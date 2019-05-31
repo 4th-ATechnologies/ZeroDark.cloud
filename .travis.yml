@@ -1,0 +1,12 @@
+language: objective-c
+os: osx
+before_install:
+  - gem install jazzy
+  - jazzy
+deploy:
+  provider: pages
+  skip-cleanup: true
+  github-token: $GITHUB_TOKEN
+  local-dir: docs
+  on:
+    branch: master

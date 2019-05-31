@@ -1,5 +1,5 @@
 objc: true
-output: Jazzy
+output: docs
 framework_root: ZeroDark.cloud
 sdk: iphonesimulator
 umbrella_header: ZeroDark.cloud/ZeroDarkCloudUmbrella.h
