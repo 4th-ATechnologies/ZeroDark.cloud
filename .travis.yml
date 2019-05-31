@@ -1,6 +1,6 @@
 language: objective-c
 os: osx
-after_success:
+before_install:
   - gem install jazzy
   - jazzy
 deploy:
