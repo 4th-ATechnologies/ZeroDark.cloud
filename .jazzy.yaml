@@ -1,0 +1,87 @@
+objc: true
+output: Jazzy
+framework_root: ZeroDark.cloud
+sdk: iphonesimulator
+umbrella_header: ZeroDark.cloud/ZeroDarkCloudUmbrella.h
+theme: fullwidth
+author: 4th-A Technologies
+custom_categories:
+- name: Core
+  children:
+  - ZeroDarkCloud
+  - ZeroDarkCloudDelegate
+  - ZDCCryptoFile
+  - ZDCNodeData
+  - ZDCNodeLink
+  - ZDCTreesystemPath
+- name: Managers
+  children:
+  - ZDCCloudNodeManager
+  - ZDCCloudPathManager
+  - ZDCDatabaseManager
+  - ZDCDatabaseKeyManager
+  - ZDCDirectoryManager
+  - ZDCDiskManager
+  - ZDCDownloadManager
+  - ZDCImageManager
+  - ZDCLocalUserManager
+  - ZDCNodeManager
+  - ZDCProgressManager
+  - ZDCPullManager
+  - ZDCPushManager
+  - ZDCRemoteUserManager
+  - ZDCSearchUserManager
+  - ZDCUITools
+  - ZDCWebManager
+- name: Model
+  children:
+  - ZDCCloudDataInfo
+  - ZDCCloudNode
+  - ZDCContainerNode
+  - ZDCLocalUser
+  - ZDCLocalUserAuth
+  - ZDCNode
+  - ZDCPublicKey
+  - ZDCShareItem
+  - ZDCShareList
+  - ZDCSymmetricKey
+  - ZDCUser
+- name: File & Streams
+  children:
+  - ZDCInputStream
+  - ZDCInterruptingInputStream
+  - CacheFile2CleartextInputStream
+  - Cleartext2CacheFileInputStream
+  - Cleartext2CloudFileInputStream
+  - CloudFile2CleartextInputStream
+  - ZDCFileReader
+  - ZDCFileChecksum
+  - ZDCFileChecksumInstruction
+  - ZDCFileConversion
+  - ZDCFilesystemMonitor
+  - ZDCCacheFileHeader
+  - ZDCCloudFileHeader
+- name: ZDCCloud
+  children:
+  - ZDCCloud
+  - ZDCCloudConnection
+  - ZDCCloudTransaction
+  - ZDCCloudOperation
+  - ZDCCloudLocator
+  - ZDCCloudPath
+  - ZDCCloudRcrd
+- name: Utilities
+  children:
+  - BIP39Mnemonic
+  - ZDCProgress
+  - ZDCAsyncCompletionDispatch
+  - ZDCDateFormatterCache  
+- name: AWS Utilities
+  children:
+  - AWSDate
+  - AWSPayload
+  - AWSRegions
+  - AWSServices
+  - AWSSignature
+exclude:
+- /*/Internal/*
