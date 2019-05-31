@@ -116,8 +116,7 @@ typedef NS_ENUM(NSInteger, ActivityType) {
 	swipeRight = [[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(swipeRight:)];
 	[self.view addGestureRecognizer:swipeRight];
 	
-	[self setNavigationTitleForUserID:_localUserID
-							 shouldEnable:YES];
+	[self setNavigationTitleForUserID:_localUserID];
 
 }
 
@@ -140,17 +139,45 @@ typedef NS_ENUM(NSInteger, ActivityType) {
 
 
 -(void) setNavigationTitleForUserID:(NSString*)userID
-							shouldEnable:(BOOL)shouldEnable
 {
 	__weak typeof(self) weakSelf = self;
 	
+	BOOL shouldEnable = YES;
+	
+	// check if there are more than one users
+	__block NSArray<NSString *> * userIDs = nil;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+	[databaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+		userIDs = [localUserManager allLocalUserIDs:transaction];
+	}];
+#pragma clang diagnostic pop
+	
+	if(userIDs.count == 1)
+ 	{
+		if(!userID)
+			userID = userIDs.firstObject;
+		
+		shouldEnable = NO;
+	}
+
 	if(!_btnTitle)
 	{
 		_btnTitle = [ZDCIconTitleButton buttonWithType:UIButtonTypeCustom];
 		
 		[_btnTitle setTitleColor:self.view.tintColor forState:UIControlStateNormal];
-		[_btnTitle addTarget:self action:@selector(navTitleButtonClicked:) forControlEvents:UIControlEventTouchUpInside];
 	}
+	
+	if(shouldEnable)
+	{
+			[_btnTitle addTarget:self action:@selector(navTitleButtonClicked:) forControlEvents:UIControlEventTouchUpInside];
+	}
+	else
+	{
+		[_btnTitle removeTarget:self action:NULL
+				 forControlEvents:UIControlEventTouchUpInside];
+	}
+	
 	
 	self.navigationItem.titleView = _btnTitle;
 	
@@ -517,8 +544,7 @@ typedef NS_ENUM(NSInteger, ActivityType) {
 {
 	_localUserID = userID.length?userID:NULL;
 	
-	[self setNavigationTitleForUserID:_localUserID
-								shouldEnable:YES];
+	[self setNavigationTitleForUserID:_localUserID];
 
 }
 
