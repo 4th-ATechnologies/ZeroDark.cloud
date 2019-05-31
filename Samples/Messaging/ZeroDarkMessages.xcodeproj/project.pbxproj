@@ -1,0 +1,498 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2EB64BC8229854630023DF11 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB64BC7229854630023DF11 /* AppDelegate.swift */; };
+		2EB64BCA229854630023DF11 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB64BC9229854630023DF11 /* MainViewController.swift */; };
+		2EB64BCD229854630023DF11 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2EB64BCB229854630023DF11 /* Main.storyboard */; };
+		2EB64BCF229854650023DF11 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2EB64BCE229854650023DF11 /* Assets.xcassets */; };
+		2EB64BD2229854650023DF11 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2EB64BD0229854650023DF11 /* LaunchScreen.storyboard */; };
+		2EB64BE2229857480023DF11 /* ZDCManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB64BDA229857480023DF11 /* ZDCManager.swift */; };
+		2EB64BE3229857480023DF11 /* SettingsViewController.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2EB64BDB229857480023DF11 /* SettingsViewController.storyboard */; };
+		2EB64BE4229857480023DF11 /* InitialViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB64BDC229857480023DF11 /* InitialViewController.swift */; };
+		2EB64BE5229857480023DF11 /* RootContainerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB64BDD229857480023DF11 /* RootContainerViewController.swift */; };
+		2EB64BE6229857480023DF11 /* UIAlertController+TextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB64BDE229857480023DF11 /* UIAlertController+TextField.swift */; };
+		2EB64BE7229857480023DF11 /* InitialViewController.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2EB64BDF229857480023DF11 /* InitialViewController.storyboard */; };
+		2EB64BE8229857480023DF11 /* CompleteActivationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB64BE0229857480023DF11 /* CompleteActivationViewController.swift */; };
+		2EB64BE9229857480023DF11 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB64BE1229857480023DF11 /* SettingsViewController.swift */; };
+		2EB64BF12298625D0023DF11 /* IconTitleButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 2EB64BEC2298625D0023DF11 /* IconTitleButton.m */; };
+		2EB64BF22298625D0023DF11 /* BadgedBarButtonItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 2EB64BEF2298625D0023DF11 /* BadgedBarButtonItem.m */; };
+		2EB64BF32298625D0023DF11 /* UIImage+scaling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB64BF02298625D0023DF11 /* UIImage+scaling.swift */; };
+		2EB64BF722986C290023DF11 /* DarkMessageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB64BF622986C290023DF11 /* DarkMessageViewController.swift */; };
+		2EB64BFC2298940E0023DF11 /* Conversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB64BFB2298940E0023DF11 /* Conversation.swift */; };
+		2EB64BFE2298942F0023DF11 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB64BFD2298942F0023DF11 /* Message.swift */; };
+		2EB64C002298992A0023DF11 /* CloudCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB64BFF2298992A0023DF11 /* CloudCodable.swift */; };
+		FC5E14A7701DB2A77DAB327C /* Pods_ios_ZeroDarkMessages.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1657D46F01E521620E543D9A /* Pods_ios_ZeroDarkMessages.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		1657D46F01E521620E543D9A /* Pods_ios_ZeroDarkMessages.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ios_ZeroDarkMessages.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		1766EF4F4A92172C10CDF8F9 /* Pods-ios-ZeroDarkMessages.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ios-ZeroDarkMessages.debug.xcconfig"; path = "Target Support Files/Pods-ios-ZeroDarkMessages/Pods-ios-ZeroDarkMessages.debug.xcconfig"; sourceTree = "<group>"; };
+		2EB64BC4229854630023DF11 /* ZeroDarkMessages.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ZeroDarkMessages.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2EB64BC7229854630023DF11 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		2EB64BC9229854630023DF11 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
+		2EB64BCC229854630023DF11 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		2EB64BCE229854650023DF11 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2EB64BD1229854650023DF11 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		2EB64BD3229854650023DF11 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		2EB64BDA229857480023DF11 /* ZDCManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ZDCManager.swift; sourceTree = "<group>"; };
+		2EB64BDB229857480023DF11 /* SettingsViewController.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = SettingsViewController.storyboard; sourceTree = "<group>"; };
+		2EB64BDC229857480023DF11 /* InitialViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InitialViewController.swift; sourceTree = "<group>"; };
+		2EB64BDD229857480023DF11 /* RootContainerViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RootContainerViewController.swift; sourceTree = "<group>"; };
+		2EB64BDE229857480023DF11 /* UIAlertController+TextField.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIAlertController+TextField.swift"; sourceTree = "<group>"; };
+		2EB64BDF229857480023DF11 /* InitialViewController.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = InitialViewController.storyboard; sourceTree = "<group>"; };
+		2EB64BE0229857480023DF11 /* CompleteActivationViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CompleteActivationViewController.swift; sourceTree = "<group>"; };
+		2EB64BE1229857480023DF11 /* SettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
+		2EB64BEA22985A1A0023DF11 /* ZeroDarkMessages-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ZeroDarkMessages-Bridging-Header.h"; sourceTree = "<group>"; };
+		2EB64BEC2298625D0023DF11 /* IconTitleButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = IconTitleButton.m; path = "ZeroDarkMessages/UI tools/IconTitleButton.m"; sourceTree = SOURCE_ROOT; };
+		2EB64BED2298625D0023DF11 /* BadgedBarButtonItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BadgedBarButtonItem.h; path = "ZeroDarkMessages/UI tools/BadgedBarButtonItem.h"; sourceTree = SOURCE_ROOT; };
+		2EB64BEE2298625D0023DF11 /* IconTitleButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IconTitleButton.h; path = "ZeroDarkMessages/UI tools/IconTitleButton.h"; sourceTree = SOURCE_ROOT; };
+		2EB64BEF2298625D0023DF11 /* BadgedBarButtonItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BadgedBarButtonItem.m; path = "ZeroDarkMessages/UI tools/BadgedBarButtonItem.m"; sourceTree = SOURCE_ROOT; };
+		2EB64BF02298625D0023DF11 /* UIImage+scaling.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "UIImage+scaling.swift"; path = "ZeroDarkMessages/UI tools/UIImage+scaling.swift"; sourceTree = SOURCE_ROOT; };
+		2EB64BF622986C290023DF11 /* DarkMessageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarkMessageViewController.swift; sourceTree = "<group>"; };
+		2EB64BFB2298940E0023DF11 /* Conversation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conversation.swift; sourceTree = "<group>"; };
+		2EB64BFD2298942F0023DF11 /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
+		2EB64BFF2298992A0023DF11 /* CloudCodable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CloudCodable.swift; sourceTree = "<group>"; };
+		8967A1E46E2F79BCD60D7BB7 /* Pods-ios-ZeroDarkMessages.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ios-ZeroDarkMessages.release.xcconfig"; path = "Target Support Files/Pods-ios-ZeroDarkMessages/Pods-ios-ZeroDarkMessages.release.xcconfig"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		2EB64BC1229854630023DF11 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FC5E14A7701DB2A77DAB327C /* Pods_ios_ZeroDarkMessages.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2EB64BBB229854630023DF11 = {
+			isa = PBXGroup;
+			children = (
+				2EB64BC6229854630023DF11 /* ZeroDarkMessages */,
+				2EB64BC5229854630023DF11 /* Products */,
+				CB676B91533F8C85A9E1963D /* Pods */,
+				61806ED198E1D8D276C6F60B /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		2EB64BC5229854630023DF11 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				2EB64BC4229854630023DF11 /* ZeroDarkMessages.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		2EB64BC6229854630023DF11 /* ZeroDarkMessages */ = {
+			isa = PBXGroup;
+			children = (
+				2EB64BC7229854630023DF11 /* AppDelegate.swift */,
+				2EB64BC9229854630023DF11 /* MainViewController.swift */,
+				2EB64BDD229857480023DF11 /* RootContainerViewController.swift */,
+				2EB64BDB229857480023DF11 /* SettingsViewController.storyboard */,
+				2EB64BF622986C290023DF11 /* DarkMessageViewController.swift */,
+				2EB64BE1229857480023DF11 /* SettingsViewController.swift */,
+				2EB64BE0229857480023DF11 /* CompleteActivationViewController.swift */,
+				2EB64BDF229857480023DF11 /* InitialViewController.storyboard */,
+				2EB64BDC229857480023DF11 /* InitialViewController.swift */,
+				2EB64BF82298935E0023DF11 /* Model */,
+				2EB64BD0229854650023DF11 /* LaunchScreen.storyboard */,
+				2EB64BCB229854630023DF11 /* Main.storyboard */,
+				2EB64BCE229854650023DF11 /* Assets.xcassets */,
+				2EB64BD3229854650023DF11 /* Info.plist */,
+				2EB64BEB2298624A0023DF11 /* UI Tools */,
+				2EB64BDA229857480023DF11 /* ZDCManager.swift */,
+				2EB64BEA22985A1A0023DF11 /* ZeroDarkMessages-Bridging-Header.h */,
+			);
+			path = ZeroDarkMessages;
+			sourceTree = "<group>";
+		};
+		2EB64BEB2298624A0023DF11 /* UI Tools */ = {
+			isa = PBXGroup;
+			children = (
+				2EB64BDE229857480023DF11 /* UIAlertController+TextField.swift */,
+				2EB64BED2298625D0023DF11 /* BadgedBarButtonItem.h */,
+				2EB64BEF2298625D0023DF11 /* BadgedBarButtonItem.m */,
+				2EB64BEE2298625D0023DF11 /* IconTitleButton.h */,
+				2EB64BEC2298625D0023DF11 /* IconTitleButton.m */,
+				2EB64BF02298625D0023DF11 /* UIImage+scaling.swift */,
+			);
+			name = "UI Tools";
+			path = "UI tools";
+			sourceTree = "<group>";
+		};
+		2EB64BF82298935E0023DF11 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				2EB64BFF2298992A0023DF11 /* CloudCodable.swift */,
+				2EB64BFB2298940E0023DF11 /* Conversation.swift */,
+				2EB64BFD2298942F0023DF11 /* Message.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		61806ED198E1D8D276C6F60B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1657D46F01E521620E543D9A /* Pods_ios_ZeroDarkMessages.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		CB676B91533F8C85A9E1963D /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				1766EF4F4A92172C10CDF8F9 /* Pods-ios-ZeroDarkMessages.debug.xcconfig */,
+				8967A1E46E2F79BCD60D7BB7 /* Pods-ios-ZeroDarkMessages.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		2EB64BC3229854630023DF11 /* ZeroDarkMessages */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2EB64BD6229854650023DF11 /* Build configuration list for PBXNativeTarget "ZeroDarkMessages" */;
+			buildPhases = (
+				3B7F5EFC117391E3802DA572 /* [CP] Check Pods Manifest.lock */,
+				2EB64BC0229854630023DF11 /* Sources */,
+				2EB64BC1229854630023DF11 /* Frameworks */,
+				2EB64BC2229854630023DF11 /* Resources */,
+				773E492BA5E1A5BFC1DB2B34 /* [CP] Embed Pods Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ZeroDarkMessages;
+			productName = ZeroDarkMessages;
+			productReference = 2EB64BC4229854630023DF11 /* ZeroDarkMessages.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2EB64BBC229854630023DF11 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1020;
+				LastUpgradeCheck = 1020;
+				ORGANIZATIONNAME = "4th A Technologies LLC";
+				TargetAttributes = {
+					2EB64BC3229854630023DF11 = {
+						CreatedOnToolsVersion = 10.2.1;
+					};
+				};
+			};
+			buildConfigurationList = 2EB64BBF229854630023DF11 /* Build configuration list for PBXProject "ZeroDarkMessages" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 2EB64BBB229854630023DF11;
+			productRefGroup = 2EB64BC5229854630023DF11 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				2EB64BC3229854630023DF11 /* ZeroDarkMessages */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		2EB64BC2229854630023DF11 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2EB64BE3229857480023DF11 /* SettingsViewController.storyboard in Resources */,
+				2EB64BD2229854650023DF11 /* LaunchScreen.storyboard in Resources */,
+				2EB64BE7229857480023DF11 /* InitialViewController.storyboard in Resources */,
+				2EB64BCF229854650023DF11 /* Assets.xcassets in Resources */,
+				2EB64BCD229854630023DF11 /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		3B7F5EFC117391E3802DA572 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-ios-ZeroDarkMessages-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		773E492BA5E1A5BFC1DB2B34 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ios-ZeroDarkMessages/Pods-ios-ZeroDarkMessages-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2EB64BC0229854630023DF11 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2EB64BF32298625D0023DF11 /* UIImage+scaling.swift in Sources */,
+				2EB64BE6229857480023DF11 /* UIAlertController+TextField.swift in Sources */,
+				2EB64C002298992A0023DF11 /* CloudCodable.swift in Sources */,
+				2EB64BE5229857480023DF11 /* RootContainerViewController.swift in Sources */,
+				2EB64BE2229857480023DF11 /* ZDCManager.swift in Sources */,
+				2EB64BFC2298940E0023DF11 /* Conversation.swift in Sources */,
+				2EB64BCA229854630023DF11 /* MainViewController.swift in Sources */,
+				2EB64BE8229857480023DF11 /* CompleteActivationViewController.swift in Sources */,
+				2EB64BF22298625D0023DF11 /* BadgedBarButtonItem.m in Sources */,
+				2EB64BF12298625D0023DF11 /* IconTitleButton.m in Sources */,
+				2EB64BF722986C290023DF11 /* DarkMessageViewController.swift in Sources */,
+				2EB64BC8229854630023DF11 /* AppDelegate.swift in Sources */,
+				2EB64BFE2298942F0023DF11 /* Message.swift in Sources */,
+				2EB64BE4229857480023DF11 /* InitialViewController.swift in Sources */,
+				2EB64BE9229857480023DF11 /* SettingsViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		2EB64BCB229854630023DF11 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				2EB64BCC229854630023DF11 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		2EB64BD0229854650023DF11 /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				2EB64BD1229854650023DF11 /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		2EB64BD4229854650023DF11 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.2;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		2EB64BD5229854650023DF11 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.2;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		2EB64BD7229854650023DF11 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1766EF4F4A92172C10CDF8F9 /* Pods-ios-ZeroDarkMessages.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = VT5GYGYX83;
+				INFOPLIST_FILE = ZeroDarkMessages/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.4th-a.ZeroDarkMessages";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "ZeroDarkMessages/ZeroDarkMessages-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		2EB64BD8229854650023DF11 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8967A1E46E2F79BCD60D7BB7 /* Pods-ios-ZeroDarkMessages.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = VT5GYGYX83;
+				INFOPLIST_FILE = ZeroDarkMessages/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.4th-a.ZeroDarkMessages";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "ZeroDarkMessages/ZeroDarkMessages-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2EB64BBF229854630023DF11 /* Build configuration list for PBXProject "ZeroDarkMessages" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2EB64BD4229854650023DF11 /* Debug */,
+				2EB64BD5229854650023DF11 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2EB64BD6229854650023DF11 /* Build configuration list for PBXNativeTarget "ZeroDarkMessages" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2EB64BD7229854650023DF11 /* Debug */,
+				2EB64BD8229854650023DF11 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 2EB64BBC229854630023DF11 /* Project object */;
+}

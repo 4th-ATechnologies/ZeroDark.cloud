@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="14113" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14088"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="FixSettingsViewControllerCell" id="cyO-6B-VDT" customClass="FixSettingsViewControllerCell">
+            <rect key="frame" x="0.0" y="0.0" width="295" height="44"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="cyO-6B-VDT" id="P7y-bI-ErA">
+                <rect key="frame" x="0.0" y="0.0" width="295" height="43.5"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="settings_ios.png" translatesAutoresizingMaskIntoConstraints="NO" id="6p0-Jb-hk1">
+                        <rect key="frame" x="0.0" y="5" width="40" height="32"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="32" id="PSD-Dk-bNh"/>
+                            <constraint firstAttribute="width" constant="40" id="iV9-Il-WL2"/>
+                        </constraints>
+                    </imageView>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="wordWrap" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="nJZ-HK-djB">
+                        <rect key="frame" x="48" y="11.5" width="231" height="20.5"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                        <color key="textColor" white="0.33333333329999998" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="nJZ-HK-djB" firstAttribute="leading" secondItem="6p0-Jb-hk1" secondAttribute="trailing" constant="8" id="3qn-lK-cnL"/>
+                    <constraint firstItem="nJZ-HK-djB" firstAttribute="top" secondItem="P7y-bI-ErA" secondAttribute="topMargin" constant="1" id="8Vw-jR-Yke"/>
+                    <constraint firstItem="6p0-Jb-hk1" firstAttribute="centerY" secondItem="P7y-bI-ErA" secondAttribute="centerY" id="efu-Yp-NdG"/>
+                    <constraint firstItem="6p0-Jb-hk1" firstAttribute="leading" secondItem="P7y-bI-ErA" secondAttribute="leading" id="gR2-UO-vhj"/>
+                    <constraint firstAttribute="trailingMargin" secondItem="nJZ-HK-djB" secondAttribute="trailing" id="omJ-Sl-s2w"/>
+                    <constraint firstAttribute="bottomMargin" secondItem="nJZ-HK-djB" secondAttribute="bottom" constant="1" id="v33-z5-hS5"/>
+                </constraints>
+            </tableViewCellContentView>
+            <connections>
+                <outlet property="imgStep" destination="6p0-Jb-hk1" id="Z2W-HJ-68f"/>
+                <outlet property="lblStep" destination="nJZ-HK-djB" id="Bbz-Py-Xkj"/>
+            </connections>
+            <point key="canvasLocation" x="-1143" y="524"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="settings_ios.png" width="118" height="118"/>
+    </resources>
+</document>

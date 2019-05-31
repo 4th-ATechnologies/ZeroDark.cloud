@@ -1,0 +1,28 @@
+source 'https://github.com/CocoaPods/Specs.git'
+
+workspace 'DatabaseKey'
+project 'DatabaseKey.xcodeproj'
+
+use_frameworks!
+inhibit_all_warnings!
+
+# Workaround for Xcode bug:
+# - https://www.ralfebert.de/ios/blog/cocoapods-clean-input-output-files/
+# - https://github.com/CocoaPods/CocoaPods/issues/8073
+# - https://github.com/CocoaPods/CocoaPods/pull/8105
+# 
+install! 'cocoapods', :disable_input_output_paths => true
+
+
+abstract_target 'ios' do
+	platform :ios, '10.1'
+	
+	pod 'YapDatabase/SQLCipher', :git=>'https://github.com/yapstudios/YapDatabase.git', :commit=>'4d42e250597387af7eb96b2d2fdba4a4f7a3741f'
+	pod 'ZeroDarkCloud/Swift', path: '../../', :inhibit_warnings => false
+	
+	# Used by sample application (not required for your application)
+
+	target :'DatabaseKey' do
+	end
+
+end

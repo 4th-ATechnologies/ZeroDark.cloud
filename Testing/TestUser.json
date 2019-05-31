@@ -1,0 +1,56 @@
+{
+	"localUserID": "7g4jon8fea7pbmy68ezeaugdpukm5he7",
+	"region": "us-west-2",
+	"bucket": "com.4th-a.user.7g4jon8fea7pbmy68ezeaugdpukm5he7-c7468e52",
+	"stage": "dev",
+	"auth0": {
+		"auth0|5c685ad1468127492d1f7e54": {
+			 "connection": "Username-Password-Authentication",
+			 "displayName": "test_account",
+			 "email": "test_account@users.4th-a.com",
+			 "isPrimaryProfile": true,
+			 "name": "test_account@users.4th-a.com",
+			 "nickname": "test_account"
+		}
+	},
+	"refreshToken": "hq6eF934-JZpkWJ1Lr6RewHP2CKUpbHOTxULOKbzHiDrU",
+	"privKey": {
+		"version": 1,
+		"encoding": "Twofish-256",
+		"keySuite": "Curve41417",
+		"mac": "kxvMRIXIbx4=",
+		"keyID": "0LqILoNlYQXpXIn/XqzqtA==",
+		"privKey": "oNBFKAhuMhBNcWgon3tkcduwf50jhetGsiGYT/q1XC9ATX0AkXHrBiL2UgrEVdUPduK3CXbBvXIUNh8aWs05q2edyifaKS2en1nW8WvY+NL4969zUn50XbZGemdFuRA6Xb7v4jRRKitHYM8Y79L5HspGlqJhxngUNPSJfFeAjfyCnQcY6+QtU0/GwxMtR+iez4EiJn1gHMETOUUiqm/6vatAwvLsh/8PSxeoAYSxYqOu5vCzxmlU6WdJ15X18lB8",
+		"start-date": "2019-02-16T18:50:09Z",
+		"userID": "7g4jon8fea7pbmy68ezeaugdpukm5he7",
+		"auth0ID": "[\"auth0|5c685ad1468127492d1f7e54\"]",
+		"signable-properties": [
+			"auth0ID",
+			"keyID",
+			"keySuite",
+			"pubKey",
+			"start-date",
+			"userID"
+		],
+		"signatures": [
+			{
+				"sigID": "KuuERRTqJ6vaiC7Ys67JUQ==",
+				"hashAlgorithm": "SHA-256",
+				"signature": "MGwCNAW/DTXknBckP+Wa/1j+7f9sYpVVjMxac5pTuAtlJZ23IS4Cewbe5aoUDVxCmHWWEBDs8F4CNAR6/QhB6giVNqHXkoiDjCmyoSGBs8HAJ/2DQUx0HSHGfoAnMZqn/Drv95eHUQ7qy0R7JXQ=",
+				"issuer": "0LqILoNlYQXpXIn/XqzqtA==",
+				"issue-date": "2019-02-16T18:50:09Z",
+				"sig-expire": 0,
+				"signed-properties": [
+					"auth0ID",
+					"keyID",
+					"keySuite",
+					"pubKey",
+					"start-date",
+					"userID"
+				]
+			}
+		]
+	},
+	"privKeyWords": "situate gain federal retire pencil annual hurt label tuna bounce roof share present cube effort video eager knife task biology knock own fish artefact",
+	"syncedSalt": "FBE319A6EED249C1B0CC9BFC2A48C0DA"
+}

@@ -1,0 +1,63 @@
+
+/* Class = "UILabel"; text = "<formated date>"; ObjectID = "6yu-Qp-I3X"; */
+"6yu-Qp-I3X.text" = "<formated date>";
+
+/* Class = "UILabel"; text = "Subtitle"; ObjectID = "8pl-MT-zij"; */
+"8pl-MT-zij.text" = "Subtitle";
+
+/* Class = "UILabel"; text = "<formated date>"; ObjectID = "AdO-J3-khe"; */
+"AdO-J3-khe.text" = "<formated date>";
+
+/* Class = "UISegmentedControl"; CLP-xg-qtN.segmentTitles[0] = "low"; ObjectID = "CLP-xg-qtN"; */
+"CLP-xg-qtN.segmentTitles[0]" = "low";
+
+/* Class = "UISegmentedControl"; CLP-xg-qtN.segmentTitles[1] = "Normal"; ObjectID = "CLP-xg-qtN"; */
+"CLP-xg-qtN.segmentTitles[1]" = "Normal";
+
+/* Class = "UISegmentedControl"; CLP-xg-qtN.segmentTitles[2] = "High"; ObjectID = "CLP-xg-qtN"; */
+"CLP-xg-qtN.segmentTitles[2]" = "High";
+
+/* Class = "UILabel"; text = "uuid:"; ObjectID = "FSJ-DB-x4Q"; */
+"FSJ-DB-x4Q.text" = "uuid:";
+
+/* Class = "UILabel"; text = "25"; ObjectID = "FlB-fm-hhu"; */
+"FlB-fm-hhu.text" = "25";
+
+/* Class = "UILabel"; text = "Title"; ObjectID = "H1y-sM-9tj"; */
+"H1y-sM-9tj.text" = "Title";
+
+/* Class = "UILabel"; text = "<uuid>"; ObjectID = "JSi-oX-acc"; */
+"JSi-oX-acc.text" = "<uuid>";
+
+/* Class = "UITextView"; text = "title"; ObjectID = "Juq-6e-dP6"; */
+"Juq-6e-dP6.text" = "title";
+
+/* Class = "UILabel"; text = "modified"; ObjectID = "O51-6V-2DH"; */
+"O51-6V-2DH.text" = "modified";
+
+/* Class = "UITextView"; text = "Lorem ipsum dolor sit er elit lamet, consectetaur cillium adipisicing pecu, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Nam liber te conscient to factor tum poen legum odioque civiuda."; ObjectID = "ODd-U5-iWD"; */
+"ODd-U5-iWD.text" = "Lorem ipsum dolor sit er elit lamet, consectetaur cillium adipisicing pecu, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Nam liber te conscient to factor tum poen legum odioque civiuda.";
+
+/* Class = "UILabel"; text = "Title"; ObjectID = "Q05-1x-kyK"; */
+"Q05-1x-kyK.text" = "Title";
+
+/* Class = "UILabel"; text = "Description:"; ObjectID = "WoK-nB-LKu"; */
+"WoK-nB-LKu.text" = "Description:";
+
+/* Class = "UILabel"; accessibilityLabel = "Accounts Heading"; ObjectID = "clf-Rc-28o"; */
+"clf-Rc-28o.accessibilityLabel" = "Accounts Heading";
+
+/* Class = "UILabel"; text = "USERS"; ObjectID = "clf-Rc-28o"; */
+"clf-Rc-28o.text" = "USERS";
+
+/* Class = "UILabel"; text = "Title:"; ObjectID = "h8N-vt-nAI"; */
+"h8N-vt-nAI.text" = "Title:";
+
+/* Class = "UILabel"; text = "created:"; ObjectID = "jcl-hY-CPV"; */
+"jcl-hY-CPV.text" = "created:";
+
+/* Class = "UILabel"; text = "Subtitle"; ObjectID = "u4C-wY-lVM"; */
+"u4C-wY-lVM.text" = "Subtitle";
+
+/* Class = "UILabel"; text = "Name"; ObjectID = "wWp-hH-Xui"; */
+"wWp-hH-Xui.text" = "Name";

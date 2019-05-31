@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14490.49"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--User Search View Controller iOS-->
+        <scene sceneID="v9e-u5-dFX">
+            <objects>
+                <viewController storyboardIdentifier="UserSearchViewController" id="csK-ee-UtN" customClass="UserSearchViewController_IOS" sceneMemberID="viewController">
+                    <view key="view" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="474-nN-eAV">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <searchBar contentMode="redraw" searchBarStyle="minimal" placeholder="Search" translatesAutoresizingMaskIntoConstraints="NO" id="1gF-Nu-MIE" customClass="SearchBarWithloading">
+                                <rect key="frame" x="0.0" y="20" width="343" height="56"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="56" id="RTE-bb-MG0"/>
+                                </constraints>
+                                <textInputTraits key="textInputTraits"/>
+                                <connections>
+                                    <outlet property="delegate" destination="csK-ee-UtN" id="kqR-li-ZHc"/>
+                                </connections>
+                            </searchBar>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="prompt" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2I7-Sy-UgE">
+                                <rect key="frame" x="143.5" y="38" width="56" height="20.5"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" name="headerColor" catalog="System" colorSpace="catalog"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="uv4-1o-xmZ">
+                                <rect key="frame" x="343" y="36" width="24" height="24"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="24" id="BCo-Aj-n4C"/>
+                                    <constraint firstAttribute="height" constant="24" id="fNj-X1-Yve"/>
+                                </constraints>
+                                <state key="normal" image="3dots.png"/>
+                                <connections>
+                                    <action selector="btnFilterTapped:" destination="csK-ee-UtN" eventType="touchUpInside" id="mS6-mT-LU5"/>
+                                </connections>
+                            </button>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" bouncesZoom="NO" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="qGc-I0-aAU" customClass="UITableViewTouch">
+                                <rect key="frame" x="0.0" y="76" width="375" height="591"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <color key="sectionIndexBackgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <connections>
+                                    <outlet property="dataSource" destination="csK-ee-UtN" id="qcX-yX-kcj"/>
+                                    <outlet property="delegate" destination="csK-ee-UtN" id="z0t-Lp-S2K"/>
+                                </connections>
+                            </tableView>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="9gu-SL-QGa">
+                                <rect key="frame" x="40" y="116" width="295" height="80"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="No results found for query." textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="LYY-rQ-LnW">
+                                        <rect key="frame" x="45.5" y="29.5" width="204" height="21"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                </subviews>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstItem="LYY-rQ-LnW" firstAttribute="centerX" secondItem="9gu-SL-QGa" secondAttribute="centerX" id="MiN-xY-hgn"/>
+                                    <constraint firstAttribute="height" constant="80" id="VaC-x8-5Zv"/>
+                                    <constraint firstItem="LYY-rQ-LnW" firstAttribute="centerY" secondItem="9gu-SL-QGa" secondAttribute="centerY" id="drz-dn-c8e"/>
+                                </constraints>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="qGc-I0-aAU" firstAttribute="bottom" secondItem="474-nN-eAV" secondAttribute="bottom" id="0VH-P8-TOl"/>
+                            <constraint firstItem="uv4-1o-xmZ" firstAttribute="centerY" secondItem="2I7-Sy-UgE" secondAttribute="centerY" id="Bou-8H-RWy"/>
+                            <constraint firstItem="9gu-SL-QGa" firstAttribute="leading" secondItem="yee-pb-PIV" secondAttribute="leading" constant="40" id="CIW-W0-xnG"/>
+                            <constraint firstItem="uv4-1o-xmZ" firstAttribute="centerY" secondItem="1gF-Nu-MIE" secondAttribute="centerY" id="Lym-xF-4yM"/>
+                            <constraint firstItem="1gF-Nu-MIE" firstAttribute="leading" secondItem="yee-pb-PIV" secondAttribute="leading" id="Rdr-f9-WJO"/>
+                            <constraint firstItem="uv4-1o-xmZ" firstAttribute="leading" secondItem="1gF-Nu-MIE" secondAttribute="trailing" id="ZCB-iF-3P3"/>
+                            <constraint firstItem="yee-pb-PIV" firstAttribute="trailing" secondItem="9gu-SL-QGa" secondAttribute="trailing" constant="40" id="dE1-g4-nRX"/>
+                            <constraint firstItem="yee-pb-PIV" firstAttribute="trailing" secondItem="uv4-1o-xmZ" secondAttribute="trailing" constant="8" id="dyn-bs-qmE"/>
+                            <constraint firstItem="qGc-I0-aAU" firstAttribute="trailing" secondItem="yee-pb-PIV" secondAttribute="trailing" id="hYy-Su-2v7"/>
+                            <constraint firstItem="1gF-Nu-MIE" firstAttribute="leading" secondItem="yee-pb-PIV" secondAttribute="leading" id="kKc-tC-uU5"/>
+                            <constraint firstItem="qGc-I0-aAU" firstAttribute="leading" secondItem="474-nN-eAV" secondAttribute="leading" id="lyk-aV-oQf"/>
+                            <constraint firstItem="9gu-SL-QGa" firstAttribute="top" secondItem="1gF-Nu-MIE" secondAttribute="bottom" constant="40" id="qh5-H7-rqM"/>
+                            <constraint firstItem="qGc-I0-aAU" firstAttribute="top" secondItem="1gF-Nu-MIE" secondAttribute="bottom" id="u4P-jO-AUp"/>
+                            <constraint firstItem="2I7-Sy-UgE" firstAttribute="centerX" secondItem="1gF-Nu-MIE" secondAttribute="centerX" id="w1M-MV-gOq"/>
+                            <constraint firstItem="1gF-Nu-MIE" firstAttribute="top" secondItem="yee-pb-PIV" secondAttribute="top" id="ynR-fF-jZr"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="yee-pb-PIV"/>
+                    </view>
+                    <connections>
+                        <outlet property="_btnFilter" destination="uv4-1o-xmZ" id="2Uo-JQ-gCH"/>
+                        <outlet property="_cnstTbleUserBottomOffset" destination="0VH-P8-TOl" id="Co1-yC-0eg"/>
+                        <outlet property="_lblInfo" destination="LYY-rQ-LnW" id="Zqh-Dm-WZO"/>
+                        <outlet property="_lblSearchPrompt" destination="2I7-Sy-UgE" id="4d8-xG-Tzn"/>
+                        <outlet property="_searchBar" destination="1gF-Nu-MIE" id="FHb-tB-qCS"/>
+                        <outlet property="_tblUsers" destination="qGc-I0-aAU" id="pV0-Yq-82a"/>
+                        <outlet property="_vwInfo" destination="9gu-SL-QGa" id="di7-xy-Dq6"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Vfx-DM-kEe" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-734" y="100"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="3dots.png" width="16" height="16"/>
+    </resources>
+</document>

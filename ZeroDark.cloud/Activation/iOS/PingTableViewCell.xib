@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="13771" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13772"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="PingTableViewCell"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="PingTableViewCell" id="KGk-i7-Jjw" customClass="PingTableViewCell">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="43.5"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" verticalHuggingPriority="251" text="Host Name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="KLM-bB-EVs">
+                        <rect key="frame" x="32" y="11" width="202" height="21"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                        <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" horizontalCompressionResistancePriority="1000" text="1285 ms" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="6jo-9t-E22">
+                        <rect key="frame" x="238" y="11" width="66" height="21"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                        <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" animating="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="DZs-Oi-mJU">
+                        <rect key="frame" x="4" y="11" width="24" height="20"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="24" id="crx-jB-pba"/>
+                        </constraints>
+                    </activityIndicatorView>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ball-green.png" translatesAutoresizingMaskIntoConstraints="NO" id="XWb-k0-AYK">
+                        <rect key="frame" x="8" y="13" width="16" height="16"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="16" id="awc-rg-y06"/>
+                            <constraint firstAttribute="height" constant="16" id="b51-Wt-98b"/>
+                        </constraints>
+                    </imageView>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="6jo-9t-E22" firstAttribute="centerY" secondItem="H2p-sc-9uM" secondAttribute="centerY" id="0xr-15-Fly"/>
+                    <constraint firstAttribute="trailingMargin" secondItem="6jo-9t-E22" secondAttribute="trailing" id="7zv-6O-sBd"/>
+                    <constraint firstItem="KLM-bB-EVs" firstAttribute="leading" secondItem="DZs-Oi-mJU" secondAttribute="trailing" constant="4" id="9JI-d2-5yu"/>
+                    <constraint firstItem="XWb-k0-AYK" firstAttribute="centerX" secondItem="DZs-Oi-mJU" secondAttribute="centerX" id="Eqn-sB-NTX"/>
+                    <constraint firstItem="DZs-Oi-mJU" firstAttribute="centerY" secondItem="H2p-sc-9uM" secondAttribute="centerY" id="FYU-r6-FHH"/>
+                    <constraint firstItem="DZs-Oi-mJU" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="4" id="ZIJ-gp-92g"/>
+                    <constraint firstItem="KLM-bB-EVs" firstAttribute="centerY" secondItem="H2p-sc-9uM" secondAttribute="centerY" id="n5V-gT-398"/>
+                    <constraint firstItem="XWb-k0-AYK" firstAttribute="centerY" secondItem="DZs-Oi-mJU" secondAttribute="centerY" id="qwA-2r-ufB"/>
+                    <constraint firstItem="6jo-9t-E22" firstAttribute="leading" secondItem="KLM-bB-EVs" secondAttribute="trailing" constant="4" id="ukb-ba-Qmw"/>
+                </constraints>
+            </tableViewCellContentView>
+            <connections>
+                <outlet property="_actBusy" destination="DZs-Oi-mJU" id="WYD-NK-KI6"/>
+                <outlet property="_imgDot" destination="XWb-k0-AYK" id="RXP-eK-kiR"/>
+                <outlet property="_lblHostName" destination="KLM-bB-EVs" id="0KF-0V-btP"/>
+                <outlet property="_lblPingTime" destination="6jo-9t-E22" id="bQF-b5-clU"/>
+            </connections>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="ball-green.png" width="32" height="32"/>
+    </resources>
+</document>

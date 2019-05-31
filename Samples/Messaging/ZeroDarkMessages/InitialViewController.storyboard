@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14490.49"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Initial View Controller-->
+        <scene sceneID="MN7-13-tc8">
+            <objects>
+                <viewController storyboardIdentifier="InitialViewController" id="Wh0-1h-8IK" customClass="InitialViewController" customModule="ZeroDarkMessages" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="PCs-gS-LIc">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="cloudmessage" translatesAutoresizingMaskIntoConstraints="NO" id="L2w-9j-yeu">
+                                <rect key="frame" x="97.5" y="120" width="180" height="180"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" secondItem="L2w-9j-yeu" secondAttribute="height" multiplier="1:1" id="cGQ-h1-iLR"/>
+                                    <constraint firstAttribute="width" constant="180" id="qCJ-LM-XMI"/>
+                                </constraints>
+                            </imageView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="OC2-3T-4HR">
+                                <rect key="frame" x="158.5" y="316" width="58" height="35"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="19"/>
+                                <state key="normal" title="Sign In">
+                                    <color key="titleColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </state>
+                                <connections>
+                                    <action selector="btnSignInClicked:" destination="Wh0-1h-8IK" eventType="touchUpInside" id="RX0-1z-7ql"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="9pE-Gb-1CL">
+                                <rect key="frame" x="121.5" y="371" width="132" height="35"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="19"/>
+                                <state key="normal" title="Create Account">
+                                    <color key="titleColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </state>
+                                <connections>
+                                    <action selector="btnCreateClicked:" destination="Wh0-1h-8IK" eventType="touchUpInside" id="an8-RM-jma"/>
+                                </connections>
+                            </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="your app name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="OEJ-3u-5xV">
+                                <rect key="frame" x="117" y="83" width="141" height="27"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="22"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="9pE-Gb-1CL" firstAttribute="centerX" secondItem="OC2-3T-4HR" secondAttribute="centerX" id="1r5-Cv-wa3"/>
+                            <constraint firstItem="L2w-9j-yeu" firstAttribute="top" secondItem="IkM-Bu-2Dy" secondAttribute="top" constant="100" id="2Zi-LN-lrK"/>
+                            <constraint firstItem="OC2-3T-4HR" firstAttribute="centerX" secondItem="PCs-gS-LIc" secondAttribute="centerX" id="B9d-kH-RKB"/>
+                            <constraint firstItem="L2w-9j-yeu" firstAttribute="centerX" secondItem="PCs-gS-LIc" secondAttribute="centerX" id="FRa-RK-cGN"/>
+                            <constraint firstItem="9pE-Gb-1CL" firstAttribute="top" secondItem="OC2-3T-4HR" secondAttribute="bottom" constant="20" id="Goo-cq-tCH"/>
+                            <constraint firstItem="L2w-9j-yeu" firstAttribute="top" secondItem="OEJ-3u-5xV" secondAttribute="bottom" constant="10" id="Soa-lN-1gg"/>
+                            <constraint firstItem="L2w-9j-yeu" firstAttribute="centerX" secondItem="OEJ-3u-5xV" secondAttribute="centerX" id="h5e-6D-qC3"/>
+                            <constraint firstItem="OC2-3T-4HR" firstAttribute="centerY" secondItem="PCs-gS-LIc" secondAttribute="centerY" id="rgw-mr-UWm"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="IkM-Bu-2Dy"/>
+                    </view>
+                    <connections>
+                        <outlet property="btnCreate" destination="9pE-Gb-1CL" id="vte-tf-fX6"/>
+                        <outlet property="btnSignIn" destination="OC2-3T-4HR" id="mPd-Nj-UMP"/>
+                        <outlet property="lblName" destination="OEJ-3u-5xV" id="dbo-8N-jrp"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="PKu-Lx-Mdq" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="72.799999999999997" y="55.322338830584712"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="cloudmessage" width="180" height="180"/>
+    </resources>
+</document>

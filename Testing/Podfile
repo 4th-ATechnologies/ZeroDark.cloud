@@ -1,0 +1,42 @@
+source 'https://github.com/CocoaPods/Specs.git'
+
+workspace 'ZeroDarkCloudTesting'
+project 'ZeroDarkCloudTesting.xcodeproj'
+
+use_frameworks!
+inhibit_all_warnings!
+
+# Workaround for Xcode bug:
+# - https://www.ralfebert.de/ios/blog/cocoapods-clean-input-output-files/
+# - https://github.com/CocoaPods/CocoaPods/issues/8073
+# - https://github.com/CocoaPods/CocoaPods/pull/8105
+# 
+install! 'cocoapods', :disable_input_output_paths => true
+
+abstract_target 'macOS' do
+	platform :osx, '10.11'
+	
+	pod 'YapDatabase/SQLCipher', :git=>'https://github.com/yapstudios/YapDatabase.git', :commit=>'493981ed85cd07c5a6af9489a6b0b035dbd3e87f'
+	pod 'ZeroDarkCloud', path: '../', :inhibit_warnings => false
+	
+	target :'zdc_macOS' do
+	end
+	
+	target :'zdc_macOS_test' do
+	end
+	
+end
+
+abstract_target 'iOS' do
+	platform :ios, '9.2'
+	
+	pod 'YapDatabase/SQLCipher', :git=>'https://github.com/yapstudios/YapDatabase.git', :commit=>'493981ed85cd07c5a6af9489a6b0b035dbd3e87f'
+	pod 'ZeroDarkCloud', path: '../', :inhibit_warnings => false
+	
+	target :'zdc_iOS' do
+	end
+	
+	target :'zdc_iOS_test' do
+	end
+	
+end

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_1" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14490.49"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Local User List View Controller iOS-->
+        <scene sceneID="iu3-Oj-ebR">
+            <objects>
+                <viewController storyboardIdentifier="LocalUserListViewController" id="24s-sk-Gvj" customClass="LocalUserListViewController_IOS" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="QYO-zz-OdF">
+                        <rect key="frame" x="0.0" y="0.0" width="250" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="CQI-0u-MQE">
+                                <rect key="frame" x="0.0" y="44" width="250" height="200"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="200" id="gYP-sz-TXR"/>
+                                </constraints>
+                                <prototypes>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="blue" indentationWidth="10" reuseIdentifier="LocalUserListUITableViewCell" id="wuT-12-Fye" userLabel="LocalUserListUITableViewCell" customClass="LocalUserListUITableViewCell">
+                                        <rect key="frame" x="0.0" y="28" width="250" height="44"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="wuT-12-Fye" id="fpk-l0-YOb">
+                                            <rect key="frame" x="0.0" y="0.0" width="250" height="43.5"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Name" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="e1m-df-P4U" userLabel="AccountsTableViewCell-Label-Name">
+                                                    <rect key="frame" x="40" y="11.5" width="190" height="20.5"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                    <color key="highlightedColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                </label>
+                                                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="default_user" translatesAutoresizingMaskIntoConstraints="NO" id="aOS-dr-1hH">
+                                                    <rect key="frame" x="8" y="8" width="28" height="28"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="28" id="1Ia-E5-WkK"/>
+                                                        <constraint firstAttribute="height" constant="28" id="3Qq-VM-F4f"/>
+                                                    </constraints>
+                                                </imageView>
+                                            </subviews>
+                                            <constraints>
+                                                <constraint firstAttribute="centerY" secondItem="e1m-df-P4U" secondAttribute="centerY" id="VaR-CB-7QI"/>
+                                                <constraint firstAttribute="trailingMargin" secondItem="e1m-df-P4U" secondAttribute="trailing" constant="4" id="ehX-om-pnv"/>
+                                                <constraint firstItem="aOS-dr-1hH" firstAttribute="leading" secondItem="fpk-l0-YOb" secondAttribute="leading" constant="8" id="j8V-TZ-UWd"/>
+                                                <constraint firstItem="e1m-df-P4U" firstAttribute="leading" secondItem="aOS-dr-1hH" secondAttribute="trailing" constant="4" id="spR-N1-yGa"/>
+                                                <constraint firstItem="aOS-dr-1hH" firstAttribute="centerY" secondItem="fpk-l0-YOb" secondAttribute="centerY" id="vWm-Me-teb"/>
+                                            </constraints>
+                                        </tableViewCellContentView>
+                                        <accessibility key="accessibilityConfiguration">
+                                            <bool key="isElement" value="YES"/>
+                                        </accessibility>
+                                        <connections>
+                                            <outlet property="lblTitle" destination="e1m-df-P4U" id="fwz-vI-7kV"/>
+                                            <outlet property="userAvatar" destination="aOS-dr-1hH" id="g3O-Fs-75V"/>
+                                        </connections>
+                                    </tableViewCell>
+                                </prototypes>
+                                <connections>
+                                    <outlet property="dataSource" destination="24s-sk-Gvj" id="94T-Rm-hxU"/>
+                                    <outlet property="delegate" destination="24s-sk-Gvj" id="z0e-9K-YDp"/>
+                                </connections>
+                            </tableView>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstAttribute="trailing" secondItem="CQI-0u-MQE" secondAttribute="trailing" id="56Z-ON-b24"/>
+                            <constraint firstItem="CQI-0u-MQE" firstAttribute="top" secondItem="SKm-QW-7sO" secondAttribute="top" id="Hqr-9u-sh6"/>
+                            <constraint firstItem="CQI-0u-MQE" firstAttribute="leading" secondItem="QYO-zz-OdF" secondAttribute="leading" id="vxN-oe-D65"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="SKm-QW-7sO"/>
+                    </view>
+                    <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+                    <size key="freeformSize" width="250" height="667"/>
+                    <connections>
+                        <outlet property="_cnstTblButtonsHeight" destination="gYP-sz-TXR" id="h1o-N9-9Iu"/>
+                        <outlet property="_tblButtons" destination="CQI-0u-MQE" id="RDi-gp-8r1"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="9b6-fk-mcr" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-127" y="150"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="default_user" width="48" height="48"/>
+    </resources>
+</document>

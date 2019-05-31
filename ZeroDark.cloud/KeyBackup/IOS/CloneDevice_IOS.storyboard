@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina5_5" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14490.49"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Clone Device View Controller iOS-->
+        <scene sceneID="jqy-Mx-XVJ">
+            <objects>
+                <viewController storyboardIdentifier="CloneDeviceViewController_IOS" id="5pq-Ge-Mk5" customClass="CloneDeviceViewController_IOS" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="iBj-it-DfJ">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" verticalHuggingPriority="1000" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="mxB-Y0-rKr" customClass="RKTagsView">
+                                <rect key="frame" x="10" y="506.33333333333326" width="394" height="100"/>
+                                <color key="backgroundColor" red="0.83741801979999997" green="0.83743780850000005" blue="0.83742713930000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="230" id="TXZ-uG-V6g"/>
+                                    <constraint firstAttribute="height" constant="100" id="TXy-UG-T6s"/>
+                                </constraints>
+                                <variation key="default">
+                                    <mask key="constraints">
+                                        <exclude reference="TXZ-uG-V6g"/>
+                                    </mask>
+                                </variation>
+                            </view>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="1000" verticalCompressionResistancePriority="1000" text="You can use this key to clone your account to  another device" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qoh-oB-WfW">
+                                <rect key="frame" x="10" y="27.999999999999996" width="394" height="40.666666666666657"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <view contentMode="scaleToFill" horizontalCompressionResistancePriority="100" verticalCompressionResistancePriority="100" translatesAutoresizingMaskIntoConstraints="NO" id="gAI-tO-Hhe">
+                                <rect key="frame" x="10" y="72.666666666666686" width="394" height="394"/>
+                                <subviews>
+                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalCompressionResistancePriority="100" verticalCompressionResistancePriority="100" image="qrcode-default" translatesAutoresizingMaskIntoConstraints="NO" id="Lbu-pf-hFK" customClass="UIImageViewPasteable">
+                                        <rect key="frame" x="4" y="4" width="386" height="386"/>
+                                    </imageView>
+                                </subviews>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="bottom" secondItem="Lbu-pf-hFK" secondAttribute="bottom" constant="4" id="BOd-sR-zbZ"/>
+                                    <constraint firstItem="Lbu-pf-hFK" firstAttribute="top" secondItem="gAI-tO-Hhe" secondAttribute="top" constant="4" id="UiL-TZ-EUO"/>
+                                    <constraint firstItem="Lbu-pf-hFK" firstAttribute="leading" secondItem="gAI-tO-Hhe" secondAttribute="leading" constant="4" id="Wm2-NT-LMC"/>
+                                    <constraint firstAttribute="trailing" secondItem="Lbu-pf-hFK" secondAttribute="trailing" constant="4" id="z6R-Mi-6Zg"/>
+                                    <constraint firstAttribute="width" secondItem="gAI-tO-Hhe" secondAttribute="height" multiplier="1:1" id="zpY-Sh-G6S"/>
+                                </constraints>
+                            </view>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Access Key Words" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eTF-Qm-axf">
+                                <rect key="frame" x="151" y="482.66666666666669" width="112" height="15.666666666666686"/>
+                                <fontDescription key="fontDescription" style="UICTFontTextStyleFootnote"/>
+                                <color key="textColor" white="0.33333333329999998" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="hzl-jP-kwR" firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="mxB-Y0-rKr" secondAttribute="bottom" constant="4" id="A26-mA-Fr4"/>
+                            <constraint firstItem="mxB-Y0-rKr" firstAttribute="leading" secondItem="hzl-jP-kwR" secondAttribute="leading" constant="10" id="AIo-a0-1fQ"/>
+                            <constraint firstItem="gAI-tO-Hhe" firstAttribute="top" secondItem="qoh-oB-WfW" secondAttribute="bottom" constant="4" id="VJQ-WG-Ibs"/>
+                            <constraint firstItem="eTF-Qm-axf" firstAttribute="top" secondItem="gAI-tO-Hhe" secondAttribute="bottom" constant="16" id="aeC-gM-ygW"/>
+                            <constraint firstItem="gAI-tO-Hhe" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="hzl-jP-kwR" secondAttribute="leading" constant="10" id="fSZ-mn-H3t"/>
+                            <constraint firstItem="hzl-jP-kwR" firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="gAI-tO-Hhe" secondAttribute="trailing" constant="10" id="fwR-wX-crb"/>
+                            <constraint firstItem="hzl-jP-kwR" firstAttribute="trailing" secondItem="mxB-Y0-rKr" secondAttribute="trailing" constant="10" id="jUb-Aa-onm"/>
+                            <constraint firstItem="hzl-jP-kwR" firstAttribute="trailing" secondItem="qoh-oB-WfW" secondAttribute="trailing" constant="10" id="kKe-vA-w2P"/>
+                            <constraint firstItem="gAI-tO-Hhe" firstAttribute="centerX" secondItem="iBj-it-DfJ" secondAttribute="centerX" id="mMU-lG-md4"/>
+                            <constraint firstItem="mxB-Y0-rKr" firstAttribute="top" secondItem="eTF-Qm-axf" secondAttribute="bottom" constant="8" id="man-Tl-maq"/>
+                            <constraint firstItem="mxB-Y0-rKr" firstAttribute="centerX" secondItem="eTF-Qm-axf" secondAttribute="centerX" id="oLm-Hq-2f8"/>
+                            <constraint firstItem="qoh-oB-WfW" firstAttribute="top" secondItem="hzl-jP-kwR" secondAttribute="top" constant="8" id="pzd-GX-nl1"/>
+                            <constraint firstItem="qoh-oB-WfW" firstAttribute="leading" secondItem="hzl-jP-kwR" secondAttribute="leading" constant="10" id="z88-0d-vfl"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="hzl-jP-kwR"/>
+                    </view>
+                    <connections>
+                        <outlet property="_imgQRCode" destination="Lbu-pf-hFK" id="jAg-VW-1aA"/>
+                        <outlet property="_tagView" destination="mxB-Y0-rKr" id="wE6-zz-O2U"/>
+                        <outlet property="_tagViewHeightConstraint" destination="TXy-UG-T6s" id="Asm-aZ-lV7"/>
+                        <outlet property="_vwQRCodeBorder" destination="gAI-tO-Hhe" id="ZAX-vp-sro"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="LK4-6I-euM" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-104.34782608695653" y="22.826086956521742"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="qrcode-default" width="660" height="660"/>
+    </resources>
+</document>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14490.49"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Activity Monitor iOS-->
+        <scene sceneID="kw0-B3-YvN">
+            <objects>
+                <viewController storyboardIdentifier="ActivityMonitor" id="x19-L2-VKJ" customClass="ActivityMonitor_IOS" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="YTX-AH-aS7">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="3bn-Dx-Jde">
+                                <rect key="frame" x="24" y="28" width="327" height="29"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <segments>
+                                    <segment title="Uploads"/>
+                                    <segment title="Downloads"/>
+                                    <segment title="Both"/>
+                                    <segment title="Details"/>
+                                </segments>
+                                <connections>
+                                    <action selector="segmentedControlChanged:" destination="x19-L2-VKJ" eventType="valueChanged" id="hAj-25-nC0"/>
+                                </connections>
+                            </segmentedControl>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Some status text here" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="tyt-2o-OSZ">
+                                <rect key="frame" x="20" y="639" width="303" height="16"/>
+                                <fontDescription key="fontDescription" style="UICTFontTextStyleFootnote"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="01T-h0-Lcd">
+                                <rect key="frame" x="331" y="635" width="24" height="24"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="24" id="q1n-va-PtI"/>
+                                    <constraint firstAttribute="width" constant="24" id="tB6-Bb-OXn"/>
+                                </constraints>
+                                <state key="normal" image="pause-round-24"/>
+                                <connections>
+                                    <action selector="btnPauseHit:" destination="x19-L2-VKJ" eventType="touchUpInside" id="HXh-Vk-Tvi"/>
+                                </connections>
+                            </button>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="jeP-w8-BEn">
+                                <rect key="frame" x="0.0" y="64" width="375" height="563"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </tableView>
+                        </subviews>
+                        <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="3bn-Dx-Jde" firstAttribute="top" secondItem="yWW-Pt-Bii" secondAttribute="top" constant="8" id="6bt-qG-41a"/>
+                            <constraint firstItem="tyt-2o-OSZ" firstAttribute="leading" secondItem="YTX-AH-aS7" secondAttribute="leading" constant="20" symbolic="YES" id="BNX-hb-bGx"/>
+                            <constraint firstItem="01T-h0-Lcd" firstAttribute="leading" secondItem="tyt-2o-OSZ" secondAttribute="trailing" constant="8" id="Chd-uZ-6lz"/>
+                            <constraint firstItem="01T-h0-Lcd" firstAttribute="top" secondItem="jeP-w8-BEn" secondAttribute="bottom" constant="8" id="EUK-7I-PkX"/>
+                            <constraint firstItem="jeP-w8-BEn" firstAttribute="top" secondItem="3bn-Dx-Jde" secondAttribute="bottom" constant="8" id="JTF-sq-2be"/>
+                            <constraint firstItem="yWW-Pt-Bii" firstAttribute="bottom" secondItem="01T-h0-Lcd" secondAttribute="bottom" constant="8" id="QsH-FS-mpY"/>
+                            <constraint firstAttribute="trailing" secondItem="01T-h0-Lcd" secondAttribute="trailing" constant="20" symbolic="YES" id="YMJ-Tn-xMe"/>
+                            <constraint firstItem="01T-h0-Lcd" firstAttribute="centerY" secondItem="tyt-2o-OSZ" secondAttribute="centerY" id="knC-gD-3X2"/>
+                            <constraint firstItem="3bn-Dx-Jde" firstAttribute="centerX" secondItem="YTX-AH-aS7" secondAttribute="centerX" id="l3d-91-6uu"/>
+                            <constraint firstItem="jeP-w8-BEn" firstAttribute="leading" secondItem="yWW-Pt-Bii" secondAttribute="leading" id="lTI-Q2-K80"/>
+                            <constraint firstItem="yWW-Pt-Bii" firstAttribute="trailing" secondItem="jeP-w8-BEn" secondAttribute="trailing" id="yiI-dp-XDp"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="yWW-Pt-Bii"/>
+                    </view>
+                    <connections>
+                        <outlet property="_btnPause" destination="01T-h0-Lcd" id="Woy-VE-7BX"/>
+                        <outlet property="_lblStatus" destination="tyt-2o-OSZ" id="JQE-rM-4rw"/>
+                        <outlet property="_segActivity" destination="3bn-Dx-Jde" id="ENG-Yu-yTD"/>
+                        <outlet property="_tblActivity" destination="jeP-w8-BEn" id="EpE-KW-5AT"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="0lv-9C-ufQ" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-412" y="161.46926536731635"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="pause-round-24" width="24" height="24"/>
+    </resources>
+</document>
