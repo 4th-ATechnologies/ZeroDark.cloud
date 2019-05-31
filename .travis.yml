@@ -1,7 +1,5 @@
 language: objective-c
 os: osx
-before_install:
-  - pod install
 after_success:
   - gem install jazzy
   - jazzy
