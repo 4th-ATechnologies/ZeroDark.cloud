@@ -1096,8 +1096,8 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			case ZDCCloudOperationType_Put:
 			{
 				if (operation.multipartInfo) {
-					NSAssert(NO, @"Not implemented");
-				}
+					[self multipartTaskDidComplete:task inSession:session withError:error context:context responseObject:nil];
+	 			}
 				else {
 					[self putTaskDidComplete:task inSession:session withError:error context:context];
 				}
