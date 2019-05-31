@@ -128,7 +128,7 @@
 		[zdc.nodeManager recursiveEnumerateNodesWithParentID: containerNode.uuid
 		                                         transaction: transaction
 		                                          usingBlock:
-		^(ZDCNode *node, NSArray<ZDCNode *> *pathFromParent, BOOL *stop)
+		^(ZDCNode *node, NSArray<ZDCNode *> *pathFromParent, BOOL *recurseInto, BOOL *stop)
 		{
 			ZDCTreesystemPath *path = [zdc.nodeManager pathForNode:node transaction:transaction];
 			
