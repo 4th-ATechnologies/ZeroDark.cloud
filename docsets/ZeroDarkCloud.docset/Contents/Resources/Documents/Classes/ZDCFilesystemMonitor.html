@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>ZDCFilesystemMonitor Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset="utf-8">
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+
+    <a name="//apple_ref/objc/Class/ZDCFilesystemMonitor" class="dashAnchor"></a>
+
+    <a title="ZDCFilesystemMonitor Class Reference"></a>
+
+    <header class="header">
+      <p class="header-col header-col--primary">
+        <a class="header-link" href="../index.html">
+          ZeroDarkCloud Docs
+        </a>
+         (86% documented)
+      </p>
+    
+      <p class="header-col--secondary">
+        <form role="search" action="../search.json">
+          <input type="text" placeholder="Search documentation" data-typeahead>
+        </form>
+      </p>
+    
+    
+    </header>
+
+    <p class="breadcrumbs">
+      <a class="breadcrumb" href="../index.html">ZeroDarkCloud Reference</a>
+      <img class="carat" src="../img/carat.png" />
+      ZDCFilesystemMonitor Class Reference
+    </p>
+
+    <div class="content-wrapper">
+      <nav class="navigation">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Core.html">Core</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZeroDarkCloud.html">ZeroDarkCloud</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/ZeroDarkCloudDelegate.html">ZeroDarkCloudDelegate</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCryptoFile.html">ZDCCryptoFile</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/ZDCNodeLink.html">ZDCNodeLink</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCTreesystemPath.html">ZDCTreesystemPath</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Managers.html">Managers</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudNodeManager.html">ZDCCloudNodeManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudPathManager.html">ZDCCloudPathManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDatabaseManager.html">ZDCDatabaseManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDatabaseKeyManager.html">ZDCDatabaseKeyManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDirectoryManager.html">ZDCDirectoryManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDiskManager.html">ZDCDiskManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDownloadManager.html">ZDCDownloadManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCImageManager.html">ZDCImageManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCLocalUserManager.html">ZDCLocalUserManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCNodeManager.html">ZDCNodeManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCProgressManager.html">ZDCProgressManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCPullManager.html">ZDCPullManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCPushManager.html">ZDCPushManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCRemoteUserManager.html">ZDCRemoteUserManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCSearchUserManager.html">ZDCSearchUserManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCUITools.html">ZDCUITools</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCWebManager.html">ZDCWebManager</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Model.html">Model</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudDataInfo.html">ZDCCloudDataInfo</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudNode.html">ZDCCloudNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCContainerNode.html">ZDCContainerNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCLocalUser.html">ZDCLocalUser</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCLocalUserAuth.html">ZDCLocalUserAuth</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCNode.html">ZDCNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCPublicKey.html">ZDCPublicKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCShareItem.html">ZDCShareItem</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCShareList.html">ZDCShareList</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCSymmetricKey.html">ZDCSymmetricKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCUser.html">ZDCUser</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../File &amp; Streams.html">File &amp; Streams</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCInputStream.html">ZDCInputStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCInterruptingInputStream.html">ZDCInterruptingInputStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/CacheFile2CleartextInputStream.html">CacheFile2CleartextInputStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/Cleartext2CacheFileInputStream.html">Cleartext2CacheFileInputStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/Cleartext2CloudFileInputStream.html">Cleartext2CloudFileInputStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/CloudFile2CleartextInputStream.html">CloudFile2CleartextInputStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCFileReader.html">ZDCFileReader</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCFileChecksum.html">ZDCFileChecksum</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCFileChecksumInstruction.html">ZDCFileChecksumInstruction</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCFileConversion.html">ZDCFileConversion</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCFilesystemMonitor.html">ZDCFilesystemMonitor</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Type Definitions/ZDCCacheFileHeader.html">ZDCCacheFileHeader</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Type Definitions/ZDCCloudFileHeader.html">ZDCCloudFileHeader</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../ZDCCloud.html">ZDCCloud</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloud.html">ZDCCloud</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudConnection.html">ZDCCloudConnection</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudTransaction.html">ZDCCloudTransaction</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudOperation.html">ZDCCloudOperation</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudLocator.html">ZDCCloudLocator</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudPath.html">ZDCCloudPath</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudRcrd.html">ZDCCloudRcrd</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Utilities.html">Utilities</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/BIP39Mnemonic.html">BIP39Mnemonic</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCProgress.html">ZDCProgress</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCAsyncCompletionDispatch.html">ZDCAsyncCompletionDispatch</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../AWS Utilities.html">AWS Utilities</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/AWSDate.html">AWSDate</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/AWSPayload.html">AWSPayload</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/AWSRegions.html">AWSRegions</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/AWSServices.html">AWSServices</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/AWSSignature.html">AWSSignature</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Other Classes.html">Other Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCAccountSetupViewControllerProxy.html">ZDCAccountSetupViewControllerProxy</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Classes.html#/c:objc(cs)ZDCConstants">ZDCConstants</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCData.html">ZDCData</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDataPromise.html">ZDCDataPromise</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDatabaseConfig.html">ZDCDatabaseConfig</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDiskExport.html">ZDCDiskExport</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDiskImport.html">ZDCDiskImport</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDiskManagerChanges.html">ZDCDiskManagerChanges</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDownloadOptions.html">ZDCDownloadOptions</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDownloadTicket.html">ZDCDownloadTicket</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCProgressManagerChanges.html">ZDCProgressManagerChanges</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCSearchUserMatching.html">ZDCSearchUserMatching</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCSearchUserResult.html">ZDCSearchUserResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCSyncManager.html">ZDCSyncManager</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Other Constants.html">Other Constants</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_CloudCore_Prefix">Ext_CloudCore_Prefix</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_Index_Nodes">Ext_Index_Nodes</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_Index_Users">Ext_Index_Users</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_Relationship">Ext_Relationship</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_Cloud_DirPrefix">Ext_View_Cloud_DirPrefix</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_Cloud_Flat">Ext_View_Cloud_Flat</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_Filesystem_CloudName">Ext_View_Filesystem_CloudName</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_Filesystem_Name">Ext_View_Filesystem_Name</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_Flat">Ext_View_Flat</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_LocalUsers">Ext_View_LocalUsers</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_SplitKeys">Ext_View_SplitKeys</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_SplitKeys_Date">Ext_View_SplitKeys_Date</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Index_Nodes_Column_CloudID">Index_Nodes_Column_CloudID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Index_Nodes_Column_DirPrefix">Index_Nodes_Column_DirPrefix</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Index_Users_Column_RandomUUID">Index_Users_Column_RandomUUID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@UIDatabaseConnectionDidUpdateNotification">UIDatabaseConnectionDidUpdateNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@UIDatabaseConnectionWillUpdateNotification">UIDatabaseConnectionWillUpdateNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCChildProgressTypeKey">ZDCChildProgressTypeKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCDiskManagerChangedNotification">ZDCDiskManagerChangedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCFileModifiedDuringRead">ZDCFileModifiedDuringRead</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCLocalizedDescriptionKey">ZDCLocalizedDescriptionKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCProgressListChangedNotification">ZDCProgressListChangedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCPullStartedNotification">ZDCPullStartedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCPullStoppedNotification">ZDCPullStoppedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCPushStartedNotification">ZDCPushStartedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCPushStoppedNotification">ZDCPushStoppedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCShareKeyType_Passphrase">ZDCShareKeyType_Passphrase</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCShareKeyType_Server">ZDCShareKeyType_Server</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCShareKeyType_User">ZDCShareKeyType_User</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCStreamCloudFileSection">ZDCStreamCloudFileSection</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCStreamFileMaxOffset">ZDCStreamFileMaxOffset</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCStreamFileMinOffset">ZDCStreamFileMinOffset</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCStreamReturnEOFOnWouldBlock">ZDCStreamReturnEOFOnWouldBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCStreamUnexpectedFileSize">ZDCStreamUnexpectedFileSize</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCSyncingNodeIDsChangedNotification">ZDCSyncingNodeIDsChangedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAppIDKey">kAppIDKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAttachmentParentIDPrefix">kAttachmentParentIDPrefix</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth04thADomain">kAuth04thADomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth04thARecoveryDomain">kAuth04thARecoveryDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth04thAUserDomain">kAuth04thAUserDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth04thA_AppClientID">kAuth04thA_AppClientID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0DBConnection_Recovery">kAuth0DBConnection_Recovery</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0DBConnection_UserAuth">kAuth0DBConnection_UserAuth</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0ErrorDescription_Blocked">kAuth0ErrorDescription_Blocked</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_InvalidGrant">kAuth0Error_InvalidGrant</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_InvalidRefreshToken">kAuth0Error_InvalidRefreshToken</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_RateLimit">kAuth0Error_RateLimit</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_Unauthorized">kAuth0Error_Unauthorized</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_UserExists">kAuth0Error_UserExists</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_UserNameExists">kAuth0Error_UserNameExists</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kLocalUserIDKey">kLocalUserIDKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kNotificationsKey">kNotificationsKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kPullResultKey">kPullResultKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kS4LocalUser_shelflife">kS4LocalUser_shelflife</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCAnonymousUserID">kZDCAnonymousUserID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudFileExtension_Data">kZDCCloudFileExtension_Data</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudFileExtension_Rcrd">kZDCCloudFileExtension_Rcrd</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudFileName_PrivateKey">kZDCCloudFileName_PrivateKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudFileName_PublicKey">kZDCCloudFileName_PublicKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Auth0ID">kZDCCloudRcrd_Auth0ID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_BurnDate">kZDCCloudRcrd_BurnDate</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Children">kZDCCloudRcrd_Children</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Children_Prefix">kZDCCloudRcrd_Children_Prefix</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Data">kZDCCloudRcrd_Data</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Data_Key">kZDCCloudRcrd_Data_Key</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Data_Value">kZDCCloudRcrd_Data_Value</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_FileID">kZDCCloudRcrd_FileID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys">kZDCCloudRcrd_Keys</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Burn">kZDCCloudRcrd_Keys_Burn</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Deprecated_Burn">kZDCCloudRcrd_Keys_Deprecated_Burn</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Deprecated_Perms">kZDCCloudRcrd_Keys_Deprecated_Perms</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Deprecated_PubKeyID">kZDCCloudRcrd_Keys_Deprecated_PubKeyID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Deprecated_SymKey">kZDCCloudRcrd_Keys_Deprecated_SymKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Key">kZDCCloudRcrd_Keys_Key</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Perms">kZDCCloudRcrd_Keys_Perms</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta">kZDCCloudRcrd_Meta</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_DirSalt">kZDCCloudRcrd_Meta_DirSalt</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_FileID">kZDCCloudRcrd_Meta_FileID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_Filename">kZDCCloudRcrd_Meta_Filename</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_OwnerID">kZDCCloudRcrd_Meta_OwnerID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_Path">kZDCCloudRcrd_Meta_Path</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_Type">kZDCCloudRcrd_Meta_Type</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_Type_Directory">kZDCCloudRcrd_Meta_Type_Directory</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_Type_Share">kZDCCloudRcrd_Meta_Type_Share</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Sender">kZDCCloudRcrd_Sender</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_UserID">kZDCCloudRcrd_UserID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Version">kZDCCloudRcrd_Version</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_CachedResponse">kZDCCollection_CachedResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_CloudNodes">kZDCCollection_CloudNodes</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_Messages">kZDCCollection_Messages</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_Nodes">kZDCCollection_Nodes</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_Prefs">kZDCCollection_Prefs</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_PublicKeys">kZDCCollection_PublicKeys</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_PullState">kZDCCollection_PullState</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_Reminders">kZDCCollection_Reminders</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_SessionStorage">kZDCCollection_SessionStorage</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_SplitKeyShares">kZDCCollection_SplitKeyShares</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_SplitKeys">kZDCCollection_SplitKeys</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_SymmetricKeys">kZDCCollection_SymmetricKeys</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_Tasks">kZDCCollection_Tasks</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_UserAuth">kZDCCollection_UserAuth</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_Users">kZDCCollection_Users</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDirPrefix_Avatar">kZDCDirPrefix_Avatar</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDirPrefix_Home">kZDCDirPrefix_Home</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDirPrefix_Inbox">kZDCDirPrefix_Inbox</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDirPrefix_Msgs">kZDCDirPrefix_Msgs</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDirPrefix_Outbox">kZDCDirPrefix_Outbox</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDirPrefix_Prefs">kZDCDirPrefix_Prefs</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDiskManagerChanges">kZDCDiskManagerChanges</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCFileExtension_ActivationCode">kZDCFileExtension_ActivationCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCProgressManagerChanges">kZDCProgressManagerChanges</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCUser_metadataKey">kZDCUser_metadataKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCUser_metadata_preferedAuth0ID">kZDCUser_metadata_preferedAuth0ID</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Other Enums.html">Other Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/AWSRegion.html">AWSRegion</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/AWSService.html">AWSService</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/Mnemonic_Algorithm.html">Mnemonic_Algorithm</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCChildProgressType.html">ZDCChildProgressType</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCCloudErrorCode.html">ZDCCloudErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCCloudFileSection.html">ZDCCloudFileSection</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCCloudOperationPutType.html">ZDCCloudOperationPutType</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCCloudOperationType.html">ZDCCloudOperationType</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCCloudPathComponents.html">ZDCCloudPathComponents</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCCryptoFileFormat.html">ZDCCryptoFileFormat</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCDeleteNodeOptions.html">ZDCDeleteNodeOptions</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCNodeChange.html">ZDCNodeChange</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCNodeMetaComponents.html">ZDCNodeMetaComponents</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCProgressType.html">ZDCProgressType</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCPullResult.html">ZDCPullResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCSearchUserManagerResultStage.html">ZDCSearchUserManagerResultStage</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCSharePermission.html">ZDCSharePermission</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCTreesystemContainer.html">ZDCTreesystemContainer</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Other Type Definitions.html">Other Type Definitions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCDownloadManager.h@T@NodeDataDownloadCompletionBlock">NodeDataDownloadCompletionBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCDownloadManager.h@T@NodeMetaDownloadCompletionBlock">NodeMetaDownloadCompletionBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCProgressManager.h@T@UploadCompletionBlock">UploadCompletionBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCDownloadManager.h@T@UserAvatarDownloadCompletionBlock">UserAvatarDownloadCompletionBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCDatabaseConfig.h@T@YapDatabaseExtensionsRegistration">YapDatabaseExtensionsRegistration</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCFileChecksum.h@T@ZDCFileChecksumCallbackBlock">ZDCFileChecksumCallbackBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCImageManager.h@T@ZDCImageProcessingBlock">ZDCImageProcessingBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCUITools.h@T@accountSetupViewCompletionHandler">accountSetupViewCompletionHandler</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCUITools.h@T@sharedUsersViewCompletionHandler">sharedUsersViewCompletionHandler</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Other Functions.html">Other Functions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Functions.html#/c:@F@AttachmentParentID">AttachmentParentID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Functions.html#/c:@F@NSStringFromTreesystemContainer">NSStringFromTreesystemContainer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Functions.html#/c:@F@TreesystemContainerFromString">TreesystemContainerFromString</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+
+        <section class="section">
+          <div class="section-content">
+            <h1>ZDCFilesystemMonitor</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight objective_c"><code><span class="k">@interface</span> <span class="nc">ZDCFilesystemMonitor</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
+
+                </div>
+              </div>
+            <p>Monitors the filesystem for changes to a file or directory,
+and uses a block-based notification system to alert you when changes are signaled by the OS.</p>
+
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-content">
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCFilesystemMonitor(im)initWithFileURL:"></a>
+                    <a name="//apple_ref/objc/Method/-initWithFileURL:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCFilesystemMonitor(im)initWithFileURL:">-initWithFileURL:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a new monitor designed to watch the given file for changes.
+The url should represent a file, not a directory.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithFileURL</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">fileURL</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="nf">init</span><span class="p">(</span><span class="nv">fileURL</span><span class="p">:</span> <span class="kt">URL</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCFilesystemMonitor(im)initWithDirectoryURL:"></a>
+                    <a name="//apple_ref/objc/Method/-initWithDirectoryURL:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCFilesystemMonitor(im)initWithDirectoryURL:">-initWithDirectoryURL:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a new monitor designed to watch the given directory for changes.
+The url should represent a directory, not a file.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithDirectoryURL</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">directoryURL</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="nf">init</span><span class="p">(</span><span class="nv">directoryURL</span><span class="p">:</span> <span class="kt">URL</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCFilesystemMonitor(py)url"></a>
+                    <a name="//apple_ref/objc/Property/url" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCFilesystemMonitor(py)url">url</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The URL specified during init</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSURL</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">url</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCFilesystemMonitor(py)isDirectory"></a>
+                    <a name="//apple_ref/objc/Property/isDirectory" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCFilesystemMonitor(py)isDirectory">isDirectory</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>YES if initWithDirectoryURL was used. NO otherwise</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">isDirectory</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isDirectory</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCFilesystemMonitor(im)monitorWithMask:queue:block:"></a>
+                    <a name="//apple_ref/objc/Method/-monitorWithMask:queue:block:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCFilesystemMonitor(im)monitorWithMask:queue:block:">-monitorWithMask:queue:block:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Starts monitoring the url for changes.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">monitorWithMask</span><span class="p">:(</span><span class="n">dispatch_source_vnode_flags_t</span><span class="p">)</span><span class="nv">mask</span>
+                  <span class="nf">queue</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">dispatch_queue_t</span><span class="p">)</span><span class="nv">queue</span>
+                  <span class="nf">block</span><span class="p">:(</span><span class="n">nonnull</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">dispatch_source_vnode_flags_t</span><span class="p">))</span><span class="nv">block</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">monitor</span><span class="p">(</span><span class="n">withMask</span> <span class="nv">mask</span><span class="p">:</span> <span class="kt">UInt</span><span class="p">,</span> <span class="nv">queue</span><span class="p">:</span> <span class="kt">DispatchQueue</span><span class="p">?,</span> <span class="nv">block</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">UInt</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>mask</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A bitmask that lists the options for monitoring the url.
+There are class methods that may be of assistance: <code>+vnode_flags+all</code> &amp; <code><a href="../Classes/ZDCFilesystemMonitor.html#/c:objc(cs)ZDCFilesystemMonitor(cm)vnode_flags_data_changed">+vnode_flags_data_changed</a></code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>queue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The dispatch queue on which to invoke your block.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>block</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The block to invoke when the OS informs us of changes to the file/directory.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCFilesystemMonitor(cm)vnode_flags_all"></a>
+                    <a name="//apple_ref/objc/Method/+vnode_flags_all" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCFilesystemMonitor(cm)vnode_flags_all">+vnode_flags_all</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns a mask with every possible event</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">dispatch_source_vnode_flags_t</span><span class="p">)</span><span class="n">vnode_flags_all</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kd">func</span> <span class="nf">vnode_flags_all</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">UInt</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCFilesystemMonitor(cm)vnode_flags_data_changed"></a>
+                    <a name="//apple_ref/objc/Method/+vnode_flags_data_changed" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCFilesystemMonitor(cm)vnode_flags_data_changed">+vnode_flags_data_changed</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns a mask with flags only for when the actual bytes change</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">dispatch_source_vnode_flags_t</span><span class="p">)</span><span class="n">vnode_flags_data_changed</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kd">func</span> <span class="nf">vnode_flags_data_changed</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">UInt</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCFilesystemMonitor(cm)vnode_flags_description:"></a>
+                    <a name="//apple_ref/objc/Method/+vnode_flags_description:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCFilesystemMonitor(cm)vnode_flags_description:">+vnode_flags_description:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns a string listing the flags specified by the given mask</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">vnode_flags_description</span><span class="p">:</span>
+    <span class="p">(</span><span class="n">dispatch_source_vnode_flags_t</span><span class="p">)</span><span class="nv">mask</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kd">func</span> <span class="nf">vnode_flags_description</span><span class="p">(</span><span class="n">_</span> <span class="nv">mask</span><span class="p">:</span> <span class="kt">UInt</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">String</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+      </article>
+    </div>
+    <section class="footer">
+      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-06-03)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+    </section>
+  </body>
+</div>
+</html>

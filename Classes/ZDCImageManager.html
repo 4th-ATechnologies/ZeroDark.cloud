@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>ZDCImageManager Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset="utf-8">
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+
+    <a name="//apple_ref/objc/Class/ZDCImageManager" class="dashAnchor"></a>
+
+    <a title="ZDCImageManager Class Reference"></a>
+
+    <header class="header">
+      <p class="header-col header-col--primary">
+        <a class="header-link" href="../index.html">
+          ZeroDarkCloud Docs
+        </a>
+         (86% documented)
+      </p>
+    
+      <p class="header-col--secondary">
+        <form role="search" action="../search.json">
+          <input type="text" placeholder="Search documentation" data-typeahead>
+        </form>
+      </p>
+    
+    
+    </header>
+
+    <p class="breadcrumbs">
+      <a class="breadcrumb" href="../index.html">ZeroDarkCloud Reference</a>
+      <img class="carat" src="../img/carat.png" />
+      ZDCImageManager Class Reference
+    </p>
+
+    <div class="content-wrapper">
+      <nav class="navigation">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Core.html">Core</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZeroDarkCloud.html">ZeroDarkCloud</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/ZeroDarkCloudDelegate.html">ZeroDarkCloudDelegate</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCryptoFile.html">ZDCCryptoFile</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/ZDCNodeLink.html">ZDCNodeLink</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCTreesystemPath.html">ZDCTreesystemPath</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Managers.html">Managers</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudNodeManager.html">ZDCCloudNodeManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudPathManager.html">ZDCCloudPathManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDatabaseManager.html">ZDCDatabaseManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDatabaseKeyManager.html">ZDCDatabaseKeyManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDirectoryManager.html">ZDCDirectoryManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDiskManager.html">ZDCDiskManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDownloadManager.html">ZDCDownloadManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCImageManager.html">ZDCImageManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCLocalUserManager.html">ZDCLocalUserManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCNodeManager.html">ZDCNodeManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCProgressManager.html">ZDCProgressManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCPullManager.html">ZDCPullManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCPushManager.html">ZDCPushManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCRemoteUserManager.html">ZDCRemoteUserManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCSearchUserManager.html">ZDCSearchUserManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCUITools.html">ZDCUITools</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCWebManager.html">ZDCWebManager</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Model.html">Model</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudDataInfo.html">ZDCCloudDataInfo</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudNode.html">ZDCCloudNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCContainerNode.html">ZDCContainerNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCLocalUser.html">ZDCLocalUser</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCLocalUserAuth.html">ZDCLocalUserAuth</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCNode.html">ZDCNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCPublicKey.html">ZDCPublicKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCShareItem.html">ZDCShareItem</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCShareList.html">ZDCShareList</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCSymmetricKey.html">ZDCSymmetricKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCUser.html">ZDCUser</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../File &amp; Streams.html">File &amp; Streams</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCInputStream.html">ZDCInputStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCInterruptingInputStream.html">ZDCInterruptingInputStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/CacheFile2CleartextInputStream.html">CacheFile2CleartextInputStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/Cleartext2CacheFileInputStream.html">Cleartext2CacheFileInputStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/Cleartext2CloudFileInputStream.html">Cleartext2CloudFileInputStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/CloudFile2CleartextInputStream.html">CloudFile2CleartextInputStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCFileReader.html">ZDCFileReader</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCFileChecksum.html">ZDCFileChecksum</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCFileChecksumInstruction.html">ZDCFileChecksumInstruction</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCFileConversion.html">ZDCFileConversion</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCFilesystemMonitor.html">ZDCFilesystemMonitor</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Type Definitions/ZDCCacheFileHeader.html">ZDCCacheFileHeader</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Type Definitions/ZDCCloudFileHeader.html">ZDCCloudFileHeader</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../ZDCCloud.html">ZDCCloud</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloud.html">ZDCCloud</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudConnection.html">ZDCCloudConnection</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudTransaction.html">ZDCCloudTransaction</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudOperation.html">ZDCCloudOperation</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudLocator.html">ZDCCloudLocator</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudPath.html">ZDCCloudPath</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudRcrd.html">ZDCCloudRcrd</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Utilities.html">Utilities</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/BIP39Mnemonic.html">BIP39Mnemonic</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCProgress.html">ZDCProgress</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCAsyncCompletionDispatch.html">ZDCAsyncCompletionDispatch</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../AWS Utilities.html">AWS Utilities</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/AWSDate.html">AWSDate</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/AWSPayload.html">AWSPayload</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/AWSRegions.html">AWSRegions</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/AWSServices.html">AWSServices</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/AWSSignature.html">AWSSignature</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Other Classes.html">Other Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCAccountSetupViewControllerProxy.html">ZDCAccountSetupViewControllerProxy</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Classes.html#/c:objc(cs)ZDCConstants">ZDCConstants</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCData.html">ZDCData</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDataPromise.html">ZDCDataPromise</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDatabaseConfig.html">ZDCDatabaseConfig</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDiskExport.html">ZDCDiskExport</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDiskImport.html">ZDCDiskImport</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDiskManagerChanges.html">ZDCDiskManagerChanges</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDownloadOptions.html">ZDCDownloadOptions</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDownloadTicket.html">ZDCDownloadTicket</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCProgressManagerChanges.html">ZDCProgressManagerChanges</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCSearchUserMatching.html">ZDCSearchUserMatching</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCSearchUserResult.html">ZDCSearchUserResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCSyncManager.html">ZDCSyncManager</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Other Constants.html">Other Constants</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_CloudCore_Prefix">Ext_CloudCore_Prefix</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_Index_Nodes">Ext_Index_Nodes</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_Index_Users">Ext_Index_Users</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_Relationship">Ext_Relationship</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_Cloud_DirPrefix">Ext_View_Cloud_DirPrefix</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_Cloud_Flat">Ext_View_Cloud_Flat</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_Filesystem_CloudName">Ext_View_Filesystem_CloudName</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_Filesystem_Name">Ext_View_Filesystem_Name</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_Flat">Ext_View_Flat</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_LocalUsers">Ext_View_LocalUsers</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_SplitKeys">Ext_View_SplitKeys</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_SplitKeys_Date">Ext_View_SplitKeys_Date</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Index_Nodes_Column_CloudID">Index_Nodes_Column_CloudID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Index_Nodes_Column_DirPrefix">Index_Nodes_Column_DirPrefix</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Index_Users_Column_RandomUUID">Index_Users_Column_RandomUUID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@UIDatabaseConnectionDidUpdateNotification">UIDatabaseConnectionDidUpdateNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@UIDatabaseConnectionWillUpdateNotification">UIDatabaseConnectionWillUpdateNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCChildProgressTypeKey">ZDCChildProgressTypeKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCDiskManagerChangedNotification">ZDCDiskManagerChangedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCFileModifiedDuringRead">ZDCFileModifiedDuringRead</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCLocalizedDescriptionKey">ZDCLocalizedDescriptionKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCProgressListChangedNotification">ZDCProgressListChangedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCPullStartedNotification">ZDCPullStartedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCPullStoppedNotification">ZDCPullStoppedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCPushStartedNotification">ZDCPushStartedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCPushStoppedNotification">ZDCPushStoppedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCShareKeyType_Passphrase">ZDCShareKeyType_Passphrase</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCShareKeyType_Server">ZDCShareKeyType_Server</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCShareKeyType_User">ZDCShareKeyType_User</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCStreamCloudFileSection">ZDCStreamCloudFileSection</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCStreamFileMaxOffset">ZDCStreamFileMaxOffset</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCStreamFileMinOffset">ZDCStreamFileMinOffset</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCStreamReturnEOFOnWouldBlock">ZDCStreamReturnEOFOnWouldBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCStreamUnexpectedFileSize">ZDCStreamUnexpectedFileSize</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCSyncingNodeIDsChangedNotification">ZDCSyncingNodeIDsChangedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAppIDKey">kAppIDKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAttachmentParentIDPrefix">kAttachmentParentIDPrefix</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth04thADomain">kAuth04thADomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth04thARecoveryDomain">kAuth04thARecoveryDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth04thAUserDomain">kAuth04thAUserDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth04thA_AppClientID">kAuth04thA_AppClientID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0DBConnection_Recovery">kAuth0DBConnection_Recovery</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0DBConnection_UserAuth">kAuth0DBConnection_UserAuth</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0ErrorDescription_Blocked">kAuth0ErrorDescription_Blocked</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_InvalidGrant">kAuth0Error_InvalidGrant</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_InvalidRefreshToken">kAuth0Error_InvalidRefreshToken</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_RateLimit">kAuth0Error_RateLimit</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_Unauthorized">kAuth0Error_Unauthorized</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_UserExists">kAuth0Error_UserExists</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_UserNameExists">kAuth0Error_UserNameExists</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kLocalUserIDKey">kLocalUserIDKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kNotificationsKey">kNotificationsKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kPullResultKey">kPullResultKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kS4LocalUser_shelflife">kS4LocalUser_shelflife</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCAnonymousUserID">kZDCAnonymousUserID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudFileExtension_Data">kZDCCloudFileExtension_Data</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudFileExtension_Rcrd">kZDCCloudFileExtension_Rcrd</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudFileName_PrivateKey">kZDCCloudFileName_PrivateKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudFileName_PublicKey">kZDCCloudFileName_PublicKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Auth0ID">kZDCCloudRcrd_Auth0ID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_BurnDate">kZDCCloudRcrd_BurnDate</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Children">kZDCCloudRcrd_Children</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Children_Prefix">kZDCCloudRcrd_Children_Prefix</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Data">kZDCCloudRcrd_Data</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Data_Key">kZDCCloudRcrd_Data_Key</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Data_Value">kZDCCloudRcrd_Data_Value</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_FileID">kZDCCloudRcrd_FileID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys">kZDCCloudRcrd_Keys</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Burn">kZDCCloudRcrd_Keys_Burn</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Deprecated_Burn">kZDCCloudRcrd_Keys_Deprecated_Burn</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Deprecated_Perms">kZDCCloudRcrd_Keys_Deprecated_Perms</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Deprecated_PubKeyID">kZDCCloudRcrd_Keys_Deprecated_PubKeyID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Deprecated_SymKey">kZDCCloudRcrd_Keys_Deprecated_SymKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Key">kZDCCloudRcrd_Keys_Key</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Perms">kZDCCloudRcrd_Keys_Perms</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta">kZDCCloudRcrd_Meta</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_DirSalt">kZDCCloudRcrd_Meta_DirSalt</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_FileID">kZDCCloudRcrd_Meta_FileID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_Filename">kZDCCloudRcrd_Meta_Filename</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_OwnerID">kZDCCloudRcrd_Meta_OwnerID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_Path">kZDCCloudRcrd_Meta_Path</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_Type">kZDCCloudRcrd_Meta_Type</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_Type_Directory">kZDCCloudRcrd_Meta_Type_Directory</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_Type_Share">kZDCCloudRcrd_Meta_Type_Share</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Sender">kZDCCloudRcrd_Sender</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_UserID">kZDCCloudRcrd_UserID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Version">kZDCCloudRcrd_Version</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_CachedResponse">kZDCCollection_CachedResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_CloudNodes">kZDCCollection_CloudNodes</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_Messages">kZDCCollection_Messages</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_Nodes">kZDCCollection_Nodes</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_Prefs">kZDCCollection_Prefs</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_PublicKeys">kZDCCollection_PublicKeys</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_PullState">kZDCCollection_PullState</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_Reminders">kZDCCollection_Reminders</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_SessionStorage">kZDCCollection_SessionStorage</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_SplitKeyShares">kZDCCollection_SplitKeyShares</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_SplitKeys">kZDCCollection_SplitKeys</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_SymmetricKeys">kZDCCollection_SymmetricKeys</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_Tasks">kZDCCollection_Tasks</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_UserAuth">kZDCCollection_UserAuth</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_Users">kZDCCollection_Users</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDirPrefix_Avatar">kZDCDirPrefix_Avatar</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDirPrefix_Home">kZDCDirPrefix_Home</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDirPrefix_Inbox">kZDCDirPrefix_Inbox</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDirPrefix_Msgs">kZDCDirPrefix_Msgs</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDirPrefix_Outbox">kZDCDirPrefix_Outbox</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDirPrefix_Prefs">kZDCDirPrefix_Prefs</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDiskManagerChanges">kZDCDiskManagerChanges</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCFileExtension_ActivationCode">kZDCFileExtension_ActivationCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCProgressManagerChanges">kZDCProgressManagerChanges</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCUser_metadataKey">kZDCUser_metadataKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCUser_metadata_preferedAuth0ID">kZDCUser_metadata_preferedAuth0ID</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Other Enums.html">Other Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/AWSRegion.html">AWSRegion</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/AWSService.html">AWSService</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/Mnemonic_Algorithm.html">Mnemonic_Algorithm</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCChildProgressType.html">ZDCChildProgressType</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCCloudErrorCode.html">ZDCCloudErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCCloudFileSection.html">ZDCCloudFileSection</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCCloudOperationPutType.html">ZDCCloudOperationPutType</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCCloudOperationType.html">ZDCCloudOperationType</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCCloudPathComponents.html">ZDCCloudPathComponents</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCCryptoFileFormat.html">ZDCCryptoFileFormat</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCDeleteNodeOptions.html">ZDCDeleteNodeOptions</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCNodeChange.html">ZDCNodeChange</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCNodeMetaComponents.html">ZDCNodeMetaComponents</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCProgressType.html">ZDCProgressType</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCPullResult.html">ZDCPullResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCSearchUserManagerResultStage.html">ZDCSearchUserManagerResultStage</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCSharePermission.html">ZDCSharePermission</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCTreesystemContainer.html">ZDCTreesystemContainer</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Other Type Definitions.html">Other Type Definitions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCDownloadManager.h@T@NodeDataDownloadCompletionBlock">NodeDataDownloadCompletionBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCDownloadManager.h@T@NodeMetaDownloadCompletionBlock">NodeMetaDownloadCompletionBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCProgressManager.h@T@UploadCompletionBlock">UploadCompletionBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCDownloadManager.h@T@UserAvatarDownloadCompletionBlock">UserAvatarDownloadCompletionBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCDatabaseConfig.h@T@YapDatabaseExtensionsRegistration">YapDatabaseExtensionsRegistration</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCFileChecksum.h@T@ZDCFileChecksumCallbackBlock">ZDCFileChecksumCallbackBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCImageManager.h@T@ZDCImageProcessingBlock">ZDCImageProcessingBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCUITools.h@T@accountSetupViewCompletionHandler">accountSetupViewCompletionHandler</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCUITools.h@T@sharedUsersViewCompletionHandler">sharedUsersViewCompletionHandler</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Other Functions.html">Other Functions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Functions.html#/c:@F@AttachmentParentID">AttachmentParentID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Functions.html#/c:@F@NSStringFromTreesystemContainer">NSStringFromTreesystemContainer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Functions.html#/c:@F@TreesystemContainerFromString">TreesystemContainerFromString</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+
+        <section class="section">
+          <div class="section-content">
+            <h1>ZDCImageManager</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight objective_c"><code><span class="k">@interface</span> <span class="nc">ZDCImageManager</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
+
+                </div>
+              </div>
+            <p>The ImageManager simplifies the process of fetching, downloading &amp; resizing images.
+This includes both node thumbnails &amp; user avatars.</p>
+
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-content">
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Configuration"></a>
+                <a name="//apple_ref/objc/Section/Configuration" class="dashAnchor"></a>
+                <a href="#/Configuration">
+                  <h3 class="section-name">Configuration</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCImageManager(py)nodeThumbnailsCache"></a>
+                    <a name="//apple_ref/objc/Property/nodeThumbnailsCache" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCImageManager(py)nodeThumbnailsCache">nodeThumbnailsCache</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Direct access to the underlying in-memory cache container.</p>
+
+<p>You can configure the cache directly (via either countLimit and/or totalCostLimit),
+ or you can flush the cache (via removeAllObjects function).</p>
+
+<p>All items put into the cache are assigned a cost value based on the size of the data in bytes.
+ So its generally recommended that you configure the cache using the totalCostLimit property.</p>
+
+<p>The default configuration is:</p>
+
+<ul>
+<li>countLimit = 0</li>
+<li>totalCostLimit = 5 MiB (i.e.: 1024 * 1024 * 5)</li>
+</ul>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSCache</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">nodeThumbnailsCache</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">nodeThumbnailsCache</span><span class="p">:</span> <span class="kt">NSCache</span><span class="o">&lt;</span><span class="kt">AnyObject</span><span class="p">,</span> <span class="kt">AnyObject</span><span class="o">&gt;</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCImageManager(py)userAvatarsCache"></a>
+                    <a name="//apple_ref/objc/Property/userAvatarsCache" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCImageManager(py)userAvatarsCache">userAvatarsCache</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Direct access to the underlying in-memory cache container.</p>
+
+<p>You can configure the cache directly (via either countLimit and/or totalCostLimit),
+ or you can flush the cache (via removeAllObjects function).</p>
+
+<p>All items put into the cache are assigned a cost value based on the size of the data in bytes.
+ So its generally recommended that you configure the cache using the totalCostLimit property.</p>
+
+<p>The default configuration is:</p>
+
+<ul>
+<li>countLimit = 0</li>
+<li>totalCostLimit = 5 MiB (i.e.: 1024 * 1024 * 5)</li>
+</ul>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSCache</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">userAvatarsCache</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">userAvatarsCache</span><span class="p">:</span> <span class="kt">NSCache</span><span class="o">&lt;</span><span class="kt">AnyObject</span><span class="p">,</span> <span class="kt">AnyObject</span><span class="o">&gt;</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Node%20Thumbnails"></a>
+                <a name="//apple_ref/objc/Section/Node Thumbnails" class="dashAnchor"></a>
+                <a href="#/Node%20Thumbnails">
+                  <h3 class="section-name">Node Thumbnails</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCImageManager(im)fetchNodeThumbnail:preFetchBlock:postFetchBlock:"></a>
+                    <a name="//apple_ref/objc/Method/-fetchNodeThumbnail:preFetchBlock:postFetchBlock:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCImageManager(im)fetchNodeThumbnail:preFetchBlock:postFetchBlock:">-fetchNodeThumbnail:preFetchBlock:postFetchBlock:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Fetches the node&rsquo;s thumbnail.</p>
+
+<p>Here&rsquo;s how this works:</p>
+
+<ul>
+<li>First, the in-memory cache is consulted to see if we have a ready image.
+That is, an image that&rsquo;s already been loaded from an earlier request, and the result has been cached in memory.</li>
+<li>If there&rsquo;s a match in the cache, the preFetchBlock is invoked with it&rsquo;s <code>willFetch</code> parameter
+set to FALSE. After which the method execution terminates - meaning the postFetchBlock is NOT invoked.</li>
+<li>Otherwise the preFetchBlock is invoked with it&rsquo;s <code>willFetch</code> parameter to to TRUE.</li>
+<li>Then the node thumbnail is asynchronously loaded from disk (if available in the DiskManager),
+or downloaded from the cloud.</li>
+<li>If the thumbnail is downloaded from the cloud, it will be cached in the DiskManager automatically.</li>
+<li>After loading or downloading, the image is cached in memory, and forwarded to you via the postFetchBlock.</li>
+</ul>
+
+<p>&nbsp;</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    You can contol the size of the in-memory cache via the <code><a href="../Classes/ZDCImageManager.html#/c:objc(cs)ZDCImageManager(py)nodeThumbnailsCache">nodeThumbnailsCache</a></code> property.
+
+</div>
+
+<p>@important Empty results are also cached to prevent duplicate lookups. For example, if a node
+            doesn&rsquo;t have a thumbnail, the result of the lookup (the 404), will be cached.
+            This results in the preFetchBlock being invoked with its <code>willFetch</code> parameter to to FALSE,
+            and its <code>image</code> parameter set to nil.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n"><a href="../Classes/ZDCDownloadTicket.html">ZDCDownloadTicket</a></span> <span class="o">*</span><span class="p">)</span>
+    <span class="nf">fetchNodeThumbnail</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCNode.html">ZDCNode</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">node</span>
+         <span class="nf">preFetchBlock</span><span class="p">:(</span><span class="n">nonnull</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">UIImage</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">,</span> <span class="n">BOOL</span><span class="p">))</span><span class="nv">preFetchBlock</span>
+        <span class="nf">postFetchBlock</span><span class="p">:(</span><span class="n">nonnull</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">UIImage</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">,</span>
+                                         <span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">))</span><span class="n">postFetchBlock</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">fetchNodeThumbnail</span><span class="p">(</span><span class="n">_</span> <span class="nv">node</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCNode.html">ZDCNode</a></span><span class="p">,</span> <span class="n">preFetch</span> <span class="nv">preFetchBlock</span><span class="p">:</span> <span class="p">(</span><span class="kt">UIImage</span><span class="p">?,</span> <span class="kt">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">,</span> <span class="n">postFetch</span> <span class="nv">postFetchBlock</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">UIImage</span><span class="p">?,</span> <span class="kt">Error</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ZDCDownloadTicket.html">ZDCDownloadTicket</a></span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>node</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The node for which you wish to display the thumbnail.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>preFetchBlock</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>This block is always invoked.
+And it&rsquo;s invoked BEFORE this method returns.
+It only returns an image if there&rsquo;s a match in the cache that can immediately be used.
+If the preFetchBlock parameter <code>willFetch</code> if FALSE, the postFetchBlock will NOT be invoked.
+Keep in mind that (image==nil &amp;&amp; !willFetch) is a valid combination representing a
+previous fetch which resulted in no image for the request.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>postFetchBlock</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>This method is invoked after the image has been read from disk or downloaded from the cloud.
+This block is only invoked if the preFetchBlock is invoked with its <code>willFetch</code> parameter set to true.
+This block is always invoked on the main thread.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCImageManager(im)fetchNodeThumbnail:withProcessingID:processingBlock:preFetchBlock:postFetchBlock:"></a>
+                    <a name="//apple_ref/objc/Method/-fetchNodeThumbnail:withProcessingID:processingBlock:preFetchBlock:postFetchBlock:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCImageManager(im)fetchNodeThumbnail:withProcessingID:processingBlock:preFetchBlock:postFetchBlock:">-fetchNodeThumbnail:withProcessingID:processingBlock:preFetchBlock:postFetchBlock:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Fetches the node&rsquo;s thumbnail, and allows you to process the image.</p>
+
+<p>Here&rsquo;s how this works:</p>
+
+<ul>
+<li>A key is generated using a combination of the nodeID + processingID.</li>
+<li>This key is used to check the in-memory cache to see if we have a ready image.
+That is, an image that&rsquo;s already been loaded &amp; processed from an earlier request,
+and the result (post-processing) has been cached in memory.</li>
+<li>If there&rsquo;s a match in the cache, the preFetchBlock is invoked with it&rsquo;s <code>willFetch</code> parameter
+set to FALSE. After which the method execution terminates - meaning the postFetchBlock is NOT invoked.</li>
+<li>Otherwise the preFetchBlock is invoked with it&rsquo;s <code>willFetch</code> parameter to to TRUE.</li>
+<li>Then the node thumbnail is asynchronously loaded from disk (if available in the DiskManager),
+or downloaded from the cloud.</li>
+<li>If the thumbnail is downloaded from the cloud, it will be cached in the DiskManager automatically.</li>
+<li>After loading or downloading, the processingBlock is invoked (on a background thread).</li>
+<li>The image returned from the processingBlock will be cached in-memory,
+and forwarded to the user via the postFetchBlock.</li>
+</ul>
+
+<p>&nbsp;</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    You can contol the size of the in-memory cache via the <code><a href="../Classes/ZDCImageManager.html#/c:objc(cs)ZDCImageManager(py)nodeThumbnailsCache">nodeThumbnailsCache</a></code> property.
+
+</div>
+
+<p>@important Empty results are also cached to prevent duplicate lookups. For example, if a node
+            doesn&rsquo;t have a thumbnail, the result of the lookup (the 404), will be cached.
+            This results in the preFetchBlock being invoked with its <code>willFetch</code> parameter to to FALSE,
+            and its <code>image</code> parameter set to nil.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n"><a href="../Classes/ZDCDownloadTicket.html">ZDCDownloadTicket</a></span> <span class="o">*</span><span class="p">)</span>
+    <span class="nf">fetchNodeThumbnail</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCNode.html">ZDCNode</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">node</span>
+      <span class="nf">withProcessingID</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">processingID</span>
+       <span class="nf">processingBlock</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Other Type Definitions.html#/c:ZDCImageManager.h@T@ZDCImageProcessingBlock">ZDCImageProcessingBlock</a></span><span class="p">)</span><span class="nv">imageProcessingBlock</span>
+         <span class="nf">preFetchBlock</span><span class="p">:(</span><span class="n">nonnull</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">UIImage</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">,</span> <span class="n">BOOL</span><span class="p">))</span><span class="nv">preFetchBlock</span>
+        <span class="nf">postFetchBlock</span><span class="p">:(</span><span class="n">nonnull</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">UIImage</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">,</span>
+                                         <span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">))</span><span class="n">postFetchBlock</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">fetchNodeThumbnail</span><span class="p">(</span><span class="n">_</span> <span class="nv">node</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCNode.html">ZDCNode</a></span><span class="p">,</span> <span class="n">withProcessingID</span> <span class="nv">processingID</span><span class="p">:</span> <span class="kt">String</span><span class="p">?,</span> <span class="n">processingBlock</span> <span class="nv">imageProcessingBlock</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Other Type Definitions.html#/c:ZDCImageManager.h@T@ZDCImageProcessingBlock">ZDCImageProcessingBlock</a></span><span class="p">,</span> <span class="n">preFetch</span> <span class="nv">preFetchBlock</span><span class="p">:</span> <span class="p">(</span><span class="kt">UIImage</span><span class="p">?,</span> <span class="kt">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">,</span> <span class="n">postFetch</span> <span class="nv">postFetchBlock</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">UIImage</span><span class="p">?,</span> <span class="kt">Error</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ZDCDownloadTicket.html">ZDCDownloadTicket</a></span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>node</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The node for which you wish to display the thumbnail.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>processingID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A unique identifier that distinguishes the results of this imageProcessingBlock from
+other imageProcessingBlocks that you may be using in other parts of your application.
+For example, if your block resizes the image to 64*64, then you might pass the string <q>64*64</q>.
+If you pass a nil processingID, then the image won&rsquo;t be cached in memory.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>imageProcessingBlock</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A block you can use to modify the image.
+For example you might scale the image to a certain size, round the corners, give it tint, etc.
+The block will be invoked on a background thread.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>preFetchBlock</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>This block is always invoked.
+And it&rsquo;s invoked BEFORE this method returns.
+It only returns an image if there&rsquo;s a match in the cache that can immediately be used.
+If the preFetchBlock parameter <code>willFetch</code> if FALSE, the postFetchBlock will NOT be invoked.
+Keep in mind that (image==nil &amp;&amp; !willFetch) is a valid combination representing a
+previous fetch which resulted in no image for the request.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>postFetchBlock</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>This method is invoked after the image has been read from disk or downloaded from the cloud.
+And after the processingBlock has done its work.
+This block is only invoked if the preFetchBlock is invoked with its <code>willFetch</code> parameter set to true.
+This block is always invoked on the main thread.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCImageManager(im)flushNodeThumbnailCache:"></a>
+                    <a name="//apple_ref/objc/Method/-flushNodeThumbnailCache:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCImageManager(im)flushNodeThumbnailCache:">-flushNodeThumbnailCache:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Removes all cached thumbnail images for the given node.</p>
+
+<p>There&rsquo;s usually little reason to use this method because the
+ ImageManager automatically flushes its cache in response to changes in the DiskManager.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">flushNodeThumbnailCache</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">nodeID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">flushNodeThumbnailCache</span><span class="p">(</span><span class="n">_</span> <span class="nv">nodeID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>nodeID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Which node&rsquo;s thumbnail to flush from the cache (nodeID == ZDCNode.uuid)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCImageManager(im)flushNodeThumbnailCacheWithProcessingID:"></a>
+                    <a name="//apple_ref/objc/Method/-flushNodeThumbnailCacheWithProcessingID:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCImageManager(im)flushNodeThumbnailCacheWithProcessingID:">-flushNodeThumbnailCacheWithProcessingID:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Removes all cached thumbnail images for the given processingID.</p>
+
+<p>You might use this method if you have an infrequently used ViewController,
+ and you&rsquo;d prefer to flush the cache of all images it created since
+ you don&rsquo;t anticipate needing them again anytime soon.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">flushNodeThumbnailCacheWithProcessingID</span><span class="p">:</span>
+    <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">processingID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">flushNodeThumbnailCache</span><span class="p">(</span><span class="n">withProcessingID</span> <span class="nv">processingID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>processingID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A processingID that was used in <code>fetchNodeThumbnail:withProcessingID::::</code></p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/User%20Avatars"></a>
+                <a name="//apple_ref/objc/Section/User Avatars" class="dashAnchor"></a>
+                <a href="#/User%20Avatars">
+                  <h3 class="section-name">User Avatars</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCImageManager(im)fetchUserAvatar:preFetchBlock:postFetchBlock:"></a>
+                    <a name="//apple_ref/objc/Method/-fetchUserAvatar:preFetchBlock:postFetchBlock:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCImageManager(im)fetchUserAvatar:preFetchBlock:postFetchBlock:">-fetchUserAvatar:preFetchBlock:postFetchBlock:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Fetches the user&rsquo;s avatar.</p>
+
+<p>Here&rsquo;s how this works:</p>
+
+<ul>
+<li>First, the in-memory cache is consulted to see if we have a ready image.
+That is, an image that&rsquo;s already been loaded from an earlier request,
+and the result has been cached in memory.</li>
+<li>If there&rsquo;s a match in the cache, the preFetchBlock is invoked with it&rsquo;s <code>willFetch</code> parameter
+set to FALSE. After which the method execution terminates - meaning the postFetchBlock is NOT invoked.</li>
+<li>Otherwise the preFetchBlock is invoked with it&rsquo;s <code>willFetch</code> parameter to to TRUE.</li>
+<li>Then the user avatar is asynchronously loaded from disk (if available in the DiskManager),
+or downloaded from the cloud.</li>
+<li>If the thumbnail is downloaded from the cloud, it will be cached in the DiskManager automatically.</li>
+<li>After loading or downloading, the image is cached in memory, and forwarded to you via the postFetchBlock.</li>
+</ul>
+
+<p>&nbsp;</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    You can contol the size of the in-memory cache via the <code><a href="../Classes/ZDCImageManager.html#/c:objc(cs)ZDCImageManager(py)userAvatarsCache">userAvatarsCache</a></code> property.
+
+</div>
+
+<p>@important Empty results are also cached to prevent duplicate lookups. For example, if a user
+            doesn&rsquo;t have an avatar, the result of the lookup (the 404), will be cached.
+            This results in the preFetchBlock being invoked with its <code>willFetch</code> parameter to to FALSE,
+            and its <code>image</code> parameter set to nil.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n"><a href="../Classes/ZDCDownloadTicket.html">ZDCDownloadTicket</a></span> <span class="o">*</span><span class="p">)</span>
+    <span class="nf">fetchUserAvatar</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCUser.html">ZDCUser</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">user</span>
+      <span class="nf">preFetchBlock</span><span class="p">:(</span><span class="n">nonnull</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">UIImage</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">,</span> <span class="n">BOOL</span><span class="p">))</span><span class="nv">preFetchBlock</span>
+     <span class="nf">postFetchBlock</span><span class="p">:(</span><span class="n">nonnull</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">UIImage</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">,</span>
+                                      <span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">))</span><span class="n">postFetchBlock</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">fetchUserAvatar</span><span class="p">(</span><span class="n">_</span> <span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCUser.html">ZDCUser</a></span><span class="p">,</span> <span class="n">preFetch</span> <span class="nv">preFetchBlock</span><span class="p">:</span> <span class="p">(</span><span class="kt">UIImage</span><span class="p">?,</span> <span class="kt">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">,</span> <span class="n">postFetch</span> <span class="nv">postFetchBlock</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">UIImage</span><span class="p">?,</span> <span class="kt">Error</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ZDCDownloadTicket.html">ZDCDownloadTicket</a></span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>user</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The user for which you wish to display the avatar.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>preFetchBlock</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>This block is always invoked.
+And it&rsquo;s invoked BEFORE this method returns.
+It only returns an image if there&rsquo;s a match in the cache that can immediately be used.
+If the preFetchBlock parameter <code>willFetch</code> if FALSE, the postFetchBlock will NOT be invoked.
+Keep in mind that (image==nil &amp;&amp; !willFetch) is a valid combination representing a
+previous fetch which resulted in no image for the request.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>postFetchBlock</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>This method is invoked after the image has been read from disk or downloaded from the cloud.
+This block is only invoked if the preFetchBlock is invoked with its <code>willFetch</code> parameter set to true.
+This block is always invoked on the main thread.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCImageManager(im)fetchUserAvatar:withProcessingID:processingBlock:preFetchBlock:postFetchBlock:"></a>
+                    <a name="//apple_ref/objc/Method/-fetchUserAvatar:withProcessingID:processingBlock:preFetchBlock:postFetchBlock:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCImageManager(im)fetchUserAvatar:withProcessingID:processingBlock:preFetchBlock:postFetchBlock:">-fetchUserAvatar:withProcessingID:processingBlock:preFetchBlock:postFetchBlock:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Fetches the node&rsquo;s thumbnail, and allows you to process the image.</p>
+
+<p>Here&rsquo;s how this works:</p>
+
+<ul>
+<li>A key is generated using a combination of the nodeID + processingID.</li>
+<li>This key is used to check the in-memory cache (<code><a href="../Classes/ZDCImageManager.html#/c:objc(cs)ZDCImageManager(py)userAvatarsCache">userAvatarsCache</a></code>) to see if we have a ready image.
+That is, an image that&rsquo;s already been loaded &amp; processed from an earlier request,
+and the result (post-processing) has been cached in memory.</li>
+<li>If there&rsquo;s a match in the cache), the preFetchBlock is invoked with it&rsquo;s <code>willFetch</code> parameter
+set to FALSE. After which the method execution terminates - meaning
+neither the processingBlock nor the postFetchBlock are invoked.</li>
+<li>Otherwise the preFetchBlock is invoked with it&rsquo;s <code>willFetch</code> parameter to to TRUE.</li>
+<li>Then the user avatar is asynchronously is loaded from disk (if available in the DiskManager),
+or downloaded from the cloud.</li>
+<li>If the user avatar is downloaded from the cloud, it will be cached in the DiskManager automatically.</li>
+<li>After loading or downloading, the processingBlock is invoked (on a background thread).</li>
+<li>The image returned from the processingBlock will be cached in-memory,
+and forwarded to the user via the postFetchBlock.</li>
+</ul>
+
+<p>&nbsp;</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    You can contol the size of the in-memory cache via the <code><a href="../Classes/ZDCImageManager.html#/c:objc(cs)ZDCImageManager(py)nodeThumbnailsCache">nodeThumbnailsCache</a></code> property.
+
+</div>
+
+<p>@important Empty results are also cached to prevent duplicate lookups. For example, if a user
+            doesn&rsquo;t have an avatar, the result of the lookup (the 404), will be cached.
+            This results in the preFetchBlock being invoked with its <code>willFetch</code> parameter to to FALSE,
+            and its <code>image</code> parameter set to nil.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n"><a href="../Classes/ZDCDownloadTicket.html">ZDCDownloadTicket</a></span> <span class="o">*</span><span class="p">)</span>
+     <span class="nf">fetchUserAvatar</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCUser.html">ZDCUser</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">user</span>
+    <span class="nf">withProcessingID</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">processingID</span>
+     <span class="nf">processingBlock</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Other Type Definitions.html#/c:ZDCImageManager.h@T@ZDCImageProcessingBlock">ZDCImageProcessingBlock</a></span><span class="p">)</span><span class="nv">imageProcessingBlock</span>
+       <span class="nf">preFetchBlock</span><span class="p">:(</span><span class="n">nonnull</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">UIImage</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">,</span> <span class="n">BOOL</span><span class="p">))</span><span class="nv">preFetchBlock</span>
+      <span class="nf">postFetchBlock</span><span class="p">:(</span><span class="n">nonnull</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">UIImage</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">,</span>
+                                       <span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">))</span><span class="n">postFetchBlock</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">fetchUserAvatar</span><span class="p">(</span><span class="n">_</span> <span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCUser.html">ZDCUser</a></span><span class="p">,</span> <span class="n">withProcessingID</span> <span class="nv">processingID</span><span class="p">:</span> <span class="kt">String</span><span class="p">?,</span> <span class="n">processingBlock</span> <span class="nv">imageProcessingBlock</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Other Type Definitions.html#/c:ZDCImageManager.h@T@ZDCImageProcessingBlock">ZDCImageProcessingBlock</a></span><span class="p">,</span> <span class="n">preFetch</span> <span class="nv">preFetchBlock</span><span class="p">:</span> <span class="p">(</span><span class="kt">UIImage</span><span class="p">?,</span> <span class="kt">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">,</span> <span class="n">postFetch</span> <span class="nv">postFetchBlock</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">UIImage</span><span class="p">?,</span> <span class="kt">Error</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ZDCDownloadTicket.html">ZDCDownloadTicket</a></span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>user</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The user for which you wish to fetch the avatar.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>processingID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A unique identifier that distinguishes the results of this imageProcessingBlock from
+other imageProcessingBlocks that you may be using in other parts of your application.
+For example, if your block resizes the image to 64*64, then you might pass the string <q>64*64</q>.
+If you pass a nil processingID, then the image won&rsquo;t be cached in memory.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>imageProcessingBlock</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A block you can use to modify the image.
+For example you might scale the image to a certain size, round the corners, give it tint, etc.
+The block will be invoked on a background thread.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>preFetchBlock</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>This block is always invoked.
+And it&rsquo;s invoked BEFORE this method returns.
+It only returns an image if there&rsquo;s a match in the cache that can immediately be used.
+If the preFetchBlock parameter <code>willFetch</code> if FALSE, the postFetchBlock will NOT be invoked.
+Keep in mind that (image==nil &amp;&amp; !willFetch) is a valid combination representing a
+previous fetch which resulted in no image for the request.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>postFetchBlock</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>This method is invoked after the image has been read from disk or downloaded from the cloud.
+And after the processingBlock has done its work.
+This block is only invoked if the preFetchBlock is invoked with its <code>willFetch</code> parameter set to true.
+This block is always invoked on the main thread.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCImageManager(im)flushUserAvatarsCache:"></a>
+                    <a name="//apple_ref/objc/Method/-flushUserAvatarsCache:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCImageManager(im)flushUserAvatarsCache:">-flushUserAvatarsCache:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Removes all cached avatar images for the given user.</p>
+
+<p>There&rsquo;s usually little reason to use this method because the
+ ImageManager automatically flushes its cache in response to changes in the DiskManager.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">flushUserAvatarsCache</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">userID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">flushUserAvatarsCache</span><span class="p">(</span><span class="n">_</span> <span class="nv">userID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>userID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Which user&rsquo;s thumbnail to flush from the cache (userID == ZDCUser.uuid)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCImageManager(im)flushUserAvatarsCacheWithProcessingID:"></a>
+                    <a name="//apple_ref/objc/Method/-flushUserAvatarsCacheWithProcessingID:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCImageManager(im)flushUserAvatarsCacheWithProcessingID:">-flushUserAvatarsCacheWithProcessingID:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Removes all cached avatar images for the given processingID.</p>
+
+<p>You might use this method if you have an infrequently used ViewController,
+ and you&rsquo;d prefer to flush the cache of all images it created since
+ you don&rsquo;t anticipate needing them again anytime soon.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">flushUserAvatarsCacheWithProcessingID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">processingID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">flushUserAvatarsCache</span><span class="p">(</span><span class="n">withProcessingID</span> <span class="nv">processingID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>processingID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A processingID that was used in <code>fetchUserAvatar:withProcessingID::::</code></p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCImageManager(im)defaultUserAvatar"></a>
+                    <a name="//apple_ref/objc/Method/-defaultUserAvatar" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCImageManager(im)defaultUserAvatar">-defaultUserAvatar</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the default user avatar used by the framework.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">UIImage</span> <span class="o">*</span><span class="p">)</span><span class="n">defaultUserAvatar</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">defaultUserAvatar</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">UIImage</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCImageManager(im)defaultMultiUserAvatar"></a>
+                    <a name="//apple_ref/objc/Method/-defaultMultiUserAvatar" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCImageManager(im)defaultMultiUserAvatar">-defaultMultiUserAvatar</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the default multi-user avatar used by the framework.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">UIImage</span> <span class="o">*</span><span class="p">)</span><span class="n">defaultMultiUserAvatar</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">defaultMultiUserAvatar</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">UIImage</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+      </article>
+    </div>
+    <section class="footer">
+      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-06-03)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+    </section>
+  </body>
+</div>
+</html>

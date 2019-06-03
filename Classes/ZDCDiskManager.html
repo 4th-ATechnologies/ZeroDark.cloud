@@ -1,0 +1,3005 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>ZDCDiskManager Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset="utf-8">
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+
+    <a name="//apple_ref/objc/Class/ZDCDiskManager" class="dashAnchor"></a>
+
+    <a title="ZDCDiskManager Class Reference"></a>
+
+    <header class="header">
+      <p class="header-col header-col--primary">
+        <a class="header-link" href="../index.html">
+          ZeroDarkCloud Docs
+        </a>
+         (86% documented)
+      </p>
+    
+      <p class="header-col--secondary">
+        <form role="search" action="../search.json">
+          <input type="text" placeholder="Search documentation" data-typeahead>
+        </form>
+      </p>
+    
+    
+    </header>
+
+    <p class="breadcrumbs">
+      <a class="breadcrumb" href="../index.html">ZeroDarkCloud Reference</a>
+      <img class="carat" src="../img/carat.png" />
+      ZDCDiskManager Class Reference
+    </p>
+
+    <div class="content-wrapper">
+      <nav class="navigation">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Core.html">Core</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZeroDarkCloud.html">ZeroDarkCloud</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/ZeroDarkCloudDelegate.html">ZeroDarkCloudDelegate</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCryptoFile.html">ZDCCryptoFile</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/ZDCNodeLink.html">ZDCNodeLink</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCTreesystemPath.html">ZDCTreesystemPath</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Managers.html">Managers</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudNodeManager.html">ZDCCloudNodeManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudPathManager.html">ZDCCloudPathManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDatabaseManager.html">ZDCDatabaseManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDatabaseKeyManager.html">ZDCDatabaseKeyManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDirectoryManager.html">ZDCDirectoryManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDiskManager.html">ZDCDiskManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDownloadManager.html">ZDCDownloadManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCImageManager.html">ZDCImageManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCLocalUserManager.html">ZDCLocalUserManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCNodeManager.html">ZDCNodeManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCProgressManager.html">ZDCProgressManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCPullManager.html">ZDCPullManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCPushManager.html">ZDCPushManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCRemoteUserManager.html">ZDCRemoteUserManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCSearchUserManager.html">ZDCSearchUserManager</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCUITools.html">ZDCUITools</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCWebManager.html">ZDCWebManager</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Model.html">Model</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudDataInfo.html">ZDCCloudDataInfo</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudNode.html">ZDCCloudNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCContainerNode.html">ZDCContainerNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCLocalUser.html">ZDCLocalUser</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCLocalUserAuth.html">ZDCLocalUserAuth</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCNode.html">ZDCNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCPublicKey.html">ZDCPublicKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCShareItem.html">ZDCShareItem</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCShareList.html">ZDCShareList</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCSymmetricKey.html">ZDCSymmetricKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCUser.html">ZDCUser</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../File &amp; Streams.html">File &amp; Streams</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCInputStream.html">ZDCInputStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCInterruptingInputStream.html">ZDCInterruptingInputStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/CacheFile2CleartextInputStream.html">CacheFile2CleartextInputStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/Cleartext2CacheFileInputStream.html">Cleartext2CacheFileInputStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/Cleartext2CloudFileInputStream.html">Cleartext2CloudFileInputStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/CloudFile2CleartextInputStream.html">CloudFile2CleartextInputStream</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCFileReader.html">ZDCFileReader</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCFileChecksum.html">ZDCFileChecksum</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCFileChecksumInstruction.html">ZDCFileChecksumInstruction</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCFileConversion.html">ZDCFileConversion</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCFilesystemMonitor.html">ZDCFilesystemMonitor</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Type Definitions/ZDCCacheFileHeader.html">ZDCCacheFileHeader</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Type Definitions/ZDCCloudFileHeader.html">ZDCCloudFileHeader</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../ZDCCloud.html">ZDCCloud</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloud.html">ZDCCloud</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudConnection.html">ZDCCloudConnection</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudTransaction.html">ZDCCloudTransaction</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudOperation.html">ZDCCloudOperation</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudLocator.html">ZDCCloudLocator</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudPath.html">ZDCCloudPath</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCCloudRcrd.html">ZDCCloudRcrd</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Utilities.html">Utilities</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/BIP39Mnemonic.html">BIP39Mnemonic</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCProgress.html">ZDCProgress</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCAsyncCompletionDispatch.html">ZDCAsyncCompletionDispatch</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../AWS Utilities.html">AWS Utilities</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/AWSDate.html">AWSDate</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/AWSPayload.html">AWSPayload</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/AWSRegions.html">AWSRegions</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/AWSServices.html">AWSServices</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/AWSSignature.html">AWSSignature</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Other Classes.html">Other Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCAccountSetupViewControllerProxy.html">ZDCAccountSetupViewControllerProxy</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Classes.html#/c:objc(cs)ZDCConstants">ZDCConstants</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCData.html">ZDCData</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDataPromise.html">ZDCDataPromise</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDatabaseConfig.html">ZDCDatabaseConfig</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDiskExport.html">ZDCDiskExport</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDiskImport.html">ZDCDiskImport</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDiskManagerChanges.html">ZDCDiskManagerChanges</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDownloadOptions.html">ZDCDownloadOptions</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCDownloadTicket.html">ZDCDownloadTicket</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCProgressManagerChanges.html">ZDCProgressManagerChanges</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCSearchUserMatching.html">ZDCSearchUserMatching</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCSearchUserResult.html">ZDCSearchUserResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCSyncManager.html">ZDCSyncManager</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Other Constants.html">Other Constants</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_CloudCore_Prefix">Ext_CloudCore_Prefix</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_Index_Nodes">Ext_Index_Nodes</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_Index_Users">Ext_Index_Users</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_Relationship">Ext_Relationship</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_Cloud_DirPrefix">Ext_View_Cloud_DirPrefix</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_Cloud_Flat">Ext_View_Cloud_Flat</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_Filesystem_CloudName">Ext_View_Filesystem_CloudName</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_Filesystem_Name">Ext_View_Filesystem_Name</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_Flat">Ext_View_Flat</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_LocalUsers">Ext_View_LocalUsers</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_SplitKeys">Ext_View_SplitKeys</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Ext_View_SplitKeys_Date">Ext_View_SplitKeys_Date</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Index_Nodes_Column_CloudID">Index_Nodes_Column_CloudID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Index_Nodes_Column_DirPrefix">Index_Nodes_Column_DirPrefix</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@Index_Users_Column_RandomUUID">Index_Users_Column_RandomUUID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@UIDatabaseConnectionDidUpdateNotification">UIDatabaseConnectionDidUpdateNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@UIDatabaseConnectionWillUpdateNotification">UIDatabaseConnectionWillUpdateNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCChildProgressTypeKey">ZDCChildProgressTypeKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCDiskManagerChangedNotification">ZDCDiskManagerChangedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCFileModifiedDuringRead">ZDCFileModifiedDuringRead</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCLocalizedDescriptionKey">ZDCLocalizedDescriptionKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCProgressListChangedNotification">ZDCProgressListChangedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCPullStartedNotification">ZDCPullStartedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCPullStoppedNotification">ZDCPullStoppedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCPushStartedNotification">ZDCPushStartedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCPushStoppedNotification">ZDCPushStoppedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCShareKeyType_Passphrase">ZDCShareKeyType_Passphrase</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCShareKeyType_Server">ZDCShareKeyType_Server</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCShareKeyType_User">ZDCShareKeyType_User</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCStreamCloudFileSection">ZDCStreamCloudFileSection</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCStreamFileMaxOffset">ZDCStreamFileMaxOffset</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCStreamFileMinOffset">ZDCStreamFileMinOffset</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCStreamReturnEOFOnWouldBlock">ZDCStreamReturnEOFOnWouldBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCStreamUnexpectedFileSize">ZDCStreamUnexpectedFileSize</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@ZDCSyncingNodeIDsChangedNotification">ZDCSyncingNodeIDsChangedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAppIDKey">kAppIDKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAttachmentParentIDPrefix">kAttachmentParentIDPrefix</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth04thADomain">kAuth04thADomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth04thARecoveryDomain">kAuth04thARecoveryDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth04thAUserDomain">kAuth04thAUserDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth04thA_AppClientID">kAuth04thA_AppClientID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0DBConnection_Recovery">kAuth0DBConnection_Recovery</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0DBConnection_UserAuth">kAuth0DBConnection_UserAuth</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0ErrorDescription_Blocked">kAuth0ErrorDescription_Blocked</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_InvalidGrant">kAuth0Error_InvalidGrant</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_InvalidRefreshToken">kAuth0Error_InvalidRefreshToken</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_RateLimit">kAuth0Error_RateLimit</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_Unauthorized">kAuth0Error_Unauthorized</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_UserExists">kAuth0Error_UserExists</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_UserNameExists">kAuth0Error_UserNameExists</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kLocalUserIDKey">kLocalUserIDKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kNotificationsKey">kNotificationsKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kPullResultKey">kPullResultKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kS4LocalUser_shelflife">kS4LocalUser_shelflife</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCAnonymousUserID">kZDCAnonymousUserID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudFileExtension_Data">kZDCCloudFileExtension_Data</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudFileExtension_Rcrd">kZDCCloudFileExtension_Rcrd</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudFileName_PrivateKey">kZDCCloudFileName_PrivateKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudFileName_PublicKey">kZDCCloudFileName_PublicKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Auth0ID">kZDCCloudRcrd_Auth0ID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_BurnDate">kZDCCloudRcrd_BurnDate</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Children">kZDCCloudRcrd_Children</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Children_Prefix">kZDCCloudRcrd_Children_Prefix</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Data">kZDCCloudRcrd_Data</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Data_Key">kZDCCloudRcrd_Data_Key</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Data_Value">kZDCCloudRcrd_Data_Value</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_FileID">kZDCCloudRcrd_FileID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys">kZDCCloudRcrd_Keys</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Burn">kZDCCloudRcrd_Keys_Burn</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Deprecated_Burn">kZDCCloudRcrd_Keys_Deprecated_Burn</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Deprecated_Perms">kZDCCloudRcrd_Keys_Deprecated_Perms</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Deprecated_PubKeyID">kZDCCloudRcrd_Keys_Deprecated_PubKeyID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Deprecated_SymKey">kZDCCloudRcrd_Keys_Deprecated_SymKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Key">kZDCCloudRcrd_Keys_Key</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Keys_Perms">kZDCCloudRcrd_Keys_Perms</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta">kZDCCloudRcrd_Meta</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_DirSalt">kZDCCloudRcrd_Meta_DirSalt</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_FileID">kZDCCloudRcrd_Meta_FileID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_Filename">kZDCCloudRcrd_Meta_Filename</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_OwnerID">kZDCCloudRcrd_Meta_OwnerID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_Path">kZDCCloudRcrd_Meta_Path</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_Type">kZDCCloudRcrd_Meta_Type</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_Type_Directory">kZDCCloudRcrd_Meta_Type_Directory</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Meta_Type_Share">kZDCCloudRcrd_Meta_Type_Share</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Sender">kZDCCloudRcrd_Sender</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_UserID">kZDCCloudRcrd_UserID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCloudRcrd_Version">kZDCCloudRcrd_Version</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_CachedResponse">kZDCCollection_CachedResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_CloudNodes">kZDCCollection_CloudNodes</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_Messages">kZDCCollection_Messages</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_Nodes">kZDCCollection_Nodes</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_Prefs">kZDCCollection_Prefs</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_PublicKeys">kZDCCollection_PublicKeys</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_PullState">kZDCCollection_PullState</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_Reminders">kZDCCollection_Reminders</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_SessionStorage">kZDCCollection_SessionStorage</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_SplitKeyShares">kZDCCollection_SplitKeyShares</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_SplitKeys">kZDCCollection_SplitKeys</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_SymmetricKeys">kZDCCollection_SymmetricKeys</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_Tasks">kZDCCollection_Tasks</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_UserAuth">kZDCCollection_UserAuth</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCCollection_Users">kZDCCollection_Users</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDirPrefix_Avatar">kZDCDirPrefix_Avatar</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDirPrefix_Home">kZDCDirPrefix_Home</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDirPrefix_Inbox">kZDCDirPrefix_Inbox</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDirPrefix_Msgs">kZDCDirPrefix_Msgs</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDirPrefix_Outbox">kZDCDirPrefix_Outbox</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDirPrefix_Prefs">kZDCDirPrefix_Prefs</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCDiskManagerChanges">kZDCDiskManagerChanges</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCFileExtension_ActivationCode">kZDCFileExtension_ActivationCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCProgressManagerChanges">kZDCProgressManagerChanges</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCUser_metadataKey">kZDCUser_metadataKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCUser_metadata_preferedAuth0ID">kZDCUser_metadata_preferedAuth0ID</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Other Enums.html">Other Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/AWSRegion.html">AWSRegion</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/AWSService.html">AWSService</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/Mnemonic_Algorithm.html">Mnemonic_Algorithm</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCChildProgressType.html">ZDCChildProgressType</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCCloudErrorCode.html">ZDCCloudErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCCloudFileSection.html">ZDCCloudFileSection</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCCloudOperationPutType.html">ZDCCloudOperationPutType</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCCloudOperationType.html">ZDCCloudOperationType</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCCloudPathComponents.html">ZDCCloudPathComponents</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCCryptoFileFormat.html">ZDCCryptoFileFormat</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCDeleteNodeOptions.html">ZDCDeleteNodeOptions</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCNodeChange.html">ZDCNodeChange</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCNodeMetaComponents.html">ZDCNodeMetaComponents</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCProgressType.html">ZDCProgressType</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCPullResult.html">ZDCPullResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCSearchUserManagerResultStage.html">ZDCSearchUserManagerResultStage</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCSharePermission.html">ZDCSharePermission</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCTreesystemContainer.html">ZDCTreesystemContainer</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Other Type Definitions.html">Other Type Definitions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCDownloadManager.h@T@NodeDataDownloadCompletionBlock">NodeDataDownloadCompletionBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCDownloadManager.h@T@NodeMetaDownloadCompletionBlock">NodeMetaDownloadCompletionBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCProgressManager.h@T@UploadCompletionBlock">UploadCompletionBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCDownloadManager.h@T@UserAvatarDownloadCompletionBlock">UserAvatarDownloadCompletionBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCDatabaseConfig.h@T@YapDatabaseExtensionsRegistration">YapDatabaseExtensionsRegistration</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCFileChecksum.h@T@ZDCFileChecksumCallbackBlock">ZDCFileChecksumCallbackBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCImageManager.h@T@ZDCImageProcessingBlock">ZDCImageProcessingBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCUITools.h@T@accountSetupViewCompletionHandler">accountSetupViewCompletionHandler</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Type Definitions.html#/c:ZDCUITools.h@T@sharedUsersViewCompletionHandler">sharedUsersViewCompletionHandler</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Other Functions.html">Other Functions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Functions.html#/c:@F@AttachmentParentID">AttachmentParentID</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Functions.html#/c:@F@NSStringFromTreesystemContainer">NSStringFromTreesystemContainer</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Functions.html#/c:@F@TreesystemContainerFromString">TreesystemContainerFromString</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+
+        <section class="section">
+          <div class="section-content">
+            <h1>ZDCDiskManager</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight objective_c"><code><span class="k">@interface</span> <span class="nc">ZDCDiskManager</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
+
+                </div>
+              </div>
+            <p>The DiskManager simplifies the process of persisting &amp; caching files to disk.</p>
+
+<p>The DiskManager supports two different storage modes:</p>
+
+<ul>
+<li>Persistent:
+ Files stored in persistent mode won&rsquo;t be deleted unless you ask the DiskManager to delete them,
+ or the underlying node/user is deleted from the database.</li>
+<li>Cache:
+ File stored in cache mode are treated as a temporarily file.
+ They are added to a <q>storage pool</q> managed by the DiskManager.
+ And when the max size of the storage pool is exceeded, the DiskManager automatically starts deleting files.
+ Further, the files are stored in an OS-designated Caches folder,
+ and are available for deletion by the OS due to low-disk-space pressure.</li>
+</ul>
+
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-content">
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Configuration"></a>
+                <a name="//apple_ref/objc/Section/Configuration" class="dashAnchor"></a>
+                <a href="#/Configuration">
+                  <h3 class="section-name">Configuration</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(py)maxNodeDataCacheSize"></a>
+                    <a name="//apple_ref/objc/Property/maxNodeDataCacheSize" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(py)maxNodeDataCacheSize">maxNodeDataCacheSize</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Allows you to configure the max size of the <q>storage pool</q> for cached (non-persistent) nodeData files.</p>
+
+<p>The value is designated in bytes.
+ The default value is 25 MiB (1024 * 1024 * 25).</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    Any value you configure is persisted to disk, and thus remains set between app launches.
+
+</div>
+
+<p>The DiskManager supports two different storage modes:</p>
+
+<ul>
+<li>Persistent:
+ Files stored in persistent mode won&rsquo;t be deleted unless you ask the DiskManager to delete them,
+ or the underlying node/user is deleted from the database.</li>
+<li>Cache:
+ File stored in cache mode are treated as a temporarily file.
+ They are added to a <q>storage pool</q> managed by the DiskManager.
+ And when the max size of the storage pool is exceeded, the DiskManager automatically starts deleting files.
+ Further, the files are stored in an OS-designated Caches folder,
+ and are available for deletion by the OS due to low-disk-space pressure.</li>
+</ul>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">readwrite</span><span class="p">,</span> <span class="n">atomic</span><span class="p">)</span> <span class="kt">uint64_t</span> <span class="n">maxNodeDataCacheSize</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">maxNodeDataCacheSize</span><span class="p">:</span> <span class="kt">UInt64</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(py)maxNodeThumbnailsCacheSize"></a>
+                    <a name="//apple_ref/objc/Property/maxNodeThumbnailsCacheSize" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(py)maxNodeThumbnailsCacheSize">maxNodeThumbnailsCacheSize</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Allows you to configure the max size of the <q>storage pool</q> for cached (non-persistent) nodeThumbnail files.</p>
+
+<p>The value is designated in bytes.
+ The default value is 5 MiB (1024 * 1024 * 5).</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    Any value you configure is persisted to disk, and thus remains set between app launches.
+
+</div>
+
+<p>The DiskManager supports two different storage modes:</p>
+
+<ul>
+<li>Persistent:
+ Files stored in persistent mode won&rsquo;t be deleted unless you ask the DiskManager to delete them,
+ or the underlying node/user is deleted from the database.</li>
+<li>Cache:
+ File stored in cache mode are treated as a temporarily file.
+ They are added to a <q>storage pool</q> managed by the DiskManager.
+ And when the max size of the storage pool is exceeded, the DiskManager automatically starts deleting files.
+ Further, the files are stored in an OS-designated Caches folder,
+ and are available for deletion by the OS due to low-disk-space pressure.</li>
+</ul>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">readwrite</span><span class="p">,</span> <span class="n">atomic</span><span class="p">)</span> <span class="kt">uint64_t</span> <span class="n">maxNodeThumbnailsCacheSize</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">maxNodeThumbnailsCacheSize</span><span class="p">:</span> <span class="kt">UInt64</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(py)maxUserAvatarsCacheSize"></a>
+                    <a name="//apple_ref/objc/Property/maxUserAvatarsCacheSize" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(py)maxUserAvatarsCacheSize">maxUserAvatarsCacheSize</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Allows you to configure the max size of the <q>storage pool</q> for cached (non-persistent) userAvatar files.</p>
+
+<p>The value is designated in bytes.
+ The default value is 5 MiB (1024 * 1024 * 5).</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    Any value you configure is persisted to disk, and thus remains set between app launches.
+
+</div>
+
+<p>The DiskManager supports two different storage modes:</p>
+
+<ul>
+<li>Persistent:
+ Files stored in persistent mode won&rsquo;t be deleted unless you ask the DiskManager to delete them,
+ or the underlying node/user is deleted from the database.</li>
+<li>Cache:
+ File stored in cache mode are treated as a temporarily file.
+ They are added to a <q>storage pool</q> managed by the DiskManager.
+ And when the max size of the storage pool is exceeded, the DiskManager automatically starts deleting files.
+ Further, the files are stored in an OS-designated Caches folder,
+ and are available for deletion by the OS due to low-disk-space pressure.</li>
+</ul>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">readwrite</span><span class="p">,</span> <span class="n">atomic</span><span class="p">)</span> <span class="kt">uint64_t</span> <span class="n">maxUserAvatarsCacheSize</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">maxUserAvatarsCacheSize</span><span class="p">:</span> <span class="kt">UInt64</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(py)defaultNodeDataCacheExpiration"></a>
+                    <a name="//apple_ref/objc/Property/defaultNodeDataCacheExpiration" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(py)defaultNodeDataCacheExpiration">defaultNodeDataCacheExpiration</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Allows you to configure a default expiration interval for cached (non-persistent) nodeData files,
+ after which time the DiskManager will automatically delete the cached file from disk.</p>
+
+<p>A positive value indicates the DiskManager should automatically delete cached nodeData files after
+ the given internal. For example, if you specify an interval of 7 days, then the DiskManager will
+ delete a cached nodeData file once its lastModified value exceeds 7 days old.</p>
+
+<p>A non-positive value (zero or negative value) indicates the DiskManager
+ should NOT automatically delete cached nodeData files.</p>
+
+<p>Keep in mind:</p>
+
+<ul>
+<li><p>This value only applies to cached (non-persistent) nodeData files.
+That is, imported nodeData files where the <code>storePersistently</code> flag was NOT set.</p></li>
+<li><p>This default value can be overriden on a per-file basis,
+by explicitly setting a non-zero value for the <code>[ZDCDiskImport expiration]</code> property.</p></li>
+</ul>
+
+<p>The default value is zero.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    NSTimeInterval is designated in seconds.
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">readwrite</span><span class="p">,</span> <span class="n">atomic</span><span class="p">)</span>
+    <span class="n">NSTimeInterval</span> <span class="n">defaultNodeDataCacheExpiration</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">defaultNodeDataCacheExpiration</span><span class="p">:</span> <span class="kt">TimeInterval</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(py)defaultNodeThumbnailCacheExpiration"></a>
+                    <a name="//apple_ref/objc/Property/defaultNodeThumbnailCacheExpiration" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(py)defaultNodeThumbnailCacheExpiration">defaultNodeThumbnailCacheExpiration</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Allows you to configure a default expiration interval for cached (non-persistent) nodeThumbnail files,
+ after which time the DiskManager will automatically delete the cached file from disk.</p>
+
+<p>A positive value indicates the DiskManager should automatically delete cached nodeThumbnail files after
+ the given internal. For example, if you specify an interval of 7 days, then the DiskManager will
+ delete a cached nodeThumbnail file once its lastModified value exceeds 7 days old.</p>
+
+<p>A non-positive value (zero or negative value) indicates the DiskManager
+ should NOT automatically delete cached nodeThumbnail files.</p>
+
+<p>Keep in mind:</p>
+
+<ul>
+<li><p>This value only applies to cached (non-persistent) nodeThumbnail files.
+That is, imported nodeThumbnail files where the <code>storePersistently</code> flag was NOT set.</p></li>
+<li><p>This default value can be overriden on a per-file basis,
+by explicitly setting a non-zero value for the <code>[ZDCDiskImport expiration]</code> property.</p></li>
+</ul>
+
+<p>The default value is zero.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    NSTimeInterval is designated in seconds.
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">readwrite</span><span class="p">,</span> <span class="n">atomic</span><span class="p">)</span>
+    <span class="n">NSTimeInterval</span> <span class="n">defaultNodeThumbnailCacheExpiration</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">defaultNodeThumbnailCacheExpiration</span><span class="p">:</span> <span class="kt">TimeInterval</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(py)defaultUserAvatarCacheExpiration"></a>
+                    <a name="//apple_ref/objc/Property/defaultUserAvatarCacheExpiration" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(py)defaultUserAvatarCacheExpiration">defaultUserAvatarCacheExpiration</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Allows you to configure a default expiration interval for cached (non-persistent) userAvatar files,
+ after which time the DiskManager will automatically delete the cached file from disk.</p>
+
+<p>A positive value indicates the DiskManager should automatically delete cached userAvatar files after
+ the given internal. For example, if you specify an interval of 7 days, then the DiskManager will
+ delete a cached userAvatar file once its lastModified value exceeds 7 days old.</p>
+
+<p>A non-positive value (zero or negative value) indicates the DiskManager
+ should NOT automatically delete cached userAvatar files.</p>
+
+<p>Keep in mind:</p>
+
+<ul>
+<li><p>This value only applies to non-persistent userAvatar files.
+That is, imported userAvatar files where the <code>storePersistently</code> flag was NOT set.</p></li>
+<li><p>This default value can be overriden on a per-file basis,
+by explicitly setting a non-zero value for the <code>[ZDCDiskImport expiration]</code> property.</p></li>
+</ul>
+
+<p>The default value is 7 days.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    NSTimeInterval is designated in seconds.
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">readwrite</span><span class="p">,</span> <span class="n">atomic</span><span class="p">)</span>
+    <span class="n">NSTimeInterval</span> <span class="n">defaultUserAvatarCacheExpiration</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">defaultUserAvatarCacheExpiration</span><span class="p">:</span> <span class="kt">TimeInterval</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Node%20Data"></a>
+                <a name="//apple_ref/objc/Section/Node Data" class="dashAnchor"></a>
+                <a href="#/Node%20Data">
+                  <h3 class="section-name">Node Data</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)importNodeData:forNode:error:"></a>
+                    <a name="//apple_ref/objc/Method/-importNodeData:forNode:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)importNodeData:forNode:error:">-importNodeData:forNode:error:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>This method is designed to take an import, migrate it to an encrypted format,
+ and then store it in a directory that&rsquo;s being managed by the DiskManager.</p>
+
+<p>For example, you might download a file using the <code><a href="../Classes/ZDCDownloadManager.html">ZDCDownloadManager</a></code>,
+ and then pass the resulting CryptoFile into this method.</p>
+
+<p>By utilizing the DiskManager, you can efficiently manage your app&rsquo;s storage.
+ This is because the DiskManager has the notion of persistent vs non-persistent (cached) files.
+ Persistent files stick around until you manually delete them (or until the corresponding node is deleted).
+ Non-persistent files, however, are part of a configurable storage pool.
+ You can set limits on the size of the storage pool,
+ and the DiskManager automatically handles deleting data when the pool gets too big.
+ You can also set optional expiration intervals for imported files,
+ and the DiskManager automatically handles deleting the files when they get too old.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <p>Non-persistent files may also be deleted by the OS due to low disk space.</p>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n"><a href="../Classes/ZDCCryptoFile.html">ZDCCryptoFile</a></span> <span class="o">*</span><span class="p">)</span><span class="nf">importNodeData</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCDiskImport.html">ZDCDiskImport</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">import</span>
+                                   <span class="nf">forNode</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCNode.html">ZDCNode</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">node</span>
+                                     <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span>
+                                               <span class="n">outError</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">importNodeData</span><span class="p">(</span><span class="n">_</span> <span class="nv">import</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCDiskImport.html">ZDCDiskImport</a></span><span class="p">,</span> <span class="k">for</span> <span class="nv">node</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCNode.html">ZDCNode</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ZDCCryptoFile.html">ZDCCryptoFile</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>import</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The data can be imported to the DiskManager from multiple formats.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>node</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The corresponding node for the file.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The CryptoFile will be MOVED from its current location to a new location.
+     So the old fileURL will no longer exist upon completion of this method.
+     A new CryptoFile is returned with an updated fileURL property.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)hasNodeData:"></a>
+                    <a name="//apple_ref/objc/Method/-hasNodeData:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)hasNodeData:">-hasNodeData:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns whether or not the DiskManager currently has a data file for the given node.</p>
+<div class="aside aside-warning">
+    <p class="aside-title">Warning</p>
+    <p>This method only provides a snapshot of the current state, which may quickly change.
+      Moments after you invoke this method, the cached file may be deleted (for various reasons).
+      If you need to ensure the cached file sticks around for awhile,
+      use a method that returns a <code><a href="../Classes/ZDCCryptoFile.html">ZDCCryptoFile</a></code> (with its retainToken) for the file.</p>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">hasNodeData</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">nodeID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">hasNodeData</span><span class="p">(</span><span class="n">_</span> <span class="nv">nodeID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>nodeID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The node you&rsquo;re interested in (nodeID == ZDCNode.uuid)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)nodeData:"></a>
+                    <a name="//apple_ref/objc/Method/-nodeData:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)nodeData:">-nodeData:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Exports the CryptoFile and associated info for the node&rsquo;s data, if available on disk.
+ The informaion is bundled in a ZDCDiskExport instance.</p>
+
+<p>If a CryptoFile is returned, it will have a non-nil <code>-[ZDCCryptoFile retainToken]</code> property.
+ This prevents the DiskManager from deleting the file for as long as this retainToken isn&rsquo;t deallocated.</p>
+
+<p>Keep in mind that while the retainToken will prevent the DiskManager from deleting the file,
+ the OS is free to do what it pleases, and may decide to delete the file while the app is backgrounded.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n"><a href="../Classes/ZDCDiskExport.html">ZDCDiskExport</a></span> <span class="o">*</span><span class="p">)</span><span class="nf">nodeData</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCNode.html">ZDCNode</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">node</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">nodeData</span><span class="p">(</span><span class="n">_</span> <span class="nv">node</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCNode.html">ZDCNode</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ZDCDiskExport.html">ZDCDiskExport</a></span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>node</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The node you&rsquo;re interested in.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)nodeData:preferredFormat:"></a>
+                    <a name="//apple_ref/objc/Method/-nodeData:preferredFormat:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)nodeData:preferredFormat:">-nodeData:preferredFormat:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns a CryptoFile and associated info for the node&rsquo;s data, if available on disk.
+ The information is bundled in a ZDCDiskExport instance.</p>
+
+<p>If a CryptoFile is returned, it will have a non-nil <code>-[ZDCCryptoFile retainToken]</code> property.
+ This prevents the DiskManager from deleting the file for as long as this retainToken isn&rsquo;t deallocated.</p>
+
+<p>Keep in mind that although the retainToken will prevent the DiskManager from deleting the file,
+ if the file is non-persistent (i.e. stored in an OS designated Caches folder),
+ then the OS is free to do what it pleases, and may decide to delete the file while the app is backgrounded.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n"><a href="../Classes/ZDCDiskExport.html">ZDCDiskExport</a></span> <span class="o">*</span><span class="p">)</span><span class="nf">nodeData</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCNode.html">ZDCNode</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">node</span>
+                     <span class="nf">preferredFormat</span><span class="p">:(</span><span class="n"><a href="../Enums/ZDCCryptoFileFormat.html">ZDCCryptoFileFormat</a></span><span class="p">)</span><span class="nv">preferredFormat</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">nodeData</span><span class="p">(</span><span class="n">_</span> <span class="nv">node</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCNode.html">ZDCNode</a></span><span class="p">,</span> <span class="nv">preferredFormat</span><span class="p">:</span> <span class="kt"><a href="../Enums/ZDCCryptoFileFormat.html">ZDCCryptoFileFormat</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ZDCDiskExport.html">ZDCDiskExport</a></span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>node</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The node you&rsquo;re interested in.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>preferredFormat</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>If you prefer a specific format, pass it here.
+If you don&rsquo;t care, just pass ZDCCryptoFileFormat_Unknown.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)deleteNodeData:"></a>
+                    <a name="//apple_ref/objc/Method/-deleteNodeData:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)deleteNodeData:">-deleteNodeData:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Deletes data files for the given nodeID from disk.</p>
+
+<p>The files are deleted in a safe manner.
+ That is, if any files are currently being retained (a retainToken is being held for them),
+ then the files are simply marked for future deletion. And the file will be deleted as soon
+ as its retainCount drops back to zero.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">deleteNodeData</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">nodeID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">deleteNodeData</span><span class="p">(</span><span class="n">_</span> <span class="nv">nodeID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)deleteNodeDataForNodeIDs:"></a>
+                    <a name="//apple_ref/objc/Method/-deleteNodeDataForNodeIDs:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)deleteNodeDataForNodeIDs:">-deleteNodeDataForNodeIDs:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Deletes data files for the given nodeIDs from disk.</p>
+
+<p>The files are deleted in a safe manner.
+ That is, if any files are currently being retained (a retainToken is being held for them),
+ then the files are simply marked for future deletion. And the file will be deleted as soon
+ as its retainCount drops back to zero.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">deleteNodeDataForNodeIDs</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n">NSString</span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span><span class="nv">nodeIDs</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">deleteNodeData</span><span class="p">(</span><span class="n">forNodeIDs</span> <span class="nv">nodeIDs</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">])</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)makeNodeDataPersistent:forNodeID:"></a>
+                    <a name="//apple_ref/objc/Method/-makeNodeDataPersistent:forNodeID:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)makeNodeDataPersistent:forNodeID:">-makeNodeDataPersistent:forNodeID:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Migrates node data files between persistent &amp; non-persistent.</p>
+
+<p>The files are migrated in a safe manner.
+ That is, if any files are currently being retained (a retainToken/CryptoFile is being held for them),
+ then file is instead copied, and the original file is marked for future deletion.
+ And the file will be deleted as soon as its retainCount drops to zero.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">makeNodeDataPersistent</span><span class="p">:(</span><span class="n">BOOL</span><span class="p">)</span><span class="nv">persistent</span>
+                     <span class="nf">forNodeID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">nodeID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">makeNodeDataPersistent</span><span class="p">(</span><span class="n">_</span> <span class="nv">persistent</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">,</span> <span class="n">forNodeID</span> <span class="nv">nodeID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>persistent</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>If YES, then non-persistent data files will moved moved to a persistent location on disk.
+If NO, then persistent files will be moved to a non-persistent location on disk.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>nodeID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The node for which you want to migrate files (nodeID == ZDCNode.uuid)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Node%20Thumbnails"></a>
+                <a name="//apple_ref/objc/Section/Node Thumbnails" class="dashAnchor"></a>
+                <a href="#/Node%20Thumbnails">
+                  <h3 class="section-name">Node Thumbnails</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)importNodeThumbnail:forNode:error:"></a>
+                    <a name="//apple_ref/objc/Method/-importNodeThumbnail:forNode:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)importNodeThumbnail:forNode:error:">-importNodeThumbnail:forNode:error:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>This method is designed to take a downloaded thumbnail and store it to disk
+ into a directory that&rsquo;s being managed by the DiskManager.</p>
+
+<p>For example, you might download a thumbnail using the <code><a href="../Classes/ZDCDownloadManager.html">ZDCDownloadManager</a></code>,
+ and then pass the resulting data into this method.</p>
+
+<p>By utilizing the DiskManager, you can efficiently manage your app&rsquo;s storage.
+ This is because the DiskManager has the notion of persistent vs non-persistent files.
+ Persistent files stick around until you manually delete them (or until the corresponding node is deleted).
+ Non-persistent files, however, are part of a cache with a configurable storage pool.
+ You can set limits on the size of the storage pool,
+ and the DiskManager automatically handles deleting data when the pool gets too big.
+ You can also set optional expiration intervals for imported files,
+ and the DiskManager automatically handles deleting the files when they get too old.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <p>Non-persistent files may also be deleted by the OS due to low disk space.</p>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n"><a href="../Classes/ZDCCryptoFile.html">ZDCCryptoFile</a></span> <span class="o">*</span><span class="p">)</span><span class="nf">importNodeThumbnail</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCDiskImport.html">ZDCDiskImport</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">import</span>
+                                        <span class="nf">forNode</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCNode.html">ZDCNode</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">node</span>
+                                          <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span>
+                                                    <span class="n">outError</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">importNodeThumbnail</span><span class="p">(</span><span class="n">_</span> <span class="nv">import</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCDiskImport.html">ZDCDiskImport</a></span><span class="p">,</span> <span class="k">for</span> <span class="nv">node</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCNode.html">ZDCNode</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ZDCCryptoFile.html">ZDCCryptoFile</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>import</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The data can be imported to the DiskManager from multiple formats.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>node</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The corresponding node for the file.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The data will be saved to disk in an encrypted format.
+     A new CryptoFile reference is returned that can be used to read the file.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)hasNodeThumbnail:"></a>
+                    <a name="//apple_ref/objc/Method/-hasNodeThumbnail:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)hasNodeThumbnail:">-hasNodeThumbnail:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns whether or not the DiskManager currently has a thumbnail for the given node.</p>
+<div class="aside aside-warning">
+    <p class="aside-title">Warning</p>
+    <p>This method only provides a snapshot of the current state, which may quickly change.
+      Moments after you invoke this method, the cached file may be deleted (for various reasons).
+      If you need to ensure the cached file sticks around for awhile,
+      use a method that returns a <code><a href="../Classes/ZDCCryptoFile.html">ZDCCryptoFile</a></code> (with its retainToken) for the file.</p>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">hasNodeThumbnail</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">nodeID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">hasNodeThumbnail</span><span class="p">(</span><span class="n">_</span> <span class="nv">nodeID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>nodeID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The node you&rsquo;re interested in (nodeID == ZDCNode.uuid)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)nodeThumbnail:"></a>
+                    <a name="//apple_ref/objc/Method/-nodeThumbnail:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)nodeThumbnail:">-nodeThumbnail:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns a CryptoFile and associated info for the node&rsquo;s thumbnail, if available on disk.
+ The information is bundled in a ZDCDiskExport instance.</p>
+
+<p>If a CryptoFile is returned, it will have a non-nil <code>-[ZDCCryptoFile retainToken]</code> property.
+ This prevents the DiskManager from deleting the file for as long as this retainToken isn&rsquo;t deallocated.</p>
+
+<p>Keep in mind that although the retainToken will prevent the DiskManager from deleting the file,
+ if the file is non-persistent (i.e. stored in an OS designated Caches folder),
+ then the OS is free to do what it pleases, and may decide to delete the file while the app is backgrounded.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n"><a href="../Classes/ZDCDiskExport.html">ZDCDiskExport</a></span> <span class="o">*</span><span class="p">)</span><span class="nf">nodeThumbnail</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCNode.html">ZDCNode</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">node</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">nodeThumbnail</span><span class="p">(</span><span class="n">_</span> <span class="nv">node</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCNode.html">ZDCNode</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ZDCDiskExport.html">ZDCDiskExport</a></span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>node</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The node you&rsquo;re interested in.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)deleteNodeThumbnail:"></a>
+                    <a name="//apple_ref/objc/Method/-deleteNodeThumbnail:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)deleteNodeThumbnail:">-deleteNodeThumbnail:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Deletes thumbnail files for the given nodeID from disk.</p>
+
+<p>The files are deleted in a safe manner.
+ That is, if any files are currently being retained (a retainToken is being held for them),
+ then the files are simply marked for future deletion. And the file will be deleted as soon
+ as its retainCount drops back to zero.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">deleteNodeThumbnail</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">nodeID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">deleteNodeThumbnail</span><span class="p">(</span><span class="n">_</span> <span class="nv">nodeID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)deleteNodeThumbnailsForNodeIDs:"></a>
+                    <a name="//apple_ref/objc/Method/-deleteNodeThumbnailsForNodeIDs:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)deleteNodeThumbnailsForNodeIDs:">-deleteNodeThumbnailsForNodeIDs:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Deletes thumbnail files for the given nodeID&rsquo;s from disk.</p>
+
+<p>The files are deleted in a safe manner.
+ That is, if any files are currently being retained (a retainToken is being held for them),
+ then the files are simply marked for future deletion. And the file will be deleted as soon
+ as its retainCount drops back to zero.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">deleteNodeThumbnailsForNodeIDs</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n">NSString</span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span><span class="nv">nodeIDs</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">deleteNodeThumbnails</span><span class="p">(</span><span class="n">forNodeIDs</span> <span class="nv">nodeIDs</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">])</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)makeNodeThumbnailPersistent:forNodeID:"></a>
+                    <a name="//apple_ref/objc/Method/-makeNodeThumbnailPersistent:forNodeID:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)makeNodeThumbnailPersistent:forNodeID:">-makeNodeThumbnailPersistent:forNodeID:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Migrates node thumbnail files between persistent &amp; non-persistent.</p>
+
+<p>The files are migrated in a safe manner.
+ That is, if any files are currently being retained (a retainToken/CryptoFile is being held for them),
+ then file is instead copied, and the original file is marked for future deletion.
+ And the file will be deleted as soon as its retainCount drops to zero.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">makeNodeThumbnailPersistent</span><span class="p">:(</span><span class="n">BOOL</span><span class="p">)</span><span class="nv">persistent</span>
+                          <span class="nf">forNodeID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">nodeID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">makeNodeThumbnailPersistent</span><span class="p">(</span><span class="n">_</span> <span class="nv">persistent</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">,</span> <span class="n">forNodeID</span> <span class="nv">nodeID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>persistent</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>If YES, then non-persistent data files will moved moved to a persistent location on disk.
+If NO, then persistent files will be moved to a non-persistent location on disk.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>nodeID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The node for which you want to migrate files (nodeID == ZDCNode.uuid)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/User%20Avatars"></a>
+                <a name="//apple_ref/objc/Section/User Avatars" class="dashAnchor"></a>
+                <a href="#/User%20Avatars">
+                  <h3 class="section-name">User Avatars</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)importUserAvatar:forUser:auth0ID:error:"></a>
+                    <a name="//apple_ref/objc/Method/-importUserAvatar:forUser:auth0ID:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)importUserAvatar:forUser:auth0ID:error:">-importUserAvatar:forUser:auth0ID:error:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>This method is designed to take a CryptoFile that&rsquo;s stored in a temp location,
+ and move it into a directory that&rsquo;s being managed by the DiskManager.</p>
+
+<p>For example, you might download a file using the <code><a href="../Classes/ZDCDownloadManager.html">ZDCDownloadManager</a></code>,
+ and then pass the resulting CryptoFile into this method.</p>
+
+<p>By utilizing the DiskManager, you can efficiently manage your app&rsquo;s storage.
+ This is because the DiskManager has the notion of persistent vs non-persistent (cached) files.
+ Persistent files stick around until you manually delete them (or until the corresponding node is deleted).
+ Non-persistent files, however, are part of a configurable storage pool.
+ You can set limits on the size of the storage pool,
+ and the DiskManager automatically handles deleting data when the pool gets too big.
+ You can also set optional expiration intervals for imported files,
+ and the DiskManager automatically handles deleting the files when they get too old.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <p>Non-persistent files may also be deleted by the OS due to low disk space.</p>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n"><a href="../Classes/ZDCCryptoFile.html">ZDCCryptoFile</a></span> <span class="o">*</span><span class="p">)</span><span class="nf">importUserAvatar</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCDiskImport.html">ZDCDiskImport</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">import</span>
+                                     <span class="nf">forUser</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCUser.html">ZDCUser</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">user</span>
+                                     <span class="nf">auth0ID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">auth0ID</span>
+                                       <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span>
+                                                 <span class="n">outError</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">importUserAvatar</span><span class="p">(</span><span class="n">_</span> <span class="nv">import</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCDiskImport.html">ZDCDiskImport</a></span><span class="p">,</span> <span class="k">for</span> <span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCUser.html">ZDCUser</a></span><span class="p">,</span> <span class="nv">auth0ID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ZDCCryptoFile.html">ZDCCryptoFile</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>import</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The data can be imported to the DiskManager from multiple formats.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>user</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The corresponding user for the file.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>auth0ID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The auth0ID that corresponds to the avatar that was downloaded.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)hasUserAvatar:"></a>
+                    <a name="//apple_ref/objc/Method/-hasUserAvatar:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)hasUserAvatar:">-hasUserAvatar:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns whether or not the DiskManager currently has any avatars for the given user.</p>
+<div class="aside aside-warning">
+    <p class="aside-title">Warning</p>
+    <p>This method only provides a snapshot of the current state, which may quickly change.
+      Moments after you invoke this method, the cached file may be deleted (for various reasons).
+      If you need to ensure the cached file sticks around for awhile,
+      use a method that returns a <code><a href="../Classes/ZDCCryptoFile.html">ZDCCryptoFile</a></code> (with its retainToken) for the file.</p>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">hasUserAvatar</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">userID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">hasUserAvatar</span><span class="p">(</span><span class="n">_</span> <span class="nv">userID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>userID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The user you&rsquo;re interested in (userID == ZDCUser.uuid)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)hasUserAvatar:forAuth0ID:"></a>
+                    <a name="//apple_ref/objc/Method/-hasUserAvatar:forAuth0ID:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)hasUserAvatar:forAuth0ID:">-hasUserAvatar:forAuth0ID:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns whether or not the DiskManager currently has an avatar for the given {userID, auth0ID} tuple.
+ If you pass a nil auth0ID, it returns whether there are ANY avatars for the user.</p>
+<div class="aside aside-warning">
+    <p class="aside-title">Warning</p>
+    <p>This method only provides a snapshot of the current state, which may quickly change.
+      Moments after you invoke this method, the cached file may be deleted (for various reasons).
+      If you need to ensure the cached file sticks around for awhile,
+      use a method that returns a <code><a href="../Classes/ZDCCryptoFile.html">ZDCCryptoFile</a></code> (with its retainToken) for the file.</p>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">hasUserAvatar</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">userID</span>
+           <span class="nf">forAuth0ID</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">auth0ID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">hasUserAvatar</span><span class="p">(</span><span class="n">_</span> <span class="nv">userID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="n">forAuth0ID</span> <span class="nv">auth0ID</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>userID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The user you&rsquo;re interested in (userID == ZDCUser.uuid)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>auth0ID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>If you&rsquo;re interested in a particular social identity.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)userAvatar:"></a>
+                    <a name="//apple_ref/objc/Method/-userAvatar:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)userAvatar:">-userAvatar:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns a CryptoFile and associated info for the user avatar, if available on disk.
+ The information is bundled in a ZDCDiskExport instance.</p>
+
+<p>If a CryptoFile is returned, it will have a non-nil <code>-[ZDCCryptoFile retainToken]</code> property.
+ This prevents the DiskManager from deleting the file for as long as this retainToken isn&rsquo;t deallocated.</p>
+
+<p>Keep in mind that although the retainToken will prevent the DiskManager from deleting the file,
+ if the file is non-persistent (i.e. stored in an OS designated Caches folder),
+ then the OS is free to do what it pleases, and may decide to delete the file while the app is backgrounded.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n"><a href="../Classes/ZDCDiskExport.html">ZDCDiskExport</a></span> <span class="o">*</span><span class="p">)</span><span class="nf">userAvatar</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCUser.html">ZDCUser</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">user</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">userAvatar</span><span class="p">(</span><span class="n">_</span> <span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCUser.html">ZDCUser</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ZDCDiskExport.html">ZDCDiskExport</a></span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>user</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The user you&rsquo;re interested in.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)userAvatar:forAuth0ID:"></a>
+                    <a name="//apple_ref/objc/Method/-userAvatar:forAuth0ID:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)userAvatar:forAuth0ID:">-userAvatar:forAuth0ID:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns a CryptoFile and associated info for the user avatar, if available on disk.
+ The information is bundled in a ZDCDiskExport instance.</p>
+
+<p>If a CryptoFile is returned, it will have a non-nil <code>-[ZDCCryptoFile retainToken]</code> property.
+ This prevents the DiskManager from deleting the file for as long as this retainToken isn&rsquo;t deallocated.</p>
+
+<p>Keep in mind that although the retainToken will prevent the DiskManager from deleting the file,
+ if the file is non-persistent (i.e. stored in an OS designated Caches folder),
+ then the OS is free to do what it pleases, and may decide to delete the file while the app is backgrounded.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n"><a href="../Classes/ZDCDiskExport.html">ZDCDiskExport</a></span> <span class="o">*</span><span class="p">)</span><span class="nf">userAvatar</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCUser.html">ZDCUser</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">user</span>
+                            <span class="nf">forAuth0ID</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">auth0ID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">userAvatar</span><span class="p">(</span><span class="n">_</span> <span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCUser.html">ZDCUser</a></span><span class="p">,</span> <span class="n">forAuth0ID</span> <span class="nv">auth0ID</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ZDCDiskExport.html">ZDCDiskExport</a></span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>user</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The user you&rsquo;re interested in.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>auth0ID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>If you&rsquo;re interested in the avatar for a particular social identity.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)deleteUserAvatar:"></a>
+                    <a name="//apple_ref/objc/Method/-deleteUserAvatar:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)deleteUserAvatar:">-deleteUserAvatar:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Deletes all avatar files for the given userID from disk.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <p>The files are deleted in a safe manner.
+   That is, if any files are currently being retained (a retainToken is being held for them),
+   then the files are simply marked for future deletion. And the file will be deleted as soon
+   as its retainCount drops back to zero.</p>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">deleteUserAvatar</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">userID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">deleteUserAvatar</span><span class="p">(</span><span class="n">_</span> <span class="nv">userID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>userID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The user you&rsquo;re interested in (userID == ZDCUser.uuid)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)deleteUserAvatarsForUserIDs:"></a>
+                    <a name="//apple_ref/objc/Method/-deleteUserAvatarsForUserIDs:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)deleteUserAvatarsForUserIDs:">-deleteUserAvatarsForUserIDs:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Deletes avatar files for the given userID&rsquo;s from disk.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    The files are deleted in a safe manner.
+   That is, if any files are currently being retained (a retainToken is being held for them),
+   then the files are simply marked for future deletion. And the file will be deleted as soon
+   as its retainCount drops back to zero.
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">deleteUserAvatarsForUserIDs</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n">NSString</span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span><span class="nv">userIDs</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">deleteUserAvatars</span><span class="p">(</span><span class="n">forUserIDs</span> <span class="nv">userIDs</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">])</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)deleteUserAvatar:forAuth0ID:"></a>
+                    <a name="//apple_ref/objc/Method/-deleteUserAvatar:forAuth0ID:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)deleteUserAvatar:forAuth0ID:">-deleteUserAvatar:forAuth0ID:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Deletes the avatar file(s) for the given {userID, auth0ID} tuple from disk.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <p>The files are deleted in a safe manner.
+   That is, if any files are currently being retained (a retainToken is being held for them),
+   then the files are simply marked for future deletion. And the file will be deleted as soon
+   as its retainCount drops back to zero.</p>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">deleteUserAvatar</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">userID</span>
+              <span class="nf">forAuth0ID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">auth0ID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">deleteUserAvatar</span><span class="p">(</span><span class="n">_</span> <span class="nv">userID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="n">forAuth0ID</span> <span class="nv">auth0ID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>userID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The user you&rsquo;re interested in (userID == ZDCUser.uuid)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>auth0ID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>If you&rsquo;re interested in the avatar for a particular social identity.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)makeUserAvatarPersistent:forUserID:"></a>
+                    <a name="//apple_ref/objc/Method/-makeUserAvatarPersistent:forUserID:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)makeUserAvatarPersistent:forUserID:">-makeUserAvatarPersistent:forUserID:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Migrates user avatar files between persistent &amp; non-persistent.</p>
+
+<p>The files are migrated in a safe manner.
+ That is, if any files are currently being retained (a retainToken/CryptoFile is being held for them),
+ then file is instead copied, and the original file is marked for future deletion.
+ And the file will be deleted as soon as its retainCount drops to zero.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">makeUserAvatarPersistent</span><span class="p">:(</span><span class="n">BOOL</span><span class="p">)</span><span class="nv">persistent</span>
+                       <span class="nf">forUserID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">userID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">makeUserAvatarPersistent</span><span class="p">(</span><span class="n">_</span> <span class="nv">persistent</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">,</span> <span class="n">forUserID</span> <span class="nv">userID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>persistent</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>If YES, then non-persistent data files will moved moved to a persistent location on disk.
+If NO, then persistent files will be moved to a non-persistent location on disk.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>userID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The user for which you want to migrate files (userID == ZDCUser.uuid)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Storage%20Sizes"></a>
+                <a name="//apple_ref/objc/Section/Storage Sizes" class="dashAnchor"></a>
+                <a href="#/Storage%20Sizes">
+                  <h3 class="section-name">Storage Sizes</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)storageSizeForAllNodeData"></a>
+                    <a name="//apple_ref/objc/Method/-storageSizeForAllNodeData" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)storageSizeForAllNodeData">-storageSizeForAllNodeData</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the total size (summation) of all nodeData files on disk
+ (in directories being managed by the DiskManager).</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This method involves asking the OS filesystem for file sizes.
+   It&rsquo;s normally quite fast, however this does involve disk IO.
+   So you may prefer to invoke this method on a background thread.
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">uint64_t</span><span class="p">)</span><span class="n">storageSizeForAllNodeData</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">storageSizeForAllNodeData</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">UInt64</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)storageSizeForPersistentNodeData"></a>
+                    <a name="//apple_ref/objc/Method/-storageSizeForPersistentNodeData" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)storageSizeForPersistentNodeData">-storageSizeForPersistentNodeData</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the total size (summation) of all persistent nodeData files on disk
+ (in directories being managed by the DiskManager).</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This method involves asking the OS filesystem for file sizes.
+   It&rsquo;s normally quite fast, however this does involve disk IO.
+   So you may prefer to invoke this method on a background thread.
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">uint64_t</span><span class="p">)</span><span class="n">storageSizeForPersistentNodeData</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">storageSizeForPersistentNodeData</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">UInt64</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)storageSizeForCachedNodeData"></a>
+                    <a name="//apple_ref/objc/Method/-storageSizeForCachedNodeData" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)storageSizeForCachedNodeData">-storageSizeForCachedNodeData</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the total size (summation) of all cached (non-persistent) nodeData files on disk
+ (in directories being managed by the DiskManager).</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <p>This method involves asking the OS filesystem for file sizes.
+   It&rsquo;s normally quite fast, however this does involve disk IO.
+   So you may prefer to invoke this method on a background thread.</p>
+
+</div>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <p>The current size may temporarily exceed the configured max size
+   if a file is queued for deletion, but is currently being used
+   by the app. (e.g. A ZDCCryptoFile.retainToken is keeping the file
+   from being immediately deleted.)</p>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">uint64_t</span><span class="p">)</span><span class="n">storageSizeForCachedNodeData</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">storageSizeForCachedNodeData</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">UInt64</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)storageSizeForAllNodeThumbnails"></a>
+                    <a name="//apple_ref/objc/Method/-storageSizeForAllNodeThumbnails" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)storageSizeForAllNodeThumbnails">-storageSizeForAllNodeThumbnails</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the total size (summation) of all nodeThumbnail files on disk
+ (in directories being managed by the DiskManager).</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This method involves asking the OS filesystem for file sizes.
+   It&rsquo;s normally quite fast, however this does involve disk IO.
+   So you may prefer to invoke this method on a background thread.
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">uint64_t</span><span class="p">)</span><span class="n">storageSizeForAllNodeThumbnails</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">storageSizeForAllNodeThumbnails</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">UInt64</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)storageSizeForPersistentNodeThumbnail"></a>
+                    <a name="//apple_ref/objc/Method/-storageSizeForPersistentNodeThumbnail" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)storageSizeForPersistentNodeThumbnail">-storageSizeForPersistentNodeThumbnail</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the total size (summation) of all persistent nodeThumbnail files on disk
+ (in directories being managed by the DiskManager).</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This method involves asking the OS filesystem for file sizes.
+   It&rsquo;s normally quite fast, however this does involve disk IO.
+   So you may prefer to invoke this method on a background thread.
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">uint64_t</span><span class="p">)</span><span class="n">storageSizeForPersistentNodeThumbnail</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">storageSizeForPersistentNodeThumbnail</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">UInt64</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)storageSizeForCachedNodeThumbnails"></a>
+                    <a name="//apple_ref/objc/Method/-storageSizeForCachedNodeThumbnails" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)storageSizeForCachedNodeThumbnails">-storageSizeForCachedNodeThumbnails</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the total size (summation) of all cached (non-persistent) nodeThumbnail files on disk
+ (in directories being managed by the DiskManager).</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <p>This method involves asking the OS filesystem for file sizes.
+   It&rsquo;s normally quite fast, however this does involve disk IO.
+   So you may prefer to invoke this method on a background thread.</p>
+
+</div>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <p>The current size may temporarily exceed the configured max size
+   if a file is queued for deletion, but is currently being used
+   by the app. (e.g. A ZDCCryptoFile.retainToken is keeping the file
+   from being immediately deleted.)</p>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">uint64_t</span><span class="p">)</span><span class="n">storageSizeForCachedNodeThumbnails</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">storageSizeForCachedNodeThumbnails</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">UInt64</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)storageSizeForAllUserAvatars"></a>
+                    <a name="//apple_ref/objc/Method/-storageSizeForAllUserAvatars" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)storageSizeForAllUserAvatars">-storageSizeForAllUserAvatars</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the total size (summation) of all userAvatar files on disk
+ (in directories being managed by the DiskManager).</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This method involves asking the OS filesystem for file sizes.
+   It&rsquo;s normally quite fast, however this does involve disk IO.
+   So you may prefer to invoke this method on a background thread.
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">uint64_t</span><span class="p">)</span><span class="n">storageSizeForAllUserAvatars</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">storageSizeForAllUserAvatars</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">UInt64</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)storageSizeForPersistentUserAvatars"></a>
+                    <a name="//apple_ref/objc/Method/-storageSizeForPersistentUserAvatars" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)storageSizeForPersistentUserAvatars">-storageSizeForPersistentUserAvatars</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the total size (summation) of all persistent userAvatar files on disk
+ (in directories being managed by the DiskManager).</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This method involves asking the OS filesystem for file sizes.
+   It&rsquo;s normally quite fast, however this does involve disk IO.
+   So you may prefer to invoke this method on a background thread.
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">uint64_t</span><span class="p">)</span><span class="n">storageSizeForPersistentUserAvatars</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">storageSizeForPersistentUserAvatars</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">UInt64</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)storageSizeForCachedUserAvatars"></a>
+                    <a name="//apple_ref/objc/Method/-storageSizeForCachedUserAvatars" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)storageSizeForCachedUserAvatars">-storageSizeForCachedUserAvatars</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the total size (summation) of all cached (non-persistent) userAvatar files on disk
+ (in directories being managed by the DiskManager).</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <p>This method involves asking the OS filesystem for file sizes.
+   It&rsquo;s normally quite fast, however this does involve disk IO.
+   So you may prefer to invoke this method on a background thread.</p>
+
+</div>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <p>The current size may temporarily exceed the configured max size
+   if a file is queued for deletion, but is currently being used
+   by the app. (e.g. A ZDCCryptoFile.retainToken is keeping the file
+   from being immediately deleted.)</p>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">uint64_t</span><span class="p">)</span><span class="n">storageSizeForCachedUserAvatars</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">storageSizeForCachedUserAvatars</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">UInt64</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Utilities"></a>
+                <a name="//apple_ref/objc/Section/Utilities" class="dashAnchor"></a>
+                <a href="#/Utilities">
+                  <h3 class="section-name">Utilities</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDiskManager(im)deleteFileIfUnmanaged:"></a>
+                    <a name="//apple_ref/objc/Method/-deleteFileIfUnmanaged:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDiskManager(im)deleteFileIfUnmanaged:">-deleteFileIfUnmanaged:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Deletes the given file from the filesystem, so long as it&rsquo;s not being managed by the DiskManager.</p>
+
+<p>When you download files using the ZDCDownloadManager,
+ you&rsquo;re given the option of storing the downloaded file into the DiskManager automatically.
+ When you choose to do so, then the returned file is managed by the DiskManager, and thus you shouldn&rsquo;t delete it.
+ But when you choose not to do so, then the returned file is sitting in a temp directory.
+ And you&rsquo;re encouraged to delete it when you&rsquo;re done with it.
+ Having two very different requirements is just asking for bugs.
+ So instead, you can simply use this API every single time, which will always just do the right thing for you.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">deleteFileIfUnmanaged</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">fileURL</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">deleteFileIfUnmanaged</span><span class="p">(</span><span class="n">_</span> <span class="nv">fileURL</span><span class="p">:</span> <span class="kt">URL</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+      </article>
+    </div>
+    <section class="footer">
+      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-06-03)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+    </section>
+  </body>
+</div>
+</html>
