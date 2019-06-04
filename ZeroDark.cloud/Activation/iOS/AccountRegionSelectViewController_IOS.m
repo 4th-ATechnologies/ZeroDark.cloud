@@ -133,7 +133,7 @@ static NSString *const kRegions	      		= @"regions";
 
 -(void)viewWillAppear:(BOOL)animated
 {
-	[self viewWillDisappear:animated];
+	[super viewWillDisappear:animated];
 	if(standAlone)
 	{
 		_lblTitle.text = NSLocalizedString(@"Region Ping Test", @"Region Ping Test");

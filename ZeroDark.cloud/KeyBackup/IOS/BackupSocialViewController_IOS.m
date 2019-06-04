@@ -278,7 +278,7 @@ typedef NS_ENUM(NSInteger, BackupSocialViewController_Page) {
 
 -(void)viewWillDisappear:(BOOL)animated
 {
-	[self viewWillDisappear:animated];
+	[super viewWillDisappear:animated];
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	
 	[_tblSplits setEditing:NO animated:YES];
@@ -571,7 +571,7 @@ typedef NS_ENUM(NSInteger, BackupSocialViewController_Page) {
 
 -(void)viewDidLoad
 {
-	[self viewDidLoad];
+	[super viewDidLoad];
 	
 	[BackupShareUITableViewCell registerViewsforTable:_tblShares bundle:[ZeroDarkCloud frameworkBundle]];
 	
@@ -590,7 +590,7 @@ typedef NS_ENUM(NSInteger, BackupSocialViewController_Page) {
 
 -(void)viewWillAppear:(BOOL)animated
 {
-	[self viewWillDisappear:animated];
+	[super viewWillDisappear:animated];
 	[[NSNotificationCenter defaultCenter] addObserver:self
 														  selector:@selector(keyboardWillShow:)
 																name:UIKeyboardWillShowNotification
@@ -644,7 +644,7 @@ typedef NS_ENUM(NSInteger, BackupSocialViewController_Page) {
 
 -(void)viewWillDisappear:(BOOL)animated
 {
-	[self viewWillDisappear:animated];
+	[super viewWillDisappear:animated];
 	__weak typeof(self) weakSelf = self;
 	
 	[[NSNotificationCenter defaultCenter]  removeObserver:self];
@@ -1009,7 +1009,7 @@ API_AVAILABLE(ios(10.0)){
 
 -(void)viewDidLoad
 {
-	[self viewDidLoad];
+	[super viewDidLoad];
 	_vwSliders.layer.cornerRadius   = 16;
 	_vwSliders.layer.masksToBounds  = YES;
 	_vwSliders.backgroundColor      = [UIColor colorWithWhite:.8 alpha:.4];
@@ -1707,7 +1707,7 @@ API_AVAILABLE(ios(10.0)){
 
 -(void)viewWillAppear:(BOOL)animated
 {
-	[self viewWillDisappear:animated];
+	[super viewWillDisappear:animated];
 	_imgStatus.hidden = !self.didSend;
 	[self refreshView];
 }
@@ -1922,7 +1922,7 @@ API_AVAILABLE(ios(10.0)){
 
 -(void)viewWillAppear:(BOOL)animated
 {
-	[self viewWillDisappear:animated];
+	[super viewWillDisappear:animated];
 	// we do this to force the pageController to free its contents
 	
 	for( UIView* vw in _stkPages.arrangedSubviews)
