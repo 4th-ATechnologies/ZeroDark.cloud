@@ -5,67 +5,92 @@
 
 #import "ZDCDelegate.h"
 
+
 @implementation ZDCDelegate
 
-- (ZDCNodeData *)dataForNode:(ZDCNode *)node
-                      atPath:(ZDCTreesystemPath *)path
-                 transaction:(YapDatabaseReadTransaction *)transaction
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Push - Nodes
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (ZDCData *)dataForNode:(ZDCNode *)node
+                  atPath:(ZDCTreesystemPath *)path
+             transaction:(YapDatabaseReadTransaction *)transaction;
 {
-	return [[ZDCNodeData alloc] initWithData:[NSData data]];
+	return [[ZDCData alloc] initWithData:[NSData data]];
 }
 
-- (nullable NSData *)metadataForNode:(ZDCNode *)node
-                              atPath:(ZDCTreesystemPath *)path
-                         transaction:(YapDatabaseReadTransaction *)transaction
-{
-	return nil;
-}
-
-- (nullable NSData *)thumbnailForNode:(ZDCNode *)node
+- (nullable ZDCData *)metadataForNode:(ZDCNode *)node
                                atPath:(ZDCTreesystemPath *)path
                           transaction:(YapDatabaseReadTransaction *)transaction
 {
 	return nil;
 }
 
-- (void)didPushNodeData:(nonnull ZDCNode *)node
-                 atPath:(nonnull ZDCTreesystemPath *)path
-            transaction:(nonnull YapDatabaseReadWriteTransaction *)transaction
+- (nullable ZDCData *)thumbnailForNode:(ZDCNode *)node
+                                atPath:(ZDCTreesystemPath *)path
+                           transaction:(YapDatabaseReadTransaction *)transaction
 {
-	NSLog(@"didPushNodeData:atPath: %@", path.fullPath);
+	return nil;
 }
 
+- (void)didPushNodeData:(ZDCNode *)node
+                 atPath:(ZDCTreesystemPath *)path
+            transaction:(YapDatabaseReadWriteTransaction *)transaction
+{
+	NSLog(@"didPushNodeData:atPath: %@", path);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Push - Messages
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (nullable ZDCData *)messageDataForUser:(ZDCUser *)user
+                           withMessageID:(NSString *)messageID
+                             transaction:(YapDatabaseReadTransaction *)transaction
+{
+	return nil;
+}
+
+- (void)didSendMessageToUser:(ZDCUser *)user
+               withMessageID:(NSString *)messageID
+                 transaction:(YapDatabaseReadWriteTransaction *)transaction
+{
+	NSLog(@"didSendMessageToUser:withMessageID::");
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Pull
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)didDiscoverNewNode:(nonnull ZDCNode *)node
-                    atPath:(nonnull ZDCTreesystemPath *)path
-               transaction:(nonnull YapDatabaseReadWriteTransaction *)transaction
+- (void)didDiscoverNewNode:(ZDCNode *)node
+                    atPath:(ZDCTreesystemPath *)path
+               transaction:(YapDatabaseReadWriteTransaction *)transaction
 {
-	NSLog(@"didDiscoverNodeNode:atPath: %@", path.fullPath);
+	NSLog(@"didDiscoverNewNode:atPath: %@", path);
 }
 
-- (void)didDiscoverModifiedNode:(nonnull ZDCNode *)node
+- (void)didDiscoverModifiedNode:(ZDCNode *)node
                      withChange:(ZDCNodeChange)change
-                         atPath:(nonnull ZDCTreesystemPath *)path
-                    transaction:(nonnull YapDatabaseReadWriteTransaction *)transaction
+                         atPath:(ZDCTreesystemPath *)path
+                    transaction:(YapDatabaseReadWriteTransaction *)transaction
 {
-	NSLog(@"didDiscoverModifiedNode:atPath: %@", path.fullPath);
+	NSLog(@"didDiscoverModifiedNode:withChange:atPath: %@", path);
 }
 
-- (void)didDiscoverMovedNode:(nonnull ZDCNode *)node
-                        from:(nonnull ZDCTreesystemPath *)oldPath
-                          to:(nonnull ZDCTreesystemPath *)newPath
-                 transaction:(nonnull YapDatabaseReadWriteTransaction *)transaction
+- (void)didDiscoverMovedNode:(ZDCNode *)node
+                        from:(ZDCTreesystemPath *)oldPath
+                          to:(ZDCTreesystemPath *)newPath
+                 transaction:(YapDatabaseReadWriteTransaction *)transaction
 {
-	NSLog(@"didDiscoverMovedNode: %@ -> %@", oldPath.fullPath, newPath.fullPath);
+	NSLog(@"didDiscoverMovedNode:from:to: %@ -> %@", oldPath, newPath);
 }
 
-- (void)didDiscoverDeletedNode:(nonnull ZDCNode *)node
-                        atPath:(nonnull ZDCTreesystemPath *)path
+- (void)didDiscoverDeletedNode:(ZDCNode *)node
+                        atPath:(ZDCTreesystemPath *)path
                      timestamp:(nullable NSDate *)timestamp
-                   transaction:(nonnull YapDatabaseReadWriteTransaction *)transaction
+                   transaction:(YapDatabaseReadWriteTransaction *)transaction
 {
-	NSLog(@"didDiscoverDeletedNode:atPath: %@", path.fullPath);
+	NSLog(@"didDiscoverDeletedNode:atPath: %@", path);
 }
 
 @end

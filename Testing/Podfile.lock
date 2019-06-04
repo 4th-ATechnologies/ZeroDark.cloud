@@ -95,6 +95,7 @@ PODS:
     - YapDatabase/SQLCipher/Core
   - YapDatabase/SQLCipher/Extensions/View (3.1.2):
     - YapDatabase/SQLCipher/Core
+  - ZDCSyncableObjC (1.0.1)
   - ZeroDarkCloud (1.0.0):
     - AFNetworking
     - CocoaLumberjack
@@ -108,9 +109,9 @@ PODS:
     - UIColor-Crayola
     - XMLDictionary
     - YapDatabase/SQLCipher
+    - ZDCSyncableObjC
     - ZeroDarkCloud/Core (= 1.0.0)
     - zipzap
-    - ZXCVBN
   - ZeroDarkCloud/Core (1.0.0):
     - AFNetworking
     - CocoaLumberjack
@@ -124,10 +125,9 @@ PODS:
     - UIColor-Crayola
     - XMLDictionary
     - YapDatabase/SQLCipher
+    - ZDCSyncableObjC
     - zipzap
-    - ZXCVBN
   - zipzap (8.1.1)
-  - ZXCVBN (1.0.5)
 
 DEPENDENCIES:
   - YapDatabase/SQLCipher (from `https://github.com/yapstudios/YapDatabase.git`, commit `493981ed85cd07c5a6af9489a6b0b035dbd3e87f`)
@@ -148,8 +148,8 @@ SPEC REPOS:
     - TCCopyableLabel
     - UIColor-Crayola
     - XMLDictionary
+    - ZDCSyncableObjC
     - zipzap
-    - ZXCVBN
 
 EXTERNAL SOURCES:
   YapDatabase:
@@ -178,10 +178,10 @@ SPEC CHECKSUMS:
   UIColor-Crayola: 0d2f68032cbea6ba4669b360ffb641d203b41a0d
   XMLDictionary: fa07b6ff422b3a91d47a5de9bc82e3fc04fbd167
   YapDatabase: d8cd02058e36bc0902e405d8f3326eb8d7dbf36c
-  ZeroDarkCloud: e10f6ff0c069e838e76589b2c4f0a0714b494aa9
+  ZDCSyncableObjC: 0866ef66fc5be67e0b6df713cff9b9b84eed9967
+  ZeroDarkCloud: 3f9ec14b318dc23b1ad8a69cd412a9ac4de60f69
   zipzap: 940162d9c9c60472c2eab341385e4214da0fdf1c
-  ZXCVBN: f3888e3f6363b8cf57bcc32857a9bc09f9f9e18e
 
-PODFILE CHECKSUM: f526ce7ee0c1314722a57c6e10cf9a8c8220b04b
+PODFILE CHECKSUM: fb56a5353dfb218c10eee108aa2a5660d69b0e13
 
-COCOAPODS: 1.6.1
+COCOAPODS: 1.7.1

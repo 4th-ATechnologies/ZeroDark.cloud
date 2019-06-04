@@ -237,7 +237,7 @@ typedef NS_ENUM(NSInteger, ZDCNodeChange) {
  */
 - (void)didSendMessageToUser:(ZDCUser *)user
                withMessageID:(NSString *)messageID
-                 transaction:(YapDatabaseReadWriteTransaction *)transaction;;
+                 transaction:(YapDatabaseReadWriteTransaction *)transaction;
 
 #pragma mark Pull
 

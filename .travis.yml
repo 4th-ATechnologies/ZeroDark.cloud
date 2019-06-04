@@ -1,6 +1,21 @@
-language: objective-c
 os: osx
+language: objective-c
+xcode_workspace: Testing/ZeroDarkCloudTesting.xcworkspace
+xcode_scheme: zdc_macOS
+xcode_destination: platform=macOS
 before_install:
+  - brew install git-lfs
+  - echo -e "machine github.com\n  login $GITHUB_TOKEN" > ~/.netrc
+  - git lfs install
+  - git lfs pull
+  - gem uninstall cocoapods -a -x --force
+  - gem install cocoapods
+  - pushd Testing
+  - pod --version
+  - pod install --repo-update
+  - xcodebuild -list
+  - popd
+after_success:
   - gem install jazzy
   - jazzy
 deploy:
