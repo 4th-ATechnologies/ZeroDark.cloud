@@ -166,6 +166,9 @@ typedef NS_ENUM(NSInteger, BackupSocialViewController_Page) {
 -(NSData*)shareKeyForShareID:(NSString*)shareID;
 -(void)resetBackButton;
 
+-(void)enableSwipe:(BOOL)enable;
+
+
 -(void)sendShareButtonHitForShareID:(NSString*)shareID
 								 sourceView:(UIView*)sourceView
 								 sourceRect:(CGRect)sourceRect
@@ -272,13 +275,20 @@ typedef NS_ENUM(NSInteger, BackupSocialViewController_Page) {
 	self.backupSocialVC.navigationItem.rightBarButtonItems = @[bbnEdit];
 	_btnCreateShare.enabled = YES;
 	
-	
 	[self refreshView];
+}
+
+-(void)viewDidAppear:(BOOL)animated
+{
+	[super viewDidAppear:animated];
+	[self.backupSocialVC	enableSwipe:NO];
 }
 
 -(void)viewWillDisappear:(BOOL)animated
 {
 	[super viewWillDisappear:animated];
+	[self.backupSocialVC	enableSwipe:YES];
+
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	
 	[_tblSplits setEditing:NO animated:YES];
@@ -1052,7 +1062,6 @@ API_AVAILABLE(ios(10.0)){
 {
 	[super viewWillAppear:animated];
 	
-	
 	[[NSNotificationCenter defaultCenter] addObserver:self
 														  selector:@selector(keyboardWillShow:)
 																name:UIKeyboardWillShowNotification
@@ -1075,13 +1084,20 @@ API_AVAILABLE(ios(10.0)){
 	self.backupSocialVC.navigationItem.leftBarButtonItems = @[backItem];
 	
 	[self reset];
-	
+}
+
+-(void)viewDidAppear:(BOOL)animated
+{
+	[super viewDidAppear:animated];
+	[self.backupSocialVC	enableSwipe:NO];
 }
 
 -(void) viewWillDisappear:(BOOL)animated
 {
 	[super viewWillDisappear:animated];
 	
+	[self.backupSocialVC	enableSwipe:YES];
+
 	[[NSNotificationCenter defaultCenter]  removeObserver:self];
 }
 
@@ -2687,6 +2703,19 @@ API_AVAILABLE(ios(10.0)){
 										}];
 }
 
+
+-(void)enableSwipe:(BOOL)enable
+{
+	
+	for (UIScrollView *view in _pageController.view.subviews) {
+		
+		if ([view isKindOfClass:[UIScrollView class]]) {
+			
+			view.scrollEnabled = enable;
+		}
+	};
+	
+}
 
 -(void) hideDots:(BOOL)hidden
 {
