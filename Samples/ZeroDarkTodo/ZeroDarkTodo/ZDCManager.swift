@@ -776,6 +776,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		let options = ZDCDownloadOptions()
 		options.cacheToDiskManager = false
 		options.canDownloadWhileInBackground = true
+		options.completionTag = String(describing: type(of: self)) as NSString
 		
 		let queue = DispatchQueue.global()
 		

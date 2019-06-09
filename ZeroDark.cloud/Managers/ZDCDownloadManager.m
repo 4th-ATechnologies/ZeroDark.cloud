@@ -279,45 +279,71 @@ static NSUInteger const kMaxFailCount = 8;
 	}
 	
 	NSString *const downloadKey = [self downloadMetaKeyForNodeID:node.uuid components:ZDCNodeMetaComponents_Header];
-	ZDCDownloadTicket *ticket =
-	  [[ZDCDownloadTicket alloc] initWithOwner: self
-	                                    nodeID: node.uuid
-	                                components: ZDCNodeMetaComponents_Header
-	                                   options: options
-	                           completionBlock: completionBlock];
 	
-	ZDCProgress *progress = [[ZDCProgress alloc] init];
+	__block ZDCDownloadTicket *existingTicket = nil;
+	__block ZDCDownloadTicket *ticket = nil;
+	
 	__block NSProgress *existingProgress = nil;
+	__block ZDCProgress *progress = nil;
 	
 	dispatch_sync(downloadQueue, ^{ @autoreleasepool {
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 	
-		[owner.progressManager setMetaDownloadProgress: progress
-		                                     forNodeID: node.uuid
-		                                    components: ZDCNodeMetaComponents_Header
-		                                   localUserID: node.localUserID
-		                              existingProgress: &existingProgress
-		                               completionQueue: completionQueue
-		                               completionBlock: completionBlock];
-	
-		if (existingProgress) {
-			ticket.progress = existingProgress;
-		}
-		else {
-			ticket.progress = progress;
-		}
-		
 		ZDCDownloadRef *ref = downloadDict[downloadKey];
-		if (!ref) {
-			ref = downloadDict[downloadKey] = [[ZDCDownloadRef alloc] init];
+		
+		if (options.completionTag && ref)
+		{
+			for (ZDCDownloadTicket *ticket in ref.tickets)
+			{
+				if ([ticket.options.completionTag isEqualToString:options.completionTag])
+				{
+					existingTicket = ticket;
+					break;
+				}
+			}
 		}
 		
-		[ref.tickets addObject:ticket];
+		if (existingTicket == nil)
+		{
+			ticket = [[ZDCDownloadTicket alloc] initWithOwner: self
+			                                           nodeID: node.uuid
+			                                       components: ZDCNodeMetaComponents_Header
+			                                          options: options
+			                                  completionBlock: completionBlock];
+			
+			progress = [[ZDCProgress alloc] init];
+			
+			[owner.progressManager setMetaDownloadProgress: progress
+			                                     forNodeID: node.uuid
+			                                    components: ZDCNodeMetaComponents_Header
+			                                   localUserID: node.localUserID
+			                              existingProgress: &existingProgress
+			                               completionQueue: completionQueue
+			                               completionBlock: completionBlock];
+		
+			if (existingProgress) {
+				ticket.progress = existingProgress;
+			}
+			else {
+				ticket.progress = progress;
+			}
+		
+			if (!ref) {
+				ref = downloadDict[downloadKey] = [[ZDCDownloadRef alloc] init];
+			}
+			[ref.tickets addObject:ticket];
+		}
 		
 	#pragma clang diagnostic pop
 	}});
 	
+	if (existingTicket)
+	{
+		// Download already in progress.
+		// Request is a duplicate (as per completionTag).
+		return existingTicket;
+	}
 	if (existingProgress)
 	{
 		// Download already in progress.
@@ -830,8 +856,6 @@ static NSUInteger const kMaxFailCount = 8;
 		                completionBlock: completionBlock];
 	}
 	
-	NSString *const downloadKey = [self downloadMetaKeyForNodeID:node.uuid components:components];
-	
 	BOOL requestingMetadata = (components & ZDCNodeMetaComponents_Metadata) != 0;
 	BOOL requestingThumbnail = (components & ZDCNodeMetaComponents_Thumbnail) != 0;
 	
@@ -840,33 +864,51 @@ static NSUInteger const kMaxFailCount = 8;
 		// Are we currently downloading both ?
 		// If so we can just piggyback off that.
 		
+		NSString *const piggybackKey = [self downloadMetaKeyForNodeID:node.uuid components:ZDCNodeMetaComponents_All];
+		
 		__block ZDCDownloadTicket *piggybackTicket = nil;
 		
 		dispatch_sync(downloadQueue, ^{ @autoreleasepool {
 		#pragma clang diagnostic push
 		#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 			
-			NSProgress *piggybackProgress =
-			  [owner.progressManager metaDownloadProgressForNodeID: node.uuid
-			                                            components: @(ZDCNodeMetaComponents_All)
-			                                       completionQueue: completionQueue
-			                                       completionBlock: completionBlock];
-			if (piggybackProgress)
+			ZDCDownloadRef *ref = downloadDict[piggybackKey];
+			
+			if (options.completionTag && ref)
 			{
-				piggybackTicket =
-				  [[ZDCDownloadTicket alloc] initWithOwner: self
-				                                    nodeID: node.uuid
-				                                components: ZDCNodeMetaComponents_All
-				                                   options: options
-				                           completionBlock: completionBlock];
-				piggybackTicket.progress = piggybackProgress;
-				
-				ZDCDownloadRef *ref = downloadDict[downloadKey];
-				if (!ref) {
-					ref = downloadDict[downloadKey] = [[ZDCDownloadRef alloc] init];
+				for (ZDCDownloadTicket *ticket in ref.tickets)
+				{
+					if ([ticket.options.completionTag isEqualToString:options.completionTag])
+					{
+						piggybackTicket = ticket;
+						break;
+					}
 				}
-				
-				[ref.tickets addObject:piggybackTicket];
+			}
+			
+			if (piggybackTicket == nil)
+			{
+				NSProgress *piggybackProgress =
+				  [owner.progressManager metaDownloadProgressForNodeID: node.uuid
+				                                            components: @(ZDCNodeMetaComponents_All)
+				                                       completionQueue: completionQueue
+				                                       completionBlock: completionBlock];
+				if (piggybackProgress)
+				{
+					piggybackTicket = [[ZDCDownloadTicket alloc] initWithOwner: self
+					                                                    nodeID: node.uuid
+					                                                components: ZDCNodeMetaComponents_All
+					                                                   options: options
+					                                           completionBlock: completionBlock];
+					
+					piggybackTicket.progress = piggybackProgress;
+		
+					if (!ref) {
+						ref = downloadDict[piggybackKey] = [[ZDCDownloadRef alloc] init];
+					}
+		
+					[ref.tickets addObject:piggybackTicket];
+				}
 			}
 			
 		#pragma clang diagnostic pop
@@ -874,51 +916,79 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		if (piggybackTicket)
 		{
+			// Download already in progress (for a slightly different request).
 			return piggybackTicket;
 		}
 	}
 	
 	// Check for existing progress
 	
-	ZDCDownloadTicket *ticket =
-	  [[ZDCDownloadTicket alloc] initWithOwner: self
-	                                    nodeID: node.uuid
-	                                components: components
-	                                   options: options
-	                           completionBlock: completionBlock];
+	NSString *const downloadKey = [self downloadMetaKeyForNodeID:node.uuid components:components];
 	
-	ZDCProgress *progress = [[ZDCProgress alloc] init];
+	__block ZDCDownloadTicket *existingTicket = nil;
+	__block ZDCDownloadTicket *ticket = nil;
+	
 	__block NSProgress *existingProgress = nil;
+	__block ZDCProgress *progress = nil;
 	
 	dispatch_sync(downloadQueue, ^{ @autoreleasepool {
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 	
-		[owner.progressManager setMetaDownloadProgress: progress
-		                                     forNodeID: node.uuid
-		                                    components: components
-		                                   localUserID: node.localUserID
-		                              existingProgress: &existingProgress
-		                               completionQueue: completionQueue
-		                               completionBlock: completionBlock];
-	
-		if (existingProgress) {
-			ticket.progress = existingProgress;
-		}
-		else {
-			ticket.progress = progress;
-		}
-		
 		ZDCDownloadRef *ref = downloadDict[downloadKey];
-		if (!ref) {
-			ref = downloadDict[downloadKey] = [[ZDCDownloadRef alloc] init];
+		
+		if (options.completionTag && ref)
+		{
+			for (ZDCDownloadTicket *ticket in ref.tickets)
+			{
+				if ([ticket.options.completionTag isEqualToString:options.completionTag])
+				{
+					existingTicket = ticket;
+					break;
+				}
+			}
 		}
 		
-		[ref.tickets addObject:ticket];
+		if (existingTicket == nil)
+		{
+			ticket = [[ZDCDownloadTicket alloc] initWithOwner: self
+			                                           nodeID: node.uuid
+			                                       components: components
+			                                          options: options
+			                                  completionBlock: completionBlock];
+			
+			progress = [[ZDCProgress alloc] init];
+			
+			[owner.progressManager setMetaDownloadProgress: progress
+			                                     forNodeID: node.uuid
+			                                    components: components
+			                                   localUserID: node.localUserID
+			                              existingProgress: &existingProgress
+			                               completionQueue: completionQueue
+			                               completionBlock: completionBlock];
+	
+			if (existingProgress) {
+				ticket.progress = existingProgress;
+			}
+			else {
+				ticket.progress = progress;
+			}
+	
+			if (!ref) {
+				ref = downloadDict[downloadKey] = [[ZDCDownloadRef alloc] init];
+			}
+			[ref.tickets addObject:ticket];
+		}
 		
 	#pragma clang diagnostic pop
 	}});
 	
+	if (existingTicket)
+	{
+		// Download already in progress.
+		// Request is a duplicate (as per completionTag).
+		return existingTicket;
+	}
 	if (existingProgress)
 	{
 		// Download already in progress.
@@ -1690,43 +1760,69 @@ static NSUInteger const kMaxFailCount = 8;
 	}
 	
 	NSString *const downloadKey = node.uuid;
-	ZDCDownloadTicket *ticket =
-	  [[ZDCDownloadTicket alloc] initWithOwner: self
-	                                    nodeID: node.uuid
-	                                   options: options
-	                           completionBlock: completionBlock];
 	
-	ZDCProgress *progress = [[ZDCProgress alloc] init];
+	__block ZDCDownloadTicket *existingTicket = nil;
+	__block ZDCDownloadTicket *ticket = nil;
+	
 	__block NSProgress *existingProgress = nil;
+	__block ZDCProgress *progress = nil;
 	
 	dispatch_sync(downloadQueue, ^{ @autoreleasepool {
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
-		[owner.progressManager setDataDownloadProgress: progress
-		                                     forNodeID: node.uuid
-		                                   localUserID: node.localUserID
-		                              existingProgress: &existingProgress
-		                               completionQueue: completionQueue
-		                               completionBlock: completionBlock];
-	
-		if (existingProgress) {
-			ticket.progress = existingProgress;
-		}
-		else {
-			ticket.progress = progress;
-		}
-		
 		ZDCDownloadRef *ref = downloadDict[downloadKey];
-		if (!ref) {
-			ref = downloadDict[downloadKey] = [[ZDCDownloadRef alloc] init];
+		
+		if (options.completionTag && ref)
+		{
+			for (ZDCDownloadTicket *ticket in ref.tickets)
+			{
+				if ([ticket.options.completionTag isEqualToString:options.completionTag])
+				{
+					existingTicket = ticket;
+					break;
+				}
+			}
 		}
 		
-		[ref.tickets addObject:ticket];
+		if (existingTicket == nil)
+		{
+			ticket = [[ZDCDownloadTicket alloc] initWithOwner: self
+			                                           nodeID: node.uuid
+			                                          options: options
+			                                  completionBlock: completionBlock];
+			
+			progress = [[ZDCProgress alloc] init];
+		
+			[owner.progressManager setDataDownloadProgress: progress
+			                                     forNodeID: node.uuid
+			                                   localUserID: node.localUserID
+			                              existingProgress: &existingProgress
+			                               completionQueue: completionQueue
+			                               completionBlock: completionBlock];
+	
+			if (existingProgress) {
+				ticket.progress = existingProgress;
+			}
+			else {
+				ticket.progress = progress;
+			}
+	
+			if (!ref) {
+				ref = downloadDict[downloadKey] = [[ZDCDownloadRef alloc] init];
+			}
+			[ref.tickets addObject:ticket];
+		}
 		
 	#pragma clang diagnostic pop
 	}});
 	
+	if (existingTicket)
+	{
+		// Download already in progress.
+		// Request is a duplicate (as per completionTag).
+		return existingTicket;
+	}
 	if (existingProgress)
 	{
 		// Download already in progress.
@@ -2917,6 +3013,7 @@ static NSString *const k_saveToDisk    = @"saveToDisk";
 #if TARGET_OS_IPHONE
 static NSString *const k_canBackground = @"canBackground";
 #endif
+static NSString *const k_completionTag = @"completionTag";
 
 @implementation ZDCDownloadOptions
 
@@ -2925,6 +3022,8 @@ static NSString *const k_canBackground = @"canBackground";
 #if TARGET_OS_IPHONE
 @synthesize canDownloadWhileInBackground = _canBackground;
 #endif
+@synthesize completionTag = _completionTag;
+
 
 - (instancetype)initWithCoder:(NSCoder *)decoder
 {
@@ -2935,6 +3034,7 @@ static NSString *const k_canBackground = @"canBackground";
 	#if TARGET_OS_IPHONE
 		_canBackground = [decoder decodeBoolForKey:k_canBackground];
 	#endif
+		_completionTag = [decoder decodeObjectForKey:k_completionTag];
 	}
 	return self;
 }
@@ -2944,8 +3044,9 @@ static NSString *const k_canBackground = @"canBackground";
 	[coder encodeBool:_cacheToDisk forKey:k_cacheToDisk];
 	[coder encodeBool:_saveToDisk  forKey:k_saveToDisk];
 #if TARGET_OS_IPHONE
-	[coder encodeBool:k_canBackground forKey:k_canBackground];
+	[coder encodeBool:_canBackground forKey:k_canBackground];
 #endif
+	[coder encodeObject:_completionTag forKey:k_completionTag];
 }
 
 - (id)copyWithZone:(NSZone *)zone
@@ -2956,6 +3057,7 @@ static NSString *const k_canBackground = @"canBackground";
 #if TARGET_OS_IPHONE
 	copy.canDownloadWhileInBackground = _canBackground;
 #endif
+	copy.completionTag = _completionTag;
 	
 	return copy;
 }

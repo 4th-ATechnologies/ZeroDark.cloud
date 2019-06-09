@@ -284,6 +284,18 @@ typedef void (^UserAvatarDownloadCompletionBlock)(NSData *_Nullable avatar, NSEr
 @property (nonatomic, assign, readwrite) BOOL canDownloadWhileInBackground;
 #endif
 
+/**
+ * The completionTag acts as a consolidation tool, and prevents multiple callbacks.
+ *
+ * For example, you may have code that requests all missing downloads.
+ * The DownloadManager consolidates requests, so the same resource is only downloaded once.
+ * However, the DownloadManager will invoke every completionBlock when the download completes.
+ * This may not be what you want. A particular class may instead wish to receive only a single callback.
+ * When this is the case, you can set a non-nil completionTag value.
+ * And if there's already a queued completionBlock, then the passed completionBlock won't be added to the queue.
+ */
+@property (nonatomic, assign, readwrite, nullable) NSString *completionTag;
+
 @end
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
