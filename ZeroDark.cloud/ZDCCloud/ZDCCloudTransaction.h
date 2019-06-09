@@ -363,9 +363,20 @@ typedef NS_ENUM(NSInteger, ZDCCloudErrorCode) {
  * added to the queue in THIS transaction.
  *
  * @param nodeID
- *   The node whose operations you're looking for.
+ *   The node whose operations you're looking for. (nodeID == ZDCNode.uuid)
  */
 - (NSArray<ZDCCloudOperation*> *)addedOperationsForNodeID:(NSString *)nodeID;
+
+/**
+ * Enumerates all the operations in the queue,
+ * and returns an array of values extracted from ZDCCloudOperation.changeset.
+ *
+ * If you're using the ZDCSyncable protocol, this is what you'll need to perform a merge.
+ *
+ * @param nodeID
+ *   The node whose operations you're looking for. (nodeID == ZDCNode.uuid)
+ */
+- (NSArray<NSDictionary*> *)pendingChangesetsForNodeID:(NSString *)nodeID;
 
 @end
 

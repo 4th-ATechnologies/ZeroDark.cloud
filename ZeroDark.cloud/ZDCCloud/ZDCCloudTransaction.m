@@ -922,6 +922,9 @@
 #pragma mark Operations
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * See header file for description.
+ */
 - (NSArray<ZDCCloudOperation*> *)addedOperationsForNodeID:(NSString *)nodeID
 {
 	NSMutableArray<ZDCCloudOperation*> *results = [NSMutableArray arrayWithCapacity:2];
@@ -945,6 +948,31 @@
 	}];
 	
 	return results;
+}
+
+/**
+ * See header file for description.
+ */
+- (NSArray<NSDictionary*> *)pendingChangesetsForNodeID:(NSString *)nodeID
+{
+	NSMutableArray<NSDictionary*> *changesets = [NSMutableArray array];
+	
+	[self _enumerateOperationsUsingBlock:^(YapDatabaseCloudCorePipeline *pipeline,
+														YapDatabaseCloudCoreOperation *operation, NSUInteger graphIdx, BOOL *stop)
+	{
+		if ([operation isKindOfClass:[ZDCCloudOperation class]])
+		{
+			__unsafe_unretained ZDCCloudOperation *op = (ZDCCloudOperation *)operation;
+			if ([op.nodeID isEqualToString:nodeID])
+			{
+				if (op.changeset_obj) {
+					[changesets addObject:op.changeset_obj];
+				}
+			}
+		}
+	}];
+	
+	return changesets;
 }
 
 /**
