@@ -403,11 +403,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		
 		if let (collection, key) = ext?.linkedCollectionAndKey(forNodeID: node.uuid) {
 			
-			// Now we need to serialize our object.
-			// To accomplish this, the sample app has created a custom protocol called CloudCodable.
-			// And all the objects we need to serialize & deserialize conform to this protocol.
-			//
-			// This means we can use the `cloudEncode()` function to serialize our object for storage in the cloud.
+			// Now we need to serialize our object for storage in the cloud.
+			// Our model classes use the `cloudEncode()` function for this task.
 			
 			if (collection == kZ2DCollection_List)
 			{
@@ -776,7 +773,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		let options = ZDCDownloadOptions()
 		options.cacheToDiskManager = false
 		options.canDownloadWhileInBackground = true
-		options.completionTag = String(describing: type(of: self)) as NSString
+		options.completionTag = String(describing: type(of: self))
 		
 		let queue = DispatchQueue.global()
 		
@@ -999,7 +996,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// This could fail if:
 				//
 				// - there's a bug in our List.cloudEncode() function
-				// - there's a bug in our List.init(fromCloudData) function
+				// - there's a bug in our List.init(fromCloudData:node:) function
 				//
 				let list = try List(fromCloudData: cleartext, node: node)
 				
@@ -1103,7 +1100,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// This could fail if:
 				//
 				// - there's a bug in our Task.cloudEncode() function
-				// - there's a bug in our Task.init(fromCloudData) function
+				// - there's a bug in our Task.init(fromCloudData:node:listID:) function
 				//
 				let task = try Task(fromCloudData: cleartext, node: node, listID: list.uuid)
 				

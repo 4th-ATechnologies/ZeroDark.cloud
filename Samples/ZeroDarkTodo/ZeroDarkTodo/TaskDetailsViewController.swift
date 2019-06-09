@@ -135,17 +135,11 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 			self.created.text =  self.dateFormatter.string(from:task.creationDate)
 			self.uuid.text = task.uuid
 
-			if (task.lastModified() != nil) {
-				
-				self.modifiedValue.text = self.dateFormatter.string(from:task.lastModified()!)
-				self.modifiedLabel.isHidden = false
-				self.modifiedValue.isHidden = false
-			}
-			else {
-				
-				self.modifiedLabel.isHidden = true
-				self.modifiedValue.isHidden = true
-			}
+			let lastModified = task.lastModified()
+			
+			self.modifiedValue.text = self.dateFormatter.string(from: lastModified)
+			self.modifiedLabel.isHidden = false
+			self.modifiedValue.isHidden = false
 			
 			self.seg.selectedSegmentIndex = task.priority.rawValue
 			
@@ -266,8 +260,8 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 			
 			guard
 				var task = transaction.object(forKey: self.taskID, inCollection: kZ2DCollection_Task) as? Task
-				else {
-					return
+			else {
+				return
 			}
 			
 			task = task.copy() as! Task
@@ -302,14 +296,15 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 			if (needsUpdate)
 			{
 				task.localLastModified = Date()
+				let changeset = task.changeset() ?? Dictionary()
+				
 				transaction.setObject(task , forKey: task.uuid, inCollection: kZ2DCollection_Task)
 		
 				if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
 					let taskNode = cloudTransaction.linkedNode(forKey: task.uuid, inCollection: kZ2DCollection_Task)
 				{
-					cloudTransaction.queueDataUpload(forNodeID: taskNode.uuid, withChangeset: nil)
+					cloudTransaction.queueDataUpload(forNodeID: taskNode.uuid, withChangeset: changeset)
 				}
-
 			}
 		}
 		
@@ -341,7 +336,7 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 	
 	@IBAction func priorityChanged(_ sender: Any) {
 
-		self.updateRecord()
+		// Nothing to do here
 	}
 
 	@IBAction func btnIconClicked(_ sender: Any) {
@@ -381,18 +376,13 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 
 	@objc func checkClicked(recognizer: UITapGestureRecognizer) {
 
-		let newValue:Bool  = !checkMark.checked
-		checkMark.checked = newValue
-
-		self.updateRecord()
+		// Toggle value
+		checkMark.checked = !checkMark.checked
 	}
 
 	func textViewDidEndEditing(_ textView: UITextView) {
 
-		if(textView == taskName || textView == taskDetails)
-		{
-			self.updateRecord()
-		}
+		// Nothing to do here
 	}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

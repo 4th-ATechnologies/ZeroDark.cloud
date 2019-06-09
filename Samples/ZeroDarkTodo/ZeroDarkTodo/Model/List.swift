@@ -10,7 +10,13 @@ import ZeroDarkCloud
  
 let kZ2DCollection_List = "List"
 
-class List: NSObject, NSCopying, Codable, CloudEncodable {
+/// The `List` class represents a container (of Tasks).
+/// Every list has a title. For example: "Groceries" or "Weekend Chores".
+///
+/// You'll notice there's nothing special about the List class.
+/// We don't have to extend some base class. It's just a plain old Swift object.
+///
+class List: NSCopying, Codable {
 
 	enum CodingKeys: String, CodingKey {
 		case uuid = "uuid"
@@ -18,8 +24,30 @@ class List: NSObject, NSCopying, Codable, CloudEncodable {
 		case title = "title"
 	}
 	
+	/// We store List objects in the database.
+	/// And since our database is a key/value store, we use a uuid as the key.
+	///
+	/// We commonly refer to the List.uuid value as the ListID.
+	///
+	/// You can fetch this object from the database via:
+	/// ```
+	/// var list: List? = nil
+	/// databaseConnection.read() {(transaction) in
+	///   list = transaction.object(forKey: listID, inCollection: kZ2DCollection_List) as? List
+	/// }
+	/// ```
 	let uuid: String
+	
+	/// Since our sample app supports multiple logged in users, we also store a reference to the localUserID.
+	/// (LocalUserID == ZDCLocalUser.uuid)
+	///
+	/// This can be thought of as a reference to the "parent" of this object.
+	///
 	let localUserID: String
+	
+	/// Every list has a title.
+	/// The title is what the user types in when they create the List.
+	///
 	var title: String
 
 	init(uuid: String, localUserID: String, title: String) {

@@ -294,7 +294,7 @@ typedef void (^UserAvatarDownloadCompletionBlock)(NSData *_Nullable avatar, NSEr
  * When this is the case, you can set a non-nil completionTag value.
  * And if there's already a queued completionBlock, then the passed completionBlock won't be added to the queue.
  */
-@property (nonatomic, assign, readwrite, nullable) NSString *completionTag;
+@property (nonatomic, copy, readwrite, nullable) NSString *completionTag;
 
 @end
 

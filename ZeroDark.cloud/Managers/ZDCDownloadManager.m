@@ -3057,7 +3057,7 @@ static NSString *const k_completionTag = @"completionTag";
 #if TARGET_OS_IPHONE
 	copy.canDownloadWhileInBackground = _canBackground;
 #endif
-	copy.completionTag = _completionTag;
+	copy.completionTag = [_completionTag copy];
 	
 	return copy;
 }

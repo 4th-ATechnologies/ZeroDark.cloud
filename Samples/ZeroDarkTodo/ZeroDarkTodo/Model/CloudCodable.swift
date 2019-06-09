@@ -4,14 +4,13 @@
 /// Sample App: ZeroDarkTodo
 
 import Foundation
-import ZeroDarkCloud
 
+/// Common list of errors we might encounter when serializing an object for storage in the cloud.
+///
+/// @see List.cloudEncode()
+/// @see Task.cloudEncode()
+///
 enum CloudCodableError: Error {
 	case invalidJSON
 	case invalidNode
-}
-
-protocol CloudEncodable {
-	
-	func cloudEncode() throws -> Data
 }

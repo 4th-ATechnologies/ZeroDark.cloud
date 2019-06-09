@@ -6,22 +6,39 @@
 import UIKit
 import YapDatabase
 import ZeroDarkCloud
+import ZDCSyncable
 
 let kZ2DCollection_Task = "Task"
 
-enum TaskPriority: Int, Codable {
+@objc enum TaskPriority: Int, Codable {
 	case low    = 0
 	case normal = 1
 	case high   = 2
 }
 
-enum ImageError: Error {
-	case missing
-	case failedToCreateImage
-	case failedToRenderImage
-}
-
-class Task: NSObject, NSCopying, Codable, CloudEncodable, YapDatabaseRelationshipNode {
+/// The `Task` class represents a Todo item.
+/// Every task has a title, priority, and completed status.
+///
+/// One of the challenges of syncing data with the cloud has to do with MERGES.
+/// For example, imagine if Alice & Bob are collaborating on a List.
+/// Both Alice & Bob modify a Task item at the same time:
+/// - Alice changes the priority
+/// - Bob changes the description
+///
+/// Then both of these changes are pushed to the cloud at the same time, but Alice wins the race.
+/// It's now up to Bob's device to pull the changes from Alice, and properly perform a merge,
+/// before re-uploading his changes.
+///
+/// In this particular example, we expect Bob to update the priority value to match the change made by Alice.
+/// However, it turns out that this simple task is rather difficult in practice.
+/// So we're using an open-source project to assist us:
+///
+/// ZDCSyncable: https://github.com/4th-ATechnologies/ZDCSyncable
+///
+/// You do NOT have to use this class.
+/// However, you may find it very useful when you need to merge changes.
+///
+class Task: ZDCRecord, Codable, YapDatabaseRelationshipNode {
 
 	enum CodingKeys: String, CodingKey {
 		case uuid = "uuid"
@@ -35,21 +52,49 @@ class Task: NSObject, NSCopying, Codable, CloudEncodable, YapDatabaseRelationshi
 		case cloudLastModified = "cloudLastModified"
 	}
 	
+	/// We store Task objects in the database.
+	/// And since our database is a key/value store, we use a uuid as the key.
+	///
+	/// We commonly refer to the Task.uuid value as the TaskID.
+	///
+	/// You can fetch this object from the database via:
+	/// ```
+	/// var task: Task? = nil
+	/// databaseConnection.read() {(transaction) in
+	///   task = transaction.object(forKey: listID, inCollection: kZ2DCollection_Task) as? Task
+	/// }
+	/// ```
 	var uuid: String
+	
+	/// Every Task has a parent List.
+	/// We store a reference to this parent.
+	///
+	/// You can fetch the parent List from the database via:
+	/// ```
+	/// var list: List? = nil
+	/// databaseConnection.read() {(transaction) in
+	///   list = transaction.object(forKey: task.listID, inCollection: kZ2DCollection_List) as? List
+	/// }
+	/// ```
 	var listID: String
-	var title: String
-	var details: String?
-	var creationDate: Date
-	var completed: Bool
-	var priority: TaskPriority
+	
+	@objc dynamic var title: String
+	@objc dynamic var details: String?
+	@objc dynamic var creationDate: Date
+	@objc dynamic var completed: Bool
+	@objc dynamic var priority: TaskPriority
 
-	var localLastModified: Date?
+	var localLastModified: Date
 	var cloudLastModified: Date?
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: Init
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	required init() {
+		fatalError("init() not supported. Use init(listID:title:)")
+	}
+	
 	init(uuid: String,
 	     listID: String,
 	     title: String,
@@ -57,7 +102,7 @@ class Task: NSObject, NSCopying, Codable, CloudEncodable, YapDatabaseRelationshi
 	     creationDate: Date,
 	     completed: Bool,
 	     priority: TaskPriority,
-	     localLastModified: Date?,
+	     localLastModified: Date,
 	     cloudLastModified: Date?)
 	{
 		self.uuid = uuid;
@@ -69,15 +114,44 @@ class Task: NSObject, NSCopying, Codable, CloudEncodable, YapDatabaseRelationshi
 		self.priority = priority
 		self.localLastModified = localLastModified
 		self.cloudLastModified = cloudLastModified
+		
+		super.init()
 	}
 	
-	init(listID:String, title:String) {
+	init(listID: String, title: String) {
 		self.uuid = UUID().uuidString
 		self.listID = listID
 		self.title = title
 		self.completed = false
 		self.priority = .normal
-		self.creationDate = Date.init()
+		
+		let now = Date()
+		self.creationDate = now
+		self.localLastModified = now
+		
+		super.init()
+	}
+	
+	required init(copy source: ZDCObject) {
+		
+		if let source = source as? Task {
+			
+			self.uuid              = source.uuid
+			self.listID            = source.listID
+			self.title             = source.title
+			self.details           = source.details
+			self.creationDate      = source.creationDate
+			self.completed         = source.completed
+			self.priority          = source.priority
+			self.localLastModified = source.localLastModified
+			self.cloudLastModified = source.cloudLastModified
+			
+			super.init(copy: source)
+			
+		} else {
+			
+			fatalError("init(copy:) invoked with invalid type")
+		}
 	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -98,9 +172,12 @@ class Task: NSObject, NSCopying, Codable, CloudEncodable, YapDatabaseRelationshi
 		self.priority = cloudJSON.priority
 		self.creationDate = cloudJSON.creationDate
 		
+		self.localLastModified = node.lastModified_data ?? cloudJSON.creationDate
 		self.cloudLastModified = node.lastModified_data
+		
+		super.init()
 	}
-
+	
 	func cloudEncode() throws -> Data {
 
 		let cloudJSON = TaskCloudJSON(fromTask: self)
@@ -110,38 +187,17 @@ class Task: NSObject, NSCopying, Codable, CloudEncodable, YapDatabaseRelationshi
 
 		return data
 	}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: NSCopying
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	func copy(with zone: NSZone? = nil) -> Any {
-		
-		let copy = Task(uuid              : uuid,
-		                listID            : listID,
-		                title             : title,
-		                details           : details,
-		                creationDate      : creationDate,
-		                completed         : completed,
-		                priority          : priority,
-		                localLastModified : localLastModified,
-		                cloudLastModified : cloudLastModified)
-		return copy
-	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: Convenience Functions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	func lastModified()-> Date? {
+	func lastModified()-> Date {
 		
-		if (cloudLastModified != nil)
-		{
-			if (localLastModified != nil)
-			{
-				if cloudLastModified!.compare(localLastModified!) == .orderedAscending {
-					return localLastModified
-				}
+		if let cloudLastModified = cloudLastModified {
+			
+			if cloudLastModified.compare(localLastModified) == .orderedAscending {
+				return localLastModified
 			}
 			
 			return cloudLastModified
