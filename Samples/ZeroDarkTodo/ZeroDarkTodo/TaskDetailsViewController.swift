@@ -246,10 +246,13 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 		return imageNode
 	}
 
+	/// We don't save the changes until the user exits the view.
+	/// At that point, we write the changes to the database, and push the changes up to the cloud.
+	///
 	func updateRecord() {
 		
 		let newTitle = self.taskName.text
-		let newDetails = self.taskDetails.text
+		let newDetails = (self.taskDetails.text.count > 0) ? self.taskDetails.text : nil
 		let newPriorty = TaskPriority(rawValue: ((self.seg?.selectedSegmentIndex)!))!
 		let newCompleted = self.checkMark.checked
 		
@@ -296,6 +299,44 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 			if (needsUpdate)
 			{
 				task.localLastModified = Date()
+				
+				// How do we merge changes from multiple devices ?
+				// Imagine the following situation:
+				//
+				// - Alice and Bob are sharing a List.
+				// - Alice changes the priority of a Task.
+				// - At the same time, Bob changes the title of the same Task.
+				//
+				// Both changes will get pushed to the cloud at the same time, but one will arrive first.
+				// Let's assume that Alice's changes arrive at the cloud first.
+				// Moments later, Bob's changes arrive at the server, but will get rejected.
+				// This is because the request included the previous eTag of the data, which is now outdated.
+				//
+				// So Bob's device will need to download the changes made by Alice, and perform a merge.
+				// But now we have a difficult problem to solve, because this is the only data we have:
+				//
+				// - the current version of the Task, as it exists on the server
+				// - the current version of the Task, as it exists in the local database
+				//
+				// Comparing the 2 Tasks, we can see that 2 properties are different:
+				// - title
+				// - priority
+				//
+				// But this isn't enough information to perform the merge.
+				// What we're missing is a list of the changes that we've made on the local device.
+				//
+				// And that's where `changesets` come in.
+				// When you queue a data upload to the cloud,
+				// you can also record information concerning what changes were made. (i.e. the changeset)
+				//
+				// The ZeroDark.cloud framework facilitates the storage of this information.
+				// And there's a separate open-source framework called ZDCSyncable that can help you get this information.
+				//
+				// Now, there's absolutely NO mandate that you have to use ZDCSyncable.
+				// You can use whatever you want.
+				//
+				// In this example we're using ZDCSyncable to get our changeset.
+				//
 				let changeset = task.changeset() ?? Dictionary()
 				
 				transaction.setObject(task , forKey: task.uuid, inCollection: kZ2DCollection_Task)
@@ -304,6 +345,8 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 					let taskNode = cloudTransaction.linkedNode(forKey: task.uuid, inCollection: kZ2DCollection_Task)
 				{
 					cloudTransaction.queueDataUpload(forNodeID: taskNode.uuid, withChangeset: changeset)
+					//                                                         ^^^^^^^^^^^^^^^^^^^^^^^^
+					//                                       And we store the changeset here: ^
 				}
 			}
 		}

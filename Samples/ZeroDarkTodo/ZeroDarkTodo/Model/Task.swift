@@ -154,6 +154,21 @@ class Task: ZDCRecord, Codable, YapDatabaseRelationshipNode {
 		}
 	}
 	
+	init(copy source: Task, uuid: String) {
+		
+		self.uuid              = uuid
+		self.listID            = source.listID
+		self.title             = source.title
+		self.details           = source.details
+		self.creationDate      = source.creationDate
+		self.completed         = source.completed
+		self.priority          = source.priority
+		self.localLastModified = source.localLastModified
+		self.cloudLastModified = source.cloudLastModified
+		
+		super.init(copy: source)
+	}
+	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: CloudCodable
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

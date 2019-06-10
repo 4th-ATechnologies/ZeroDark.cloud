@@ -1082,18 +1082,13 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				let node = transaction.object(forKey: nodeID, inCollection: kZDCCollection_Nodes) as? ZDCNode,
 				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: node.localUserID),
 				let list = cloudTransaction.linkedObject(forNodeID: node.parentID ?? "") as? List
-				else {
-					return
+			else {
+				return
 			}
 			
 			cloudTransaction.unmarkNode(asNeedsDownload: nodeID, ifETagMatches: eTag)
 			
-			if cloudTransaction.isNodeLinked(nodeID) {
-				
-				// We already created the corresponding Task and linked it to this node.
-				return
-			}
-			
+			var downloadedTask: Task!
 			do {
 				
 				// Attempt to create a Task instance from the downloaded data.
@@ -1102,9 +1097,52 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// - there's a bug in our Task.cloudEncode() function
 				// - there's a bug in our Task.init(fromCloudData:node:listID:) function
 				//
-				let task = try Task(fromCloudData: cleartext, node: node, listID: list.uuid)
+				downloadedTask = try Task(fromCloudData: cleartext, node: node, listID: list.uuid)
 				
-				// Store the Task object in the database.
+			} catch {
+				
+				print("Error parsing task from cloudData: \(error)")
+				return // from block
+			}
+			
+			if var existingTask = cloudTransaction.linkedObject(forNodeID: nodeID) as? Task {
+				
+				// Update an existing Task.
+				
+				// The `existingTask` is immutable.
+				// That is, the ZDCObject.makeImmutable() function has been called.
+				// This is a safety mechanism we added in this class.
+				//
+				// So to make changes to the object, we first need to make a copy.
+				//
+				existingTask = existingTask.copy() as! Task
+				
+				// Next, in order to perform the merge, we need the list of changes we've made on the local device.
+				// We can extract this from the list of queued changes.
+				//
+				let pendingChangesets = cloudTransaction.pendingChangesets(forNodeID: nodeID) as? Array<Dictionary<String, Any>> ?? []
+				
+				do {
+					
+					// Now we can perform the merge !
+					// The ZDCSyncable open-source project handles this for us.
+					
+					let _ = try existingTask.merge(cloudVersion: downloadedTask, pendingChangesets: pendingChangesets)
+					
+				} catch {
+					
+					print("Error merging changes from cloudData: \(error)")
+					
+					// Since merge failed, we just fallback to using the cloud version.
+					// We just need to change its uuid to match.
+					//
+					downloadedTask = Task(copy: downloadedTask, uuid: existingTask.uuid)
+					transaction.setObject(downloadedTask, forKey: downloadedTask.uuid, inCollection: kZ2DCollection_Task)
+				}
+			}
+			else {
+				
+				// Store the new Task object in the database.
 				//
 				// YapDatabase is a collection/key/value store.
 				// We store all Task objects in the same collection: kZ2DCollection_Task
@@ -1113,7 +1151,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// Wondering how the object gets serialized / deserialized ?
 				// The Task object supports the Swift Codable protocol.
 				
-				transaction.setObject(task, forKey: task.uuid, inCollection: kZ2DCollection_Task)
+				transaction.setObject(downloadedTask, forKey: downloadedTask.uuid, inCollection: kZ2DCollection_Task)
 				
 				// Where does this Task object go within the context of the UI ?
 				//
@@ -1123,15 +1161,12 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// Link the Task to the Node
 				//
 				do {
-					try cloudTransaction.linkNodeID(nodeID, toKey: task.uuid, inCollection: kZ2DCollection_Task)
+					try cloudTransaction.linkNodeID(nodeID, toKey: downloadedTask.uuid, inCollection: kZ2DCollection_Task)
 					
 				} catch {
 					print("Error linking node to task: \(error)")
-					
-					transaction.rollback()
-					return
 				}
-				
+					
 				// Adding a task indirectly modifies the List.
 				// And there are various components of our UI that should update in response to this change.
 				// However, those UI components are looking for changes to the List, not to Tasks.
@@ -1142,9 +1177,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// We can accomplish this using YapDatabase's `touch` functionality.
 				
 				transaction.touchObject(forKey: list.uuid, inCollection: kZ2DCollection_List)
-				
-			} catch {
-				print("Error parsing task from cloudData: \(error)")
 			}
 		})
 	}
