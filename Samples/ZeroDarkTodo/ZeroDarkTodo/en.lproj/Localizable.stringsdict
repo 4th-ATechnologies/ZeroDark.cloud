@@ -1,30 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!--
-   Localizable.stringsdict
-   demo1
-
-   Created by vinnie on 2/8/19.
-   Copyright (c) 2019 4th-a. All rights reserved.
--->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-    <dict>
-		<key>number_of_tasks</key>
+<dict>
+	<key>number_of_tasks</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
 		<dict>
-			<key>NSStringLocalizedFormatKey</key>
-			<string>%#@value@</string>
-			<key>value</key>
-			<dict>
-				<key>NSStringFormatSpecTypeKey</key>
-				<string>NSStringPluralRuleType</string>
-				<key>NSStringFormatValueTypeKey</key>
-				<string>d</string>
-				<key>one</key>
-				<string>%d task remaining</string>
-				<key>other</key>
-				<string>%d tasks remaining</string>
-			</dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>%d task remaining, %d total</string>
+			<key>other</key>
+			<string>%d tasks remaining, %d total</string>
 		</dict>
-
-    </dict>
+	</dict>
+</dict>
 </plist>
