@@ -25,6 +25,7 @@ static NSString *const k_nodeID          = @"nodeID";
 static NSString *const k_cloudNodeID     = @"cloudNodeID";
 static NSString *const k_cloudLocator    = @"cloudLocator";
 static NSString *const k_dstCloudLocator = @"dstCloudLocator";
+static NSString *const k_eTag            = @"eTag";
 static NSString *const k_ifOrphan        = @"ifOrphan";
 static NSString *const k_deleteNodeJSON  = @"deleteDirJSON";  // historical name
 static NSString *const k_deletedCloudIDs = @"deletedFileIDs"; // historical name
@@ -64,6 +65,7 @@ static NSString *const putType_str_message_remote = @"msgRmt";
 @synthesize cloudNodeID = cloudNodeID;
 @synthesize cloudLocator = cloudLocator;
 @synthesize dstCloudLocator = dstCloudLocator;
+@synthesize eTag = eTag;
 @synthesize ifOrphan = ifOrphan;
 @synthesize deleteNodeJSON = deleteNodeJSON;
 @synthesize deletedCloudIDs = deletedCloudIDs;
@@ -186,6 +188,8 @@ static NSString *const putType_str_message_remote = @"msgRmt";
 			}
 		}
 		
+		eTag = [decoder decodeObjectForKey:k_eTag];
+		
 		ifOrphan = [decoder decodeBoolForKey:k_ifOrphan];
 		deleteNodeJSON = [decoder decodeObjectForKey:k_deleteNodeJSON];
 		deletedCloudIDs = [decoder decodeObjectForKey:k_deletedCloudIDs];
@@ -242,6 +246,8 @@ static NSString *const putType_str_message_remote = @"msgRmt";
 	[coder encodeObject:cloudLocator forKey:k_cloudLocator];
 	[coder encodeObject:dstCloudLocator forKey:k_dstCloudLocator];
 	
+	[coder encodeObject:eTag forKey:k_eTag];
+	
 	[coder encodeBool:ifOrphan forKey:k_ifOrphan];
 	[coder encodeObject:deleteNodeJSON forKey:k_deleteNodeJSON];
 	[coder encodeObject:deletedCloudIDs forKey:k_deletedCloudIDs];
@@ -275,6 +281,8 @@ static NSString *const putType_str_message_remote = @"msgRmt";
 	
 	copy->cloudLocator = cloudLocator;
 	copy->dstCloudLocator = dstCloudLocator;
+	
+	copy->eTag = eTag;
 	
 	copy->ifOrphan = ifOrphan;
 	copy->deleteNodeJSON = deleteNodeJSON;
@@ -397,6 +405,8 @@ static NSString *const putType_str_message_remote = @"msgRmt";
 	
 	if (!YDB_IsEqualOrBothNil(cloudLocator, op->cloudLocator)) return NO;
 	if (!YDB_IsEqualOrBothNil(dstCloudLocator, op->dstCloudLocator)) return NO;
+	
+	if (!YDB_IsEqualOrBothNil(eTag, op->eTag)) return NO;
 	
 	if (ifOrphan != op->ifOrphan) return NO;
 	if (!YDB_IsEqualOrBothNil(deleteNodeJSON, op->deleteNodeJSON)) return NO;

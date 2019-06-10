@@ -3274,9 +3274,10 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 					ZDCTreesystemPath *cleartextPath =
 					  [nodeManager pathForNode:node transaction:transaction];
 					
-					[owner.delegate didDiscoverConflictNode: node
-					                                 atPath: cleartextPath
-					                            transaction: transaction];
+					[owner.delegate didDiscoverConflict: ZDCNodeConflict_Path
+					                            forNode: node
+					                             atPath: cleartextPath
+					                        transaction: transaction];
 					
 					// Did the delegate take action ?
 					

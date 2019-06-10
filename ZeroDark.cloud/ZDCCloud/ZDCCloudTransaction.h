@@ -378,6 +378,28 @@ typedef NS_ENUM(NSInteger, ZDCCloudErrorCode) {
  */
 - (NSArray<NSDictionary*> *)pendingChangesetsForNodeID:(NSString *)nodeID;
 
+/**
+ * Invoke this method after you've downloaded and processed the latest version of a node's data.
+ *
+ * This informs the system that your data is now up-to-date with the given version/eTag.
+ * In particular, this tells the system to update all queued ZDCCloudOperation.eTag values.
+ *
+ * This method is one of the ways in which you can resolve a conflict.
+ *
+ * @see [ZeroDarkCloudDelegate didDiscoverConflict:forNode:atPath:transaction:]
+ */
+- (void)didMergeDataWithETag:(NSString *)eTag forNodeID:(NSString *)nodeID;
+
+/**
+ * Invoke this method if you've been notified of a conflict, and you've decided to let the cloud version "win".
+ * In other words, you've decided not to overwrite the cloud version with the local version. 
+ *
+ * This method is one of the ways in which you can resolve a conflict.
+ *
+ * @see [ZeroDarkCloudDelegate didDiscoverConflict:forNode:atPath:transaction:]
+ */
+- (void)skipDataUploadsForNodeID:(NSString *)nodeID;
+
 @end
 
 NS_ASSUME_NONNULL_END

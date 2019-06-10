@@ -14,7 +14,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- * Used as a flag passed to `-[ZeroDarkCloudDelegate didModifyNode::::]`,
+ * Used as a flag passed to `-[ZeroDarkCloudDelegate didDiscoverModifiedNode:withChange:atPath:transaction:]`,
  * which tells the delegate how the node was modified.
  */
 typedef NS_ENUM(NSInteger, ZDCNodeChange) {
@@ -33,6 +33,43 @@ typedef NS_ENUM(NSInteger, ZDCNodeChange) {
 	 * (i.e. the DATA file in the cloud was changed)
 	 */
 	ZDCNodeChange_Data
+};
+
+/**
+ * Used as a flag passed to `-[ZeroDarkCloudDelegate didDiscoverConflict:forNode:atPath:transaction:]`,
+ * which tells the delegate about the conflict that was encountered.
+ */
+typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
+	
+	/**
+	 * A treesystem path is in conflict:
+	 *
+	 * - there's a local node at path X
+	 * - it hasn't been uploaded to the cloud yet,
+	 *   or it's been moved, and the move operation hasn't hit the cloud yet
+	 * - a new node is discovered in the cloud with the same path X
+	 *
+	 * Since two nodes cannot occupy the same path, this means the local node will need to adapt.
+	 * The conflict can be resolved by performing one of the following options:
+	 *
+	 * Option A:
+	 * - rename the node so it's no longer a conflict (i.e. change node.name)
+	 * - be sure to invoke `[ZDCCloudTransaction modifyNode:]`
+	 *
+	 * Option B:
+	 * - delete the node
+	 * - be sure to invoke `[ZDCCloudTransaction deleteNode:]`
+	 *
+	 * If you do nothing, the system will automatically perform option A for you.
+	 */
+	ZDCNodeConflict_Path,
+	
+	/**
+	 * Your node data is out-of-date:
+	 *
+	 * - you previously queued
+	 */
+	ZDCNodeConflict_Data
 };
 
 /**
@@ -401,31 +438,21 @@ typedef NS_ENUM(NSInteger, ZDCNodeChange) {
                           timestamp:(nullable NSDate *)timestamp
                         transaction:(YapDatabaseReadWriteTransaction *)transaction;
 
+@required
+
 /**
- * This (optional) method is called when:
+ * Invoked when a conflict is detected.
  *
- * - there's a local node at path X
- * - it hasn't been uploaded to the cloud yet,
- *   or it's been moved, and the move operation hasn't hit the cloud yet
- * - a new node is discovered in the cloud with the same path X
+ * The framework can automatically recover from some conflicts,
+ * while other conflicts may require you to take action.
  *
- * Since two nodes with the same path cannot both exist in the cloud, this means the local node will need to adapt.
- * The conflict can be resolved by performing one of the following options:
+ * For details on the types of conflicts, and how to deal with them, see `ZDCNodeConflict`.
  *
- * Option A:
- * - rename the node so it's no longer a conflict (i.e. change node.name)
- * - be sure to invoke `[ZDCCloudTransaction modifyNode:]`
- *
- * Option B:
- * - delete the node
- * - be sure to invoke `[ZDCCloudTransaction deleteNode:]`
- *
- * If you do nothing, the system will automatically perform option A for you.
+ * @param conflict
+ *   This enum value tells you which type of conflict you're dealing with.
  *
  * @param node
  *   This is the local version of the node that is in conflict with the cloud.
- *   This node will need to be modified or deleted.
- *   When this method is called, the node is still stored in the database.
  *
  * @param path
  *   The treesystem path of the node in conflict.
@@ -433,11 +460,13 @@ typedef NS_ENUM(NSInteger, ZDCNodeChange) {
  * @param transaction
  *   An active read-write transaction.
  */
-- (void)didDiscoverConflictNode:(ZDCNode *)node
-                         atPath:(ZDCTreesystemPath *)path
-                    transaction:(YapDatabaseReadWriteTransaction *)transaction;
+- (void)didDiscoverConflict:(ZDCNodeConflict)conflict
+                    forNode:(ZDCNode *)node
+                     atPath:(ZDCTreesystemPath *)path
+                transaction:(YapDatabaseReadWriteTransaction *)transaction NS_SWIFT_NAME(didDiscoverConflict(_:forNode:atPath:transaction:));
 
 #pragma mark Background Downloads
+@optional
 
 #if TARGET_OS_IOS
 /**

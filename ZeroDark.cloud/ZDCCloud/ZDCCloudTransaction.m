@@ -53,6 +53,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)nodeWithPath:(ZDCTreesystemPath *)path
 {
@@ -69,6 +71,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)createNodeWithPath:(ZDCTreesystemPath *)path
                                    error:(NSError *_Nullable *_Nullable)outError
@@ -138,6 +142,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)createNode:(ZDCNode *)node error:(NSError *_Nullable *_Nullable)outError
 {
@@ -208,7 +214,45 @@
 }
 
 /**
+ * Helper method.
+ * Creates & queues the operations to PUT the node in the cloud.
+ */
+- (void)queuePutOpsForNode:(ZDCNode *)node
+{
+	NSString *localUserID = [self localUserID];
+	NSString *zAppID = [self zAppID];
+	
+	ZDCCloudLocator *cloudLocatorRcrd =
+	  [[ZDCCloudPathManager sharedInstance] cloudLocatorForNode: node
+	                                              fileExtension: kZDCCloudFileExtension_Rcrd
+	                                                transaction: databaseTransaction];
+	
+	ZDCCloudOperation *opRcrd =
+	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
+	                                          zAppID: zAppID
+	                                         putType: ZDCCloudOperationPutType_Node_Rcrd];
+	
+	opRcrd.nodeID = node.uuid;
+	opRcrd.cloudLocator = cloudLocatorRcrd;
+	
+	ZDCCloudOperation *opData =
+	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
+	                                          zAppID: zAppID
+	                                         putType: ZDCCloudOperationPutType_Node_Data];
+	
+	opData.nodeID = node.uuid;
+	opData.cloudLocator = [cloudLocatorRcrd copyWithFileNameExt:kZDCCloudFileExtension_Data];
+	
+	[opData addDependency:opRcrd.uuid];
+	
+	[self addOperation:opRcrd];
+	[self addOperation:opData];
+}
+
+/**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)modifyNode:(ZDCNode *)newNode error:(NSError *_Nullable *_Nullable)outError
 {
@@ -306,6 +350,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCCloudOperation *)queueDataUploadForNodeID:(NSString *)nodeID
                                            withChangeset:(nullable NSDictionary *)changeset
@@ -347,6 +393,7 @@
 	
 	operation.nodeID = node.uuid;
 	operation.cloudLocator = cloudLocator;
+	operation.eTag = node.eTag_data;
 	
 	[self addOperation:operation];
 	
@@ -355,6 +402,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)deleteNode:(ZDCNode *)node error:(NSError *_Nullable *_Nullable)outError
 {
@@ -367,6 +416,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)deleteNode:(ZDCNode *)rootNode
        withOptions:(ZDCDeleteNodeOptions)opts
@@ -641,6 +692,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)linkNodeID:(NSString *)nodeID
              toKey:(NSString *)key
@@ -748,6 +801,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable NSString *)unlinkKey:(NSString *)key inCollection:(nullable NSString *)collection
 {
@@ -766,6 +821,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable NSString *)linkedNodeIDForKey:(NSString *)key inCollection:(nullable NSString *)collection
 {
@@ -786,6 +843,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)linkedNodeForKey:(NSString *)key inCollection:(nullable NSString *)collection
 {
@@ -801,6 +860,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)isNodeLinked:(NSString *)nodeID
 {
@@ -818,6 +879,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)getLinkedKey:(NSString **)outKey
           collection:(NSString **)outCollection
@@ -842,6 +905,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable id)linkedObjectForNodeID:(NSString *)nodeID
 {
@@ -857,6 +922,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable id)linkedObjectForPath:(ZDCTreesystemPath *)path
 {
@@ -883,6 +950,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (void)markNodeAsNeedsDownload:(NSString *)nodeID
 {
@@ -891,6 +960,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (void)unmarkNodeAsNeedsDownload:(NSString *)nodeID ifETagMatches:(nullable NSString *)eTag
 {
@@ -910,6 +981,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)nodeIsMarkedAsNeedsDownload:(NSString *)nodeID
 {
@@ -924,6 +997,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (NSArray<ZDCCloudOperation*> *)addedOperationsForNodeID:(NSString *)nodeID
 {
@@ -952,6 +1027,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (NSArray<NSDictionary*> *)pendingChangesetsForNodeID:(NSString *)nodeID
 {
@@ -976,39 +1053,66 @@
 }
 
 /**
- * Helper method.
- * Creates & queues the operations to PUT the node in the cloud.
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
-- (void)queuePutOpsForNode:(ZDCNode *)node
+- (void)didMergeDataWithETag:(NSString *)eTag forNodeID:(NSString *)nodeID
 {
-	NSString *localUserID = [self localUserID];
-	NSString *zAppID = [self zAppID];
+	if (nodeID == nil) return;
 	
-	ZDCCloudLocator *cloudLocatorRcrd =
-	  [[ZDCCloudPathManager sharedInstance] cloudLocatorForNode: node
-	                                              fileExtension: kZDCCloudFileExtension_Rcrd
-	                                                transaction: databaseTransaction];
+	[self _enumerateAndModifyOperations:YDBCloudCore_EnumOps_All
+	                         usingBlock:
+	  ^YapDatabaseCloudCoreOperation *(YapDatabaseCloudCorePipeline *pipeline,
+	                                   YapDatabaseCloudCoreOperation *operation,
+	                                   NSUInteger graphIdx, BOOL *stop)
+	{
+		if ([operation isKindOfClass:[ZDCCloudOperation class]])
+		{
+			ZDCCloudOperation *op = (ZDCCloudOperation *)operation;
+			ZDCCloudOperation *modifiedOp = nil;
+			
+			if ([op.nodeID isEqualToString:nodeID])
+			{
+				if (!YDB_IsEqualOrBothNil(op.eTag, eTag))
+				{
+					modifiedOp = [op copy];
+					modifiedOp.eTag = eTag;
+					
+					return modifiedOp;
+				}
+			}
+		}
+		
+		return nil;
+	}];
+}
+
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (void)skipDataUploadsForNodeID:(NSString *)nodeID
+{
+	if (nodeID == nil) return;
 	
-	ZDCCloudOperation *opRcrd =
-	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
-	                                          zAppID: zAppID
-	                                         putType: ZDCCloudOperationPutType_Node_Rcrd];
-	
-	opRcrd.nodeID = node.uuid;
-	opRcrd.cloudLocator = cloudLocatorRcrd;
-	
-	ZDCCloudOperation *opData =
-	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
-	                                          zAppID: zAppID
-	                                         putType: ZDCCloudOperationPutType_Node_Data];
-	
-	opData.nodeID = node.uuid;
-	opData.cloudLocator = [cloudLocatorRcrd copyWithFileNameExt:kZDCCloudFileExtension_Data];
-	
-	[opData addDependency:opRcrd.uuid];
-	
-	[self addOperation:opRcrd];
-	[self addOperation:opData];
+	[self skipOperationsPassingTest:
+	  ^BOOL(YapDatabaseCloudCorePipeline *pipeline,
+	        YapDatabaseCloudCoreOperation *operation, NSUInteger graphIdx, BOOL *stop)
+	{
+		if ([operation isKindOfClass:[ZDCCloudOperation class]])
+		{
+			ZDCCloudOperation *op = (ZDCCloudOperation *)operation;
+			
+			if (op.isPutNodeDataOperation && [op.nodeID isEqualToString:nodeID])
+			{
+				return YES;
+			}
+		}
+		
+		return NO;
+	}];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

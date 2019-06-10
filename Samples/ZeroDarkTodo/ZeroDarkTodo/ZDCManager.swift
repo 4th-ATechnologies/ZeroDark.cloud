@@ -687,12 +687,14 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 						downloadNode(node, at: path)
 					}
 				
-				case 3:
+			case 3:
 					// This is a Task IMAGE.
+					//
 					// Don't bother downloading this right now.
 					// We can download it on demand via the UI.
 					// In fact, the ZDCImageManager will help us out with it.
-					break;
+				
+					break
 			
 				default:
 					print("Unknown cloud path: \(path)")
@@ -715,6 +717,57 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		print("ZDC Delegate: didDiscoverDeletedNode:at: \(path.fullPath())")
 		
 		// Todo...
+	}
+	
+	func didDiscoverConflict(_ conflict: ZDCNodeConflict, forNode node: ZDCNode, atPath path: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
+		
+		print("ZDC Delegate: didDiscoverConflict: \(conflict)")
+		
+		if conflict == .path {
+			
+			// Allow framework to automatically recover by renaming the node.
+			return
+		}
+		
+		if conflict == .data {
+			
+			// Our node's data is out-of-date.
+			
+			guard let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: node.localUserID) else {
+				return
+			}
+			
+			switch path.pathComponents.count
+			{
+				case 1:
+					// This is a List object.
+					//
+					// We don't bother with merging List objects since they only contain a single property.
+					// So the cloud version wins.
+				
+					cloudTransaction.skipDataUploads(forNodeID: node.uuid)
+				
+				case 2:
+					// This is a Task object.
+					//
+					// We need to download the most recent version of the node, and merge the changes.
+					
+					cloudTransaction.markNode(asNeedsDownload: node.uuid)
+					downloadNode(node, at: path)
+				
+				case 3:
+					// This is a Task IMAGE.
+					//
+					// We can't merge images.
+					// So the cloud version wins.
+				
+					cloudTransaction.skipDataUploads(forNodeID: node.uuid)
+				
+				default:
+					
+					print("Unknown cloud path: \(path)")
+			}
+		}
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1129,6 +1182,17 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					
 					let _ = try existingTask.merge(cloudVersion: downloadedTask, pendingChangesets: pendingChangesets)
 					
+					// Store the updated Task object in the database.
+					//
+					// YapDatabase is a collection/key/value store.
+					// We store all Task objects in the same collection: kZ2DCollection_Task
+					// And every task has a uuid, which we use as the key in the database.
+					//
+					// Wondering how the object gets serialized / deserialized ?
+					// The Task object supports the Swift Codable protocol.
+					
+					transaction.setObject(existingTask, forKey: existingTask.uuid, inCollection: kZ2DCollection_Task)
+					
 				} catch {
 					
 					print("Error merging changes from cloudData: \(error)")
@@ -1153,11 +1217,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				
 				transaction.setObject(downloadedTask, forKey: downloadedTask.uuid, inCollection: kZ2DCollection_Task)
 				
-				// Where does this Task object go within the context of the UI ?
-				//
-				// This is handled for us automatically.
-				// @see self.setupView_Tasks()
-				
 				// Link the Task to the Node
 				//
 				do {
@@ -1166,18 +1225,23 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				} catch {
 					print("Error linking node to task: \(error)")
 				}
-					
-				// Adding a task indirectly modifies the List.
-				// And there are various components of our UI that should update in response to this change.
-				// However, those UI components are looking for changes to the List, not to Tasks.
-				// So what we want to do here is tell the database that the List was modified.
-				// This way, when the DatabaseModified notification gets sent out,
-				// our UI will update the List properly.
-				//
-				// We can accomplish this using YapDatabase's `touch` functionality.
 				
-				transaction.touchObject(forKey: list.uuid, inCollection: kZ2DCollection_List)
+				// Where does this Task object go within the context of the UI ?
+				//
+				// This is handled for us automatically.
+				// @see self.setupView_Tasks()
 			}
+			
+			// Adding or modifying a task indirectly modifies the List.
+			// And there are various components of our UI that should update in response to this change.
+			// However, those UI components are looking for changes to the List, not to Tasks.
+			// So what we want to do here is tell the database that the List was modified.
+			// This way, when the DatabaseModified notification gets sent out,
+			// our UI will update the List properly.
+			//
+			// We can accomplish this using YapDatabase's `touch` functionality.
+			
+			transaction.touchObject(forKey: list.uuid, inCollection: kZ2DCollection_List)
 		})
 	}
 	

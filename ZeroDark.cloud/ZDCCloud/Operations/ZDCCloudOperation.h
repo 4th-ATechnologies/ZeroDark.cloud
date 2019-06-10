@@ -197,6 +197,22 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy, readwrite, nullable) ZDCCloudLocator *dstCloudLocator;
 
 /**
+ * The eTag is used for put-node-data operations.
+ * It designates the currently know version of the data in the cloud.
+ *
+ * For example, imagine the current version of a node is 'A'.
+ * If we queue an operation to update that node, then our operation will specify that we expect the current versio of the node to be 'A'.
+ * When the operation hits the cloud, that operation will succeed as long as the node is still at 'A'.
+ * However, if the node has been updated by another device, we may discover it's actually at 'B' now.
+ *
+ * When this is the case, we will need to perform one of the following actions:
+ *
+ * - download the latest version of the node, and merge changes
+ * - skip our queued put-node-data operations
+ */
+@property (nonatomic, copy, readwrite, nullable) NSString *eTag;
+
+/**
  * The node's name may change after the operation is enqueued,
  * however the cloudLocator's were calculated based on the node's name at the time the operation was enqueued.
  */

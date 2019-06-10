@@ -1494,7 +1494,11 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			operation.ephemeralInfo.lastChangeToken = pullInfo.latestChangeID_local;
 		}];
 		
-		context.eTag = node.eTag_data;
+		if (operation.eTag) {
+			context.eTag = operation.eTag;
+		} else {
+			context.eTag = node.eTag_data;
+		}
 		
 		if (!asyncNodeData && !nodeData)
 		{
