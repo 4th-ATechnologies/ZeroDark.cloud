@@ -408,7 +408,21 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
         }
         return count
     }
-    
+	
+	
+	func numberOfTotalTasksForListID (listID: String) -> Int
+	{
+		var count: Int = 0
+		
+		databaseConnection.read {  (transaction) in
+			if  let vt = transaction.ext(Ext_View_Tasks) as? YapDatabaseViewTransaction
+			{
+				count = Int(vt.numberOfItems(inGroup: listID))
+			}
+		}
+		return count
+	}
+
 	private func createNewList(title: String) {
 		
 		let zdc = ZDCManager.zdc()
@@ -787,9 +801,11 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 			cell.delegate = self;
 			
 			let pendingCount = self.numberOfPendingTasksForListID(listID: list.uuid)
+			let totalCount = self.numberOfTotalTasksForListID(listID: list.uuid)
+	 
 			
 			let format = NSLocalizedString("number_of_tasks", comment: "")
-			let message = String.localizedStringWithFormat(format, pendingCount)
+			let message = String.localizedStringWithFormat(format, pendingCount, totalCount)
 			cell.lblDetail?.text = message
 		
 			let sharedToCount = nodeForList(list)?.shareList.countOfUserIDs(excluding: self.localUserID) ?? 0
