@@ -1080,6 +1080,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	NSString *eTag      = change.eTag;
 	NSString *bucket    = change.bucket;
 	NSString *regionStr = change.region;
+	NSDate *timestamp   = change.timestamp;
 
 	ZDCCloudPath *cloudPath = [ZDCCloudPath cloudPathFromPath:path];
 	AWSRegion region = [AWSRegions regionForName:regionStr];
@@ -1240,6 +1241,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				{
 					node = [node copy];
 					node.eTag_data = eTag;
+					node.lastModified_data = timestamp;
 					
 					[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
 					
@@ -1333,6 +1335,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	NSString *eTag      = change.eTag;
 	NSString *bucket    = change.bucket;
 	NSString *regionStr = change.region;
+	NSDate *timestamp   = change.timestamp;
 	
 	ZDCCloudPath *cloudPath = [ZDCCloudPath cloudPathFromPath:path];
 	AWSRegion region = [AWSRegions regionForName:regionStr];
@@ -1493,6 +1496,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				{
 					node = [node copy];
 					node.eTag_data = eTag;
+					node.lastModified_data = timestamp;
 					
 					[transaction setObject: node
 					                forKey: node.uuid

@@ -219,7 +219,7 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		BOOL notifyDelegate = NO;
 		
-		if (ZDCLaterDate(updatedNode.lastModified_data, info.lastModified) == info.lastModified)
+		if (!updatedNode.lastModified_data || [updatedNode.lastModified_data isBefore:info.lastModified])
 		{
 			updatedNode.eTag_data = info.eTag;
 			updatedNode.lastModified_data = info.lastModified;
