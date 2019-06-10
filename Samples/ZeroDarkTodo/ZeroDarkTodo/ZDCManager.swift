@@ -835,7 +835,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 														  completionQueue: queue)
 		{ (cloudDataInfo: ZDCCloudDataInfo?, cryptoFile: ZDCCryptoFile?, error: Error?) in
 			
-			if let cryptoFile = cryptoFile {
+			if let cloudDataInfo = cloudDataInfo,
+			   let cryptoFile = cryptoFile {
 				
 				do {
 					// The downloaded file is still encrypted.
@@ -855,10 +856,10 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					// Process it
 					
 					if isListNode {
-						self.processDownloadedList(cleartext, forNodeID: nodeID, withETag: cloudDataInfo?.eTag)
+						self.processDownloadedList(cleartext, forNodeID: nodeID, withETag: cloudDataInfo.eTag)
 					}
 					else {
-						self.processDownloadedTask(cleartext, forNodeID: nodeID, withETag: cloudDataInfo?.eTag)
+						self.processDownloadedTask(cleartext, forNodeID: nodeID, withETag: cloudDataInfo.eTag)
 					}
 					
 				} catch {
@@ -1016,7 +1017,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	
 	/// Invoked after a List object has been downloaded from the cloud.
 	///
-	private func processDownloadedList(_ cleartext: Data, forNodeID nodeID: String, withETag eTag: String?) {
+	private func processDownloadedList(_ cleartext: Data, forNodeID nodeID: String, withETag eTag: String) {
 		
 		var listID: String? = nil
 		var localUserID: String? = nil
@@ -1032,18 +1033,13 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			guard
 				let node = transaction.object(forKey: nodeID, inCollection: kZDCCollection_Nodes) as? ZDCNode,
 				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: node.localUserID)
-				else {
-					return
+			else {
+				return
 			}
 			
 			cloudTransaction.unmarkNode(asNeedsDownload: nodeID, ifETagMatches: eTag)
 			
-			if cloudTransaction.isNodeLinked(nodeID) {
-				
-				// We already created the corresponding List and linked it to this node.
-				return
-			}
-			
+			var downloadedList: List!
 			do {
 				// Attempt to create a List instance from the downloaded data.
 				// This could fail if:
@@ -1051,9 +1047,28 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// - there's a bug in our List.cloudEncode() function
 				// - there's a bug in our List.init(fromCloudData:node:) function
 				//
-				let list = try List(fromCloudData: cleartext, node: node)
+				downloadedList = try List(fromCloudData: cleartext, node: node)
 				
-				// Store the List object in the database.
+			} catch {
+				print("Error parsing list from cloudData: \(error)")
+				return
+			}
+			
+			if let existingList = cloudTransaction.linkedObject(forNodeID: nodeID) as? List {
+				
+				// We are updating an existing List.
+				
+				// We don't do fancy merges for List objects,
+				// because they really only have a single user-facing property:
+				// - title
+				//
+				// (We do fancy merges for Task objects. See function processDownloadedTask() below.)
+				//
+				// So we always just use whatever is in the cloud.
+				
+				downloadedList = List(copy: downloadedList, uuid: existingList.uuid)
+				
+				// Store the downloaded List object in the database.
 				//
 				// YapDatabase is a collection/key/value store.
 				// So we store all List objects in the same collection: kZ2DCollection_List
@@ -1062,7 +1077,32 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// Wondering how the object gets serialized / deserialized ?
 				// The List object supports the Swift Codable protocol.
 				
-				transaction.setObject(list, forKey: list.uuid, inCollection: kZ2DCollection_List)
+				transaction.setObject(downloadedList, forKey: downloadedList.uuid, inCollection: kZ2DCollection_List)
+				
+				// We notify the system that we've opted to use this version of the List.
+				//
+				// We do this because we may have pending changes that we wanted to push up to the cloud.
+				// But these changes were blocked, waiting for us to either merge changes, or skip the operation(s).
+				//
+				// @see self.didDiscoverConflict(...)
+				
+				cloudTransaction.skipDataUploads(forNodeID: node.uuid)
+				
+			}
+			else {
+				
+				// We are creating a NEW List.
+				
+				// Store the downloaded List object in the database.
+				//
+				// YapDatabase is a collection/key/value store.
+				// So we store all List objects in the same collection: kZ2DCollection_List
+				// And every list has a uuid, which we use as the key in the database.
+				//
+				// Wondering how the object gets serialized / deserialized ?
+				// The List object supports the Swift Codable protocol.
+				
+				transaction.setObject(downloadedList, forKey: downloadedList.uuid, inCollection: kZ2DCollection_List)
 				
 				// Where does this List object go within the context of the UI.
 				// For example, imagine the situation in which there are multiple lists:
@@ -1084,13 +1124,13 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				
 				if let vt = transaction.ext(Ext_View_Lists) as? YapDatabaseManualViewTransaction {
 					
-					vt.addKey(list.uuid, inCollection:kZ2DCollection_List, toGroup: node.localUserID)
+					vt.addKey(downloadedList.uuid, inCollection:kZ2DCollection_List, toGroup: node.localUserID)
 				}
 				
 				// Link the List to the Node
 				
 				do {
-					try cloudTransaction.linkNodeID(nodeID, toKey: list.uuid, inCollection: kZ2DCollection_List)
+					try cloudTransaction.linkNodeID(nodeID, toKey: downloadedList.uuid, inCollection: kZ2DCollection_List)
 					
 				} catch {
 					print("Error linking node to list: \(error)")
@@ -1098,19 +1138,18 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					transaction.rollback()
 					return // from block
 				}
-				
-				listID = list.uuid
-				localUserID = node.localUserID
-				
-			} catch {
-				print("Error parsing list from cloudData: \(error)")
 			}
+			
+			listID = downloadedList.uuid
+			localUserID = node.localUserID
 			
 		}, completionQueue: DispatchQueue.global()) {
 			
 			// Download any missing or outdated tasks for this list
 			
-			if let listID = listID, let localUserID = localUserID {
+			if let listID = listID,
+			   let localUserID = localUserID
+			{
 				self.downloadMissingOrOutdatedTasks(forListID: listID, localUserID: localUserID)
 			}
 		}
@@ -1118,7 +1157,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	
 	/// Invoked after a Task object has been downloaded from the cloud.
 	///
-	private func processDownloadedTask(_ cleartext: Data, forNodeID nodeID: String, withETag eTag: String?) {
+	private func processDownloadedTask(_ cleartext: Data, forNodeID nodeID: String, withETag eTag: String) {
 		
 		let zdc = self.zdc!
 		let rwConnection = zdc.databaseManager!.rwDatabaseConnection
@@ -1143,7 +1182,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			var downloadedTask: Task!
 			do {
-				
 				// Attempt to create a Task instance from the downloaded data.
 				// This could fail if:
 				//
@@ -1192,6 +1230,15 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					// The Task object supports the Swift Codable protocol.
 					
 					transaction.setObject(existingTask, forKey: existingTask.uuid, inCollection: kZ2DCollection_Task)
+					
+					// We notify the system that we've merged the changes from the cloud.
+					//
+					// We do this because we may have pending changes that we wanted to push up to the cloud.
+					// But these changes were blocked until we had merged the existing changes.
+					//
+					// @see self.didDiscoverConflict(...)
+					
+					cloudTransaction.didMergeData(withETag: eTag, forNodeID: node.uuid)
 					
 				} catch {
 					
