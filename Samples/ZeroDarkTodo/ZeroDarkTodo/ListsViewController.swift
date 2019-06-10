@@ -579,6 +579,14 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
         })
         
     }
+	
+	
+	//TODO: check is this is shared to me or I am the owner
+	
+	private func isOwnedByMe (listID: String) -> Bool
+	{
+		return true;
+	}
     
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: Actions
@@ -941,15 +949,19 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 					completionHandler(true)
 				})
 			})
+		removeAction.backgroundColor = UIColor.orange
 		
 		var actions:Array<UIContextualAction> = Array()
-		actions.append(contentsOf: [deleteAction, moreAction])
 		
-		if (true)
+		if (self.isOwnedByMe(listID: list.uuid))
 		{
-			removeAction.backgroundColor = UIColor.orange
-			actions.append( removeAction)
+			actions.append(contentsOf: [deleteAction, moreAction])
 		}
+		else
+		{
+ 			actions.append( removeAction)
+		}
+		
 		
 		let configuration = UISwipeActionsConfiguration(actions:actions)
 		return configuration
