@@ -10,6 +10,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 extern NSString *const kZDCDirPrefix_Fake; // Used for "static" nodes with a fixed set of children
 
+extern NSString *const kZDCContext_Conflict;
+
 extern NSString *const ZDCSkippedOperationsNotification;
 extern NSString *const ZDCSkippedOperationsNotification_UserInfo_Ops;
 

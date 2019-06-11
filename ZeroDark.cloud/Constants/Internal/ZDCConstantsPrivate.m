@@ -7,6 +7,8 @@
 
 NSString *const kZDCDirPrefix_Fake = @"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 
+NSString *const kZDCContext_Conflict = @"ZDC:Conflict";
+
 NSString *const ZDCSkippedOperationsNotification = @"ZDCSkippedOperationsNotification";
 NSString *const ZDCSkippedOperationsNotification_UserInfo_Ops = @"ops";
 

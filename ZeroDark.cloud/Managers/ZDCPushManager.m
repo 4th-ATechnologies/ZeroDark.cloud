@@ -2107,6 +2107,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		BOOL shouldRestartFromScratch = NO;
 		BOOL shouldAbort = NO;
+		BOOL shouldNotifyDelegateOfConflict = NO;
 		
 		if (extCode == ZDCErrCode_staging_file_disappeared ||
 		    extCode == ZDCErrCode_staging_file_modified     )
@@ -2145,6 +2146,11 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
+			if ((extCode == ZDCErrCode_precondition_dst_eTag_mismatch) && operation.isPutNodeDataOperation) {
+				
+				shouldNotifyDelegateOfConflict = YES;
+			}
+			
 			NSUInteger successiveFailCount = [operation.ephemeralInfo s4_didFailWithExtStatusCode:@(extCode)];
 			DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
 			
@@ -2191,6 +2197,27 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			[pipeline setStatusAsPendingForOperationWithUUID:operation.uuid];
 		
 			[owner.pullManager pullRemoteChangesForLocalUserID:operation.localUserID zAppID:operation.zAppID];
+			
+			if (shouldNotifyDelegateOfConflict)
+			{
+				[pipeline setHoldDate: [NSDate distantFuture]
+				 forOperationWithUUID: operation.uuid
+				              context: kZDCContext_Conflict];
+				
+				[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+					
+					ZDCNode *node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
+					ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
+					
+					if (node)
+					{
+						[owner.delegate didDiscoverConflict: ZDCNodeConflict_Data
+						                            forNode: node
+						                             atPath: path
+						                        transaction: transaction];
+					}
+				}];
+			}
 			return;
 		}
 	}

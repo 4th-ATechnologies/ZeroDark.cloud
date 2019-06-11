@@ -47,6 +47,11 @@
 	return ext.zAppID;
 }
 
+- (YapDatabaseCloudCorePipeline *)defaultPipeline
+{
+	return [parentConnection->parent defaultPipeline];
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Node Management
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1061,6 +1066,8 @@
 {
 	if (nodeID == nil) return;
 	
+	NSMutableArray<NSUUID*> *operationUUIDs = [NSMutableArray array];
+	
 	[self _enumerateAndModifyOperations:YDBCloudCore_EnumOps_All
 	                         usingBlock:
 	  ^YapDatabaseCloudCoreOperation *(YapDatabaseCloudCorePipeline *pipeline,
@@ -1072,8 +1079,10 @@
 			ZDCCloudOperation *op = (ZDCCloudOperation *)operation;
 			ZDCCloudOperation *modifiedOp = nil;
 			
-			if ([op.nodeID isEqualToString:nodeID])
+			if ([op.nodeID isEqualToString:nodeID] && op.isPutNodeDataOperation)
 			{
+				[operationUUIDs addObject:op.uuid];
+				
 				if (!YDB_IsEqualOrBothNil(op.eTag, eTag))
 				{
 					modifiedOp = [op copy];
@@ -1086,6 +1095,14 @@
 		
 		return nil;
 	}];
+	
+	YapDatabaseCloudCorePipeline *defaultPipeline = [self defaultPipeline];
+	for (NSUUID *operationUUID in operationUUIDs)
+	{
+		[defaultPipeline setHoldDate: nil
+		        forOperationWithUUID: operationUUID
+		                     context: kZDCContext_Conflict];
+	}
 }
 
 /**
