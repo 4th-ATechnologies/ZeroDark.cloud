@@ -23,14 +23,15 @@ extension Notification.Name {
 
 }
 
-let kNotificationsKey = "notifications";
+let kNotificationsKey = "notifications"
 
-let kZDC_DatabaseName = "ZeroDarkTodo";
+let kZDC_DatabaseName = "ZeroDarkTodo"
 let kZDC_zAppID       = "com.4th-a.ZeroDarkTodo"
 
-let Ext_View_Lists         = "List View";
-let Ext_View_Tasks         = "Tasks View";
-let Ext_View_Pending_Tasks = "Pending Tasks View";
+let Ext_View_Lists         = "List View"
+let Ext_View_Tasks         = "Tasks View"
+let Ext_View_Pending_Tasks = "Pending Tasks View"
+let Ext_Hooks              = "Hooks"
 
 
 class ZDCManager: NSObject, ZeroDarkCloudDelegate {
@@ -119,6 +120,18 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	// MARK: YapDatabase Configuration
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	/// We're using YapDatabase in this example.
+	/// You don't have to use it (but it's pretty awesome).
+	///
+	/// So we're going to configure the database according to our needs.
+	/// Mostly, this means we're going to setup some extensions to:
+	///
+	/// - automatically sort items according to how we want them in the UI
+	/// - automatically delete items when their "parents" get deleted
+	/// - automatically "touch" items when their "children" get modified/deleted
+	///
+	/// Basically, a bunch of cool tricks to simplify the work we need to do within the UI.
+	///
 	func databaseConfig(encryptionKey: Data) -> ZDCDatabaseConfig {
 		
 		let config = ZDCDatabaseConfig(encryptionKey: encryptionKey)
@@ -131,6 +144,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			self.setupView_Lists(database)
 			self.setupView_Tasks(database)
 			self.setupView_PendingTasks(database)
+			self.setupHooks(database)
 		}
 		
 		return config
@@ -221,10 +235,11 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		//
 		let view = YapDatabaseManualView()
 		
-		database.asyncRegister(view, withName: Ext_View_Lists) {(ready) in
+		let extName = Ext_View_Lists
+		database.asyncRegister(view, withName: extName) {(ready) in
 			
 			if !ready {
-				print("Error registering \"%@\" !!!", Ext_View_Lists)
+				print("Error registering \(extName) !!!")
 			}
 		}
 	}
@@ -318,12 +333,12 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			                  versionTag: versionTag,
 			                     options: options)
 
-		database.asyncRegister(view, withName: Ext_View_Tasks) {(ready) in
+		let extName = Ext_View_Tasks
+		database.asyncRegister(view, withName: extName) {(ready) in
 			
 			if !ready {
-				print("Error registering \"%@\" !!!", Ext_View_Tasks)
+				print("Error registering \(extName) !!!")
 			}
-			
 		}
 	}
 	
@@ -371,12 +386,75 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		                             versionTag: versionTag,
 		                                options: options)
 
-		database.asyncRegister(view, withName: Ext_View_Pending_Tasks) { (ready) in
-			if(!ready)
-			{
-				print("Error registering \"%@\" !!!", Ext_View_Pending_Tasks)
-			}
+		let extName = Ext_View_Pending_Tasks
+		database.asyncRegister(view, withName: extName) { (ready) in
 			
+			if !ready {
+				print("Error registering \(extName) !!!")
+			}
+		}
+	}
+	
+	/// In our UI, we have a TableView that displays all the List items.
+	/// And within the TableView row, we display information concerning the Task's within the List.
+	/// For example:
+	///
+	/// > Weekend Chores
+	/// > 2 tasks remaining, 5 total
+	///
+	/// In practice, this means we need to update this TableView cell whenever either:
+	///
+	/// - The List is changed
+	/// - Any children Tasks are added/modified/deleted
+	///
+	/// YapDatabase has a few tricks we can use to simplify the work we need to do.
+	/// First, we setup our UI (in ListsViewController) so that it listens for changes to any List.
+	/// Then, we add hooks so that if a Task is changed, we will automatically "touch" the parent List.
+	/// And by "touching" a List item, it will get reported to the UI via the database listeners.
+	///
+	func setupHooks(_ database: YapDatabase) {
+		
+		let hooks = YapDatabaseHooks()
+		
+		// DidModifyRow:
+		//
+		//   This closure is called after an item is inserted or modified in the database.
+		//
+		hooks.didModifyRow = {(transaction: YapDatabaseReadWriteTransaction, collection: String, key: String,
+			proxyObject: YapProxyObject, _, _) in
+			
+			if collection == kZ2DCollection_Task,
+				let task = proxyObject.realObject as? Task
+			{
+				// A Task item was inserted or modified.
+				// So we "touch" the parent List, which will trigger a UI update for it.
+				//
+				transaction.touchObject(forKey: task.listID, inCollection: kZ2DCollection_List)
+			}
+		}
+		
+		// WillRemoveRow:
+		//
+		//   This closure is called before an item is removed from the database.
+		//
+		hooks.willRemoveRow = {(transaction: YapDatabaseReadWriteTransaction, collection: String, key: String) in
+			
+			if collection == kZ2DCollection_Task,
+				let task = transaction.object(forKey: key, inCollection: collection) as? Task
+			{
+				// A Task item will be deleted.
+				// So we "touch" the parent List, which will trigger a UI update for it.
+				//
+				transaction.touchObject(forKey: task.listID, inCollection: kZ2DCollection_List)
+			}
+		}
+		
+		let extName = Ext_Hooks
+		database.asyncRegister(hooks, withName: extName) {(ready) in
+			
+			if !ready {
+				print("Error registering \(extName) !!!")
+			}
 		}
 	}
 	
@@ -742,17 +820,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					// Delete the corresponding task.
 					
 					transaction.removeObject(forKey: task.uuid, inCollection: kZ2DCollection_Task)
-					
-					// The other thing we want to do is "touch" the corresponding List.
-					// If we "touch" an item in the database, the database acts as if the object was modified.
-					//
-					// We do this because our UI that displays List items,
-					// also displays the number of child Task items.
-					// We're changing this number right now.
-					// However the UI is listening for changes to List objects.
-					// So by "touching" the List object, we'll trigger a UI update.
-					
-					transaction.touchObject(forKey: task.listID, inCollection: kZ2DCollection_List)
 				}
 			
 			case 3:
@@ -1334,17 +1401,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// This is handled for us automatically.
 				// @see self.setupView_Tasks()
 			}
-			
-			// Adding or modifying a task indirectly modifies the List.
-			// And there are various components of our UI that should update in response to this change.
-			// However, those UI components are looking for changes to the List, not to Tasks.
-			// So what we want to do here is tell the database that the List was modified.
-			// This way, when the DatabaseModified notification gets sent out,
-			// our UI will update the List properly.
-			//
-			// We can accomplish this using YapDatabase's `touch` functionality.
-			
-			transaction.touchObject(forKey: list.uuid, inCollection: kZ2DCollection_List)
 		})
 	}
 	
