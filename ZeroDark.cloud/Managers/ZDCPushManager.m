@@ -2206,15 +2206,41 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				
 				[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 					
-					ZDCNode *node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
-					ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
+					NSString *extName = [self extNameForContext:context];
+					ZDCCloudTransaction *ext = [transaction ext:extName];
 					
-					if (node)
+					ZDCCloudOperation *op_mostRecentVersion = (ZDCCloudOperation *)[ext operationWithUUID:context.operationUUID];
+					
+					if (op_mostRecentVersion.eTag && ![op_mostRecentVersion.eTag isEqual:context.eTag])
 					{
-						[owner.delegate didDiscoverConflict: ZDCNodeConflict_Data
-						                            forNode: node
-						                             atPath: path
-						                        transaction: transaction];
+						// Looks like the op.eTag has changed since we pushed our request.
+						// So it might not be in conflict anymore.
+						//
+						// Example:
+						// - app was launched, and we discovered an updated node, and notified delegate
+						// - delegate started download of node's data
+						// - we started to push the data component of the same node
+						// - delegate download completed, and they merged the changes
+						// - our push gets rejected (dst_eTag_mismatch)
+						// - but since the data has been merged, the op.eTag was updated accordingly,
+						//   and thus no longer matches what was sent.
+						
+						[pipeline setHoldDate: nil
+						 forOperationWithUUID: operation.uuid
+						              context: kZDCContext_Conflict];
+					}
+					else
+					{
+						ZDCNode *node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
+						ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
+					
+						if (node)
+						{
+							[owner.delegate didDiscoverConflict: ZDCNodeConflict_Data
+							                            forNode: node
+							                             atPath: path
+							                        transaction: transaction];
+						}
 					}
 				}];
 			}

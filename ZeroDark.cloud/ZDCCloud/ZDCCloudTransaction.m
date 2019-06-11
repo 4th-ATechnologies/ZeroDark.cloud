@@ -399,6 +399,7 @@
 	operation.nodeID = node.uuid;
 	operation.cloudLocator = cloudLocator;
 	operation.eTag = node.eTag_data;
+	operation.changeset_obj = changeset;
 	
 	[self addOperation:operation];
 	
