@@ -120,53 +120,127 @@ extern NSString *const kZDCCloudFileExtension_Data;
 // Names of special files, paths
 //
 
+/** Name of container within the treesystem. */
 extern NSString *const kZDCDirPrefix_Home;
+
+/** Name of container within the treesystem. */
 extern NSString *const kZDCDirPrefix_Msgs;
+
+/** Name of container within the treesystem. */
 extern NSString *const kZDCDirPrefix_Prefs;
+
+/** Name of container within the treesystem. */
 extern NSString *const kZDCDirPrefix_Inbox;
+
+/** Name of container within the treesystem. */
 extern NSString *const kZDCDirPrefix_Outbox;
+
+/** Name of container within the treesystem. */
 extern NSString *const kZDCDirPrefix_Avatar;
 
-extern NSString *const kAttachmentParentIDPrefix;
-
-NSString* AttachmentParentID(NSString *localUserID);
-
+//
 // Dictionary keys within .rcrd files
+//
 
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Version;
+
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_FileID;
+
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Sender;
+
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Keys;
+
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Children;
+
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Meta;
+
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Data;
+
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_BurnDate;
 
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Keys_Perms;
+
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Keys_Burn;
+
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Keys_Key;
 
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Keys_Deprecated_Perms;
+
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Keys_Deprecated_Burn;
+
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Keys_Deprecated_PubKeyID;
+
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Keys_Deprecated_SymKey;
 
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Children_Prefix;
 
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Meta_Type;
+
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Meta_Filename;
+
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Meta_DirSalt; // if (type == "directory")
+
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Meta_OwnerID; // if (type == "share")
+
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Meta_Path;    // if (type == "share")
+
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Meta_FileID;  // if (type == "share")
 
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Meta_Type_Directory;
+
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Meta_Type_Share;
 
-extern NSString *const kZDCCloudRcrd_Data_Key;
-extern NSString *const kZDCCloudRcrd_Data_Value;
-
+//
 // Dictionary keys used in .pubKey/.privKey files
+//
 
 extern NSString *const kZDCCloudRcrd_UserID;
 extern NSString *const kZDCCloudRcrd_Auth0ID;

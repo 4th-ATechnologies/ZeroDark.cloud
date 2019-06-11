@@ -40,18 +40,6 @@ NSString *const kZDCDirPrefix_Inbox  = @"inbox";
 NSString *const kZDCDirPrefix_Outbox = @"outbox";
 NSString *const kZDCDirPrefix_Avatar = @"avatar";
 
-NSString *const kAttachmentParentIDPrefix = @"temp|";
-NSString* AttachmentParentID(NSString *localUserID)
-{
-	// ParentID's for normal filesystem are 32 characters in zBase32 encoding.
-	// So we know the following:
-	// - kAttachmentParentIDPrefix uses a character outside the zBase32 encoding
-	// - thus we cannot ever collide with a normal parentID
-	// - the prefix can be used to determine if file is attachment
-	
-	return [kAttachmentParentIDPrefix stringByAppendingString:localUserID];
-}
-
 // Dictionary keys used in .rcrd files
 
 /* extern */ NSString *const kZDCCloudRcrd_Version  = @"version";
@@ -83,9 +71,6 @@ NSString* AttachmentParentID(NSString *localUserID)
 
 /* extern */ NSString *const kZDCCloudRcrd_Meta_Type_Directory = @"directory";
 /* extern */ NSString *const kZDCCloudRcrd_Meta_Type_Share     = @"share";
-
-/* extern */ NSString *const kZDCCloudRcrd_Data_Key            = @"key";
-/* extern */ NSString *const kZDCCloudRcrd_Data_Value          = @"value";
 
 // Dictionary keys used in .pubKey/.privKey files
 
