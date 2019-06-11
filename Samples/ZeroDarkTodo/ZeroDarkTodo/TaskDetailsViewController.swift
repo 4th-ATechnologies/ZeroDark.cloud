@@ -43,6 +43,10 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 	@IBOutlet public var modifiedLabel : UILabel!
 	@IBOutlet public var modifiedValue : UILabel!
 
+	// for simulating push
+	@IBOutlet public var vwSimulate : UIView!
+	@IBOutlet public var cnstVwSimulateHeight : NSLayoutConstraint!
+
 	var taskID : String!
 	var databaseConnection :YapDatabaseConnection!
 	var tap: UITapGestureRecognizer!
@@ -74,6 +78,25 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
+		
+		#if DEBUG
+		self.vwSimulate.isHidden = false
+		self.cnstVwSimulateHeight.constant = 44
+		
+		if let simVC = ZDCManager.uiTools().simulatePushNotificationViewController() {
+			
+			simVC.view.frame = self.vwSimulate.bounds;
+			simVC.willMove(toParent: self)
+			self.vwSimulate.addSubview(simVC.view)
+			self.addChild(simVC)
+			simVC.didMove(toParent: self)
+		}
+		
+		#else
+		self.vwSimulate.isHidden = true
+		self.cnstVwSimulateHeight.constant = 0
+		#endif
+
 	}
 
 	override func viewWillAppear(_ animated: Bool) {

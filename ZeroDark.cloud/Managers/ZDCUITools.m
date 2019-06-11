@@ -29,6 +29,8 @@ static const int ddLogLevel = DDLogLevelWarning;
 #import "FixSettingsViewController_IOS.h"
 #import "LocalUserSettingsViewController_IOS.h"
 #import "ActivityMonitor_IOS.h"
+#import "SimulatePushNotificationViewController_IOS.h"
+
 #import "ZDCPopoverTransition.h"
 
 #else // OSX
@@ -292,6 +294,14 @@ static const int ddLogLevel = DDLogLevelWarning;
 	
 	[navigationController pushViewController:vc animated:YES];
 
+}
+
+- (UIViewController* __nullable)simulatePushNotificationViewController
+{
+	SimulatePushNotificationViewController_IOS*  vc = [[SimulatePushNotificationViewController_IOS alloc]
+																		initWithOwner:owner ];
+	
+	return vc;
 }
 
  #else // OSX

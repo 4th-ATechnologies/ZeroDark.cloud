@@ -49,9 +49,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 	// for simulating push
 	@IBOutlet public var vwSimulate : UIView!
 	@IBOutlet public var cnstVwSimulateHeight : NSLayoutConstraint!
-	@IBOutlet public var btnSimPush : UIButton!
-	@IBOutlet public var actPush : UIActivityIndicatorView!
-
+	
     
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: Class Functions
@@ -126,14 +124,24 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
                             action: #selector(self.didTapAddItemButton(_:))),
             sortButtonItem	]
 		
-#if DEBUG
+		#if DEBUG
 		self.vwSimulate.isHidden = false
 		self.cnstVwSimulateHeight.constant = 44
-#else
+		
+		if let simVC = ZDCManager.uiTools().simulatePushNotificationViewController() {
+			
+			simVC.view.frame = self.vwSimulate.bounds;
+			simVC.willMove(toParent: self)
+			self.vwSimulate.addSubview(simVC.view)
+			self.addChild(simVC)
+			simVC.didMove(toParent: self)
+		}
+		
+		#else
 		self.vwSimulate.isHidden = true
 		self.cnstVwSimulateHeight.constant = 0
-#endif
-		
+		#endif
+
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -148,51 +156,14 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
         self.setNavigationTitle(user: localUser)
         listsTable.reloadData()
 		
-		#if DEBUG
-		if((ZDCManager.zdc().syncManager?.isPullingOrPushingChangesForAnyLocalUser())!)
-		{
-			self.actPush.startAnimating()
-			self.btnSimPush.isEnabled = false;
-		}
-		else
-		{
-			self.actPush.stopAnimating()
-			self.btnSimPush.isEnabled = true;
-		}
-	
-		NotificationCenter.default.addObserver(self,
-															selector: #selector(self.pullStarted(notification:)),
-															name:.ZDCPullStartedNotification ,
-															object: nil)
-	
-		NotificationCenter.default.addObserver(self,
-															selector: #selector(self.pullStopped(notification:)),
-															name:.ZDCPullStoppedNotification ,
-															object: nil)
-	
-		NotificationCenter.default.addObserver(self,
-															selector: #selector(self.pushStarted(notification:)),
-															name:.ZDCPushStartedNotification ,
-															object: nil)
-	
-		NotificationCenter.default.addObserver(self,
-															selector: #selector(self.pushStopped(notification:)),
-															name:.ZDCPushStoppedNotification ,
-															object: nil)
-		#endif
+
 		
     }
     
     override func viewDidDisappear(_ animated: Bool) {
 		
-		#if DEBUG
-		self.actPush.stopAnimating()
-		self.btnSimPush.isEnabled = true;
-		#endif
-
         NotificationCenter.default.removeObserver(self)
-        
-    }
+     }
     
 	private func setNavigationTitle(user: ZDCLocalUser) {
 		
@@ -229,46 +200,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		                                          preFetch: preFetch,
 		                                          postFetch: postFetch)
 	}
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// MARK: Pull/Push
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	@objc func pullStarted(notification: Notification) {
-		
-		if(!self.actPush.isAnimating){
-			self.actPush.startAnimating()
-			self.btnSimPush.isEnabled = false;
-		}
-		
-	}
-
-	@objc func pullStopped(notification: Notification) {
-		
-		if(self.actPush.isAnimating){
-			self.actPush.stopAnimating()
-			self.btnSimPush.isEnabled = true;
-		}
-
-	}
 	
-	@objc func pushStarted(notification: Notification) {
-		
-		if(!self.actPush.isAnimating){
-			self.actPush.startAnimating()
-			self.btnSimPush.isEnabled = false;
-		}
-	}
-
-	@objc func pushStopped(notification: Notification) {
-		if(self.actPush.isAnimating){
-			self.actPush.stopAnimating()
-			self.btnSimPush.isEnabled = true;
-		}
-
-	}
-
-	
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: Database
@@ -597,12 +529,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
     //		listsTable.isEditing  = editing
     //	}
     
-
-	@IBAction func didHitSimulatePush(_ sender: Any)
-	{
-		ZDCManager.zdc().syncManager?.pullChangesForAllLocalUsers()
- 	}
-
+ 
     @objc func didHitTitle(_ sender: Any)
     {
 		ZDCManager.uiTools().pushSettings(forLocalUserID: localUserID,
