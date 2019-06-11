@@ -2752,6 +2752,10 @@ API_AVAILABLE(ios(10.0)){
 	
 	__weak typeof(self) weakSelf = self;
 	
+	// deallocate what we dont need.
+	if(vc_Send)
+		vc_Send = NULL;
+	
 	UIViewController* vc =  [self viewControllerAtIndex:
 									 hasSplits?kPage_Existing: kPage_Intro];
 	if(vc)
@@ -3225,11 +3229,12 @@ API_AVAILABLE(ios(10.0)){
 			break;
 			
 		case kPage_Send:
+			
 			if(!vc_Send)
 			{
 				vc_Send = [self.storyboard instantiateViewControllerWithIdentifier:@"BackupSocialViewController_Send"];
 			}
-			vc = vc_Send;
+ 			vc = vc_Send;
 			break;
 			
 		case kPage_Print:
