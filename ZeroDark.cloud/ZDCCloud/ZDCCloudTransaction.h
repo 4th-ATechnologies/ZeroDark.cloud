@@ -66,7 +66,8 @@ typedef NS_ENUM(NSInteger, ZDCCloudErrorCode) {
  *
  * @return Returns the matching node, if it exists. Nil otherwise.
  */
-- (nullable ZDCNode *)nodeWithPath:(ZDCTreesystemPath *)path NS_SWIFT_NAME(nodeWithPath(_:));
+- (nullable ZDCNode *)nodeWithPath:(ZDCTreesystemPath *)path
+NS_SWIFT_NAME(nodeWithPath(_:));
 
 /**
  * Creates a new node with the given path,
@@ -82,7 +83,8 @@ typedef NS_ENUM(NSInteger, ZDCCloudErrorCode) {
  * @return The newly created node.
  */
 - (nullable ZDCNode *)createNodeWithPath:(ZDCTreesystemPath *)path
-                                   error:(NSError *_Nullable *_Nullable)outError NS_SWIFT_NAME(createNode(withPath:));
+                                   error:(NSError *_Nullable *_Nullable)outError
+NS_SWIFT_NAME(createNode(withPath:));
 
 /**
  * Inserts the given node into the treesystem (as configured),
@@ -392,7 +394,7 @@ typedef NS_ENUM(NSInteger, ZDCCloudErrorCode) {
 
 /**
  * Invoke this method if you've been notified of a conflict, and you've decided to let the cloud version "win".
- * In other words, you've decided not to overwrite the cloud version with the local version. 
+ * In other words, you've decided not to overwrite the cloud version with the local version.
  *
  * This method is one of the ways in which you can resolve a conflict.
  *

@@ -99,7 +99,8 @@ extern NSString *const ZDCShareKeyType_Passphrase;
  * For example, you want to know how many other people the node is being shared with.
  * I.e. the count excluding the localUserID.
  */
-- (NSUInteger)countOfUserIDsExcluding:(nullable NSString *)userID NS_SWIFT_NAME(countOfUserIDs(excluding:));
+- (NSUInteger)countOfUserIDsExcluding:(nullable NSString *)userID
+NS_SWIFT_NAME(countOfUserIDs(excluding:));
 
 #pragma mark Read
 

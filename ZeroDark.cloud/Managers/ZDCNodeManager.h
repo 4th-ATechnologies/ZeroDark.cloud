@@ -289,7 +289,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable ZDCNode *)findNodeWithPath:(ZDCTreesystemPath *)path
                            localUserID:(NSString *)localUserID
                                 zAppID:(NSString *)zAppID
-                           transaction:(YapDatabaseReadTransaction *)transaction;
+                           transaction:(YapDatabaseReadTransaction *)transaction
+NS_SWIFT_NAME(findNode(withPath:localUserID:zAppID:transaction:));
 
 /**
  * Finds the node with the given cloudName.
@@ -359,7 +360,8 @@ NS_ASSUME_NONNULL_BEGIN
                                      region:(AWSRegion)region
                                 localUserID:(NSString *)localUserID
                                      zAppID:(NSString *)zAppID
-                                transaction:(YapDatabaseReadTransaction *)transaction;
+                                transaction:(YapDatabaseReadTransaction *)transaction
+NS_SWIFT_NAME(findNode(withCloudPath:bucket:region:localUserID:zAppID:transaction:));
 
 /**
  * Finds the node with a matching dirPrefix.

@@ -463,7 +463,8 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
 - (void)didDiscoverConflict:(ZDCNodeConflict)conflict
                     forNode:(ZDCNode *)node
                      atPath:(ZDCTreesystemPath *)path
-                transaction:(YapDatabaseReadWriteTransaction *)transaction NS_SWIFT_NAME(didDiscoverConflict(_:forNode:atPath:transaction:));
+                transaction:(YapDatabaseReadWriteTransaction *)transaction
+NS_SWIFT_NAME(didDiscoverConflict(_:forNode:atPath:transaction:));
 
 #pragma mark Background Downloads
 @optional

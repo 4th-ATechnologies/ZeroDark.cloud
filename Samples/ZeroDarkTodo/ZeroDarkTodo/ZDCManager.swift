@@ -704,19 +704,75 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	
 	func didDiscoverMovedNode(_ node: ZDCNode, from oldPath: ZDCTreesystemPath, to newPath: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
 		
+		print("ZDC Delegate: didDiscoverMovedNode: \(oldPath.fullPath()) => \(newPath.fullPath())")
+		
 		// We don't move nodes around in this app, so there's nothing to do.
 		//
 		// Note:
-		// Even if we did move nodes around, it wouldn't matter in this particular app.
-		// This is because our model objects (List & Task) don't store any
-		// information that relates to the node's location.
+		//   Even if we did move nodes around, it wouldn't matter in this particular app.
+		//   This is because our model objects (List & Task) don't store any
+		//   information that relates to the node's treesystem path.
 	}
 	
 	func didDiscoverDeletedNode(_ node: ZDCNode, at path: ZDCTreesystemPath, timestamp: Date?, transaction: YapDatabaseReadWriteTransaction) {
 		
 		print("ZDC Delegate: didDiscoverDeletedNode:at: \(path.fullPath())")
 		
-		// Todo...
+		guard let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: node.localUserID) else {
+			return
+		}
+		
+		switch path.pathComponents.count
+		{
+			case 1:
+				// A List item was deleted.
+				
+				if let list = cloudTransaction.linkedObject(forNodeID: node.uuid) as? List {
+					
+					// All we have to do is delete the corresponding List from the database.
+					
+					transaction.removeObject(forKey: list.uuid, inCollection: kZ2DCollection_List)
+				}
+			
+			case 2:
+				// A Task item was deleted.
+				
+				if let task = cloudTransaction.linkedObject(forNodeID: node.uuid) as? Task {
+					
+					// Delete the corresponding task.
+					
+					transaction.removeObject(forKey: task.uuid, inCollection: kZ2DCollection_Task)
+					
+					// The other thing we want to do is "touch" the corresponding List.
+					// If we "touch" an item in the database, the database acts as if the object was modified.
+					//
+					// We do this because our UI that displays List items,
+					// also displays the number of child Task items.
+					// We're changing this number right now.
+					// However the UI is listening for changes to List objects.
+					// So by "touching" the List object, we'll trigger a UI update.
+					
+					transaction.touchObject(forKey: task.listID, inCollection: kZ2DCollection_List)
+				}
+			
+			case 3:
+				// A Task IMAGE was deleted.
+				//
+				// The DiskManager will automatically delete the image (and/or thumbnail) from disk for us.
+				// So we don't need to worry about that.
+				//
+				// However, we do want to "touch" the parent Task item, so the UI can update itself accordingly.
+				
+				if let parentPath = path.parent(),
+				   let task = cloudTransaction.linkedObject(for: parentPath) as? Task
+				{
+					transaction.touchObject(forKey: task.uuid, inCollection: kZ2DCollection_Task)
+				}
+			
+			default:
+				
+				print("Unknown cloud path: \(path)")
+		}
 	}
 	
 	func didDiscoverConflict(_ conflict: ZDCNodeConflict, forNode node: ZDCNode, atPath path: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
