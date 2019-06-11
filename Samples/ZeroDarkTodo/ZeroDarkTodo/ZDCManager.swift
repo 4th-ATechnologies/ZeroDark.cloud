@@ -810,6 +810,11 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					// All we have to do is delete the corresponding List from the database.
 					
 					transaction.removeObject(forKey: list.uuid, inCollection: kZ2DCollection_List)
+					
+					// The Tasks will be automatically deleted, courtesy of YapDatabaseRelationship extension.
+					// For more information on how this works, look at the function:
+					//
+					// - Task.yapDatabaseRelationshipEdges()
 				}
 			
 			case 2:

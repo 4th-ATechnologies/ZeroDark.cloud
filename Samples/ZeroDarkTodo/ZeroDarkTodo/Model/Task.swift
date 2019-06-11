@@ -225,6 +225,18 @@ class Task: ZDCRecord, Codable, YapDatabaseRelationshipNode {
 // MARK: YapDatabaseRelationship
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	/// YapDatabase has an extension called YapDatabaseRelationship.
+	/// And this extension is registered for us automatically by ZeroDark.cloud.
+	///
+	/// So basically, this extension allows us to create "relationships" between different objects in the database.
+	/// And then we can tell the database what to do if one of the objects gets deleted.
+	///
+	/// So we're going to take advantage of this to say:
+	///
+	/// - If the parent List gets deleted, then delete this Task as well
+	///
+	/// Which just means one less thing we have to code manually.
+	///
 	func yapDatabaseRelationshipEdges() -> [YapDatabaseRelationshipEdge]? {
 
 		let listEdge =
