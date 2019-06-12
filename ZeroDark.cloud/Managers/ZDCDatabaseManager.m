@@ -1595,37 +1595,6 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 }
 
 /**
- * Cloud operation creation logic.
- * Exposed for unit testing.
-**/
-- (ZDCCloudHandler *)cloudHandler:(NSString *)localUserID
-{
-	ZDCCloudHandler *handler = [ZDCCloudHandler withObjectBlock:
-	  ^(YapDatabaseReadTransaction *transaction, NSMutableArray *operations,
-	    NSString *collection, NSString *key, id object)
-	{
-		ZDCUser *user = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
-		if (!user || !user.isLocal)
-		{
-			// Ignore: this is a remote user, so syncing won't ever be possible again.
-			return;
-		}
-
-		ZDCLocalUser *localUser = (ZDCLocalUser *)user;
-
-		if (localUser.accountDeleted)
-		{
-			// Ignore: Account is dead, so syncing won't ever be possible again.
-			return;
-		}
-		
-		// Todo...
-	}];
-	
-	return handler;
-}
-
-/**
  * A separate YapDatabaseCloudCore instance MUST be registered for every account.
  *
  * When the app launches, YapDatabaseCloudCore instances are automatically registered for all existing accounts.
@@ -1653,8 +1622,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	
 	ZDCCloud *ext =
 	  [[ZDCCloud alloc] initWithLocalUserID: localUserID
-	                                 zAppID: appID
-	                                handler: [self cloudHandler:localUserID]];
+	                                 zAppID: appID];
 	
 	id <YapDatabaseCloudCorePipelineDelegate> pipelineDelegate =
 	  (id <YapDatabaseCloudCorePipelineDelegate>)owner;

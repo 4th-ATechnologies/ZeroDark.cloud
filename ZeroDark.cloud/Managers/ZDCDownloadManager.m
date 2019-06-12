@@ -1416,6 +1416,10 @@ static NSUInteger const kMaxFailCount = 8;
 	void (^failBlock)(NSError *) =
 		^(NSError *error) { @autoreleasepool
 	{
+		// Executing within either:
+		// - AFNetworking session queue
+		// - concurrentQueue
+		
 		__strong typeof(self) strongSelf = weakSelf;
 		if (strongSelf == nil) return;
 		
@@ -2118,6 +2122,10 @@ static NSUInteger const kMaxFailCount = 8;
 	__weak typeof(self) weakSelf = self;
 	
 	void (^failBlock)(NSError *) = ^(NSError *error) { @autoreleasepool {
+		
+		// Executing within either:
+		// - AFNetworking session queue
+		// - concurrentQueue
 		
 		__strong typeof(self) strongSelf = weakSelf;
 		if (strongSelf == nil) return;

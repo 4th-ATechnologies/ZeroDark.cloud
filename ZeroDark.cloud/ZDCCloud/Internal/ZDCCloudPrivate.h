@@ -13,7 +13,6 @@
 
 #import "ZDCCloud.h"
 #import "ZDCCloudConnection.h"
-#import "ZDCCloudTypes.h"
 #import "ZDCCloudTransaction.h"
 
 #import "ZDCCloudOperation.h"
@@ -23,25 +22,7 @@
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-@interface ZDCCloudHandler () {
-@public
-	
-	ZDCCloudHandlerBlock   block;
-	YapDatabaseBlockType   blockType;
-	YapDatabaseBlockInvoke blockInvokeOptions;
-}
-
-@end
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-@interface ZDCCloud () {
-@public
-	
-	ZDCCloudHandler *handler;
-}
+@interface ZDCCloud ()
 
 /**
  * ZDCCloud instances are automatically created for you by the framework.
@@ -52,17 +33,9 @@
  * @param zAppID
  *   The zAppID from which the stored push operations were created.
  *   Cross application operations are allowed.
- *
- * @param handler
- *   A block that gets plugged into the database,
- *   and executed in response to database events (such as objects being added, modified, deleted, etc).
  */
 - (instancetype)initWithLocalUserID:(NSString *)localUserID
-                             zAppID:(NSString *)zAppID
-                            handler:(ZDCCloudHandler *)handler;
-
-/** The handler provided during init */
-@property (nonatomic, strong, readonly) ZDCCloudHandler *handler;
+                             zAppID:(NSString *)zAppID;
 
 @end
 

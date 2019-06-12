@@ -11,15 +11,12 @@
 
 @synthesize localUserID = localUserID;
 @synthesize zAppID = zAppID;
-@synthesize handler = handler;
 
 - (instancetype)initWithLocalUserID:(NSString *)inLocalUserID
                              zAppID:(NSString *)inZAppID
-                            handler:(ZDCCloudHandler *)inHandler
 {
 	NSParameterAssert(inLocalUserID != nil);
 	NSParameterAssert(inZAppID != nil);
-	NSParameterAssert(inHandler != nil);
 	
 	YapDatabaseCloudCoreOptions *super_options = [[YapDatabaseCloudCoreOptions alloc] init];
 	super_options.allowedOperationClasses = [NSSet setWithObject:[ZDCCloudOperation class]];
@@ -30,7 +27,6 @@
 	{
 		localUserID = [inLocalUserID copy];
 		zAppID = [inZAppID copy];
-		handler = inHandler;
 	}
 	return self;
 }

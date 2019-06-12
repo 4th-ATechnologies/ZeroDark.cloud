@@ -1890,57 +1890,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Internal helper method for other handleX methods.
-**/
-- (void)_didChangeWithRowid:(int64_t)rowid
-              collectionKey:(YapCollectionKey *)ck
-                     object:(id)object
-                   metadata:(id)metadata
-{
-	DDLogAutoTrace();
-	
-	__unsafe_unretained ZDCCloudConnection *cloudConnection = (ZDCCloudConnection *)parentConnection;
-	__unsafe_unretained ZDCCloud *cloud = (ZDCCloud *)parentConnection->parent;
-	
-	__unsafe_unretained ZDCCloudHandler *handler = cloud->handler;
-	
-	if (handler->blockType == YapDatabaseBlockTypeWithKey)
-	{
-		ZDCCloudHandlerWithKeyBlock block = (ZDCCloudHandlerWithKeyBlock)handler->block;
-		
-		block(databaseTransaction, cloudConnection->operations_block, ck.collection, ck.key);
-	}
-	else if (handler->blockType == YapDatabaseBlockTypeWithObject)
-	{
-		ZDCCloudHandlerWithObjectBlock block = (ZDCCloudHandlerWithObjectBlock)handler->block;
-		
-		block(databaseTransaction, cloudConnection->operations_block, ck.collection, ck.key, object);
-	}
-	else if (handler->blockType == YapDatabaseBlockTypeWithMetadata)
-	{
-		ZDCCloudHandlerWithMetadataBlock block = (ZDCCloudHandlerWithMetadataBlock)handler->block;
-		
-		block(databaseTransaction, cloudConnection->operations_block, ck.collection, ck.key, metadata);
-	}
-	else
-	{
-		ZDCCloudHandlerWithRowBlock block = (ZDCCloudHandlerWithRowBlock)handler->block;
-		
-		block(databaseTransaction, cloudConnection->operations_block, ck.collection, ck.key, object, metadata);
-	}
-	
-	if ([cloudConnection->operations_block count] > 0)
-	{
-		for (YapDatabaseCloudCoreOperation *operation in cloudConnection->operations_block)
-		{
-			[self addOperation:operation];
-		}
-		
-		[cloudConnection->operations_block removeAllObjects];
-	}
-}
-
-/**
  * YapDatabaseReadWriteTransaction Hook, invoked post-op.
  *
  * Corresponds to the following method(s) in YapDatabaseReadWriteTransaction:
@@ -1958,11 +1907,6 @@
 	DDLogAutoTrace();
 	
 	[super didInsertObject:object forCollectionKey:collectionKey withMetadata:metadata rowid:rowid];
-	
-	[self _didChangeWithRowid:rowid
-	            collectionKey:collectionKey
-	                   object:object
-	                 metadata:metadata];
 }
 
 /**
@@ -1982,17 +1926,7 @@
 {
 	DDLogAutoTrace();
 	
-	__unsafe_unretained ZDCCloudHandler *handler = ((ZDCCloud *)parentConnection->parent)->handler;
-	
-	YapDatabaseBlockInvoke blockInvokeBitmask = YapDatabaseBlockInvokeIfObjectModified |
-	                                            YapDatabaseBlockInvokeIfMetadataModified;
-	
-	if (!(handler->blockInvokeOptions & blockInvokeBitmask)) return;
-	
-	[self _didChangeWithRowid:rowid
-	            collectionKey:collectionKey
-	                   object:object
-	                 metadata:metadata];
+	[super didUpdateObject:object forCollectionKey:collectionKey withMetadata:metadata rowid:rowid];
 }
 
 /**
@@ -2008,156 +1942,7 @@
 {
 	DDLogAutoTrace();
 	
-	__unsafe_unretained ZDCCloudHandler *handler = ((ZDCCloud *)parentConnection->parent)->handler;
-	
-	YapDatabaseBlockInvoke blockInvokeBitmask = YapDatabaseBlockInvokeIfObjectModified;
-	
-	if (!(handler->blockInvokeOptions & blockInvokeBitmask)) return;
-	
-	id metadata = nil;
-	if (handler->blockType & YapDatabaseBlockType_MetadataFlag)
-	{
-		metadata = [databaseTransaction metadataForCollectionKey:collectionKey withRowid:rowid];
-	}
-	
-	[self _didChangeWithRowid:rowid
-	            collectionKey:collectionKey
-	                   object:object
-	                 metadata:metadata];
-}
-
-/**
- * YapDatabaseReadWriteTransaction Hook, invoked post-op.
- *
- * Corresponds to the following method(s) in YapDatabaseReadWriteTransaction:
- * - replaceMetadata:forKey:inCollection:
- * - replaceMetadata:forKey:inCollection:withSerializedMetadata:
- *
- * There is already a row for the collection/key tuple, and only the metadata is being modified (object untouched).
-**/
-- (void)didReplaceMetadata:(id)metadata forCollectionKey:(YapCollectionKey *)collectionKey withRowid:(int64_t)rowid
-{
-	DDLogAutoTrace();
-	
-	__unsafe_unretained ZDCCloudHandler *handler = ((ZDCCloud *)parentConnection->parent)->handler;
-	
-	YapDatabaseBlockInvoke blockInvokeBitmask = YapDatabaseBlockInvokeIfMetadataModified;
-	
-	if (!(handler->blockInvokeOptions & blockInvokeBitmask)) return;
-	
-	id object = nil;
-	if (handler->blockType & YapDatabaseBlockType_ObjectFlag)
-	{
-		object = [databaseTransaction objectForCollectionKey:collectionKey withRowid:rowid];
-	}
-	
-	[self _didChangeWithRowid:rowid
-	            collectionKey:collectionKey
-	                   object:object
-	                 metadata:metadata];
-}
-
-/**
- * YapDatabaseReadWriteTransaction Hook, invoked post-op.
- *
- * Corresponds to the following method(s) in YapDatabaseReadWriteTransaction:
- * - touchObjectForKey:inCollection:collection:
-**/
-- (void)didTouchObjectForCollectionKey:(YapCollectionKey *)collectionKey withRowid:(int64_t)rowid
-{
-	DDLogAutoTrace();
-	
-	__unsafe_unretained ZDCCloudHandler *handler = ((ZDCCloud *)parentConnection->parent)->handler;
-	
-	YapDatabaseBlockInvoke blockInvokeBitmask = YapDatabaseBlockInvokeIfObjectTouched;
-	
-	if (!(handler->blockInvokeOptions & blockInvokeBitmask)) return;
-	
-	id object = nil;
-	if (handler->blockType & YapDatabaseBlockType_ObjectFlag)
-	{
-		object = [databaseTransaction objectForCollectionKey:collectionKey withRowid:rowid];
-	}
-	
-	id metadata = nil;
-	if (handler->blockType & YapDatabaseBlockType_MetadataFlag)
-	{
-		metadata = [databaseTransaction metadataForCollectionKey:collectionKey withRowid:rowid];
-	}
-	
-	[self _didChangeWithRowid:rowid
-	            collectionKey:collectionKey
-	                   object:object
-	                 metadata:metadata];
-}
-
-/**
- * YapDatabaseReadWriteTransaction Hook, invoked post-op.
- *
- * Corresponds to the following method(s) in YapDatabaseReadWriteTransaction:
- * - touchMetadataForKey:inCollection:
-**/
-- (void)didTouchMetadataForCollectionKey:(YapCollectionKey *)collectionKey withRowid:(int64_t)rowid
-{
-	DDLogAutoTrace();
-	
-	__unsafe_unretained ZDCCloudHandler *handler = ((ZDCCloud *)parentConnection->parent)->handler;
-	
-	YapDatabaseBlockInvoke blockInvokeBitmask = YapDatabaseBlockInvokeIfMetadataTouched;
-	
-	if (!(handler->blockInvokeOptions & blockInvokeBitmask)) return;
-	
-	id object = nil;
-	if (handler->blockType & YapDatabaseBlockType_ObjectFlag)
-	{
-		object = [databaseTransaction objectForCollectionKey:collectionKey withRowid:rowid];
-	}
-	
-	id metadata = nil;
-	if (handler->blockType & YapDatabaseBlockType_MetadataFlag)
-	{
-		metadata = [databaseTransaction metadataForCollectionKey:collectionKey withRowid:rowid];
-	}
-	
-	[self _didChangeWithRowid:rowid
-	            collectionKey:collectionKey
-	                   object:object
-	                 metadata:metadata];
-}
-
-/**
- * YapDatabaseReadWriteTransaction Hook, invoked post-op.
- *
- * Corresponds to the following method(s) in YapDatabaseReadWriteTransaction:
- * - touchRowForKey:inCollection:
-**/
-- (void)didTouchRowForCollectionKey:(YapCollectionKey *)collectionKey withRowid:(int64_t)rowid
-{
-	DDLogAutoTrace();
-	
-	__unsafe_unretained ZDCCloudHandler *handler = ((ZDCCloud *)parentConnection->parent)->handler;
-	
-	YapDatabaseBlockInvoke blockInvokeBitmask = YapDatabaseBlockInvokeIfObjectTouched |
-	                                            YapDatabaseBlockInvokeIfMetadataTouched;
-	
-	if (!(handler->blockInvokeOptions & blockInvokeBitmask)) return;
-	
-	id object = nil;
-	if (handler->blockType & YapDatabaseBlockType_ObjectFlag)
-	{
-		object = [databaseTransaction objectForCollectionKey:collectionKey withRowid:rowid];
-	}
-	
-	id metadata = nil;
-	if (handler->blockType & YapDatabaseBlockType_MetadataFlag)
-	{
-		metadata = [databaseTransaction metadataForCollectionKey:collectionKey withRowid:rowid];
-	}
-	
-	[self _didChangeWithRowid:rowid
-	            collectionKey:collectionKey
-	                   object:object
-	                 metadata:metadata];
+	[super didReplaceObject:object forCollectionKey:collectionKey withRowid:rowid];
 }
 
 /**
@@ -2168,7 +1953,7 @@
  */
 - (void)willRemoveObjectForCollectionKey:(YapCollectionKey *)ck withRowid:(int64_t)rowid
 {
-	// Why are we usin the pre-op hook instead of the post-op hook here ?
+	// Why are we using the pre-op hook instead of the post-op hook here ?
 	//
 	// If we instead use the `didRemoveObjectForCollectionKey:` then:
 	// - when the method is inovked, the database row no longer exists
