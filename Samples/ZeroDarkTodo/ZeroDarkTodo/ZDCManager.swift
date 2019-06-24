@@ -1111,7 +1111,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		guard
 			let zdc = self.zdc,
 			let databaseManager = zdc.databaseManager
-			else {
+		else {
 				
 				// Don't call this method until the database has been unlocked
 				return
@@ -1122,7 +1122,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			guard
 				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
 				let listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List)
-				else {
+			else {
 					return
 			}
 			
@@ -1491,7 +1491,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			guard
 				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
 				let taskNode = cloudTransaction.linkedNode(forKey: taskID, inCollection: kZ2DCollection_Task)
-				else {
+			else {
 					return
 			}
 			
@@ -1529,9 +1529,9 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		guard
 			let imageData = image.dataWithJPEG(),
 			let thumbnailData = image.withMaxSize(CGSize(width: 256, height: 256))?.dataWithPNG()
-			else {
-				print("Unable to convert image to JPEG !")
-				return
+		else {
+			print("Unable to convert image to JPEG !")
+			return
 		}
 		
 		let zdc = self.zdc!
@@ -1579,8 +1579,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				guard
 					let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
 					let taskNode = cloudTransaction.linkedNode(forKey: taskID, inCollection: kZ2DCollection_Task)
-					else {
-						return
+				else {
+					return
 				}
 				
 				if imageNodeIsNew {

@@ -2790,11 +2790,37 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		
 		ZDCFileInfo *matchingInfo = nil;
 		
-		for (ZDCFileInfo *info in infos)
+		NSUInteger i = 0;
+		while (i < infos.count)
 		{
+			ZDCFileInfo *info = infos[i];
+			
 			if ([info matchesMode:mode type:type format:format])
 			{
 				matchingInfo = info;
+				i++;
+			}
+			else
+			{
+				// The info doesn't match what's being imported (different format, different persistent setting, etc).
+				// This means the particular file is now outdated, and needs to be deleted.
+				
+				if (info.fileRetainCount == 0)
+				{
+					NSError *error = nil;
+					[[NSFileManager defaultManager] removeItemAtURL:info.fileURL error:&error];
+					
+					if (error) {
+						DDLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
+					}
+					
+					[infos removeObjectAtIndex:i];
+				}
+				else
+				{
+					info.pendingDelete = YES;
+					i++;
+				}
 			}
 		}
 		
@@ -2879,8 +2905,12 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		NSMutableDictionary<NSString *, NSMutableArray<ZDCFileInfo *> *> *dict = dict_nodeData;
 		
 		NSArray <ZDCFileInfo *> *infos = dict[nodeID];
-		if (infos.count > 0) {
-			result = YES;
+		for (ZDCFileInfo *info in infos)
+		{
+			if (!info.pendingDelete) {
+				result = YES;
+				break;
+			}
 		}
 		
 	#pragma clang diagnostic pop
@@ -2956,35 +2986,41 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 			
 			for (ZDCFileInfo *info in infos)
 			{
-				if (pInfo == nil)
-					pInfo = info;
-				else
-					pInfo = PreferredInfo(info, pInfo);
-			}
-			
-			fileURL = pInfo.fileURL;
-			format = pInfo.format;
-			
-			[pInfo incrementFileRetainCount];
-			retainToken = [[ZDCFileRetainToken alloc] initWithInfo:pInfo owner:self];
-			
-			pInfo.lastAccessed = [NSDate date];
-			
-			isPersistent = pInfo.isStoredPersistently;
-			
-			if (pInfo.eTag == nil) // we read eTag xattr only on demand
-			{
-				NSString *eTag = nil;
-				if ([self getETag:&eTag forURL:pInfo.fileURL withEncryptionKey:node.encryptionKey])
+				if (!info.pendingDelete)
 				{
-					pInfo.eTag = eTag ?: [NSNull null];
+					if (pInfo == nil)
+						pInfo = info;
+					else
+						pInfo = PreferredInfo(info, pInfo);
 				}
 			}
 			
-			if ([pInfo.eTag isKindOfClass:[NSString class]]) {
-				eTag = (NSString *)pInfo.eTag;
+			if (pInfo)
+			{
+				fileURL = pInfo.fileURL;
+				format = pInfo.format;
+				
+				[pInfo incrementFileRetainCount];
+				retainToken = [[ZDCFileRetainToken alloc] initWithInfo:pInfo owner:self];
+				
+				pInfo.lastAccessed = [NSDate date];
+				
+				isPersistent = pInfo.isStoredPersistently;
+				
+				if (pInfo.eTag == nil) // we read eTag xattr only on demand
+				{
+					NSString *eTag = nil;
+					if ([self getETag:&eTag forURL:pInfo.fileURL withEncryptionKey:node.encryptionKey])
+					{
+						pInfo.eTag = eTag ?: [NSNull null];
+					}
+				}
+				
+				if ([pInfo.eTag isKindOfClass:[NSString class]]) {
+					eTag = (NSString *)pInfo.eTag;
+				}
+				expiration = pInfo.expiration;
 			}
-			expiration = pInfo.expiration;
 		}
 		
 	#pragma clang diagnostic pop
@@ -3376,7 +3412,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		NSMutableDictionary<NSString *, NSMutableArray<ZDCFileInfo *> *> *dict = dict_nodeThumbnails;
 		NSMutableSet<NSString*> *changes = changes_nodeThumbnails;
 		
-		NSMutableArray <ZDCFileInfo *> *infos = dict[node.uuid];
+		NSMutableArray<ZDCFileInfo *> *infos = dict[node.uuid];
 		if (infos == nil)
 		{
 			infos = [[NSMutableArray alloc] initWithCapacity:1];
@@ -3385,11 +3421,37 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		
 		ZDCFileInfo *matchingInfo = nil;
 		
-		for (ZDCFileInfo *info in infos)
+		NSUInteger i = 0;
+		while (i < infos.count)
 		{
+			ZDCFileInfo *info = infos[i];
+			
 			if ([info matchesMode:mode type:type format:format])
 			{
 				matchingInfo = info;
+				i++;
+			}
+			else
+			{
+				// The info doesn't match what's being imported (different format, different persistent setting, etc).
+				// This means the particular file is now outdated, and needs to be deleted.
+				
+				if (info.fileRetainCount == 0)
+				{
+					NSError *error = nil;
+					[[NSFileManager defaultManager] removeItemAtURL:info.fileURL error:&error];
+					
+					if (error) {
+						DDLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
+					}
+					
+					[infos removeObjectAtIndex:i];
+				}
+				else
+				{
+					info.pendingDelete = YES;
+					i++;
+				}
 			}
 		}
 		
@@ -3474,8 +3536,12 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		NSMutableDictionary<NSString *, NSMutableArray<ZDCFileInfo *> *> *dict = dict_nodeThumbnails;
 		
 		NSArray <ZDCFileInfo *> *infos = dict[nodeID];
-		if (infos.count > 0) {
-			result = YES;
+		for (ZDCFileInfo *info in infos)
+		{
+			if (!info.pendingDelete) {
+				result = YES;
+				break;
+			}
 		}
 		
 	#pragma clang diagnostic pop
@@ -3514,10 +3580,18 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		NSMutableDictionary<NSString *, NSMutableArray<ZDCFileInfo *> *> *dict = dict_nodeThumbnails;
 		
 		NSArray <ZDCFileInfo *> *infos = dict[node.uuid];
-		if (infos.count > 0)
+		ZDCFileInfo *info = nil;
+		
+		for (ZDCFileInfo *i in infos)
 		{
-			ZDCFileInfo *info = infos[0];
-			
+			if (!i.pendingDelete) {
+				info = i;
+				break;
+			}
+		}
+		
+		if (infos)
+		{
 			fileURL = info.fileURL;
 			format = info.format;
 			
@@ -3955,11 +4029,37 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		
 		ZDCFileInfo *matchingInfo = nil;
 		
-		for (ZDCFileInfo *info in infos)
+		NSUInteger i = 0;
+		while (i < infos.count)
 		{
+			ZDCFileInfo *info = infos[i];
+			
 			if ([info matchesMode:mode type:type format:format auth0ID:auth0ID])
 			{
 				matchingInfo = info;
+				i++;
+			}
+			else
+			{
+				// The info doesn't match what's being imported (different format, different persistent setting, etc).
+				// This means the particular file is now outdated, and needs to be deleted.
+				
+				if (info.fileRetainCount == 0)
+				{
+					NSError *error = nil;
+					[[NSFileManager defaultManager] removeItemAtURL:info.fileURL error:&error];
+					
+					if (error) {
+						DDLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
+					}
+					
+					[infos removeObjectAtIndex:i];
+				}
+				else
+				{
+					info.pendingDelete = YES;
+					i++;
+				}
 			}
 		}
 		
@@ -4053,21 +4153,14 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		NSMutableDictionary<NSString *, NSMutableArray<ZDCFileInfo *> *> *dict = dict_userAvatars;
 		
 		NSArray <ZDCFileInfo *> *infos = dict[userID];
-		if (infos.count > 0)
+		for (ZDCFileInfo *info in infos)
 		{
-			if (auth0ID == nil)
+			if (!info.pendingDelete)
 			{
-				result = YES;
-			}
-			else
-			{
-				for (ZDCFileInfo *info in infos)
+				if (auth0ID == nil || [info.auth0ID isEqualToString:auth0ID])
 				{
-					if ([info.auth0ID isEqualToString:auth0ID])
-					{
-						result = YES;
-						break;
-					}
+					result = YES;
+					break;
 				}
 			}
 		}
@@ -4132,7 +4225,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 			
 			for (ZDCFileInfo *info in infos)
 			{
-				if ([info.auth0ID isEqualToString:auth0ID])
+				if (!info.pendingDelete && [info.auth0ID isEqualToString:auth0ID])
 				{
 					matchingInfo = info;
 					break;
