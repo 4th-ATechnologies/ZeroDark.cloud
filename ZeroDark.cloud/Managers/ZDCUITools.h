@@ -177,6 +177,16 @@ typedef void(^sharedUsersViewCompletionHandler)(NSSet <NSString*>  * _Nullable  
 - (void)deleteRefreshTokenforUserID:(NSString *)localUserID
                     completionBlock:(dispatch_block_t __nullable )completionBlock;
 
+
+#if TARGET_OS_IPHONE
+
+/**
+ * return a UIViewController for that simulates push notifcations for debugging
+ *
+*/
+- (UIViewController* __nullable)simulatePushNotificationViewController;
+#endif
+
 @end
 
 NS_ASSUME_NONNULL_END

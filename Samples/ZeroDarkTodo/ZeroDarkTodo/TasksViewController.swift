@@ -24,6 +24,7 @@ class TaskTableCell : UITableViewCell
 	@IBOutlet public var cnslblRightOffset : NSLayoutConstraint!
 	@IBOutlet public var imgThumb : UIImageView!
 
+	
 	var taskID: String!
 	weak var delegate : TaskTableCellDelegate!
 
@@ -53,7 +54,11 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 	var databaseConnection :YapDatabaseConnection!
 	var mappings: YapDatabaseViewMappings!
 	var shareBadge: BadgedBarButtonItem?
-    
+	
+	// for simulating push
+	@IBOutlet public var vwSimulate : UIView!
+	@IBOutlet public var cnstVwSimulateHeight : NSLayoutConstraint!
+
 	private let dateFormatter: DateFormatter = {
 		let dateFormatter = DateFormatter()
 		dateFormatter.dateFormat = "MMM d, h:mm a"
@@ -94,6 +99,25 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 		
 		tasksTable.rowHeight = UITableView.automaticDimension
 		tasksTable.estimatedRowHeight = 62
+		
+		#if DEBUG
+		self.vwSimulate.isHidden = false
+		self.cnstVwSimulateHeight.constant = 44
+		
+		if let simVC = ZDCManager.uiTools().simulatePushNotificationViewController() {
+			
+			simVC.view.frame = self.vwSimulate.bounds;
+			simVC.willMove(toParent: self)
+			self.vwSimulate.addSubview(simVC.view)
+			self.addChild(simVC)
+			simVC.didMove(toParent: self)
+		}
+ 
+		#else
+		self.vwSimulate.isHidden = true
+		self.cnstVwSimulateHeight.constant = 0
+		#endif
+
    }
 	
 	override func viewWillAppear(_ animated: Bool) {
