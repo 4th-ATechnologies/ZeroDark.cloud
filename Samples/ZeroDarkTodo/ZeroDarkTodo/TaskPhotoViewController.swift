@@ -175,7 +175,10 @@ class TaskPhotoViewController: UIViewController, UINavigationControllerDelegate,
 			}
 		}
 		
-		zdc.imageManager?.fetchNodeThumbnail(imageNode, preFetch: preFetch, postFetch: postFetch)
+		let options = ZDCFetchOptions()
+		options.downloadOnETagMismatch = imageNode.eTag_data as NSString?
+		
+		zdc.imageManager?.fetchNodeThumbnail(imageNode, with: options, preFetch: preFetch, postFetch: postFetch)
 	}
 	
 	private func loadFullSizeImage(_ imageNode: ZDCNode) {

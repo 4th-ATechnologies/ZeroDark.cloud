@@ -732,6 +732,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			//
 			// i.e. a serialized List, Task or TaskImage.
 			
+			cloudTransaction.markNode(asNeedsDownload: node.uuid)
+			
 			// What kind of node is this ?
 			//
 			// For this sample application,
@@ -749,15 +751,13 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			{
 				case 1:
 					// This is a List object.
-					cloudTransaction.markNode(asNeedsDownload: node.uuid)
-			
-					// We can download it now.
+					//
+					// We can download it immediately.
 					downloadNode(node, at: path)
 			
 				case 2:
 					// This is a Task object.
-					cloudTransaction.markNode(asNeedsDownload: node.uuid)
-					
+					//
 					// Download it IFF we have the parent List already.
 					if let parentNodeID = node.parentID,
 					   let _/* listID */ = cloudTransaction.linkedKey(forNodeID: parentNodeID)

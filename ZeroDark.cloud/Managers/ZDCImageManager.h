@@ -10,6 +10,7 @@
 
 @class ZDCNode;
 @class ZDCUser;
+@class ZDCFetchOptions;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -105,6 +106,7 @@ typedef OSImage*_Nonnull (^ZDCImageProcessingBlock)(OSImage *image);
  */
 - (nullable ZDCDownloadTicket *)
         fetchNodeThumbnail:(ZDCNode *)node
+               withOptions:(nullable ZDCFetchOptions *)options
              preFetchBlock:(void(NS_NOESCAPE^)(OSImage *_Nullable image, BOOL willFetch))preFetchBlock
             postFetchBlock:(void(^)(OSImage *_Nullable image, NSError *_Nullable error))postFetchBlock;
 
@@ -164,7 +166,8 @@ typedef OSImage*_Nonnull (^ZDCImageProcessingBlock)(OSImage *image);
  */
 - (nullable ZDCDownloadTicket *)
         fetchNodeThumbnail:(ZDCNode *)node
-          withProcessingID:(nullable NSString *)processingID
+               withOptions:(nullable ZDCFetchOptions *)options
+              processingID:(nullable NSString *)processingID
            processingBlock:(ZDCImageProcessingBlock)imageProcessingBlock
              preFetchBlock:(void(NS_NOESCAPE^)(OSImage *_Nullable image, BOOL willFetch))preFetchBlock
             postFetchBlock:(void(^)(OSImage *_Nullable image, NSError *_Nullable error))postFetchBlock;
@@ -334,6 +337,22 @@ typedef OSImage*_Nonnull (^ZDCImageProcessingBlock)(OSImage *image);
  * Returns the default multi-user avatar used by the framework.
  */
 - (OSImage *)defaultMultiUserAvatar;
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * FetchOptions allow you to configure the scenarios in which the image is downloaded from the cloud.
+ */
+@interface ZDCFetchOptions : NSObject
+
+/**
+ * Set this to a non-nil value if you want the most recent version automatically downloaded.
+ */
+@property (nonatomic, assign, readwrite, nullable) NSString *downloadOnETagMismatch;
 
 @end
 

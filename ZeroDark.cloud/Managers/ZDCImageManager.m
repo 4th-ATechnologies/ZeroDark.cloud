@@ -28,10 +28,11 @@
 
 @interface ZDCCachedImageItem : NSObject
 
-- (instancetype)initWithKey:(NSString *)key image:(nullable OSImage *)image;
+- (instancetype)initWithKey:(NSString *)key image:(nullable OSImage *)image eTag:(nullable NSString *)eTag;
 
 @property (nonatomic, copy, readonly) NSString *key;
 @property (nonatomic, strong, readonly, nullable) OSImage *image;
+@property (nonatomic, copy, readonly, nullable) NSString *eTag;
 
 @end
 
@@ -39,13 +40,15 @@
 
 @synthesize key = _key;
 @synthesize image = _image;
+@synthesize eTag = _eTag;
 
-- (instancetype)initWithKey:(NSString *)key image:(nullable OSImage *)image
+- (instancetype)initWithKey:(NSString *)key image:(nullable OSImage *)image eTag:(nullable NSString *)eTag
 {
 	if ((self = [super init]))
 	{
 		_key = [key copy];
 		_image = image;
+		_eTag = [eTag copy];
 	}
 	return self;
 }
@@ -180,9 +183,12 @@
 	return [NSString stringWithFormat:@"%@|%@", nodeID, processingID];
 }
 
-- (void)cacheNodeThumbnail:(nullable OSImage *)image forKey:(NSString *)key cost:(NSUInteger)cost
+- (void)cacheNodeThumbnail:(nullable OSImage *)image
+                    forKey:(NSString *)key
+                  withETag:(NSString *)eTag
+                      cost:(NSUInteger)cost
 {
-	ZDCCachedImageItem *item = [[ZDCCachedImageItem alloc] initWithKey:key image:image];
+	ZDCCachedImageItem *item = [[ZDCCachedImageItem alloc] initWithKey:key image:image eTag:eTag];
 	
 	[nodeThumbnailsCache setObject:item forKey:key cost:cost];
 	
@@ -213,6 +219,7 @@
  */
 - (nullable ZDCDownloadTicket *)
         fetchNodeThumbnail:(ZDCNode *)node
+               withOptions:(nullable ZDCFetchOptions *)options
              preFetchBlock:(void(NS_NOESCAPE^)(OSImage *_Nullable image, BOOL willFetch))preFetchBlock
             postFetchBlock:(void(^)(OSImage *_Nullable image, NSError *_Nullable error))postFetchBlock
 {
@@ -220,6 +227,7 @@
 	
 	return [self _fetchNodeThumbnail: node
 	                    withCacheKey: node.uuid
+	                         options: options
 	                 processingBlock: nil
 	                   preFetchBlock: preFetchBlock
 	                  postFetchBlock: postFetchBlock];
@@ -230,7 +238,8 @@
  */
 - (nullable ZDCDownloadTicket *)
         fetchNodeThumbnail:(ZDCNode *)node
-          withProcessingID:(nullable NSString *)processingID
+               withOptions:(nullable ZDCFetchOptions *)options
+              processingID:(nullable NSString *)processingID
            processingBlock:(ZDCImageProcessingBlock)imageProcessingBlock
              preFetchBlock:(void(NS_NOESCAPE^)(OSImage *_Nullable image, BOOL willFetch))preFetchBlock
             postFetchBlock:(void(^)(OSImage *_Nullable image, NSError *_Nullable error))postFetchBlock
@@ -244,6 +253,7 @@
 	
 	return [self _fetchNodeThumbnail: node
 	                    withCacheKey: cacheKey
+	                         options: options
 	                 processingBlock: imageProcessingBlock
 	                   preFetchBlock: preFetchBlock
 	                  postFetchBlock: postFetchBlock];
@@ -252,32 +262,61 @@
 - (nullable ZDCDownloadTicket *)
         _fetchNodeThumbnail:(ZDCNode *)node
                withCacheKey:(nullable NSString *)cacheKey
+                    options:(nullable ZDCFetchOptions *)options
             processingBlock:(nullable ZDCImageProcessingBlock)imageProcessingBlock
               preFetchBlock:(void(^)(OSImage *_Nullable image, BOOL willFetch))preFetchBlock
              postFetchBlock:(void(^)(OSImage *_Nullable image, NSError *_Nullable error))postFetchBlock
 {
+	ZDCCachedImageItem *cachedItem = nil;
 	if (cacheKey)
 	{
-		ZDCCachedImageItem *cachedItem = [nodeThumbnailsCache objectForKey:cacheKey];
+		cachedItem = [nodeThumbnailsCache objectForKey:cacheKey];
 		if (cachedItem)
 		{
-			preFetchBlock(cachedItem.image, NO);
-			return nil;
+			BOOL willFetch = NO;
+			if (options.downloadOnETagMismatch && ![options.downloadOnETagMismatch isEqual:cachedItem.eTag])
+			{
+				willFetch = YES;
+			}
+			
+			preFetchBlock(cachedItem.image, willFetch);
+			if (!willFetch) {
+				return nil;
+			}
 		}
 	}
 	
 	ZDCDiskExport *export = [owner.diskManager nodeThumbnail:node];
-	if (export.isNilPlaceholder)
+	
+	BOOL requiresDownload = NO;
+	if (export)
 	{
-		preFetchBlock(nil, NO);
-		return nil;
+		if (options.downloadOnETagMismatch && ![options.downloadOnETagMismatch isEqual:export.eTag])
+		{
+			requiresDownload = YES;
+		}
+	}
+	else
+	{
+		requiresDownload = YES;
 	}
 	
-	preFetchBlock(nil, YES);
+	if (!cachedItem)
+	{
+		if (export.isNilPlaceholder)
+		{
+			preFetchBlock(nil, requiresDownload);
+			if (!requiresDownload) {
+				return nil;
+			}
+		}
+	
+		preFetchBlock(nil, YES);
+	}
 	
 	__weak typeof(self) weakSelf = self;
-	void (^processingBlock)(NSData*, NSError*) =
-		^(NSData *imageData, NSError *error){ @autoreleasepool
+	void (^processingBlock)(NSData*, NSString*, NSError*) =
+		^(NSData *imageData, NSString *eTag, NSError *error){ @autoreleasepool
 	{
 		// Executing on the processingQueue now
 		
@@ -301,7 +340,8 @@
 		__strong typeof(self) strongSelf = weakSelf;
 		if (strongSelf && cacheKey && !error)
 		{
-			[strongSelf cacheNodeThumbnail:image forKey:cacheKey cost:(imageData.length ?: 1)];
+			NSUInteger cost = imageData.length ?: 1;
+			[strongSelf cacheNodeThumbnail:image forKey:cacheKey withETag:eTag cost:cost];
 		}
 		
 		if (postFetchBlock)
@@ -313,23 +353,32 @@
 	}};
 	
 	
+	ZDCDownloadTicket *downloadTicket = nil;
+	__block BOOL didDownload = NO;
+	
 	if (export.cryptoFile)
 	{
+		// Read the file from disk.
+		//
+		// We return this even if the image is going to be downloaded, as the download could be slow,
+		// and it's generally preferred to show stale data rather than no data.
+		
 		[ZDCFileConversion decryptCryptoFileIntoMemory: export.cryptoFile
 		                               completionQueue: processingQueue
 		                               completionBlock:^(NSData *cleartext, NSError *error)
 		{
-			processingBlock(cleartext, error);
+			if (!didDownload) {
+				processingBlock(cleartext, export.eTag, error);
+			}
 		}];
-		
-		return nil;
 	}
-	else
+	
+	if (requiresDownload)
 	{
 		ZDCDownloadOptions *opts = [[ZDCDownloadOptions alloc] init];
 		opts.cacheToDiskManager = YES;
 		
-		ZDCDownloadTicket *ticket =
+		downloadTicket =
 		  [owner.downloadManager downloadNodeMeta: node
 		                               components: ZDCNodeMetaComponents_Thumbnail
 		                                  options: opts
@@ -337,11 +386,12 @@
 		                          completionBlock:
 			^(ZDCCloudDataInfo *header, NSData *metadata, NSData *thumbnail, NSError *error)
 		{
-			processingBlock(thumbnail, error);
+			didDownload = (thumbnail != nil);
+			processingBlock(thumbnail, header.eTag, error);
 		}];
-		
-		return ticket;
 	}
+	
+	return downloadTicket;
 }
 
 /**
@@ -459,9 +509,12 @@
 	return (userID != nil);
 }
 
-- (void)cacheUserAvatar:(nullable OSImage *)image forKey:(NSString *)key cost:(NSUInteger)cost
+- (void)cacheUserAvatar:(nullable OSImage *)image
+                 forKey:(NSString *)key
+               withETag:(NSString *)eTag
+                   cost:(NSUInteger)cost
 {
-	ZDCCachedImageItem *item = [[ZDCCachedImageItem alloc] initWithKey:key image:image];
+	ZDCCachedImageItem *item = [[ZDCCachedImageItem alloc] initWithKey:key image:image eTag:eTag];
 	
 	[userAvatarsCache setObject:item forKey:key cost:cost];
 	
@@ -584,7 +637,8 @@
 		__strong typeof(self) strongSelf = weakSelf;
 		if (strongSelf && cacheKey && !error)
 		{
-			[strongSelf cacheUserAvatar:image forKey:cacheKey cost:(imageData.length ?: 1)];
+			NSUInteger cost = imageData.length ?: 1;
+			[strongSelf cacheUserAvatar:image forKey:cacheKey withETag:nil cost:cost];
 		}
 		
 		if (postFetchBlock)
@@ -688,7 +742,8 @@
 		__strong typeof(self) strongSelf = weakSelf;
 		if (strongSelf && cacheKey)
 		{
-			[strongSelf cacheUserAvatar:image forKey:cacheKey cost:(imageData.length ?: 1)];
+			NSUInteger cost = imageData.length ?: 1;
+			[strongSelf cacheUserAvatar:image forKey:cacheKey withETag:nil cost:cost];
 		}
 		
 		if (postFetchBlock)
@@ -812,7 +867,7 @@
 	
 	if (image)
 	{
-		cachedItem = [[ZDCCachedImageItem alloc] initWithKey:cacheKey image:image];
+		cachedItem = [[ZDCCachedImageItem alloc] initWithKey:cacheKey image:image eTag:nil];
 		[userAvatarsCache setObject:cachedItem forKey:cacheKey cost:10]; // low cost - no decryption required
 	}
 	
@@ -838,11 +893,21 @@
  
 	if (image)
 	{
-		cachedItem = [[ZDCCachedImageItem alloc] initWithKey:cacheKey image:image];
+		cachedItem = [[ZDCCachedImageItem alloc] initWithKey:cacheKey image:image eTag:nil];
 		[userAvatarsCache setObject:cachedItem forKey:cacheKey cost:10]; // low cost - no decryption required
 	}
 	
 	return image;
 }
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+@implementation ZDCFetchOptions
+
+@synthesize downloadOnETagMismatch;
 
 @end

@@ -595,7 +595,10 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 					}
 				}
 				
-				ZDCManager.imageManager().fetchNodeThumbnail(imageNode, preFetch: preFetch, postFetch: postFetch)
+				let options = ZDCFetchOptions()
+				options.downloadOnETagMismatch = imageNode.eTag_data as NSString?
+				
+				ZDCManager.imageManager().fetchNodeThumbnail(imageNode, with: options, preFetch: preFetch, postFetch: postFetch)
 				
 			} else {
 				
