@@ -664,33 +664,33 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		//
 		switch path.pathComponents.count
 		{
-		case 1:
-			// This is a List object.
-			cloudTransaction.markNode(asNeedsDownload: node.uuid)
+			case 1:
+				// This is a List object.
+				cloudTransaction.markNode(asNeedsDownload: node.uuid)
 				
-			// We can download it now.
-			downloadNode(node, at: path)
-			
-		case 2:
-			// This is a Task object.
-			cloudTransaction.markNode(asNeedsDownload: node.uuid)
-			
-			// Download it now IFF we have the parent List already.
-			if let parentNodeID = node.parentID,
-			   let _/* listID */ = cloudTransaction.linkedKey(forNodeID: parentNodeID)
-			{
+				// We can download it now.
 				downloadNode(node, at: path)
-			}
 			
-		case 3:
-			// This is a Task IMAGE.
-			// Don't bother downloading this right now.
-			// We can download it on demand via the UI.
-			// In fact, the ZDCImageManager will help us out with it.
-			break;
+			case 2:
+				// This is a Task object.
+				cloudTransaction.markNode(asNeedsDownload: node.uuid)
+				
+				// Download it now IFF we have the parent List already.
+				if let parentNodeID = node.parentID,
+					let _/* listID */ = cloudTransaction.linkedKey(forNodeID: parentNodeID)
+				{
+					downloadNode(node, at: path)
+				}
 			
-		default:
-			print("Unknown cloud path: \(path)")
+			case 3:
+				// This is a Task IMAGE.
+				// Don't bother downloading this right now.
+				// We can download it on demand via the UI.
+				// In fact, the ZDCImageManager will help us out with it.
+				break;
+			
+			default:
+				print("Unknown cloud path: \(path)")
 		}
 	}
 	
