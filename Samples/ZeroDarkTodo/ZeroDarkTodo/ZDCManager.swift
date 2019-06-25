@@ -800,6 +800,14 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			return
 		}
 		
+		// Given our tree hierarchy:
+		//
+		// - All List objects have a path that looks like : /X
+		// - All Task objects have a path that looks like : /X/Y
+		// - All Task images have a path that looks like  : /X/Y/Z
+		//
+		// So we know what type of node we're downloading based on the number of path components.
+		//
 		switch path.pathComponents.count
 		{
 			case 1:
@@ -865,6 +873,14 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				return
 			}
 			
+			// Given our tree hierarchy:
+			//
+			// - All List objects have a path that looks like : /X
+			// - All Task objects have a path that looks like : /X/Y
+			// - All Task images have a path that looks like  : /X/Y/Z
+			//
+			// So we can identify the type of node based on the number of path components.
+			//
 			switch path.pathComponents.count
 			{
 				case 1:
@@ -919,26 +935,25 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		
 		let nodeID = node.uuid
 		
-		// What are we downloading ?
-		//
 		// Given our tree hierarchy:
 		//
-		// - All List objects have a path that looks like: /X
-		// - All Task objects have a path that looks like: /X/Y
+		// - All List objects have a path that looks like : /X
+		// - All Task objects have a path that looks like : /X/Y
+		// - All Task images have a path that looks like  : /X/Y/Z
 		//
-		// So we know what type of node we're downloading based on the number of path components.
+		// So we can identify the type of node based on the number of path components.
 		
 		var isListNode = false
 		var isTaskNode = false
 		
 		switch path.pathComponents.count
 		{
-		case 1:
-			isListNode = true
-		case 2:
-			isTaskNode = true
-		default:
-			break
+			case 1:
+				isListNode = true
+			case 2:
+				isTaskNode = true
+			default:
+				break
 		}
 		
 		if !isListNode && !isTaskNode {
@@ -1010,7 +1025,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			let zdc = self.zdc,
 			let databaseManager = zdc.databaseManager
 		else {
-			// Don't call this method until the database has been unlocked
+			// Looks like the database is still locked
 			return
 		}
 		
@@ -1077,29 +1092,58 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 																  using:
 				{ (nodeID: String, path: [String], recurseInto, stop) in
 					
-					let needsDownload = cloudTransaction.nodeIsMarked(asNeedsDownload: nodeID)
-					if needsDownload {
-						self.downloadNode(withNodeID: nodeID, transaction: transaction)
-					}
-					
+					// Given our tree hierarchy:
+					//
+					// - All List objects have a path that looks like : /X
+					// - All Task objects have a path that looks like : /X/Y
+					// - All Task images have a path that looks like  : /X/Y/Z
+					//
+					// So we can identify the type of node based on the number of path components.
+					//
 					// The `path` gives us a list of nodeID's between `home` & `noodeID`.
 					//
-					// In the case of a List object, this would be an empty array.
-					// In the case of a Task object, this would be an array with 1 item (the listID)
-					//
-					// If we don't have the List object yet, then we don't need to recurse into the children.
-					// That is, if we don't have the List object in the database yet,
-					// then we can't download any of the List's task items yet.
-					//
-					if path.count == 0 {
+					switch path.count
+					{
+						case 0:
+							// This is a List object.
+							// - treesystem path = /X
+							// - nodeID          = X
+							// - path array      = []
 						
-						let list = cloudTransaction.linkedObject(forNodeID: nodeID) as? List
-						if list == nil {
+							let needsDownload = cloudTransaction.nodeIsMarked(asNeedsDownload: nodeID)
+							if needsDownload {
+								self.downloadNode(withNodeID: nodeID, transaction: transaction)
+							}
 							
-							// Don't bother recursing into the List.
-							// We need to download & process the List first, before we can download any of the children.
-							recurseInto[0] = false
-						}
+							let list = cloudTransaction.linkedObject(forNodeID: nodeID) as? List
+							if list == nil {
+								
+								// Don't bother recursing into the List.
+								// We need to download & process the List first, before we can download any of the children.
+								recurseInto[0] = false
+							}
+						
+						case 1:
+							// This is a Task object.
+							// - treesystem path = /X/Y
+							// - nodeID          = Y
+							// - path array      = [X]
+						
+							let needsDownload = cloudTransaction.nodeIsMarked(asNeedsDownload: nodeID)
+							if needsDownload {
+									self.downloadNode(withNodeID: nodeID, transaction: transaction)
+							}
+						
+						case 2:
+							// This is a Task image.
+							// - treesystem path = /X/Y/Z
+							// - nodeID          = Z
+							// - path array      = [X, Y]
+							//
+							// Task images are downloaded on demand.
+							break;
+						
+						default: break
 					}
 				})
 			}
