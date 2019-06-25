@@ -39,6 +39,30 @@ typedef NS_ENUM(NSInteger, ZDCCloudErrorCode) {
 };
 
 /**
+ * Bitmask for specifiying which "meta" components to download from the cloud.
+ */
+typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
+	
+	/** Bitmask flag that specifies the header should be downloaded. */
+	ZDCNodeComponents_Header    = (1 << 0), // 00001
+	
+	/** Bitmask flag that specifies the metadata section should be downloaded (if present). */
+	ZDCNodeComponents_Metadata  = (1 << 1), // 00010
+	
+	/** Bitmask flag that specifies the thumbnail section should be downloaded (if present). */
+	ZDCNodeComponents_Thumbnail = (1 << 2), // 00100
+	
+	/** Bitmask flag that specifies the data section should be downloaded. */
+	ZDCNodeComponents_Data      = (1 << 3), // 01000
+	
+	/** Bitmask flag that specifies all sections should be downloaded. */
+	ZDCNodeComponents_All = (ZDCNodeComponents_Header    |
+	                         ZDCNodeComponents_Metadata  |
+	                         ZDCNodeComponents_Thumbnail |
+	                         ZDCNodeComponents_Data      ) // 01111
+};
+
+/**
  * ZDCCloud is a YapDatabase extension.
  *
  * It manages the storage of the upload queue.
@@ -67,7 +91,7 @@ typedef NS_ENUM(NSInteger, ZDCCloudErrorCode) {
  * @return Returns the matching node, if it exists. Nil otherwise.
  */
 - (nullable ZDCNode *)nodeWithPath:(ZDCTreesystemPath *)path
-NS_SWIFT_NAME(nodeWithPath(_:));
+ NS_SWIFT_NAME(nodeWithPath(_:));
 
 /**
  * Creates a new node with the given path,
@@ -84,7 +108,7 @@ NS_SWIFT_NAME(nodeWithPath(_:));
  */
 - (nullable ZDCNode *)createNodeWithPath:(ZDCTreesystemPath *)path
                                    error:(NSError *_Nullable *_Nullable)outError
-NS_SWIFT_NAME(createNode(withPath:));
+ NS_SWIFT_NAME(createNode(withPath:));
 
 /**
  * Inserts the given node into the treesystem (as configured),
@@ -325,8 +349,13 @@ NS_SWIFT_NAME(createNode(withPath:));
  *
  * @param nodeID
  *   The node needing to be downloaded. (nodeID == ZDCNode.uuid)
+ *
+ * @param components
+ *   Typically you pass ZDCNodeComponents_All to specify that all components of a node are out-of-date.
+ *   However, you can customize this in advanced situations.
  */
-- (void)markNodeAsNeedsDownload:(NSString *)nodeID;
+- (void)markNodeAsNeedsDownload:(NSString *)nodeID components:(ZDCNodeComponents)components
+ NS_SWIFT_NAME(markNodeAsNeedsDownload(_:components:));
 
 /**
  * After a download succeeds, invoke this method to remove the flag.
@@ -334,19 +363,33 @@ NS_SWIFT_NAME(createNode(withPath:));
  * @param nodeID
  *   The node you successfully downloaded. (nodeID == ZDCNode.uuid)
  *
+ * @param components
+ *   Pass ZDCNodeComponents_All to specify that all components are now up-to-date.
+ *   However, if you only downloaded one component, such as the thumbnail, then just specify that component.
+ *
  * @param eTag
  *   If you pass a non-nil eTag, then the flag will only be removed if ZDCNode.eTag_data matches the given eTag.
- *   You can get the eTag from `[ZDCCloudDataInfo eTag]`, which is given as a parameter from the DownloadManager.
+ *   You can get the eTag from the DownloadManager's completion block parameter, via `[ZDCCloudDataInfo eTag]`.
  */
-- (void)unmarkNodeAsNeedsDownload:(NSString *)nodeID ifETagMatches:(nullable NSString *)eTag;
+- (void)unmarkNodeAsNeedsDownload:(NSString *)nodeID
+                       components:(ZDCNodeComponents)components
+                    ifETagMatches:(nullable NSString *)eTag
+ NS_SWIFT_NAME(unmarkNodeAsNeedsDownload(_:components:ifETagMatches:));
 
 /**
  * Returns YES/true if you've marked the node as needing to be downloaded.
  *
+ * A bitwise comparison is performed between the currently marked components, and the passed components parameter.
+ * YES is returned if ANY of the components (flags, bits) are currented marked as needing download.
+ *
  * @param nodeID
  *   The node in question. (nodeID == ZDCNode.uuid)
+ *
+ * @param components
+ *   The component(s) in question.
  */
-- (BOOL)nodeIsMarkedAsNeedsDownload:(NSString *)nodeID;
+- (BOOL)nodeIsMarkedAsNeedsDownload:(NSString *)nodeID components:(ZDCNodeComponents)components
+ NS_SWIFT_NAME(nodeIsMarkedAsNeedsDownload(_:components:));;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Operations
@@ -368,6 +411,12 @@ NS_SWIFT_NAME(createNode(withPath:));
  *   The node whose operations you're looking for. (nodeID == ZDCNode.uuid)
  */
 - (NSArray<ZDCCloudOperation*> *)addedOperationsForNodeID:(NSString *)nodeID;
+
+/**
+ * Returns YES if there pending uploads for the given nodeID.
+ * This information may be useful in determining why your data is out-of-sync with the cloud.
+ */
+- (BOOL)hasPendingDataUploadsForNodeID:(NSString *)nodeID;
 
 /**
  * Enumerates all the operations in the queue,

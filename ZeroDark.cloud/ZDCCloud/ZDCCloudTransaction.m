@@ -864,6 +864,31 @@
 	return node;
 }
 
+- (nullable NSString *)_linkedNodeIDForRowid:(int64_t)rowid
+{
+	__block NSString *nodeID = nil;
+	[self _enumerateAttachedForRowid: rowid
+								 usingBlock:^(NSString *cloudURI, BOOL *stop)
+	{
+		nodeID = cloudURI;
+		*stop = YES;
+	}];
+	
+	return nodeID;
+}
+
+- (nullable ZDCNode *)_linkedNodeForRowid:(int64_t)rowid
+{
+	ZDCNode *node = nil;
+	
+	NSString *nodeID = [self _linkedNodeIDForRowid:rowid];
+	if (nodeID) {
+		node = [databaseTransaction objectForKey:nodeID inCollection:kZDCCollection_Nodes];
+	}
+	
+	return node;
+}
+
 /**
  * See header file for description.
  * Or view the reference docs online:
@@ -959,9 +984,9 @@
  * Or view the reference docs online:
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
-- (void)markNodeAsNeedsDownload:(NSString *)nodeID
+- (void)markNodeAsNeedsDownload:(NSString *)nodeID components:(ZDCNodeComponents)components
 {
-	[self setTag:@(YES) forKey:nodeID withIdentifier:nil];
+	[self setTag:@(components) forKey:nodeID withIdentifier:nil];
 }
 
 /**
@@ -969,7 +994,9 @@
  * Or view the reference docs online:
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
-- (void)unmarkNodeAsNeedsDownload:(NSString *)nodeID ifETagMatches:(nullable NSString *)eTag
+- (void)unmarkNodeAsNeedsDownload:(NSString *)nodeID
+                       components:(ZDCNodeComponents)components
+                    ifETagMatches:(nullable NSString *)eTag
 {
 	if (eTag)
 	{
@@ -982,7 +1009,59 @@
 		}
 	}
 	
-	[self removeTagForKey:nodeID withIdentifier:nil];
+	id tag = [self tagForKey:nodeID withIdentifier:nil];
+	if (tag && [tag isKindOfClass:[NSNumber class]])
+	{
+		NSUInteger bitmask = [(NSNumber *)tag unsignedIntegerValue];
+		ZDCNodeComponents existingComponents = bitmask & ZDCNodeComponents_All;
+		
+		// Example:
+		//
+		//   existingComponents = 01111
+		// -         components = 00100
+		// ----------------------------
+		//   newComponents      = 01011
+		//
+		// flags &= ~flag
+		// ^^^^^^^^^^^^^^
+		// Explanation:
+		//
+		// - If flag == 00100, then ~flag == 11011
+		// - & is a bitwise AND operation
+		// - &= is assignment after bitwise AND operation
+		//
+		// Putting it all together:
+		// - if flags == 00111
+		// - and flag == 00100
+		//
+		// flags &= ~flag  IS
+		// 00111 &= ~00100 IS
+		// 00111 &=  11011 IS
+		// 00011
+		//
+		// In other words, it unsets a specific flag.
+		
+		ZDCNodeComponents newComponents = existingComponents;
+		if (components & ZDCNodeComponents_Header) {
+			newComponents &= ~ZDCNodeComponents_Header; // see comment above for code explanation
+		}
+		if (components & ZDCNodeComponents_Metadata) {
+			newComponents &= ~ZDCNodeComponents_Metadata; // see comment above for code explanation
+		}
+		if (components & ZDCNodeComponents_Thumbnail) {
+			newComponents &= ~ZDCNodeComponents_Thumbnail; // see comment above for code explanation
+		}
+		if (components & ZDCNodeComponents_Data) {
+			newComponents &= ~ZDCNodeComponents_Data; // see comment above for code explanation
+		}
+		
+		if (newComponents == 0) {
+			[self removeTagForKey:nodeID withIdentifier:nil];
+		}
+		else {
+			[self setTag:@(newComponents) forKey:nodeID withIdentifier:nil];
+		}
+	}
 }
 
 /**
@@ -990,11 +1069,25 @@
  * Or view the reference docs online:
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
-- (BOOL)nodeIsMarkedAsNeedsDownload:(NSString *)nodeID
+- (BOOL)nodeIsMarkedAsNeedsDownload:(NSString *)nodeID components:(ZDCNodeComponents)components
 {
-	id tag = [self tagForKey:nodeID withIdentifier:nil];
+	BOOL result = NO;
 	
-	return (tag && [tag isKindOfClass:[NSNumber class]] && [(NSNumber *)tag boolValue]);
+	id tag = [self tagForKey:nodeID withIdentifier:nil];
+	if (tag && [tag isKindOfClass:[NSNumber class]])
+	{
+		NSUInteger bitmask = [(NSNumber *)tag unsignedIntegerValue];
+		ZDCNodeComponents existing = bitmask & ZDCNodeComponents_All;
+		
+		ZDCNodeComponents passed = components & ZDCNodeComponents_All;
+		
+		ZDCNodeComponents bitwiseOR = existing | passed;
+		if (bitwiseOR != 0) {
+			result = YES;
+		}
+	}
+	
+	return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1029,6 +1122,36 @@
 	}];
 	
 	return results;
+}
+
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (BOOL)hasPendingDataUploadsForNodeID:(NSString *)nodeID
+{
+	if (nodeID == nil) return NO;
+	
+	__block BOOL result = NO;
+	
+	[self _enumerateOperationsUsingBlock:^(YapDatabaseCloudCorePipeline *pipeline,
+	                                       YapDatabaseCloudCoreOperation *operation, NSUInteger graphIdx, BOOL *stop)
+	{
+		if ([operation isKindOfClass:[ZDCCloudOperation class]])
+		{
+			__unsafe_unretained ZDCCloudOperation *op = (ZDCCloudOperation *)operation;
+			if ([op.nodeID isEqualToString:nodeID])
+			{
+				if (op.isPutNodeDataOperation) {
+					result = YES;
+					*stop = YES;
+				}
+			}
+		}
+	}];
+	
+	return result;
 }
 
 /**
@@ -1951,25 +2074,11 @@
  * Corresponds to the following method(s) in YapDatabaseReadWriteTransaction
  * - removeObjectForKey:inCollection:
  */
-- (void)willRemoveObjectForCollectionKey:(YapCollectionKey *)ck withRowid:(int64_t)rowid
+- (void)didRemoveObjectForCollectionKey:(YapCollectionKey *)ck withRowid:(int64_t)rowid
 {
-	// Why are we using the pre-op hook instead of the post-op hook here ?
-	//
-	// If we instead use the `didRemoveObjectForCollectionKey:` then:
-	// - when the method is inovked, the database row no longer exists
-	// - we call [self linkedNodeForKey:inCollection:]
-	// - which in turn calls [self linkedNodeIDForKey:inCollection:]
-	// - which in turn calls [self enumerateAttachedForKey:inCollection:]
-	// - which in turn calls [databaseTransaction getRowid:&rowid forKey:key inCollection:collection]
-	// - which doesn't find the rowid, since it's already been deleted
-	//
-	// So we have 2 options:
-	// - use the pre-op version
-	// - add alternative code paths which take {rowid, collectionKey} as opposed to {collection, key}
-	//
-	// We're taking the easy option for now.
+	[super didRemoveObjectForCollectionKey:ck withRowid:rowid];
 	
-	ZDCNode *linkedNode = [self linkedNodeForKey:ck.key inCollection:ck.collection];
+	ZDCNode *linkedNode = [self _linkedNodeForRowid:rowid];
 	if (linkedNode)
 	{
 		[self deleteNode:linkedNode error:nil];
@@ -1990,11 +2099,15 @@
  * The YapDatabaseReadWriteTransaction will inspect the list of keys that are to be removed,
  * and then loop over them in "chunks" which are readily processable for extensions.
  */
-- (void)willRemoveObjectsForKeys:(NSArray *)keys inCollection:(NSString *)collection withRowids:(NSArray *)rowids
+- (void)didRemoveObjectsForKeys:(NSArray *)keys inCollection:(NSString *)collection withRowids:(NSArray *)rowids
 {
-	for (NSString *key in keys)
+	[super didRemoveObjectsForKeys:keys inCollection:collection withRowids:rowids];
+	
+	for (NSNumber *num in rowids)
 	{
-		ZDCNode *linkedNode = [self linkedNodeForKey:key inCollection:collection];
+		int64_t rowid = [num longLongValue];
+		
+		ZDCNode *linkedNode = [self _linkedNodeForRowid:rowid];
 		if (linkedNode)
 		{
 			[self deleteNode:linkedNode error:nil];

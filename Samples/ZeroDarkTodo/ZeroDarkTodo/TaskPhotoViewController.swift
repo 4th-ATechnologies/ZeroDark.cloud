@@ -176,7 +176,7 @@ class TaskPhotoViewController: UIViewController, UINavigationControllerDelegate,
 		}
 		
 		let options = ZDCFetchOptions()
-		options.downloadOnETagMismatch = imageNode.eTag_data as NSString?
+		options.downloadIfMarkedAsNeedsDownload = true
 		
 		zdc.imageManager?.fetchNodeThumbnail(imageNode, with: options, preFetch: preFetch, postFetch: postFetch)
 	}
@@ -190,7 +190,6 @@ class TaskPhotoViewController: UIViewController, UINavigationControllerDelegate,
 			assert(Thread.isMainThread, "Bad programmer - no cookie")
 			
 			self?.imgPhoto.display(image:image)
-
 			self?.isDisplayingFullSizeImage = true
 		}
 		
@@ -212,13 +211,32 @@ class TaskPhotoViewController: UIViewController, UINavigationControllerDelegate,
 			})
 		}
 		
-		if let export = zdc.diskManager?.nodeData(imageNode) {
+		// Fetch the full version of the file from the DiskManager.
+		// This version may or may not be out-of-date.
+		//
+		let export = zdc.diskManager?.nodeData(imageNode)
+		
+		let isMissing = (export == nil)
+		var isOutOfDate = false
+		if !isMissing {
 			
-			if let cryptoFile = export.cryptoFile {
+			databaseConnection.read {(transaction) in
+				
+				if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: imageNode.localUserID) {
+					
+					isOutOfDate = cloudTransaction.nodeIsMarkedAsNeedsDownload(imageNode.uuid, components: .data)
+				}
+			}
+		}
+		
+		if !isOutOfDate {
+			
+			if let cryptoFile = export?.cryptoFile {
 				decryptImage(cryptoFile)
 			}
 		}
-		else {
+		
+		if isMissing || isOutOfDate {
 			
 			let options = ZDCDownloadOptions()
 			options.cacheToDiskManager = true
@@ -228,11 +246,13 @@ class TaskPhotoViewController: UIViewController, UINavigationControllerDelegate,
 			                                      options: options,
 			                                      completionQueue: DispatchQueue.global(),
 			                                      completionBlock:
-			{ (cloudDataInfo: ZDCCloudDataInfo?, cryptoFile: ZDCCryptoFile?, error: Error?) in
+			{[weak self] (cloudDataInfo: ZDCCloudDataInfo?, cryptoFile: ZDCCryptoFile?, error: Error?) in
 				
-				if let cryptoFile = cryptoFile {
-					
+				if let cloudDataInfo = cloudDataInfo,
+				   let cryptoFile = cryptoFile
+				{
 					decryptImage(cryptoFile)
+					self?.unmarkNodeAsNeedsDownload(imageNode, eTag: cloudDataInfo.eTag)
 				}
 			})
 		}
@@ -268,6 +288,20 @@ class TaskPhotoViewController: UIViewController, UINavigationControllerDelegate,
 		
 		if hasChanges {
 			self.refreshView()
+		}
+	}
+	
+	private func unmarkNodeAsNeedsDownload(_ node: ZDCNode, eTag: String) {
+		
+		let zdc = ZDCManager.zdc()
+		let rwConnection = ZDCManager.rwDatabaseConnection()
+		
+		rwConnection.asyncReadWrite { (transaction) in
+			
+			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: node.localUserID) {
+				
+				cloudTransaction.unmarkNodeAsNeedsDownload(node.uuid, components: .data, ifETagMatches: eTag)
+			}
 		}
 	}
 	

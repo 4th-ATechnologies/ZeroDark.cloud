@@ -666,14 +666,14 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		{
 			case 1:
 				// This is a List object.
-				cloudTransaction.markNode(asNeedsDownload: node.uuid)
+				cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
 				
 				// We can download it now.
 				downloadNode(node, at: path)
 			
 			case 2:
 				// This is a Task object.
-				cloudTransaction.markNode(asNeedsDownload: node.uuid)
+				cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
 				
 				// Download it now IFF we have the parent List already.
 				if let parentNodeID = node.parentID,
@@ -684,10 +684,12 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			case 3:
 				// This is a Task IMAGE.
+				let components: ZDCNodeComponents = [.thumbnail, .data]
+				cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: components)
+				
 				// Don't bother downloading this right now.
 				// We can download it on demand via the UI.
 				// In fact, the ZDCImageManager will help us out with it.
-				break;
 			
 			default:
 				print("Unknown cloud path: \(path)")
@@ -732,7 +734,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			//
 			// i.e. a serialized List, Task or TaskImage.
 			
-			cloudTransaction.markNode(asNeedsDownload: node.uuid)
 			
 			// What kind of node is this ?
 			//
@@ -751,13 +752,15 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			{
 				case 1:
 					// This is a List object.
-					//
+					cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+					
 					// We can download it immediately.
 					downloadNode(node, at: path)
 			
 				case 2:
 					// This is a Task object.
-					//
+					cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+					
 					// Download it IFF we have the parent List already.
 					if let parentNodeID = node.parentID,
 					   let _/* listID */ = cloudTransaction.linkedKey(forNodeID: parentNodeID)
@@ -767,12 +770,12 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				
 			case 3:
 					// This is a Task IMAGE.
-					//
+					let components: ZDCNodeComponents = [.thumbnail, .data]
+					cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: components)
+					
 					// Don't bother downloading this right now.
 					// We can download it on demand via the UI.
 					// In fact, the ZDCImageManager will help us out with it.
-				
-					break
 			
 				default:
 					print("Unknown cloud path: \(path)")
@@ -896,7 +899,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					//
 					// We need to download the most recent version of the node, and merge the changes.
 					
-					cloudTransaction.markNode(asNeedsDownload: node.uuid)
+					cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
 					downloadNode(node, at: path)
 				
 				case 3:
@@ -1110,7 +1113,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 							// - nodeID          = X
 							// - path array      = []
 						
-							let needsDownload = cloudTransaction.nodeIsMarked(asNeedsDownload: nodeID)
+							let needsDownload = cloudTransaction.nodeIsMarkedAsNeedsDownload(nodeID, components: .all)
 							if needsDownload {
 								self.downloadNode(withNodeID: nodeID, transaction: transaction)
 							}
@@ -1129,7 +1132,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 							// - nodeID          = Y
 							// - path array      = [X]
 						
-							let needsDownload = cloudTransaction.nodeIsMarked(asNeedsDownload: nodeID)
+							let needsDownload = cloudTransaction.nodeIsMarkedAsNeedsDownload(nodeID, components: .all)
 							if needsDownload {
 									self.downloadNode(withNodeID: nodeID, transaction: transaction)
 							}
@@ -1175,7 +1178,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 														using:
 			{ (nodeID, stop) in
 				
-				let needsDownload = cloudTransaction.nodeIsMarked(asNeedsDownload: nodeID)
+				let needsDownload = cloudTransaction.nodeIsMarkedAsNeedsDownload(nodeID, components: .all)
 				if needsDownload {
 					self.downloadNode(withNodeID: nodeID, transaction: transaction)
 				}
@@ -1209,7 +1212,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				return
 			}
 			
-			cloudTransaction.unmarkNode(asNeedsDownload: nodeID, ifETagMatches: eTag)
+			cloudTransaction.unmarkNodeAsNeedsDownload(nodeID, components: .all, ifETagMatches: eTag)
 			
 			var downloadedList: List!
 			do {
@@ -1350,7 +1353,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				return
 			}
 			
-			cloudTransaction.unmarkNode(asNeedsDownload: nodeID, ifETagMatches: eTag)
+			cloudTransaction.unmarkNodeAsNeedsDownload(nodeID, components: .all, ifETagMatches: eTag)
 			
 			var downloadedTask: Task!
 			do {

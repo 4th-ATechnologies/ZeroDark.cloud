@@ -193,7 +193,7 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 					}
 					
 					let options = ZDCFetchOptions()
-					options.downloadOnETagMismatch = imageNode.eTag_data as NSString?
+					options.downloadIfMarkedAsNeedsDownload = true
 					
 					ZDCManager.imageManager().fetchNodeThumbnail(imageNode, with: options, preFetch: preFetch, postFetch: postFetch)
 				}

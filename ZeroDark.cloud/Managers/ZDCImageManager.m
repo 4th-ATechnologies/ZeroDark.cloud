@@ -66,6 +66,7 @@
 	
 	__weak ZeroDarkCloud *owner;
 	
+	YapDatabaseConnection *internalDatabaseConnection;
 	dispatch_queue_t processingQueue;
 	
 	NSCache<NSString*, ZDCCachedImageItem*> *nodeThumbnailsCache;
@@ -92,6 +93,7 @@
 	{
 		owner = inOwner;
 		
+		internalDatabaseConnection = [owner.databaseManager.database newConnection];
 		processingQueue = dispatch_queue_create("ZDCImageManager-processing", DISPATCH_QUEUE_SERIAL);
 		
 		nodeThumbnailsCache = [[NSCache alloc] init];
@@ -262,11 +264,26 @@
 - (nullable ZDCDownloadTicket *)
         _fetchNodeThumbnail:(ZDCNode *)node
                withCacheKey:(nullable NSString *)cacheKey
-                    options:(nullable ZDCFetchOptions *)options
+                    options:(nullable ZDCFetchOptions *)inOptions
             processingBlock:(nullable ZDCImageProcessingBlock)imageProcessingBlock
               preFetchBlock:(void(^)(OSImage *_Nullable image, BOOL willFetch))preFetchBlock
              postFetchBlock:(void(^)(OSImage *_Nullable image, NSError *_Nullable error))postFetchBlock
 {
+	ZDCFetchOptions *options = inOptions ? [inOptions copy] : [[ZDCFetchOptions alloc] init];
+	
+	__block BOOL nodeIsMarkedAsNeedsDownload = NO;
+	if (options.downloadIfMarkedAsNeedsDownload)
+	{
+		__strong ZeroDarkCloud *zdc = owner;
+		[internalDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+			
+			ZDCCloudTransaction *cloudTransaction = [zdc cloudTransaction:transaction forLocalUserID:node.localUserID];
+			nodeIsMarkedAsNeedsDownload =
+			  [cloudTransaction nodeIsMarkedAsNeedsDownload: node.uuid
+			                                     components: ZDCNodeComponents_Thumbnail];
+		}];
+	}
+	
 	ZDCCachedImageItem *cachedItem = nil;
 	if (cacheKey)
 	{
@@ -274,7 +291,7 @@
 		if (cachedItem)
 		{
 			BOOL willFetch = NO;
-			if (options.downloadOnETagMismatch && ![options.downloadOnETagMismatch isEqual:cachedItem.eTag])
+			if (options.downloadIfMarkedAsNeedsDownload && nodeIsMarkedAsNeedsDownload)
 			{
 				willFetch = YES;
 			}
@@ -291,14 +308,14 @@
 	BOOL requiresDownload = NO;
 	if (export)
 	{
-		if (options.downloadOnETagMismatch && ![options.downloadOnETagMismatch isEqual:export.eTag])
+		if (options.downloadIfMarkedAsNeedsDownload && nodeIsMarkedAsNeedsDownload)
 		{
-			requiresDownload = YES;
+			requiresDownload = YES; // version in DiskManager is out-of-date
 		}
 	}
 	else
 	{
-		requiresDownload = YES;
+		requiresDownload = YES; // missing from DiskManager
 	}
 	
 	if (!cachedItem)
@@ -315,8 +332,8 @@
 	}
 	
 	__weak typeof(self) weakSelf = self;
-	void (^processingBlock)(NSData*, NSString*, NSError*) =
-		^(NSData *imageData, NSString *eTag, NSError *error){ @autoreleasepool
+	void (^processingBlock)(NSData*, NSString*, NSError*, BOOL) =
+		^(NSData *imageData, NSString *eTag, NSError *error, BOOL isDownload){ @autoreleasepool
 	{
 		// Executing on the processingQueue now
 		
@@ -338,10 +355,29 @@
 		}
 		
 		__strong typeof(self) strongSelf = weakSelf;
-		if (strongSelf && cacheKey && !error)
+		if (strongSelf)
 		{
-			NSUInteger cost = imageData.length ?: 1;
-			[strongSelf cacheNodeThumbnail:image forKey:cacheKey withETag:eTag cost:cost];
+			if (cacheKey && !error)
+			{
+				NSUInteger cost = imageData.length ?: 1;
+				[strongSelf cacheNodeThumbnail:image forKey:cacheKey withETag:eTag cost:cost];
+			}
+			
+			if (isDownload && options.downloadIfMarkedAsNeedsDownload && imageData)
+			{
+				__weak ZeroDarkCloud *owner = strongSelf->owner;
+				YapDatabaseConnection *rwConnection  = owner.databaseManager.rwDatabaseConnection;
+				
+				[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+					
+					ZDCCloudTransaction *cloudTransaction =
+					  [owner cloudTransaction:transaction forLocalUserID:node.localUserID];
+					
+					[cloudTransaction unmarkNodeAsNeedsDownload: node.uuid
+					                                 components: ZDCNodeComponents_Thumbnail
+					                              ifETagMatches: eTag];
+				}];
+			}
 		}
 		
 		if (postFetchBlock)
@@ -368,7 +404,7 @@
 		                               completionBlock:^(NSData *cleartext, NSError *error)
 		{
 			if (!didDownload) {
-				processingBlock(cleartext, export.eTag, error);
+				processingBlock(cleartext, export.eTag, error, /*isDownload:*/ NO);
 			}
 		}];
 	}
@@ -387,7 +423,7 @@
 			^(ZDCCloudDataInfo *header, NSData *metadata, NSData *thumbnail, NSError *error)
 		{
 			didDownload = (thumbnail != nil);
-			processingBlock(thumbnail, header.eTag, error);
+			processingBlock(thumbnail, header.eTag, error, /*isDownload:*/ YES);
 		}];
 	}
 	
@@ -908,6 +944,23 @@
 
 @implementation ZDCFetchOptions
 
-@synthesize downloadOnETagMismatch;
+@synthesize downloadIfMarkedAsNeedsDownload = _downloadIfMarkedAsNeedsDownload;
+
+- (instancetype)init
+{
+	if ((self = [super init]))
+	{
+		_downloadIfMarkedAsNeedsDownload = YES;
+	}
+	return self;
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+	ZDCFetchOptions *copy = [[ZDCFetchOptions alloc] init];
+	copy->_downloadIfMarkedAsNeedsDownload = _downloadIfMarkedAsNeedsDownload;
+	
+	return copy;
+}
 
 @end

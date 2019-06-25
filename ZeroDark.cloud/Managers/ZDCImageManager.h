@@ -91,6 +91,9 @@ typedef OSImage*_Nonnull (^ZDCImageProcessingBlock)(OSImage *image);
  * @param node
  *   The node for which you wish to display the thumbnail.
  *
+ * @param options
+ *   If nil, the default options will be used.
+ *
  * @param preFetchBlock
  *   This block is always invoked.
  *   And it's invoked BEFORE this method returns.
@@ -138,6 +141,9 @@ typedef OSImage*_Nonnull (^ZDCImageProcessingBlock)(OSImage *image);
  *
  * @param node
  *   The node for which you wish to display the thumbnail.
+ *
+ * @param options
+ *   If nil, the default options will be used.
  *
  * @param processingID
  *   A unique identifier that distinguishes the results of this imageProcessingBlock from
@@ -347,12 +353,22 @@ typedef OSImage*_Nonnull (^ZDCImageProcessingBlock)(OSImage *image);
 /**
  * FetchOptions allow you to configure the scenarios in which the image is downloaded from the cloud.
  */
-@interface ZDCFetchOptions : NSObject
+@interface ZDCFetchOptions : NSObject <NSCopying>
 
 /**
- * Set this to a non-nil value if you want the most recent version automatically downloaded.
+ * If set to YES, then the ImageManager will automatically attempt to download the latest version as needed.
+ *
+ * More specifically:
+ * - If this property is set to YES/true
+ * - And the thumbnail is marked as "needs download" for the ZDCComponent_Thumbnail flag
+ *   (via `[ZDCCloudTransaction markNodeAsNeedsDownload:components:]`).
+ * - Then a download will be initiated via the DownloadManager for the most recent version.
+ *   (The DownloadManager will automatically consolidate multiple requests.)
+ * - And the ImageManager will unmark the ZDCComponent_Thumbnail flag as "needs download" upon completion.
+ *
+ * The default value is YES.
  */
-@property (nonatomic, assign, readwrite, nullable) NSString *downloadOnETagMismatch;
+@property (nonatomic, assign, readwrite) BOOL downloadIfMarkedAsNeedsDownload;
 
 @end
 

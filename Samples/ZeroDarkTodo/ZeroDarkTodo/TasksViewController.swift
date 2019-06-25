@@ -100,7 +100,7 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 		tasksTable.rowHeight = UITableView.automaticDimension
 		tasksTable.estimatedRowHeight = 62
 		
-		#if DEBUG
+	#if DEBUG
 		self.vwSimulate.isHidden = false
 		self.cnstVwSimulateHeight.constant = 44
 		
@@ -112,12 +112,10 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 			self.addChild(simVC)
 			simVC.didMove(toParent: self)
 		}
- 
-		#else
+	#else
 		self.vwSimulate.isHidden = true
 		self.cnstVwSimulateHeight.constant = 0
-		#endif
-
+	#endif
    }
 	
 	override func viewWillAppear(_ animated: Bool) {
@@ -126,7 +124,7 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 		tasksTable.reloadData()
 		
 		var list: List? = nil
-		databaseConnection .read { (transaction) in
+		databaseConnection.read { (transaction) in
 			list = transaction.object(forKey: self.listID, inCollection: kZ2DCollection_List) as? List
 		}
 		
@@ -596,7 +594,7 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 				}
 				
 				let options = ZDCFetchOptions()
-				options.downloadOnETagMismatch = imageNode.eTag_data as NSString?
+				options.downloadIfMarkedAsNeedsDownload = true
 				
 				ZDCManager.imageManager().fetchNodeThumbnail(imageNode, with: options, preFetch: preFetch, postFetch: postFetch)
 				
