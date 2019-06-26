@@ -12,6 +12,8 @@
 #import "ZDCCloudOperation.h"
 #import "ZDCTreesystemPath.h"
 #import "ZDCNode.h"
+#import "ZDCOutgoingMessage.h"
+#import "ZDCUser.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -30,6 +32,14 @@ typedef NS_ENUM(NSInteger, ZDCCloudErrorCode) {
 	 * all parents leading up to the last path component must already exist in the treesystem.
 	 */
 	ZDCCloudErrorCode_MissingParent,
+	
+	/**
+	 * If you attempt to send a message to a user,
+	 * the receiving user must exist in the database.
+	 *
+	 * (You can use the ZDCRemoteUserManager to create the user if needed.)
+	 */
+	ZDCCloudErrorCode_MissingReceiver,
 	
 	/**
 	 * A conflict occurred.
@@ -75,6 +85,33 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  * and contributed to the open source community.
  */
 @interface ZDCCloudTransaction : YapDatabaseCloudCoreTransaction
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Messaging
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Queues a message to be sent to the given user.
+ *
+ * This method creates and queues an operation (ZDCCloudOperation) to send a message to the given user.
+ * The system will send the message as soon as possible (i.e. when there's an active internet connection,
+ * and bandwidth in the pipeline, etc.)
+ *
+ * By default, the system queues the message such that all previously queued messages to the same user
+ * will be sent first, before sending this message. If you wish to override that behavior, you can modify the
+ * queued operation, and remove its dependencies.
+ *
+ * @param message
+ *   The skeleton information concerning the message to send.
+ *   This includes the receiver's userID.
+ *
+ * @param outError
+ *   Set to nil on success.
+ *   Otherwise returns an error that explains what went wrong.
+ * 
+ * @return Returns YES on success, NO otherwise.
+ */
+- (BOOL)sendMessage:(ZDCOutgoingMessage *)message error:(NSError *_Nullable *_Nullable)outError;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Node Management

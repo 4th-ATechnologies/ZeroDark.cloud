@@ -624,6 +624,9 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	// MARK: ZeroDarkCloudDelegate: Push (Messages)
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	/// ZeroDark is asking us to supply the serialized data for the message.
+	/// This is the data that will get uploaded to the cloud (after ZeroDark encrypts it).
+	///
 	func messageData(for user: ZDCUser, withMessageID messageID: String, transaction: YapDatabaseReadTransaction) -> ZDCData? {
 		
 		return nil
@@ -1516,7 +1519,19 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			transaction.touchObject(forKey: listID, inCollection: kZ2DCollection_List)
 			
-			// Todo: We need to send a message to the user(s) we added.
+			// Send a message to the user(s) we added.
+			
+			for addedUserID in newUsers {
+				
+				let message = ZDCOutgoingMessage.init(sender: localUserID, receiver: addedUserID)
+				
+				do {
+					try cloudTransaction.send(message)
+				}
+				catch {
+					print("Error sending message: \(error)")
+				}
+			}
 		})
 	}
 	

@@ -56,8 +56,8 @@ typedef NS_ENUM(NSUInteger, ZDCCloudOperationPutType) {
 	ZDCCloudOperationPutType_Invalid = 0,
 	
 	/**
-	 * Represents a put of the "*.rcrd" file.
-	 * A RCRD file contains only the filesystem metadata, which includes info such as:
+	 * Represents a put of the "*.rcrd" file for a node in the treesystem.
+	 * The RCRD file contains only the filesystem metadata, which includes info such as:
 	 * - permissions
 	 * - filename (encrypted)
 	 * - cloudID (server-assigned uuid, used to track a node during moves)
@@ -67,34 +67,40 @@ typedef NS_ENUM(NSUInteger, ZDCCloudOperationPutType) {
 	ZDCCloudOperationPutType_Node_Rcrd,
 	
 	/**
-	 * Represents the put of the "*.data" file.
-	 * A DATA file represents the actual content of the node.
+	 * Represents the put of the "*.data" file for a node in the treesystem.
+	 * The DATA file represents the actual content of the node.
 	 * That is, the content delivered to the framework via:
 	 * - `-[ZeroDarkCloudDelegate dataForNode:atPath:transaction:]`
 	 * - `-[ZeroDarkCloudDelegate metadataForNode:atPath:transaction:]`
 	 * - `-[ZeroDarkCloudDelegate thumbnailForNode:atPath:transaction:]`
 	 *
-	 * The data is automatically encrypted, and wrapped in CloudFile format.
-	 *
-	 * @see Cleartext2CloudFileInputStream
+	 * The data is automatically encrypted before being uploaded to the cloud.
 	 */
 	ZDCCloudOperationPutType_Node_Data,
 	
 	/**
-	 * The put is a pointer to another node.
-	 * This information gets stored within the RCRD file (encrypted).
+	 * Represents a put of a special "*.rcrd" file, which contains a pointer to another node.
+	 * The pointer information gets encrypted (not readable by the server).
 	 */
 	ZDCCloudOperationPutType_Pointer,
 	
 	/**
-	 * The put is a message (RCRD) that's going into the localUser's 'msgs' container.
+	 * Represents a put of the "*.rcrd" file for a message in another user's 'msgs' container.
+	 * The RCRD file contains only the metadata, which includes info such as:
+	 * - permissions
+	 * - cloudID (server-assigned uuid)
 	 */
-	ZDCCloudOperationPutType_Message_Local,
+	ZDCCloudOperationPutType_Message_Rcrd,
 	
 	/**
-	 * The put is a message (RCRD) that's going into a different user's 'msgs' container.
+	 * Represents a put of the "*.data" file for a message in another user's 'msgs' container.
+	 * The DATA file represents the actual content of the message.
+	 * That is, the content delivered to the framework via:
+	 * - `-[ZeroDarkCloudDelegate messageDataForUser:withMessageID:transaction:]`
+	 *
+	 * The data is automatically encrypted before being uploaded to the cloud.
 	 */
-	ZDCCloudOperationPutType_Message_Remote
+	ZDCCloudOperationPutType_Message_Data
 };
 
 /**
@@ -186,6 +192,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** Points to the corresponding cloudNode (cloudNodeID == ZDCCloudNode.uuid) */
 @property (nonatomic, copy, readwrite, nullable) NSString *cloudNodeID;
 
+/** Points to the corresponding outgoing message (messageID == ZDCOutgoingMessage.uuid) */
+@property (nonatomic, copy, readwrite, nullable) NSString *messageID;
+
 /** The cloud location of the operation. */
 @property (nonatomic, copy, readwrite, nullable) ZDCCloudLocator *cloudLocator;
 
@@ -201,7 +210,8 @@ NS_ASSUME_NONNULL_BEGIN
  * It designates the currently know version of the data in the cloud.
  *
  * For example, imagine the current version of a node is 'A'.
- * If we queue an operation to update that node, then our operation will specify that we expect the current versio of the node to be 'A'.
+ * If we queue an operation to update that node, then our operation will specify
+ * that we expect the current versio of the node to be 'A'.
  * When the operation hits the cloud, that operation will succeed as long as the node is still at 'A'.
  * However, if the node has been updated by another device, we may discover it's actually at 'B' now.
  *
@@ -211,12 +221,6 @@ NS_ASSUME_NONNULL_BEGIN
  * - skip our queued put-node-data operations
  */
 @property (nonatomic, copy, readwrite, nullable) NSString *eTag;
-
-/**
- * The node's name may change after the operation is enqueued,
- * however the cloudLocator's were calculated based on the node's name at the time the operation was enqueued.
- */
-//@property (nonatomic, copy, readwrite, nullable) NSString *cleartextNodeName;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Delete Options
@@ -326,16 +330,16 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Convenience method: returns YES if:
  * - type == ZDCCloudOperationType_Put AND
- * - putType == ZDCCloudOperationPutType_Message_Local
+ * - putType == ZDCCloudOperationPutType_Message_Rcrd
  */
-- (BOOL)isPutLocalMessageOperation;
+- (BOOL)isPutMessageRcrdOperation;
 
 /**
  * Convenience method: returns YES if:
  * - type == ZDCCloudOperationType_Put AND
- * - putType == ZDCCloudOperationPutType_Message_Remote
+ * - putType == ZDCCloudOperationPutType_Message_Data
  */
-- (BOOL)isPutRemoteMessageOperation;
+- (BOOL)isPutMessageDataOperation;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Class Utilities

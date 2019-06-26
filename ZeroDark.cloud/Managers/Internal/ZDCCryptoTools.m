@@ -558,25 +558,198 @@ done:
 /**
  * See header file for description.
  */
-- (NSUInteger)fixMissingKeysForNode:(ZDCNode *)inNode
-								transaction:(YapDatabaseReadWriteTransaction *)transaction
+- (nullable NSData *)cloudRcrdForMessage:(ZDCOutgoingMessage *)message
+                             transaction:(YapDatabaseReadTransaction *)transaction
+                             missingKeys:(NSArray<NSString*> *_Nullable *_Nonnull)outMissingKeys
+                          missingUserIDs:(NSArray<NSString*> *_Nullable *_Nonnull)outMissingUserIDs
+                        missingServerIDs:(NSArray<NSString*> *_Nullable *_Nonnull)outMissingServerIDs
+                                   error:(NSError **)outError
 {
-	ZDCNode *node = inNode;
-	if (node.isImmutable) {
-		node = [node copy];
+	NSParameterAssert(message != nil);
+	NSParameterAssert(transaction != nil);
+	NSParameterAssert(outMissingKeys != nil);
+	NSParameterAssert(outMissingUserIDs != nil);
+	NSParameterAssert(outMissingServerIDs != nil);
+	NSParameterAssert(outError != nil);
+	
+	__block NSMutableArray<NSString*> *missingKeys = nil;
+	__block NSMutableArray<NSString*> *missingUserIDs = nil;
+	__block NSMutableArray<NSString*> *missingServerIDs = nil;
+	__block NSError *error = nil;
+	
+	NSMutableDictionary *dict = nil;
+	NSData *result = nil;
+	
+	// Prepare JSON dictionary
+	
+	/**
+	 * The RCRD file looks like this:
+	 *
+	 * @{ "version": 3,
+	 *    "fileID": <random string>
+	 *    "keys": {
+	 *      "UID:<localUserID": {
+	 *        "perms": "...",
+	 *        "key": <encrypted symmetricKey>
+	 *      },
+	 *      "UID:<remoteUserID>": {
+	 *        "perms": "...",
+	 *        "key": <encrypted symmetricKey>
+	 *      }
+	 *    }
+	 *    "meta": ""
+	 * }
+	 **/
+	
+	dict = [NSMutableDictionary dictionaryWithCapacity:4];
+	dict[kZDCCloudRcrd_Version] = @(kZDCCloudRcrdCurrentVersion);
+	
+	// Add keys section
+	{
+		ZDCShareList *shareList = message.shareList;
+		NSMutableDictionary *dict_keys = [NSMutableDictionary dictionaryWithCapacity:shareList.count];
+		
+		[shareList enumerateListWithBlock:^(NSString *key, ZDCShareItem *shareItem, BOOL *stop) {
+			
+			if (shareItem.key.length > 0)
+			{
+				// We have everything we need already encoded for us.
+				//
+				// That is, shareItem.key contains a wrapped version of the node.encryptionKey.
+				// So we can simply add it to the JSON.
+				
+				dict_keys[key] = shareItem.rawDictionary;
+				return; // from block; continue;
+			}
+			if (!shareItem.canAddKey || ![shareItem hasPermission:ZDCSharePermission_Read])
+			{
+				// Doesn't need a key, or we haven't been granted permission to add one.
+				// So we're using what we've got.
+				
+				dict_keys[key] = shareItem.rawDictionary;
+				return; // from block; continue;
+			}
+			
+			if ([ZDCShareList isUserKey:key])
+			{
+				NSString *userID = [ZDCShareList userIDFromKey:key];
+				
+				ZDCUser *user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+				if (user.accountDeleted)
+				{
+					return; // from block; continue;
+				}
+				
+				ZDCPublicKey *pubKey =
+				  [transaction objectForKey: user.publicKeyID
+				               inCollection: kZDCCollection_PublicKeys];
+				
+				if (pubKey)
+				{
+					// Missing (wrapped) node.encryptionKey for user.
+					//
+					// This means we need to update the node.shareList.shareItem in the database.
+					
+					if (missingKeys == nil) {
+						missingKeys = [NSMutableArray array];
+					}
+					
+					[missingKeys addObject:key];
+				}
+				else
+				{
+					// Missing publicKey for user.
+					// And the user's account appears to be valid.
+					// And we don't have a pre-wrapped version of the node's encryptionKey.
+					//
+					// This means we need to fetch the user's publicKey before we can upload this node.
+					
+					if (missingUserIDs == nil) {
+						missingUserIDs = [NSMutableArray array];
+					}
+				
+					[missingUserIDs addObject:userID];
+				}
+			}
+			else if ([ZDCShareList isServerKey:key])
+			{
+			//	NSString *serverID = [ZDCShareList serverIDFromKey:key];
+				
+			//	ZDCServer *server = [transaction objectForKey:serverID inCollection:kZDCCollection_Servers];
+			//	if (server.accountDeleted)
+			//	{
+			//		return; // from block; continue;
+			//	}
+				
+				// Future work:
+				// - Need server API's for storing/retreiving server info
+				// - downloading a server's publicKey based on serverID
+			}
+		}];
+		
+		dict[kZDCCloudRcrd_Keys] = dict_keys;
 	}
 	
+	if ((missingKeys.count == 0) && (missingUserIDs.count == 0) && (missingServerIDs.count == 0))
+	{
+		// Add meta section
+		{
+			// Messages don't have metadata section.
+			// But the server requires either a data or metadata section.
+			
+			dict[kZDCCloudRcrd_Meta] = @"";
+		}
+		
+		// Add burnDate
+		
+		if (message.burnDate)
+		{
+			NSTimeInterval secondsSinceEpoch = [message.burnDate timeIntervalSince1970]; // ObjC format
+			uint64_t millisSinceEpoch = (uint64_t)(secondsSinceEpoch * 1000);         // Javascript format
+			
+			dict[kZDCCloudRcrd_BurnDate] = @(millisSinceEpoch);
+		}
+		
+		// Serialize RCRD
+		
+		if (![NSJSONSerialization isValidJSONObject:dict])
+		{
+			error = [self errorWithDescription:@"NSJSONSerialization could not serialize root dictionary."];
+			goto done;
+		}
+		
+		result = [NSJSONSerialization dataWithJSONObject:dict options:0 error:&error];
+	}
+	
+done:
+	
+	*outMissingKeys = missingKeys;
+	*outMissingUserIDs = missingUserIDs;
+	*outMissingServerIDs = missingServerIDs;
+	*outError = error;
+	return result;
+}
+
+/**
+ * See header file for description.
+ */
+- (NSUInteger)fixMissingKeysForShareList:(ZDCShareList *)shareList
+                           encryptionKey:(NSData *)encryptionKey
+                             transaction:(YapDatabaseReadTransaction *)transaction
+{
 	__block NSUInteger count = 0;
 	
-	[node.shareList enumerateListWithBlock:^(NSString *key, ZDCShareItem *shareItem, BOOL *stop) {
+	for (NSString *key in [shareList allKeys])
+	{
+		ZDCShareItem *shareItem = [shareList shareItemForKey:key];
 		
 		if (shareItem.key.length > 0)
 		{
-			return; // from block; continue;
+			continue;
 		}
 		if (!shareItem.canAddKey || ![shareItem hasPermission:ZDCSharePermission_Read])
 		{
-			return; // from block: continue;
+			continue;
 		}
 		
 		if ([ZDCShareList isUserKey:key])
@@ -586,7 +759,7 @@ done:
 			ZDCUser *user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
 			if (user.accountDeleted)
 			{
-				return; // from block; continue;
+				continue;
 			}
 			
 			ZDCPublicKey *pubKey =
@@ -597,7 +770,7 @@ done:
 			{
 				NSError *error = nil;
 				NSData *wrappedNodeEncryptionKey =
-				  [self wrapSymmetricKey: node.encryptionKey
+				  [self wrapSymmetricKey: encryptionKey
 				          usingPublicKey: pubKey
 				                   error: &error];
 				
@@ -607,12 +780,12 @@ done:
 					// The user has asked us to give permission to the given user.
 					// But it appears that the publicKey we have for the user is bad.
 					
-					[node.shareList removeShareItemForKey:key];
+					[shareList removeShareItemForKey:key];
 					count++;
 				}
 				else
 				{
-					[[node.shareList shareItemForKey:key] setKey:wrappedNodeEncryptionKey];
+					[shareItem setKey:wrappedNodeEncryptionKey];
 					count++;
 				}
 			}
@@ -631,10 +804,6 @@ done:
 			// - Need server API's for storing/retreiving server info
 			// - downloading a server's publicKey based on serverID
 		}
-	}];
-	
-	if (count > 0) {
-		[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
 	}
 	
 	return count;

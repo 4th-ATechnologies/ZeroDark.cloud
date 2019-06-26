@@ -23,6 +23,7 @@ static NSString *const k_type_str        = @"type_str";
 static NSString *const k_putType_str     = @"putType_str";
 static NSString *const k_nodeID          = @"nodeID";
 static NSString *const k_cloudNodeID     = @"cloudNodeID";
+static NSString *const k_messageID       = @"messageID";
 static NSString *const k_cloudLocator    = @"cloudLocator";
 static NSString *const k_dstCloudLocator = @"dstCloudLocator";
 static NSString *const k_eTag            = @"eTag";
@@ -48,11 +49,11 @@ static NSString *const type_str_deleteNode = @"deleteNode";
 static NSString *const type_str_copyLeaf   = @"copyLeaf";
 static NSString *const type_str_avatar     = @"avatar";
 
-static NSString *const putType_str_node_rcrd      = @"rcrd";
-static NSString *const putType_str_node_data      = @"data";
-static NSString *const putType_str_pointer        = @"ptr";
-static NSString *const putType_str_message_local  = @"msgLcl";
-static NSString *const putType_str_message_remote = @"msgRmt";
+static NSString *const putType_str_node_rcrd    = @"rcrd";
+static NSString *const putType_str_node_data    = @"data";
+static NSString *const putType_str_pointer      = @"ptr";
+static NSString *const putType_str_message_rcrd = @"msgRcrd";
+static NSString *const putType_str_message_data = @"msgData";
 
 
 @implementation ZDCCloudOperation
@@ -63,6 +64,7 @@ static NSString *const putType_str_message_remote = @"msgRmt";
 @synthesize putType = putType;
 @synthesize nodeID = nodeID;
 @synthesize cloudNodeID = cloudNodeID;
+@synthesize messageID = messageID;
 @synthesize cloudLocator = cloudLocator;
 @synthesize dstCloudLocator = dstCloudLocator;
 @synthesize eTag = eTag;
@@ -160,6 +162,7 @@ static NSString *const putType_str_message_remote = @"msgRmt";
 		
 		nodeID      = [decoder decodeObjectForKey:k_nodeID];
 		cloudNodeID = [decoder decodeObjectForKey:k_cloudNodeID];
+		messageID   = [decoder decodeObjectForKey:k_messageID];
 		
 		cloudLocator = [decoder decodeObjectForKey:k_cloudLocator];
 		
@@ -242,6 +245,7 @@ static NSString *const putType_str_message_remote = @"msgRmt";
 	
 	[coder encodeObject:nodeID      forKey:k_nodeID];
 	[coder encodeObject:cloudNodeID forKey:k_cloudNodeID];
+	[coder encodeObject:messageID   forKey:k_messageID];
 	
 	[coder encodeObject:cloudLocator forKey:k_cloudLocator];
 	[coder encodeObject:dstCloudLocator forKey:k_dstCloudLocator];
@@ -278,6 +282,7 @@ static NSString *const putType_str_message_remote = @"msgRmt";
 	
 	copy->nodeID = nodeID;
 	copy->cloudNodeID = cloudNodeID;
+	copy->messageID = messageID;
 	
 	copy->cloudLocator = cloudLocator;
 	copy->dstCloudLocator = dstCloudLocator;
@@ -374,6 +379,7 @@ static NSString *const putType_str_message_remote = @"msgRmt";
 	
 	if (!YDB_IsEqualOrBothNil(nodeID, op->nodeID)) return NO;
 	if (!YDB_IsEqualOrBothNil(cloudNodeID, op->cloudNodeID)) return NO;
+	if (!YDB_IsEqualOrBothNil(messageID, op->messageID)) return NO;
 	
 	if (!YDB_IsEqualOrBothNil(cloudLocator, op->cloudLocator)) return NO;
 	if (!YDB_IsEqualOrBothNil(dstCloudLocator, op->dstCloudLocator)) return NO;
@@ -402,6 +408,7 @@ static NSString *const putType_str_message_remote = @"msgRmt";
 	
 	if (!YDB_IsEqualOrBothNil(nodeID, op->nodeID)) return NO;
 	if (!YDB_IsEqualOrBothNil(cloudNodeID, op->cloudNodeID)) return NO;
+	if (!YDB_IsEqualOrBothNil(messageID, op->messageID)) return NO;
 	
 	if (!YDB_IsEqualOrBothNil(cloudLocator, op->cloudLocator)) return NO;
 	if (!YDB_IsEqualOrBothNil(dstCloudLocator, op->dstCloudLocator)) return NO;
@@ -437,12 +444,12 @@ static NSString *const putType_str_message_remote = @"msgRmt";
 	{
 		switch(putType)
 		{
-			case ZDCCloudOperationPutType_Node_Rcrd      : typeStr = @"Put:Rcrd";    break;
-			case ZDCCloudOperationPutType_Node_Data      : typeStr = @"Put:Data";    break;
-			case ZDCCloudOperationPutType_Pointer        : typeStr = @"Put:Ptr";     break;
-			case ZDCCloudOperationPutType_Message_Local  : typeStr = @"Put:MsgLcl";  break;
-			case ZDCCloudOperationPutType_Message_Remote : typeStr = @"Put:MsgRmt";  break;
-			default                                      : typeStr = @"Put:?";       break;
+			case ZDCCloudOperationPutType_Node_Rcrd    : typeStr = @"Put:Node:Rcrd"; break;
+			case ZDCCloudOperationPutType_Node_Data    : typeStr = @"Put:Node:Data"; break;
+			case ZDCCloudOperationPutType_Pointer      : typeStr = @"Put:Ptr";       break;
+			case ZDCCloudOperationPutType_Message_Rcrd : typeStr = @"Put:Msg:Rcrd";  break;
+			case ZDCCloudOperationPutType_Message_Data : typeStr = @"Put:Msg:Data";  break;
+			default                                    : typeStr = @"Put:?";         break;
 		}
 	}
 	else if (type == ZDCCloudOperationType_Move) {
@@ -482,12 +489,12 @@ static NSString *const putType_str_message_remote = @"msgRmt";
 	{
 		switch(putType)
 		{
-			case ZDCCloudOperationPutType_Node_Rcrd      : typeStr = @"Put:Rcrd";    break;
-			case ZDCCloudOperationPutType_Node_Data      : typeStr = @"Put:Data";    break;
-			case ZDCCloudOperationPutType_Pointer        : typeStr = @"Put:Ptr";     break;
-			case ZDCCloudOperationPutType_Message_Local  : typeStr = @"Put:MsgLcl";  break;
-			case ZDCCloudOperationPutType_Message_Remote : typeStr = @"Put:MsgRmt";  break;
-			default                                      : typeStr = @"Put:?";       break;
+			case ZDCCloudOperationPutType_Node_Rcrd    : typeStr = @"Put:Node:Rcrd"; break;
+			case ZDCCloudOperationPutType_Node_Data    : typeStr = @"Put:Node:Data"; break;
+			case ZDCCloudOperationPutType_Pointer      : typeStr = @"Put:Ptr";       break;
+			case ZDCCloudOperationPutType_Message_Rcrd : typeStr = @"Put:Msg:Rcrd";  break;
+			case ZDCCloudOperationPutType_Message_Data : typeStr = @"Put:Msg:Data";  break;
+			default                                    : typeStr = @"Put:?";         break;
 		}
 	}
 	else if (type == ZDCCloudOperationType_Move) {
@@ -552,14 +559,14 @@ static NSString *const putType_str_message_remote = @"msgRmt";
 	return (type == ZDCCloudOperationType_Put) && (putType == ZDCCloudOperationPutType_Pointer);
 }
 
-- (BOOL)isPutLocalMessageOperation
+- (BOOL)isPutMessageRcrdOperation
 {
-	return (type == ZDCCloudOperationType_Put) && (putType == ZDCCloudOperationPutType_Message_Local);
+	return (type == ZDCCloudOperationType_Put) && (putType == ZDCCloudOperationPutType_Message_Rcrd);
 }
 
-- (BOOL)isPutRemoteMessageOperation
+- (BOOL)isPutMessageDataOperation
 {
-	return (type == ZDCCloudOperationType_Put) && (putType == ZDCCloudOperationPutType_Message_Remote);
+	return (type == ZDCCloudOperationType_Put) && (putType == ZDCCloudOperationPutType_Message_Data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -596,22 +603,22 @@ static NSString *const putType_str_message_remote = @"msgRmt";
 {
 	switch(putType)
 	{
-		case ZDCCloudOperationPutType_Node_Rcrd      : return putType_str_node_rcrd;
-		case ZDCCloudOperationPutType_Node_Data      : return putType_str_node_data;
-		case ZDCCloudOperationPutType_Pointer        : return putType_str_pointer;
-		case ZDCCloudOperationPutType_Message_Local  : return putType_str_message_local;
-		case ZDCCloudOperationPutType_Message_Remote : return putType_str_message_remote;
-		default                                      : return @"";
+		case ZDCCloudOperationPutType_Node_Rcrd    : return putType_str_node_rcrd;
+		case ZDCCloudOperationPutType_Node_Data    : return putType_str_node_data;
+		case ZDCCloudOperationPutType_Pointer      : return putType_str_pointer;
+		case ZDCCloudOperationPutType_Message_Rcrd : return putType_str_message_rcrd;
+		case ZDCCloudOperationPutType_Message_Data : return putType_str_message_data;
+		default                                    : return @"";
 	}
 }
 
 + (ZDCCloudOperationPutType)putTypeForString:(NSString *)string
 {
-	if ([string isEqualToString:putType_str_node_rcrd])      return ZDCCloudOperationPutType_Node_Rcrd;
-	if ([string isEqualToString:putType_str_node_data])      return ZDCCloudOperationPutType_Node_Data;
-	if ([string isEqualToString:putType_str_pointer])        return ZDCCloudOperationPutType_Pointer;
-	if ([string isEqualToString:putType_str_message_local])  return ZDCCloudOperationPutType_Message_Local;
-	if ([string isEqualToString:putType_str_message_remote]) return ZDCCloudOperationPutType_Message_Remote;
+	if ([string isEqualToString:putType_str_node_rcrd])    return ZDCCloudOperationPutType_Node_Rcrd;
+	if ([string isEqualToString:putType_str_node_data])    return ZDCCloudOperationPutType_Node_Data;
+	if ([string isEqualToString:putType_str_pointer])      return ZDCCloudOperationPutType_Pointer;
+	if ([string isEqualToString:putType_str_message_rcrd]) return ZDCCloudOperationPutType_Message_Rcrd;
+	if ([string isEqualToString:putType_str_message_data]) return ZDCCloudOperationPutType_Message_Data;
 	
 	if ([string isEqualToString:@"info"]) return ZDCCloudOperationPutType_Node_Rcrd;
 	

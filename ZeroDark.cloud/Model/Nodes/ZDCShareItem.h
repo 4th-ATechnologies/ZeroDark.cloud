@@ -161,7 +161,7 @@ typedef NS_OPTIONS(unichar, ZDCSharePermission) {
  * - the permissions include ZDCSharePermission_Read
  *
  * The `canAddKey` property only gets set to true if you explicitly add `read` permission.
- * The `canAddKey` property doesn't get modified as a result of puling down information from the cloud.
+ * The `canAddKey` property doesn't get modified as a result of pulling down information from the cloud.
  */
 @property (nonatomic, readwrite, assign) BOOL canAddKey;
 

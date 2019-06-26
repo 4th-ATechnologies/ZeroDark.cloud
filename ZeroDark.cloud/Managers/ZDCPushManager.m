@@ -1399,7 +1399,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	if (putType == ZDCCloudOperationPutType_Node_Rcrd)
 	{
-		// Generate ".rcrd" file content
+		// Generate node ".rcrd" file content
 		
 		__block NSError *error = nil;
 		__block ZDCNode *node = nil;
@@ -1441,6 +1441,58 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		else if (missingKeys.count > 0)
 		{
 			[self fixMissingKeysForNodeID:operation.nodeID operation:operation];
+		}
+		else if (missingUserIDs.count > 0)
+		{
+			[self fetchMissingUsers:missingUserIDs forOperation:operation];
+		}
+		else
+		{
+			continueWithFileData(rcrdData);
+		}
+	}
+	else if (putType == ZDCCloudOperationPutType_Message_Rcrd)
+	{
+		// Generate message ".rcrd" file content
+		
+		__block NSError *error = nil;
+		__block ZDCOutgoingMessage *message = nil;
+		__block NSData *rcrdData = nil;
+		__block NSArray<NSString*> *missingKeys = nil;
+		__block NSArray<NSString*> *missingUserIDs = nil;
+		__block NSArray<NSString*> *missingServerIDs = nil;
+		
+		ZDCCryptoTools *cryptoTools = owner.cryptoTools;
+		
+		[self.roConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+			
+			message = [transaction objectForKey:operation.messageID inCollection:kZDCCollection_Messages];
+			
+			rcrdData = [cryptoTools cloudRcrdForMessage: message
+			                                transaction: transaction
+			                                missingKeys: &missingKeys
+			                             missingUserIDs: &missingUserIDs
+			                           missingServerIDs: &missingServerIDs
+			                                      error: &error];
+			
+			// Snapshot current pullState.
+			// We use this during conflict resolution to determine if a pull had any effect.
+			
+			ZDCChangeList *pullInfo =
+			  [transaction objectForKey:operation.localUserID inCollection:kZDCCollection_PullState];
+			
+			operation.ephemeralInfo.lastChangeToken = pullInfo.latestChangeID_local;
+		}];
+		
+		if (error)
+		{
+			DDLogWarn(@"Error creating PUT operation: %@: %@", operation.cloudLocator.cloudPath, error);
+			
+			[self skipOperationWithContext:context];
+		}
+		else if (missingKeys.count > 0)
+		{
+			[self fixMissingKeysForMessageID:operation.messageID operation:operation];
 		}
 		else if (missingUserIDs.count > 0)
 		{
@@ -7078,12 +7130,57 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	[pipeline setHoldDate:distantFuture forOperationWithUUID:opUUID context:ctx];
 	[pipeline setStatusAsPendingForOperationWithUUID:opUUID];
 	
+	__weak ZeroDarkCloud *zdc = owner;
 	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 	
 		ZDCNode *node = [transaction objectForKey:nodeID inCollection:kZDCCollection_Nodes];
 		if (node)
 		{
-			[owner.cryptoTools fixMissingKeysForNode:node transaction:transaction];
+			node = [node copy];
+			NSUInteger changeCount =
+			  [zdc.cryptoTools fixMissingKeysForShareList: node.shareList
+			                                encryptionKey: node.encryptionKey
+			                                  transaction: transaction];
+			
+			if (changeCount > 0) {
+				[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
+			}
+		}
+		
+	} completionQueue:concurrentQueue completionBlock:^{
+		
+		[pipeline setHoldDate:nil forOperationWithUUID:opUUID context:ctx];
+	}];
+}
+
+- (void)fixMissingKeysForMessageID:(NSString *)messageID operation:(ZDCCloudOperation *)operation
+{
+	DDLogAutoTrace();
+	
+	YapDatabaseCloudCorePipeline *pipeline = [self pipelineForOperation:operation];
+	
+	NSDate *distantFuture = [NSDate distantFuture];
+	NSUUID *opUUID = operation.uuid;
+	NSString *ctx = @"fix-missing-keys";
+	
+	[pipeline setHoldDate:distantFuture forOperationWithUUID:opUUID context:ctx];
+	[pipeline setStatusAsPendingForOperationWithUUID:opUUID];
+	
+	__weak ZeroDarkCloud *zdc = owner;
+	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+		
+		ZDCOutgoingMessage *message = [transaction objectForKey:messageID inCollection:kZDCCollection_Messages];
+		if (message)
+		{
+			message = [message copy];
+			NSUInteger changeCount =
+			  [zdc.cryptoTools fixMissingKeysForShareList: message.shareList
+			                                encryptionKey: message.encryptionKey
+			                                  transaction: transaction];
+			
+			if (changeCount > 0) {
+				[transaction setObject:message forKey:message.uuid inCollection:kZDCCollection_Messages];
+			}
 		}
 		
 	} completionQueue:concurrentQueue completionBlock:^{
