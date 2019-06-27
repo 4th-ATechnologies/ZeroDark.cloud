@@ -159,8 +159,6 @@ typedef enum {
 	TintButtonImage(_btnPaste);
 	TintButtonImage(_btnPhoto);
 	
-	defaultUserImage = imageManager.defaultUserAvatar;
-	
 	[_btnCloneWordsVerify setup];
 	_btnCloneWordsVerify.enabled  = NO;
 	
@@ -230,6 +228,10 @@ typedef enum {
 	accessKeyManager = accountSetupVC.owner.userAccessKeyManager;
 	imageManager = accountSetupVC.owner.imageManager;
 	
+	defaultUserImage = imageManager.defaultUserAvatar;
+	_imgCloneCodeAvatar.image = defaultUserImage;
+	_imgCloneWordsAvatar.image = defaultUserImage;
+
 	[[UITabBar appearance] setTintColor:[UIColor whiteColor ]];
 	[[UITabBar appearance] setBarTintColor:[UIColor clearColor]];
 	
