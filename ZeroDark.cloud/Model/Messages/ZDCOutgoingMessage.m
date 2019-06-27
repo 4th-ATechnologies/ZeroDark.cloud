@@ -54,7 +54,7 @@ static NSString *const k_lastModified_data     = @"lastModified_data";
 	
 	if ((self = [super init]))
 	{
-		uuid = [[NSUUID UUID] UUIDString];
+		uuid = [ZDCNode randomCloudName];
 		senderUserID = [inSenderUserID copy];
 		receiverUserID = [inReceiverUserID copy];
 		
@@ -70,7 +70,7 @@ static NSString *const k_lastModified_data     = @"lastModified_data";
 {
 	// Add sender
 	//
-	if (senderUserID)
+	if (receiverUserID)
 	{
 		ZDCShareItem *item = [[ZDCShareItem alloc] init];
 		item.canAddKey = YES;
@@ -80,12 +80,12 @@ static NSString *const k_lastModified_data     = @"lastModified_data";
 		[item addPermission:ZDCSharePermission_Share];
 		[item addPermission:ZDCSharePermission_LeafsOnly];
 		
-		[shareList addShareItem:item forUserID:senderUserID];
+		[shareList addShareItem:item forUserID:receiverUserID];
 	}
 	
 	// Add receiver
 	//
-	if (receiverUserID && ![receiverUserID isEqual:senderUserID])
+	if (senderUserID && ![senderUserID isEqual:receiverUserID])
 	{
 		ZDCShareItem *item = [[ZDCShareItem alloc] init];
 		item.canAddKey = YES;
@@ -94,7 +94,7 @@ static NSString *const k_lastModified_data     = @"lastModified_data";
 		[item addPermission:ZDCSharePermission_WriteOnce];
 		[item addPermission:ZDCSharePermission_BurnIfOwner];
 		
-		[shareList addShareItem:item forUserID:receiverUserID];
+		[shareList addShareItem:item forUserID:senderUserID];
 	}
 }
 

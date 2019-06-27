@@ -192,7 +192,7 @@ typedef void (^UserAvatarDownloadCompletionBlock)(NSData *_Nullable avatar, NSEr
  *         and can be fetched from there as well. (Meaning you also get throughput
  *         & estimated time remaining for this progress item.)
  */
-- (ZDCDownloadTicket *)downloadNodeData:(ZDCNode  *)node
+- (ZDCDownloadTicket *)downloadNodeData:(ZDCNode *)node
                                 options:(nullable ZDCDownloadOptions *)options
                         completionQueue:(nullable dispatch_queue_t)completionQueue
                         completionBlock:(NodeDataDownloadCompletionBlock)completionBlock;
