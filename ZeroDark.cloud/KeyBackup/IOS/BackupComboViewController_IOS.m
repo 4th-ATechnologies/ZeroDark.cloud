@@ -22,6 +22,10 @@
 #import "NSString+ZeroDark.h"
 #import "UIImageViewPasteable.h"
 
+// Libraries
+#import <MobileCoreServices/MobileCoreServices.h>
+#import <Photos/Photos.h>
+
 #import "ZDCLogging.h"
 
 
@@ -669,7 +673,45 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (IBAction)actionButtonTapped:(id)sender
 {
-	[self saveQRCode];
+	if(ZDCConstants.appHasPhotosPermission)
+	{
+		[PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
+			
+			dispatch_async(dispatch_get_main_queue(), ^{
+				
+				switch (status) {
+						
+					case PHAuthorizationStatusAuthorized:
+						[self saveQRCodeFromBBN:sender
+									  canAccessPhotos:YES];
+						break;
+						
+					case PHAuthorizationStatusRestricted:
+					{
+						[self saveQRCodeFromBBN:sender
+									  canAccessPhotos:NO];
+					}
+						break;
+						
+					case PHAuthorizationStatusDenied:
+					{
+						[self saveQRCodeFromBBN:sender
+									  canAccessPhotos:NO];
+					}
+						break;
+						
+					default:
+						break;
+				}
+			});
+			
+		}];
+		
+	}else
+	{
+		[self saveQRCodeFromBBN:sender
+					  canAccessPhotos:YES];
+	}
 }
 
 -(IBAction)copyWordsButtonTapped:(id)sender
@@ -918,9 +960,10 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 
 //MARK: activity button
 
--(void)sendBackupDocumentWithActivityView:(NSURL*)url
-												image:(UIImage*)image
-								  completionBlock:(void (^)(BOOL didSend,  NSError * error))completionBlock;
+-(void)saveBackupDocumentFromBBN:(UIBarButtonItem*)bbn						  					canAccessPhotos:(BOOL)canAccessPhotos
+										  url:(NSURL*)url
+										image:(UIImage*)image
+						  completionBlock:(void (^)(BOOL didSend,  NSError * error))completionBlock;
 {
 	
 	__weak typeof(self) weakSelf = self;
@@ -962,7 +1005,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 												 ]];
 	
 	// prevent crashing , if the photo lib is not available dont show it
-	if(!ZDCConstants.appHasPhotosPermission)
+	if(!canAccessPhotos)
 		[excludeTypes addObject: UIActivityTypeSaveToCameraRoll];
 	
 	avc.excludedActivityTypes = excludeTypes;
@@ -998,7 +1041,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	
 	if([ZDCConstants isIPad])
 	{
-		avc.popoverPresentationController.barButtonItem = _bbnAction;
+		avc.popoverPresentationController.barButtonItem = bbn;
 		avc.popoverPresentationController.permittedArrowDirections  = UIPopoverArrowDirectionAny;
 		
 	}
@@ -1008,7 +1051,8 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 						  completion:nil];
 }
 
--(void) saveQRCode
+-(void)saveQRCodeFromBBN:(UIBarButtonItem*)bbn
+				 canAccessPhotos:(BOOL)canAccessPhotos
 {
 	__weak typeof(self) weakSelf = self;
 	
@@ -1024,7 +1068,6 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 		 __strong typeof(self) strongSelf = weakSelf;
 		 if(!strongSelf) return;
 		 
-		 
 		 if(error)
 		 {
 			 [strongSelf.keyBackupVC showError: NSLocalizedString(@"Sending Key Failed", @"Sending Key Failed")
@@ -1033,14 +1076,15 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 			 return;
 		 }
 		 
-		 [strongSelf sendBackupDocumentWithActivityView:url
-																image:image
-												  completionBlock:^(BOOL didSend, NSError *error) {
-													  
-												  }];
+		 [strongSelf saveBackupDocumentFromBBN:bbn
+									  canAccessPhotos:canAccessPhotos
+													  url:url
+													image:image
+									  completionBlock:^(BOOL didSend, NSError *error) {
+										  
+									  }];
 		 
 	 }];
-	
 }
 
 - (id)activityViewController:(UIActivityViewController *)activityViewController
