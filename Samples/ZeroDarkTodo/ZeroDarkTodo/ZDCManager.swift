@@ -627,12 +627,12 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	/// ZeroDark is asking us to supply the serialized data for the message.
 	/// This is the data that will get uploaded to the cloud (after ZeroDark encrypts it).
 	///
-	func messageData(for user: ZDCUser, withMessageID messageID: String, transaction: YapDatabaseReadTransaction) -> ZDCData? {
+	func data(for message: ZDCOutgoingMessage, transaction: YapDatabaseReadTransaction) -> ZDCData? {
 		
 		return nil
 	}
 	
-	func didSendMessage(to user: ZDCUser, withMessageID messageID: String, transaction: YapDatabaseReadWriteTransaction) {
+	func didSend(_ message: ZDCOutgoingMessage, transaction: YapDatabaseReadWriteTransaction) {
 		
 		// Todo...
 	}

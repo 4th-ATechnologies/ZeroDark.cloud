@@ -10,10 +10,11 @@
 #import <Foundation/Foundation.h>
 #import <YapDatabase/YapDatabase.h>
 
-#import "ZDCTreesystemPath.h"
-#import "ZDCNode.h"
 #import "ZDCData.h"
-#import "ZDCDownloadManager.h"
+#import "ZDCDownloadManager.h" // for ZDCNodeMetaComponents
+#import "ZDCNode.h"
+#import "ZDCOutgoingMessage.h"
+#import "ZDCTreesystemPath.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -243,21 +244,16 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
  * And her message to Bob would contain a reference to the file.
  * She may be even set a "burn" time on the 1 gig file so it gets deleted automatically by the server after 30 days.
  *
- * @param user
- *   The user to which the message will be sent.
- *
- * @messageID
- *   The UUID of the message.
- *   You received this value when you originally queued the message via `[ZDCCloudTransaction sendMessageToUser:]`.
+ * @param message
+ *   The outgoing message to be sent.
  *
  * @param transaction
  *   An atomic transaction in which its safe to read any needed information from the database.
  *
  * @return Either nil, or a ZDCData instance that wraps the message data to send.
  */
-- (nullable ZDCData *)messageDataForUser:(ZDCUser *)user
-                           withMessageID:(NSString *)messageID
-                             transaction:(YapDatabaseReadTransaction *)transaction;
+- (nullable ZDCData *)dataForMessage:(ZDCOutgoingMessage *)message
+                         transaction:(YapDatabaseReadTransaction *)transaction;
 
 /**
  * This method is called by the framework after a message has been sent.
@@ -265,20 +261,16 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
  * When this method is called, the queued ZDCCloudOperation has already been deleted from the database.
  * This method is being called within the same atomic transaction that modifies the the database.
  *
- * @param user
- *   The user to which the message was sent.
- *
- * @messageID
- *   The UUID of the message.
+ * @param message
+ *   The message which was sent.
  *
  * @param transaction
  *   The atomic transaction in which the database was modified.
  *   This allows you to update your own objects within the same atomic transaction that
  *   removes the queued outgoing message.
  */
-- (void)didSendMessageToUser:(ZDCUser *)user
-               withMessageID:(NSString *)messageID
-                 transaction:(YapDatabaseReadWriteTransaction *)transaction;
+- (void)didSendMessage:(ZDCOutgoingMessage *)message
+           transaction:(YapDatabaseReadWriteTransaction *)transaction;
 
 #pragma mark Pull
 

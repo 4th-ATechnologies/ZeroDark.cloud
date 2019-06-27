@@ -44,7 +44,7 @@
   static const int ddLogLevel = DDLogLevelWarning;
 #endif
 
-static int const kStagingVersion = 2;
+static int const kStagingVersion = 3;
 
 #if TARGET_OS_IPHONE
 static const uint64_t multipart_minCloudFileSize = (1024 * 1024 * 10);
@@ -1507,37 +1507,52 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			continueWithFileData(rcrdData);
 		}
 	}
-	else if (putType == ZDCCloudOperationPutType_Node_Data)
+	else if (putType == ZDCCloudOperationPutType_Node_Data ||
+	         putType == ZDCCloudOperationPutType_Message_Data)
 	{
 		// Generate "*.data" content
 		
-		ZDCCloudOperation_AsyncData *asyncNodeData = operation.ephemeralInfo.asyncData;
+		ZDCCloudOperation_AsyncData *asyncData = operation.ephemeralInfo.asyncData;
 		
 		__block ZDCNode *node = nil;
-		__block ZDCData *nodeData = nil;
-		__block ZDCData *nodeMetadata = nil;
-		__block ZDCData *nodeThumbnail = nil;
+		__block ZDCOutgoingMessage *message = nil;
+		
+		__block ZDCData *data = nil;
+		__block ZDCData *metadata = nil;
+		__block ZDCData *thumbnail = nil;
 		
 		[self.roConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 			
-			if (asyncNodeData)
+			if (asyncData)
 			{
-				node = asyncNodeData.node;
-				nodeData = asyncNodeData.nodeData;
-				nodeMetadata = asyncNodeData.nodeMetadata;
-				nodeThumbnail = asyncNodeData.nodeThumbnail;
+				node = asyncData.node;
+				message = asyncData.message;
+				
+				data = asyncData.data;
+				metadata = asyncData.metadata;
+				thumbnail = asyncData.thumbnail;
 			}
-			else
+			else if (putType == ZDCCloudOperationPutType_Node_Data)
 			{
 				node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
-				
-				ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
-				nodeData = [owner.delegate dataForNode:node atPath:path transaction:transaction];
-			
-				if (nodeData)
+				if (node)
 				{
-					nodeMetadata = [owner.delegate metadataForNode:node atPath:path transaction:transaction];
-					nodeThumbnail = [owner.delegate thumbnailForNode:node atPath:path transaction:transaction];
+					ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
+					data = [owner.delegate dataForNode:node atPath:path transaction:transaction];
+					
+					if (data)
+					{
+						metadata = [owner.delegate metadataForNode:node atPath:path transaction:transaction];
+						thumbnail = [owner.delegate thumbnailForNode:node atPath:path transaction:transaction];
+					}
+				}
+			}
+			else if (putType == ZDCCloudOperationPutType_Message_Data)
+			{
+				message = [transaction objectForKey:operation.messageID inCollection:kZDCCollection_Messages];
+				if (message)
+				{
+					data = [owner.delegate dataForMessage:message transaction:transaction];
 				}
 			}
 			
@@ -1552,32 +1567,40 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		if (operation.eTag) {
 			context.eTag = operation.eTag;
-		} else {
+		} else if (node) {
 			context.eTag = node.eTag_data;
+		} else if (message) {
+			context.eTag = message.eTag_data;
 		}
 		
-		if (!asyncNodeData && !nodeData)
+		if (!asyncData && !data)
 		{
-			DDLogWarn(@"Delegate failed to create data for PUT operation: %@", operation.cloudLocator.cloudPath);
+			if (node || message) {
+				DDLogWarn(@"Delegate failed to create data for PUT operation: %@", operation.cloudLocator.cloudPath);
+			}
 			
 			[self skipOperationWithContext:context];
 			return;
 		}
 		
 		BOOL hasAsyncTasks =
-		    (nodeData.promise != nil)                     // need to wait for fullfilled promise
-		 || (nodeMetadata && nodeMetadata.data == nil)    // need to load into memory
-		 || (nodeThumbnail && nodeThumbnail.data == nil); // need to load into memory
+		    (data.promise != nil)                 // need to wait for fullfilled promise
+		 || (metadata && metadata.data == nil)    // need to load into memory
+		 || (thumbnail && thumbnail.data == nil); // need to load into memory
 		
 		if (hasAsyncTasks)
 		{
-			if (asyncNodeData == nil)
+			if (asyncData == nil)
 			{
-				operation.ephemeralInfo.asyncData =
-				  [[ZDCCloudOperation_AsyncData alloc] initWithNode: node
-				                                               data: nodeData
-				                                       nodeMetadata: nodeMetadata
-				                                      nodeThumbnail: nodeThumbnail];
+				asyncData = [[ZDCCloudOperation_AsyncData alloc] initWithData:data];
+				
+				asyncData.metadata = metadata;
+				asyncData.thumbnail = thumbnail;
+				
+				asyncData.node = node;
+				asyncData.message = message;
+				
+				operation.ephemeralInfo.asyncData = asyncData;
 			}
 			
 			[self resolveAsyncNodeDataForOperation:operation];
@@ -1585,14 +1608,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			return;
 		}
 		
-		NSData *rawMetadata = nodeMetadata.data ?: operation.ephemeralInfo.asyncData.rawMetadata;
-		NSData *rawThumbnail = nodeThumbnail.data ?: operation.ephemeralInfo.asyncData.rawThumbnail;
+		NSData *rawMetadata = metadata.data ?: asyncData.rawMetadata;
+		NSData *rawThumbnail = thumbnail.data ?: asyncData.rawThumbnail;
 		operation.ephemeralInfo.asyncData = nil;
 		
 		BOOL needsMultipart =
 		  [self checkNeedsMultipart: context
 		                    forNode: node
-		                   withData: nodeData
+		                   withData: data
 		                   metadata: rawMetadata
 		                  thumbnail: rawThumbnail];
 		
@@ -1604,7 +1627,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			return;
 		}
 		
-		if (nodeData.data)
+		if (data.data)
 		{
 			// The delegate gave us raw data (not encrypted).
 			// We need to encrypt it by storing it in a CloudFile.
@@ -1614,7 +1637,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			// iOS is going to ultimately force us to write the data to disk.
 			// So we might as well do so here.
 			
-			[ZDCFileConversion encryptCleartextData: nodeData.data
+			[ZDCFileConversion encryptCleartextData: data.data
 			                     toCloudFileWithKey: node.encryptionKey
 			                               metadata: rawMetadata
 			                              thumbnail: rawThumbnail
@@ -1651,7 +1674,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			
 		#endif
 		}
-		else if (nodeData.cleartextFileURL)
+		else if (data.cleartextFileURL)
 		{
 			// The delegate gave us a file in cleartext (not encrypted).
 			// We need to convert it to CloudFile format.
@@ -1659,7 +1682,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			ZDCInterruptingInputStream *inputStream = nil;
 			Cleartext2CloudFileInputStream *cloudStream = nil;
 			
-			inputStream = [[ZDCInterruptingInputStream alloc] initWithFileURL:nodeData.cleartextFileURL];
+			inputStream = [[ZDCInterruptingInputStream alloc] initWithFileURL:data.cleartextFileURL];
 			
 			cloudStream =
 			  [[Cleartext2CloudFileInputStream alloc] initWithCleartextFileStream: inputStream
@@ -1670,7 +1693,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			
 			continueWithFileStream(cloudStream);
 		}
-		else if (nodeData.cryptoFile.fileFormat == ZDCCryptoFileFormat_CacheFile)
+		else if (data.cryptoFile.fileFormat == ZDCCryptoFileFormat_CacheFile)
 		{
 			// The delegate gave us a ZDCCryptoFile in CacheFile format.
 			// We need to convert it to CloudFile format.
@@ -1679,12 +1702,12 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			CacheFile2CleartextInputStream *clearStream = nil;
 			Cleartext2CloudFileInputStream *cloudStream = nil;
 			
-			inputStream = [[ZDCInterruptingInputStream alloc] initWithFileURL:nodeData.cryptoFile.fileURL];
-			inputStream.retainToken = nodeData.cryptoFile.retainToken;
+			inputStream = [[ZDCInterruptingInputStream alloc] initWithFileURL:data.cryptoFile.fileURL];
+			inputStream.retainToken = data.cryptoFile.retainToken;
 			
 			clearStream =
 			  [[CacheFile2CleartextInputStream alloc] initWithCacheFileStream: inputStream
-			                                                    encryptionKey: nodeData.cryptoFile.encryptionKey];
+			                                                    encryptionKey: data.cryptoFile.encryptionKey];
 			
 			cloudStream =
 			  [[Cleartext2CloudFileInputStream alloc] initWithCleartextFileStream: clearStream
@@ -1695,7 +1718,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			
 			continueWithFileStream(cloudStream);
 		}
-		else if (nodeData.cryptoFile.fileFormat == ZDCCryptoFileFormat_CloudFile)
+		else if (data.cryptoFile.fileFormat == ZDCCryptoFileFormat_CloudFile)
 		{
 			// The delegate gave us a ZDCCryptoFile in CloudFile format.
 			// So, if all the following are true, then we can upload directly from the file:
@@ -1714,12 +1737,12 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				CloudFile2CleartextInputStream *clearStream = nil;
 				Cleartext2CloudFileInputStream *cloudStream = nil;
 			
-				inputStream = [[ZDCInterruptingInputStream alloc] initWithFileURL:nodeData.cryptoFile.fileURL];
-				inputStream.retainToken = nodeData.cryptoFile.retainToken;
+				inputStream = [[ZDCInterruptingInputStream alloc] initWithFileURL:data.cryptoFile.fileURL];
+				inputStream.retainToken = data.cryptoFile.retainToken;
 			
 				clearStream =
 				  [[CloudFile2CleartextInputStream alloc] initWithCloudFileStream: inputStream
-				                                                    encryptionKey: nodeData.cryptoFile.encryptionKey];
+				                                                    encryptionKey: data.cryptoFile.encryptionKey];
 			
 				[clearStream setProperty:@(ZDCCloudFileSection_Data) forKey:ZDCStreamCloudFileSection];
 			
@@ -1733,17 +1756,17 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				continueWithFileStream(cloudStream);
 			}};
 				
-			if ([nodeData.cryptoFile.encryptionKey isEqualToData:node.encryptionKey])
+			if ([data.cryptoFile.encryptionKey isEqualToData:node.encryptionKey])
 			{
 				ZDCInterruptingInputStream *inputStream = nil;
 				CloudFile2CleartextInputStream *clearStream = nil;
 				
-				inputStream = [[ZDCInterruptingInputStream alloc] initWithFileURL:nodeData.cryptoFile.fileURL];
-				inputStream.retainToken = nodeData.cryptoFile.retainToken;
+				inputStream = [[ZDCInterruptingInputStream alloc] initWithFileURL:data.cryptoFile.fileURL];
+				inputStream.retainToken = data.cryptoFile.retainToken;
 			
 				clearStream =
 				  [[CloudFile2CleartextInputStream alloc] initWithCloudFileStream: inputStream
-				                                                    encryptionKey: nodeData.cryptoFile.encryptionKey];
+				                                                    encryptionKey: data.cryptoFile.encryptionKey];
 				
 				[self compareMetadata: rawMetadata
 				            thumbnail: rawThumbnail
@@ -1765,7 +1788,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 					else
 					{
 						if (match) {
-							continueWithFileURL(nodeData.cryptoFile.fileURL);
+							continueWithFileURL(data.cryptoFile.fileURL);
 						}
 						else {
 							fallbackToFileStream();
@@ -6080,22 +6103,22 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	{ // 1 of 3
 		
-		ZDCData *nodeData = asyncData.nodeData;
+		ZDCData *data = asyncData.data;
 		
-		if (nodeData.promise)
+		if (data.promise)
 		{
 			pendingCount++;
 			NSString *ctx = @"nodeData.promise";
 			[pipeline setHoldDate:distantFuture forOperationWithUUID:op.uuid context:ctx];
 	
-			[nodeData.promise pushCompletionQueue: concurrentQueue
-			                      completionBlock:^(ZDCData * _Nullable nodeData)
+			[data.promise pushCompletionQueue: concurrentQueue
+			                  completionBlock:^(ZDCData *data)
 			{
-				if (nodeData == nil) {
-					nodeData = [[ZDCData alloc] initWithData:[NSData data]];
+				if (data == nil) {
+					data = [[ZDCData alloc] initWithData:[NSData data]];
 				}
 	
-				op.ephemeralInfo.asyncData.nodeData = nodeData;
+				op.ephemeralInfo.asyncData.data = data;
 				[pipeline setHoldDate:nil forOperationWithUUID:op.uuid context:ctx];
 			}];
 		}
@@ -6103,17 +6126,17 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	{ // 2 of 3
 		
-		ZDCData *nodeMetadata = asyncData.nodeMetadata;
+		ZDCData *metadata = asyncData.metadata;
 		
-		if (nodeMetadata.cleartextFileURL || nodeMetadata.cryptoFile)
+		if (metadata.cleartextFileURL || metadata.cryptoFile)
 		{
 			pendingCount++;
-			NSString *ctx = nodeMetadata.cleartextFileURL
+			NSString *ctx = metadata.cleartextFileURL
 			  ? @"nodeMetadata.cleartextFileURL"
 			  : @"nodeMetadata.cryptoFile";
 			[pipeline setHoldDate:distantFuture forOperationWithUUID:op.uuid context:ctx];
 	
-			[self extractCleartextData: nodeMetadata
+			[self extractCleartextData: metadata
 			           completionQueue: concurrentQueue
 			           completionBlock:^(NSData *data, NSError *error)
 			{
@@ -6122,24 +6145,24 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				}
 				
 				op.ephemeralInfo.asyncData.rawMetadata = data;
-				op.ephemeralInfo.asyncData.nodeMetadata = nil;
+				op.ephemeralInfo.asyncData.metadata = nil;
 				[pipeline setHoldDate:nil forOperationWithUUID:op.uuid context:ctx];
 			}];
 		}
-		else if (nodeMetadata.promise)
+		else if (metadata.promise)
 		{
 			pendingCount++;
 			NSString *ctx = @"nodeMetadata.promise";
 			[pipeline setHoldDate:distantFuture forOperationWithUUID:op.uuid context:ctx];
 	
-			[nodeMetadata.promise pushCompletionQueue: concurrentQueue
-			                          completionBlock:^(ZDCData *nodeMetadata)
+			[metadata.promise pushCompletionQueue: concurrentQueue
+			                      completionBlock:^(ZDCData *metadata)
 			{
-				if (nodeMetadata == nil) {
-					nodeMetadata = [[ZDCData alloc] initWithData:[NSData data]];
+				if (metadata == nil) {
+					metadata = [[ZDCData alloc] initWithData:[NSData data]];
 				}
 	
-				op.ephemeralInfo.asyncData.nodeMetadata = nodeMetadata;
+				op.ephemeralInfo.asyncData.metadata = metadata;
 				[pipeline setHoldDate:nil forOperationWithUUID:op.uuid context:ctx];
 			}];
 		}
@@ -6147,17 +6170,17 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	{ // 3 of 3
 		
-		ZDCData *nodeThumbnail = asyncData.nodeThumbnail;
+		ZDCData *thumbnail = asyncData.thumbnail;
 		
-		if (nodeThumbnail.cleartextFileURL || nodeThumbnail.cryptoFile)
+		if (thumbnail.cleartextFileURL || thumbnail.cryptoFile)
 		{
 			pendingCount++;
-			NSString *ctx = nodeThumbnail.cleartextFileURL
+			NSString *ctx = thumbnail.cleartextFileURL
 			  ? @"nodeThumbnail.cleartextFileURL"
 			  : @"nodeThumbnail.cryptoFile";
 			[pipeline setHoldDate:distantFuture forOperationWithUUID:op.uuid context:ctx];
 	
-			[self extractCleartextData: nodeThumbnail
+			[self extractCleartextData: thumbnail
 			           completionQueue: concurrentQueue
 			           completionBlock:^(NSData *data, NSError *error)
 			{
@@ -6166,24 +6189,24 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				}
 	
 				op.ephemeralInfo.asyncData.rawThumbnail = data;
-				op.ephemeralInfo.asyncData.nodeThumbnail = nil;
+				op.ephemeralInfo.asyncData.thumbnail = nil;
 				[pipeline setHoldDate:nil forOperationWithUUID:op.uuid context:ctx];
 			}];
 		}
-		else if (nodeThumbnail.promise)
+		else if (thumbnail.promise)
 		{
 			pendingCount++;
 			NSString *ctx = @"nodeThumbnail.promise";
 			[pipeline setHoldDate:distantFuture forOperationWithUUID:op.uuid context:ctx];
 	
-			[nodeThumbnail.promise pushCompletionQueue: concurrentQueue
-			                           completionBlock:^(ZDCData *nodeThumbnail)
+			[thumbnail.promise pushCompletionQueue: concurrentQueue
+			                       completionBlock:^(ZDCData *thumbnail)
 			{
-				if (nodeThumbnail == nil) {
-					nodeThumbnail = [[ZDCData alloc] initWithData:[NSData data]];
+				if (thumbnail == nil) {
+					thumbnail = [[ZDCData alloc] initWithData:[NSData data]];
 				}
 	
-				op.ephemeralInfo.asyncData.nodeThumbnail = nodeThumbnail;
+				op.ephemeralInfo.asyncData.thumbnail = thumbnail;
 				[pipeline setHoldDate:nil forOperationWithUUID:op.uuid context:ctx];
 			}];
 		}
