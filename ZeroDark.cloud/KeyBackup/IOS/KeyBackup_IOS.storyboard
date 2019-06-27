@@ -452,19 +452,19 @@ To ensure security, you must enter a passcode of your chosing before saving this
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="justified" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="veV-Hd-bfB">
-                                <rect key="frame" x="20" y="60" width="335" height="264"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="veV-Hd-bfB">
+                                <rect key="frame" x="20" y="60" width="335" height="223.5"/>
                                 <string key="text">Congratulations, your access key backup has been verified.
 
-Remember, if you lose this device (it stops working, gets stolen, etc) you will need your access key to re-gain access to your Storm4 files. That's why this backup may be needed.
+Remember, if you lose this device (it stops working, gets stolen, etc) you will need your access key to re-gain access to your data. That's why this backup may be needed.
 
-If you happen to be logged into the same Storm4 account on a different device, you can  also use that device to retrieve your access key.</string>
+If you happen to be logged into the same account on a different device, you can  also use that device to retrieve your access key.</string>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="q4H-JG-0ny">
-                                <rect key="frame" x="87.5" y="344" width="200" height="40"/>
+                                <rect key="frame" x="87.5" y="303.5" width="200" height="40"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="40" id="Lwk-C8-1bB"/>
                                     <constraint firstAttribute="width" constant="200" id="VcG-7K-oF2"/>
