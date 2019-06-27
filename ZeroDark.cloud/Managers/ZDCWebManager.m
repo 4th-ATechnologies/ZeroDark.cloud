@@ -31,6 +31,10 @@
 
 #define CLAMP(min, num, max) (MAX(min, MIN(max, num)))
 
+#ifndef AWS_STAGE
+#define AWS_STAGE @"dev"
+#endif
+
 @implementation ZDCWebManager {
 @private
 	
@@ -467,38 +471,50 @@
 		NSDate   *activationDate = nil;
 		NSError *error = sessionError;
 		
-		if (response && data)
-        {
-            error = nil; // we only care about non-server-response errors
-            
-            NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
-            if ([json isKindOfClass:[NSDictionary class]])
-            {
-                id value = json[@"bucket"];
-                if ([value isKindOfClass:[NSString class]]) {
-                    bucket = (NSString *)value;
-                }
+		if (!error && response && data)
+		{
+			NSInteger statusCode = response.httpStatusCode;
+			
+			NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
+			if ([json isKindOfClass:[NSDictionary class]])
+			{
+				if ((statusCode >= 200) && (statusCode < 300))
+				{
+					// Success response from server
+					
+					id value = json[@"bucket"];
+					if ([value isKindOfClass:[NSString class]]) {
+						bucket = (NSString *)value;
+					}
 					
 					value = json[@"stage"];
 					if ([value isKindOfClass:[NSString class]]) {
 						stage = (NSString *)value;
 					}
 					
-                value = json[@"salt"];
-                if ([value isKindOfClass:[NSString class]]) {
-                    syncedSalt = (NSString *)value;
-                }
-                
-                // process activationDate
-                value = json[@"created"];
-                if ([value isKindOfClass:[NSNumber class]]) {
-                    // Javascript Dates are in milliseconds since unix epoch, UTC.
-                    
-                    NSTimeInterval seconds = [value doubleValue] / 1000.0;
-                    activationDate = [NSDate dateWithTimeIntervalSince1970:seconds];
-                }
-            }
-        }
+					value = json[@"salt"];
+					if ([value isKindOfClass:[NSString class]]) {
+						syncedSalt = (NSString *)value;
+					}
+					
+					// process activationDate
+					value = json[@"created"];
+					if ([value isKindOfClass:[NSNumber class]]) {
+						// Javascript Dates are in milliseconds since unix epoch, UTC.
+						
+						NSTimeInterval seconds = [value doubleValue] / 1000.0;
+						activationDate = [NSDate dateWithTimeIntervalSince1970:seconds];
+					}
+				}
+				else
+				{
+					// Error response from server
+					
+					NSString *domain = [NSError domainForClass:[self class]];
+					error = [NSError errorWithDomain:domain code:statusCode userInfo:json];
+				}
+			}
+		}
 		
 		if (!error && !bucket)
 		{
