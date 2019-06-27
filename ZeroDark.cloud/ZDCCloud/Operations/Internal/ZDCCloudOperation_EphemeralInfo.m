@@ -1,6 +1,10 @@
 /**
  * ZeroDark.cloud
- * <GitHub wiki link goes here>
+ * 
+ * Homepage      : https://www.zerodark.cloud
+ * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
+ * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
+ * API Reference : https://4th-atechnologies.github.io/ZeroDark.cloud/
 **/
 
 #import "ZDCCloudOperation_EphemeralInfo.h"
@@ -272,22 +276,21 @@ static BOOL numbersAreEqual(NSNumber *num1, NSNumber *num2)
 
 @implementation ZDCCloudOperation_AsyncData
 
-@synthesize node = node;
-@synthesize nodeData = nodeData;
-@synthesize nodeMetadata = nodeMetadata;
-@synthesize nodeThumbnail = nodeThumbnail;
+@synthesize data = data;
+@synthesize metadata = metadata;
+@synthesize thumbnail = thumbnail;
 
-- (instancetype)initWithNode:(ZDCNode *)inNode
-                        data:(ZDCData *)inNodeData
-                nodeMetadata:(nullable ZDCData *)inNodeMetadata
-               nodeThumbnail:(nullable ZDCData *)inNodeThumbnail
+@synthesize rawMetadata;
+@synthesize rawThumbnail;
+
+@synthesize node = node;
+@synthesize message = message;
+
+- (instancetype)initWithData:(ZDCData *)inData
 {
 	if ((self = [super init]))
 	{
-		node = inNode;
-		nodeData = inNodeData;
-		nodeMetadata = inNodeMetadata;
-		nodeThumbnail = inNodeThumbnail;
+		data = inData;
 	}
 	return self;
 }

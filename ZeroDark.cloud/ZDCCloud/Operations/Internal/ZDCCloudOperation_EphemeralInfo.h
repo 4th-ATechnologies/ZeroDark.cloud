@@ -1,12 +1,17 @@
 /**
  * ZeroDark.cloud
- * <GitHub wiki link goes here>
+ * 
+ * Homepage      : https://www.zerodark.cloud
+ * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
+ * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
+ * API Reference : https://4th-atechnologies.github.io/ZeroDark.cloud/
 **/
 
 #import <Foundation/Foundation.h>
 
-@class ZDCNode;
 @class ZDCData;
+@class ZDCNode;
+@class ZDCOutgoingMessage;
 @class ZDCPollContext;
 @class ZDCTouchContext;
 
@@ -105,19 +110,17 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface ZDCCloudOperation_AsyncData : NSObject
 
-- (instancetype)initWithNode:(ZDCNode *)node
-                        data:(ZDCData *)data
-                nodeMetadata:(nullable ZDCData *)nodeMetadata
-               nodeThumbnail:(nullable ZDCData *)nodeThumbnail;
+- (instancetype)initWithData:(ZDCData *)data;
 
-@property (atomic, strong, readwrite) ZDCNode *node;
-
-@property (atomic, strong, readwrite) ZDCData *nodeData;
-@property (atomic, strong, readwrite, nullable) ZDCData *nodeMetadata;
-@property (atomic, strong, readwrite, nullable) ZDCData *nodeThumbnail;
+@property (atomic, strong, readwrite) ZDCData *data;
+@property (atomic, strong, readwrite, nullable) ZDCData *metadata;
+@property (atomic, strong, readwrite, nullable) ZDCData *thumbnail;
 
 @property (atomic, strong, readwrite, nullable) NSData *rawMetadata;
 @property (atomic, strong, readwrite, nullable) NSData *rawThumbnail;
+
+@property (atomic, strong, readwrite, nullable) ZDCNode *node;
+@property (atomic, strong, readwrite, nullable) ZDCOutgoingMessage *message;
 
 @end
 
