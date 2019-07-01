@@ -201,7 +201,6 @@ static const int ddLogLevel = DDLogLevelWarning;
 	
 }
 
-
 -(void)pushInitialViewController:(UIViewController* __nonnull)initialViewController
 {
 	NSParameterAssert(initialViewController != nil);
@@ -247,7 +246,9 @@ static const int ddLogLevel = DDLogLevelWarning;
 			break;
 			
 		case AccountSetupViewID_DBAuth:
-			if(!vc_DBAuth)
+			// always create new vc.
+			vc_DBAuth = NULL;
+//			if(!vc_DBAuth)
 			{
 				vc_DBAuth        = (DatabaseIdentityAuthenticationViewController_IOS *)
 				[self.storyboard instantiateViewControllerWithIdentifier:@"DatabaseIdentityAuthenticationViewController_IOS"];
@@ -256,7 +257,9 @@ static const int ddLogLevel = DDLogLevelWarning;
 			break;
 			
 		case AccountSetupViewID_ReAuthDatabase:
-			if(!vc_DBReAuth)
+			// always create new vc.
+			vc_DBReAuth = NULL;
+//			if(!vc_DBReAuth)
 			{
 				vc_DBReAuth        = (DatabaseIdentityAuthenticationViewController_IOS *)
 				[self.storyboard instantiateViewControllerWithIdentifier:@"DatabaseIdentityAuthenticationViewController_LOGIN_IOS"];
@@ -265,7 +268,9 @@ static const int ddLogLevel = DDLogLevelWarning;
 			break;
 			
 		case AccountSetupViewID_DBCreate:
-			if(!vc_DBCreate)
+			// always create new vc.
+			vc_DBCreate = NULL;
+	//		if(!vc_DBCreate)
 			{
 				vc_DBCreate        = (DatabaseIdentityCreateViewController_IOS *)
 				[self.storyboard instantiateViewControllerWithIdentifier:@"DatabaseIdentityCreateViewController_IOS"];
