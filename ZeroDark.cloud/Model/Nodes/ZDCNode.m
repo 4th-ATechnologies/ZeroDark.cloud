@@ -26,6 +26,7 @@ static NSString *const k_parentID              = @"parentID";
 static NSString *const k_name                  = @"name";
 static NSString *const k_shareList             = @"shareList";
 static NSString *const k_burnDate              = @"burnDate";
+static NSString *const k_pendingRecipients     = @"pendingRecipients";
 static NSString *const k_encryptionKey         = @"encryptionKey";
 static NSString *const k_dirSalt               = @"dirSalt";
 static NSString *const k_dirPrefix             = @"dirPrefix";
@@ -72,6 +73,8 @@ static NSString *const k_pointeeID             = @"pointeeID";
 @synthesize name = name;
 @synthesize shareList = shareList;
 @synthesize burnDate = burnDate;
+
+@synthesize pendingRecipients;
 
 @synthesize encryptionKey = encryptionKey;
 @synthesize dirSalt = dirSalt;
@@ -153,6 +156,8 @@ static NSString *const k_pointeeID             = @"pointeeID";
 		shareList     = [decoder decodeObjectForKey:k_shareList];
 		burnDate      = [decoder decodeObjectForKey:k_burnDate];
 		
+		pendingRecipients = [decoder decodeObjectForKey:k_pendingRecipients];
+		
 		encryptionKey = [decoder decodeObjectForKey:k_encryptionKey];
 		dirSalt       = [decoder decodeObjectForKey:k_dirSalt];
 		dirPrefix     = [decoder decodeObjectForKey:k_dirPrefix];
@@ -187,6 +192,8 @@ static NSString *const k_pointeeID             = @"pointeeID";
 	[coder encodeObject:shareList   forKey:k_shareList];
 	[coder encodeObject:burnDate    forKey:k_burnDate];
 	
+	[coder encodeObject:pendingRecipients forKey:k_pendingRecipients];
+	
 	[coder encodeObject:encryptionKey forKey:k_encryptionKey];
 	[coder encodeObject:dirSalt       forKey:k_dirSalt];
 	[coder encodeObject:dirPrefix     forKey:k_dirPrefix];
@@ -216,6 +223,8 @@ static NSString *const k_pointeeID             = @"pointeeID";
 	copy->name        = name;
 	copy->shareList   = [shareList copy];
 	copy->burnDate    = burnDate;
+	
+	copy->pendingRecipients = [pendingRecipients copy];
 	
 	copy->encryptionKey = encryptionKey;
 	copy->dirSalt       = dirSalt;

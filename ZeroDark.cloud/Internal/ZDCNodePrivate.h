@@ -18,6 +18,12 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (instancetype)initWithLocalUserID:(NSString *)localUserID uuid:(nullable NSString *)uuid;
 
+#pragma mark Messaging
+
+@property (nonatomic, copy, readwrite, nullable) NSSet<NSString *> *pendingRecipients;
+
+#pragma mark Encryption Info
+
 @property (nonatomic, copy, readwrite, nullable) NSData   * encryptionKey;
 @property (nonatomic, copy, readwrite, nullable) NSData   * dirSalt;
 @property (nonatomic, copy, readwrite, nullable) NSString * dirPrefix;
@@ -36,8 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, copy, readwrite, nullable) NSString *explicitCloudName;
 
-@property (nonatomic, copy, readwrite, nullable) NSString *ownerID;
-@property (nonatomic, copy, readwrite, nullable) NSString *ownerCloudAnchor;
+@property (nonatomic, copy, readwrite, nullable) ZDCNodeAnchor *anchor;
 
 @end
 

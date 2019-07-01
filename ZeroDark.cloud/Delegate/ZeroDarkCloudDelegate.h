@@ -13,7 +13,6 @@
 #import "ZDCData.h"
 #import "ZDCDownloadManager.h" // for ZDCNodeMetaComponents
 #import "ZDCNode.h"
-#import "ZDCOutgoingMessage.h"
 #import "ZDCTreesystemPath.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -229,7 +228,7 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
  * - Then she sends a message to Bob that contains a link to the file
  *
  * The following is also allowed:
- * - Bob creates a "folder" in his treesystem, and gives Alice has write permission to it
+ * - Bob creates a "folder" in his treesystem, and gives Alice write permission
  * - Alice then stores the 1 gigabyte file in that "folder" (within Bob's treesystem)
  *
  * However, the following is NOT allowed:
@@ -239,10 +238,11 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
  * However there are no restrictions on the size of attachments.
  * And your app is free to decide exactly where & how attachments are stored.
  *
- * One common solution is to store attachments in the "outbox" folder.
- * For example, Alice would store that 1 gig file in her outbox folder.
- * And her message to Bob would contain a reference to the file.
- * She may be even set a "burn" time on the 1 gig file so it gets deleted automatically by the server after 30 days.
+ * One common solution is to store attachments in the "temp" container.
+ * For example, Alice would store that 1 gig file in temp,
+ * and her message to Bob would contain a reference to the file.
+ * She may be even set a "burn" time on the 1 gig file so it gets
+ * deleted automatically by the server after 30 days.
  *
  * @param message
  *   The outgoing message to be sent.
@@ -252,7 +252,7 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
  *
  * @return Either nil, or a ZDCData instance that wraps the message data to send.
  */
-- (nullable ZDCData *)dataForMessage:(ZDCOutgoingMessage *)message
+- (nullable ZDCData *)dataForMessage:(ZDCNode *)message
                          transaction:(YapDatabaseReadTransaction *)transaction;
 
 /**
@@ -269,7 +269,7 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
  *   This allows you to update your own objects within the same atomic transaction that
  *   removes the queued outgoing message.
  */
-- (void)didSendMessage:(ZDCOutgoingMessage *)message
+- (void)didSendMessage:(ZDCNode *)message
            transaction:(YapDatabaseReadWriteTransaction *)transaction;
 
 #pragma mark Pull

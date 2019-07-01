@@ -13,13 +13,13 @@
 
 NSString *const kZDCCollection_CachedResponse  = @"ZDCCachedResponse";
 NSString *const kZDCCollection_CloudNodes      = @"ZDCCloudNodes";
-NSString *const kZDCCollection_Messages        = @"ZDCMessages";
 NSString *const kZDCCollection_Nodes           = @"ZDCNodes";
 NSString *const kZDCCollection_Prefs           = @"ZDCPrefs";
 NSString *const kZDCCollection_PublicKeys      = @"ZDCPublicKeys";
 NSString *const kZDCCollection_PullState       = @"ZDCSyncState";
 NSString *const kZDCCollection_Reminders       = @"ZDCReminders";
 NSString *const kZDCCollection_SessionStorage  = @"ZDCSessionStorage";
+NSString *const kZDCCollection_Signals         = @"ZDCSignals";
 NSString *const kZDCCollection_SymmetricKeys   = @"ZDCSymmetricKeys";
 NSString *const kZDCCollection_Tasks           = @"ZDCTasks";
 NSString *const kZDCCollection_Users           = @"ZDCUsers";

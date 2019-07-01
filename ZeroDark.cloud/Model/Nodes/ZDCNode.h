@@ -84,6 +84,14 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, copy, readwrite, nullable) NSDate *burnDate;
 
+#pragma mark Messaging
+
+/**
+ * For messages & signals, this set contains the list of userID's for which the system
+ * is still working on sending the node.
+ */
+@property (nonatomic, copy, readonly, nullable) NSSet<NSString *> *pendingRecipients;
+
 #pragma mark Encryption Info
 
 /**

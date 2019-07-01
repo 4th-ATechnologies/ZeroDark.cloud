@@ -17,7 +17,6 @@
 #import "ZDCCloudOperation.h"
 #import "ZDCTreesystemPath.h"
 #import "ZDCNode.h"
-#import "ZDCOutgoingMessage.h"
 #import "ZDCUser.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -96,27 +95,57 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Queues a message to be sent to the given user.
+ * Messages are first uploaded into the sender's outbox,
+ * and then copied server-side into the recipient's inbox.
  *
- * This method creates and queues an operation (ZDCCloudOperation) to send a message to the given user.
- * The system will send the message as soon as possible (i.e. when there's an active internet connection,
- * and bandwidth in the pipeline, etc.)
+ * You supply the data for the message via `[ZeroDarkCloudDelegate dataForMessage:transaction:]`.
+ * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
  *
- * By default, the system queues the message such that all previously queued messages to the same user
- * will be sent first, before sending this message. If you wish to override that behavior, you can modify the
- * queued operation, and remove its dependencies.
+ * For more information about messaging, see the docs:
+ * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
  *
  * @param message
- *   The skeleton information concerning the message to send.
- *   This includes the receiver's userID.
+ *   A node that represents the message to send.
+ *
+ * @param userIDs
+ *   A list of recipients that should receive the message. (userID == ZDCUser.uuid)
  *
  * @param outError
  *   Set to nil on success.
  *   Otherwise returns an error that explains what went wrong.
- * 
+ *
  * @return Returns YES on success, NO otherwise.
  */
-- (BOOL)sendMessage:(ZDCOutgoingMessage *)message error:(NSError *_Nullable *_Nullable)outError;
+- (BOOL)sendMessage:(ZDCNode *)message
+                 to:(NSArray<NSString*> *)userIDs
+              error:(NSError *_Nullable *_Nullable)outError;
+
+/**
+ * A signal is a lightweight message. Signals are delivered into the inbox of the recipient,
+ * but are NOT copied into the outbox of the sender. In other words, they are lightweight messages,
+ * that don't cause additional overhead for the sender.
+ *
+ * You supply the data for the message via `[ZeroDarkCloudDelegate dataForMessage:transaction:]`.
+ * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
+ * 
+ * For more information about messaging, see the docs:
+ * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
+ *
+ * @param signal
+ *   The message to send.
+ *
+ * @param recipient
+ *   The user to send the message to. (userID == ZDCUser.uuid)
+ *
+ * @param outError
+ *   Set to nil on success.
+ *   Otherwise returns an error that explains what went wrong.
+ *
+ * @return Returns YES on success, NO otherwise.
+ */
+- (BOOL)sendSignal:(ZDCNode *)signal
+                to:(ZDCUser *)recipient
+             error:(NSError *_Nullable *_Nullable)outError;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Node Management

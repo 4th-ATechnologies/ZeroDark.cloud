@@ -284,7 +284,6 @@ static BOOL numbersAreEqual(NSNumber *num1, NSNumber *num2)
 @synthesize rawThumbnail;
 
 @synthesize node = node;
-@synthesize message = message;
 
 - (instancetype)initWithData:(ZDCData *)inData
 {

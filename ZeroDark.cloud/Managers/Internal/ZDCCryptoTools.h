@@ -13,7 +13,6 @@
 #import "ZDCCloudRcrd.h"
 #import "ZDCContainerNode.h"
 #import "ZDCLocalUser.h"
-#import "ZDCOutgoingMessage.h"
 #import "ZDCPublicKey.h"
 #import "ZDCSymmetricKey.h"
 
@@ -119,7 +118,7 @@ NS_ASSUME_NONNULL_BEGIN
  *         All the sensitive data is encrypted with the node.encryptionKey.
  *         And the node.encryptionKey has been wrapped using the publicKey's of those with read-access.
  */
-- (nullable NSData *)cloudRcrdForMessage:(ZDCOutgoingMessage *)message
+- (nullable NSData *)cloudRcrdForMessage:(ZDCNode *)message
                              transaction:(YapDatabaseReadTransaction *)transaction
                              missingKeys:(NSArray<NSString*> *_Nullable *_Nonnull)outMissingKeys
                           missingUserIDs:(NSArray<NSString*> *_Nullable *_Nonnull)outMissingUserIDs

@@ -86,25 +86,7 @@ typedef NS_ENUM(NSUInteger, ZDCCloudOperationPutType) {
 	 * Represents a put of a special "*.rcrd" file, which contains a pointer to another node.
 	 * The pointer information gets encrypted (not readable by the server).
 	 */
-	ZDCCloudOperationPutType_Pointer,
-	
-	/**
-	 * Represents a put of the "*.rcrd" file for a message in another user's 'msgs' container.
-	 * The RCRD file contains only the metadata, which includes info such as:
-	 * - permissions
-	 * - cloudID (server-assigned uuid)
-	 */
-	ZDCCloudOperationPutType_Message_Rcrd,
-	
-	/**
-	 * Represents a put of the "*.data" file for a message in another user's 'msgs' container.
-	 * The DATA file represents the actual content of the message.
-	 * That is, the content delivered to the framework via:
-	 * - `-[ZeroDarkCloudDelegate messageDataForUser:withMessageID:transaction:]`
-	 *
-	 * The data is automatically encrypted before being uploaded to the cloud.
-	 */
-	ZDCCloudOperationPutType_Message_Data
+	ZDCCloudOperationPutType_Pointer
 };
 
 /**
@@ -195,9 +177,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Points to the corresponding cloudNode (cloudNodeID == ZDCCloudNode.uuid) */
 @property (nonatomic, copy, readwrite, nullable) NSString *cloudNodeID;
-
-/** Points to the corresponding outgoing message (messageID == ZDCOutgoingMessage.uuid) */
-@property (nonatomic, copy, readwrite, nullable) NSString *messageID;
 
 /** The cloud location of the operation. */
 @property (nonatomic, copy, readwrite, nullable) ZDCCloudLocator *cloudLocator;
@@ -330,20 +309,6 @@ NS_ASSUME_NONNULL_BEGIN
  * - putType == ZDCCloudOperationPutType_Pointer
  */
 - (BOOL)isPutPointerOperation;
-
-/**
- * Convenience method: returns YES if:
- * - type == ZDCCloudOperationType_Put AND
- * - putType == ZDCCloudOperationPutType_Message_Rcrd
- */
-- (BOOL)isPutMessageRcrdOperation;
-
-/**
- * Convenience method: returns YES if:
- * - type == ZDCCloudOperationType_Put AND
- * - putType == ZDCCloudOperationPutType_Message_Data
- */
-- (BOOL)isPutMessageDataOperation;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Class Utilities

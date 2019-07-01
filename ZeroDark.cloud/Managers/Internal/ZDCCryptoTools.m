@@ -562,7 +562,7 @@ done:
 /**
  * See header file for description.
  */
-- (nullable NSData *)cloudRcrdForMessage:(ZDCOutgoingMessage *)message
+- (nullable NSData *)cloudRcrdForMessage:(ZDCNode *)message
                              transaction:(YapDatabaseReadTransaction *)transaction
                              missingKeys:(NSArray<NSString*> *_Nullable *_Nonnull)outMissingKeys
                           missingUserIDs:(NSArray<NSString*> *_Nullable *_Nonnull)outMissingUserIDs

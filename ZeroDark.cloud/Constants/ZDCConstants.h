@@ -52,8 +52,6 @@ extern NSString *const kZDCCollection_CachedResponse;
 /** Name of collection in YapDatabase. All ZeroDark collection constants start with "ZDC" */
 extern NSString *const kZDCCollection_CloudNodes;
 /** Name of collection in YapDatabase. All ZeroDark collection constants start with "ZDC" */
-extern NSString *const kZDCCollection_Messages;
-/** Name of collection in YapDatabase. All ZeroDark collection constants start with "ZDC" */
 extern NSString *const kZDCCollection_Nodes;
 /** Name of collection in YapDatabase. All ZeroDark collection constants start with "ZDC" */
 extern NSString *const kZDCCollection_Prefs;
@@ -65,6 +63,8 @@ extern NSString *const kZDCCollection_PullState;
 extern NSString *const kZDCCollection_Reminders;
 /** Name of collection in YapDatabase. All ZeroDark collection constants start with "ZDC" */
 extern NSString *const kZDCCollection_SessionStorage;
+/** Name of collection in YapDatabase. All ZeroDark collection constants start with "ZDC" */
+extern NSString *const kZDCCollection_Signals;
 /** Name of collection in YapDatabase. All ZeroDark collection constants start with "ZDC" */
 extern NSString *const kZDCCollection_SymmetricKeys;
 /** Name of collection in YapDatabase. All ZeroDark collection constants start with "ZDC" */

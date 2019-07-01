@@ -11,7 +11,6 @@
 
 @class ZDCData;
 @class ZDCNode;
-@class ZDCOutgoingMessage;
 @class ZDCPollContext;
 @class ZDCTouchContext;
 
@@ -120,7 +119,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (atomic, strong, readwrite, nullable) NSData *rawThumbnail;
 
 @property (atomic, strong, readwrite, nullable) ZDCNode *node;
-@property (atomic, strong, readwrite, nullable) ZDCOutgoingMessage *message;
 
 @end
 

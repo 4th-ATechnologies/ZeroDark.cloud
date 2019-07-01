@@ -1455,67 +1455,13 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			continueWithFileData(rcrdData);
 		}
 	}
-	else if (putType == ZDCCloudOperationPutType_Message_Rcrd)
-	{
-		// Generate message ".rcrd" file content
-		
-		__block NSError *error = nil;
-		__block ZDCOutgoingMessage *message = nil;
-		__block NSData *rcrdData = nil;
-		__block NSArray<NSString*> *missingKeys = nil;
-		__block NSArray<NSString*> *missingUserIDs = nil;
-		__block NSArray<NSString*> *missingServerIDs = nil;
-		
-		ZDCCryptoTools *cryptoTools = owner.cryptoTools;
-		
-		[self.roConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-			
-			message = [transaction objectForKey:operation.messageID inCollection:kZDCCollection_Messages];
-			
-			rcrdData = [cryptoTools cloudRcrdForMessage: message
-			                                transaction: transaction
-			                                missingKeys: &missingKeys
-			                             missingUserIDs: &missingUserIDs
-			                           missingServerIDs: &missingServerIDs
-			                                      error: &error];
-			
-			// Snapshot current pullState.
-			// We use this during conflict resolution to determine if a pull had any effect.
-			
-			ZDCChangeList *pullInfo =
-			  [transaction objectForKey:operation.localUserID inCollection:kZDCCollection_PullState];
-			
-			operation.ephemeralInfo.lastChangeToken = pullInfo.latestChangeID_local;
-		}];
-		
-		if (error)
-		{
-			DDLogWarn(@"Error creating PUT operation: %@: %@", operation.cloudLocator.cloudPath, error);
-			
-			[self skipOperationWithContext:context];
-		}
-		else if (missingKeys.count > 0)
-		{
-			[self fixMissingKeysForMessageID:operation.messageID operation:operation];
-		}
-		else if (missingUserIDs.count > 0)
-		{
-			[self fetchMissingUsers:missingUserIDs forOperation:operation];
-		}
-		else
-		{
-			continueWithFileData(rcrdData);
-		}
-	}
-	else if (putType == ZDCCloudOperationPutType_Node_Data ||
-	         putType == ZDCCloudOperationPutType_Message_Data)
+	else if (putType == ZDCCloudOperationPutType_Node_Data)
 	{
 		// Generate "*.data" content
 		
 		ZDCCloudOperation_AsyncData *asyncData = operation.ephemeralInfo.asyncData;
 		
 		__block ZDCNode *node = nil;
-		__block ZDCOutgoingMessage *message = nil;
 		
 		__block ZDCData *data = nil;
 		__block ZDCData *metadata = nil;
@@ -1526,13 +1472,12 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			if (asyncData)
 			{
 				node = asyncData.node;
-				message = asyncData.message;
 				
 				data = asyncData.data;
 				metadata = asyncData.metadata;
 				thumbnail = asyncData.thumbnail;
 			}
-			else if (putType == ZDCCloudOperationPutType_Node_Data)
+			else
 			{
 				node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
 				if (node)
@@ -1545,14 +1490,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 						metadata = [owner.delegate metadataForNode:node atPath:path transaction:transaction];
 						thumbnail = [owner.delegate thumbnailForNode:node atPath:path transaction:transaction];
 					}
-				}
-			}
-			else if (putType == ZDCCloudOperationPutType_Message_Data)
-			{
-				message = [transaction objectForKey:operation.messageID inCollection:kZDCCollection_Messages];
-				if (message)
-				{
-					data = [owner.delegate dataForMessage:message transaction:transaction];
 				}
 			}
 			
@@ -1569,13 +1506,11 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			context.eTag = operation.eTag;
 		} else if (node) {
 			context.eTag = node.eTag_data;
-		} else if (message) {
-			context.eTag = message.eTag_data;
 		}
 		
 		if (!asyncData && !data)
 		{
-			if (node || message) {
+			if (node) {
 				DDLogWarn(@"Delegate failed to create data for PUT operation: %@", operation.cloudLocator.cloudPath);
 			}
 			
@@ -1598,7 +1533,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				asyncData.thumbnail = thumbnail;
 				
 				asyncData.node = node;
-				asyncData.message = message;
 				
 				operation.ephemeralInfo.asyncData = asyncData;
 			}
@@ -7184,36 +7118,36 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 {
 	DDLogAutoTrace();
 	
-	YapDatabaseCloudCorePipeline *pipeline = [self pipelineForOperation:operation];
-	
-	NSDate *distantFuture = [NSDate distantFuture];
-	NSUUID *opUUID = operation.uuid;
-	NSString *ctx = @"fix-missing-keys";
-	
-	[pipeline setHoldDate:distantFuture forOperationWithUUID:opUUID context:ctx];
-	[pipeline setStatusAsPendingForOperationWithUUID:opUUID];
-	
-	__weak ZeroDarkCloud *zdc = owner;
-	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
-		
-		ZDCOutgoingMessage *message = [transaction objectForKey:messageID inCollection:kZDCCollection_Messages];
-		if (message)
-		{
-			message = [message copy];
-			NSUInteger changeCount =
-			  [zdc.cryptoTools fixMissingKeysForShareList: message.shareList
-			                                encryptionKey: message.encryptionKey
-			                                  transaction: transaction];
-			
-			if (changeCount > 0) {
-				[transaction setObject:message forKey:message.uuid inCollection:kZDCCollection_Messages];
-			}
-		}
-		
-	} completionQueue:concurrentQueue completionBlock:^{
-		
-		[pipeline setHoldDate:nil forOperationWithUUID:opUUID context:ctx];
-	}];
+//	YapDatabaseCloudCorePipeline *pipeline = [self pipelineForOperation:operation];
+//	
+//	NSDate *distantFuture = [NSDate distantFuture];
+//	NSUUID *opUUID = operation.uuid;
+//	NSString *ctx = @"fix-missing-keys";
+//	
+//	[pipeline setHoldDate:distantFuture forOperationWithUUID:opUUID context:ctx];
+//	[pipeline setStatusAsPendingForOperationWithUUID:opUUID];
+//	
+//	__weak ZeroDarkCloud *zdc = owner;
+//	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+//		
+//		ZDCOutgoingMessage *message = [transaction objectForKey:messageID inCollection:kZDCCollection_Messages];
+//		if (message)
+//		{
+//			message = [message copy];
+//			NSUInteger changeCount =
+//			  [zdc.cryptoTools fixMissingKeysForShareList: message.shareList
+//			                                encryptionKey: message.encryptionKey
+//			                                  transaction: transaction];
+//			
+//			if (changeCount > 0) {
+//				[transaction setObject:message forKey:message.uuid inCollection:kZDCCollection_Messages];
+//			}
+//		}
+//		
+//	} completionQueue:concurrentQueue completionBlock:^{
+//		
+//		[pipeline setHoldDate:nil forOperationWithUUID:opUUID context:ctx];
+//	}];
 }
 
 - (void)fetchMissingUsers:(NSArray<NSString*> *)missingUserIDs forOperation:(ZDCCloudOperation *)operation

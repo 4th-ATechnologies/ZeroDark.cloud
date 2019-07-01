@@ -58,7 +58,7 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Node Management
+#pragma mark Messaging
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -66,7 +66,23 @@
  * Or view the reference docs online:
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
-- (BOOL)sendMessage:(ZDCOutgoingMessage *)message error:(NSError *_Nullable *_Nullable)outError
+- (BOOL)sendMessage:(ZDCNode *)message
+                 to:(NSArray<NSString*> *)userIDs
+              error:(NSError *_Nullable *_Nullable)outError
+{
+	// Todo...
+	
+	return NO;
+}
+
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (BOOL)sendSignal:(ZDCNode *)signal
+                to:(ZDCUser *)recipient
+             error:(NSError *_Nullable *_Nullable)outError
 {
 	DDLogAutoTrace();
 	
@@ -80,10 +96,19 @@
 	}
 	YapDatabaseReadWriteTransaction *rwTransaction = (YapDatabaseReadWriteTransaction *)databaseTransaction;
 	
-	if (message == nil || message.senderUserID == nil || message.receiverUserID == nil)
+	if (signal == nil)
 	{
 		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
-		NSString *desc = @"Invalid parameter: the given message is invalid";
+		NSString *desc = @"Invalid parameter: the given signal is nil";
+		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
+		
+		if (outError) *outError = error;
+		return NO;
+	}
+	if (recipient == nil)
+	{
+		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
+		NSString *desc = @"Invalid parameter: the given recipient is nil";
 		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
 		
 		if (outError) *outError = error;
@@ -93,52 +118,48 @@
 	NSString *localUserID = [self localUserID];
 	NSString *zAppID = [self zAppID];
 	
-	if (![message.senderUserID isEqualToString:localUserID])
+	if (![signal.localUserID isEqualToString:localUserID])
 	{
 		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
-		NSString *desc = @"Invalid parameter: message.senderUserID != ZDCCloud.localUserID";
+		NSString *desc = @"Invalid parameter: signal.localUserID != ZDCCloud.localUserID";
 		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
 		
 		if (outError) *outError = error;
 		return NO;
 	}
 	
-	ZDCUser *receiver = [databaseTransaction objectForKey:message.receiverUserID inCollection:kZDCCollection_Users];
-	
-	if (receiver == nil)
-	{
-		ZDCCloudErrorCode code = ZDCCloudErrorCode_MissingReceiver;
-		NSString *desc = @"Invalid parameter: message.receiverUserID => No matching ZDCUser in database";
-		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
-		
-		if (outError) *outError = error;
-		return NO;
+	if (signal.isImmutable) {
+		signal = [signal copy];
 	}
 	
-	[rwTransaction setObject:message forKey:message.uuid inCollection:kZDCCollection_Messages];
+	signal.parentID = nil;
+	signal.name = [ZDCNode randomCloudName];
+	signal.pendingRecipients = [NSSet setWithObject:recipient.uuid];
+	
+	[rwTransaction setObject:signal forKey:signal.uuid inCollection:kZDCCollection_Signals];
 	
 	ZDCCloudPath *cloudPath =
 	  [[ZDCCloudPath alloc] initWithAppPrefix: zAppID
-	                                dirPrefix: kZDCDirPrefix_Msgs
-	                                 fileName: message.uuid];
+	                                dirPrefix: kZDCDirPrefix_Inbox
+	                                 fileName: signal.uuid];
 	
 	ZDCCloudLocator *cloudLocator =
-	  [[ZDCCloudLocator alloc] initWithRegion: receiver.aws_region
-	                                   bucket: receiver.aws_bucket
+	  [[ZDCCloudLocator alloc] initWithRegion: recipient.aws_region
+	                                   bucket: recipient.aws_bucket
 	                                cloudPath: cloudPath];
 	
 	ZDCCloudOperation *op_rcrd =
 	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
 	                                          zAppID: zAppID
-	                                         putType: ZDCCloudOperationPutType_Message_Rcrd];
+	                                         putType: ZDCCloudOperationPutType_Node_Rcrd];
 	
 	ZDCCloudOperation *op_data =
 	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
 	                                          zAppID: zAppID
-	                                         putType: ZDCCloudOperationPutType_Message_Data];
+	                                         putType: ZDCCloudOperationPutType_Node_Data];
 	
-	op_rcrd.messageID = message.uuid;
-	op_data.messageID = message.uuid;
+	op_rcrd.nodeID = signal.uuid;
+	op_data.nodeID = signal.uuid;
 	
 	op_rcrd.cloudLocator = [cloudLocator copyWithFileNameExt:kZDCCloudFileExtension_Rcrd];
 	op_data.cloudLocator = [cloudLocator copyWithFileNameExt:kZDCCloudFileExtension_Data];
@@ -1767,16 +1788,6 @@
 					
 					return NO;
 				}
-				else if (oldOp.putType == ZDCCloudOperationPutType_Message_Rcrd ||
-				         oldOp.putType == ZDCCloudOperationPutType_Message_Data )
-				{
-					//   new.put.rcrd || new.put.data
-					// + old.put.msgRcrd || old.put.msgData
-					// ------------------------------
-					// => NO
-					
-					return NO;
-				}
 			}
 			else if (oldOp.type == ZDCCloudOperationType_Move ||
 			         oldOp.type == ZDCCloudOperationType_CopyLeaf)
@@ -1812,74 +1823,6 @@
 				//   new.put.rcrd || new.put.data
 				// + old.avatar
 				// ------------------------------
-				// => NO
-				
-				return NO;
-			}
-		}
-		else if (newOp.putType == ZDCCloudOperationPutType_Message_Rcrd ||
-		         newOp.putType == ZDCCloudOperationPutType_Message_Data)
-		{
-			if (oldOp.type == ZDCCloudOperationType_Put)
-			{
-				if (oldOp.putType == ZDCCloudOperationPutType_Message_Rcrd ||
-				    oldOp.putType == ZDCCloudOperationPutType_Message_Data)
-				{
-					//   new.put.msgRcrd || new.put.msgData
-					// + old.put.msgRcrd || old.put.msgData
-					// ---------------------------------------
-					// => same.user
-					
-					if ((newOp.cloudLocator.region == oldOp.cloudLocator.region) &&
-					    [newOp.cloudLocator.bucket isEqual:oldOp.cloudLocator.bucket]) return YES;
-					
-					return NO;
-				}
-				else if (oldOp.putType == ZDCCloudOperationPutType_Node_Rcrd ||
-				         oldOp.putType == ZDCCloudOperationPutType_Node_Data  )
-				{
-					//   new.put.msgLocal || new.put.msgRemote
-					// + old.put.rcrd || old.put.data
-					// ---------------
-					// => NO
-					
-					return NO;
-				}
-			}
-			else if (oldOp.type == ZDCCloudOperationType_Move ||
-			         oldOp.type == ZDCCloudOperationType_CopyLeaf)
-			{
-				//   new.put.msgLocal || new.put.msgRemote
-				// + old.move || old.copyLeaf
-				// -----------------
-				// => same.src || same.dst
-				
-				if ([newOp.cloudLocator isEqualToCloudLocator: oldOp.cloudLocator
-				                                   components: ZDCCloudPathComponents_All_WithoutExt]) return YES;
-				
-				if ([newOp.cloudLocator isEqualToCloudLocator: oldOp.dstCloudLocator
-				                                   components: ZDCCloudPathComponents_All_WithoutExt]) return YES;
-				
-				return NO;
-			}
-			else if (oldOp.type == ZDCCloudOperationType_DeleteLeaf ||
-			         oldOp.type == ZDCCloudOperationType_DeleteNode)
-			{
-				//   new.put.msgLocal || new.put.msgRemote
-				// + old.deleteLeaf || old.deleteNode
-				// -----------------
-				// => same.src
-				
-				if ([newOp.cloudLocator isEqualToCloudLocator: oldOp.cloudLocator
-				                                   components: ZDCCloudPathComponents_All_WithoutExt]) return YES;
-				
-				return NO;
-			}
-			else if (oldOp.type == ZDCCloudOperationType_Avatar)
-			{
-				//   new.put.msgLocal || new.put.msgRemote
-				// + old.avatar
-				// -----------------
 				// => NO
 				
 				return NO;
@@ -2052,13 +1995,6 @@
 				case ZDCCloudOperationPutType_Pointer:
 				{
 					NSAssert(NO, @"Implement this section when you start implementing pointers...");
-					break;
-				}
-				case ZDCCloudOperationPutType_Message_Rcrd:
-				case ZDCCloudOperationPutType_Message_Data:
-				{
-					NSAssert(op.messageID != nil, @"messageID is nil !");
-					NSAssert(op.cloudLocator != nil, @"cloudLocator is nil !");
 					break;
 				}
 				default:
