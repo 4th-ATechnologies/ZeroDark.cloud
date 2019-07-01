@@ -10,6 +10,7 @@
 #import <ZDCSyncableObjC/ZDCSyncableObjC.h>
 
 #import "ZDCCloudDataInfo.h"
+#import "ZDCNodeAnchor.h"
 #import "ZDCShareList.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -190,9 +191,7 @@ NS_ASSUME_NONNULL_BEGIN
  * If the node is located in a different bucket (not the localUserID's bucket),
  * then the ownerID property will be set to reference the owner.
 **/
-@property (nonatomic, copy, readonly, nullable) NSString *ownerID;
-@property (nonatomic, copy, readonly, nullable) NSString *ownerAnchor_appID;
-@property (nonatomic, copy, readonly, nullable) NSString *ownerAnchor_dirPrefix;
+@property (nonatomic, copy, readonly, nullable) ZDCNodeAnchor *anchor;
 
 /**
  * If the node is a pointer, specifies the ZDCNode.uuid that it points to.

@@ -629,6 +629,10 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	///
 	func data(for message: ZDCOutgoingMessage, transaction: YapDatabaseReadTransaction) -> ZDCData? {
 		
+	//	var dict = [String: String]()
+	//	dict["msg"] = "I'd like to invite you to collaborate."
+	//	dict["listID"] = "something needs to go here..."
+		
 		return nil
 	}
 	

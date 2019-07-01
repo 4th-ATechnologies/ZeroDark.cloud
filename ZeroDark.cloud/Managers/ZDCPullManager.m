@@ -2682,7 +2682,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		
 		ZDCNode *anchorNode = [[ZDCNodeManager sharedInstance] anchorNodeForNode:node transaction:transaction];
 		
-		NSString *appPrefix = anchorNode.ownerAnchor_appID;
+		NSString *appPrefix = anchorNode.anchor.zAppID;
 		if (!appPrefix && [anchorNode isKindOfClass:[ZDCContainerNode class]]) {
 			appPrefix = [(ZDCContainerNode *)anchorNode zAppID];
 		}

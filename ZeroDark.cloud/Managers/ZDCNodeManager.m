@@ -123,7 +123,7 @@ static ZDCNodeManager *sharedInstance = nil;
 	ZDCNode *currentNode = node;
 	while (currentNode)
 	{
-		if (currentNode.ownerID || currentNode.parentID == nil)
+		if (currentNode.anchor || currentNode.parentID == nil)
 		{
 			anchorNode = currentNode;
 			break;
@@ -145,8 +145,8 @@ static ZDCNodeManager *sharedInstance = nil;
 {
 	ZDCNode *anchorNode = [self anchorNodeForNode:node transaction:transaction];
 	
-	if (anchorNode.ownerID)
-		return anchorNode.ownerID;
+	if (anchorNode.anchor)
+		return anchorNode.anchor.userID;
 	else
 		return anchorNode.localUserID;
 }

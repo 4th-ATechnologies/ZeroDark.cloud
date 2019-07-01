@@ -36,9 +36,7 @@ static NSString *const k_lastModified_rcrd     = @"lastModified_rcrd";
 static NSString *const k_lastModified_data     = @"lastModified_data";
 static NSString *const k_cloudDataInfo         = @"cloudDataInfo";
 static NSString *const k_explicitCloudName     = @"explicitCloudName";
-static NSString *const k_ownerID               = @"ownerID";
-static NSString *const k_ownerAnchor_appID     = @"ownerAnchor_appID";
-static NSString *const k_ownerAnchor_dirPrefix = @"ownerAnchor_dirPrefix";
+static NSString *const k_anchor                = @"anchor";
 static NSString *const k_pointeeID             = @"pointeeID";
 
 
@@ -87,9 +85,7 @@ static NSString *const k_pointeeID             = @"pointeeID";
 @synthesize lastModified_data = lastModified_data;
 @synthesize cloudDataInfo = cloudDataInfo;
 @synthesize explicitCloudName = explicitCloudName;
-@synthesize ownerID = ownerID;
-@synthesize ownerAnchor_appID = ownerAnchor_appID;
-@synthesize ownerAnchor_dirPrefix = ownerAnchor_dirPrefix;
+@synthesize anchor = anchor;
 @synthesize pointeeID = pointeeID;
 
 - (void)setDirSalt:(NSData *)newDirSalt
@@ -161,17 +157,15 @@ static NSString *const k_pointeeID             = @"pointeeID";
 		dirSalt       = [decoder decodeObjectForKey:k_dirSalt];
 		dirPrefix     = [decoder decodeObjectForKey:k_dirPrefix];
 		
-		cloudID               = [decoder decodeObjectForKey:k_cloudID];
-		eTag_rcrd             = [decoder decodeObjectForKey:k_eTag_rcrd];
-		eTag_data             = [decoder decodeObjectForKey:k_eTag_data];
-		lastModified_rcrd     = [decoder decodeObjectForKey:k_lastModified_rcrd];
-		lastModified_data     = [decoder decodeObjectForKey:k_lastModified_data];
-		cloudDataInfo         = [decoder decodeObjectForKey:k_cloudDataInfo];
-		explicitCloudName     = [decoder decodeObjectForKey:k_explicitCloudName];
-		ownerID               = [decoder decodeObjectForKey:k_ownerID];
-		ownerAnchor_appID     = [decoder decodeObjectForKey:k_ownerAnchor_appID];
-		ownerAnchor_dirPrefix = [decoder decodeObjectForKey:k_ownerAnchor_dirPrefix];
-		pointeeID             = [decoder decodeObjectForKey:k_pointeeID];
+		cloudID           = [decoder decodeObjectForKey:k_cloudID];
+		eTag_rcrd         = [decoder decodeObjectForKey:k_eTag_rcrd];
+		eTag_data         = [decoder decodeObjectForKey:k_eTag_data];
+		lastModified_rcrd = [decoder decodeObjectForKey:k_lastModified_rcrd];
+		lastModified_data = [decoder decodeObjectForKey:k_lastModified_data];
+		cloudDataInfo     = [decoder decodeObjectForKey:k_cloudDataInfo];
+		explicitCloudName = [decoder decodeObjectForKey:k_explicitCloudName];
+		anchor            = [decoder decodeObjectForKey:k_anchor];
+		pointeeID         = [decoder decodeObjectForKey:k_pointeeID];
 		
 		if (shareList == nil) {
 			shareList = [[ZDCShareList alloc] init];
@@ -197,17 +191,15 @@ static NSString *const k_pointeeID             = @"pointeeID";
 	[coder encodeObject:dirSalt       forKey:k_dirSalt];
 	[coder encodeObject:dirPrefix     forKey:k_dirPrefix];
 	
-	[coder encodeObject:cloudID               forKey:k_cloudID];
-	[coder encodeObject:eTag_rcrd             forKey:k_eTag_rcrd];
-	[coder encodeObject:eTag_data             forKey:k_eTag_data];
-	[coder encodeObject:lastModified_rcrd     forKey:k_lastModified_rcrd];
-	[coder encodeObject:lastModified_data     forKey:k_lastModified_data];
-	[coder encodeObject:cloudDataInfo         forKey:k_cloudDataInfo];
-	[coder encodeObject:explicitCloudName     forKey:k_explicitCloudName];
-	[coder encodeObject:ownerID               forKey:k_ownerID];
-	[coder encodeObject:ownerAnchor_appID     forKey:k_ownerAnchor_appID];
-	[coder encodeObject:ownerAnchor_dirPrefix forKey:k_ownerAnchor_dirPrefix];
-	[coder encodeObject:pointeeID             forKey:k_pointeeID];
+	[coder encodeObject:cloudID           forKey:k_cloudID];
+	[coder encodeObject:eTag_rcrd         forKey:k_eTag_rcrd];
+	[coder encodeObject:eTag_data         forKey:k_eTag_data];
+	[coder encodeObject:lastModified_rcrd forKey:k_lastModified_rcrd];
+	[coder encodeObject:lastModified_data forKey:k_lastModified_data];
+	[coder encodeObject:cloudDataInfo     forKey:k_cloudDataInfo];
+	[coder encodeObject:explicitCloudName forKey:k_explicitCloudName];
+	[coder encodeObject:anchor            forKey:k_anchor];
+	[coder encodeObject:pointeeID         forKey:k_pointeeID];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -229,17 +221,15 @@ static NSString *const k_pointeeID             = @"pointeeID";
 	copy->dirSalt       = dirSalt;
 	copy->dirPrefix     = dirPrefix;
 	
-	copy->cloudID               = cloudID;
-	copy->eTag_rcrd             = eTag_rcrd;
-	copy->eTag_data             = eTag_data;
-	copy->lastModified_rcrd     = lastModified_rcrd;
-	copy->lastModified_data     = lastModified_data;
-	copy->cloudDataInfo         = [cloudDataInfo copy];
-	copy->explicitCloudName     = explicitCloudName;
-	copy->ownerID               = ownerID;
-	copy->ownerAnchor_appID     = ownerAnchor_appID;
-	copy->ownerAnchor_dirPrefix = ownerAnchor_dirPrefix;
-	copy->pointeeID             = pointeeID;
+	copy->cloudID           = cloudID;
+	copy->eTag_rcrd         = eTag_rcrd;
+	copy->eTag_data         = eTag_data;
+	copy->lastModified_rcrd = lastModified_rcrd;
+	copy->lastModified_data = lastModified_data;
+	copy->cloudDataInfo     = [cloudDataInfo copy];
+	copy->explicitCloudName = explicitCloudName;
+	copy->anchor            = [anchor copy];
+	copy->pointeeID         = pointeeID;
 	
 	return copy;
 }

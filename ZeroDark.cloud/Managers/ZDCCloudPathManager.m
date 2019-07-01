@@ -86,7 +86,7 @@ static ZDCCloudPathManager *sharedInstance = nil;
 {
 	ZDCNode *anchorNode = [[ZDCNodeManager sharedInstance] anchorNodeForNode:node transaction:transaction];
 	
-	NSString *appID = node.ownerAnchor_appID;
+	NSString *appID = node.anchor.zAppID;
 	if (!appID && [anchorNode isKindOfClass:[ZDCContainerNode class]]) {
 		appID = [(ZDCContainerNode *)anchorNode zAppID];
 	}
