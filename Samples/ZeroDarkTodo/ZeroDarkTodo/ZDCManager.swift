@@ -627,7 +627,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	/// ZeroDark is asking us to supply the serialized data for the message.
 	/// This is the data that will get uploaded to the cloud (after ZeroDark encrypts it).
 	///
-	func data(for message: ZDCOutgoingMessage, transaction: YapDatabaseReadTransaction) -> ZDCData? {
+	func data(forMessage message: ZDCNode, transaction: YapDatabaseReadTransaction) -> ZDCData? {
 		
 	//	var dict = [String: String]()
 	//	dict["msg"] = "I'd like to invite you to collaborate."
@@ -636,7 +636,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		return nil
 	}
 	
-	func didSend(_ message: ZDCOutgoingMessage, transaction: YapDatabaseReadWriteTransaction) {
+	func didSendMessage(_ message: ZDCNode, transaction: YapDatabaseReadWriteTransaction) {
 		
 		// Todo...
 	}
@@ -1484,7 +1484,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				
 				return
 			}
-			
+			/*
 			if var node = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List) {
 				
 				node = node.copy() as! ZDCNode
@@ -1511,6 +1511,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					return // from transaction
 				}
 			}
+			*/
 			
 			// Modifying the node indirectly modifies the List.
 			// And there are various components of our UI that should update in response to this change.
@@ -1527,15 +1528,40 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			for addedUserID in newUsers {
 				
-				let message = ZDCOutgoingMessage.init(sender: localUserID, receiver: addedUserID)
+				// Test sending a signal
 				
+				if let user = transaction.object(forKey: addedUserID, inCollection: kZDCCollection_Users) as? ZDCUser {
+					
+					let signal = ZDCNode(localUserID: localUserID)
+					do {
+						try cloudTransaction.sendSignal(signal, to: user)
+					}
+					catch {
+						print("Error sending message: \(error)")
+					}
+				}
+			}
+			
+		/*
+			if newUsers.count > 0 {
+				
+				var addedUsers = [ZDCUser]()
+				for addedUserID in newUsers {
+			
+					if let user = transaction.object(forKey: addedUserID, inCollection: kZDCCollection_Users) as? ZDCUser {
+						addedUsers.append(user)
+					}
+				}
+			
+				let message = ZDCNode(localUserID: localUserID)
 				do {
-					try cloudTransaction.send(message)
+					try cloudTransaction.sendMessage(message, to: addedUsers)
 				}
 				catch {
 					print("Error sending message: \(error)")
 				}
 			}
+		*/
 		})
 	}
 	

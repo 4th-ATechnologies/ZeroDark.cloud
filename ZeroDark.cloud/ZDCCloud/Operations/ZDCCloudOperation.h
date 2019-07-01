@@ -107,7 +107,8 @@ typedef NS_OPTIONS(NSUInteger, ZDCDeleteNodeOptions) {
 	 *
 	 * This option specifies that you want outdated nodes to also be deleted.
 	 * If this flag is NOT set, then outdated nodes will NOT be deleted.
-	 * And, as such, the server will not delete any nodes in the hierarchy between the outdated node & the target node.
+	 * And, as such, the server will not delete any nodes in the hierarchy between
+	 * the outdated node & the target node.
 	 */
 	ZDCDeleteOutdatedNodes = 1 << 0,
 	
@@ -120,7 +121,8 @@ typedef NS_OPTIONS(NSUInteger, ZDCDeleteNodeOptions) {
 	 *
 	 * This option specifies that you want unknown nodes to also be deleted.
 	 * If this flag is NOT set, then unknown nodes will NOT be deleted.
-	 * And, as such, the server will not delete any nodes in the hierarchy between the unknown node & the target node.
+	 * And, as such, the server will not delete any nodes in the hierarchy between
+	 * the unknown node & the target node.
 	 */
 	ZDCDeleteUnknownNodes  = 1 << 1
 };

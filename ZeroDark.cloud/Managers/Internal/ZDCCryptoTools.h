@@ -91,41 +91,6 @@ NS_ASSUME_NONNULL_BEGIN
                                 error:(NSError *_Nullable *_Nonnull)outError;
 
 /**
- * Creates the RCRD file content for the given message.
- *
- * @param message
- *   The message to generate the RCRD for.
- *
- * @param transaction
- *   A database transaction - used to read from the database in atomic fashion.
- *
- * @param outMissingKeys
- *   If there are 1 ore more ZDCShareItem's with an empty key,
- *   and there's a ZDCPublicKey that can be used to fill in the key,
- *   then this parameter will provide the list of keys that are missing (and required).
- *   You'll need to use the `-fixMissingKeysForNode::` method to fix the problem.
- *
- * @param outMissingUserIDs
- *   If there are 1 or more user's for which we require their publicKey,
- *   then this parameter will provide the list of userID's that are missing (and required).
- *   It's then the responsibility of the push manager to delay the upload operation,
- *   and use the RemoteUserManager to request a download for each user.
- *
- * @param outError
- *   In case something goes wrong.
- *
- * @return A serialized JSON file which contains the RCRD file for the cloud.
- *         All the sensitive data is encrypted with the node.encryptionKey.
- *         And the node.encryptionKey has been wrapped using the publicKey's of those with read-access.
- */
-- (nullable NSData *)cloudRcrdForMessage:(ZDCNode *)message
-                             transaction:(YapDatabaseReadTransaction *)transaction
-                             missingKeys:(NSArray<NSString*> *_Nullable *_Nonnull)outMissingKeys
-                          missingUserIDs:(NSArray<NSString*> *_Nullable *_Nonnull)outMissingUserIDs
-                        missingServerIDs:(NSArray<NSString*> *_Nullable *_Nonnull)outMissingServerIDs
-                                   error:(NSError *_Nullable *_Nonnull)outError;
-
-/**
  * If `cloudRcrdForNode:` or `cloudRcrdForMessage:` returns a non-empty list of `missingKeys`,
  * then you should call this method to fix it.
  *

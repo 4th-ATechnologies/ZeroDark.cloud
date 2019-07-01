@@ -303,10 +303,9 @@ done:
 	//   This section is encrypted, and must be decrypted in order to be read.
 	//   In order to decrypt it, you'll need the node's encryptionKey.
 	//   Every node has a different encryptionKey (randomly generated).
-	//   Where is the encryptionKey?
-	//   Well it's also encrypted, and stored in the keys section.
+	//   Where is the encryptionKey? It's also encrypted, and stored in the keys section.
 	//
-	//   If we decrypt this section, we'll find the node's cleartextname (i.e. ZDCNode.name).
+	//   If we decrypt the metadata section, we'll find the node's cleartextname (i.e. ZDCNode.name).
 	//   This is because the actual filename (when stored in the cloud)
 	//   is a hashed version of the cleartext name (with salt that comes from the parent node).
 	//   For example:
@@ -349,14 +348,6 @@ done:
 	NSMutableDictionary *dict = nil;
 	NSData *result = nil;
 	
-	ZDCLocalUser *localUser = nil;
-	ZDCPublicKey *localPrivKey = nil;
-	
-	// Fetch required data
-	
-	localUser = [transaction objectForKey:node.localUserID inCollection:kZDCCollection_Users];
-	localPrivKey = [transaction objectForKey:localUser.publicKeyID inCollection:kZDCCollection_PublicKeys];
-	
 	// Sanity checks
 	
 	if (node == nil)
@@ -375,22 +366,12 @@ done:
 		goto done;
 	}
 	
-	if (!localUser || ![localUser isKindOfClass:[ZDCLocalUser class]])
-	{
-		error = [self errorWithDescription:@"Missing localUser for node."];
-		goto done;
-	}
-	if (localUser.publicKeyID == nil)
-	{
-		error = [self errorWithDescription:@"Missing publicKeyID for localUser."];
-		goto done;
-	}
+	// Is this a message ?
 	
-	if (localPrivKey == nil)
-	{
-		error = [self errorWithDescription:@"Missing privateKey for localUser."];
-		goto done;
-	}
+	BOOL isMessage =
+	    (node.parentID == nil)
+	 || [node.parentID hasSuffix:NSStringFromTreesystemContainer(ZDCTreesystemContainer_Inbox)]
+	 || [node.parentID hasSuffix:NSStringFromTreesystemContainer(ZDCTreesystemContainer_Outbox)];
 	
 	// Prepare JSON dictionary
 	
@@ -407,7 +388,7 @@ done:
 	}
 	
 	// Add children section
-	if (node.dirPrefix)
+	if (!isMessage && node.dirPrefix)
 	{
 		dict[kZDCCloudRcrd_Children] = @{
 			@"": @{
@@ -505,6 +486,14 @@ done:
 	if ((missingKeys.count == 0) && (missingUserIDs.count == 0) && (missingServerIDs.count == 0))
 	{
 		// Add meta section
+		if (isMessage)
+		{
+			// Messages don't have metadata section.
+			// But the server requires either a data or metadata section.
+			
+			dict[kZDCCloudRcrd_Meta] = @"";
+		}
+		else
 		{
 			NSMutableDictionary *dict_meta = [NSMutableDictionary dictionaryWithCapacity:4];
 	
@@ -547,181 +536,6 @@ done:
 			goto done;
 		}
 	
-		result = [NSJSONSerialization dataWithJSONObject:dict options:0 error:&error];
-	}
-	
-done:
-	
-	*outMissingKeys = missingKeys;
-	*outMissingUserIDs = missingUserIDs;
-	*outMissingServerIDs = missingServerIDs;
-	*outError = error;
-	return result;
-}
-
-/**
- * See header file for description.
- */
-- (nullable NSData *)cloudRcrdForMessage:(ZDCNode *)message
-                             transaction:(YapDatabaseReadTransaction *)transaction
-                             missingKeys:(NSArray<NSString*> *_Nullable *_Nonnull)outMissingKeys
-                          missingUserIDs:(NSArray<NSString*> *_Nullable *_Nonnull)outMissingUserIDs
-                        missingServerIDs:(NSArray<NSString*> *_Nullable *_Nonnull)outMissingServerIDs
-                                   error:(NSError **)outError
-{
-	NSParameterAssert(message != nil);
-	NSParameterAssert(transaction != nil);
-	NSParameterAssert(outMissingKeys != nil);
-	NSParameterAssert(outMissingUserIDs != nil);
-	NSParameterAssert(outMissingServerIDs != nil);
-	NSParameterAssert(outError != nil);
-	
-	__block NSMutableArray<NSString*> *missingKeys = nil;
-	__block NSMutableArray<NSString*> *missingUserIDs = nil;
-	__block NSMutableArray<NSString*> *missingServerIDs = nil;
-	__block NSError *error = nil;
-	
-	NSMutableDictionary *dict = nil;
-	NSData *result = nil;
-	
-	// Prepare JSON dictionary
-	
-	/**
-	 * The RCRD file looks like this:
-	 *
-	 * @{ "version": 3,
-	 *    "fileID": <random string>
-	 *    "keys": {
-	 *      "UID:<localUserID": {
-	 *        "perms": "...",
-	 *        "key": <encrypted symmetricKey>
-	 *      },
-	 *      "UID:<remoteUserID>": {
-	 *        "perms": "...",
-	 *        "key": <encrypted symmetricKey>
-	 *      }
-	 *    }
-	 *    "meta": ""
-	 * }
-	 **/
-	
-	dict = [NSMutableDictionary dictionaryWithCapacity:4];
-	dict[kZDCCloudRcrd_Version] = @(kZDCCloudRcrdCurrentVersion);
-	
-	// Add keys section
-	{
-		ZDCShareList *shareList = message.shareList;
-		NSMutableDictionary *dict_keys = [NSMutableDictionary dictionaryWithCapacity:shareList.count];
-		
-		[shareList enumerateListWithBlock:^(NSString *key, ZDCShareItem *shareItem, BOOL *stop) {
-			
-			if (shareItem.key.length > 0)
-			{
-				// We have everything we need already encoded for us.
-				//
-				// That is, shareItem.key contains a wrapped version of the node.encryptionKey.
-				// So we can simply add it to the JSON.
-				
-				dict_keys[key] = shareItem.rawDictionary;
-				return; // from block; continue;
-			}
-			if (!shareItem.canAddKey || ![shareItem hasPermission:ZDCSharePermission_Read])
-			{
-				// Doesn't need a key, or we haven't been granted permission to add one.
-				// So we're using what we've got.
-				
-				dict_keys[key] = shareItem.rawDictionary;
-				return; // from block; continue;
-			}
-			
-			if ([ZDCShareList isUserKey:key])
-			{
-				NSString *userID = [ZDCShareList userIDFromKey:key];
-				
-				ZDCUser *user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
-				if (user.accountDeleted)
-				{
-					return; // from block; continue;
-				}
-				
-				ZDCPublicKey *pubKey =
-				  [transaction objectForKey: user.publicKeyID
-				               inCollection: kZDCCollection_PublicKeys];
-				
-				if (pubKey)
-				{
-					// Missing (wrapped) node.encryptionKey for user.
-					//
-					// This means we need to update the node.shareList.shareItem in the database.
-					
-					if (missingKeys == nil) {
-						missingKeys = [NSMutableArray array];
-					}
-					
-					[missingKeys addObject:key];
-				}
-				else
-				{
-					// Missing publicKey for user.
-					// And the user's account appears to be valid.
-					// And we don't have a pre-wrapped version of the node's encryptionKey.
-					//
-					// This means we need to fetch the user's publicKey before we can upload this node.
-					
-					if (missingUserIDs == nil) {
-						missingUserIDs = [NSMutableArray array];
-					}
-				
-					[missingUserIDs addObject:userID];
-				}
-			}
-			else if ([ZDCShareList isServerKey:key])
-			{
-			//	NSString *serverID = [ZDCShareList serverIDFromKey:key];
-				
-			//	ZDCServer *server = [transaction objectForKey:serverID inCollection:kZDCCollection_Servers];
-			//	if (server.accountDeleted)
-			//	{
-			//		return; // from block; continue;
-			//	}
-				
-				// Future work:
-				// - Need server API's for storing/retreiving server info
-				// - downloading a server's publicKey based on serverID
-			}
-		}];
-		
-		dict[kZDCCloudRcrd_Keys] = dict_keys;
-	}
-	
-	if ((missingKeys.count == 0) && (missingUserIDs.count == 0) && (missingServerIDs.count == 0))
-	{
-		// Add meta section
-		{
-			// Messages don't have metadata section.
-			// But the server requires either a data or metadata section.
-			
-			dict[kZDCCloudRcrd_Meta] = @"";
-		}
-		
-		// Add burnDate
-		
-		if (message.burnDate)
-		{
-			NSTimeInterval secondsSinceEpoch = [message.burnDate timeIntervalSince1970]; // ObjC format
-			uint64_t millisSinceEpoch = (uint64_t)(secondsSinceEpoch * 1000);         // Javascript format
-			
-			dict[kZDCCloudRcrd_BurnDate] = @(millisSinceEpoch);
-		}
-		
-		// Serialize RCRD
-		
-		if (![NSJSONSerialization isValidJSONObject:dict])
-		{
-			error = [self errorWithDescription:@"NSJSONSerialization could not serialize root dictionary."];
-			goto done;
-		}
-		
 		result = [NSJSONSerialization dataWithJSONObject:dict options:0 error:&error];
 	}
 	

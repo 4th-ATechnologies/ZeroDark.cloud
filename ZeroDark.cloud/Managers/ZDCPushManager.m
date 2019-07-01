@@ -1417,13 +1417,28 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		[self.roConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 			
 			node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
-			
-			rcrdData = [cryptoTools cloudRcrdForNode: node
-			                             transaction: transaction
-			                             missingKeys: &missingKeys
-			                          missingUserIDs: &missingUserIDs
-			                        missingServerIDs: &missingServerIDs
-			                                   error: &error];
+			if (node)
+			{
+				// Questions:
+				// - How can we detect if this is a "message" ?
+				//   - If parent container is "outbox" or "inbox"
+				//
+				// - What differences does it make if this is a message ?
+				//   - We use special permissions for "outbox"
+				//   - Maybe these special permissions should be set within ZDCCloudTransaction
+				//
+				// - So it sounds like this is the operation for the "outbox" right ?
+				//   - No
+				//   - For a message, this is the outbox item
+				//   - For a signal, this is the inbox item
+				
+				rcrdData = [cryptoTools cloudRcrdForNode: node
+				                             transaction: transaction
+				                             missingKeys: &missingKeys
+				                          missingUserIDs: &missingUserIDs
+				                        missingServerIDs: &missingServerIDs
+				                                   error: &error];
+			}
 			
 			// Snapshot current pullState.
 			// We use this during conflict resolution to determine if a pull had any effect.

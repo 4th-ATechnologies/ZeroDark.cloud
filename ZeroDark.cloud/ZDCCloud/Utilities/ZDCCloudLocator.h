@@ -48,6 +48,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy, readonly) NSString * bucket;
 
 /**
+ * Extracts the userID component from the bucket name.
+ */
+@property (nonatomic, readonly, nullable) NSString *bucketOwner;
+
+/**
  * Represents the keypath to the file within the S3 bucket.
  */
 @property (nonatomic, copy, readonly) ZDCCloudPath * cloudPath;

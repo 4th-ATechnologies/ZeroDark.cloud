@@ -18,6 +18,7 @@
 #import "ZDCNodePrivate.h"
 #import "ZDCPushManager.h"
 
+#import "NSData+S4.h"
 #import "NSError+ZeroDark.h"
 #import "NSString+ZeroDark.h"
 
@@ -67,12 +68,152 @@
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)sendMessage:(ZDCNode *)message
-                 to:(NSArray<NSString*> *)userIDs
+                 to:(NSArray<ZDCUser*> *)recipients
               error:(NSError *_Nullable *_Nullable)outError
 {
-	// Todo...
+	DDLogAutoTrace();
 	
-	return NO;
+	// Proper API usage check
+	if (![databaseTransaction isKindOfClass:[YapDatabaseReadWriteTransaction class]])
+	{
+		// Improper database API usage.
+		// All other YapDatabase extensions throw an exception when this occurs.
+		// Following recommended pattern here.
+		@throw [self requiresReadWriteTransactionException:NSStringFromSelector(_cmd)];
+	}
+	YapDatabaseReadWriteTransaction *rwTransaction = (YapDatabaseReadWriteTransaction *)databaseTransaction;
+	
+	// Sanity checks
+	
+	if (message == nil)
+	{
+		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
+		NSString *desc = @"Invalid parameter: the given message is nil";
+		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
+		
+		if (outError) *outError = error;
+		return NO;
+	}
+	
+	NSString *localUserID = [self localUserID];
+	NSString *zAppID = [self zAppID];
+	
+	if (![message.localUserID isEqualToString:localUserID])
+	{
+		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
+		NSString *desc = @"Invalid parameter: message.localUserID != ZDCCloud.localUserID";
+		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
+		
+		if (outError) *outError = error;
+		return NO;
+	}
+	
+	if ([databaseTransaction hasObjectForKey:message.uuid inCollection:kZDCCollection_Nodes])
+	{
+		ZDCCloudErrorCode code = ZDCCloudErrorCode_Conflict;
+		NSString *desc =
+		  @"The given node is already in the database."
+		  @" Did you mean to modify the existing node? If so, you must use the `modifyNode:` method.";
+		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
+		
+		if (outError) *outError = error;
+		return NO;
+	}
+	
+	if (message.isImmutable) {
+		message = [message copy];
+	}
+	
+	ZDCContainerNode *outbox = [self containerNode:ZDCTreesystemContainer_Outbox];
+	message.parentID = outbox.uuid;
+	
+	message.name = [ZDCNode randomCloudName];
+	
+	if (recipients.count > 0)
+	{
+		NSMutableSet *userIDs = [NSMutableSet setWithCapacity:recipients.count];
+		for (ZDCUser *user in recipients)
+		{
+			[userIDs addObject:user.uuid];
+		}
+		
+		message.pendingRecipients = userIDs;
+	}
+	
+	if (![message.shareList hasShareItemForUserID:localUserID])
+	{
+		// Add sender permissions
+		
+		ZDCShareItem *item = [[ZDCShareItem alloc] init];
+		[item addPermission:ZDCSharePermission_Read];
+		[item addPermission:ZDCSharePermission_Write];
+		[item addPermission:ZDCSharePermission_Share];
+		[item addPermission:ZDCSharePermission_LeafsOnly];
+		
+		[message.shareList addShareItem:item forUserID:localUserID];
+	}
+	
+	[rwTransaction setObject:message forKey:message.uuid inCollection:kZDCCollection_Nodes];
+	
+	// Create & queue operations
+	
+	ZDCCloudLocator *cloudLocator =
+	  [[ZDCCloudPathManager sharedInstance] cloudLocatorForNode: message
+	                                              fileExtension: nil
+	                                                transaction: databaseTransaction];
+	
+	ZDCCloudOperation *op_rcrd =
+	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
+	                                          zAppID: zAppID
+	                                         putType: ZDCCloudOperationPutType_Node_Rcrd];
+	
+	ZDCCloudOperation *op_data =
+	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
+	                                          zAppID: zAppID
+	                                         putType: ZDCCloudOperationPutType_Node_Data];
+	
+	op_rcrd.nodeID = message.uuid;
+	op_data.nodeID = message.uuid;
+	
+	op_rcrd.cloudLocator = [cloudLocator copyWithFileNameExt:kZDCCloudFileExtension_Rcrd];
+	op_data.cloudLocator = [cloudLocator copyWithFileNameExt:kZDCCloudFileExtension_Data];
+	
+	[op_data addDependency:op_rcrd];
+	
+	[self addOperation:op_rcrd];
+	[self addOperation:op_data];
+	
+	for (ZDCUser *recipient in recipients)
+	{
+		NSString *hashMe_str = [NSString stringWithFormat:@"%@|%@|%@", localUserID, message.name, recipient.uuid];
+		NSData *hashMe_data = [hashMe_str dataUsingEncoding:NSUTF8StringEncoding];
+		
+		NSData *hash = [hashMe_data hashWithAlgorithm:kHASH_Algorithm_SHA256 error:nil];
+		NSString *filename = [[hash zBase32String] substringToIndex:32];
+		
+		ZDCCloudOperation *op_copy =
+		  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
+		                                          zAppID: zAppID
+		                                            type: ZDCCloudOperationType_CopyLeaf];
+		
+		ZDCCloudPath *dstCloudPath =
+		  [[ZDCCloudPath alloc] initWithAppPrefix: zAppID
+		                                dirPrefix: kZDCDirPrefix_Inbox
+		                                 fileName: filename];
+		
+		ZDCCloudLocator *dstCloudLocator =
+		  [[ZDCCloudLocator alloc] initWithRegion: recipient.aws_region
+		                                   bucket: recipient.aws_bucket
+		                                cloudPath: dstCloudPath];
+		
+		op_copy.nodeID = message.uuid;
+		op_copy.cloudLocator = cloudLocator;
+		op_copy.dstCloudLocator = dstCloudLocator;
+		
+		[self addOperation:op_copy];
+	}
+	
+	return YES;
 }
 
 /**
@@ -95,6 +236,8 @@
 		@throw [self requiresReadWriteTransactionException:NSStringFromSelector(_cmd)];
 	}
 	YapDatabaseReadWriteTransaction *rwTransaction = (YapDatabaseReadWriteTransaction *)databaseTransaction;
+	
+	// Sanity checks
 	
 	if (signal == nil)
 	{
@@ -128,20 +271,62 @@
 		return NO;
 	}
 	
+	if ([databaseTransaction hasObjectForKey:signal.uuid inCollection:kZDCCollection_Nodes])
+	{
+		ZDCCloudErrorCode code = ZDCCloudErrorCode_Conflict;
+		NSString *desc =
+		  @"The given node is already in the database."
+		  @" Did you mean to modify the existing node? If so, you must use the `modifyNode:` method.";
+		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
+		
+		if (outError) *outError = error;
+		return NO;
+	}
+	
+	// Prepare signal for storage & upload
+	
 	if (signal.isImmutable) {
 		signal = [signal copy];
 	}
 	
-	signal.parentID = nil;
+	signal.parentID = nil; // outgoing message only; not a part of the treesystem
+	
 	signal.name = [ZDCNode randomCloudName];
 	signal.pendingRecipients = [NSSet setWithObject:recipient.uuid];
 	
+	if (![signal.shareList hasShareItemForUserID:localUserID])
+	{
+		// Add sender permissions
+		
+		ZDCShareItem *item = [[ZDCShareItem alloc] init];
+		[item addPermission:ZDCSharePermission_LeafsOnly];
+		[item addPermission:ZDCSharePermission_WriteOnce];
+		[item addPermission:ZDCSharePermission_BurnIfOwner];
+		
+		[signal.shareList addShareItem:item forUserID:localUserID];
+	}
+	
+	if (![signal.shareList hasShareItemForUserID:recipient.uuid])
+	{
+		// Add recipient permissions
+		
+		ZDCShareItem *item = [[ZDCShareItem alloc] init];
+		[item addPermission:ZDCSharePermission_Read];
+		[item addPermission:ZDCSharePermission_Write];
+		[item addPermission:ZDCSharePermission_Share];
+		[item addPermission:ZDCSharePermission_LeafsOnly];
+		
+		[signal.shareList addShareItem:item forUserID:recipient.uuid];
+	}
+	
 	[rwTransaction setObject:signal forKey:signal.uuid inCollection:kZDCCollection_Signals];
+	
+	// Create & queue operation
 	
 	ZDCCloudPath *cloudPath =
 	  [[ZDCCloudPath alloc] initWithAppPrefix: zAppID
 	                                dirPrefix: kZDCDirPrefix_Inbox
-	                                 fileName: signal.uuid];
+	                                 fileName: signal.name];
 	
 	ZDCCloudLocator *cloudLocator =
 	  [[ZDCCloudLocator alloc] initWithRegion: recipient.aws_region

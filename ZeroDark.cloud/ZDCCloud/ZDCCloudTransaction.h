@@ -107,8 +107,8 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  * @param message
  *   A node that represents the message to send.
  *
- * @param userIDs
- *   A list of recipients that should receive the message. (userID == ZDCUser.uuid)
+ * @param recipients
+ *   A list of recipients that should receive the message.
  *
  * @param outError
  *   Set to nil on success.
@@ -117,7 +117,7 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  * @return Returns YES on success, NO otherwise.
  */
 - (BOOL)sendMessage:(ZDCNode *)message
-                 to:(NSArray<NSString*> *)userIDs
+                 to:(NSArray<ZDCUser*> *)recipients
               error:(NSError *_Nullable *_Nullable)outError;
 
 /**
