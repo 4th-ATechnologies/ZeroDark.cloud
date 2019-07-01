@@ -160,6 +160,19 @@
  * Or view the reference docs online:
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
+- (nullable ZDCContainerNode *)containerNode:(ZDCTreesystemContainer)container
+{
+	return [[ZDCNodeManager sharedInstance] containerNodeForLocalUserID: [self localUserID]
+	                                                             zAppID: [self zAppID]
+	                                                          container: container
+	                                                        transaction: databaseTransaction];
+}
+
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ */
 - (nullable ZDCNode *)nodeWithPath:(ZDCTreesystemPath *)path
 {
 	NSString *localUserID = [self localUserID];
