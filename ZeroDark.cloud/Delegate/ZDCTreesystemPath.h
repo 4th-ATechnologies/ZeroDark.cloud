@@ -26,19 +26,13 @@ typedef NS_ENUM(NSInteger, ZDCTreesystemContainer) {
 	ZDCTreesystemContainer_Prefs,
 	
 	/**
-	 * A special container for messages, which allows users to communicate with each other.
-	 * See the [docs](https://zerodarkcloud.readthedocs.io/en/latest/advanced/tree/) for more information.
-	 */
-	ZDCTreesystemContainer_Msgs,
-	
-	/**
-	 * A special container to allow receiving files from non-ZeroDark-users.
+	 * A special container for incoming messages.
 	 * See the [docs](https://zerodarkcloud.readthedocs.io/en/latest/advanced/tree/) for more information.
 	 */
 	ZDCTreesystemContainer_Inbox,
 	
 	/**
-	 * Typically used to send messages with attachments.
+	 * A special container for outgoing messages.
 	 * See the [docs](https://zerodarkcloud.readthedocs.io/en/latest/advanced/tree/) for more information.
 	 */
 	ZDCTreesystemContainer_Outbox,

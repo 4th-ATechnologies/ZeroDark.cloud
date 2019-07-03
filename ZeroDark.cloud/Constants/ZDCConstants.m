@@ -19,7 +19,6 @@ NSString *const kZDCCollection_PublicKeys      = @"ZDCPublicKeys";
 NSString *const kZDCCollection_PullState       = @"ZDCSyncState";
 NSString *const kZDCCollection_Reminders       = @"ZDCReminders";
 NSString *const kZDCCollection_SessionStorage  = @"ZDCSessionStorage";
-NSString *const kZDCCollection_Signals         = @"ZDCSignals";
 NSString *const kZDCCollection_SymmetricKeys   = @"ZDCSymmetricKeys";
 NSString *const kZDCCollection_Tasks           = @"ZDCTasks";
 NSString *const kZDCCollection_Users           = @"ZDCUsers";
@@ -37,12 +36,15 @@ NSString *const kZDCCloudFileExtension_Data  = @"data";
 
 // Names of special local files & file extensions
 
-NSString *const kZDCDirPrefix_Home   = @"00000000000000000000000000000000";
-NSString *const kZDCDirPrefix_Msgs   = @"msgs";
-NSString *const kZDCDirPrefix_Prefs  = @"prefs";
-NSString *const kZDCDirPrefix_Inbox  = @"inbox";
-NSString *const kZDCDirPrefix_Outbox = @"outbox";
-NSString *const kZDCDirPrefix_Avatar = @"avatar";
+NSString *const kZDCDirPrefix_Home    = @"00000000000000000000000000000000";
+NSString *const kZDCDirPrefix_Prefs   = @"prefs";
+NSString *const kZDCDirPrefix_MsgsIn  = @"msgsIn";
+NSString *const kZDCDirPrefix_MsgsOut = @"msgsOut";
+NSString *const kZDCDirPrefix_Avatar  = @"avatar";
+
+NSString *const kZDCDirPrefix_Deprecated_Msgs   = @"msgs";
+NSString *const kZDCDirPrefix_Deprecated_Inbox  = @"inbox";
+NSString *const kZDCDirPrefix_Deprecated_Outbox = @"outbox";
 
 // Dictionary keys used in .rcrd files
 

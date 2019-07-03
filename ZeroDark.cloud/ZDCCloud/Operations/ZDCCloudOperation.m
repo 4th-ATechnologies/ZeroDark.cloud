@@ -324,12 +324,7 @@ static NSString *const putType_str_pointer      = @"ptr";
 		
 		if ([dependencyUUID isEqual:self.uuid])
 		{
-			// Robbie NEEDS to know where this is happening.
-			//
-			// Vinnie - screen share with me, or get me a bunch of screenshots.
-			// I need to be able to see the stack trace very clearly.
-			//
-			NSAssert(NO, @"Gotcha - you dirty filthy BUG !!!");
+			NSAssert(NO, @"This is probably a typo, which is going to lead to a hard-to-reproduce bug");
 		}
 	}
 	
@@ -351,12 +346,7 @@ static NSString *const putType_str_pointer      = @"ptr";
 	
 	if ([dependencyUUID isEqual:self.uuid])
 	{
-		// Robbie NEEDS to know where this is happening.
-		//
-		// Vinnie - screen share with me, or get me a bunch of screenshots.
-		// I need to be able to see the stack trace very clearly.
-		//
-		NSAssert(NO, @"Gotcha - you dirty filthy BUG !!!");
+		NSAssert(NO, @"This is probably a typo, which is going to lead to a hard-to-reproduce bug");
 	}
 	
 	[super addDependency:dependency];

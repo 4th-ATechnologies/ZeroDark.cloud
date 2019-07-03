@@ -2307,10 +2307,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	
 	NSArray<NSString *> *containerIDs = @[
 		[ZDCContainerNode uuidForLocalUserID:localUserID zAppID:zAppID container:ZDCTreesystemContainer_Home],
-	//	[ZDCContainerNode uuidForLocalUserID:localUserID zAppID:zAppID container:ZDCTreesystemContainer_Msgs],
+	//	[ZDCContainerNode uuidForLocalUserID:localUserID zAppID:zAppID container:ZDCTreeesystemContainer_Prefs],
 	//	[ZDCContainerNode uuidForLocalUserID:localUserID zAppID:zAppID container:ZDCTreesystemContainer_Inbox],
-	//	[ZDCContainerNode uuidForLocalUserID:localUserID zAppID:zAppID container:ZDCTreesystemContainer_Outbox],
-	//	[ZDCContainerNode uuidForLocalUserID:localUserID zAppID:zAppID container:ZDCTreeesystemContainer_Prefs]
+	//	[ZDCContainerNode uuidForLocalUserID:localUserID zAppID:zAppID container:ZDCTreesystemContainer_Outbox]
 	];
 	
 	NSMutableArray<ZDCContainerNode *> *containerNodes = [NSMutableArray arrayWithCapacity:containerIDs.count];

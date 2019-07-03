@@ -484,6 +484,7 @@
 			baseConfigurationReference = 6072BDFF6B58333B69F57DA2 /* Pods-ios-ZeroDarkTodo.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				AWS_STAGE = "@\"dev\"";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = ZeroDarkTodo/ZeroDarkTodo.entitlements;
 				CODE_SIGN_STYLE = Automatic;
@@ -507,6 +508,7 @@
 			baseConfigurationReference = 59C7356F4CA983D6A2F47F70 /* Pods-ios-ZeroDarkTodo.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				AWS_STAGE = "@\"dev\"";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = ZeroDarkTodo/ZeroDarkTodo.entitlements;
 				CODE_SIGN_STYLE = Automatic;

@@ -135,6 +135,7 @@ DEPENDENCIES:
   - ImageScrollView
   - KGHitTestingViews
   - SWRevealViewController
+  - YapDatabase/SQLCipher (from `https://github.com/yapstudios/YapDatabase.git`, commit `829aa9411ceba327b55f847ead6efd851e5e82a9`)
   - ZDCSyncable
   - ZeroDarkCloud/Swift (from `../../`)
 
@@ -154,14 +155,21 @@ SPEC REPOS:
     - TCCopyableLabel
     - UIColor-Crayola
     - XMLDictionary
-    - YapDatabase
     - ZDCSyncable
     - ZDCSyncableObjC
     - zipzap
 
 EXTERNAL SOURCES:
+  YapDatabase:
+    :commit: 829aa9411ceba327b55f847ead6efd851e5e82a9
+    :git: https://github.com/yapstudios/YapDatabase.git
   ZeroDarkCloud:
     :path: "../../"
+
+CHECKOUT OPTIONS:
+  YapDatabase:
+    :commit: 829aa9411ceba327b55f847ead6efd851e5e82a9
+    :git: https://github.com/yapstudios/YapDatabase.git
 
 SPEC CHECKSUMS:
   AFNetworking: b6f891fdfaed196b46c7a83cf209e09697b94057
@@ -184,6 +192,6 @@ SPEC CHECKSUMS:
   ZeroDarkCloud: de3e2cca8872fdf1a64f5e2e582c338f9e7a429d
   zipzap: 940162d9c9c60472c2eab341385e4214da0fdf1c
 
-PODFILE CHECKSUM: bb18cd2ac0e0b011d80da16ea82c0e4d974787a0
+PODFILE CHECKSUM: 924a901ea2fd9bb01cba10fe1702fffd63eccf34
 
-COCOAPODS: 1.7.2
+COCOAPODS: 1.7.3

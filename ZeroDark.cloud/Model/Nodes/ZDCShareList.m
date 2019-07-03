@@ -690,23 +690,21 @@ static NSString *const k_dict    = @"dict";
 			}
 			break;
 		}
-		case ZDCTreesystemContainer_Msgs:
+		case ZDCTreesystemContainer_Inbox:
 		{
-			{ // "UID:{localUserID}" : "rwsRL"
+			{ // "UID:{localUserID}" : "rwsL"
 				
 				ZDCShareItem *shareItem = [[ZDCShareItem alloc] init];
 				[shareItem addPermission:ZDCSharePermission_Read];
 				[shareItem addPermission:ZDCSharePermission_Write];
 				[shareItem addPermission:ZDCSharePermission_Share];
-				[shareItem addPermission:ZDCSharePermission_RecordsOnly];
 				[shareItem addPermission:ZDCSharePermission_LeafsOnly];
 				
 				[shareList addShareItem:shareItem forUserID:localUserID];
 			}
-			{ // "UID:*" : "RLWB"
+			{ // "UID:*" : "LWB"
 				
 				ZDCShareItem *shareItem = [[ZDCShareItem alloc] init];
-				[shareItem addPermission:ZDCSharePermission_RecordsOnly];
 				[shareItem addPermission:ZDCSharePermission_LeafsOnly];
 				[shareItem addPermission:ZDCSharePermission_WriteOnce];
 				[shareItem addPermission:ZDCSharePermission_BurnIfOwner];
@@ -715,35 +713,15 @@ static NSString *const k_dict    = @"dict";
 			}
 			break;
 		}
-		case ZDCTreesystemContainer_Inbox:
-		{
-			{ // "UID:{localUserID}" : "rws"
-				
-				ZDCShareItem *shareItem = [[ZDCShareItem alloc] init];
-				[shareItem addPermission:ZDCSharePermission_Read];
-				[shareItem addPermission:ZDCSharePermission_Write];
-				[shareItem addPermission:ZDCSharePermission_Share];
-				
-				[shareList addShareItem:shareItem forUserID:localUserID];
-			}
-			{ // "UID:anonymous" : "rW"
-				
-				ZDCShareItem *shareItem = [[ZDCShareItem alloc] init];
-				[shareItem addPermission:ZDCSharePermission_Read];
-				[shareItem addPermission:ZDCSharePermission_WriteOnce];
-				
-				[shareList addShareItem:shareItem forUserID:@"anonymous"];
-			}
-			break;
-		}
 		case ZDCTreesystemContainer_Outbox:
 		{
-			{ // "UID:{localUserID}" : "rws"
+			{ // "UID:{localUserID}" : "rwsL"
 				
 				ZDCShareItem *shareItem = [[ZDCShareItem alloc] init];
 				[shareItem addPermission:ZDCSharePermission_Read];
 				[shareItem addPermission:ZDCSharePermission_Write];
 				[shareItem addPermission:ZDCSharePermission_Share];
+				[shareItem addPermission:ZDCSharePermission_LeafsOnly];
 				
 				[shareList addShareItem:shareItem forUserID:localUserID];
 			}

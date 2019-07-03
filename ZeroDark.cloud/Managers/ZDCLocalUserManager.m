@@ -474,7 +474,6 @@
 	NSArray<NSNumber*> *containers = @[
 		@(ZDCTreesystemContainer_Home),
 		@(ZDCTreesystemContainer_Prefs),
-		@(ZDCTreesystemContainer_Msgs),
 		@(ZDCTreesystemContainer_Inbox),
 		@(ZDCTreesystemContainer_Outbox)
 	];
@@ -519,15 +518,15 @@
 - (void)deleteLocalUser:(NSString *)localUserID
             transaction:(YapDatabaseReadWriteTransaction *)transaction
 {
-    ZDCUser *user = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
-    if (!user || !user.isLocal)
-    {
-        return;
-    }
-    
-    ZDCLocalUser *localUser = (ZDCLocalUser *)user;
-    
-    // Convert localUser to remote user
+	ZDCUser *user = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
+	if (!user || !user.isLocal)
+	{
+		return;
+	}
+	
+	ZDCLocalUser *localUser = (ZDCLocalUser *)user;
+	
+	// Convert localUser to remote user
         
 	ZDCUser *remoteUser = [[ZDCUser alloc] initWithUUID:localUser.uuid];
 	[localUser copyTo:remoteUser];

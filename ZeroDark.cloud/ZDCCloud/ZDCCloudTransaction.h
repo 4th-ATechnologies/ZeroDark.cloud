@@ -282,13 +282,17 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
 /**
  * Call this method to link an object in the database to an existing node.
  *
- * The node should already exist in the database.
- * (If you just created the node, use `createNode:shouldUpload:operations:` to add it to the database.)
- * The node should not already be linked to a different collection/key tuple.
+ * Linking allows you to create a one-to-one mapping between a node, and one of your own database objects.
  *
- * @note You can link a {collection, key} tuple that doesn't yet exist in the database.
- *       However, you must add the corresponding object to the database before the
- *       transaction completes, or the linkage will be dropped.
+ * @note If you need one-to-many mappings, you can instead use the tagging feature.
+ *       See `setTag:forNodeID:withIdentifier:` for more information.
+ *
+ * The node must already exist in the database.
+ * (If you just created the node, use `createNode:error:` to add it to the database first.)
+ *
+ * You can link a {collection, key} tuple that doesn't yet exist in the database.
+ * However, you must add the corresponding object to the database before the
+ * transaction completes, or the linkage will be dropped.
  *
  * @param nodeID
  *   The node that you'd like to link. (nodeID == ZDCNode.uuid)

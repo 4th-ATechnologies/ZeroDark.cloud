@@ -275,7 +275,6 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		kZDCCollection_PullState,
 		kZDCCollection_Reminders,
 		kZDCCollection_SessionStorage,
-		kZDCCollection_Signals,
 		kZDCCollection_SymmetricKeys,
 		kZDCCollection_Tasks,
 		kZDCCollection_Users,
@@ -339,17 +338,16 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	
 	// Setup all the extensions
 	
-	[self setupHooks];
 	[self setupRelationship];
 	[self setupIndex_Nodes];
 	[self setupIndex_Users];
 	[self setupView_LocalUsers];
-	[self setupView_SplitKeys];
-	[self setupView_SplitKeys_Date];
 	[self setupView_Filesystem_Name];
 	[self setupView_Filesystem_CloudName];
 	[self setupView_Flat];
 	[self setupView_CloudDirPrefix];
+	[self setupView_SplitKeys];
+	[self setupView_SplitKeys_Date];
 	[self setupCloudExtensions];
 	[self setupActionManager];
 
@@ -382,30 +380,6 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	                                           object: database];
 	
 	return YES;
-}
-
-- (void)setupHooks
-{
-	DDLogAutoTrace();
-	
-	//
-	// HOOKS
-	//
-	
-	YapDatabaseHooks *hooks = [[YapDatabaseHooks alloc] init];
-	
-	// Do we need this anymore ?
-	
-	NSString *const extName = @"ZeroDark:hooks";
-	[database asyncRegisterExtension: hooks
-	                        withName: extName
-	                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                 completionBlock:^(BOOL ready)
-	{
-		if (!ready) {
-			DDLogError(@"Error registering \"%@\" !!!", extName);
-		}
-	}];
 }
 
 - (void)setupRelationship
@@ -483,120 +457,6 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		}
 	}];
 }
-
-
-- (void)setupView_SplitKeys
-{
-	DDLogAutoTrace();
-	
-	  //
-    // VIEW - SplitKeys for user
-    //
-    // Sorts all SplitKeys by splitNum (localized)
-    //
-	
-    YapDatabaseViewGrouping *grouping = [YapDatabaseViewGrouping withObjectBlock:
-		^NSString *(YapDatabaseReadTransaction *transaction, NSString *collection, NSString *key, id object)
-	{
-		NSAssert([object isKindOfClass:[ZDCSplitKey class]], @"Invalid class detected !");
-		__unsafe_unretained ZDCSplitKey *split = (ZDCSplitKey *)object;
-		
-		return split.localUserID;
-	}];
-	
-    YapDatabaseViewSorting *sorting = [YapDatabaseViewSorting withObjectBlock:
-		^(YapDatabaseReadTransaction *transaction, NSString *group,
-		    NSString *collection1, NSString *key1, id obj1,
-		    NSString *collection2, NSString *key2, id obj2)
-	{
-		__unsafe_unretained ZDCSplitKey *split1 = (ZDCSplitKey *)obj1;
-		__unsafe_unretained ZDCSplitKey *split2 = (ZDCSplitKey *)obj2;
-		
-		return [@(split1.splitNum) compare:	@(split2.splitNum)];
-	}];
-	
-	NSString *versionTag = @"1.0"; // <---------- change me if you modify grouping or sorting block <----------
-
-	NSSet *whitelist = [NSSet setWithObject:kZDCCollection_SplitKeys];
-	
-	YapDatabaseViewOptions *options = [[YapDatabaseViewOptions alloc] init];
-	options.allowedCollections = [[YapWhitelistBlacklist alloc] initWithWhitelist:whitelist];
-	
-	YapDatabaseAutoView *ext =
-	  [[YapDatabaseAutoView alloc] initWithGrouping: grouping
-	                                        sorting: sorting
-	                                     versionTag: versionTag
-	                                        options: options];
-	
-	NSString *const extName = Ext_View_SplitKeys;
-	[database asyncRegisterExtension: ext
-	                        withName: extName
-	                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                 completionBlock:^(BOOL ready)
-	{
-		if (!ready) {
-			DDLogError(@"Error registering \"%@\" !!!", extName);
-		}
-	}];
-
-}
-
-- (void)setupView_SplitKeys_Date
-{
-	DDLogAutoTrace();
-	
-	//
-	// VIEW - SplitKeys for user
-	//
-	// Sorts all SplitKeys by splitNum Create date
-	//
-	
-	YapDatabaseViewGrouping *grouping = [YapDatabaseViewGrouping withObjectBlock:
-													 ^NSString *(YapDatabaseReadTransaction *transaction, NSString *collection, NSString *key, id object)
-													 {
-														 NSAssert([object isKindOfClass:[ZDCSplitKey class]], @"Invalid class detected !");
-														 __unsafe_unretained ZDCSplitKey *split = (ZDCSplitKey *)object;
-														 
-														 return split.localUserID;
-													 }];
-	
-	YapDatabaseViewSorting *sorting = [YapDatabaseViewSorting withObjectBlock:
-												  ^(YapDatabaseReadTransaction *transaction, NSString *group,
-													 NSString *collection1, NSString *key1, id obj1,
-													 NSString *collection2, NSString *key2, id obj2)
-												  {
-													  __unsafe_unretained ZDCSplitKey *split1 = (ZDCSplitKey *)obj1;
-													  __unsafe_unretained ZDCSplitKey *split2 = (ZDCSplitKey *)obj2;
-													  
-													  return [ split2.creationDate compare: split1.creationDate];
-												  }];
-	
-	NSString *versionTag = @"1.1"; // <---------- change me if you modify grouping or sorting block <----------
-	
-	NSSet *whitelist = [NSSet setWithObject:kZDCCollection_SplitKeys];
-	
-	YapDatabaseViewOptions *options = [[YapDatabaseViewOptions alloc] init];
-	options.allowedCollections = [[YapWhitelistBlacklist alloc] initWithWhitelist:whitelist];
-	
-	YapDatabaseAutoView *ext =
-	[[YapDatabaseAutoView alloc] initWithGrouping: grouping
-													  sorting: sorting
-												  versionTag: versionTag
-													  options: options];
-	
-	NSString *const extName = Ext_View_SplitKeys_Date;
-	[database asyncRegisterExtension: ext
-									withName: extName
-						  completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-						  completionBlock:^(BOOL ready)
-	 {
-		 if (!ready) {
-			 DDLogError(@"Error registering \"%@\" !!!", extName);
-		 }
-	 }];
-	
-}
-
 
 - (void)setupIndex_Users
 {
@@ -733,30 +593,25 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		// Don't forget to change `version` (below) if you modify this block.
 		//
 		
-		if ([object isKindOfClass:[ZDCNode class]])
-		{
-			__unsafe_unretained ZDCNode *node = (ZDCNode *)object;
-			
-			// Sanity checks:
-			if (node.name == nil)
-			{
-				// Apple's documentation for 'localizedCaseInsensitiveCompare' (used in the sorting block) states:
-				//
-				// > [The parameter] must not be nil. If this value is nil,
-				// > the behavior is undefined and may change in future versions of OS X.
-				
-				return nil;
-			}
+		NSAssert([object isKindOfClass:[ZDCNode class]], @"Invalid class detected !");
+		__unsafe_unretained ZDCNode *node = (ZDCNode *)object;
 		
-			// All regular nodes have a parentID.
-			// Container nodes don't have a parentID.
+		// Sanity checks:
+		if (node.name == nil)
+		{
+			// Apple's documentation for 'localizedCaseInsensitiveCompare' (used in the sorting block) states:
 			//
-			return node.parentID;
+			// > [The parameter] must not be nil. If this value is nil,
+			// > the behavior is undefined and may change in future versions of OS X.
+			
+			return nil;
 		}
 		
-		NSAssert(NO, @"Invalid class detected !");
-		return nil;
-		
+		// All regular nodes have a parentID.
+		// Container nodes don't have a parentID.
+		// Signal nodes don't have a parentID.
+		//
+		return node.parentID;
 		//
 		// Don't forget to change `version` (below) if you modify this block.
 	}];
@@ -829,31 +684,25 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	{
 		// Don't forget to change `version` (below) if you modify this block.
 		//
+		NSAssert([object isKindOfClass:[ZDCNode class]], @"Invalid class detected !");
+		__unsafe_unretained ZDCNode *node = (ZDCNode *)object;
 		
-		if ([object isKindOfClass:[ZDCNode class]])
+		NSString *cloudName = [[ZDCCloudPathManager sharedInstance] cloudNameForNode:node transaction:transaction];
+		if (cloudName == nil)
 		{
-			__unsafe_unretained ZDCNode *node = (ZDCNode *)object;
-			
-			NSString *cloudName = [[ZDCCloudPathManager sharedInstance] cloudNameForNode:node transaction:transaction];
-			if (cloudName == nil)
-			{
-				// Apple's documentation for 'compare:' (used in the sorting block) states:
-				//
-				// > [The parameter] must not be nil. If this value is nil,
-				// > the behavior is undefined and may change in future versions of OS X.
-				
-				return nil;
-			}
-		
-			// All regular nodes have a parentID.
-			// Container nodes don't have a parentID.
+			// Apple's documentation for 'compare:' (used in the sorting block) states:
 			//
-			return node.parentID;
+			// > [The parameter] must not be nil. If this value is nil,
+			// > the behavior is undefined and may change in future versions of OS X.
+			
+			return nil;
 		}
 		
-		NSAssert(NO, @"Invalid class detected !");
-		return nil;
-		
+		// All regular nodes have a parentID.
+		// Container nodes don't have a parentID.
+		// Signal nodes don't have a parentID.
+		//
+		return node.parentID;
 		//
 		// Don't forget to change `version` (below) if you modify this block.
 	}];
@@ -865,7 +714,6 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	{
 		// Don't forget to change `version` (below) if you modify this block.
 		//
-		
 		__unsafe_unretained ZDCNode *node1 = (ZDCNode *)obj1;
 		__unsafe_unretained ZDCNode *node2 = (ZDCNode *)obj2;
 		
@@ -1065,6 +913,116 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	[database asyncRegisterExtension:ext
 	                        withName:extName
 	                 completionQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                 completionBlock:^(BOOL ready)
+	{
+		if (!ready) {
+			DDLogError(@"Error registering \"%@\" !!!", extName);
+		}
+	}];
+}
+
+- (void)setupView_SplitKeys
+{
+	DDLogAutoTrace();
+	
+	  //
+    // VIEW - SplitKeys for user
+    //
+    // Sorts all SplitKeys by splitNum (localized)
+    //
+	
+    YapDatabaseViewGrouping *grouping = [YapDatabaseViewGrouping withObjectBlock:
+		^NSString *(YapDatabaseReadTransaction *transaction, NSString *collection, NSString *key, id object)
+	{
+		NSAssert([object isKindOfClass:[ZDCSplitKey class]], @"Invalid class detected !");
+		__unsafe_unretained ZDCSplitKey *split = (ZDCSplitKey *)object;
+		
+		return split.localUserID;
+	}];
+	
+    YapDatabaseViewSorting *sorting = [YapDatabaseViewSorting withObjectBlock:
+		^(YapDatabaseReadTransaction *transaction, NSString *group,
+		    NSString *collection1, NSString *key1, id obj1,
+		    NSString *collection2, NSString *key2, id obj2)
+	{
+		__unsafe_unretained ZDCSplitKey *split1 = (ZDCSplitKey *)obj1;
+		__unsafe_unretained ZDCSplitKey *split2 = (ZDCSplitKey *)obj2;
+		
+		return [@(split1.splitNum) compare:	@(split2.splitNum)];
+	}];
+	
+	NSString *versionTag = @"1.0"; // <---------- change me if you modify grouping or sorting block <----------
+
+	NSSet *whitelist = [NSSet setWithObject:kZDCCollection_SplitKeys];
+	
+	YapDatabaseViewOptions *options = [[YapDatabaseViewOptions alloc] init];
+	options.allowedCollections = [[YapWhitelistBlacklist alloc] initWithWhitelist:whitelist];
+	
+	YapDatabaseAutoView *ext =
+	  [[YapDatabaseAutoView alloc] initWithGrouping: grouping
+	                                        sorting: sorting
+	                                     versionTag: versionTag
+	                                        options: options];
+	
+	NSString *const extName = Ext_View_SplitKeys;
+	[database asyncRegisterExtension: ext
+	                        withName: extName
+	                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                 completionBlock:^(BOOL ready)
+	{
+		if (!ready) {
+			DDLogError(@"Error registering \"%@\" !!!", extName);
+		}
+	}];
+}
+
+- (void)setupView_SplitKeys_Date
+{
+	DDLogAutoTrace();
+	
+	//
+	// VIEW - SplitKeys for user
+	//
+	// Sorts all SplitKeys by splitNum Create date
+	//
+	
+	YapDatabaseViewGrouping *grouping = [YapDatabaseViewGrouping withObjectBlock:
+		^NSString *(YapDatabaseReadTransaction *transaction, NSString *collection, NSString *key, id object)
+	{
+		NSAssert([object isKindOfClass:[ZDCSplitKey class]], @"Invalid class detected !");
+		__unsafe_unretained ZDCSplitKey *split = (ZDCSplitKey *)object;
+		
+		return split.localUserID;
+	}];
+	
+	YapDatabaseViewSorting *sorting = [YapDatabaseViewSorting withObjectBlock:
+		^(YapDatabaseReadTransaction *transaction, NSString *group,
+	     NSString *collection1, NSString *key1, id obj1,
+	     NSString *collection2, NSString *key2, id obj2)
+	{
+		__unsafe_unretained ZDCSplitKey *split1 = (ZDCSplitKey *)obj1;
+		__unsafe_unretained ZDCSplitKey *split2 = (ZDCSplitKey *)obj2;
+		
+		return [split2.creationDate compare: split1.creationDate];
+	}];
+	
+	NSString *versionTag = @"1.1"; // <---------- change me if you modify grouping or sorting block <----------
+	
+	NSSet *whitelist = [NSSet setWithObject:kZDCCollection_SplitKeys];
+	
+	YapDatabaseViewOptions *options = [[YapDatabaseViewOptions alloc] init];
+	options.allowedCollections = [[YapWhitelistBlacklist alloc] initWithWhitelist:whitelist];
+	
+	YapDatabaseAutoView *ext =
+	  [[YapDatabaseAutoView alloc] initWithGrouping: grouping
+	                                        sorting: sorting
+	                                     versionTag: versionTag
+	                                        options: options];
+	
+	NSString *const extName = Ext_View_SplitKeys_Date;
+	[database asyncRegisterExtension: ext
+	                        withName: extName
+	                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
 	                 completionBlock:^(BOOL ready)
 	{
 		if (!ready) {

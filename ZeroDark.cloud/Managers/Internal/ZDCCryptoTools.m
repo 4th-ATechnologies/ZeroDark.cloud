@@ -369,9 +369,9 @@ done:
 	// Is this a message ?
 	
 	BOOL isMessage =
-	    (node.parentID == nil)
-	 || [node.parentID hasSuffix:NSStringFromTreesystemContainer(ZDCTreesystemContainer_Inbox)]
-	 || [node.parentID hasSuffix:NSStringFromTreesystemContainer(ZDCTreesystemContainer_Outbox)];
+	    [node.parentID hasSuffix:@"|inbox"]
+	 || [node.parentID hasSuffix:@"|outbox"]
+	 || [node.parentID hasSuffix:@"|signal"];
 	
 	// Prepare JSON dictionary
 	
@@ -1340,8 +1340,7 @@ done:
 	NSParameterAssert([containerNode.localUserID isEqualToString:localUser.uuid]);
 	NSParameterAssert([localUser.accessKeyID isEqualToString:accessKey.uuid]);
 	
-	if (containerNode.container == ZDCTreesystemContainer_Msgs ||
-	    containerNode.container == ZDCTreesystemContainer_Inbox )
+	if (containerNode.container == ZDCTreesystemContainer_Inbox)
 	{
 		// These containers are writable by other users.
 		// The "msgs" container is writable by anyone.

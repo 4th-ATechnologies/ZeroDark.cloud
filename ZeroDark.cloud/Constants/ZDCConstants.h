@@ -64,8 +64,6 @@ extern NSString *const kZDCCollection_Reminders;
 /** Name of collection in YapDatabase. All ZeroDark collection constants start with "ZDC" */
 extern NSString *const kZDCCollection_SessionStorage;
 /** Name of collection in YapDatabase. All ZeroDark collection constants start with "ZDC" */
-extern NSString *const kZDCCollection_Signals;
-/** Name of collection in YapDatabase. All ZeroDark collection constants start with "ZDC" */
 extern NSString *const kZDCCollection_SymmetricKeys;
 /** Name of collection in YapDatabase. All ZeroDark collection constants start with "ZDC" */
 extern NSString *const kZDCCollection_Tasks;
@@ -124,23 +122,79 @@ extern NSString *const kZDCCloudFileExtension_Data;
 // Names of special files, paths
 //
 
-/** Name of container within the treesystem. */
+/**
+ * A "DirPrefix" is a part of the encrypted cloudName of a file.
+ * It corresponds with the parent node.
+ * Treesystem trunks have a hard-coded dirPrefix, and regular nodes have a randomly generated dirPrefix.
+ *
+ * For more information about ZeroDark.cloud encrypts node-names to maintain zero-knowledge in the cloud,
+ * see the [docs](https://zerodarkcloud.readthedocs.io/en/latest/overview/encryption/)
+ */
 extern NSString *const kZDCDirPrefix_Home;
 
-/** Name of container within the treesystem. */
-extern NSString *const kZDCDirPrefix_Msgs;
-
-/** Name of container within the treesystem. */
+/**
+ * A "DirPrefix" is a part of the encrypted cloudName of a file.
+ * It corresponds with the parent node.
+ * Treesystem trunks have a hard-coded dirPrefix, and regular nodes have a randomly generated dirPrefix.
+ *
+ * For more information about ZeroDark.cloud encrypts node-names to maintain zero-knowledge in the cloud,
+ * see the [docs](https://zerodarkcloud.readthedocs.io/en/latest/overview/encryption/)
+ */
 extern NSString *const kZDCDirPrefix_Prefs;
 
-/** Name of container within the treesystem. */
-extern NSString *const kZDCDirPrefix_Inbox;
+/**
+ * A "DirPrefix" is a part of the encrypted cloudName of a file.
+ * It corresponds with the parent node.
+ * Treesystem trunks have a hard-coded dirPrefix, and regular nodes have a randomly generated dirPrefix.
+ *
+ * For more information about ZeroDark.cloud encrypts node-names to maintain zero-knowledge in the cloud,
+ * see the [docs](https://zerodarkcloud.readthedocs.io/en/latest/overview/encryption/)
+ */
+extern NSString *const kZDCDirPrefix_MsgsIn;
 
-/** Name of container within the treesystem. */
-extern NSString *const kZDCDirPrefix_Outbox;
+/**
+ * A "DirPrefix" is a part of the encrypted cloudName of a file.
+ * It corresponds with the parent node.
+ * Treesystem trunks have a hard-coded dirPrefix, and regular nodes have a randomly generated dirPrefix.
+ *
+ * For more information about ZeroDark.cloud encrypts node-names to maintain zero-knowledge in the cloud,
+ * see the [docs](https://zerodarkcloud.readthedocs.io/en/latest/overview/encryption/)
+ */
+extern NSString *const kZDCDirPrefix_MsgsOut;
 
-/** Name of container within the treesystem. */
+/**
+ * A "DirPrefix" is a part of the encrypted cloudName of a file.
+ * It corresponds with the parent node.
+ * Treesystem trunks have a hard-coded dirPrefix, and regular nodes have a randomly generated dirPrefix.
+ *
+ * For more information about ZeroDark.cloud encrypts node-names to maintain zero-knowledge in the cloud,
+ * see the [docs](https://zerodarkcloud.readthedocs.io/en/latest/overview/encryption/)
+ */
 extern NSString *const kZDCDirPrefix_Avatar;
+
+/**
+ * A "DirPrefix" is a part of the encrypted cloudName of a file. (Deprecated)
+ *
+ * @see kZDCDirPrefix_MsgsIn
+ * @see kZDCDirPrefix_MsgsOut
+ */
+extern NSString *const kZDCDirPrefix_Deprecated_Msgs;
+
+/**
+ * A "DirPrefix" is a part of the encrypted cloudName of a file. (Deprecated)
+ *
+ * @see kZDCDirPrefix_MsgsIn
+ * @see kZDCDirPrefix_MsgsOut
+ */
+extern NSString *const kZDCDirPrefix_Deprecated_Inbox;
+
+/**
+ * A "DirPrefix" is a part of the encrypted cloudName of a file. (Deprecated)
+ *
+ * @see kZDCDirPrefix_MsgsIn
+ * @see kZDCDirPrefix_MsgsOut
+ */
+extern NSString *const kZDCDirPrefix_Deprecated_Outbox;
 
 //
 // Dictionary keys within .rcrd files

@@ -1497,13 +1497,25 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
 				if (node)
 				{
-					ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
-					data = [owner.delegate dataForNode:node atPath:path transaction:transaction];
+					BOOL isMessage =
+					    [node.parentID hasSuffix:@"|inbox"]
+					 || [node.parentID hasSuffix:@"|outbox"]
+					 || [node.parentID hasSuffix:@"|signal"];
 					
-					if (data)
+					if (isMessage)
 					{
-						metadata = [owner.delegate metadataForNode:node atPath:path transaction:transaction];
-						thumbnail = [owner.delegate thumbnailForNode:node atPath:path transaction:transaction];
+						data = [owner.delegate dataForMessage:node transaction:transaction];
+					}
+					else
+					{
+						ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
+						
+						data = [owner.delegate dataForNode:node atPath:path transaction:transaction];
+						if (data)
+						{
+							metadata = [owner.delegate metadataForNode:node atPath:path transaction:transaction];
+							thumbnail = [owner.delegate thumbnailForNode:node atPath:path transaction:transaction];
+						}
 					}
 				}
 			}

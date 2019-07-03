@@ -198,7 +198,7 @@
 		
 		ZDCCloudPath *dstCloudPath =
 		  [[ZDCCloudPath alloc] initWithAppPrefix: zAppID
-		                                dirPrefix: kZDCDirPrefix_Inbox
+		                                dirPrefix: kZDCDirPrefix_MsgsIn
 		                                 fileName: filename];
 		
 		ZDCCloudLocator *dstCloudLocator =
@@ -289,22 +289,22 @@
 		signal = [signal copy];
 	}
 	
-	signal.parentID = nil; // outgoing message only; not a part of the treesystem
+	// Signals are not a part of the treesystem.
+	// So we store them with a special parentID.
+	//
+	// This makes them searchable via:
+	// - Ext_View_Filesystem
+	// - Ext_View_Flat
+	//
+	signal.parentID = [NSString stringWithFormat:@"%@|%@|signal", localUserID, zAppID];
 	
 	signal.name = [ZDCNode randomCloudName];
 	signal.pendingRecipients = [NSSet setWithObject:recipient.uuid];
 	
-	if (![signal.shareList hasShareItemForUserID:localUserID])
-	{
-		// Add sender permissions
-		
-		ZDCShareItem *item = [[ZDCShareItem alloc] init];
-		[item addPermission:ZDCSharePermission_LeafsOnly];
-		[item addPermission:ZDCSharePermission_WriteOnce];
-		[item addPermission:ZDCSharePermission_BurnIfOwner];
-		
-		[signal.shareList addShareItem:item forUserID:localUserID];
-	}
+	signal.anchor =
+	  [[ZDCNodeAnchor alloc] initWithUserID: recipient.uuid
+	                                 zAppID: zAppID
+	                              dirPrefix: kZDCDirPrefix_MsgsIn];
 	
 	if (![signal.shareList hasShareItemForUserID:recipient.uuid])
 	{
@@ -319,13 +319,25 @@
 		[signal.shareList addShareItem:item forUserID:recipient.uuid];
 	}
 	
-	[rwTransaction setObject:signal forKey:signal.uuid inCollection:kZDCCollection_Signals];
+	if (![signal.shareList hasShareItemForUserID:localUserID])
+	{
+		// Add sender permissions
+		
+		ZDCShareItem *item = [[ZDCShareItem alloc] init];
+		[item addPermission:ZDCSharePermission_LeafsOnly];
+		[item addPermission:ZDCSharePermission_WriteOnce];
+		[item addPermission:ZDCSharePermission_BurnIfOwner];
+		
+		[signal.shareList addShareItem:item forUserID:localUserID];
+	}
+	
+	[rwTransaction setObject:signal forKey:signal.uuid inCollection:kZDCCollection_Nodes];
 	
 	// Create & queue operation
 	
 	ZDCCloudPath *cloudPath =
 	  [[ZDCCloudPath alloc] initWithAppPrefix: zAppID
-	                                dirPrefix: kZDCDirPrefix_Inbox
+	                                dirPrefix: kZDCDirPrefix_MsgsIn
 	                                 fileName: signal.name];
 	
 	ZDCCloudLocator *cloudLocator =
@@ -1837,103 +1849,234 @@
 #pragma mark Subclass Hooks
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/**
- * Subclass Hook.
- * 
- * We use this method to properly update ZDCCloudOperations.
-**/
-- (NSArray<YapDatabaseCloudCoreOperation *> *)processOperations:(NSArray<YapDatabaseCloudCoreOperation *> *)inOperations
-                                                     inPipeline:(YapDatabaseCloudCorePipeline *)pipeline
-                                                   withGraphIdx:(NSUInteger)operationsGraphIdx
+- (void)validateOperation:(YapDatabaseCloudCoreOperation *)operation
 {
-	// Step 1 of 3:
-	//
-	// Filter out all operations except:
-	// - those supported by this class (ZDCCloudOperation)
-	// - those that aren't marked for deletion
-	
-	NSUInteger capacity = inOperations.count;
-	
-	NSMutableArray<ZDCCloudOperation *> *operations = [NSMutableArray arrayWithCapacity:capacity];
-	NSMutableDictionary<NSUUID *, ZDCCloudOperation *> *map = [NSMutableDictionary dictionaryWithCapacity:capacity];
-	
-	for (YapDatabaseCloudCoreOperation *op in inOperations)
-	{
-		if (!op.pendingStatusIsCompletedOrSkipped)
-		{
-			if ([op isKindOfClass:[ZDCCloudOperation class]])
-			{
-				__unsafe_unretained ZDCCloudOperation *s4op = (ZDCCloudOperation *)op;
-				
-				[operations addObject:s4op];
-				map[s4op.uuid] = s4op;
-			}
-		}
+	if (![operation isKindOfClass:[ZDCCloudOperation class]]) {
+		NSAssert(NO, @"Invalid operation class !");
 	}
 	
-	// Step 2 of 3:
-	//
-	// Add implicit dependencies for operations with the same target.
-	// That is, if the user created 2 operations for the same node,
-	// then we should make one of them dependent on the other.
+	__unsafe_unretained ZDCCloudOperation *op = (ZDCCloudOperation *)operation;
 	
-	for (NSUInteger i = 1; i < operations.count; i++)
-	{
-		ZDCCloudOperation *laterOp = operations[i];
-		
-		for (NSUInteger j = i; j > 0; j--)
-		{
-			ZDCCloudOperation *earlierOp = operations[j-1];
-			
-			if ([laterOp hasSameTarget:earlierOp])
-			{
-				[laterOp addDependency:earlierOp];
-				break;
-			}
-		}
+	if (op.localUserID == nil) {
+		NSAssert(NO, @"localUserID is nil !");
 	}
 	
-	// Step 3 of 3:
-	//
+	switch (op.type)
+	{
+		case ZDCCloudOperationType_Put:
+		{
+			switch (op.putType)
+			{
+				case ZDCCloudOperationPutType_Node_Rcrd:
+				case ZDCCloudOperationPutType_Node_Data:
+				{
+					NSAssert(op.nodeID != nil, @"nodeID is nil !");
+					NSAssert(op.cloudLocator != nil, @"cloudLocator is nil !");
+					break;
+				}
+				case ZDCCloudOperationPutType_Pointer:
+				{
+					NSAssert(NO, @"Implement this section when you start implementing pointers...");
+					break;
+				}
+				default:
+				{
+					NSAssert(NO, @"Invalid operation putType !");
+					break;
+				}
+			}
+			break;
+		}
+		case ZDCCloudOperationType_Move:
+		{
+			NSAssert(op.nodeID != nil, @"nodeID is nil !");
+			NSAssert(op.cloudLocator != nil, @"cloudLocator is nil !");
+			NSAssert(op.dstCloudLocator != nil, @"dstCloudLocator is nil !");
+			break;
+		}
+		case ZDCCloudOperationType_DeleteLeaf:
+		{
+			NSAssert(op.cloudLocator != nil, @"cloudLocator is nil !");
+			NSAssert(op.deletedCloudIDs != nil, @"deletedCloudIDs is nil !");
+			break;
+		}
+		case ZDCCloudOperationType_DeleteNode:
+		{
+			NSAssert(op.cloudLocator != nil, @"cloudLocator is nil !");
+			NSAssert(op.deletedCloudIDs != nil, @"deletedCloudIDs is nil !");
+			NSAssert(op.deleteNodeJSON != nil, @"deleteNodeJSON is nil !");
+			break;
+		}
+		case ZDCCloudOperationType_CopyLeaf:
+		{
+			NSAssert(op.nodeID != nil, @"nodeID is nil !");
+			NSAssert(op.cloudLocator != nil, @"cloudLocator is nil !");
+			NSAssert(op.dstCloudLocator != nil, @"dstCloudLocator is nil !");
+			break;
+		}
+		case ZDCCloudOperationType_Avatar:
+		{
+			NSAssert(op.avatar_auth0ID != nil, @"avatar_auth0ID is nil !");
+			break;
+		}
+		default:
+		{
+			NSAssert(NO, @"Invalid operation type !");
+			break;
+		}
+	}
+}
+
+- (void)willAddOperation:(YapDatabaseCloudCoreOperation *)operation
+              inPipeline:(YapDatabaseCloudCorePipeline *)pipeline
+            withGraphIdx:(NSUInteger)opGraphIdx
+{
 	// Add implicit dependencies to enable FlatGraph optimizations.
-	// That is, we need to inject dependencies for these operations
+	//
+	// That is, we need to inject dependencies for this operation
 	// based on the queued operations from earlier commits.
 	//
-	// The FlatGraph optimiztion allows us to escape the strict per-commit operation ordering.
+	// The FlatGraph optimization allows us to escape the strict per-commit operation ordering.
 	// That is, all operations from commit A must complete before starting any operations from commit B.
-	// However, to do this we must inject proper dependencies based on the filesystem hierarchy.
+	// However, to do this we must inject proper dependencies based on the treesystem hierarchy.
+	
+	ZDCCloudOperation *newOp = (ZDCCloudOperation *)operation;
 	
 	[self _enumerateOperations: (YDBCloudCore_EnumOps_Existing | YDBCloudCore_EnumOps_Inserted)
 	                inPipeline: pipeline
-						 usingBlock: ^void (YapDatabaseCloudCoreOperation *oldOperation, NSUInteger graphIdx, BOOL *stop)
+	                usingBlock: ^void (YapDatabaseCloudCoreOperation *oldOperation, NSUInteger graphIdx, BOOL *stop)
 	{
-		// Remember: this method is invoked for each graphIdx that had changes.
-		//
-		// Therefore the graphIdx could be:
-		// - the latest graphIdx, with all added operations
-		// - an earlier graphIdx, due to an inserted/modified operation
-		//
-		if (graphIdx >= operationsGraphIdx)
+		if (![oldOperation isKindOfClass:[ZDCCloudOperation class]]) {
+			return; // from block; i.e. continue;
+		}
+		__unsafe_unretained ZDCCloudOperation *oldOp = (ZDCCloudOperation *)oldOperation;
+			
+		if (graphIdx < opGraphIdx)
+		{
+			// oldOp : from graphA (commit #X)
+			// newOp : from graphB (commit #Y)
+			//
+			// where X < Y
+			
+			if ([self newOperation:newOp dependsOnOldOperation:oldOp])
+			{
+				[newOp addDependency:oldOperation];
+			}
+		}
+		else if (graphIdx == opGraphIdx)
+		{
+			// oldOp : from graphB (commit #Y)
+			// newOp : from graphB (commit #Y)
+			//
+			// We are being extra cautious here, and only injecting dependencies if:
+			// - the 2 operations have the exact same target
+			// - the inverse dependency doesn't exist
+			//
+			// We could be more cautious here (and do a full circular dependency check).
+			// Or we could be more aggressive here (and use `newOperation:dependsOnOldOperation:`).
+			
+			if ([newOp hasSameTarget:oldOp] && ![newOp.dependencies containsObject:oldOp.uuid])
+			{
+				[newOp addDependency:oldOp];
+			}
+		}
+		else
 		{
 			*stop = YES;
-			return;
 		}
+	}];
+}
+
+/**
+ * Subclass Hook
+ */
+- (void)willInsertOperation:(YapDatabaseCloudCoreOperation *)operation
+                 inPipeline:(YapDatabaseCloudCorePipeline *)pipeline
+               withGraphIdx:(NSUInteger)opGraphIdx
+{
+	[self willModifyOperation:operation inPipeline:pipeline withGraphIdx:opGraphIdx];
+}
+
+/**
+ * Subclass Hook
+ */
+- (void)didInsertOperation:(YapDatabaseCloudCoreOperation *)operation
+                inPipeline:(YapDatabaseCloudCorePipeline *)pipeline
+              withGraphIdx:(NSUInteger)opGraphIdx
+{
+	[self didModifyOperation:operation inPipeline:pipeline withGraphIdx:opGraphIdx];
+}
+
+/**
+ * Subclass Hook
+ */
+- (void)willModifyOperation:(YapDatabaseCloudCoreOperation *)operation
+                 inPipeline:(YapDatabaseCloudCorePipeline *)pipeline
+               withGraphIdx:(NSUInteger)opGraphIdx
+{
+	__unsafe_unretained ZDCCloudOperation *newOp = (ZDCCloudOperation *)operation;
+	
+	[self _enumerateOperations: (YDBCloudCore_EnumOps_Existing | YDBCloudCore_EnumOps_Inserted)
+	                inPipeline: pipeline
+	                usingBlock: ^void (YapDatabaseCloudCoreOperation *oldOperation, NSUInteger graphIdx, BOOL *stop)
+	{
+		__unsafe_unretained ZDCCloudOperation *oldOp = (ZDCCloudOperation *)oldOperation;
 		
-		if ([oldOperation isKindOfClass:[ZDCCloudOperation class]])
+		if (graphIdx < opGraphIdx)
 		{
-			__unsafe_unretained ZDCCloudOperation *oldOp = (ZDCCloudOperation *)oldOperation;
+			// oldOp : from graphA (commit #X)
+			// newOp : from graphB (commit #Y)
+			//
+			// where X < Y
 			
-			for (ZDCCloudOperation *newOp in operations)
+			if ([self newOperation:newOp dependsOnOldOperation:oldOp])
 			{
-				if ([self newOperation:newOp dependsOnOldOperation:oldOp])
-				{
-					[newOp addDependency:oldOperation];
+				[newOp addDependency:oldOperation];
+			}
+		}
+		else
+		{
+			*stop = YES;
+		}
+	}];
+}
+
+/**
+ * Subclass Hook
+ */
+- (void)didModifyOperation:(YapDatabaseCloudCoreOperation *)operation
+                 inPipeline:(YapDatabaseCloudCorePipeline *)pipeline
+               withGraphIdx:(NSUInteger)opGraphIdx
+{
+	__unsafe_unretained ZDCCloudOperation *oldOp = (ZDCCloudOperation *)operation;
+	
+	__block NSMutableArray<ZDCCloudOperation*> *modifiedLaterOps = nil;
+	
+	[self _enumerateOperations: (YDBCloudCore_EnumOps_Existing | YDBCloudCore_EnumOps_Inserted)
+	                inPipeline: pipeline
+	                usingBlock: ^void (YapDatabaseCloudCoreOperation *newOperation, NSUInteger graphIdx, BOOL *stop)
+	{
+		if (graphIdx > opGraphIdx)
+		{
+			ZDCCloudOperation *newOp = (ZDCCloudOperation *)newOperation;
+			
+			if ([self newOperation:newOp dependsOnOldOperation:oldOp] && ![newOp.dependencies containsObject:oldOp.uuid])
+			{
+				newOp = [newOp copy];
+				[newOp addDependency:oldOp];
+				
+				if (modifiedLaterOps == nil) {
+					modifiedLaterOps = [NSMutableArray array];
 				}
+				[modifiedLaterOps addObject:newOp];
 			}
 		}
 	}];
 	
-	return operations;
+	for (ZDCCloudOperation *modifiedOp in modifiedLaterOps)
+	{
+		[self modifyOperation:modifiedOp];
+	}
 }
 
 - (BOOL)newOperation:(ZDCCloudOperation *)newOp dependsOnOldOperation:(ZDCCloudOperation *)oldOp
@@ -2150,84 +2293,6 @@
 	
 	NSAssert(NO, @"You need to add code here to support this type of operation.");
 	return NO;
-}
-
-- (void)validateOperation:(YapDatabaseCloudCoreOperation *)operation
-{
-	if (![operation isKindOfClass:[ZDCCloudOperation class]]) {
-		NSAssert(NO, @"Invalid operation class !");
-	}
-	
-	__unsafe_unretained ZDCCloudOperation *op = (ZDCCloudOperation *)operation;
-	
-	if (op.localUserID == nil) {
-		NSAssert(NO, @"localUserID is nil !");
-	}
-	
-	switch (op.type)
-	{
-		case ZDCCloudOperationType_Put:
-		{
-			switch (op.putType)
-			{
-				case ZDCCloudOperationPutType_Node_Rcrd:
-				case ZDCCloudOperationPutType_Node_Data:
-				{
-					NSAssert(op.nodeID != nil, @"nodeID is nil !");
-					NSAssert(op.cloudLocator != nil, @"cloudLocator is nil !");
-					break;
-				}
-				case ZDCCloudOperationPutType_Pointer:
-				{
-					NSAssert(NO, @"Implement this section when you start implementing pointers...");
-					break;
-				}
-				default:
-				{
-					NSAssert(NO, @"Invalid operation putType !");
-					break;
-				}
-			}
-			break;
-		}
-		case ZDCCloudOperationType_Move:
-		{
-			NSAssert(op.nodeID != nil, @"nodeID is nil !");
-			NSAssert(op.cloudLocator != nil, @"cloudLocator is nil !");
-			NSAssert(op.dstCloudLocator != nil, @"dstCloudLocator is nil !");
-			break;
-		}
-		case ZDCCloudOperationType_DeleteLeaf:
-		{
-			NSAssert(op.cloudLocator != nil, @"cloudLocator is nil !");
-			NSAssert(op.deletedCloudIDs != nil, @"deletedCloudIDs is nil !");
-			break;
-		}
-		case ZDCCloudOperationType_DeleteNode:
-		{
-			NSAssert(op.cloudLocator != nil, @"cloudLocator is nil !");
-			NSAssert(op.deletedCloudIDs != nil, @"deletedCloudIDs is nil !");
-			NSAssert(op.deleteNodeJSON != nil, @"deleteNodeJSON is nil !");
-			break;
-		}
-		case ZDCCloudOperationType_CopyLeaf:
-		{
-			NSAssert(op.nodeID != nil, @"nodeID is nil !");
-			NSAssert(op.cloudLocator != nil, @"cloudLocator is nil !");
-			NSAssert(op.dstCloudLocator != nil, @"dstCloudLocator is nil !");
-			break;
-		}
-		case ZDCCloudOperationType_Avatar:
-		{
-			NSAssert(op.avatar_auth0ID != nil, @"avatar_auth0ID is nil !");
-			break;
-		}
-		default:
-		{
-			NSAssert(NO, @"Invalid operation type !");
-			break;
-		}
-	}
 }
 
 - (BOOL)addOperation:(YapDatabaseCloudCoreOperation *)operation

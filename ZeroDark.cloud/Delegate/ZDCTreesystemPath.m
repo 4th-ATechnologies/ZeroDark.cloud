@@ -17,7 +17,6 @@ static NSString *const k_pathComponents = @"pathComponents";
 // Standardized strings
 
 static NSString *const k_home   = @"home";
-static NSString *const k_msgs   = @"msgs";
 static NSString *const k_inbox  = @"inbox";
 static NSString *const k_outbox = @"outbox";
 static NSString *const k_prefs  = @"prefs";
@@ -28,10 +27,9 @@ NSString* NSStringFromTreesystemContainer(ZDCTreesystemContainer container)
 	switch (container)
 	{
 		case ZDCTreesystemContainer_Home   : return k_home;
-		case ZDCTreesystemContainer_Msgs   : return k_msgs;
+		case ZDCTreesystemContainer_Prefs  : return k_prefs;
 		case ZDCTreesystemContainer_Inbox  : return k_inbox;
 		case ZDCTreesystemContainer_Outbox : return k_outbox;
-		case ZDCTreesystemContainer_Prefs  : return k_prefs;
 		default                            : return @"invalid";
 	}
 }
@@ -39,10 +37,9 @@ NSString* NSStringFromTreesystemContainer(ZDCTreesystemContainer container)
 ZDCTreesystemContainer TreesystemContainerFromString(NSString *str)
 {
 	if ([str isEqualToString:k_home])   return ZDCTreesystemContainer_Home;
-	if ([str isEqualToString:k_msgs])   return ZDCTreesystemContainer_Msgs;
+	if ([str isEqualToString:k_prefs])  return ZDCTreesystemContainer_Prefs;
 	if ([str isEqualToString:k_inbox])  return ZDCTreesystemContainer_Inbox;
 	if ([str isEqualToString:k_outbox]) return ZDCTreesystemContainer_Outbox;
-	if ([str isEqualToString:k_prefs])  return ZDCTreesystemContainer_Prefs;
 	
 	return ZDCTreesystemContainer_Invalid;
 }

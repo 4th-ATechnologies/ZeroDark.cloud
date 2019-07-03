@@ -104,13 +104,20 @@ static NSString *const k_cloudPath = @"cloudPath";
 
 - (nullable NSString *)bucketOwner
 {
-	NSRange range = [bucket rangeOfString:@"-"];
-	if (range.location != NSNotFound)
+	NSString *const prefix = @"com.4th-a.user.";
+	
+	if ([bucket hasPrefix:prefix])
 	{
-		NSString *userID = [bucket substringToIndex:range.location];
-		
-		if (userID.length == 32 && [userID isZBase32]) {
-			return userID;
+		NSString *suffix = [bucket substringFromIndex:prefix.length];
+	
+		NSRange range = [suffix rangeOfString:@"-"];
+		if (range.location != NSNotFound)
+		{
+			NSString *userID = [suffix substringToIndex:range.location];
+	
+			if (userID.length == 32 && [userID isZBase32]) {
+				return userID;
+			}
 		}
 	}
 	

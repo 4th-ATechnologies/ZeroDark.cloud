@@ -47,12 +47,11 @@ static NSString *const k_containerStr = @"container";
 		
 		switch (container)
 		{
-			case ZDCTreesystemContainer_Home    : self.dirPrefix = kZDCDirPrefix_Home;   break;
-			case ZDCTreesystemContainer_Msgs    : self.dirPrefix = kZDCDirPrefix_Msgs;   break;
-			case ZDCTreesystemContainer_Inbox   : self.dirPrefix = kZDCDirPrefix_Inbox;  break;
-			case ZDCTreesystemContainer_Outbox  : self.dirPrefix = kZDCDirPrefix_Outbox; break;
-			case ZDCTreesystemContainer_Prefs   : self.dirPrefix = kZDCDirPrefix_Prefs;  break;
-			case ZDCTreesystemContainer_Invalid : self.dirPrefix = kZDCDirPrefix_Fake;   break;
+			case ZDCTreesystemContainer_Home    : self.dirPrefix = kZDCDirPrefix_Home;    break;
+			case ZDCTreesystemContainer_Prefs   : self.dirPrefix = kZDCDirPrefix_Prefs;   break;
+			case ZDCTreesystemContainer_Inbox   : self.dirPrefix = kZDCDirPrefix_MsgsIn;  break;
+			case ZDCTreesystemContainer_Outbox  : self.dirPrefix = kZDCDirPrefix_MsgsOut; break;
+			case ZDCTreesystemContainer_Invalid : self.dirPrefix = kZDCDirPrefix_Fake;    break;
 		}
 	}
 	return self;
