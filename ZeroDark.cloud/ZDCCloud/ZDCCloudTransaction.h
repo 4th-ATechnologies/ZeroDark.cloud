@@ -121,9 +121,11 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
               error:(NSError *_Nullable *_Nullable)outError;
 
 /**
- * A signal is a lightweight message. Signals are delivered into the inbox of the recipient,
- * but are NOT copied into the outbox of the sender. In other words, they are lightweight messages,
- * that don't cause additional overhead for the sender.
+ * A signal is a lightweight outgoing message.
+ *
+ * Signals are delivered into the inbox of the recipient *ONLY*.
+ * There is NOT a copy in the outbox of the sender. In other words, they are designed to be minimal,
+ * and don't cause additional overhead for the sender.
  *
  * You supply the data for the message via `[ZeroDarkCloudDelegate dataForMessage:transaction:]`.
  * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
@@ -132,7 +134,7 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
  *
  * @param signal
- *   The message to send.
+ *   The signal to send.
  *
  * @param recipient
  *   The user to send the message to. (userID == ZDCUser.uuid)
@@ -416,6 +418,76 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  *         Otherwise returns nil.
  */
 - (nullable id)linkedObjectForPath:(ZDCTreesystemPath *)path;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Tagging
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Returns the currently set tag for the given {nodeID, identifier} tuple.
+ *
+ * @param nodeID
+ *   The associated node. (nodeID == ZDCNode.uuid)
+ *
+ * @param identifier
+ *   A unique identifier for the type of tag being stored.
+ *
+ * @return
+ *   The most recently assigned tag.
+ */
+- (nullable id)tagForNodeID:(NSString *)nodeID withIdentifier:(NSString *)identifier;
+
+/**
+ * Allows you to set or update the current tag value for the given {nodeID, identifier} tuple.
+ *
+ * @param tag
+ *   The tag to store.
+ *   The following classes are supported:
+ *   - NSString
+ *   - NSNumber
+ *   - NSData
+ *
+ * @param nodeID
+ *   The associated node. (nodeID == ZDCNode.uuid)
+ *
+ * @param identifier
+ *   A unique identifier for the type of tag being stored.
+ *
+ * If the given tag is nil, the effect is the same as invoking removeTagForKey:withIdentifier:.
+ * If the given tag is an unsupported class, throws an exception.
+ */
+- (void)setTag:(nullable id)tag forNodeID:(NSString *)nodeID withIdentifier:(NSString *)identifier;
+
+/**
+ * Allows you to enumerate the current set of <key, tag> tuples associated with the given node.
+ *
+ * @param nodeID
+ *   The associated node. (nodeID == ZDCNode.uuid)
+ */
+- (void)enumerateTagsForNodeID:(NSString *)nodeID
+                     withBlock:(void (^NS_NOESCAPE)(NSString *identifier, id tag, BOOL *stop))block;
+
+/**
+ * Removes the tag for the given {nodeID, key} tuple.
+ *
+ * Note that this method only removes the specific nodeID+key value.
+ * If there are other tags for the same node, but different keys, then those values will remain set.
+ * To remove all such values, use removeAllTagsForNode.
+ *
+ * @param nodeID
+ *   The associated node. (nodeID == ZDCNode.uuid)
+ *
+ * @param identifier
+ *   A unique identifier for the type of tag being stored.
+ *
+ * @see `removeAllTagsForNodeID:`
+ */
+- (void)removeTagForNodeID:(NSString *)nodeID withIdentifier:(NSString *)identifier;
+
+/**
+ * Removes all tags with the given nodeID (matching any identifier).
+ */
+- (void)removeAllTagsForNodeID:(NSString *)nodeID;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Download Status

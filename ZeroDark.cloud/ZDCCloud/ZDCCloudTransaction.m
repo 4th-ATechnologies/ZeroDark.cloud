@@ -1322,8 +1322,75 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Tagging
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (nullable id)tagForNodeID:(NSString *)nodeID withIdentifier:(NSString *)identifier
+{
+	return [self tagForKey:nodeID withIdentifier:identifier];
+}
+
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (void)setTag:(nullable id)tag forNodeID:(NSString *)nodeID withIdentifier:(NSString *)identifier
+{
+	[self setTag:tag forKey:nodeID withIdentifier:identifier];
+}
+
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (void)enumerateTagsForNodeID:(NSString *)nodeID
+                     withBlock:(void (^NS_NOESCAPE)(NSString *identifier, id tag, BOOL *stop))block
+{
+	[self enumerateTagsForKey:nodeID withBlock:block];
+}
+
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (void)removeTagForNodeID:(NSString *)nodeID withIdentifier:(NSString *)identifier
+{
+	[self removeTagForKey:nodeID withIdentifier:identifier];
+}
+
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (void)removeAllTagsForNodeID:(NSString *)nodeID
+{
+	[self removeAllTagsForKey:nodeID];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Download Status
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (NSString *)internalTaggingKeyForNodeID:(NSString *)nodeID
+{
+	// There's a public API for tagging nodeID's.
+	// We want to use the same tagging system, but don't want to have any conflicts with the public API.
+	// So we simply use a different key.
+	
+	if (nodeID == nil)
+		return nil;
+	else
+		return [NSString stringWithFormat:@"%@|zdc", nodeID];
+}
 
 /**
  * See header file for description.
@@ -1332,7 +1399,10 @@
  */
 - (void)markNodeAsNeedsDownload:(NSString *)nodeID components:(ZDCNodeComponents)components
 {
-	[self setTag:@(components) forKey:nodeID withIdentifier:nil];
+	if (nodeID == nil) return;
+	
+	NSString *key = [self internalTaggingKeyForNodeID:nodeID];
+	[self setTag:@(components) forKey:key withIdentifier:nil];
 }
 
 /**
@@ -1344,6 +1414,8 @@
                        components:(ZDCNodeComponents)components
                     ifETagMatches:(nullable NSString *)eTag
 {
+	if (nodeID == nil) return;
+	
 	if (eTag)
 	{
 		ZDCNode *node = [databaseTransaction objectForKey:nodeID inCollection:kZDCCollection_Nodes];
@@ -1355,7 +1427,9 @@
 		}
 	}
 	
-	id tag = [self tagForKey:nodeID withIdentifier:nil];
+	NSString *key = [self internalTaggingKeyForNodeID:nodeID];
+	id tag = [self tagForKey:key withIdentifier:nil];
+	
 	if (tag && [tag isKindOfClass:[NSNumber class]])
 	{
 		NSUInteger bitmask = [(NSNumber *)tag unsignedIntegerValue];
@@ -1402,10 +1476,10 @@
 		}
 		
 		if (newComponents == 0) {
-			[self removeTagForKey:nodeID withIdentifier:nil];
+			[self removeTagForKey:key withIdentifier:nil];
 		}
 		else {
-			[self setTag:@(newComponents) forKey:nodeID withIdentifier:nil];
+			[self setTag:@(newComponents) forKey:key withIdentifier:nil];
 		}
 	}
 }
@@ -1419,7 +1493,9 @@
 {
 	BOOL result = NO;
 	
-	id tag = [self tagForKey:nodeID withIdentifier:nil];
+	NSString *key = [self internalTaggingKeyForNodeID:nodeID];
+	id tag = [self tagForKey:key withIdentifier:nil];
+	
 	if (tag && [tag isKindOfClass:[NSNumber class]])
 	{
 		NSUInteger bitmask = [(NSNumber *)tag unsignedIntegerValue];
@@ -2398,6 +2474,15 @@
 	{
 		[self deleteNode:linkedNode error:nil];
 	}
+	
+	if ([ck.collection isEqualToString:kZDCCollection_Nodes])
+	{
+		NSString *nodeID = ck.key;
+		NSString *internalKey = [self internalTaggingKeyForNodeID:nodeID];
+		
+		[self removeAllTagsForKey:nodeID];
+		[self removeAllTagsForKey:internalKey];
+	}
 }
 
 /**
@@ -2426,6 +2511,17 @@
 		if (linkedNode)
 		{
 			[self deleteNode:linkedNode error:nil];
+		}
+	}
+	
+	if ([collection isEqualToString:kZDCCollection_Nodes])
+	{
+		for (NSString *nodeID in keys)
+		{
+			NSString *internalKey = [self internalTaggingKeyForNodeID:nodeID];
+			
+			[self removeAllTagsForKey:nodeID];
+			[self removeAllTagsForKey:internalKey];
 		}
 	}
 }
