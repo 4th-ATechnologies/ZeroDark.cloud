@@ -19,9 +19,9 @@ NS_ASSUME_NONNULL_BEGIN
  * - the DATA file contains the actual content of the node
  *
  * ZeroDark.cloud downloads RCRD files automatically (which are small),
- * in order to keep the local filesystem up-to-date with the cloud.
+ * in order to keep the local treesystem up-to-date with the cloud.
  * Note, however, that it does NOT automatically download DATA files.
- * The application gets to decide which DATA files to download & when.
+ * Your application gets to decide which DATA files to download & when.
  */
 @interface ZDCCloudRcrd : NSObject
 

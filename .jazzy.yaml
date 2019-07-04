@@ -11,7 +11,7 @@ custom_categories:
   - ZeroDarkCloud
   - ZeroDarkCloudDelegate
   - ZDCCryptoFile
-  - ZDCNodeData
+  - ZDCData
   - ZDCNodeLink
   - ZDCTreesystemPath
 - name: Managers
@@ -31,6 +31,7 @@ custom_categories:
   - ZDCPushManager
   - ZDCRemoteUserManager
   - ZDCSearchUserManager
+  - ZDCSyncManager
   - ZDCUITools
   - ZDCWebManager
 - name: Model
@@ -75,7 +76,6 @@ custom_categories:
   - BIP39Mnemonic
   - ZDCProgress
   - ZDCAsyncCompletionDispatch
-  - ZDCDateFormatterCache  
 - name: AWS Utilities
   children:
   - AWSDate
