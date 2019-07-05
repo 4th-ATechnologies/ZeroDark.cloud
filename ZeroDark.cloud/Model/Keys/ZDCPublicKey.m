@@ -27,6 +27,9 @@ static NSString *const k_pubKeyJSON   = @"k_pubKeyJSON";
 
 
 @interface ZDCPublicKey ()
+@property (nonatomic, copy, readwrite) NSString * pubKeyJSON;
+@property (nonatomic, copy, readwrite, nullable) NSString * privKeyJSON;
+
 @property (atomic, strong, readwrite) NSDictionary *cachedKeyDict;
 @end
 
@@ -121,9 +124,9 @@ done:
 /**
  * See header file for description.
  */
-+ (id)privateKeyWithOwner:(NSString *)userID 
-               storageKey:(S4KeyContextRef)storageKey
-                algorithm:(Cipher_Algorithm)algorithm
++ (instancetype)privateKeyWithOwner:(NSString *)userID
+                         storageKey:(S4KeyContextRef)storageKey
+                          algorithm:(Cipher_Algorithm)algorithm
 
 {
 	NSString *pubKeyString = nil;
@@ -473,7 +476,7 @@ done:
 }
 
 
--(BOOL) updateKeyProperty:(NSString*)propertyID
+- (BOOL)updateKeyProperty:(NSString*)propertyID
                     value:(NSData*)value
                storageKey:(S4KeyContextRef)storageKey
                     error:(NSError **)errorOut
@@ -513,38 +516,51 @@ done:
                                     S4KeyPropertyExtended_Signable,
                                     (void *)value.bytes, value.length ); CKERR;
 
-    err = S4Key_SerializeToS4Key(privKeyCtx, storageKey, &privKeyData, &keyDataLen); CKERR;
-    privKeyStr = [[NSString alloc]initWithBytesNoCopy:privKeyData length:keyDataLen encoding:NSUTF8StringEncoding freeWhenDone:YES];
+	err = S4Key_SerializeToS4Key(privKeyCtx, storageKey, &privKeyData, &keyDataLen); CKERR;
+	privKeyStr = [[NSString alloc] initWithBytesNoCopy: privKeyData
+	                                            length: keyDataLen
+	                                          encoding: NSUTF8StringEncoding
+	                                      freeWhenDone: YES];
     
-    err = S4Key_SerializePubKey(privKeyCtx, &pubKeyData, &keyDataLen); CKERR;
-    pubKeyStr = [[NSString alloc]initWithBytesNoCopy:pubKeyData length:keyDataLen encoding:NSUTF8StringEncoding freeWhenDone:YES];
+	err = S4Key_SerializePubKey(privKeyCtx, &pubKeyData, &keyDataLen); CKERR;
+	pubKeyStr = [[NSString alloc] initWithBytesNoCopy: pubKeyData
+	                                           length: keyDataLen
+	                                         encoding: NSUTF8StringEncoding
+	                                     freeWhenDone: YES];
 
-    if(privKeyStr.length && pubKeyStr.length)
-    {
-        pubKeyJSON = pubKeyStr;
-        privKeyJSON = privKeyStr;
-        success = YES;
-
-    }
+	if (privKeyStr.length && pubKeyStr.length)
+	{
+		// Are you getting a crash here ?
+		// That's because you're attempting to modify an immutable instance.
+		// You need to:
+		// - make a copy of the publicKey instance: pubKey = [pubKey copy]
+		// - modify the copy
+		// - update the database with the modified version
+		//
+		self.pubKeyJSON = pubKeyStr;   // don't change this code - see comment above
+		self.privKeyJSON = privKeyStr; // don't change this code - see comment above
+		//
+		// See comment above
+		success = YES;
+	}
      
  done:
     
-    if(importCtx)
-    {
-        if(S4KeyContextRefIsValid(importCtx[0]))
-        {
-            S4Key_Free(importCtx[0]);
-        }
-        XFREE(importCtx);
-    }
+	if (importCtx)
+	{
+		if (S4KeyContextRefIsValid(importCtx[0])) {
+			S4Key_Free(importCtx[0]);
+		}
+		XFREE(importCtx);
+	}
 
-    if(IsS4Err(err))
-        error = [NSError errorWithS4Error:err];
-    
-    if(errorOut)
-        *errorOut = error;
+	if (IsS4Err(err))
+		error = [NSError errorWithS4Error:err];
+	
+	if (errorOut)
+		*errorOut = error;
 
-    return success;
+	return success;
 }
 
 /**

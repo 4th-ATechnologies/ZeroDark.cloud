@@ -10,25 +10,45 @@
 #import <S4Crypto/S4Crypto.h>
 #import <ZDCSyncableObjC/ZDCObject.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
+/**
+ * The SymmetricKey class holds the information necessary to create a symmetric key within the S4Crypto library.
+ */
 @interface ZDCSymmetricKey : ZDCObject <NSCoding, NSCopying>
 
-+ (id)keyWithAlgorithm:(Cipher_Algorithm)algorithm
-            storageKey:(S4KeyContextRef)storageKey;
+/**
+ * Generates a random symmetic key.
+ */
++ (instancetype)keyWithAlgorithm:(Cipher_Algorithm)algorithm
+                      storageKey:(S4KeyContextRef)storageKey;
 
-+ (id)keyWithString:(NSString *)inKeyJSON passCode:(NSString*)passCode;
++ (instancetype)keyWithString:(NSString *)inKeyJSON
+                     passCode:(NSString *)passCode;
 
-- (id)initWithUUID:(NSString *)inUUID
-           keyJSON:(NSString *)inKeyJSON;
++ (instancetype)keyWithS4Key:(S4KeyContextRef)symCtx
+                  storageKey:(S4KeyContextRef)storageKey;
 
-+(id) keyWithS4Key:(S4KeyContextRef)symCtx
-        storageKey:(S4KeyContextRef)storageKey;
-
+- (instancetype)initWithUUID:(NSString *)uuid
+			            keyJSON:(NSString *)keyJSON;
 
 @property (nonatomic, copy, readonly) NSString * uuid;
+
+/**
+ * A string that contains the serialized JSON parameters that can be used to create the symmetic key.
+ */
 @property (nonatomic, copy, readonly) NSString * keyJSON;
 
-// Convenience properties
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Convenience Properties
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-@property (nonatomic, readonly) NSDictionary * keyDict; // parsed keyJSON (cached, thread-safe)
+/**
+ * Returns a parsed version of `pubKeyJSON`.
+ * The parsed version is kept cached in memory for performance.
+ */
+@property (nonatomic, readonly) NSDictionary * keyDict;
 
 @end
+
+NS_ASSUME_NONNULL_END

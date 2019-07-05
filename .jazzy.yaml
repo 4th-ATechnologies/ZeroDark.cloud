@@ -16,7 +16,6 @@ custom_categories:
   - ZDCTreesystemPath
 - name: Managers
   children:
-  - ZDCCloudNodeManager
   - ZDCCloudPathManager
   - ZDCDatabaseManager
   - ZDCDatabaseKeyManager
@@ -37,7 +36,6 @@ custom_categories:
 - name: Model
   children:
   - ZDCCloudDataInfo
-  - ZDCCloudNode
   - ZDCContainerNode
   - ZDCLocalUser
   - ZDCLocalUserAuth

@@ -14,16 +14,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * The PublicKey class holds the information necessary to create a public key within the S4Crypto library.
- * It may optionally hold the information for the corresponding private key (typically for local users).
+ * It may optionally hold the information for the corresponding private key (if the key is for a local user).
  */
 @interface ZDCPublicKey : ZDCObject <NSCoding, NSCopying>
 
 /**
  * Generates a random public/private key pair.
  */
-+ (id)privateKeyWithOwner:(NSString *)userID
-               storageKey:(S4KeyContextRef)storageKey
-                algorithm:(Cipher_Algorithm)algorithm;
++ (instancetype)privateKeyWithOwner:(NSString *)userID
+                         storageKey:(S4KeyContextRef)storageKey
+                          algorithm:(Cipher_Algorithm)algorithm;
 
 /**
  * Creates a new PublicKey instance from the given parameters.
@@ -113,26 +113,47 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, copy, readonly, nullable) NSString * privKeyJSON;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Convenience Properties
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
- * Convenience method - returns YES if privKeyJSON is non-nil.
+ * Returns YES if privKeyJSON is non-nil.
  */
 @property (nonatomic, readonly) BOOL isPrivateKey;
 
-// Extracted info from parsed keyJSON
+/**
+ * Returns a parsed version of `pubKeyJSON`.
+ * The parsed version is kept cached in memory for performance.
+ */
+@property (nonatomic, readonly) NSDictionary *keyDict;
 
-@property (nonatomic, readonly) NSDictionary *keyDict; // Parsed keyJSON
+/**
+ * Reads & returns the keyID from the keyDict.
+ */
 @property (nonatomic, readonly, nullable) NSString * keyID;
+
+/**
+ * Reads & returns the eTag from the keyDict.
+ */
 @property (nonatomic, readonly, nullable) NSString * eTag;
 
-- (BOOL)updateKeyProperty:(NSString *)propertyID
-                    value:(NSData *)value
-               storageKey:(S4KeyContextRef)storageKey
-                    error:(NSError *_Nullable *_Nullable)errorOut;
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Methods
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Performs self-test by attempting to create an S4KeyContext from the pubKeyJSON.
  */
 - (BOOL)checkKeyValidityWithError:(NSError *_Nullable *_Nullable)errorOut;
+
+/**
+ * Modifies the pubKeyJSON and/or privKeyJSON by setting the given property.
+ */
+- (BOOL)updateKeyProperty:(NSString *)propertyID
+                    value:(NSData *)value
+               storageKey:(S4KeyContextRef)storageKey
+                    error:(NSError *_Nullable *_Nullable)errorOut;
 
 /**
  * Used when migrating a PrivateKey to a PublicKey.

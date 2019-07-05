@@ -23,7 +23,7 @@ static NSString *const k_keyJSON     = @"keyJSON";
 
 @implementation ZDCSymmetricKey
 
-@synthesize uuid   = uuid;
+@synthesize uuid = uuid;
 @synthesize keyJSON = keyJSON;
 
 @synthesize cachedKeyDict = _cachedKeyDict_atomic_property_must_use_selfDot_syntax;
@@ -160,8 +160,8 @@ done:
 
 
 
-+(id) keyWithS4Key:(S4KeyContextRef)symCtx
-        storageKey:(S4KeyContextRef)storageKey
++ (instancetype)keyWithS4Key:(S4KeyContextRef)symCtx
+                  storageKey:(S4KeyContextRef)storageKey
 {
     ZDCSymmetricKey *key = nil;
     
@@ -209,8 +209,8 @@ done:
     return key;
 }
 
-- (id)initWithUUID:(NSString *)inUUID
-           keyJSON:(NSString *)inKeyJSON
+- (instancetype)initWithUUID:(NSString *)inUUID
+                     keyJSON:(NSString *)inKeyJSON
 {
 	if ((self = [super init]))
 	{
@@ -274,10 +274,10 @@ done:
 **/
 + (NSMutableSet *)monitoredProperties
 {
-    NSMutableSet *result = [super monitoredProperties];
-    [result removeObject:@"cachedKeyDict"];
-    
-    return result;
+	NSMutableSet *result = [super monitoredProperties];
+	[result removeObject:NSStringFromSelector(@selector(cachedKeyDict))];
+	
+	return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
