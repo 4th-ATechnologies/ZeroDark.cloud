@@ -768,25 +768,32 @@ done:
 			goto done;
 		}
 		
-		decrypted_data = [encrypted_data decryptedDataWithSymmetricKey:cloudRcrd.encryptionKey error:&error];
-		if (error) goto done;
-		
-		NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:decrypted_data options:0 error:&error];
-		if (error) goto done;
-		
-		if (![dict isKindOfClass:[NSDictionary class]])
+		if (encrypted_data.length == 0)
 		{
-			error = [self errorWithDescription:@"dict[meta] has bad value (1002)."];
-			goto done;
+			cloudRcrd.metadata = [NSDictionary dictionary];
 		}
-		
-		// Since JSON doesn't support NSData (binary), we may have converted from NSData to NSString.
-		// Undo that here (if needed).
-		//
-		NSMutableDictionary *dict_sanitized = [dict mutableCopy];
-		[dict_sanitized normalizeFromJSON];
-		
-		cloudRcrd.metadata = dict_sanitized;
+		else
+		{
+			decrypted_data = [encrypted_data decryptedDataWithSymmetricKey:cloudRcrd.encryptionKey error:&error];
+			if (error) goto done;
+			
+			NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:decrypted_data options:0 error:&error];
+			if (error) goto done;
+			
+			if (![dict isKindOfClass:[NSDictionary class]])
+			{
+				error = [self errorWithDescription:@"dict[meta] has bad value (1002)."];
+				goto done;
+			}
+			
+			// Since JSON doesn't support NSData (binary), we may have converted from NSData to NSString.
+			// Undo that here (if needed).
+			//
+			NSMutableDictionary *dict_sanitized = [dict mutableCopy];
+			[dict_sanitized normalizeFromJSON];
+			
+			cloudRcrd.metadata = dict_sanitized;
+		}
 	}
 	
 	// Process data
@@ -799,32 +806,38 @@ done:
 		}
 		
 		encrypted_data = [[NSData alloc] initWithBase64EncodedString:encrypted_string options:0];
-		
 		if (!encrypted_data)
 		{
 			error = [self errorWithDescription:@"dict[data] has bad value (1001)."];
 			goto done;
 		}
 		
-		decrypted_data = [encrypted_data decryptedDataWithSymmetricKey:cloudRcrd.encryptionKey error:&error];
-		if (error) goto done;
-		
-		NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:decrypted_data options:0 error:&error];
-		if (error) goto done;
-		
-		if (![dict isKindOfClass:[NSDictionary class]])
+		if (encrypted_data.length == 0)
 		{
-			error = [self errorWithDescription:@"dict[data] has bad value (1002)."];
-			goto done;
+			cloudRcrd.data = [NSDictionary dictionary];
 		}
+		else
+		{
+			decrypted_data = [encrypted_data decryptedDataWithSymmetricKey:cloudRcrd.encryptionKey error:&error];
+			if (error) goto done;
 		
-		// Since JSON doesn't support NSData (binary), we may have converted from NSData to NSString.
-		// Undo that here (if needed).
-		//
-		NSMutableDictionary *dict_sanitized = [dict mutableCopy];
-		[dict_sanitized normalizeFromJSON];
+			NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:decrypted_data options:0 error:&error];
+			if (error) goto done;
 		
-		cloudRcrd.data = dict_sanitized;
+			if (![dict isKindOfClass:[NSDictionary class]])
+			{
+				error = [self errorWithDescription:@"dict[data] has bad value (1002)."];
+				goto done;
+			}
+		
+			// Since JSON doesn't support NSData (binary), we may have converted from NSData to NSString.
+			// Undo that here (if needed).
+			//
+			NSMutableDictionary *dict_sanitized = [dict mutableCopy];
+			[dict_sanitized normalizeFromJSON];
+		
+			cloudRcrd.data = dict_sanitized;
+		}
 	}
 	
 done:

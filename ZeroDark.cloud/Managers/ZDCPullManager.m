@@ -2308,9 +2308,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	
 	NSArray<NSString *> *containerIDs = @[
 		[ZDCContainerNode uuidForLocalUserID:localUserID zAppID:zAppID container:ZDCTreesystemContainer_Home],
-	//	[ZDCContainerNode uuidForLocalUserID:localUserID zAppID:zAppID container:ZDCTreeesystemContainer_Prefs],
-	//	[ZDCContainerNode uuidForLocalUserID:localUserID zAppID:zAppID container:ZDCTreesystemContainer_Inbox],
-	//	[ZDCContainerNode uuidForLocalUserID:localUserID zAppID:zAppID container:ZDCTreesystemContainer_Outbox]
+		[ZDCContainerNode uuidForLocalUserID:localUserID zAppID:zAppID container:ZDCTreesystemContainer_Prefs],
+		[ZDCContainerNode uuidForLocalUserID:localUserID zAppID:zAppID container:ZDCTreesystemContainer_Inbox],
+		[ZDCContainerNode uuidForLocalUserID:localUserID zAppID:zAppID container:ZDCTreesystemContainer_Outbox]
 	];
 	
 	NSMutableArray<ZDCContainerNode *> *containerNodes = [NSMutableArray arrayWithCapacity:containerIDs.count];
@@ -3487,16 +3487,25 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			else // if (node == nil)
 			{
 				node = [[ZDCNode alloc] initWithLocalUserID:pullState.localUserID];
-				
 				node.parentID = parentID;
-				node.name = cloudRcrd.metadata[kZDCCloudRcrd_Meta_Filename];
 				
-				NSString *localCloudName = [cloudPathManager cloudNameForNode:node transaction:transaction];
-				if (![localCloudName isEqualToString:remoteCloudName])
+				NSString *filename = cloudRcrd.metadata[kZDCCloudRcrd_Meta_Filename];
+				if (filename)
 				{
-					DDLogWarn(@"Hash Mismatch: calculated cloudName(%@) != remoteCloudName(%@)",
-					          localCloudName, remoteCloudName);
+					node.name = filename;
 					
+					NSString *localCloudName = [cloudPathManager cloudNameForNode:node transaction:transaction];
+					if (![localCloudName isEqualToString:remoteCloudName])
+					{
+						DDLogWarn(@"Hash Mismatch: calculated cloudName(%@) != remoteCloudName(%@)",
+									 localCloudName, remoteCloudName);
+						
+						node.explicitCloudName = remoteCloudName;
+					}
+				}
+				else
+				{
+					node.name = remoteCloudName;
 					node.explicitCloudName = remoteCloudName;
 				}
 				
@@ -3514,19 +3523,16 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				{
 					dirSalt = [[NSData alloc] initWithBase64EncodedString:(NSString *)dirSalt options:0];
 				}
-				
-				if ([dirSalt isKindOfClass:[NSData class]]) {
+				if ([dirSalt isKindOfClass:[NSData class]])
+				{
 					node.dirSalt = dirSalt;
-				}
-				else {
-					DDLogWarn(@"Missing directory salt: %@", node.name);
 				}
 				
 				NSMutableArray<ZDCNode*> *children = nil;
 				
 				if (![cloudRcrd usingAdvancedChildrenContainer])
 				{
-					node.dirPrefix = [cloudRcrd dirPrefix];
+					node.dirPrefix = [cloudRcrd dirPrefix] ?: kZDCDirPrefix_Fake;
 				}
 				else // fixed set of children
 				{

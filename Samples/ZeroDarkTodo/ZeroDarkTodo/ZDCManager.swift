@@ -628,11 +628,64 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	///
 	func data(forMessage message: ZDCNode, transaction: YapDatabaseReadTransaction) -> ZDCData? {
 		
-	//	var dict = [String: String]()
-	//	dict["msg"] = "I'd like to invite you to collaborate."
-	//	dict["listID"] = "something needs to go here..."
+		// We're going to send a JSON message.
+		// It will contain our invitation to collaborate on the List.
+		//
+		var dict = [String: String]()
 		
-		return nil
+		// When we enqueued the message, we tagged it with the corresponding listID.
+		// So we can fetch our listID via this tag.
+		guard
+			let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: message.localUserID),
+		   let listID = cloudTransaction.tag(forNodeID: message.uuid, withIdentifier: "listID") as? String,
+			let list = transaction.object(forKey: listID, inCollection: kZ2DCollection_List) as? List
+		else {
+			return nil
+		}
+		
+		// Here's what we want our message to look like:
+		// {
+		//   "name": "Holiday Groceries",
+		//   "msg": "Hi Bob's, let collaborate on the shopping list for the holidays!",
+		//   "path": "com.4th-a.ZeroDarkTodo/abc123/def456"
+		// }
+		
+		dict["name"] = list.title
+		
+		if let invitation = list.invitations[message.uuid] {
+			dict["msg"] = invitation
+		}
+		else {
+			// If the user didn't type in any specific invitation text, then we can leave the message blank.
+			// And the app will display a generic invitation message.
+		}
+		
+		// We also need to include the cloud path to the node.
+		// This will allow the message receiver to link the node into their treesystem.
+		//
+		// To get the cloudPath, we can use the ZDCCloudPathManager.
+		
+		if let listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List),
+		   let locator = zdc.cloudPathManager.cloudLocator(for: listNode, transaction: transaction)
+		{
+			dict["path"] = locator.cloudPath.path()
+		}
+		else {
+			// This information isn't optional !
+			return nil
+		}
+		
+		// Convert to JSON, and return data
+		do {
+			let encoder = JSONEncoder()
+			let jsonData = try encoder.encode(dict)
+			return ZDCData(data: jsonData)
+			
+		} catch {
+			
+			print("Error encoding message dict to JSON: \(error)")
+			return nil
+		}
 	}
 	
 	func didSendMessage(_ message: ZDCNode, transaction: YapDatabaseReadWriteTransaction) {
@@ -657,48 +710,78 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		
 		// What kind of node is this ?
 		//
-		// For this sample application,
-		// the easiest way to answer that question is by looking at the path.
+		// If it's in the home container, it could be:
+		// - List object
+		// - Task object
+		// - Task image
 		//
-		// Given our tree hierarchy:
+		// If it's in the inbox or outbox continer:
+		// - Invitation message
 		//
-		// - All List objects have a path that looks like : /X
-		// - All Task objects have a path that looks like : /X/Y
-		// - All Task images have a path that looks like  : /X/Y/Z
-		//
-		// So we know what type of node we're downloading based on the number of path components.
-		//
-		switch path.pathComponents.count
-		{
-			case 1:
-				// This is a List object.
-				cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+		switch path.container {
+			
+			case .home:
 				
+				// Given our tree hierarchy:
+				//
+				// - All List objects have a path that looks like : /X
+				// - All Task objects have a path that looks like : /X/Y
+				// - All Task images have a path that looks like  : /X/Y/Z
+				//
+				// So we know what type of node we're downloading based on the number of path components.
+				//
+				switch path.pathComponents.count {
+					
+					case 1:
+						// This is a List object.
+						cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+						
+						// We can download it now.
+						downloadNode(node, at: path)
+					
+					case 2:
+						// This is a Task object.
+						cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+						
+						// Download it now IFF we have the parent List already.
+						if let parentNodeID = node.parentID,
+							let _/* listID */ = cloudTransaction.linkedKey(forNodeID: parentNodeID)
+						{
+							downloadNode(node, at: path)
+						}
+					
+					case 3:
+						// This is a Task IMAGE.
+						let components: ZDCNodeComponents = [.thumbnail, .data]
+						cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: components)
+					
+						// Don't bother downloading this right now.
+						// We can download it on demand via the UI.
+						// In fact, the ZDCImageManager will help us out with it.
+					
+					default:
+						print("Unknown cloud path: \(path)")
+				}
+			
+			case .inbox:
+			
+				// This is an incoming message.
+				cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+			
 				// We can download it now.
 				downloadNode(node, at: path)
 			
-			case 2:
-				// This is a Task object.
-				cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
-				
-				// Download it now IFF we have the parent List already.
-				if let parentNodeID = node.parentID,
-					let _/* listID */ = cloudTransaction.linkedKey(forNodeID: parentNodeID)
-				{
-					downloadNode(node, at: path)
-				}
+			case .outbox:
 			
-			case 3:
-				// This is a Task IMAGE.
-				let components: ZDCNodeComponents = [.thumbnail, .data]
-				cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: components)
-				
-				// Don't bother downloading this right now.
-				// We can download it on demand via the UI.
-				// In fact, the ZDCImageManager will help us out with it.
+				// This is an outgoing message.
+				// We don't care about these now,
+				// because we don't really display them in our app.
+				break
 			
 			default:
-				print("Unknown cloud path: \(path)")
+			
+				// We don't do anything with the other containers in this app.
+				break
 		}
 	}
 	
@@ -740,51 +823,80 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			//
 			// i.e. a serialized List, Task or TaskImage.
 			
-			
 			// What kind of node is this ?
 			//
-			// For this sample application,
-			// the easiest way to answer that question is by looking at the path.
+			// If it's in the home container, it could be:
+			// - List object
+			// - Task object
+			// - Task image
 			//
-			// Given our tree hierarchy:
+			// If it's in the inbox or outbox continer:
+			// - Invitation message
 			//
-			// - All List objects have a path that looks like : /X
-			// - All Task objects have a path that looks like : /X/Y
-			// - All Task images have a path that looks like  : /X/Y/Z
-			//
-			// So we know what type of node we're downloading based on the number of path components.
-			//
-			switch path.pathComponents.count
-			{
-				case 1:
-					// This is a List object.
-					cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+			switch path.container {
+				
+				case .home:
 					
-					// We can download it immediately.
-					downloadNode(node, at: path)
-			
-				case 2:
-					// This is a Task object.
-					cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+					// Given our tree hierarchy:
+					//
+					// - All List objects have a path that looks like : /X
+					// - All Task objects have a path that looks like : /X/Y
+					// - All Task images have a path that looks like  : /X/Y/Z
+					//
+					// So we know what type of node we're downloading based on the number of path components.
+					//
+					switch path.pathComponents.count {
+						
+						case 1:
+							// This is a List object.
+							cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+							
+							// We can download it immediately.
+							downloadNode(node, at: path)
 					
-					// Download it IFF we have the parent List already.
-					if let parentNodeID = node.parentID,
-					   let _/* listID */ = cloudTransaction.linkedKey(forNodeID: parentNodeID)
-					{
-						downloadNode(node, at: path)
+						case 2:
+							// This is a Task object.
+							cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+							
+							// Download it IFF we have the parent List already.
+							if let parentNodeID = node.parentID,
+								let _/* listID */ = cloudTransaction.linkedKey(forNodeID: parentNodeID)
+							{
+								downloadNode(node, at: path)
+							}
+						
+						case 3:
+							// This is a Task IMAGE.
+							let components: ZDCNodeComponents = [.thumbnail, .data]
+							cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: components)
+						
+							// Don't bother downloading this right now.
+							// We can download it on demand via the UI.
+							// In fact, the ZDCImageManager will help us out with it.
+					
+						default:
+							print("Unknown cloud path: \(path)")
 					}
 				
-			case 3:
-					// This is a Task IMAGE.
-					let components: ZDCNodeComponents = [.thumbnail, .data]
-					cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: components)
+				case .inbox:
+				
+					// This is an incoming message.
+					cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
 					
-					// Don't bother downloading this right now.
-					// We can download it on demand via the UI.
-					// In fact, the ZDCImageManager will help us out with it.
-			
+					// We can download it now.
+					downloadNode(node, at: path)
+				
+				case .outbox:
+					
+					// This is an outgoing message.
+					// We don't care about these now,
+					// because we don't really display them in our app.
+					break
+				
 				default:
-					print("Unknown cloud path: \(path)")
+				
+					// We don't do anything with the other containers in this app.
+					break
 			}
 		}
 	}
@@ -944,28 +1056,49 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		
 		let nodeID = node.uuid
 		
-		// Given our tree hierarchy:
-		//
-		// - All List objects have a path that looks like : /X
-		// - All Task objects have a path that looks like : /X/Y
-		// - All Task images have a path that looks like  : /X/Y/Z
-		//
-		// So we can identify the type of node based on the number of path components.
-		
 		var isListNode = false
 		var isTaskNode = false
+		var isInvitation = false
 		
-		switch path.pathComponents.count
-		{
-			case 1:
-				isListNode = true
-			case 2:
-				isTaskNode = true
+		// What kind of node is this ?
+		//
+		// If it's in the home container, it could be:
+		// - List object
+		// - Task object
+		// - Task image
+		//
+		// If it's in the inbox or outbox continer:
+		// - Invitation message
+		//
+		switch path.container{
+			
+			case .home:
+				
+				// Given our tree hierarchy:
+				//
+				// - All List objects have a path that looks like : /X
+				// - All Task objects have a path that looks like : /X/Y
+				// - All Task images have a path that looks like  : /X/Y/Z
+				//
+				// So we can identify the type of node based on the number of path components.
+				//
+				switch path.pathComponents.count {
+					case 1:
+						isListNode = true
+					case 2:
+						isTaskNode = true
+					default:
+						break
+				}
+			
+			case .inbox:
+				isInvitation = true
+			
 			default:
 				break
 		}
 		
-		if !isListNode && !isTaskNode {
+		if !isListNode && !isTaskNode && !isInvitation {
 			
 			print("No clue what you're asking me to download...")
 			return
@@ -1010,8 +1143,11 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					if isListNode {
 						self.processDownloadedList(cleartext, forNodeID: nodeID, withETag: cloudDataInfo.eTag)
 					}
-					else {
+					else if isTaskNode {
 						self.processDownloadedTask(cleartext, forNodeID: nodeID, withETag: cloudDataInfo.eTag)
+					}
+					else {
+						self.processDownloadedInvitation(cleartext, forNodeID: nodeID, withETag: cloudDataInfo.eTag)
 					}
 					
 				} catch {
@@ -1072,11 +1208,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				
 				guard
 					let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-					
-					let containerNode = nodeManager.containerNode(forLocalUserID : localUserID,
-																				 zAppID         : kZDC_zAppID,
-																				 container      : .home,
-																				 transaction    : transaction)
+					let containerNode = cloudTransaction.containerNode(.home)
 				else {
 					continue
 				}
@@ -1462,6 +1594,15 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		})
 	}
 	
+	/// Invoked after an (incoming) invitation has been downloaded from the cloud.
+	///
+	private func processDownloadedInvitation(_ cleartext: Data, forNodeID nodeID: String, withETag eTag: String) {
+		
+		print("processDownloadedInvitation")
+		
+		// Todo...
+	}
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// MARK: Sharing Logic
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1534,6 +1675,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					let signal = ZDCNode(localUserID: localUserID)
 					do {
 						try cloudTransaction.sendSignal(signal, to: user)
+						cloudTransaction.setTag(listID, forNodeID: signal.uuid, withIdentifier: "listID")
 					}
 					catch {
 						print("Error sending message: \(error)")

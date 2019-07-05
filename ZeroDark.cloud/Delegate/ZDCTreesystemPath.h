@@ -22,7 +22,7 @@ typedef NS_ENUM(NSInteger, ZDCTreesystemContainer) {
 	/** The 'Home' container is where your app stores the majority of its data. */
 	ZDCTreesystemContainer_Home,
 	
-	/** A simple container designed for storing (synced) user preferences.   */
+	/** A simple container designed for storing (synced) user preferences. */
 	ZDCTreesystemContainer_Prefs,
 	
 	/**

@@ -40,6 +40,7 @@ custom_categories:
   - ZDCLocalUser
   - ZDCLocalUserAuth
   - ZDCNode
+  - ZDCNodeAnchor
   - ZDCPublicKey
   - ZDCShareItem
   - ZDCShareList
