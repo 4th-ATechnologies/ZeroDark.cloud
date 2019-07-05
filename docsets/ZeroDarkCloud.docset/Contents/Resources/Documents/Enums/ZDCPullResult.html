@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           ZeroDarkCloud Docs
         </a>
-         (89% documented)
+         (92% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -70,9 +70,6 @@
           <li class="nav-group-name">
             <a class="nav-group-name-link" href="../Managers.html">Managers</a>
             <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Classes/ZDCCloudNodeManager.html">ZDCCloudNodeManager</a>
-              </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/ZDCCloudPathManager.html">ZDCCloudPathManager</a>
               </li>
@@ -131,9 +128,6 @@
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/ZDCCloudDataInfo.html">ZDCCloudDataInfo</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Classes/ZDCCloudNode.html">ZDCCloudNode</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/ZDCContainerNode.html">ZDCContainerNode</a>
@@ -770,19 +764,11 @@
             <h1>ZDCPullResult</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight objective_c"><code><span class="n">NS_ENUM</span><span class="p">(</span><span class="n">NSInteger</span><span class="p">,</span> <span class="n">ZDCPullResult</span><span class="p">)</span> <span class="p">{</span>
-	
-	<span class="n">ZDCPullResult_Success</span>           <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-	<span class="n">ZDCPullResult_ManuallyAborted</span>   <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="c1">// explicitly cancelled (by user, or due to backgrounding, etc)</span>
-	
-	<span class="n">ZDCPullResult_Fail_CloudChanged</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="c1">// retry soon</span>
-	<span class="n">ZDCPullResult_Fail_Unknown</span>      <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="c1">// retry after exponential delay</span>
-	<span class="n">ZDCPullResult_Fail_Auth</span>         <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="c1">// retry requires new auth</span>
-<span class="p">}</span></code></pre>
+                  <pre class="highlight objective_c"><code><span class="k">enum</span> <span class="n">ZDCPullResult</span> <span class="p">{}</span></code></pre>
 
                 </div>
               </div>
-            <p>Undocumented</p>
+            <p>Specifies the final result of a pull attempt.</p>
 
           </div>
         </section>
@@ -804,14 +790,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The pull operation was successful, and the client is now up-to-date with the cloud.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="n">ZDCPullResult_Success</span>           <span class="o">=</span> <span class="mi">0</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="n">ZDCPullResult_Success</span> <span class="o">=</span> <span class="mi">0</span></code></pre>
 
                         </div>
                         <div class="language">
@@ -836,14 +822,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The pull operation was cancelled by request.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="n">ZDCPullResult_ManuallyAborted</span>   <span class="o">=</span> <span class="mi">1</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="n">ZDCPullResult_ManuallyAborted</span> <span class="o">=</span> <span class="mi">1</span></code></pre>
 
                         </div>
                         <div class="language">
@@ -868,7 +854,12 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The pull operation failed temporarily.</p>
+
+<p>While the framework was pulling data from the cloud,
+ the state of the treesystem changed sufficiently to require the pull system to start over.</p>
+
+<p>When this failure occurs, the framework will retry a pull soon.</p>
 
                       </div>
                       <div class="declaration">
@@ -900,14 +891,17 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The pull operation failed.</p>
+
+<p>The framework encountered an unknown error during the pull process.
+ When this failure occurs, the framework will rety, using a delay based on exponential backoff.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="n">ZDCPullResult_Fail_Unknown</span>      <span class="o">=</span> <span class="mi">3</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="n">ZDCPullResult_Fail_Unknown</span> <span class="o">=</span> <span class="mi">3</span></code></pre>
 
                         </div>
                         <div class="language">
@@ -932,14 +926,17 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The pull operation failed due to an authentication problem.</p>
+
+<p>The framework will be unable to retry a pull until the user is reauthenticated.
+ Typically this occurs when the user account has been suspended or deleted (due to a missed payment).</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="n">ZDCPullResult_Fail_Auth</span>         <span class="o">=</span> <span class="mi">4</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="n">ZDCPullResult_Fail_Auth</span> <span class="o">=</span> <span class="mi">4</span></code></pre>
 
                         </div>
                         <div class="language">
@@ -959,7 +956,7 @@
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-07-04)</p>
+      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-07-05)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

@@ -23,7 +23,7 @@
         <a class="header-link" href="index.html">
           ZeroDarkCloud Docs
         </a>
-         (89% documented)
+         (92% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -70,9 +70,6 @@
           <li class="nav-group-name">
             <a class="nav-group-name-link" href="Managers.html">Managers</a>
             <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Classes/ZDCCloudNodeManager.html">ZDCCloudNodeManager</a>
-              </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Classes/ZDCCloudPathManager.html">ZDCCloudPathManager</a>
               </li>
@@ -131,9 +128,6 @@
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Classes/ZDCCloudDataInfo.html">ZDCCloudDataInfo</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Classes/ZDCCloudNode.html">ZDCCloudNode</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Classes/ZDCContainerNode.html">ZDCContainerNode</a>
@@ -779,94 +773,6 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCCloudNodeManager"></a>
-                    <a name="//apple_ref/objc/Class/ZDCCloudNodeManager" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCCloudNodeManager">ZDCCloudNodeManager</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                        <a href="Classes/ZDCCloudNodeManager.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@interface</span> <span class="nc">ZDCCloudNodeManager</span> <span class="p">:</span> <span class="nc">NSObject</span>
-
-<span class="cm">/**
- * Returns singleton instance.
- */</span>
-<span class="k">+</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="n">sharedInstance</span><span class="p">;</span>
-
-<span class="c1">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////</span>
-<span class="cp">#pragma mark Find CloudNode
-</span><span class="c1">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////</span>
-
-<span class="cm">/**
- * Locates the cloudNode using only the cloud path information.
- *
- * Use this method when you're only interested in what information we have for a specific cloud location.
- */</span>
-<span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n"><a href="Classes/ZDCCloudNode.html">ZDCCloudNode</a></span> <span class="o">*</span><span class="p">)</span><span class="nf">findCloudNodeWithCloudPath</span><span class="p">:(</span><span class="n"><a href="Classes/ZDCCloudPath.html">ZDCCloudPath</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">cloudPath</span>
-                                               <span class="nf">bucket</span><span class="p">:(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">bucket</span>
-                                               <span class="nf">region</span><span class="p">:(</span><span class="n"><a href="Enums/AWSRegion.html">AWSRegion</a></span><span class="p">)</span><span class="nv">region</span>
-                                          <span class="nf">localUserID</span><span class="p">:(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">localUserID</span>
-                                          <span class="nf">transaction</span><span class="p">:(</span><span class="n">YapDatabaseReadTransaction</span> <span class="o">*</span><span class="p">)</span><span class="nv">transaction</span><span class="p">;</span>
-
-<span class="c1">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////</span>
-<span class="cp">#pragma mark Enumerate CloudNodes
-</span><span class="c1">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////</span>
-
-<span class="cm">/**
- * Enumerates all ZDCCloudNode's whose cloudLocator.cloudPath.dirPrefix matches the given parent.dirPrefix.
- *
- * This only includes the direct (first generation) children of the given parent.
- * Further ancestors (grandchildren, etc) are NOT enumerated.
- */</span>
-<span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">enumerateCloudNodesWithParent</span><span class="p">:(</span><span class="n"><a href="Classes/ZDCCloudNode.html">ZDCCloudNode</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">parent</span>
-                          <span class="nf">transaction</span><span class="p">:(</span><span class="n">YapDatabaseReadTransaction</span> <span class="o">*</span><span class="p">)</span><span class="nv">transaction</span>
-                           <span class="nf">usingBlock</span><span class="p">:(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n"><a href="Classes/ZDCCloudNode.html">ZDCCloudNode</a></span> <span class="o">*</span><span class="n">cloudNode</span><span class="p">,</span> <span class="n">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">))</span><span class="nv">enumBlock</span><span class="p">;</span>
-
-<span class="cm">/**
- * Enumerates all ZDCCloudNodes's who are ancestors of the given parent.
- *
- * This includes direct children, as well as further ancestors (grandchildren, etc).
- */</span>
-<span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">recursiveEnumerateCloudNodesWithParent</span><span class="p">:(</span><span class="n"><a href="Classes/ZDCCloudNode.html">ZDCCloudNode</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">parent</span>
-                                   <span class="nf">transaction</span><span class="p">:(</span><span class="n">YapDatabaseReadTransaction</span> <span class="o">*</span><span class="p">)</span><span class="nv">transaction</span>
-                                    <span class="nf">usingBlock</span><span class="p">:(</span><span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n"><a href="Classes/ZDCCloudNode.html">ZDCCloudNode</a></span> <span class="o">*</span><span class="n">cloudNode</span><span class="p">,</span> <span class="n">BOOL</span> <span class="o">*</span><span class="n">stop</span><span class="p">))</span><span class="nv">enumBlock</span><span class="p">;</span>
-
-<span class="cm">/**
- * Returns a list of all cloudNodeID's belonging to the given user.
- */</span>
-<span class="k">-</span> <span class="p">(</span><span class="n">NSArray</span><span class="o">&lt;</span><span class="n">NSString</span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span><span class="nf">allCloudNodeIDsWithLocalUserID</span><span class="p">:(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">localUserID</span>
-                                            <span class="nf">transaction</span><span class="p">:(</span><span class="n">YapDatabaseReadTransaction</span> <span class="o">*</span><span class="p">)</span><span class="nv">transaction</span><span class="p">;</span>
-
-<span class="k">@end</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">ZDCCloudNodeManager</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <ul class="item-container">
-                <li class="item">
-                  <div>
-                    <code>
                     <a name="/c:objc(cs)ZDCCloudPathManager"></a>
                     <a name="//apple_ref/objc/Class/ZDCCloudPathManager" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)ZDCCloudPathManager">ZDCCloudPathManager</a>
@@ -1394,31 +1300,31 @@ This includes both node thumbnails &amp; user avatars.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The sync process can be broken down into 2 components:</p>
+                        <p>The PullManager handles pulling changes down from the cloud.</p>
 
-<ul>
-<li>Push</li>
-<li>Pull</li>
-</ul>
-
-<p>If you&rsquo;ve used git before, you&rsquo;re already familiar with the process.
+<p>The sync process can be broken down into 2 components: Push &amp; Pull.
+ If you&rsquo;ve used git before, you&rsquo;re already familiar with the process.
  You push changes (made locally) to the cloud. And you pull changes (made on remote devices) from the cloud.</p>
 
 <p>This class handles the PULL side of things.</p>
 
-<p>In particular, the PullManager will automatically keep the local filesystem information
- up-to-date with the cloud. This ONLY includes the bare filesystem information:</p>
+<p>In particular, the PullManager will automatically keep the local treesystem information
+ up-to-date with the cloud. This ONLY includes the treesystem metadata information, such as:</p>
 
 <ul>
 <li>names of nodes</li>
 <li>their permissions</li>
-<li>their location within the filesystem/tree</li>
+<li>their location within the tree</li>
 </ul>
 
-<p>The ZeroDarkCloud framework doesn&rsquo;t automatically download node data (date == the content your app generates).
- You are in complete control of that, which allows you to optimize for your app. For example,
- you may choose to only download a small part of what&rsquo;s stored in the cloud. Or perhaps there
- are certain items you only download on demand.</p>
+<p>The ZeroDarkCloud framework doesn&rsquo;t automatically download node data (the content your app generates).
+ You are in complete control of that, which allows you to optimize for your app. For example, you can:</p>
+
+<ul>
+<li>download only recent data</li>
+<li>download data on demand (as the app needs it)</li>
+<li>download a small part of what&rsquo;s stored in the cloud (i.e. thumbnails instead of full images)</li>
+</ul>
 
                         <a href="Classes/ZDCPullManager.html" class="slightly-smaller">See more</a>
                       </div>
@@ -1455,14 +1361,10 @@ This includes both node thumbnails &amp; user avatars.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The sync process can be broken down into 2 components:</p>
+                        <p>The PushManager handles pushing changes up to the cloud.</p>
 
-<ul>
-<li>Push</li>
-<li>Pull</li>
-</ul>
-
-<p>If you&rsquo;ve used git before, you&rsquo;re already familiar with the process.
+<p>The sync process can be broken down into 2 components: Push &amp; Pull.
+ If you&rsquo;ve used git before, you&rsquo;re already familiar with the process.
  You push changes (made locally) to the cloud. And you pull changes (made on remote devices) from the cloud.</p>
 
 <p>This class handles the PUSH side of things.</p>
@@ -1603,6 +1505,17 @@ This includes both node thumbnails &amp; user avatars.</p>
                       <div class="abstract">
                         <p>The SyncManager simplifies many aspects of determining sync state.</p>
 
+<p>In particular, it can tell you:</p>
+
+<ul>
+<li>whether or not the framework is <q>syncing</q> data (pushing or pulling)</li>
+<li>which nodes are being synced</li>
+</ul>
+
+<p>The framework can run on autopilot most of the time.
+ But this class gives you fine grained controls.
+ For example, you can pause the push queue for a particular user so changes aren&rsquo;t uploaded.</p>
+
                         <a href="Classes/ZDCSyncManager.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
@@ -1704,7 +1617,7 @@ creating, signing-in and managing ZDCLocalUsers</p>
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-07-04)</p>
+      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-07-05)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

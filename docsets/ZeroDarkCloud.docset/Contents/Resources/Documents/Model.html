@@ -23,7 +23,7 @@
         <a class="header-link" href="index.html">
           ZeroDarkCloud Docs
         </a>
-         (89% documented)
+         (92% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -70,9 +70,6 @@
           <li class="nav-group-name">
             <a class="nav-group-name-link" href="Managers.html">Managers</a>
             <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Classes/ZDCCloudNodeManager.html">ZDCCloudNodeManager</a>
-              </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Classes/ZDCCloudPathManager.html">ZDCCloudPathManager</a>
               </li>
@@ -131,9 +128,6 @@
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Classes/ZDCCloudDataInfo.html">ZDCCloudDataInfo</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Classes/ZDCCloudNode.html">ZDCCloudNode</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Classes/ZDCContainerNode.html">ZDCContainerNode</a>
@@ -820,49 +814,6 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCCloudNode"></a>
-                    <a name="//apple_ref/objc/Class/ZDCCloudNode" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCCloudNode">ZDCCloudNode</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>ZDCCloudNode represents a node that exists in the cloud,
- but isn&rsquo;t represented in the local filesystem (as a ZDCCNode) because either:</p>
-
-<ul>
-<li>the node has been deleted locally (but we haven&rsquo;t yet pushed the delete request to the server)</li>
-<li>the node appears to be an orphan (the rcrd file exists on the server, but there&rsquo;s no matching data file)</li>
-</ul>
-
-                        <a href="Classes/ZDCCloudNode.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@interface</span> <span class="nc">ZDCCloudNode</span> <span class="o">&lt;</span><span class="n">NSCoding</span><span class="p">,</span> <span class="n">NSCopying</span><span class="o">&gt;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">ZDCCloudNode</span> <span class="p">:</span> <span class="kt">NSCoding</span><span class="p">,</span> <span class="kt">NSCopying</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <ul class="item-container">
-                <li class="item">
-                  <div>
-                    <code>
                     <a name="/c:objc(cs)ZDCContainerNode"></a>
                     <a name="//apple_ref/objc/Class/ZDCContainerNode" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)ZDCContainerNode">ZDCContainerNode</a>
@@ -1072,7 +1023,7 @@ which will implicitly create the ZDCNode for you.</li>
                       <div class="pointer"></div>
                       <div class="abstract">
                         <p>The PublicKey class holds the information necessary to create a public key within the S4Crypto library.
-It may optionally hold the information for the corresponding private key (typically for local users).</p>
+It may optionally hold the information for the corresponding private key (if the key is for a local user).</p>
 
                         <a href="Classes/ZDCPublicKey.html" class="slightly-smaller">See more</a>
                       </div>
@@ -1217,7 +1168,7 @@ the current set of registered endpoints.</li>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The SymmetricKey class holds the information necessary to create a symmetric key within the S4Crypto library.</p>
 
                         <a href="Classes/ZDCSymmetricKey.html" class="slightly-smaller">See more</a>
                       </div>
@@ -1225,28 +1176,7 @@ the current set of registered endpoints.</li>
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@interface</span> <span class="nc">ZDCSymmetricKey</span> <span class="p">:</span> <span class="nc">ZDCObject</span> <span class="o">&lt;</span><span class="n">NSCoding</span><span class="p">,</span> <span class="n">NSCopying</span><span class="o">&gt;</span>
-
-<span class="o">+</span> <span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="n">keyWithAlgorithm</span><span class="o">:</span><span class="p">(</span><span class="n">Cipher_Algorithm</span><span class="p">)</span><span class="n">algorithm</span>
-            <span class="n">storageKey</span><span class="o">:</span><span class="p">(</span><span class="n">S4KeyContextRef</span><span class="p">)</span><span class="n">storageKey</span><span class="p">;</span>
-
-<span class="k">+</span> <span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="nf">keyWithString</span><span class="p">:(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">inKeyJSON</span> <span class="nf">passCode</span><span class="p">:(</span><span class="n">NSString</span><span class="o">*</span><span class="p">)</span><span class="nv">passCode</span><span class="p">;</span>
-
-<span class="k">-</span> <span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="nf">initWithUUID</span><span class="p">:(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">inUUID</span>
-           <span class="nf">keyJSON</span><span class="p">:(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">inKeyJSON</span><span class="p">;</span>
-
-<span class="k">+</span><span class="p">(</span><span class="n">id</span><span class="p">)</span> <span class="nf">keyWithS4Key</span><span class="p">:(</span><span class="n">S4KeyContextRef</span><span class="p">)</span><span class="nv">symCtx</span>
-        <span class="nf">storageKey</span><span class="p">:(</span><span class="n">S4KeyContextRef</span><span class="p">)</span><span class="nv">storageKey</span><span class="p">;</span>
-
-
-<span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">copy</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span> <span class="n">uuid</span><span class="p">;</span>
-<span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">copy</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span> <span class="n">keyJSON</span><span class="p">;</span>
-
-<span class="c1">// Convenience properties</span>
-
-<span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSDictionary</span> <span class="o">*</span> <span class="n">keyDict</span><span class="p">;</span> <span class="c1">// parsed keyJSON (cached, thread-safe)</span>
-
-<span class="k">@end</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@interface</span> <span class="nc">ZDCSymmetricKey</span> <span class="o">&lt;</span><span class="n">NSCoding</span><span class="p">,</span> <span class="n">NSCopying</span><span class="o">&gt;</span></code></pre>
 
                         </div>
                         <div class="language">
@@ -1306,7 +1236,7 @@ the current set of registered endpoints.</li>
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-07-04)</p>
+      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-07-05)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

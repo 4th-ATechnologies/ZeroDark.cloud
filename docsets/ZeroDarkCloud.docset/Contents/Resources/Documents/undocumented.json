@@ -120,13 +120,6 @@
       "warning": "undocumented"
     },
     {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCCloudNodeManager.h",
-      "line": 10,
-      "symbol": "ZDCCloudNodeManager",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.class",
-      "warning": "undocumented"
-    },
-    {
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCDatabaseKeyManager.h",
       "line": 52,
       "symbol": "ZDCDatabaseKeyManager.isConfigured",
@@ -243,76 +236,6 @@
       "line": 112,
       "symbol": "Ext_View_SplitKeys_Date",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.constant",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCNodeManager.h",
-      "line": 22,
-      "symbol": "ZDCNodeManager.+sharedInstance",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.class",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCPullManager.h",
-      "line": 12,
-      "symbol": "ZDCPullResult",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enum",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCPullManager.h",
-      "line": 12,
-      "symbol": "ZDCPullResult",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.typedef",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCPullManager.h",
-      "line": 14,
-      "symbol": "ZDCPullResult.ZDCPullResult_Success",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCPullManager.h",
-      "line": 15,
-      "symbol": "ZDCPullResult.ZDCPullResult_ManuallyAborted",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCPullManager.h",
-      "line": 17,
-      "symbol": "ZDCPullResult.ZDCPullResult_Fail_CloudChanged",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCPullManager.h",
-      "line": 18,
-      "symbol": "ZDCPullResult.ZDCPullResult_Fail_Unknown",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCPullManager.h",
-      "line": 19,
-      "symbol": "ZDCPullResult.ZDCPullResult_Fail_Auth",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCPushManager.h",
-      "line": 27,
-      "symbol": "ZDCPushManager.-abortOperationsForLocalUserID:appID:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCPushManager.h",
-      "line": 29,
-      "symbol": "ZDCPushManager.-abortOperations:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
     },
     {
@@ -547,142 +470,30 @@
       "warning": "undocumented"
     },
     {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/CloudNodes/ZDCCloudNode.h",
-      "line": 51,
-      "symbol": "ZDCCloudNode.eTag_rcrd",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/CloudNodes/ZDCCloudNode.h",
-      "line": 52,
-      "symbol": "ZDCCloudNode.eTag_data",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/CloudNodes/ZDCCloudNode.h",
-      "line": 54,
-      "symbol": "ZDCCloudNode.isQueuedForDeletion",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Keys/ZDCPublicKey.h",
-      "line": 123,
-      "symbol": "ZDCPublicKey.keyDict",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Keys/ZDCPublicKey.h",
-      "line": 124,
-      "symbol": "ZDCPublicKey.keyID",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Keys/ZDCPublicKey.h",
-      "line": 125,
-      "symbol": "ZDCPublicKey.eTag",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Keys/ZDCPublicKey.h",
-      "line": 127,
-      "symbol": "ZDCPublicKey.-updateKeyProperty:value:storageKey:error:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
-      "warning": "undocumented"
-    },
-    {
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Keys/ZDCSymmetricKey.h",
-      "line": 13,
-      "symbol": "ZDCSymmetricKey",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.class",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Keys/ZDCSymmetricKey.h",
-      "line": 15,
-      "symbol": "ZDCSymmetricKey.+keyWithAlgorithm:storageKey:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.class",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Keys/ZDCSymmetricKey.h",
-      "line": 18,
+      "line": 26,
       "symbol": "ZDCSymmetricKey.+keyWithString:passCode:",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.class",
       "warning": "undocumented"
     },
     {
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Keys/ZDCSymmetricKey.h",
-      "line": 20,
-      "symbol": "ZDCSymmetricKey.-initWithUUID:keyJSON:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Keys/ZDCSymmetricKey.h",
-      "line": 23,
+      "line": 29,
       "symbol": "ZDCSymmetricKey.+keyWithS4Key:storageKey:",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.class",
       "warning": "undocumented"
     },
     {
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Keys/ZDCSymmetricKey.h",
-      "line": 27,
-      "symbol": "ZDCSymmetricKey.uuid",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Keys/ZDCSymmetricKey.h",
-      "line": 28,
-      "symbol": "ZDCSymmetricKey.keyJSON",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Keys/ZDCSymmetricKey.h",
       "line": 32,
-      "symbol": "ZDCSymmetricKey.keyDict",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Nodes/ZDCNodeAnchor.h",
-      "line": 14,
-      "symbol": "ZDCNodeAnchor",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.class",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Nodes/ZDCNodeAnchor.h",
-      "line": 16,
-      "symbol": "ZDCNodeAnchor.-initWithUserID:zAppID:dirPrefix:",
+      "symbol": "ZDCSymmetricKey.-initWithUUID:keyJSON:",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Nodes/ZDCNodeAnchor.h",
-      "line": 18,
-      "symbol": "ZDCNodeAnchor.userID",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Nodes/ZDCNodeAnchor.h",
-      "line": 20,
-      "symbol": "ZDCNodeAnchor.zAppID",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Nodes/ZDCNodeAnchor.h",
-      "line": 22,
-      "symbol": "ZDCNodeAnchor.dirPrefix",
+      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Keys/ZDCSymmetricKey.h",
+      "line": 35,
+      "symbol": "ZDCSymmetricKey.uuid",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
       "warning": "undocumented"
     },
@@ -810,13 +621,6 @@
       "line": 18,
       "symbol": "Mnemonic_Algorithm.Mnemonic_Invalid",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/ZDCCloud/Utilities/ZDCCloudRcrd.h",
-      "line": 95,
-      "symbol": "ZDCCloudRcrd.data",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
       "warning": "undocumented"
     }
   ],
