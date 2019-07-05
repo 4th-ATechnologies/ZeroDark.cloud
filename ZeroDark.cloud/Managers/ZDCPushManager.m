@@ -708,16 +708,19 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 #pragma mark Aborting Operations
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)abortOperationsForLocalUserID:(NSString *)localUserID appID:(NSString *)appID
+/**
+ * See header file for description.
+ */
+- (void)abortOperationsForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
 {
 	DDLogAutoTrace();
 	
 	if (localUserID == nil) return;
-	if (appID == nil) return;
+	if (zAppID == nil) return;
 	
-	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, appID);
+	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, zAppID);
 	
-	ZDCCloud *ext = [owner.databaseManager cloudExtForUser:localUserID app:appID];
+	ZDCCloud *ext = [owner.databaseManager cloudExtForUser:localUserID app:zAppID];
 	YapDatabaseCloudCorePipeline *pipeline = [ext defaultPipeline];
 	NSArray<ZDCCloudOperation *> *operations = (NSArray<ZDCCloudOperation *> *)[pipeline activeOperations];
 	
@@ -771,6 +774,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	}});
 }
 
+/**
+ * See header file for description.
+ */
 - (void)abortOperations:(NSArray<ZDCCloudOperation *> *)operations
 {
 	DDLogAutoTrace();

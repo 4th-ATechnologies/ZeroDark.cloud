@@ -876,7 +876,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 				[syncState.cloudExt suspend];
 				syncState.isPushingSuspended = YES;
 				
-				[owner.pushManager abortOperationsForLocalUserID:localUserID appID:zAppID];
+				[owner.pushManager abortOperationsForLocalUserID:localUserID zAppID:zAppID];
 			}
 		}
 	}
@@ -906,7 +906,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 				[syncState.cloudExt suspend];
 				syncState.isPushingSuspended = YES;
 				
-				[owner.pushManager abortOperationsForLocalUserID:localUserID appID:zAppID];
+				[owner.pushManager abortOperationsForLocalUserID:localUserID zAppID:zAppID];
 			}
 			
 			[owner.databaseManager unregisterCloudExtensionForUser:localUserID app:zAppID];
@@ -1245,7 +1245,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 	
 	if (shouldAbortUploads)
 	{
-		[owner.pushManager abortOperationsForLocalUserID:syncState.localUserID appID:owner.zAppID];
+		[owner.pushManager abortOperationsForLocalUserID:syncState.localUserID zAppID:owner.zAppID];
 	}
 }
 

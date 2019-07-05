@@ -611,7 +611,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	}
 	
 	/// ZeroDark just pushed our data to the cloud.
-	/// If the node is a List of Task, we should update our cloudETag value to match the node.
 	///
 	func didPushNodeData(_ node: ZDCNode, at path: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
 		

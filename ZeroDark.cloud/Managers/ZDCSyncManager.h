@@ -80,6 +80,14 @@ extern NSString *const kPullResultKey;
 
 /**
  * The SyncManager simplifies many aspects of determining sync state.
+ *
+ * In particular, it can tell you:
+ * - whether or not the framework is "syncing" data (pushing or pulling)
+ * - which nodes are being synced
+ *
+ * The framework can run on autopilot most of the time.
+ * But this class gives you fine grained controls.
+ * For example, you can pause the push queue for a particular user so changes aren't uploaded.
  */
 @interface ZDCSyncManager : NSObject
 
