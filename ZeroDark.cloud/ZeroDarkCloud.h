@@ -136,9 +136,6 @@ NS_ASSUME_NONNULL_BEGIN
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /** The functionality of ZeroDarkCloud is split into multiple managers, separated by task. */
-@property (nonatomic, readonly) ZDCCloudNodeManager * cloudNodeManager;
-
-/** The functionality of ZeroDarkCloud is split into multiple managers, separated by task. */
 @property (nonatomic, readonly) ZDCCloudPathManager * cloudPathManager;
 
 /** The functionality of ZeroDarkCloud is split into multiple managers, separated by task. */

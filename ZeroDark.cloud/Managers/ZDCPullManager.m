@@ -14,6 +14,7 @@
 #import "S3Response.h"
 #import "S3ResponseParser.h"
 #import "ZDCCachedResponse.h"
+#import "ZDCCloudNodeManager.h"
 #import "ZDCCloudPrivate.h"
 #import "ZDCConstantsPrivate.h"
 #import "ZDCLogging.h"

@@ -15,6 +15,7 @@
 #import "S3Request.h"
 #import "S3ResponseParser.h"
 #import "ZDCCloudOperationPrivate.h"
+#import "ZDCCloudNodeManager.h"
 #import "ZDCConstantsPrivate.h"
 #import "ZDCLogging.h"
 #import "ZDCNodePrivate.h"

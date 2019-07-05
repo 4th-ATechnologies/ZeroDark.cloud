@@ -92,6 +92,11 @@ NS_ASSUME_NONNULL_BEGIN
  * If it has a data section, the RCRD is not allowed to have an accompanying DATA fork.
  */
 @property (nonatomic, copy, readwrite, nullable) NSDictionary *metadata;
+
+/**
+ * Every RCRD must have either a metadata || data section.
+ * If it has a data section, the RCRD is not allowed to have an accompanying DATA fork.
+ */
 @property (nonatomic, copy, readwrite, nullable) NSDictionary *data;
 
 /**

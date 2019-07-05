@@ -99,7 +99,6 @@
 @dynamic isDatabaseUnlocked;
 
 @dynamic auth0APIManager;
-@dynamic cloudNodeManager;
 @dynamic cloudPathManager;
 @synthesize databaseKeyManager;
 @synthesize directoryManager;
@@ -422,11 +421,6 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 - (Auth0APIManager *)auth0APIManager
 {
 	return [Auth0APIManager sharedInstance];
-}
-
-- (ZDCCloudNodeManager *)cloudNodeManager
-{
-	return [ZDCCloudNodeManager sharedInstance];
 }
 
 - (ZDCCloudPathManager *)cloudPathManager

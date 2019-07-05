@@ -27,16 +27,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) Auth0APIManager * auth0APIManager;
 
-@property (nonatomic, readonly, nullable) AWSCredentialsManager * awsCredentialsManager;
-@property (nonatomic, readonly, nullable) ZDCSessionManager     * sessionManager;
-@property (nonatomic, readonly, nullable) ZDCNetworkTools       * networkTools;
-@property (nonatomic, readonly, nullable) Auth0ProviderManager	* auth0ProviderManager;
-@property (nonatomic, readonly, nullable) ZDCInternalPreferences * internalPreferences;
-@property (nonatomic, readonly, nullable) ZDCCryptoTools        * cryptoTools;
-@property (nonatomic, readonly, nullable) ZDCUserAccessKeyManager  * userAccessKeyManager;
-@property (nonatomic, readonly, nullable) ZDCBlockchainManager  * blockchainManager;
-@property (nonatomic, readonly, nullable) ZDCSharesManager  	* sharesManager;
-@property (nonatomic, readonly, nullable) ZDCPasswordStrengthManager  	* passwordStrength;
+@property (nonatomic, readonly, nullable) AWSCredentialsManager      * awsCredentialsManager;
+@property (nonatomic, readonly, nullable) ZDCSessionManager          * sessionManager;
+@property (nonatomic, readonly, nullable) ZDCNetworkTools            * networkTools;
+@property (nonatomic, readonly, nullable) Auth0ProviderManager       * auth0ProviderManager;
+@property (nonatomic, readonly, nullable) ZDCInternalPreferences     * internalPreferences;
+@property (nonatomic, readonly, nullable) ZDCCryptoTools             * cryptoTools;
+@property (nonatomic, readonly, nullable) ZDCUserAccessKeyManager    * userAccessKeyManager;
+@property (nonatomic, readonly, nullable) ZDCBlockchainManager       * blockchainManager;
+@property (nonatomic, readonly, nullable) ZDCSharesManager           * sharesManager;
+@property (nonatomic, readonly, nullable) ZDCPasswordStrengthManager * passwordStrength;
 
 @property (nonatomic, readonly, nullable) S4KeyContextRef storageKey;
 

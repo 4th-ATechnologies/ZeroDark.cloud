@@ -14,6 +14,7 @@
 #import "BIP39Mnemonic.h"
 #import "ZDCLogging.h"
 #import "ZDCContainerNodePrivate.h"
+#import "ZDCCloudNodeManager.h"
 #import "ZDCLocalUserPrivate.h"
 #import "ZeroDarkCloudPrivate.h"
 #import "Auth0ProviderManager.h"
@@ -580,8 +581,8 @@
 	[transaction removeObjectsForKeys:allNodeIDs inCollection:kZDCCollection_Nodes];
     
 	NSArray<NSString *> *allCloudNodeIDs =
-	  [owner.cloudNodeManager allCloudNodeIDsWithLocalUserID: localUserID
-	                                             transaction: transaction];
+	  [[ZDCCloudNodeManager sharedInstance] allCloudNodeIDsWithLocalUserID: localUserID
+	                                                           transaction: transaction];
 	
 	[transaction removeObjectsForKeys:allCloudNodeIDs inCollection:kZDCCollection_CloudNodes];
 	

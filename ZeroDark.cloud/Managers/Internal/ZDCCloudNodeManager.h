@@ -7,6 +7,16 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/**
+ * The framework sometimes needs to represent nodes that exist in the cloud,
+ * but don't exist in the local treesystem (as a ZDCCNode) because either:
+ *
+ * - the node has been deleted locally (but we haven't yet pushed the delete request to the server)
+ * - the node appears to be an orphan (the rcrd file exists on the server, but there's no matching data file)
+ *
+ * For these situations, the framework stores an internal object called a ZDCCloudNode.
+ * And this manager provides various utilities for finding these "cloud nodes".
+ */
 @interface ZDCCloudNodeManager : NSObject
 
 /**
