@@ -33,6 +33,7 @@
 		2EE89F92220E618E006B6663 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = 2EE89F94220E618E006B6663 /* Localizable.stringsdict */; };
 		8589031A9BDA45CA59649E55 /* Pods_ios_ZeroDarkTodo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DB3BFBB074B3C2A6926B4F93 /* Pods_ios_ZeroDarkTodo.framework */; };
 		DC1A75AD2268CD4C009E5C4E /* CloudCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1A75AC2268CD4C009E5C4E /* CloudCodable.swift */; };
+		DC7DD80522D3B18000677034 /* Invitation.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC7DD80422D3B18000677034 /* Invitation.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -73,6 +74,7 @@
 		DB3BFBB074B3C2A6926B4F93 /* Pods_ios_ZeroDarkTodo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ios_ZeroDarkTodo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC1A75AC2268CD4C009E5C4E /* CloudCodable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudCodable.swift; sourceTree = "<group>"; };
 		DC349B1122342B3000F1542F /* ZeroDarkTodo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ZeroDarkTodo.entitlements; sourceTree = "<group>"; };
+		DC7DD80422D3B18000677034 /* Invitation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Invitation.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -163,6 +165,7 @@
 				DC1A75AC2268CD4C009E5C4E /* CloudCodable.swift */,
 				2E0C414D2207C93F00D05BC9 /* List.swift */,
 				2E0C414F2207CC5900D05BC9 /* Task.swift */,
+				DC7DD80422D3B18000677034 /* Invitation.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -321,6 +324,7 @@
 				2E0C414B2207BC2B00D05BC9 /* TasksViewController.swift in Sources */,
 				2E0C41392207A15400D05BC9 /* AppDelegate.swift in Sources */,
 				2E0C415F220A536200D05BC9 /* UIAlertController+TextField.swift in Sources */,
+				DC7DD80522D3B18000677034 /* Invitation.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

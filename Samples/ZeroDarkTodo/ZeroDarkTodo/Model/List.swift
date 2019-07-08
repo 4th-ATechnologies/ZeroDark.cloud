@@ -1,17 +1,22 @@
-/**
- * ZeroDark.cloud
- * <GitHub wiki link goes here>
- *
- * Sample App: ZeroDarkTodo
-**/
+/// ZeroDark.cloud
+///
+/// Homepage      : https://www.zerodark.cloud
+/// GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
+/// Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
+/// API Reference : https://4th-atechnologies.github.io/ZeroDark.cloud/
+///
+/// Sample App: ZeroDarkTodo
 
 import UIKit
 import ZeroDarkCloud
- 
+
+/// All `List` objects get stored in the database using this collection.
+/// (The database being used by this sample app is a collection/key/value store.)
+///
 let kZ2DCollection_List = "List"
 
-/// The `List` class represents a container (of Tasks).
-/// Every list has a title. For example: "Groceries" or "Weekend Chores".
+/// The `List` class is a container for Tasks (i.e. a container for Todo items).
+/// Every List has a title, such as "Groceries" or "Weekend Chores".
 ///
 /// You'll notice there's nothing special about the List class.
 /// We don't have to extend some base class. It's just a plain old Swift object.
@@ -25,8 +30,11 @@ class List: NSCopying, Codable {
 		case invitations = "invitations"
 	}
 	
-	/// We store List objects in the database.
-	/// And since our database is a key/value store, we use a uuid as the key.
+	/// We store `List` objects in the database.
+	///
+	/// The database being used by this sample app is YapDatabase, which is a collection/key/value store.
+	/// All List objects go into the same collection: kZ2DCollection_List.
+	/// And each List has a uuid, which we use as the database key.
 	///
 	/// We commonly refer to the List.uuid value as the ListID.
 	///

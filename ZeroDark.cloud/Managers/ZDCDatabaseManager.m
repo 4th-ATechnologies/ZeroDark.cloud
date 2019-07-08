@@ -248,6 +248,8 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	
 	// Create the database
 	
+	[NSKeyedUnarchiver setClass:[ZDCTrunkNode class] forClassName:@"ZDCContainerNode"];
+	
 	NSString *databasePath = owner.databasePath.filePathURL.path;
 	DDLogDebug(@"databasePath = %@", databasePath);
 	

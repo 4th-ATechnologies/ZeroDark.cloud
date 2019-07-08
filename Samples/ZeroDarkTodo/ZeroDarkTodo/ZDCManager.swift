@@ -1,9 +1,11 @@
-/**
-* ZeroDark.cloud
-* <GitHub wiki link goes here>
-*
-* Sample App: ZeroDarkTodo
-**/
+/// ZeroDark.cloud
+///
+/// Homepage      : https://www.zerodark.cloud
+/// GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
+/// Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
+/// API Reference : https://4th-atechnologies.github.io/ZeroDark.cloud/
+///
+/// Sample App: ZeroDarkTodo
 
 import UIKit
 import ZeroDarkCloud
@@ -33,7 +35,14 @@ let Ext_View_Tasks         = "Tasks View"
 let Ext_View_Pending_Tasks = "Pending Tasks View"
 let Ext_Hooks              = "Hooks"
 
-
+/// ZDCManager is our interface into the ZeroDarkCloud framework.
+///
+/// This class demonstrates much of the functionality you'll use within your own app, such as:
+/// - setting up the ZeroDark database
+/// - implementing the methods required by the ZeroDarkCloudDelegate protocol
+/// - providing the data that ZeroDark uploads to the cloud
+/// - downloading nodes from the ZeroDark cloud treesystem
+///
 class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	
 	var zdc: ZeroDarkCloud!
@@ -543,7 +552,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	/// ZeroDark is asking for an optional metadata section for this node.
 	///
 	/// When ZeroDark uploads our node to the cloud, it uploads it in "CloudFile format".
-	/// This is an encrypted file. But if you decrypted it, and looked inside it would look like this:
+	/// This is an encrypted file. But if you decrypted it, and looked inside, the file layout would look like this:
 	///
 	/// | header | metadata(optional) | thumbnail(optional) | data |
 	///
@@ -560,7 +569,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	/// ZeroDark is asking for an optional thumbnail for this node.
 	///
 	/// When ZeroDark uploads our node to the cloud, it uploads it in "CloudFile format".
-	/// This is an encrypted file. But if you decrypted it, and looked inside it would look like this:
+	/// This is an encrypted file. But if you decrypted it, and looked inside, the file layout would look like this:
 	///
 	/// | header | metadata(optional) | thumbnail(optional) | data |
 	///
@@ -570,20 +579,12 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	/// For List & Task objects, we return nil (thumbnails don't make sense in this context).
 	///
 	/// But for a TaskImage we do include a thumbnail in the upload.
-	/// Here's why:
-	///
-	/// - Imagine the user attaches a picture to a task
-	/// - The picture is 5 megabytes
-	/// - However, the UI generally only displays a tiny thumbnail for this image
-	/// - Without a thumbnail, we would be forced to download a 5 megabyte photo when
-	///   all we need most of the time is a tiny little thumbnail.
-	///
-	///
-	/// This allows
+	/// This allows other devices to download only the thumbnail image,
+	/// which can be MUCH smaller than the full image.
 	///
 	func thumbnail(for node: ZDCNode, at path: ZDCTreesystemPath, transaction: YapDatabaseReadTransaction) -> ZDCData? {
 		
-		if path.pathComponents.count == 3 {
+		if (path.trunk == .home) && (path.pathComponents.count == 3) {
 			
 			// This is for a Task's image:
 			//

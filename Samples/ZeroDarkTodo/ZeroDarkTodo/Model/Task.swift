@@ -1,5 +1,9 @@
 /// ZeroDark.cloud
-/// <GitHub wiki link goes here>
+///
+/// Homepage      : https://www.zerodark.cloud
+/// GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
+/// Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
+/// API Reference : https://4th-atechnologies.github.io/ZeroDark.cloud/
 ///
 /// Sample App: ZeroDarkTodo
 
@@ -8,6 +12,9 @@ import YapDatabase
 import ZeroDarkCloud
 import ZDCSyncable
 
+/// All `Task` objects get stored in the database using this collection.
+/// (The database being used by this sample app is a collection/key/value store.)
+///
 let kZ2DCollection_Task = "Task"
 
 @objc enum TaskPriority: Int, Codable {
@@ -37,6 +44,9 @@ let kZ2DCollection_Task = "Task"
 ///
 /// You do NOT have to use this class.
 /// However, you may find it very useful when you need to merge changes.
+///
+/// For more information about merging changes in ZeroDark.cloud:
+/// https://zerodarkcloud.readthedocs.io/en/latest/client/merging/
 ///
 class Task: ZDCRecord, Codable, YapDatabaseRelationshipNode {
 
