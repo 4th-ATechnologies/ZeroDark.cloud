@@ -47,7 +47,7 @@
 #import "ZDCCloudNode.h"
 #import "ZDCPublicKey.h"
 #import "ZDCSymmetricKey.h"
-#import "ZDCContainerNode.h"
+#import "ZDCTrunkNode.h"
 #import "ZDCNode.h"
 #import "ZDCShareList.h"
 #import "ZDCShareItem.h"

@@ -9,15 +9,15 @@
 
 #import "ZDCLocalUserManagerPrivate.h"
 
+#import "Auth0ProviderManager.h"
 #import "Auth0Utilities.h"
 #import "AWSPayload.h"
 #import "BIP39Mnemonic.h"
 #import "ZDCLogging.h"
-#import "ZDCContainerNodePrivate.h"
 #import "ZDCCloudNodeManager.h"
 #import "ZDCLocalUserPrivate.h"
+#import "ZDCTrunkNodePrivate.h"
 #import "ZeroDarkCloudPrivate.h"
-#import "Auth0ProviderManager.h"
 
 // Categories
 #import "NSData+AWSUtilities.h"
@@ -472,42 +472,42 @@
                            withAccessKey:(ZDCSymmetricKey *)accessKey
                              transaction:(YapDatabaseReadWriteTransaction *)transaction
 {
-	NSArray<NSNumber*> *containers = @[
-		@(ZDCTreesystemContainer_Home),
-		@(ZDCTreesystemContainer_Prefs),
-		@(ZDCTreesystemContainer_Inbox),
-		@(ZDCTreesystemContainer_Outbox)
+	NSArray<NSNumber*> *trunks = @[
+		@(ZDCTreesystemTrunk_Home),
+		@(ZDCTreesystemTrunk_Prefs),
+		@(ZDCTreesystemTrunk_Inbox),
+		@(ZDCTreesystemTrunk_Outbox)
 	];
 	
 	NSString *const zAppID = owner.zAppID;
 	
-	for (NSNumber *containerNum in containers)
+	for (NSNumber *trunkNum in trunks)
 	{
-		ZDCTreesystemContainer container = (ZDCTreesystemContainer)[containerNum integerValue];
-		NSString *containerID = [ZDCContainerNode uuidForLocalUserID:localUser.uuid zAppID:zAppID container:container];
+		ZDCTreesystemTrunk trunk = (ZDCTreesystemTrunk)[trunkNum integerValue];
+		NSString *key = [ZDCTrunkNode uuidForLocalUserID:localUser.uuid zAppID:zAppID trunk:trunk];
 		
-		if (![transaction hasObjectForKey:containerID inCollection:kZDCCollection_Nodes])
+		if (![transaction hasObjectForKey:key inCollection:kZDCCollection_Nodes])
 		{
-			ZDCContainerNode *containerNode =
-			  [[ZDCContainerNode alloc] initWithLocalUserID: localUser.uuid
-			                                         zAppID: zAppID
-			                                      container: container];
+			ZDCTrunkNode *trunkNode =
+			  [[ZDCTrunkNode alloc] initWithLocalUserID: localUser.uuid
+			                                     zAppID: zAppID
+			                                      trunk: trunk];
 	
-			[owner.cryptoTools setDirSaltForContainerNode: containerNode
-			                                withLocalUser: localUser
-			                                    accessKey: accessKey];
+			[owner.cryptoTools setDirSaltForTrunkNode: trunkNode
+			                            withLocalUser: localUser
+			                                accessKey: accessKey];
 	
-			ZDCShareList *containerShareList =
-			  [ZDCShareList defaultShareListForContainer: container
-			                             withLocalUserID: localUser.uuid];
+			ZDCShareList *shareList =
+			  [ZDCShareList defaultShareListForTrunk: trunk
+			                         withLocalUserID: localUser.uuid];
 	
-			[containerShareList enumerateListWithBlock:^(NSString *key, ZDCShareItem *shareItem, BOOL *stop) {
+			[shareList enumerateListWithBlock:^(NSString *key, ZDCShareItem *shareItem, BOOL *stop) {
 	
-				[containerNode.shareList addShareItem:shareItem forKey:key];
+				[trunkNode.shareList addShareItem:shareItem forKey:key];
 			}];
 	
-			[transaction setObject: containerNode
-			                forKey: containerNode.uuid
+			[transaction setObject: trunkNode
+			                forKey: trunkNode.uuid
 			          inCollection: kZDCCollection_Nodes];
 		}
 	}

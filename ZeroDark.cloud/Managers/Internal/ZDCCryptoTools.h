@@ -11,10 +11,10 @@
 #import <YapDatabase/YapDatabase.h>
 
 #import "ZDCCloudRcrd.h"
-#import "ZDCContainerNode.h"
 #import "ZDCLocalUser.h"
 #import "ZDCPublicKey.h"
 #import "ZDCSymmetricKey.h"
+#import "ZDCTrunkNode.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -241,8 +241,8 @@ NS_ASSUME_NONNULL_BEGIN
  * Standardized technique for deriving the dirSalt for container nodes.
  * This method modifies the given containerNode.
  *
- * @param containerNode
- *   The container node to modify (set dirSalt property)
+ * @param trunkNode
+ *   The trunk node to modify (set dirSalt property)
  *
  * @param localUser
  *   The corresponding localUser for the node
@@ -250,9 +250,9 @@ NS_ASSUME_NONNULL_BEGIN
  * @param accessKey
  *   The localUser's accessKey (the key they need to access their account - they one they backup)
  */
-- (BOOL)setDirSaltForContainerNode:(ZDCContainerNode *)containerNode
-                     withLocalUser:(ZDCLocalUser *)localUser
-                         accessKey:(ZDCSymmetricKey *)accessKey;
+- (BOOL)setDirSaltForTrunkNode:(ZDCTrunkNode *)trunkNode
+                 withLocalUser:(ZDCLocalUser *)localUser
+                     accessKey:(ZDCSymmetricKey *)accessKey;
 
 /**
  * Key derivation function (mac=skein, hash=skein256)

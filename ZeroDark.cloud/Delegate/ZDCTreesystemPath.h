@@ -12,40 +12,51 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- * The treesystem has several different containers at the root level.
+ * The treesystem has several different "trunks", which represent root-level nodes.
+ * All of the nodes in your treesystem will be rooted in one of these trunks.
  *
  * For more information about the ZeroDark.cloud treesystem, check out the docs:
  * - https://zerodarkcloud.readthedocs.io/en/latest/advanced/tree/
  */
-typedef NS_ENUM(NSInteger, ZDCTreesystemContainer) {
-	
-	/** The 'Home' container is where your app stores the majority of its data. */
-	ZDCTreesystemContainer_Home,
-	
-	/** A simple container designed for storing (synced) user preferences. */
-	ZDCTreesystemContainer_Prefs,
+typedef NS_ENUM(NSInteger, ZDCTreesystemTrunk) {
 	
 	/**
-	 * A special container for incoming messages.
-	 * See the [docs](https://zerodarkcloud.readthedocs.io/en/latest/advanced/tree/) for more information.
+	 * The 'Home' trunk is where your app stores the majority of its data.
+	 * If you don't specify a trunk when creating a path, it will default to 'Home'.
 	 */
-	ZDCTreesystemContainer_Inbox,
+	ZDCTreesystemTrunk_Home,
 	
 	/**
-	 * A special container for outgoing messages.
+	 * The 'Prefs' trunk is designed for storing (synced) user preferences.
+	 * Unlike the home trunk, it doesn't allow nodes to be shared with other users.
+	 */
+	ZDCTreesystemTrunk_Prefs,
+	
+	/**
+	 * The 'Inbox' trunk is where you receive incoming messages from other users.
 	 * See the [docs](https://zerodarkcloud.readthedocs.io/en/latest/advanced/tree/) for more information.
 	 */
-	ZDCTreesystemContainer_Outbox,
+	ZDCTreesystemTrunk_Inbox,
 	
-	/** Special value used to indicate an invalid container. Don't use this value. */
-	ZDCTreesystemContainer_Invalid = NSIntegerMax,
+	/**
+	 * The 'Outbox' trunk is for outgoing messages.
+	 * Messages in your outbox get copied into other users' 'Inbox',
+	 * and all of your devices see the ougoing message via your 'Outbox'.
+	 */
+	ZDCTreesystemTrunk_Outbox,
+	
+	/**
+	 * A special value used to indicate an invalid trunk.
+	 * Don't use this value - it's reserved for errors.
+	 */
+	ZDCTreesystemTrunk_Invalid = NSIntegerMax,
 };
 
 /** Converts from enum value to string. */
-extern NSString* NSStringFromTreesystemContainer(ZDCTreesystemContainer);
+extern NSString* NSStringFromTreesystemTrunk(ZDCTreesystemTrunk);
 
 /** Converts from string to enum value. */
-extern ZDCTreesystemContainer TreesystemContainerFromString(NSString*);
+extern ZDCTreesystemTrunk TreesystemTrunkFromString(NSString*);
 
 /**
  * ZDCTreesystemPath is a standardized class for storing paths to nodes in the tree.
@@ -67,7 +78,7 @@ extern ZDCTreesystemContainer TreesystemContainerFromString(NSString*);
 - (instancetype)initWithPathComponents:(NSArray<NSString *> *)pathComponents;
 
 /**
- * Creates a path with the given components in the given container.
+ * Creates a path with the given components in the given trunk.
  *
  * For example, if the string based representation of the path is "/foo/bar",
  * then you'd pass in ["foo", "bar"].
@@ -75,18 +86,17 @@ extern ZDCTreesystemContainer TreesystemContainerFromString(NSString*);
  * @param pathComponents
  *   The ordered list of pathComponents, with the destination node being the last item in the array.
  *
- * @param container
- *   The specific container for the node.
- *   For most nodes, this is the home container (ZDCTreesystemContainer_Home).
+ * @param trunk
+ *   The specific trunk for the node.
+ *   For most nodes, this is the home trunk (ZDCTreesystemTrunk_Home).
  */
-- (instancetype)initWithPathComponents:(NSArray<NSString *> *)pathComponents
-                             container:(ZDCTreesystemContainer)container;
+- (instancetype)initWithPathComponents:(NSArray<NSString *> *)pathComponents trunk:(ZDCTreesystemTrunk)trunk;
 
 /**
- * The "container" the path is rooted within.
- * Typically this is "home", which means the primary filesystem for the user/app.
+ * The trunk (top-level root node) in which the path is rooted.
+ * Typically this is "home", which is the primary trunk for the user's data.
  */
-@property (nonatomic, assign, readonly) ZDCTreesystemContainer container;
+@property (nonatomic, assign, readonly) ZDCTreesystemTrunk trunk;
 
 /**
  * An array of node-names, leading from the container node to the target node.
@@ -100,10 +110,10 @@ extern ZDCTreesystemContainer TreesystemContainerFromString(NSString*);
 @property (nonatomic, readonly) NSString *nodeName;
 
 /**
- * Returns YES if the path represents the root of the container.
+ * Returns YES if the path represents the root node (i.e. the trunk itself).
  * That is, the pathComponents array is empty.
  */
-@property (nonatomic, readonly) BOOL isContainerRoot;
+@property (nonatomic, readonly) BOOL isTrunk;
 
 /**
  * Returns the pathComponents, joined using the separator '/'.
@@ -133,7 +143,7 @@ extern ZDCTreesystemContainer TreesystemContainerFromString(NSString*);
 
 /**
  * Returns the parent's path by removing the last item from the pathComponents array.
- * If the pathComponents array is empty, returns nil.
+ * If the pathComponents array is empty (i.e. isTrunk == true), then this method returns nil.
  *
  * This method does not modify the receiver.
  */

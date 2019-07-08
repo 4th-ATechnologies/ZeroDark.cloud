@@ -795,12 +795,12 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		
 		if (node.parentID == nil) return nil; // exclude container nodes
 		
-		ZDCContainerNode *containerNode =
-		  [[ZDCNodeManager sharedInstance] containerNodeForNode:node transaction:transaction];
+		ZDCTrunkNode *trunkNode =
+		  [[ZDCNodeManager sharedInstance] trunkNodeForNode:node transaction:transaction];
 		
-		if (containerNode == nil) return nil;
+		if (trunkNode == nil) return nil;
 		
-		return [ZDCDatabaseManager groupForLocalUserID:node.localUserID zAppID:containerNode.zAppID];
+		return [ZDCDatabaseManager groupForLocalUserID:node.localUserID zAppID:trunkNode.zAppID];
 	}];
 	
 	YapDatabaseViewSorting *sorting = [YapDatabaseViewSorting withObjectBlock:

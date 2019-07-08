@@ -1,12 +1,12 @@
 #import "ZDCNodeManager.h"
 
 #import "ZDCCloudPathManager.h"
-#import "ZDCContainerNode.h"
 #import "ZDCDatabaseManager.h"
-#import "ZDCTreesystemPath.h"
 #import "ZDCLocalUser.h"
 #import "ZDCLogging.h"
 #import "ZDCPublicKey.h"
+#import "ZDCTreesystemPath.h"
+#import "ZDCTrunkNode.h"
 
 // Categories
 #import "NSData+S4.h"
@@ -72,17 +72,17 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  */
-- (nullable ZDCContainerNode *)containerNodeForLocalUserID:(NSString *)localUserID
-                                                    zAppID:(NSString *)zAppID
-                                                 container:(ZDCTreesystemContainer)container
-                                               transaction:(YapDatabaseReadTransaction *)transaction
+- (nullable ZDCTrunkNode *)trunkNodeForLocalUserID:(NSString *)localUserID
+                                            zAppID:(NSString *)zAppID
+                                             trunk:(ZDCTreesystemTrunk)trunk
+                                       transaction:(YapDatabaseReadTransaction *)transaction
 {
 	DDLogAutoTrace();
 	
 	NSString *nodeID =
-	  [ZDCContainerNode uuidForLocalUserID: localUserID
-	                                zAppID: zAppID
-	                             container: container];
+	  [ZDCTrunkNode uuidForLocalUserID: localUserID
+	                            zAppID: zAppID
+	                             trunk: trunk];
 	
 	return [transaction objectForKey:nodeID inCollection:kZDCCollection_Nodes];
 }
@@ -90,17 +90,17 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  */
-- (nullable ZDCContainerNode *)containerNodeForNode:(ZDCNode *)node
-                                       transaction:(YapDatabaseReadTransaction *)transaction
+- (nullable ZDCTrunkNode *)trunkNodeForNode:(ZDCNode *)node
+                                transaction:(YapDatabaseReadTransaction *)transaction
 {
 	DDLogAutoTrace();
 	
-	ZDCContainerNode *containerNode = nil;
+	ZDCTrunkNode *trunkNode = nil;
 	do {
 		
-		if ([node isKindOfClass:[ZDCContainerNode class]])
+		if ([node isKindOfClass:[ZDCTrunkNode class]])
 		{
-			containerNode = (ZDCContainerNode *)node;
+			trunkNode = (ZDCTrunkNode *)node;
 			break;
 		}
 		else
@@ -110,7 +110,7 @@ static ZDCNodeManager *sharedInstance = nil;
 		
 	} while (node);
 	
-	return containerNode;
+	return trunkNode;
 }
 
 /**
@@ -210,13 +210,13 @@ static ZDCNodeManager *sharedInstance = nil;
 		return nil;
 	}
 	
-	ZDCContainerNode *containerNode = nil;
+	ZDCTrunkNode *trunkNode = nil;
 	
-	if ([node isKindOfClass:[ZDCContainerNode class]])
+	if ([node isKindOfClass:[ZDCTrunkNode class]])
 	{
-		containerNode = (ZDCContainerNode *)node;
+		trunkNode = (ZDCTrunkNode *)node;
 		
-		return [[ZDCTreesystemPath alloc] initWithPathComponents:@[] container:containerNode.container];
+		return [[ZDCTreesystemPath alloc] initWithPathComponents:@[] trunk:trunkNode.trunk];
 	}
 	
 	NSMutableArray<NSString *> *pathComponents = [NSMutableArray arrayWithCapacity:8];
@@ -225,9 +225,9 @@ static ZDCNodeManager *sharedInstance = nil;
 	while (YES)
 	{
 		node = [transaction objectForKey:node.parentID inCollection:kZDCCollection_Nodes];
-		if ([node isKindOfClass:[ZDCContainerNode class]])
+		if ([node isKindOfClass:[ZDCTrunkNode class]])
 		{
-			containerNode = (ZDCContainerNode *)node;
+			trunkNode = (ZDCTrunkNode *)node;
 			break;
 		}
 		else if (node)
@@ -240,11 +240,11 @@ static ZDCNodeManager *sharedInstance = nil;
 		}
 	}
 	
-	ZDCTreesystemContainer container = (containerNode ? containerNode.container : ZDCTreesystemContainer_Home);
+	ZDCTreesystemTrunk trunk = (trunkNode ? trunkNode.trunk : ZDCTreesystemTrunk_Invalid);
 	
 	ZDCTreesystemPath *path =
 	  [[ZDCTreesystemPath alloc] initWithPathComponents: pathComponents
-	                                         container: container];
+	                                              trunk: trunk];
 	return path;
 }
 
@@ -322,11 +322,11 @@ static ZDCNodeManager *sharedInstance = nil;
 		// Scan all nodes belonging to the user and look for a match (slow but functional).
 		
 		ZDCNode *parentNode = [transaction objectForKey:parentID inCollection:kZDCCollection_Nodes];
-		ZDCContainerNode *containerNode = [self containerNodeForNode:parentNode transaction:transaction];
+		ZDCTrunkNode *trunkNode = [self trunkNodeForNode:parentNode transaction:transaction];
 		
 		NSString *group =
-		  [ZDCDatabaseManager groupForLocalUserID: containerNode.localUserID
-		                                   zAppID: containerNode.zAppID];
+		  [ZDCDatabaseManager groupForLocalUserID: trunkNode.localUserID
+		                                   zAppID: trunkNode.zAppID];
 		
 		[flatViewTransaction enumerateKeysAndObjectsInGroup:group
 		                                         usingBlock:
@@ -466,11 +466,11 @@ static ZDCNodeManager *sharedInstance = nil;
 		// Scan all nodes belonging to the user and look for a match (slow but functional).
 		
 		ZDCNode *parentNode = [transaction objectForKey:parentID inCollection:kZDCCollection_Nodes];
-		ZDCContainerNode *containerNode = [self containerNodeForNode:parentNode transaction:transaction];
+		ZDCTrunkNode *trunkNode = [self trunkNodeForNode:parentNode transaction:transaction];
 		
 		NSString *group =
-		  [ZDCDatabaseManager groupForLocalUserID: containerNode.localUserID
-		                                   zAppID: containerNode.zAppID];
+		  [ZDCDatabaseManager groupForLocalUserID: trunkNode.localUserID
+		                                   zAppID: trunkNode.zAppID];
 		
 		[flatViewTransaction enumerateKeysAndObjectsInGroup:group
 		                                         usingBlock:
@@ -675,11 +675,11 @@ static ZDCNodeManager *sharedInstance = nil;
 		// Scan all nodes belonging to the user and look for a match (slow but functional).
 		
 		ZDCNode *parentNode = [transaction objectForKey:parentID inCollection:kZDCCollection_Nodes];
-		ZDCContainerNode *containerNode = [self containerNodeForNode:parentNode transaction:transaction];
+		ZDCTrunkNode *trunkNode = [self trunkNodeForNode:parentNode transaction:transaction];
 		
 		NSString *group =
-		  [ZDCDatabaseManager groupForLocalUserID: containerNode.localUserID
-		                                   zAppID: containerNode.zAppID];
+		  [ZDCDatabaseManager groupForLocalUserID: trunkNode.localUserID
+		                                   zAppID: trunkNode.zAppID];
 		
 		[flatViewTransaction enumerateKeysAndObjectsInGroup:group
 		                                         usingBlock:
@@ -754,11 +754,11 @@ static ZDCNodeManager *sharedInstance = nil;
 	
 	ZDCNode *node = nil;
 	NSString *containerID =
-	  [ZDCContainerNode uuidForLocalUserID: localUserID
-	                                zAppID: zAppID
-	                             container: path.container];
+	  [ZDCTrunkNode uuidForLocalUserID: localUserID
+	                            zAppID: zAppID
+	                             trunk: path.trunk];
 	
-	if (path.isContainerRoot)
+	if (path.isTrunk)
 	{
 		node = [transaction objectForKey:containerID inCollection:kZDCCollection_Nodes];
 	}
@@ -858,11 +858,11 @@ static ZDCNodeManager *sharedInstance = nil;
 		// Scan all nodes belonging to the user and look for a match (slow but functional).
 		
 		ZDCNode *parentNode = [transaction objectForKey:parentID inCollection:kZDCCollection_Nodes];
-		ZDCContainerNode *containerNode = [self containerNodeForNode:parentNode transaction:transaction];
+		ZDCTrunkNode *trunkNode = [self trunkNodeForNode:parentNode transaction:transaction];
 		
 		NSString *group =
-		  [ZDCDatabaseManager groupForLocalUserID: containerNode.localUserID
-		                                   zAppID: containerNode.zAppID];
+		  [ZDCDatabaseManager groupForLocalUserID: trunkNode.localUserID
+		                                   zAppID: trunkNode.zAppID];
 		
 		[flatViewTransaction enumerateKeysAndObjectsInGroup: group
 		                                         usingBlock:
@@ -1273,8 +1273,8 @@ static ZDCNodeManager *sharedInstance = nil;
 			
 			if ([node.localUserID isEqualToString:localUserID])
 			{
-				ZDCContainerNode *containerNode = [self containerNodeForNode:node transaction:transaction];
-				if ([containerNode.zAppID isEqualToString:zAppID])
+				ZDCTrunkNode *trunkNode = [self trunkNodeForNode:node transaction:transaction];
+				if ([trunkNode.zAppID isEqualToString:zAppID])
 				{
 					[result addObject:key];
 				}
@@ -1392,9 +1392,9 @@ static ZDCNodeManager *sharedInstance = nil;
 			
 			if ([node.localUserID isEqualToString:localUserID] && node.cloudID)
 			{
-				ZDCContainerNode *containerNode = [self containerNodeForNode:node transaction:transaction];
+				ZDCTrunkNode *trunkNode = [self trunkNodeForNode:node transaction:transaction];
 				
-				if ([containerNode.zAppID isEqualToString:zAppID])
+				if ([trunkNode.zAppID isEqualToString:zAppID])
 				{
 					[uploadedNodeIDs addObject:nodeID];
 				}

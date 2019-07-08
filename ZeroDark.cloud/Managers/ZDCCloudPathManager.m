@@ -1,8 +1,8 @@
 #import "ZDCCloudPathManager.h"
 
-#import "ZDCContainerNode.h"
 #import "ZDCLogging.h"
 #import "ZDCNodeManager.h"
+#import "ZDCTrunkNode.h"
 
 #import "NSString+S4.h"
 #import "NSString+ZeroDark.h"
@@ -87,8 +87,8 @@ static ZDCCloudPathManager *sharedInstance = nil;
 	ZDCNode *anchorNode = [[ZDCNodeManager sharedInstance] anchorNodeForNode:node transaction:transaction];
 	
 	NSString *appID = node.anchor.zAppID;
-	if (!appID && [anchorNode isKindOfClass:[ZDCContainerNode class]]) {
-		appID = [(ZDCContainerNode *)anchorNode zAppID];
+	if (!appID && [anchorNode isKindOfClass:[ZDCTrunkNode class]]) {
+		appID = [(ZDCTrunkNode *)anchorNode zAppID];
 	}
 	
 	if (appID == nil) {

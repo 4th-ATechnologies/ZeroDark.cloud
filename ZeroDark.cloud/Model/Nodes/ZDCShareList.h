@@ -256,11 +256,11 @@ NS_SWIFT_NAME(countOfUserIDs(excluding:));
 + (nullable NSString *)serverIDFromKey:(NSString *)key;
 
 /**
- * Returns the default set of permissions for the given container.
- * These are hard-coded on a per-container basis.
+ * Returns the default set of permissions for the given trunk (top-level root node).
+ * These are hard-coded on a per-trunk basis.
  */
-+ (ZDCShareList *)defaultShareListForContainer:(ZDCTreesystemContainer)container
-                               withLocalUserID:(NSString *)localUserID;
++ (ZDCShareList *)defaultShareListForTrunk:(ZDCTreesystemTrunk)trunk
+                           withLocalUserID:(NSString *)localUserID;
 
 @end
 

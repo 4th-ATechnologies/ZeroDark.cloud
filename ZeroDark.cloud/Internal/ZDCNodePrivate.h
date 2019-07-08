@@ -14,7 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface ZDCNode ()
 
 /**
- * Used by ZDCContainerNode, which has a deterministic uuid.
+ * Used by ZDCTrunkNode, which has a deterministic uuid.
  */
 - (instancetype)initWithLocalUserID:(NSString *)localUserID uuid:(nullable NSString *)uuid;
 

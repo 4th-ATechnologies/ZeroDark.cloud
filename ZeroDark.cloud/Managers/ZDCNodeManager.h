@@ -5,10 +5,10 @@
 #import "AWSRegions.h"
 #import "ZDCCloud.h"
 #import "ZDCCloudRcrd.h"
-#import "ZDCContainerNode.h"
-#import "ZDCTreesystemPath.h"
 #import "ZDCNode.h"
 #import "ZDCPublicKey.h"
+#import "ZDCTreesystemPath.h"
+#import "ZDCTrunkNode.h"
 #import "ZDCUser.h"
 
 
@@ -25,11 +25,11 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)sharedInstance;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Containers & Anchors
+#pragma mark Trunks & Anchors
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Returns a specific container.
+ * Returns a specific trunk (top-level root node).
  * This method only returns nil if you pass an invalid parameter.
  *
  * @param localUserID
@@ -39,42 +39,42 @@ NS_ASSUME_NONNULL_BEGIN
  *   The zAppID you registered in the ZeroDark.cloud dashboard.
  *   This is the same zAppID you passed when you created a ZeroDarkCloud instance.
  *
- * @param container
- *   The container you're looking for.
+ * @param trunk
+ *   The trunk you're looking for.
  *
  * @param transaction
  *   A database transaction - allows the method to read from the database.
  */
-- (nullable ZDCContainerNode *)containerNodeForLocalUserID:(NSString *)localUserID
-                                                    zAppID:(NSString *)zAppID
-                                                 container:(ZDCTreesystemContainer)container
-                                               transaction:(YapDatabaseReadTransaction *)transaction;
+- (nullable ZDCTrunkNode *)trunkNodeForLocalUserID:(NSString *)localUserID
+                                            zAppID:(NSString *)zAppID
+                                             trunk:(ZDCTreesystemTrunk)trunk
+                                       transaction:(YapDatabaseReadTransaction *)transaction;
 
 /**
- * A "container node" is a root node for a tree.
- * This method walks up the tree until it finds the corresponding container.
+ * A "trunk node" is a top-level root node.
+ * This method walks up the tree until it finds the corresponding trunk.
  *
  * @param node
- *   Find the container for this node.
+ *   Find the trunk for this node.
  *   (The node doesn't need to be stored in the database for this method to work.
  *    But it will need to have a proper `-[ZDCNode parentID]` property set.)
  *
  * @param transaction
  *   A database transaction - allows the method to read from the database.
  */
-- (nullable ZDCContainerNode *)containerNodeForNode:(ZDCNode *)node
-                                        transaction:(YapDatabaseReadTransaction *)transaction;
+- (nullable ZDCTrunkNode *)trunkNodeForNode:(ZDCNode *)node
+                                transaction:(YapDatabaseReadTransaction *)transaction;
 
 /**
  * An "anchor node" is the nearest node in the hierarchy that
  * provides a location anchor (e.g. an AWS region & bucket).
  *
- * This could be the containerNode (a ZDCContainerNode instance), meaning the user's own region & bucket.
- * Or it could be another node with a non-nil ownerID property, meaning some other user's region & bucket.
+ * This could be the trunkNode (a ZDCTrunkNode instance), meaning the user's own region & bucket.
+ * Or it could be another node with a non-nil anchor property, meaning some other user's region & bucket.
  *
- * The anchorNode is found by traversing up the node hierarchy towards the containerNode,
- * and searching for a node with owner information.
- * If not found, the containerNode is returned.
+ * The anchorNode is found by traversing up the node hierarchy towards the trunkNode,
+ * and searching for a node with anchor information.
+ * If not found, the trunkNode is returned.
  */
 - (ZDCNode *)anchorNodeForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction;
 

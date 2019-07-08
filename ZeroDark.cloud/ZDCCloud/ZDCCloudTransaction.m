@@ -124,7 +124,7 @@
 		message = [message copy];
 	}
 	
-	ZDCContainerNode *outbox = [self containerNode:ZDCTreesystemContainer_Outbox];
+	ZDCTrunkNode *outbox = [self trunkNode:ZDCTreesystemTrunk_Outbox];
 	message.parentID = outbox.uuid;
 	
 	message.name = [ZDCNode randomCloudName];
@@ -378,12 +378,12 @@
  * Or view the reference docs online:
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
-- (nullable ZDCContainerNode *)containerNode:(ZDCTreesystemContainer)container
+- (nullable ZDCTrunkNode *)trunkNode:(ZDCTreesystemTrunk)trunk
 {
-	return [[ZDCNodeManager sharedInstance] containerNodeForLocalUserID: [self localUserID]
-	                                                             zAppID: [self zAppID]
-	                                                          container: container
-	                                                        transaction: databaseTransaction];
+	return [[ZDCNodeManager sharedInstance] trunkNodeForLocalUserID: [self localUserID]
+	                                                         zAppID: [self zAppID]
+	                                                          trunk: trunk
+	                                                    transaction: databaseTransaction];
 }
 
 /**
@@ -786,10 +786,10 @@
 		@throw [self requiresReadWriteTransactionException:NSStringFromSelector(_cmd)];
 	}
 	
-	if ([rootNode isKindOfClass:[ZDCContainerNode class]])
+	if ([rootNode isKindOfClass:[ZDCTrunkNode class]])
 	{
 		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
-		NSString *desc = @"You cannot delete a container node.";
+		NSString *desc = @"You cannot delete a trunk node.";
 		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
 		
 		if (outError) *outError = error;

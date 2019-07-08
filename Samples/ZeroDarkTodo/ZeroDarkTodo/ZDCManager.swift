@@ -710,15 +710,15 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		
 		// What kind of node is this ?
 		//
-		// If it's in the home container, it could be:
+		// If it's in the home trunk, it could be:
 		// - List object
 		// - Task object
 		// - Task image
 		//
-		// If it's in the inbox or outbox continer:
+		// If it's in the inbox or outbox trunk:
 		// - Invitation message
 		//
-		switch path.container {
+		switch path.trunk {
 			
 			case .home:
 				
@@ -825,15 +825,15 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			// What kind of node is this ?
 			//
-			// If it's in the home container, it could be:
+			// If it's in the home trun, it could be:
 			// - List object
 			// - Task object
 			// - Task image
 			//
-			// If it's in the inbox or outbox continer:
+			// If it's in the inbox or outbox trunk:
 			// - Invitation message
 			//
-			switch path.container {
+			switch path.trunk {
 				
 				case .home:
 					
@@ -1062,15 +1062,15 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		
 		// What kind of node is this ?
 		//
-		// If it's in the home container, it could be:
+		// If it's in the home trun, it could be:
 		// - List object
 		// - Task object
 		// - Task image
 		//
-		// If it's in the inbox or outbox continer:
+		// If it's in the inbox or outbox trunk:
 		// - Invitation message
 		//
-		switch path.container{
+		switch path.trunk {
 			
 			case .home:
 				
@@ -1208,7 +1208,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				
 				guard
 					let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-					let containerNode = cloudTransaction.containerNode(.home)
+					let trunkNode = cloudTransaction.trunkNode(.home)
 				else {
 					continue
 				}
@@ -1228,9 +1228,9 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// So if we don't always need the full node (like in this particular situation),
 				// then its a little faster to enumerate the nodeIDs.
 				
-				nodeManager.recursiveEnumerateNodeIDs(withParentID: containerNode.uuid,
-																  transaction: transaction,
-																  using:
+				nodeManager.recursiveEnumerateNodeIDs(withParentID: trunkNode.uuid,
+				                                       transaction: transaction,
+				                                             using:
 				{ (nodeID: String, path: [String], recurseInto, stop) in
 					
 					// Given our tree hierarchy:

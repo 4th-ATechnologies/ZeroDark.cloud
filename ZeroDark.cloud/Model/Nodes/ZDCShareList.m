@@ -657,14 +657,14 @@ static NSString *const k_dict    = @"dict";
 /**
  * See header file for description.
  */
-+ (ZDCShareList *)defaultShareListForContainer:(ZDCTreesystemContainer)container
-                               withLocalUserID:(NSString *)localUserID
++ (ZDCShareList *)defaultShareListForTrunk:(ZDCTreesystemTrunk)trunk
+                           withLocalUserID:(NSString *)localUserID
 {
 	ZDCShareList *shareList = [[ZDCShareList alloc] init];
 	
-	switch (container)
+	switch (trunk)
 	{
-		case ZDCTreesystemContainer_Home:
+		case ZDCTreesystemTrunk_Home:
 		{
 			{ // "UID:{localUserID}" : "rws"
 				
@@ -677,7 +677,7 @@ static NSString *const k_dict    = @"dict";
 			}
 			break;
 		}
-		case ZDCTreesystemContainer_Prefs:
+		case ZDCTreesystemTrunk_Prefs:
 		{
 			{ // "UID:{localUserID}" : "rwL"
 				
@@ -690,7 +690,7 @@ static NSString *const k_dict    = @"dict";
 			}
 			break;
 		}
-		case ZDCTreesystemContainer_Inbox:
+		case ZDCTreesystemTrunk_Inbox:
 		{
 			{ // "UID:{localUserID}" : "rwsL"
 				
@@ -713,7 +713,7 @@ static NSString *const k_dict    = @"dict";
 			}
 			break;
 		}
-		case ZDCTreesystemContainer_Outbox:
+		case ZDCTreesystemTrunk_Outbox:
 		{
 			{ // "UID:{localUserID}" : "rwsL"
 				
@@ -727,7 +727,7 @@ static NSString *const k_dict    = @"dict";
 			}
 			break;
 		}
-		case ZDCTreesystemContainer_Invalid: break;
+		case ZDCTreesystemTrunk_Invalid: break;
 	}
 	
 	return shareList;

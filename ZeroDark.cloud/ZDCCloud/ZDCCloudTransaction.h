@@ -12,10 +12,10 @@
 #import <YapDatabase/YapDatabaseCloudCoreTransaction.h>
 #import <YapDatabase/YapCollectionKey.h>
 
-#import "ZDCContainerNode.h"
 #import "ZDCCloudLocator.h"
 #import "ZDCCloudOperation.h"
 #import "ZDCTreesystemPath.h"
+#import "ZDCTrunkNode.h"
 #import "ZDCNode.h"
 #import "ZDCUser.h"
 
@@ -154,11 +154,11 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Returns the corresponding top-level container node.
+ * Returns the corresponding trunk node (top-level root node).
  *
- * This method is short-hand for `[ZDCNodeManager containerNodeForLocalUserID:zAppID:container:transaction:]`
+ * This method is short-hand for `[ZDCNodeManager trunkNodeForLocalUserID:zAppID:trunk:transaction:]`
  */
-- (nullable ZDCContainerNode *)containerNode:(ZDCTreesystemContainer)container;
+- (nullable ZDCTrunkNode *)trunkNode:(ZDCTreesystemTrunk)trunk;
 
 /**
  * Returns the existing node with the given path.

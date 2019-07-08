@@ -1340,26 +1340,23 @@ done:
 #pragma mark DirSalt
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (BOOL)setDirSaltForContainerNode:(ZDCContainerNode *)containerNode
-                     withLocalUser:(ZDCLocalUser *)localUser
-                         accessKey:(ZDCSymmetricKey *)accessKey
+- (BOOL)setDirSaltForTrunkNode:(ZDCTrunkNode *)trunkNode
+                 withLocalUser:(ZDCLocalUser *)localUser
+                     accessKey:(ZDCSymmetricKey *)accessKey
 {
-	NSParameterAssert(containerNode != nil);
-	NSParameterAssert(containerNode.isImmutable == NO);
+	NSParameterAssert(trunkNode != nil);
+	NSParameterAssert(trunkNode.isImmutable == NO);
 	
 	NSParameterAssert(localUser != nil);
 	NSParameterAssert(accessKey != nil);
 	
-	NSParameterAssert([containerNode.localUserID isEqualToString:localUser.uuid]);
+	NSParameterAssert([trunkNode.localUserID isEqualToString:localUser.uuid]);
 	NSParameterAssert([localUser.accessKeyID isEqualToString:accessKey.uuid]);
 	
-	if (containerNode.container == ZDCTreesystemContainer_Inbox)
+	if (trunkNode.trunk == ZDCTreesystemTrunk_Inbox)
 	{
-		// These containers are writable by other users.
-		// The "msgs" container is writable by anyone.
-		// And the "inbox" container is writable by non-ZeroDark users.
-		//
-		// Other users won't know our accessKey (obviously),
+		// The 'Inbox' trunk is writable by other users.
+		// And other users won't know our accessKey (obviously),
 		// so we're going to use a simple hash instead.
 		//
 		// Important:
@@ -1370,7 +1367,7 @@ done:
 		//   We just want a quick-n-easy way to get 160 bits.
 		//   SHA1 is the quick-n-easy solution.
 		
-		NSData *input = [containerNode.dirPrefix dataUsingEncoding:NSUTF8StringEncoding];
+		NSData *input = [trunkNode.dirPrefix dataUsingEncoding:NSUTF8StringEncoding];
 		
 		HASH_Algorithm algo = kHASH_Algorithm_SHA1; // This isn't a security thing. Read the comments above.
 		
@@ -1385,21 +1382,21 @@ done:
 		S4Err err = HASH_DO(kHASH_Algorithm_SHA1, input.bytes, input.length, &output, outputSizeInBytes);
 		if (err == kS4Err_NoErr)
 		{
-			containerNode.dirSalt = [NSData dataWithBytes:output length:outputSizeInBytes];
+			trunkNode.dirSalt = [NSData dataWithBytes:output length:outputSizeInBytes];
 		}
 	}
 	else
 	{
 		NSError *error = nil;
-		containerNode.dirSalt =
+		trunkNode.dirSalt =
 		  [self kdfWithSymmetricKey: accessKey
 		                     length: kZDCNode_DirSaltKeySizeInBytes
 		                      label: @"storm4-directory-salt"
-		                       salt: [containerNode.dirPrefix dataUsingEncoding:NSUTF8StringEncoding]
+		                       salt: [trunkNode.dirPrefix dataUsingEncoding:NSUTF8StringEncoding]
 		                      error: &error];
 	}
 	
-	return (containerNode.dirSalt != nil);
+	return (trunkNode.dirSalt != nil);
 }
 
 - (nullable NSData *)kdfWithSymmetricKey:(ZDCSymmetricKey *)inSymKey

@@ -11,60 +11,60 @@
 
 // NSCoding constants
 
-static NSString *const k_container      = @"container";
+static NSString *const k_trunk          = @"container";
 static NSString *const k_pathComponents = @"pathComponents";
 
 // Standardized strings
 
 static NSString *const k_home   = @"home";
+static NSString *const k_prefs  = @"prefs";
 static NSString *const k_inbox  = @"inbox";
 static NSString *const k_outbox = @"outbox";
-static NSString *const k_prefs  = @"prefs";
 
 
-NSString* NSStringFromTreesystemContainer(ZDCTreesystemContainer container)
+NSString* NSStringFromTreesystemTrunk(ZDCTreesystemTrunk trunk)
 {
-	switch (container)
+	switch (trunk)
 	{
-		case ZDCTreesystemContainer_Home   : return k_home;
-		case ZDCTreesystemContainer_Prefs  : return k_prefs;
-		case ZDCTreesystemContainer_Inbox  : return k_inbox;
-		case ZDCTreesystemContainer_Outbox : return k_outbox;
-		default                            : return @"invalid";
+		case ZDCTreesystemTrunk_Home   : return k_home;
+		case ZDCTreesystemTrunk_Prefs  : return k_prefs;
+		case ZDCTreesystemTrunk_Inbox  : return k_inbox;
+		case ZDCTreesystemTrunk_Outbox : return k_outbox;
+		default                        : return @"invalid";
 	}
 }
 
-ZDCTreesystemContainer TreesystemContainerFromString(NSString *str)
+ZDCTreesystemTrunk TreesystemTrunkFromString(NSString *str)
 {
-	if ([str isEqualToString:k_home])   return ZDCTreesystemContainer_Home;
-	if ([str isEqualToString:k_prefs])  return ZDCTreesystemContainer_Prefs;
-	if ([str isEqualToString:k_inbox])  return ZDCTreesystemContainer_Inbox;
-	if ([str isEqualToString:k_outbox]) return ZDCTreesystemContainer_Outbox;
+	if ([str isEqualToString:k_home])   return ZDCTreesystemTrunk_Home;
+	if ([str isEqualToString:k_prefs])  return ZDCTreesystemTrunk_Prefs;
+	if ([str isEqualToString:k_inbox])  return ZDCTreesystemTrunk_Inbox;
+	if ([str isEqualToString:k_outbox]) return ZDCTreesystemTrunk_Outbox;
 	
-	return ZDCTreesystemContainer_Invalid;
+	return ZDCTreesystemTrunk_Invalid;
 }
 	
 
 @implementation ZDCTreesystemPath
 
-@synthesize container = _container;
+@synthesize trunk = _trunk;
 @synthesize pathComponents = _pathComponents;
 
 @dynamic nodeName;
-@dynamic isContainerRoot;
+@dynamic isTrunk;
 
 - (instancetype)initWithPathComponents:(NSArray<NSString *> *)pathComponents
 {
 	return [self initWithPathComponents: pathComponents
-	                          container: ZDCTreesystemContainer_Home];
+	                              trunk: ZDCTreesystemTrunk_Home];
 }
 
 - (instancetype)initWithPathComponents:(NSArray<NSString *> *)pathComponents
-                             container:(ZDCTreesystemContainer)container
+                                 trunk:(ZDCTreesystemTrunk)trunk
 {
 	if ((self = [super init]))
 	{
-		_container = container;
+		_trunk = trunk;
 		
 		if (pathComponents == nil)
 			_pathComponents = @[];
@@ -82,8 +82,8 @@ ZDCTreesystemContainer TreesystemContainerFromString(NSString *str)
 {
 	if ((self = [super init]))
 	{
-		NSString *containerStr = [decoder decodeObjectForKey:k_container];
-		_container = TreesystemContainerFromString(containerStr);
+		NSString *trunkStr = [decoder decodeObjectForKey:k_trunk];
+		_trunk = TreesystemTrunkFromString(trunkStr);
 		
 		_pathComponents = [decoder decodeObjectForKey:k_pathComponents];
 	}
@@ -92,9 +92,9 @@ ZDCTreesystemContainer TreesystemContainerFromString(NSString *str)
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
-	NSString *containerStr = NSStringFromTreesystemContainer(_container);
+	NSString *trunkStr = NSStringFromTreesystemTrunk(_trunk);
 	
-	[coder encodeObject:containerStr forKey:k_container];
+	[coder encodeObject:trunkStr forKey:k_trunk];
 	[coder encodeObject:_pathComponents forKey:k_pathComponents];
 }
 
@@ -121,7 +121,7 @@ ZDCTreesystemContainer TreesystemContainerFromString(NSString *str)
 	}
 }
 
-- (BOOL)isContainerRoot
+- (BOOL)isTrunk
 {
 	return (_pathComponents.count == 0);
 }
@@ -150,10 +150,13 @@ ZDCTreesystemContainer TreesystemContainerFromString(NSString *str)
 - (NSString *)fullPath
 {
 	return [NSString stringWithFormat:@"%@:%@",
-	  NSStringFromTreesystemContainer(_container),
+	  NSStringFromTreesystemTrunk(_trunk),
 	  [self relativePath]];
 }
 
+/**
+ * See header file for description.
+ */
 - (nullable ZDCTreesystemPath *)parentPath
 {
 	if (_pathComponents.count == 0) return nil;
@@ -161,16 +164,19 @@ ZDCTreesystemContainer TreesystemContainerFromString(NSString *str)
 	NSRange range = NSMakeRange(0, _pathComponents.count-1);
 	NSArray<NSString *> *parentPathComponents = [_pathComponents subarrayWithRange:range];
 	
-	return [[ZDCTreesystemPath alloc] initWithPathComponents:parentPathComponents container:_container];
+	return [[ZDCTreesystemPath alloc] initWithPathComponents:parentPathComponents trunk:_trunk];
 }
 
+/**
+ * See header file for description.
+ */
 - (ZDCTreesystemPath *)pathByAppendingComponent:(NSString *)pathComponent
 {
 	if (pathComponent == nil) return self;
 	
 	NSArray<NSString*> *childPathComponents = [_pathComponents arrayByAddingObject:pathComponent];
 	
-	return [[ZDCTreesystemPath alloc] initWithPathComponents:childPathComponents container:_container];
+	return [[ZDCTreesystemPath alloc] initWithPathComponents:childPathComponents trunk:_trunk];
 }
 
 @end

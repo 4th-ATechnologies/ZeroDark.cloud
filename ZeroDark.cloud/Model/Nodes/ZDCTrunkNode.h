@@ -31,45 +31,36 @@ NS_ASSUME_NONNULL_BEGIN
  * For more information about the treesystem, see the docs:
  * https://zerodarkcloud.readthedocs.io/en/latest/advanced/tree/
  *
- * Every user gets their own treesystem. And similar to an Operating System,
- * the treesystem comes with a home "directory", and some other special "directories".
+ * Every user gets their own treesystem. And within each treesystem are top-level root nodes called "trunks".
+ * All user-generated treesystem nodes will be rooted in one of these trunks.
  *
- * The ZDCContainerNode represents these top-level "directories", which are commonly referred to as containers:
- * - home
- * - msgs
- * - prefs
- * - outbox
- * - inbox
- *
- * ZDCContainerNode instances are automatically added to the database when a localUser is created.
+ * A ZDCTrunkNode represents one of these top-level trunk nodes.
+ * ZDCTrunkNode instances are automatically added to the database when a localUser is created.
  */
-@interface ZDCContainerNode : ZDCNode <NSCoding, NSCopying>
+@interface ZDCTrunkNode : ZDCNode <NSCoding, NSCopying>
 
 /**
- * ZDCContainerNode's act as root nodes in the tree hierarchy,
- * and thus they use a deterministic key.
- *
- * This method returns the database key that can be used to fetch the containerNode instance from the database.
+ * Returns the database key that can be used to fetch the trunkNode instance from the database.
  * (Use kZDCCollection_Nodes as the database collection.)
  *
  * @note Normal ZDCNode instances have a random uuid.
  *       That is, the uuid is specific to the local device, and cannot be derived from the cloud version of the node.
- *       ZDCContainerNode's are a little different, as they represent the "virtual" nodes in the server.
- *       That is, hard-coded "root" nodes that doesn't actually exist on the server.
+ *       ZDCTrunkNode's are a little different, as they represent the "virtual" nodes in the server.
+ *       That is, hard-coded "root" nodes that don't actually exist on the server.
  */
 + (NSString *)uuidForLocalUserID:(NSString *)localUserID
                           zAppID:(NSString *)zAppID
-                       container:(ZDCTreesystemContainer)container;
+                           trunk:(ZDCTreesystemTrunk)trunk;
 
 /**
- * The zApp "container".
+ * The zAppID container for the treesystem.
  */
 @property (nonatomic, copy, readonly) NSString *zAppID;
 
 /**
- * The top-level container. E.g. "home", "msgs", "prefs", "inbox", "outbox"
+ * The trunk (top-level root node). E.g. "home", "prefs", "inbox", "outbox".
  */
-@property (nonatomic, assign, readonly) ZDCTreesystemContainer container;
+@property (nonatomic, assign, readonly) ZDCTreesystemTrunk trunk;
 
 @end
 

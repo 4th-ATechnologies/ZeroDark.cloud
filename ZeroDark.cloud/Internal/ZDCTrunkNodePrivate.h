@@ -7,15 +7,15 @@
  * API Reference : https://4th-atechnologies.github.io/ZeroDark.cloud/
 **/
 
-#import "ZDCContainerNode.h"
+#import "ZDCTrunkNode.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ZDCContainerNode ()
+@interface ZDCTrunkNode ()
 
 - (instancetype)initWithLocalUserID:(NSString *)localUserID
                              zAppID:(NSString *)zAppID
-								  container:(ZDCTreesystemContainer)container;
+                              trunk:(ZDCTreesystemTrunk)trunk;
 
 @end
 

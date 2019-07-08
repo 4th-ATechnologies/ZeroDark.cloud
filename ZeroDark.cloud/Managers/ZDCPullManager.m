@@ -2306,14 +2306,14 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	NSString *const localUserID = pullState.localUserID;
 	NSString *const zAppID = pullState.zAppID;
 	
-	NSArray<NSString *> *containerIDs = @[
-		[ZDCContainerNode uuidForLocalUserID:localUserID zAppID:zAppID container:ZDCTreesystemContainer_Home],
-		[ZDCContainerNode uuidForLocalUserID:localUserID zAppID:zAppID container:ZDCTreesystemContainer_Prefs],
-		[ZDCContainerNode uuidForLocalUserID:localUserID zAppID:zAppID container:ZDCTreesystemContainer_Inbox],
-		[ZDCContainerNode uuidForLocalUserID:localUserID zAppID:zAppID container:ZDCTreesystemContainer_Outbox]
+	NSArray<NSString *> *trunkIDs = @[
+		[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Home],
+		[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Prefs],
+		[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Inbox],
+		[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Outbox]
 	];
 	
-	NSMutableArray<ZDCContainerNode *> *containerNodes = [NSMutableArray arrayWithCapacity:containerIDs.count];
+	NSMutableArray<ZDCTrunkNode *> *trunkNodes = [NSMutableArray arrayWithCapacity:trunkIDs.count];
 	
 	[[self roConnection] asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
@@ -2324,11 +2324,11 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		bucket = user.aws_bucket;
 		region = user.aws_region;
 		
-		for (NSString *containerID in containerIDs)
+		for (NSString *trunkID in trunkIDs)
 		{
-			ZDCContainerNode *containerNode = [transaction objectForKey:containerID inCollection:kZDCCollection_Nodes];
-			if (containerNode) {
-				[containerNodes addObject:containerNode];
+			ZDCTrunkNode *trunkNode = [transaction objectForKey:trunkID inCollection:kZDCCollection_Nodes];
+			if (trunkNode) {
+				[trunkNodes addObject:trunkNode];
 			}
 			else {
 				NSAssert(NO, @"You forgot to create the container nodes when you created the localUser!");
@@ -2372,7 +2372,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			
 			__block YAPUnfairLock innerLock = YAP_UNFAIR_LOCK_INIT;
 			__block ZDCPullTaskResult *cumulativeResult = nil;
-			__block atomic_uint pendingCount = containerNodes.count;
+			__block atomic_uint pendingCount = trunkNodes.count;
 			
 			ZDCPullTaskCompletion innerCompletionBlock =
 			^(YapDatabaseReadWriteTransaction *transaction, ZDCPullTaskResult *opResult){ @autoreleasepool {
@@ -2398,9 +2398,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				}
 			}};
 			
-			for (ZDCContainerNode *containerNode in containerNodes)
+			for (ZDCTrunkNode *trunkNode in trunkNodes)
 			{
-				[self syncNode: containerNode
+				[self syncNode: trunkNode
 				        bucket: bucket
 				        region: region
 				     pullState: pullState
@@ -2412,7 +2412,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		//	                  pullState: pullState
 		//	                 completion: innerCompletionBlock]; Don't forget to change pendingCount initialization
 			
-			NSAssert(containerNodes.count != 0, @"Pull is never going to complete!");
+			NSAssert(trunkNodes.count != 0, @"Pull is never going to complete!");
 		}];
 	}];
 }
@@ -2683,12 +2683,12 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		ZDCNode *anchorNode = [[ZDCNodeManager sharedInstance] anchorNodeForNode:node transaction:transaction];
 		
 		NSString *appPrefix = anchorNode.anchor.zAppID;
-		if (!appPrefix && [anchorNode isKindOfClass:[ZDCContainerNode class]]) {
-			appPrefix = [(ZDCContainerNode *)anchorNode zAppID];
+		if (!appPrefix && [anchorNode isKindOfClass:[ZDCTrunkNode class]]) {
+			appPrefix = [(ZDCTrunkNode *)anchorNode zAppID];
 		}
 		
 		NSString *rootNodeID = nil;
-		if ([anchorNode isKindOfClass:[ZDCContainerNode class]]) {
+		if ([anchorNode isKindOfClass:[ZDCTrunkNode class]]) {
 			rootNodeID = anchorNode.localUserID;
 		}
 		else {
