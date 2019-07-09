@@ -18,6 +18,8 @@ PODS:
   - CocoaLumberjack (3.5.3):
     - CocoaLumberjack/Core (= 3.5.3)
   - CocoaLumberjack/Core (3.5.3)
+  - CocoaLumberjack/Swift (3.5.3):
+    - CocoaLumberjack/Core
   - ImageScrollView (1.8)
   - JGProgressView (1.2.1)
   - JWT (2.2.0):
@@ -132,6 +134,7 @@ PODS:
   - zipzap (8.1.1)
 
 DEPENDENCIES:
+  - CocoaLumberjack/Swift
   - ImageScrollView
   - KGHitTestingViews
   - SWRevealViewController
@@ -192,6 +195,6 @@ SPEC CHECKSUMS:
   ZeroDarkCloud: de3e2cca8872fdf1a64f5e2e582c338f9e7a429d
   zipzap: 940162d9c9c60472c2eab341385e4214da0fdf1c
 
-PODFILE CHECKSUM: 8464385b4ad9705b063ef24f0bd0d86cbc03c956
+PODFILE CHECKSUM: c20ea5580043017218bc41680548c05da67150ed
 
 COCOAPODS: 1.7.3

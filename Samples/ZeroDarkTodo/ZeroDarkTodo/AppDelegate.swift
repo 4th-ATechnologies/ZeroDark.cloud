@@ -12,6 +12,7 @@ import Photos
 
 import YapDatabase
 import ZeroDarkCloud
+import CocoaLumberjack
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate, SettingsViewControllerDelegate, SWRevealViewControllerDelegate {
@@ -36,6 +37,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, SettingsViewControllerDel
 	func application(_ application: UIApplication,
 	                 didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool
 	{
+		// Configure CocoaLumberjack
+		DDLog.add(DDOSLogger.sharedInstance)
+		
 		// Setup ZeroDarkCloud
 		ZDCManager.setup()
 
