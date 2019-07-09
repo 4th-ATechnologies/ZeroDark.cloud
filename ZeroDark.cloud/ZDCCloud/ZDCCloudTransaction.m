@@ -60,6 +60,13 @@
 
 - (NSString *)signalParentID
 {
+	// Signals are not a part of the treesystem.
+	// So we store them with a special parentID.
+	//
+	// This makes them searchable via:
+	// - Ext_View_Filesystem
+	// - Ext_View_Flat
+	
 	return [NSString stringWithFormat:@"%@|%@|signal", [self localUserID], [self zAppID]];
 }
 
@@ -72,9 +79,8 @@
  * Or view the reference docs online:
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
-- (BOOL)sendMessage:(ZDCNode *)message
-                 to:(NSArray<ZDCUser*> *)recipients
-              error:(NSError *_Nullable *_Nullable)outError
+- (nullable ZDCNode *)sendMessageToRecipients:(NSArray<ZDCUser*> *)recipients
+                                        error:(NSError *_Nullable *_Nullable)outError
 {
 	DDLogAutoTrace();
 	
@@ -88,46 +94,12 @@
 	}
 	YapDatabaseReadWriteTransaction *rwTransaction = (YapDatabaseReadWriteTransaction *)databaseTransaction;
 	
-	// Sanity checks
-	
-	if (message == nil)
-	{
-		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
-		NSString *desc = @"Invalid parameter: the given message is nil";
-		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
-		
-		if (outError) *outError = error;
-		return NO;
-	}
+	// Create message node
 	
 	NSString *localUserID = [self localUserID];
 	NSString *zAppID = [self zAppID];
 	
-	if (![message.localUserID isEqualToString:localUserID])
-	{
-		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
-		NSString *desc = @"Invalid parameter: message.localUserID != ZDCCloud.localUserID";
-		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
-		
-		if (outError) *outError = error;
-		return NO;
-	}
-	
-	if ([databaseTransaction hasObjectForKey:message.uuid inCollection:kZDCCollection_Nodes])
-	{
-		ZDCCloudErrorCode code = ZDCCloudErrorCode_Conflict;
-		NSString *desc =
-		  @"The given node is already in the database."
-		  @" Did you mean to modify the existing node? If so, you must use the `modifyNode:` method.";
-		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
-		
-		if (outError) *outError = error;
-		return NO;
-	}
-	
-	if (message.isImmutable) {
-		message = [message copy];
-	}
+	ZDCNode *message = [[ZDCNode alloc] initWithLocalUserID:localUserID];
 	
 	ZDCTrunkNode *outbox = [self trunkNode:ZDCTreesystemTrunk_Outbox];
 	message.parentID = outbox.uuid;
@@ -147,9 +119,7 @@
 		message.pendingRecipients = userIDs;
 	}
 	
-	if (![message.shareList hasShareItemForUserID:localUserID])
-	{
-		// Add sender permissions
+	{ // Add sender permissions
 		
 		ZDCShareItem *item = [[ZDCShareItem alloc] init];
 		[item addPermission:ZDCSharePermission_Read];
@@ -255,7 +225,7 @@
 		[self addOperation:op_copy];
 	}
 	
-	return YES;
+	return message;
 }
 
 /**
@@ -263,9 +233,8 @@
  * Or view the reference docs online:
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
-- (BOOL)sendSignal:(ZDCNode *)signal
-                to:(ZDCUser *)recipient
-             error:(NSError *_Nullable *_Nullable)outError
+- (nullable ZDCNode *)sendSignalToRecipient:(ZDCUser *)recipient
+                                      error:(NSError *_Nullable *_Nullable)outError
 {
 	DDLogAutoTrace();
 	
@@ -281,15 +250,6 @@
 	
 	// Sanity checks
 	
-	if (signal == nil)
-	{
-		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
-		NSString *desc = @"Invalid parameter: the given signal is nil";
-		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
-		
-		if (outError) *outError = error;
-		return NO;
-	}
 	if (recipient == nil)
 	{
 		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
@@ -297,47 +257,15 @@
 		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
 		
 		if (outError) *outError = error;
-		return NO;
+		return nil;
 	}
+	
+	// Create signal node
 	
 	NSString *localUserID = [self localUserID];
 	NSString *zAppID = [self zAppID];
 	
-	if (![signal.localUserID isEqualToString:localUserID])
-	{
-		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
-		NSString *desc = @"Invalid parameter: signal.localUserID != ZDCCloud.localUserID";
-		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
-		
-		if (outError) *outError = error;
-		return NO;
-	}
-	
-	if ([databaseTransaction hasObjectForKey:signal.uuid inCollection:kZDCCollection_Nodes])
-	{
-		ZDCCloudErrorCode code = ZDCCloudErrorCode_Conflict;
-		NSString *desc =
-		  @"The given node is already in the database."
-		  @" Did you mean to modify the existing node? If so, you must use the `modifyNode:` method.";
-		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
-		
-		if (outError) *outError = error;
-		return NO;
-	}
-	
-	// Prepare signal for storage & upload
-	
-	if (signal.isImmutable) {
-		signal = [signal copy];
-	}
-	
-	// Signals are not a part of the treesystem.
-	// So we store them with a special parentID.
-	//
-	// This makes them searchable via:
-	// - Ext_View_Filesystem
-	// - Ext_View_Flat
-	//
+	ZDCNode *signal = [[ZDCNode alloc] initWithLocalUserID:localUserID];
 	signal.parentID = [self signalParentID];
 	
 	NSString *cloudName = [ZDCNode randomCloudName];
@@ -351,9 +279,7 @@
 	                                 zAppID: zAppID
 	                              dirPrefix: kZDCDirPrefix_MsgsIn];
 	
-	if (![signal.shareList hasShareItemForUserID:recipient.uuid])
-	{
-		// Add recipient permissions
+	{ // Add recipient permissions
 		
 		ZDCShareItem *item = [[ZDCShareItem alloc] init];
 		[item addPermission:ZDCSharePermission_Read];
@@ -411,7 +337,7 @@
 	[self addOperation:op_rcrd];
 	[self addOperation:op_data];
 	
-	return YES;
+	return signal;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2091,15 +2017,16 @@
 			// newOp : from graphB (commit #Y)
 			//
 			// We are being extra cautious here, and only injecting dependencies if:
-			// - the 2 operations have the exact same target
+			// - the newOp should depend on the oldOp
 			// - the inverse dependency doesn't exist
-			//
-			// We could be more cautious here (and do a full circular dependency check).
-			// Or we could be more aggressive here (and use `newOperation:dependsOnOldOperation:`).
 			
-			if ([newOp hasSameTarget:oldOp] && ![newOp.dependencies containsObject:oldOp.uuid])
+			if ([self newOperation:newOp dependsOnOldOperation:oldOp])
 			{
-				[newOp addDependency:oldOp];
+				NSSet<NSUUID*> *allDependencies = [self recursiveDependenciesForOperation:newOp];
+				if (![allDependencies containsObject:oldOp.uuid])
+				{
+					[newOp addDependency:oldOp];
+				}
 			}
 		}
 		else

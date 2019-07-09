@@ -104,9 +104,6 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  * For more information about messaging, see the docs:
  * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
  *
- * @param message
- *   A node that represents the message to send.
- *
  * @param recipients
  *   A list of recipients that should receive the message.
  *
@@ -114,27 +111,23 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  *   Set to nil on success.
  *   Otherwise returns an error that explains what went wrong.
  *
- * @return Returns YES on success, NO otherwise.
+ * @return Returns the message node on success, nil otherwise.
  */
-- (BOOL)sendMessage:(ZDCNode *)message
-                 to:(NSArray<ZDCUser*> *)recipients
-              error:(NSError *_Nullable *_Nullable)outError;
+- (nullable ZDCNode *)sendMessageToRecipients:(NSArray<ZDCUser*> *)recipients
+                                        error:(NSError *_Nullable *_Nullable)outError;
 
 /**
  * A signal is a lightweight outgoing message.
  *
  * Signals are delivered into the inbox of the recipient *ONLY*.
- * There is NOT a copy in the outbox of the sender. In other words, they are designed to be minimal,
- * and don't cause additional overhead for the sender.
+ * There is NOT a copy of the message within the outbox of the sender.
+ * In other words, signals are designed to be minimal, and don't cause additional overhead for the sender.
  *
  * You supply the data for the message via `[ZeroDarkCloudDelegate dataForMessage:transaction:]`.
  * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
  * 
  * For more information about messaging, see the docs:
  * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
- *
- * @param signal
- *   The signal to send.
  *
  * @param recipient
  *   The user to send the message to. (userID == ZDCUser.uuid)
@@ -143,11 +136,10 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  *   Set to nil on success.
  *   Otherwise returns an error that explains what went wrong.
  *
- * @return Returns YES on success, NO otherwise.
+ * @return Returns the message node on success, nil otherwise.
  */
-- (BOOL)sendSignal:(ZDCNode *)signal
-                to:(ZDCUser *)recipient
-             error:(NSError *_Nullable *_Nullable)outError;
+- (nullable ZDCNode *)sendSignalToRecipient:(ZDCUser *)recipient
+                                      error:(NSError *_Nullable *_Nullable)outError;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Node Management

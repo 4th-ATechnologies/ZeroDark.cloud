@@ -352,7 +352,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			  context.eTag,
 			  operation.cloudLocator.cloudPath.dirPrefix,
 			  operation.cloudLocator.cloudPath.fileName,
-			  operation.localUserID,
+			  [operation.dstCloudLocator bucketOwner],
 			  operation.dstCloudLocator.cloudPath.dirPrefix,
 			  operation.dstCloudLocator.cloudPath.fileName];
 			
@@ -1137,7 +1137,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			}
 			case ZDCCloudOperationType_CopyLeaf:
 			{
-				NSAssert(NO, @"Not implemented");
+				[self copyLeafTaskDidComplete:task inSession:session withError:error context:context];
 				break;
 			}
 			case ZDCCloudOperationType_DeleteLeaf:
@@ -5072,6 +5072,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	// Generate ".rcrd" file content
 	
 	__block NSError *error = nil;
+	__block ZDCNode *srcNode = nil;
 	__block ZDCNode *dstNode = nil;
 	__block NSData *rcrdData = nil;
 	__block NSArray<NSString*> *missingKeys = nil;
@@ -5082,6 +5083,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	[self.roConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
+		srcNode = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
 		dstNode = [transaction objectForKey:operation.dstNodeID inCollection:kZDCCollection_Nodes];
 		if (dstNode)
 		{
@@ -5102,7 +5104,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		operation.ephemeralInfo.lastChangeToken = pullInfo.latestChangeID_local;
 	}];
 	
-	context.eTag = dstNode.eTag_rcrd;
+	context.eTag = srcNode.eTag_rcrd;
 	
 	if (error)
 	{
