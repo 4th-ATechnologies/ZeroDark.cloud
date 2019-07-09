@@ -95,8 +95,17 @@ static ZDCCloudPathManager *sharedInstance = nil;
 		return nil;
 	}
 	
-	ZDCNode *parent = [transaction objectForKey:node.parentID inCollection:kZDCCollection_Nodes];
-	NSString *dirPrefix = parent.dirPrefix;
+	NSString *dirPrefix = nil;
+	
+	if ([node.parentID hasSuffix:@"|signal"])
+	{
+		dirPrefix = kZDCDirPrefix_MsgsIn;
+	}
+	else
+	{
+		ZDCNode *parent = [transaction objectForKey:node.parentID inCollection:kZDCCollection_Nodes];
+		dirPrefix = parent.dirPrefix;
+	}
 	
 	if (dirPrefix == nil) {
 		return nil;

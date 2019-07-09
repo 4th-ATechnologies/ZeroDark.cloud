@@ -65,7 +65,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   A database transaction - used to read from the database in atomic fashion.
  *
  * @param outMissingKeys
- *   If there are 1 ore more ZDCShareItem's with an empty key,
+ *   If there are 1 or more ZDCShareItem's with an empty key,
  *   and there's a ZDCPublicKey that can be used to fill in the key,
  *   then this parameter will provide the list of keys that are missing (and required).
  *   You'll need to use the `-fixMissingKeysForNode::` method to fix the problem.

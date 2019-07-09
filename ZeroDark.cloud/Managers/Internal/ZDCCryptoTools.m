@@ -390,11 +390,23 @@ done:
 	// Add children section
 	if (!isMessage && node.dirPrefix)
 	{
-		dict[kZDCCloudRcrd_Children] = @{
-			@"": @{
-				kZDCCloudRcrd_Children_Prefix: node.dirPrefix
-			}
-		};
+		BOOL parentNodeAllowsChildren = YES;
+		
+		ZDCNode *parentNode = [transaction objectForKey:node.parentID inCollection:kZDCCollection_Nodes];
+		ZDCShareItem *shareItem = [parentNode.shareList shareItemForUserID:node.localUserID];
+		if (shareItem)
+		{
+			parentNodeAllowsChildren = ![shareItem hasPermission:ZDCSharePermission_LeafsOnly];
+		}
+		
+		if (parentNodeAllowsChildren)
+		{
+			dict[kZDCCloudRcrd_Children] = @{
+				@"": @{
+					kZDCCloudRcrd_Children_Prefix: node.dirPrefix
+				}
+			};
+		}
 	}
 	
 	// Add keys section

@@ -58,6 +58,11 @@
 	return [parentConnection->parent defaultPipeline];
 }
 
+- (NSString *)signalParentID
+{
+	return [NSString stringWithFormat:@"%@|%@|signal", [self localUserID], [self zAppID]];
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Messaging
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -127,7 +132,9 @@
 	ZDCTrunkNode *outbox = [self trunkNode:ZDCTreesystemTrunk_Outbox];
 	message.parentID = outbox.uuid;
 	
-	message.name = [ZDCNode randomCloudName];
+	NSString *cloudName = [ZDCNode randomCloudName];
+	message.name = cloudName;
+	message.explicitCloudName = cloudName;
 	
 	if (recipients.count > 0)
 	{
@@ -155,11 +162,10 @@
 	
 	[rwTransaction setObject:message forKey:message.uuid inCollection:kZDCCollection_Nodes];
 	
-	// Create & queue operations
+	// Create & queue operations (put:[rcrd, data] -> local:outbox)
 	
 	ZDCCloudLocator *cloudLocator =
 	  [[ZDCCloudPathManager sharedInstance] cloudLocatorForNode: message
-	                                              fileExtension: nil
 	                                                transaction: databaseTransaction];
 	
 	ZDCCloudOperation *op_rcrd =
@@ -183,13 +189,48 @@
 	[self addOperation:op_rcrd];
 	[self addOperation:op_data];
 	
+	// Create and queue operations (copy-leaf -> remote:inbox)
+	
 	for (ZDCUser *recipient in recipients)
 	{
-		NSString *hashMe_str = [NSString stringWithFormat:@"%@|%@|%@", localUserID, message.name, recipient.uuid];
-		NSData *hashMe_data = [hashMe_str dataUsingEncoding:NSUTF8StringEncoding];
+		ZDCNode *dstNode = [[ZDCNode alloc] initWithLocalUserID:localUserID];
+		dstNode.parentID = [self signalParentID];
 		
-		NSData *hash = [hashMe_data hashWithAlgorithm:kHASH_Algorithm_SHA256 error:nil];
-		NSString *filename = [[hash zBase32String] substringToIndex:32];
+		NSString *cloudName = [ZDCNode randomCloudName];
+		dstNode.name = cloudName;
+		dstNode.explicitCloudName = cloudName;
+		
+		dstNode.pendingRecipients = [NSSet setWithObject:recipient.uuid];
+		
+		dstNode.anchor =
+		  [[ZDCNodeAnchor alloc] initWithUserID: recipient.uuid
+		                                 zAppID: zAppID
+		                              dirPrefix: kZDCDirPrefix_MsgsIn];
+		
+		{ // Add recipient permissions
+			
+			ZDCShareItem *item = [[ZDCShareItem alloc] init];
+			[item addPermission:ZDCSharePermission_Read];
+			[item addPermission:ZDCSharePermission_Write];
+			[item addPermission:ZDCSharePermission_Share];
+			[item addPermission:ZDCSharePermission_LeafsOnly];
+			
+			[dstNode.shareList addShareItem:item forUserID:recipient.uuid];
+		}
+		
+		if (![dstNode.shareList hasShareItemForUserID:localUserID])
+		{
+			// Add sender permissions
+			
+			ZDCShareItem *item = [[ZDCShareItem alloc] init];
+			[item addPermission:ZDCSharePermission_LeafsOnly];
+			[item addPermission:ZDCSharePermission_WriteOnce];
+			[item addPermission:ZDCSharePermission_BurnIfOwner];
+			
+			[dstNode.shareList addShareItem:item forUserID:localUserID];
+		}
+		
+		[rwTransaction setObject:dstNode forKey:dstNode.uuid inCollection:kZDCCollection_Nodes];
 		
 		ZDCCloudOperation *op_copy =
 		  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
@@ -199,7 +240,7 @@
 		ZDCCloudPath *dstCloudPath =
 		  [[ZDCCloudPath alloc] initWithAppPrefix: zAppID
 		                                dirPrefix: kZDCDirPrefix_MsgsIn
-		                                 fileName: filename];
+		                                 fileName: cloudName];
 		
 		ZDCCloudLocator *dstCloudLocator =
 		  [[ZDCCloudLocator alloc] initWithRegion: recipient.aws_region
@@ -207,6 +248,7 @@
 		                                cloudPath: dstCloudPath];
 		
 		op_copy.nodeID = message.uuid;
+		op_copy.dstNodeID = dstNode.uuid;
 		op_copy.cloudLocator = cloudLocator;
 		op_copy.dstCloudLocator = dstCloudLocator;
 		
@@ -296,9 +338,12 @@
 	// - Ext_View_Filesystem
 	// - Ext_View_Flat
 	//
-	signal.parentID = [NSString stringWithFormat:@"%@|%@|signal", localUserID, zAppID];
+	signal.parentID = [self signalParentID];
 	
-	signal.name = [ZDCNode randomCloudName];
+	NSString *cloudName = [ZDCNode randomCloudName];
+	signal.name = cloudName;
+	signal.explicitCloudName = cloudName;
+	
 	signal.pendingRecipients = [NSSet setWithObject:recipient.uuid];
 	
 	signal.anchor =
@@ -338,7 +383,7 @@
 	ZDCCloudPath *cloudPath =
 	  [[ZDCCloudPath alloc] initWithAppPrefix: zAppID
 	                                dirPrefix: kZDCDirPrefix_MsgsIn
-	                                 fileName: signal.name];
+	                                 fileName: cloudName];
 	
 	ZDCCloudLocator *cloudLocator =
 	  [[ZDCCloudLocator alloc] initWithRegion: recipient.aws_region
@@ -1986,6 +2031,7 @@
 		case ZDCCloudOperationType_CopyLeaf:
 		{
 			NSAssert(op.nodeID != nil, @"nodeID is nil !");
+			NSAssert(op.dstNodeID != nil, @"dstNodeID is nil !");
 			NSAssert(op.cloudLocator != nil, @"cloudLocator is nil !");
 			NSAssert(op.dstCloudLocator != nil, @"dstCloudLocator is nil !");
 			break;
@@ -2018,7 +2064,7 @@
 	
 	ZDCCloudOperation *newOp = (ZDCCloudOperation *)operation;
 	
-	[self _enumerateOperations: (YDBCloudCore_EnumOps_Existing | YDBCloudCore_EnumOps_Inserted)
+	[self _enumerateOperations: YDBCloudCore_EnumOps_All
 	                inPipeline: pipeline
 	                usingBlock: ^void (YapDatabaseCloudCoreOperation *oldOperation, NSUInteger graphIdx, BOOL *stop)
 	{
@@ -2092,7 +2138,7 @@
 {
 	__unsafe_unretained ZDCCloudOperation *newOp = (ZDCCloudOperation *)operation;
 	
-	[self _enumerateOperations: (YDBCloudCore_EnumOps_Existing | YDBCloudCore_EnumOps_Inserted)
+	[self _enumerateOperations: YDBCloudCore_EnumOps_All
 	                inPipeline: pipeline
 	                usingBlock: ^void (YapDatabaseCloudCoreOperation *oldOperation, NSUInteger graphIdx, BOOL *stop)
 	{
@@ -2128,7 +2174,7 @@
 	
 	__block NSMutableArray<ZDCCloudOperation*> *modifiedLaterOps = nil;
 	
-	[self _enumerateOperations: (YDBCloudCore_EnumOps_Existing | YDBCloudCore_EnumOps_Inserted)
+	[self _enumerateOperations: YDBCloudCore_EnumOps_All
 	                inPipeline: pipeline
 	                usingBlock: ^void (YapDatabaseCloudCoreOperation *newOperation, NSUInteger graphIdx, BOOL *stop)
 	{

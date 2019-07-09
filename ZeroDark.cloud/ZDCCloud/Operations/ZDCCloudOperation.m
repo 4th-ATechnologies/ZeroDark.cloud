@@ -26,6 +26,7 @@ static NSString *const k_zAppID          = @"zAppID";
 static NSString *const k_type_str        = @"type_str";
 static NSString *const k_putType_str     = @"putType_str";
 static NSString *const k_nodeID          = @"nodeID";
+static NSString *const k_dstNodeID       = @"dstNodeID";
 static NSString *const k_cloudNodeID     = @"cloudNodeID";
 static NSString *const k_cloudLocator    = @"cloudLocator";
 static NSString *const k_dstCloudLocator = @"dstCloudLocator";
@@ -64,6 +65,7 @@ static NSString *const putType_str_pointer      = @"ptr";
 @synthesize type = type;
 @synthesize putType = putType;
 @synthesize nodeID = nodeID;
+@synthesize dstNodeID = dstNodeID;
 @synthesize cloudNodeID = cloudNodeID;
 @synthesize cloudLocator = cloudLocator;
 @synthesize dstCloudLocator = dstCloudLocator;
@@ -161,6 +163,7 @@ static NSString *const putType_str_pointer      = @"ptr";
 		putType = [[self class] putTypeForString:putType_str];
 		
 		nodeID      = [decoder decodeObjectForKey:k_nodeID];
+		dstNodeID   = [decoder decodeObjectForKey:k_dstNodeID];
 		cloudNodeID = [decoder decodeObjectForKey:k_cloudNodeID];
 		
 		cloudLocator = [decoder decodeObjectForKey:k_cloudLocator];
@@ -243,6 +246,7 @@ static NSString *const putType_str_pointer      = @"ptr";
 	}
 	
 	[coder encodeObject:nodeID      forKey:k_nodeID];
+	[coder encodeObject:dstNodeID   forKey:k_dstNodeID];
 	[coder encodeObject:cloudNodeID forKey:k_cloudNodeID];
 	
 	[coder encodeObject:cloudLocator forKey:k_cloudLocator];
@@ -279,6 +283,7 @@ static NSString *const putType_str_pointer      = @"ptr";
 	copy->putType = putType;
 	
 	copy->nodeID = nodeID;
+	copy->dstNodeID = dstNodeID;
 	copy->cloudNodeID = cloudNodeID;
 	
 	copy->cloudLocator = cloudLocator;
@@ -365,55 +370,13 @@ static NSString *const putType_str_pointer      = @"ptr";
 	if (putType != op->putType) return NO;
 	
 	if (!YDB_IsEqualOrBothNil(nodeID, op->nodeID)) return NO;
+	if (!YDB_IsEqualOrBothNil(dstNodeID, op->dstNodeID)) return NO;
 	if (!YDB_IsEqualOrBothNil(cloudNodeID, op->cloudNodeID)) return NO;
 	
 	if (!YDB_IsEqualOrBothNil(cloudLocator, op->cloudLocator)) return NO;
 	if (!YDB_IsEqualOrBothNil(dstCloudLocator, op->dstCloudLocator)) return NO;
 	
 	if (!YDB_IsEqualOrBothNil(avatar_auth0ID, op->avatar_auth0ID)) return NO;
-	
-	return YES;
-}
-
-/**
- * Subclasses should override this method, and add their own comparisons.
-**/
-- (BOOL)isEqualToOperation:(YapDatabaseCloudCoreOperation *)operation
-{
-	if (![super isEqualToOperation:operation]) return NO;
-	
-	if (![operation isKindOfClass:[ZDCCloudOperation class]]) return NO;
-	
-	ZDCCloudOperation *op = (ZDCCloudOperation *)operation;
-	
-	if (!YDB_IsEqualOrBothNil(localUserID, op->localUserID)) return NO;
-	if (!YDB_IsEqualOrBothNil(zAppID, op->zAppID)) return NO;
-	
-	if (type != op->type) return NO;
-	if (putType != op->putType) return NO;
-	
-	if (!YDB_IsEqualOrBothNil(nodeID, op->nodeID)) return NO;
-	if (!YDB_IsEqualOrBothNil(cloudNodeID, op->cloudNodeID)) return NO;
-	
-	if (!YDB_IsEqualOrBothNil(cloudLocator, op->cloudLocator)) return NO;
-	if (!YDB_IsEqualOrBothNil(dstCloudLocator, op->dstCloudLocator)) return NO;
-	
-	if (!YDB_IsEqualOrBothNil(eTag, op->eTag)) return NO;
-	
-	if (ifOrphan != op->ifOrphan) return NO;
-	if (!YDB_IsEqualOrBothNil(deleteNodeJSON, op->deleteNodeJSON)) return NO;
-	if (!YDB_IsEqualOrBothNil(deletedCloudIDs, op->deletedCloudIDs)) return NO;
-	
-	if (!YDB_IsEqualOrBothNil(avatar_auth0ID, op->avatar_auth0ID)) return NO;
-	if (!YDB_IsEqualOrBothNil(avatar_oldETag, op->avatar_oldETag)) return NO;
-	if (!YDB_IsEqualOrBothNil(avatar_newETag, op->avatar_newETag)) return NO;
-	
-	if (!YDB_IsEqualOrBothNil(changeset_permissions, op->changeset_permissions)) return NO;
-	if (!YDB_IsEqualOrBothNil(changeset_obj, op->changeset_obj)) return NO;
-	
-	if (!YDB_IsEqualOrBothNil(multipartInfo, op->multipartInfo)) return NO;
-	
-	if (ephemeralInfo != op->ephemeralInfo) return NO; // explicit pointer comparison
 	
 	return YES;
 }

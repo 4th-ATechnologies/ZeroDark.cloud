@@ -1667,25 +1667,25 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			// Send a message to the user(s) we added.
 			
-			for addedUserID in newUsers {
-				
-				// Test sending a signal
-				
-				if let user = transaction.object(forKey: addedUserID, inCollection: kZDCCollection_Users) as? ZDCUser {
+			let sendMessageAsSignal = false
+			if sendMessageAsSignal {
+			
+				for addedUserID in newUsers {
 					
-					let signal = ZDCNode(localUserID: localUserID)
-					do {
-						try cloudTransaction.sendSignal(signal, to: user)
-						cloudTransaction.setTag(listID, forNodeID: signal.uuid, withIdentifier: "listID")
-					}
-					catch {
-						print("Error sending message: \(error)")
+					if let user = transaction.object(forKey: addedUserID, inCollection: kZDCCollection_Users) as? ZDCUser {
+						
+						let signal = ZDCNode(localUserID: localUserID)
+						do {
+							try cloudTransaction.sendSignal(signal, to: user)
+							cloudTransaction.setTag(listID, forNodeID: signal.uuid, withIdentifier: "listID")
+						}
+						catch {
+							print("Error sending message: \(error)")
+						}
 					}
 				}
 			}
-			
-		/*
-			if newUsers.count > 0 {
+			else if newUsers.count > 0 {
 				
 				var addedUsers = [ZDCUser]()
 				for addedUserID in newUsers {
@@ -1703,7 +1703,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					print("Error sending message: \(error)")
 				}
 			}
-		*/
+			
 		})
 	}
 	

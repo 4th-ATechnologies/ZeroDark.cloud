@@ -456,21 +456,21 @@
 	[transaction setObject:privKey forKey:privKey.uuid inCollection:kZDCCollection_PublicKeys];
 	[transaction setObject:accessKey forKey:accessKey.uuid inCollection:kZDCCollection_SymmetricKeys];
 	
-	[self createContainerNodesForLocalUser: localUser
-	                         withAccessKey: accessKey
-	                           transaction: transaction];
+	[self createTrunkNodesForLocalUser: localUser
+	                     withAccessKey: accessKey
+	                       transaction: transaction];
 	
 	if (outLocalUserID) *outLocalUserID = localUser.uuid;
 	return nil;
 }
 
 /**
- * Standardized routine for creating all the container nodes.
+ * Standardized routine for creating all the trunk nodes.
  * Get access via: #import "ZDCLocalUserManagerPrivate.h"
  */
-- (void)createContainerNodesForLocalUser:(ZDCLocalUser *)localUser
-                           withAccessKey:(ZDCSymmetricKey *)accessKey
-                             transaction:(YapDatabaseReadWriteTransaction *)transaction
+- (void)createTrunkNodesForLocalUser:(ZDCLocalUser *)localUser
+                       withAccessKey:(ZDCSymmetricKey *)accessKey
+                         transaction:(YapDatabaseReadWriteTransaction *)transaction
 {
 	NSArray<NSNumber*> *trunks = @[
 		@(ZDCTreesystemTrunk_Home),
@@ -985,10 +985,10 @@
 			[transaction setObject:privateKey
 							forKey:privateKey.uuid
 					  inCollection:kZDCCollection_PublicKeys];
-            
-            [strongSelf createContainerNodesForLocalUser:user
-                                           withAccessKey:accessKey
-                                             transaction:transaction];
+			
+			[strongSelf createTrunkNodesForLocalUser: user
+			                           withAccessKey: accessKey
+			                             transaction: transaction];
 		}
 
 	} completionQueue:completionQueue completionBlock:completionBlock];

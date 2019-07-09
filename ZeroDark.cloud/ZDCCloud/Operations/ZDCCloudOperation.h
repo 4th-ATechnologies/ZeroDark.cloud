@@ -177,6 +177,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** Points to the corresponding node (nodeID == ZDCNode.uuid) */
 @property (nonatomic, copy, readwrite, nullable) NSString *nodeID;
 
+/** For copy-leaf operations, points to the corresponding destination node (nodeID == ZDCNode.uuid) */
+@property (nonatomic, copy, readwrite, nullable) NSString *dstNodeID;
+
 /** Points to the corresponding cloudNode (cloudNodeID == ZDCCloudNode.uuid) */
 @property (nonatomic, copy, readwrite, nullable) NSString *cloudNodeID;
 

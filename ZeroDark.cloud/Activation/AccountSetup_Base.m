@@ -1348,10 +1348,9 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 								 forKey:localUser.uuid
 						 inCollection:kZDCCollection_Users];
 			
-			[strongSelf->owner.localUserManager createContainerNodesForLocalUser:localUser
-																	 withAccessKey:symKey
-																		transaction:transaction];
-			
+			[strongSelf->owner.localUserManager createTrunkNodesForLocalUser: localUser
+			                                                   withAccessKey: symKey
+			                                                     transaction: transaction];
 			
 		} completionBlock:^{
 			

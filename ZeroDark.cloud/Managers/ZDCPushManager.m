@@ -857,34 +857,50 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	{
 		ZDCCloudOperationType type = operation.type;
 
-		if (type == ZDCCloudOperationType_Put)
+		switch (type)
 		{
-			if (operation.multipartInfo) {
-				[self prepareMultipartOperation:operation forPipeline:pipeline];
+			case ZDCCloudOperationType_Put:
+			{
+				if (operation.multipartInfo) {
+					[self prepareMultipartOperation:operation forPipeline:pipeline];
+				}
+				else {
+					[self preparePutOperation:operation forPipeline:pipeline];
+				}
+				break;
 			}
-			else {
-				[self preparePutOperation:operation forPipeline:pipeline];
+			case ZDCCloudOperationType_Move:
+			{
+				[self prepareMoveOperation:operation forPipeline:pipeline];
+				break;
 			}
-		}
-		else if (type == ZDCCloudOperationType_Move)
-		{
-			[self prepareMoveOperation:operation forPipeline:pipeline];
-		}
-		else if (type == ZDCCloudOperationType_DeleteLeaf)
-		{
-			[self prepareDeleteLeafOperation:operation forPipeline:pipeline];
-		}
-		else if (type == ZDCCloudOperationType_DeleteNode)
-		{
-			[self prepareDeleteNodeOperation:operation forPipeline:pipeline];
-		}
-		else if (type == ZDCCloudOperationType_Avatar)
-		{
-			[self prepareAvatarOperation:operation forPipeline:pipeline];
-		}
-		else
-		{
-			DDLogError(@"%@ - Unsupported operation type: %lu", THIS_METHOD, (unsigned long)type);
+			case ZDCCloudOperationType_DeleteLeaf:
+			{
+				[self prepareDeleteLeafOperation:operation forPipeline:pipeline];
+				break;
+			}
+			case ZDCCloudOperationType_DeleteNode:
+			{
+				[self prepareDeleteNodeOperation:operation forPipeline:pipeline];
+				break;
+			}
+			case ZDCCloudOperationType_CopyLeaf:
+			{
+				[self prepareCopyLeafOperation:operation forPipeline:pipeline];
+				break;
+			}
+			case ZDCCloudOperationType_Avatar:
+			{
+				[self prepareAvatarOperation:operation forPipeline:pipeline];
+				break;
+			}
+			default:
+			{
+				DDLogError(@"%@ - Unsupported operation type: %lu", THIS_METHOD, (unsigned long)type);
+			#if DEBUG
+				NSAssert(NO, @"Unsupported operation type: %lu", (unsigned long)type);
+			#endif
+			}
 		}
 	}
 }
@@ -1426,19 +1442,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
 			if (node)
 			{
-				// Questions:
-				// - How can we detect if this is a "message" ?
-				//   - If parent container is "outbox" or "inbox"
-				//
-				// - What differences does it make if this is a message ?
-				//   - We use special permissions for "outbox"
-				//   - Maybe these special permissions should be set within ZDCCloudTransaction
-				//
-				// - So it sounds like this is the operation for the "outbox" right ?
-				//   - No
-				//   - For a message, this is the outbox item
-				//   - For a signal, this is the inbox item
-				
 				rcrdData = [cryptoTools cloudRcrdForNode: node
 				                             transaction: transaction
 				                             missingKeys: &missingKeys
@@ -4977,6 +4980,408 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark CopyLeaf
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)prepareCopyLeafOperation:(ZDCCloudOperation *)operation
+                     forPipeline:(YapDatabaseCloudCorePipeline *)pipeline
+{
+	DDLogAutoTrace();
+	NSAssert(operation.type == ZDCCloudOperationType_CopyLeaf, @"Invalid operation type");
+	
+	// Create context with boilerplate values
+	
+	ZDCTaskContext *context = [[ZDCTaskContext alloc] initWithOperation:operation];
+	
+	// Sanity checks
+	
+	if (operation.cloudLocator == nil
+	 || operation.cloudLocator.region == AWSRegion_Invalid
+	 || operation.cloudLocator.bucket == nil
+	 || operation.cloudLocator.cloudPath == nil)
+	{
+		DDLogWarn(@"Skipping copy-leaf operation: invalid op.cloudLocator: %@", operation.cloudLocator);
+		
+		[self skipOperationWithContext:context];
+		return;
+	}
+	
+	if (operation.dstCloudLocator == nil
+	 || operation.dstCloudLocator.region == AWSRegion_Invalid
+	 || operation.dstCloudLocator.bucket == nil
+	 || operation.dstCloudLocator.cloudPath == nil)
+	{
+		DDLogWarn(@"Skipping copy-leaf operation: invalid op.dstCloudLocator: %@", operation.dstCloudLocator);
+		
+		[self skipOperationWithContext:context];
+		return;
+	}
+	
+	if ([operation.cloudLocator isEqualToCloudLocatorIgnoringExt:operation.dstCloudLocator])
+	{
+		DDLogWarn(@"Skipping copy-leaf operation: src == dst: %@", operation);
+		
+		[self skipOperationWithContext:context];
+		return;
+	}
+	
+	void (^continueWithFileData)(NSData *) =
+		^(NSData *fileData){ @autoreleasepool
+	{
+		if (fileData == nil)
+		{
+			[self skipOperationWithContext:context];
+			return;
+		}
+		
+		context.sha256Hash = [AWSPayload signatureForPayload:fileData];
+		
+	#if TARGET_OS_IPHONE
+		
+		// Background NSURLSession's don't support data tasks !
+		//
+		// So we write the data to a temporary location on disk, in order to use a file task.
+		
+		NSString *fileName = [operation.uuid UUIDString];
+		
+		NSURL *tempDir = [ZDCDirectoryManager tempDirectoryURL];
+		NSURL *tempFileURL = [tempDir URLByAppendingPathComponent:fileName isDirectory:NO];
+		
+		NSError *error = nil;
+		[fileData writeToURL:tempFileURL options:0 error:&error];
+		
+		if (error)
+		{
+			DDLogError(@"Error writing operation.data (%@): %@", tempFileURL.path, error);
+		}
+		
+		context.uploadFileURL = tempFileURL;
+		context.deleteUploadFileURL = YES;
+		
+		[self startCopyLeafOperation:operation withContext:context];
+		
+	#else // macOS
+		
+		context.uploadData = fileData;
+		
+		[self startCopyLeafOperation:operation withContext:context];
+		
+	#endif
+	}};
+	
+	// Generate ".rcrd" file content
+	
+	__block NSError *error = nil;
+	__block ZDCNode *dstNode = nil;
+	__block NSData *rcrdData = nil;
+	__block NSArray<NSString*> *missingKeys = nil;
+	__block NSArray<NSString*> *missingUserIDs = nil;
+	__block NSArray<NSString*> *missingServerIDs = nil;
+	
+	ZDCCryptoTools *cryptoTools = owner.cryptoTools;
+	
+	[self.roConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+		
+		dstNode = [transaction objectForKey:operation.dstNodeID inCollection:kZDCCollection_Nodes];
+		if (dstNode)
+		{
+			rcrdData = [cryptoTools cloudRcrdForNode: dstNode
+			                             transaction: transaction
+			                             missingKeys: &missingKeys
+			                          missingUserIDs: &missingUserIDs
+			                        missingServerIDs: &missingServerIDs
+			                                   error: &error];
+		}
+		
+		// Snapshot current pullState.
+		// We use this during conflict resolution to determine if a pull had any effect.
+		
+		ZDCChangeList *pullInfo =
+		  [transaction objectForKey:operation.localUserID inCollection:kZDCCollection_PullState];
+		
+		operation.ephemeralInfo.lastChangeToken = pullInfo.latestChangeID_local;
+	}];
+	
+	context.eTag = dstNode.eTag_rcrd;
+	
+	if (error)
+	{
+		DDLogWarn(@"Error creating PUT operation: %@: %@", operation.cloudLocator.cloudPath, error);
+		
+		[self skipOperationWithContext:context];
+	}
+	else if (missingKeys.count > 0)
+	{
+		[self fixMissingKeysForNodeID:operation.dstNodeID operation:operation];
+	}
+	else if (missingUserIDs.count > 0)
+	{
+		[self fetchMissingUsers:missingUserIDs forOperation:operation];
+	}
+	else
+	{
+		continueWithFileData(rcrdData);
+	}
+}
+
+- (void)startCopyLeafOperation:(ZDCCloudOperation *)operation withContext:(ZDCTaskContext *)context
+{
+	DDLogAutoTrace();
+	NSAssert(operation.type == ZDCCloudOperationType_CopyLeaf, @"Invalid operation type");
+	
+	[owner.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
+	                                      completionQueue: concurrentQueue
+	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	{
+		if (error)
+		{
+			if ([error.auth0API_error isEqualToString:kAuth0Error_RateLimit])
+			{
+				// Auth0 is just rate limiting us.
+				// Normal path will automatically execute exponential backoff.
+			}
+			else
+			{
+				// Auth0 is indicating our account may have been removed.
+				[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+			}
+			
+			[self copyLeafTaskDidComplete:nil inSession:nil withError:error context:context];
+			return;
+		}
+		
+		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:context.localUserID];
+		
+	#if TARGET_OS_IPHONE
+		AFURLSessionManager *session = sessionInfo.backgroundSession;
+	#else
+		AFURLSessionManager *session = sessionInfo.session;
+	#endif
+		
+		// Calculate staging path
+		
+		NSString *requestID = [self requestIDForOperation:operation];
+		NSString *stagingPath = [self stagingPathForOperation:operation withContext:context];
+		
+		// Fire off request
+		
+		NSURLComponents *urlComponents = nil;
+		NSMutableURLRequest *request =
+		  [S3Request putObject: stagingPath
+		              inBucket: operation.cloudLocator.bucket
+		                region: operation.cloudLocator.region
+		      outUrlComponents: &urlComponents];
+		
+		[AWSSignature signRequest: request
+		               withRegion: operation.cloudLocator.region
+		                  service: AWSService_S3
+		              accessKeyID: auth.aws_accessKeyID
+		                   secret: auth.aws_secret
+		                  session: auth.aws_session
+		               payloadSig: context.sha256Hash];
+		
+	#if DEBUG && robbie_hanson
+		DDLogDonut(@"%@", [request zdcDescription]);
+	#endif
+		
+		NSURLSessionUploadTask *task = nil;
+	#if TARGET_OS_IPHONE
+		
+		task = [session uploadTaskWithRequest: request
+		                             fromFile: context.uploadFileURL
+		                             progress: nil
+								  completionHandler:^(NSURLResponse *response, id responseObject, NSError *error)
+		{
+			if ([responseObject isKindOfClass:[NSData class]])
+			{
+				NSString *str = [[NSString alloc] initWithData:(NSData *)responseObject encoding:NSUTF8StringEncoding];
+				DDLogInfo(@"response: %@", str);
+			}
+			else
+			{
+				DDLogInfo(@"response: %@", responseObject);
+			}
+		}];
+		
+	#else // macOS
+		
+		task = [session uploadTaskWithRequest: request
+		                             fromData: context.uploadData
+		                             progress: nil
+		                    completionHandler: nil];
+		
+	#endif
+		
+		NSProgress *progress = [session uploadProgressForTask:task];
+		context.progress = progress;
+		if (progress) {
+			[owner.progressManager setUploadProgress:progress forOperation:operation];
+		}
+		
+		[self stashContext:context];
+		[owner.networkTools addRecentRequestID:requestID forUser:context.localUserID];
+		
+		if (operation.ephemeralInfo.abortRequested)
+		{
+			operation.ephemeralInfo.abortRequested = NO;
+			[self copyLeafTaskDidComplete: task
+			                    inSession: session.session
+			                    withError: [self cancelledError]
+			                      context: context];
+		}
+		else
+		{
+			[owner.sessionManager associateContext:context withTask:task inSession:session.session];
+			[task resume];
+		}
+	}];
+}
+
+- (void)copyLeafTaskDidComplete:(NSURLSessionTask *)task
+                      inSession:(NSURLSession *)session
+                      withError:(NSError *)error
+                        context:(ZDCTaskContext *)context
+{
+	DDLogAutoTrace();
+	
+	[self unstashContext:context];
+	
+	NSURLResponse *response = task.response;
+	YapDatabaseCloudCorePipeline *pipeline = [self pipelineForContext:context];
+	ZDCCloudOperation *operation = [self operationForContext:context];
+	
+	// Cleanup (if needed)
+#if TARGET_OS_IPHONE
+	if (context.uploadFileURL && context.deleteUploadFileURL)
+	{
+		[[NSFileManager defaultManager] removeItemAtURL:context.uploadFileURL error:nil];
+	}
+#endif
+	
+	// Observed status codes:
+	//
+	// 200 - Success
+	// 404 - Bucket not found (account has been deleted)
+	//
+	// NOTE: This is a response directly from AWS S3 - NOT from Storm4 server.
+	
+	NSInteger statusCode = response.httpStatusCode;
+	
+	if (response && error)
+	{
+		error = nil; // we only care about non-server-response errors
+	}
+	
+	if (error)
+	{
+		// Request failed due to network error.
+		// Not error from the server.
+		
+		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+		
+		// If this was a network error (due to loss of Internet connection),
+		// then most likely, the pipeline has already been suspended.
+		// This is courtesy of the AppDelegate, which does this when Reachability goes down.
+		// And the pipeline will be automatically resumed once we reconnect to the Internet.
+		//
+		// So we can simply hand the operation back to the pipeline.
+		// To be extra cautious (thread timing considerations), we do so after a short delay.
+		
+		NSTimeInterval retryDelay = 2.0;
+		NSDate *holdDate = [NSDate dateWithTimeIntervalSinceNow:retryDelay];
+		NSString *ctx = NSStringFromClass([self class]);
+		
+		[pipeline setHoldDate:holdDate forOperationWithUUID:context.operationUUID context:ctx];
+		[pipeline setStatusAsPendingForOperationWithUUID:context.operationUUID];
+		return;
+	}
+	else if (statusCode != 200)
+	{
+		// Request failed due to AWS S3 issue.
+		// This is rather abnormal, and generally only occurs under specific conditions.
+		
+		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+		
+		NSUInteger successiveFailCount = [operation.ephemeralInfo s3_didFailWithStatusCode:@(statusCode)];
+		DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
+		
+		if (successiveFailCount > 10)
+		{
+			// Infinite loop prevention.
+			
+			NSDictionary *errorInfo = @{
+				@"system": @"S4PushManager",
+				@"subsystem": @"PUT S3",
+				@"statusCode": @(statusCode)
+			};
+			
+			[self failOperationWithContext:context errorInfo:errorInfo stopSyncingNode:YES];
+			return;
+		}
+		
+		NSTimeInterval delay;
+		
+		if (statusCode == 401 || statusCode == 403 || statusCode == 404)
+		{
+			// - 401 is the traditional unauthorized response (but amazon doesn't appear to use it)
+			// - 403 seems to be what amazon uses for auth failures
+			// - 404 is what we get if the bucket has been deleted
+			//
+			// A 404 is likely our first indicator that our acount has been deleted.
+			// Because the bucket gets deleted right away,
+			// even though our authentication sticks around for a few hours.
+			
+			[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+			
+			// Use a longer delay here.
+			// We want time to check on the status of our account.
+			
+			delay = 30; // seconds
+		}
+		else
+		{
+			DDLogWarn(@"Received unknown statusCode from S3: %ld", (long)statusCode);
+			
+			// The operation failed for some unknown reason.
+			//
+			// This may indicate that the server is overloaded,
+			// and doing some kind of rate limiting.
+			//
+			// So we execute exponential backoff algorithm.
+			
+			delay = [owner.networkTools exponentialBackoffForFailCount:successiveFailCount];
+		}
+		
+		NSDate *holdDate = [NSDate dateWithTimeIntervalSinceNow:delay];
+		NSString *ctx = NSStringFromClass([self class]);
+		
+		[pipeline setHoldDate:holdDate forOperationWithUUID:context.operationUUID context:ctx];
+		[pipeline setStatusAsPendingForOperationWithUUID:context.operationUUID];
+		return;
+	}
+	
+	// Request succeeded !
+	//
+	// Start polling for staging response.
+	
+	[operation.ephemeralInfo s3_didSucceed];
+	
+	ZDCPollContext *pollContext = [[ZDCPollContext alloc] init];
+	
+	pollContext.taskContext = context;
+	pollContext.eTag = [response eTag];
+	
+	[self startPollWithContext:pollContext pipeline:pipeline];
+}
+
+- (void)copyLeafPollDidComplete:(ZDCPollContext *)pollContext withStatus:(NSDictionary *)status
+{
+	DDLogAutoTrace();
+	
+	NSLog(@"I like cheese");
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Poll
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -5308,7 +5713,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		case ZDCCloudOperationType_CopyLeaf:
 		{
-		//	[self copyLeafPollDidComplete:pollContext withStatus:stagingStatus];
+			[self copyLeafPollDidComplete:pollContext withStatus:stagingStatus];
 			break;
 		}
 		default :

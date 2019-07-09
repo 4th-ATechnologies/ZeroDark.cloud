@@ -19,9 +19,9 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Standardized routine for creating all the container nodes.
  */
-- (void)createContainerNodesForLocalUser:(ZDCLocalUser *)localUser
-                           withAccessKey:(ZDCSymmetricKey *)accessKey
-                             transaction:(YapDatabaseReadWriteTransaction *)transaction;
+- (void)createTrunkNodesForLocalUser:(ZDCLocalUser *)localUser
+                       withAccessKey:(ZDCSymmetricKey *)accessKey
+                         transaction:(YapDatabaseReadWriteTransaction *)transaction;
 
 /**
  * Create or download the public/private keypair for the user.
