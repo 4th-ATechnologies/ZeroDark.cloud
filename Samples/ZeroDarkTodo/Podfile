@@ -18,7 +18,7 @@ abstract_target 'ios' do
 	platform :ios, '10.1'
 	
 	pod 'ZDCSyncable'
-	pod 'YapDatabase/SQLCipher', :git =>'https://github.com/yapstudios/YapDatabase.git', :commit=>'829aa9411ceba327b55f847ead6efd851e5e82a9'
+	pod 'YapDatabase/SQLCipher', :git =>'https://github.com/yapstudios/YapDatabase.git', :commit=>'5a7e70a2101ba78b1f92bc992b78dc2e06adb941'
 	pod 'ZeroDarkCloud/Swift', path: '../../', :inhibit_warnings => false
 	
 	# Used by sample application (not required for your application)
