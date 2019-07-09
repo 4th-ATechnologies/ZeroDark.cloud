@@ -112,7 +112,7 @@ static NSString *const k_sha256Hash           = @"sha256Hash";
 	[coder encodeBool:multipart_initiate forKey:k_multipart_initiate];
 	[coder encodeBool:multipart_complete forKey:k_multipart_complete];
 	[coder encodeBool:multipart_abort    forKey:k_multipart_abort];
-	[coder encodeBool:multipart_index    forKey:k_multipart_index];
+	[coder encodeInteger:multipart_index forKey:k_multipart_index];
 	
 	[coder encodeObject:[self serializeFileURL:uploadFileURL] forKey:k_uploadFileURL];
 	
