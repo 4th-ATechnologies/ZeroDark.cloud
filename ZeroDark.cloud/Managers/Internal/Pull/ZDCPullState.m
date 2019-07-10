@@ -159,7 +159,7 @@
 #pragma mark Pull Queue
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)pushItem:(ZDCPullItem *)item
+- (void)enqueueItem:(ZDCPullItem *)item
 {
 	dispatch_sync(queue, ^{ @autoreleasepool {
 	#pragma clang diagnostic push
@@ -171,7 +171,23 @@
 	}});
 }
 
-- (ZDCPullItem *)popItemWithPreferredNodeIDs:(NSSet<NSString *> *)preferredNodeIDs
+- (NSUInteger)queueLength
+{
+	__block NSUInteger count = 0;
+	
+	dispatch_sync(queue, ^{ @autoreleasepool {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		count = items.count;
+		
+	#pragma clang diagnostic pop
+	}});
+	
+	return count;
+}
+
+- (ZDCPullItem *)dequeueItemWithPreferredNodeIDs:(NSSet<NSString *> *)preferredNodeIDs
 {
 	__block ZDCPullItem *nextItem = nil;
 	__block NSInteger nextItemDepth = -1;

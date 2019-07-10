@@ -34,9 +34,11 @@
 #pragma mark Pull Queue
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)pushItem:(ZDCPullItem *)item;
+- (void)enqueueItem:(ZDCPullItem *)item;
 
-- (ZDCPullItem *)popItemWithPreferredNodeIDs:(NSSet<NSString *> *)preferredNodeIDs;
+- (NSUInteger)queueLength;
+
+- (ZDCPullItem *)dequeueItemWithPreferredNodeIDs:(NSSet<NSString *> *)preferredNodeIDs;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Task Tracking

@@ -30,6 +30,7 @@
 // Categories
 #import "NSError+Auth0API.h"
 #import "NSError+ZeroDark.h"
+#import "NSURLRequest+ZeroDark.h"
 #import "NSURLResponse+ZeroDark.h"
 
 // Libraries
@@ -1223,17 +1224,20 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 					// The node's RCRD has been updated.
 					// We need to download it to find out what changed.
 					
+					ZDCPullItem *item = [[ZDCPullItem alloc] init];
+					item.region = region;
+					item.bucket = bucket;
+					item.parents = @[ node.parentID ];
+					
+					item.rcrdPath = path;
+					item.rcrdETag = eTag;
+					item.rcrdLastModified = timestamp;
+					
+					item.rcrdCompletionBlock = continuationBlock;
+					item.dirCompletionBlock = nil; // don't need to update sub-tree
+					
 					done = NO;
-					[self pullNodeRcrd: path
-					          nodeData: nil
-					          dataETag: nil
-					  dataLastModified: nil
-					            bucket: bucket
-					            region: region
-					          parentID: node.parentID
-					         pullState: pullState
-					    rcrdCompletion: continuationBlock
-					     dirCompletion: nil]; // don't need to update sub-tree
+					[self pullItem:item pullState:pullState];
 				}
 			}
 			else // DATA changed (encrypted node content)
@@ -1478,17 +1482,20 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 					// We know about this node,
 					// but somehow it's out-of-date already.
 					
+					ZDCPullItem *item = [[ZDCPullItem alloc] init];
+					item.region = region;
+					item.bucket = bucket;
+					item.parents = @[ node.parentID ]; // only need direct parent
+					
+					item.rcrdPath = path;
+					item.rcrdETag = eTag;
+					item.rcrdLastModified = timestamp;
+					
+					item.rcrdCompletionBlock = continuationBlock;
+					item.dirCompletionBlock = nil;
+					
 					done = NO;
-					[self pullNodeRcrd: path
-					          nodeData: nil
-					          dataETag: nil
-					  dataLastModified: nil
-					            bucket: bucket
-					            region: region
-					          parentID: node.parentID
-					         pullState: pullState
-					    rcrdCompletion: continuationBlock
-					     dirCompletion: nil];
+					[self pullItem:item pullState:pullState];
 				}
 			}
 			else
@@ -1570,33 +1577,41 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			}
 			else if (isRcrd)
 			{
+				ZDCPullItem *item = [[ZDCPullItem alloc] init];
+				item.region = region;
+				item.bucket = bucket;
+				item.parents = @[ parentNode.uuid ]; // only need direct parent
+				
+				item.rcrdPath = path;
+				item.rcrdETag = eTag;
+				item.rcrdLastModified = timestamp;
+				
+				item.rcrdCompletionBlock = continuationBlock;
+				item.dirCompletionBlock = nil;
+				
 				done = NO;
-				[self pullNodeRcrd: path
-				          nodeData: nil
-				          dataETag: nil
-				  dataLastModified: nil
-				            bucket: bucket
-				            region: region
-				          parentID: parentNode.uuid
-				         pullState: pullState
-				    rcrdCompletion: continuationBlock
-				     dirCompletion: nil];
+				[self pullItem:item pullState:pullState];
 			}
 			else
 			{
 				ZDCCloudPath *rcrdCloudPath = [cloudPath copyWithFileNameExt:kZDCCloudFileExtension_Rcrd];
 				
+				ZDCPullItem *item = [[ZDCPullItem alloc] init];
+				item.region = region;
+				item.bucket = bucket;
+				item.parents = @[ parentNode.uuid ]; // only need direct parent
+				
+				item.rcrdPath = rcrdCloudPath.path;
+				
+				item.dataPath = path;
+				item.dataETag = eTag;
+				item.dataLastModified = timestamp;
+				
+				item.rcrdCompletionBlock = continuationBlock;
+				item.dirCompletionBlock = nil;
+				
 				done = NO;
-				[self pullNodeRcrd: rcrdCloudPath.path
-				          nodeData: path
-				          dataETag: eTag
-				  dataLastModified: change.timestamp
-				            bucket: bucket
-				            region: region
-				          parentID: parentNode.uuid
-				         pullState: pullState
-				    rcrdCompletion: continuationBlock
-				     dirCompletion: nil];
+				[self pullItem:item pullState:pullState];
 			}
 		}
 				 
@@ -1625,6 +1640,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	NSString *eTag      = change.eTag;
 	NSString *bucket    = change.bucket;
 	NSString *regionStr = change.region;
+	NSDate *timestamp   = change.timestamp;
 	
 	ZDCCloudPath *srcCloudPath = [ZDCCloudPath cloudPathFromPath:srcPath];
 	ZDCCloudPath *dstCloudPath = [ZDCCloudPath cloudPathFromPath:dstPath];
@@ -1778,17 +1794,20 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				
 				NSString *dstRcrdPath = [dstCloudPath pathWithExt:kZDCCloudFileExtension_Rcrd];
 				
+				ZDCPullItem *item = [[ZDCPullItem alloc] init];
+				item.region = region;
+				item.bucket = bucket;
+				item.parents = @[ dstParentNode.uuid ]; // only need direct parent
+				
+				item.rcrdPath = dstRcrdPath;
+				item.rcrdETag = eTag;
+				item.rcrdLastModified = timestamp;
+				
+				item.rcrdCompletionBlock = continuationBlock;
+				item.dirCompletionBlock = nil;
+				
 				done = NO;
-				[self pullNodeRcrd: dstRcrdPath
-				          nodeData: nil
-				          dataETag: nil
-				  dataLastModified: nil
-				            bucket: bucket
-				            region: region
-				          parentID: dstParentNode.uuid
-				         pullState: pullState
-				    rcrdCompletion: continuationBlock
-				     dirCompletion: nil];
+				[self pullItem:item pullState:pullState];
 			}
 			else // if (!dstParentNode)
 			{
@@ -2379,6 +2398,13 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				
 				NSAssert(opResult != nil, @"Bad parameter for block: ZDCPullTaskResult");
 
+				dispatch_async(concurrentQueue, ^{ @autoreleasepool {
+					
+					if (![pullStateManager isPullCancelled:pullState]) {
+						[self dequeueNextItemIfPossible:pullState];
+					}
+				}});
+				
 				YAPUnfairLockLock(&innerLock);
 				@try {
 
@@ -2392,6 +2418,10 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				}
 				
 				uint remaining = atomic_fetch_sub(&pendingCount, 1) - 1;
+				if (ddLogLevel & DDLogFlagTrace)
+				{
+					DDLogTrace(@"[%@] Trunk nodes remaining = %u", pullState.localUserID, remaining);
+				}
 				if (remaining == 0)
 				{
 					finalCompletionBlock(transaction, cumulativeResult);
@@ -2600,7 +2630,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			                  session:auth.aws_session];
 			
 		#if DEBUG && robbie_hanson
-			DDLogDonut(@"%@", [request s4Description]);
+			DDLogDonut(@"%@", [request zdcDescription]);
 		#endif
 			
 			task = [session dataTaskWithRequest: request
@@ -2666,10 +2696,11 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			return;
 		}
 		
+		ZDCTreesystemPath *log_path = nil;
 		if (ddLogLevel & DDLogFlagTrace)
 		{
-			ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
-			DDLogTrace(@"[%@] Sync node: %@", pullState.localUserID, path.fullPath);
+			log_path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
+			DDLogTrace(@"[%@] Sync node: %@", pullState.localUserID, log_path.fullPath);
 		}
 		
 		// Step 1 of 4
@@ -2711,6 +2742,13 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 
 			NSAssert(opResult != nil, @"Bad parameter for block: ZDCPullTaskResult");
 
+			dispatch_async(concurrentQueue, ^{ @autoreleasepool {
+				
+				if (![pullStateManager isPullCancelled:pullState]) {
+					[self dequeueNextItemIfPossible:pullState];
+				}
+			}});
+			
 			YAPUnfairLockLock(&innerLock);
 			@try {
 
@@ -2724,6 +2762,11 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			}
 
 			uint remaining = atomic_fetch_sub(&pendingCount, 1) - 1;
+			DDLogTrace(@"[%@] Syncing node's children (remaining=%u): %@",
+				pullState.localUserID,
+				remaining,
+				log_path.fullPath);
+			
 			if (remaining == 0)
 			{
 				outerCompletionBlock(transaction, cumulativeResult);
@@ -2853,19 +2896,24 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				// So we need to download the .rcrd file.
 				// After parsing it we can decide the next processing step.
 	
+				ZDCPullItem *item = [[ZDCPullItem alloc] init];
+				item.region = region;
+				item.bucket = bucket;
+				item.parents = parents;
+				
+				item.rcrdPath = nodeRcrd.key;
+				item.rcrdETag = nodeRcrd.eTag;
+				item.rcrdLastModified = nodeRcrd.lastModified;
+				
+				item.dataPath = nodeData.key;
+				item.dataETag = nodeData.eTag;
+				item.dataLastModified = nodeData.lastModified;
+				
+				item.rcrdCompletionBlock = innerCompletionBlock;
+				item.dirCompletionBlock = innerCompletionBlock; // if node might have children
+				
 				atomic_fetch_add(&pendingCount, 2);
-				[self queuePullNodeRcrd: nodeRcrd.key
-				               rcrdETag: nodeRcrd.eTag
-				       rcrdLastModified: nodeRcrd.lastModified
-				               nodeData: nodeData.key
-				               dataETag: nodeData.eTag
-				       dataLastModified: nodeData.lastModified
-				                 bucket: bucket
-				                 region: region
-				                parents: parents
-				              pullState: pullState
-				         rcrdCompletion: innerCompletionBlock
-				          dirCompletion: innerCompletionBlock]; // if node might have children
+				[self queuePullItem:item pullState:pullState];
 			}
 			else
 			{
@@ -2941,43 +2989,19 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
  * This was inspired by the work we did in Storm4 to prioritize downloads of files
  * based on folders that the user is currently looking at.
  */
-- (void)queuePullNodeRcrd:(NSString *)rcrdPath
-                 rcrdETag:(NSString *)rcrdETag
-         rcrdLastModified:(NSDate *)rcrdLastModified
-                 nodeData:(NSString *)dataPath
-                 dataETag:(NSString *)dataETag
-         dataLastModified:(NSDate *)dataLastModified
-                   bucket:(NSString *)bucket
-                   region:(AWSRegion)region
-                  parents:(NSArray<NSString *> *)parents
-                pullState:(ZDCPullState *)pullState
-           rcrdCompletion:(ZDCPullTaskCompletion)rcrdCompletionBlock
-            dirCompletion:(ZDCPullTaskCompletion)dirCompletionBlock
+- (void)queuePullItem:(ZDCPullItem *)item
+            pullState:(ZDCPullState *)pullState
 {
-	ZDCPullItem *item = [[ZDCPullItem alloc] init];
-	
-	item.rcrdPath = rcrdPath;
-	item.rcrdETag = rcrdETag;
-	
-	item.dataPath = dataPath;
-	item.dataETag = dataETag;
-	item.dataLastModified = dataLastModified;
-	
-	item.bucket = bucket;
-	item.region = region;
-	
-	item.parents = parents;
-	
-	item.rcrdCompletionBlock = rcrdCompletionBlock;
-	item.dirCompletionBlock = dirCompletionBlock;
-	
-	[pullState pushItem:item];
+	[pullState enqueueItem:item];
 	[self dequeueNextItemIfPossible:pullState];
 }
 
 - (void)dequeueNextItemIfPossible:(ZDCPullState *)pullState
 {
 	if (pullState.tasksCount >= 8) {
+		DDLogTrace(@"[%@] dequeueNextItemIfPossible: at capacity (pending=%lu)",
+			pullState.localUserID,
+			(unsigned long)pullState.queueLength);
 		return;
 	}
 	
@@ -2987,21 +3011,14 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	}
 	
 	// Smart dequeue algorithm
-	ZDCPullItem *item = [pullState popItemWithPreferredNodeIDs:preferredNodeIDs];
+	ZDCPullItem *item = [pullState dequeueItemWithPreferredNodeIDs:preferredNodeIDs];
 	if (item == nil) {
+		DDLogTrace(@"[%@] dequeueNextItemIfPossible: empty", pullState.localUserID);
 		return;
 	}
 	
-	[self pullNodeRcrd: item.rcrdPath
-	          nodeData: item.dataPath
-	          dataETag: item.dataETag
-	  dataLastModified: item.dataLastModified
-	            bucket: item.bucket
-	            region: item.region
-	          parentID: [item.parents lastObject]
-	         pullState: pullState
-	    rcrdCompletion: item.rcrdCompletionBlock
-	     dirCompletion: item.dirCompletionBlock];
+	DDLogTrace(@"[%@] dequeueNextItemIfPossible: dequeueing", pullState.localUserID);
+	[self pullItem:item pullState:pullState];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3011,36 +3028,35 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 /**
  * Pulls the *.rcrd item from server and updates the database.
  *
- * @param rcrdPath
- *   The cloudPath (as a string) of the "*.rcrd" item.
- *
- * @param dataPath
- *   The cloudPath (as a string) of the "*.data" item.
- *   Only pass this if you want the code to also sync the data item too.
- *
- * @param dataETag
- *   The known remote eTag of the ".data" item.
- *   Pass this only if you know it.
- *   I.e. during a full sync, or if the current pending change indicates it.
+ * Will conditionally recurse into the node's children, if a non-nil dirCompletionBlock is given.
  */
-- (void)pullNodeRcrd:(NSString *)rcrdPath
-            nodeData:(nullable NSString *)dataPath
-            dataETag:(nullable NSString *)dataETag
-    dataLastModified:(nullable NSDate *)dataLastModified
-              bucket:(NSString *)bucket
-              region:(AWSRegion)region
-            parentID:(NSString *)parentID
-           pullState:(ZDCPullState *)pullState
-      rcrdCompletion:(ZDCPullTaskCompletion)rcrdCompletionBlock
-       dirCompletion:(nullable ZDCPullTaskCompletion)dirCompletionBlock
+- (void)pullItem:(ZDCPullItem *)item pullState:(ZDCPullState *)pullState
 {
-	DDLogTrace(@"Sync node.rcrd: %@", rcrdPath);
+	DDLogTrace(@"[%@] Pull item: %@", pullState.localUserID, item.rcrdPath);
 	
-	NSParameterAssert(rcrdPath != nil);
-	NSParameterAssert(bucket != nil);
-	NSParameterAssert(region != AWSRegion_Invalid);
-	NSParameterAssert(parentID != nil);
+	NSParameterAssert(item != nil);
 	NSParameterAssert(pullState != nil);
+	
+	AWSRegion region = item.region;
+	NSString *bucket = item.bucket;
+	
+	NSParameterAssert(region != AWSRegion_Invalid);
+	NSParameterAssert(bucket != nil);
+	
+	NSString *parentID = [item.parents lastObject];
+	NSParameterAssert(parentID != nil);
+	
+	NSString *rcrdPath = item.rcrdPath;
+	NSParameterAssert(rcrdPath != nil);
+	
+//	NSString *dataPath = item.dataPath;
+	NSString *dataETag = item.dataETag;
+	NSDate *dataLastModified = item.dataLastModified;
+	
+	ZDCPullTaskCompletion rcrdCompletionBlock = item.rcrdCompletionBlock;
+	ZDCPullTaskCompletion dirCompletionBlock = item.dirCompletionBlock;
+	
+	NSParameterAssert(rcrdCompletionBlock != nil);
 	
 	// If this method is being invoked, it means we found changes on the server.
 	if ([pullState isFirstChangeDetected])
@@ -3066,6 +3082,8 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			// Unrecoverable failure.
 			// Either cloud contents changed mid-pull, or we encountered an authentication failure.
 			
+			DDLogInfo(@"[%@] fetchRcrd failure: %d", pullState.localUserID, (int)result);
+			
 			rcrdCompletionBlock(nil, result);
 			if (dirCompletionBlock) {
 				dirCompletionBlock(nil, result);
@@ -3077,6 +3095,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			
 			if ([pullStateManager isPullCancelled:pullState])
 			{
+				DDLogTrace(@"[%@] Pull aborted", pullState.localUserID);
 				return;
 			}
 			
@@ -3605,8 +3624,11 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				
 				if (dirCompletionBlock)
 				{
+					ZDCTreesystemPath *path = [nodeManager pathForNode:node transaction:transaction];
+					
 					if (node.isPointer)
 					{
+						DDLogTrace(@"Syncing (A): %@", path.fullPath);
 						[self syncPointerNode: node
 						            pullState: pullState
 						        dirCompletion: dirCompletionBlock];
@@ -3614,6 +3636,8 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 					}
 					else if (children)
 					{
+						DDLogTrace(@"Syncing (B): %@", path.fullPath);
+						
 						// Node is using a deprecated RCRD format in the cloud (i.e. Storm4).
 						// It's using the old cleartext children style.
 						// So the node doesn't actually have any direct children.
@@ -3632,6 +3656,8 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 						// Modern RCRD format.
 						// Scan the node's children.
 						
+						DDLogTrace(@"Syncing (C): %@", path.fullPath);
+						
 						[self syncNode: node
 						        bucket: bucket
 						        region: region
@@ -3642,6 +3668,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 					{
 						// Node doesn't have any children
 						
+						DDLogTrace(@"Syncing (D): %@", path.fullPath);
 						dirCompletionBlock(transaction, [ZDCPullTaskResult success]);
 					}
 				}
@@ -3897,6 +3924,8 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		{
 			// Try request again (using exponential backoff)
 			
+			DDLogTrace(@"[%@] Error fetching keyPath: %@ - %@", pullState.localUserID, keyPath, error);
+			
 			NSUInteger newFailCount = failCount + 1;
 			
 			if (newFailCount > kMaxFailCount)
@@ -3925,7 +3954,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		else if (statusCode == 401) // Unauthorized
 		{
 			// Authentication failed.
-			//
+			
+			DDLogTrace(@"[%@] Error fetching keyPath (401): %@", pullState.localUserID, keyPath);
+			
 			// We need to alert the user (so they can re-auth with valid credentials).
 			
 			[owner.networkTools handleAuthFailureForUser:localUserID withError:error pullState:pullState];
@@ -3945,6 +3976,8 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			//
 			// If the keyPath doesn't exist in the bucket, then S3 returns a 403 !
 			
+			DDLogTrace(@"[%@] Error fetching keyPath (%d): %@", pullState.localUserID, (int)statusCode, keyPath);
+			
 			if ((statusCode != 403) && (statusCode != 404))
 			{
 				DDLogError(@"AWS S3 returned unknown status code: %ld", (long)statusCode);
@@ -3958,6 +3991,8 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			completionBlock(nil, nil, nil, result);
 			return;
 		}
+		
+		DDLogTrace(@"[%@] Fetched keyPath (%d): %@", pullState.localUserID, (int)statusCode, keyPath);
 		
 		NSString *eTag = [urlResponse eTag];
 		NSDate *lastModified = [urlResponse lastModified];
@@ -4037,6 +4072,8 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			
 			if (![pullStateManager isPullCancelled:pullState])
 			{
+				DDLogTrace(@"[%@] Fetching keyPath: %@", pullState.localUserID, keyPath);
+				
 				[pullState addTask:task];
 				[task resume];
 			}
