@@ -9,12 +9,12 @@
 
 #import <Foundation/Foundation.h>
 
-@class ZDCData;
-@class ZDCNode;
-@class ZDCPollContext;
-@class ZDCTouchContext;
+#import "ZDCCloudOperation_AsyncData.h"
 
-@class ZDCCloudOperation_AsyncData;
+@class ZDCData;
+@class ZDCPollContext;
+@class ZDCMultipollContext;
+@class ZDCTouchContext;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -31,6 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (atomic, strong, readwrite, nullable) ZDCData *multipartData;
 
 @property (atomic, strong, readwrite, nullable) ZDCPollContext *pollContext;
+@property (atomic, strong, readwrite, nullable) ZDCMultipollContext *multipollContext;
 @property (atomic, strong, readwrite, nullable) ZDCTouchContext *touchContext;
 
 @property (atomic, assign, readwrite) BOOL abortRequested;
@@ -38,6 +39,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (atomic, copy, readwrite, nullable) NSString *lastChangeToken;
 @property (atomic, copy, readwrite, nullable) NSUUID *postResolveUUID;
+
+@property (atomic, copy, readwrite, nullable) NSString *continuation_rcrd;
+@property (atomic, copy, readwrite, nullable) NSString *continuation_data;
 
 // Why is the infinite-loop-protections stuff separated ?
 //
@@ -89,36 +93,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (atomic, readonly) NSUInteger s4_successiveFailCount;
 @property (atomic, readonly, nullable) NSNumber *s4_successiveFail_extStatusCode;
-
-@end
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * Used to assist when one of the following situations occurs:
- *
- * - nodeData.promise
- * - nodeMetadata.cleartextFileURL
- * - nodeMetadata.cryptoFile
- * - nodeMetadata.promise
- * - nodeThumbnail.cleartextFileURL
- * - nodeThumbnail.cryptoFile
- * - nodeThumbnail.promise
- */
-@interface ZDCCloudOperation_AsyncData : NSObject
-
-- (instancetype)initWithData:(ZDCData *)data;
-
-@property (atomic, strong, readwrite) ZDCData *data;
-@property (atomic, strong, readwrite, nullable) ZDCData *metadata;
-@property (atomic, strong, readwrite, nullable) ZDCData *thumbnail;
-
-@property (atomic, strong, readwrite, nullable) NSData *rawMetadata;
-@property (atomic, strong, readwrite, nullable) NSData *rawThumbnail;
-
-@property (atomic, strong, readwrite, nullable) ZDCNode *node;
 
 @end
 

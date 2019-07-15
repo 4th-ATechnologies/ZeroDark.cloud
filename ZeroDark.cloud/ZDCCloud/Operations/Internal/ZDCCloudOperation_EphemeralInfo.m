@@ -30,6 +30,7 @@
 @synthesize asyncData;
 
 @synthesize pollContext;
+@synthesize multipollContext;
 @synthesize touchContext;
 
 @synthesize abortRequested;
@@ -37,6 +38,9 @@
 
 @synthesize lastChangeToken;
 @synthesize postResolveUUID;
+
+@synthesize continuation_rcrd;
+@synthesize continuation_data;
 
 @dynamic s3_successiveFailCount;
 @dynamic s3_successiveFail_statusCode;
@@ -266,32 +270,6 @@ static BOOL numbersAreEqual(NSNumber *num1, NSNumber *num2)
 	}});
 	
 	return result;
-}
-
-@end
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-@implementation ZDCCloudOperation_AsyncData
-
-@synthesize data = data;
-@synthesize metadata = metadata;
-@synthesize thumbnail = thumbnail;
-
-@synthesize rawMetadata;
-@synthesize rawThumbnail;
-
-@synthesize node = node;
-
-- (instancetype)initWithData:(ZDCData *)inData
-{
-	if ((self = [super init]))
-	{
-		data = inData;
-	}
-	return self;
 }
 
 @end
