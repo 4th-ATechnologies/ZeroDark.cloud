@@ -90,7 +90,7 @@ class Invitation: NSCopying, Codable {
 		let cloudJSON = try decoder.decode(InvitationCloudJSON.self, from: cloudData)
 		
 		self.uuid = UUID().uuidString
-		self.senderID = "todo"
+		self.senderID = node.senderID ?? kZDCAnonymousUserID
 		self.receiverID = node.localUserID
 		
 		self.listName = cloudJSON.listName

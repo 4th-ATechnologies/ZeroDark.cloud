@@ -1615,7 +1615,38 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		
 		print("processDownloadedInvitation")
 		
-		// Todo...
+		let zdc = self.zdc!
+		let rwConnection = zdc.databaseManager!.rwDatabaseConnection
+		rwConnection.asyncReadWrite({ (transaction) in
+			
+			guard
+				let node = transaction.object(forKey: nodeID, inCollection: kZDCCollection_Nodes) as? ZDCNode,
+				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: node.localUserID)
+			else {
+				return
+			}
+			
+			cloudTransaction.unmarkNodeAsNeedsDownload(nodeID, components: .all, ifETagMatches: eTag)
+			
+			var downloadedInvitation: Invitation!
+			do {
+				// Attempt to create an Invitation instance from the downloaded data.
+				// This could fail if:
+				//
+				// - there's a bug in our Invitation.cloudEncode() function
+				// - there's a bug in our Invitation.init(fromCloudData:node:) function
+				//
+				downloadedInvitation = try Invitation(fromCloudData: cleartext, node: node)
+				
+			} catch {
+				print("Error parsing Invitation from cloudData: \(error)")
+				return
+			}
+			
+			transaction.setObject(downloadedInvitation,
+			               forKey: downloadedInvitation.uuid,
+			         inCollection: kZ2DCollection_Invitation)
+		})
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
