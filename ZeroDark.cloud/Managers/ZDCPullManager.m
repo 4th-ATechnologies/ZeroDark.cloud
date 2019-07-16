@@ -3528,6 +3528,8 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 					node.explicitCloudName = remoteCloudName;
 				}
 				
+				node.senderID = cloudRcrd.sender;
+				
 				node.cloudID = cloudRcrd.cloudID;
 				node.encryptionKey = cloudRcrd.encryptionKey;
 				
@@ -3606,6 +3608,13 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				
 				ZDCTreesystemPath *path = [nodeManager pathForNode:node transaction:transaction];
 				[owner.delegate didDiscoverNewNode:node atPath:path transaction:transaction];
+				
+				// Check for unknown users
+				
+				NSSet<NSString *> *unknownUserIDs = [self unknownUserIDsForNode:node transaction:transaction];
+				if (unknownUserIDs) {
+					[pullState addUnknownUserIDs:unknownUserIDs];
+				}
 				
 				rcrdCompletionBlock(transaction, [ZDCPullTaskResult success]);
 				
@@ -4237,46 +4246,51 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 {
 	__block NSMutableSet *unknownUserIDs = nil;
 
-//	[node.shareList enumerateKeysUsingBlock:^(NSString *key, BOOL *stop) {
-//
-//		NSString *userID = [S4ShareList userIDFromKey:key];
-//		if (userID == nil) {
-//			return; // from block => continue
-//		}
-//
-//		BOOL shouldUpdateUser = NO;
-//
-//		if ([NSString isAnonymousID:userID])
-//		{
-//			userID = kS4AnonymousUserID;
-//			ZDCUser *anonymousUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
-//
-//			if (!anonymousUser)
-//			{
-//				shouldUpdateUser = YES;
-//			}
-//		}
-//		else
-//		{
-//			ZDCUser *user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
-//			S4PublicKey *pubKey = [transaction objectForKey:user.publicKeyID inCollection:kZDCCollection_PublicKeys];
-//
-//			BOOL shouldUpdateUser = NO;
-//
-//			if (!user || !pubKey)
-//			{
-//				shouldUpdateUser = YES;
-//			}
-//		}
-//
-//		if (shouldUpdateUser)
-//		{
-//			if (unknownUserIDs == nil)
-//				unknownUserIDs = [NSMutableSet set];
-//
-//			[unknownUserIDs addObject:userID];
-//		}
-//	}];
+	void (^maybeAddUserID)(NSString*) = ^(NSString *_Nullable userID){ @autoreleasepool {
+		
+		if (userID == nil) {
+			return; // from block => continue
+		}
+		
+		BOOL shouldUpdateUser = NO;
+		
+		if ([ZDCUser isAnonymousID:userID])
+		{
+			userID = kZDCAnonymousUserID;
+			ZDCUser *anonymousUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+			
+			if (!anonymousUser)
+			{
+				shouldUpdateUser = YES;
+			}
+		}
+		else
+		{
+			ZDCUser *user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+			ZDCPublicKey *pubKey = [transaction objectForKey:user.publicKeyID inCollection:kZDCCollection_PublicKeys];
+			
+			if (!user || !pubKey)
+			{
+				shouldUpdateUser = YES;
+			}
+		}
+		
+		if (shouldUpdateUser)
+		{
+			if (unknownUserIDs == nil)
+				unknownUserIDs = [NSMutableSet set];
+			
+			[unknownUserIDs addObject:userID];
+		}
+	}};
+	
+	[node.shareList enumerateListWithBlock:^(NSString *key, ZDCShareItem *shareItem, BOOL *stop) {
+
+		NSString *userID = [ZDCShareList userIDFromKey:key];
+		maybeAddUserID(userID);
+	}];
+	
+	maybeAddUserID(node.senderID);
 
 	return unknownUserIDs;
 }
@@ -4286,16 +4300,16 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 **/
 - (void)fetchUnknownUsers:(ZDCPullState *)pullState
 {
-//	for (NSString *remoteUserID in unknownUserIDs)
-//	{
-//		[S4RemoteUserManager createRemoteUserWithID:remoteUserID
-//		                                requesterID:localUserID
-//		                            completionQueue:concurrentQueue
-//		                            completionBlock:^(ZDCUser *remoteUser, NSError *error)
-//		{
-//			// Ignore...
-//		}];
-//	}
+	for (NSString *remoteUserID in pullState.unknownUserIDs)
+	{
+		[owner.remoteUserManager createRemoteUserWithID: remoteUserID
+		                                    requesterID: pullState.localUserID
+		                                completionQueue: concurrentQueue
+		                                completionBlock:^(ZDCUser *remoteUser, NSError *error)
+		{
+			// Ignore...
+		}];
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

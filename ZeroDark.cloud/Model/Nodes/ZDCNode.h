@@ -48,12 +48,12 @@ NS_ASSUME_NONNULL_BEGIN
  * The nodeID is only for referencing a ZDCNode instance in the LOCAL DATABASE.
  * NodeID's are NOT uploaded to the cloud, nor are they synced in any way.
  */
-@property (nonatomic, copy, readonly) NSString *uuid;
+@property (nonatomic, readonly) NSString *uuid;
 
 /**
  * A reference to the corresponding localUser. (localUserID == ZDCLocalUser.uuid)
  */
-@property (nonatomic, copy, readonly) NSString *localUserID;
+@property (nonatomic, readonly) NSString *localUserID;
 
 /**
  * A reference to the parent ZDCNode.uuid.
@@ -89,13 +89,13 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * For incoming messages (in the inbox), this value will be set to the userID that sent the message.
  */
-@property (nonatomic, copy, readonly, nullable) NSString *senderID;
+@property (nonatomic, readonly, nullable) NSString *senderID;
 
 /**
  * For outgoing messages & signals, this set contains the list of userID's for which the system
  * is still working on sending the node.
  */
-@property (nonatomic, copy, readonly, nullable) NSSet<NSString *> *pendingRecipients;
+@property (nonatomic, readonly, nullable) NSSet<NSString *> *pendingRecipients;
 
 #pragma mark Encryption Info
 
@@ -108,7 +108,7 @@ NS_ASSUME_NONNULL_BEGIN
  * For nodes that are pulled down from the server,
  * the encryption key is extracted & decrypted from the cloud data.
  */
-@property (nonatomic, copy, readonly) NSData *encryptionKey;
+@property (nonatomic, readonly) NSData *encryptionKey;
 
 /**
  * Random bits used for creating cloudName's.
@@ -119,14 +119,14 @@ NS_ASSUME_NONNULL_BEGIN
  * exact same name, but in different directories, will actually have
  * different names in the cloud.
  */
-@property (nonatomic, copy, readonly) NSData * dirSalt;
+@property (nonatomic, readonly) NSData * dirSalt;
 
 /**
  * This value represents the dirPrefix to be used by all the children.
  *
  * A file's cloudPath is: {zAppID}/{dirPrefix_of_parent_node}/{cloudName}
  */
-@property (nonatomic, copy, readonly) NSString *dirPrefix;
+@property (nonatomic, readonly) NSString *dirPrefix;
 
 #pragma mark Cloud Info
 
@@ -139,7 +139,7 @@ NS_ASSUME_NONNULL_BEGIN
  * - we've successfully uploaded the node's RCRD to the server at least once
  * - we've downloaded the node's RCRD from the server at least once
  */
-@property (nonatomic, copy, readonly, nullable) NSString *cloudID;
+@property (nonatomic, readonly, nullable) NSString *cloudID;
 
 /**
  * The eTag value of the RCRD file in the cloud.
@@ -147,7 +147,7 @@ NS_ASSUME_NONNULL_BEGIN
  * If this value is nil, then the node was created on this device,
  * and hasn't been updated yet.
  */
-@property (nonatomic, copy, readonly, nullable) NSString *eTag_rcrd;
+@property (nonatomic, readonly, nullable) NSString *eTag_rcrd;
 
 /**
  * The eTag value of the data fork in the cloud.
@@ -157,7 +157,7 @@ NS_ASSUME_NONNULL_BEGIN
  * - there isn't a data fork for this node (it's an empty node)
  * - the PullManager is in the process of updating, and hasn't discovered it yet
  */
-@property (nonatomic, copy, readonly, nullable) NSString *eTag_data;
+@property (nonatomic, readonly, nullable) NSString *eTag_data;
 
 /**
  * Returns the later of the 2 dates: lastModified_rcrd & lastModified_data
@@ -168,13 +168,13 @@ NS_ASSUME_NONNULL_BEGIN
  * The date in which the RCRD file was last modified on the server.
  * This relates to the last time the node's "filesystem" information was changed, such as permissions.
  */
-@property (nonatomic, copy, readonly, nullable) NSDate *lastModified_rcrd;
+@property (nonatomic, readonly, nullable) NSDate *lastModified_rcrd;
 
 /**
  * The date in which the DATA file was last modified on the server.
  * This relates to the last time the node's content was changed.
  */
-@property (nonatomic, copy, readonly, nullable) NSDate *lastModified_data;
+@property (nonatomic, readonly, nullable) NSDate *lastModified_data;
 
 /**
  * Stores the most recently downloaded information about the data file in the cloud.
@@ -185,7 +185,7 @@ NS_ASSUME_NONNULL_BEGIN
  * @warning This information is not necessarily up-to-date.
  *          It's kept cached to allow you to inspect the previous data info before requesting a download.
  */
-@property (nonatomic, copy, readonly, nullable) ZDCCloudDataInfo *cloudDataInfo;
+@property (nonatomic, readonly, nullable) ZDCCloudDataInfo *cloudDataInfo;
 
 /**
  * Typically the cloudName is calculated by hashing node.name along with parentNode.dirSalt.
@@ -198,13 +198,13 @@ NS_ASSUME_NONNULL_BEGIN
  * and the cloudName doesn't match what we'd expect via hashing.
  * If this occurs, we store the mismatched value here.
  */
-@property (nonatomic, copy, readonly, nullable) NSString *explicitCloudName;
+@property (nonatomic, readonly, nullable) NSString *explicitCloudName;
 
 /**
  * If the node is located in a different bucket (not the localUserID's bucket),
  * then the ownerID property will be set to reference the owner.
 **/
-@property (nonatomic, copy, readonly, nullable) ZDCNodeAnchor *anchor;
+@property (nonatomic, readonly, nullable) ZDCNodeAnchor *anchor;
 
 /**
  * If the node is a pointer, specifies the ZDCNode.uuid that it points to.

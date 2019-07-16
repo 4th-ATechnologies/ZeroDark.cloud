@@ -20,6 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark Messaging
 
+@property (nonatomic, copy, readwrite, nullable) NSString *senderID;
 @property (nonatomic, copy, readwrite, nullable) NSSet<NSString *> *pendingRecipients;
 
 #pragma mark Encryption Info
