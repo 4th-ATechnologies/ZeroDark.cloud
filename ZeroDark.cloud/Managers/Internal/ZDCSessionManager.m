@@ -33,6 +33,7 @@ static NSString *const kSessionDescriptionPrefix_Foreground = @"fg";
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#if TARGET_OS_IPHONE
 
 @interface ZDCSessionPendingItem : NSObject
 
@@ -49,6 +50,7 @@ static NSString *const kSessionDescriptionPrefix_Foreground = @"fg";
 
 @end
 
+#endif
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,6 +64,7 @@ static NSString *const kSessionDescriptionPrefix_Foreground = @"fg";
 @property (nonatomic, assign, readwrite) BOOL streamUsedOnce;
 
 @property (nonatomic, strong, readwrite) NSURL *downloadedFileURL;
+@property (nonatomic, strong, readwrite) NSMutableData *downloadedData;
 
 @end
 
@@ -85,12 +88,13 @@ static NSString *const kSessionDescriptionPrefix_Foreground = @"fg";
 	NSMutableDictionary<NSString *, ZDCSessionInfo *> * sessionDict;
 	NSMutableDictionary<NSString *, ZDCSessionInfo *> * staleSessionDict;
 	
-	NSMutableDictionary<NSString *, NSMutableDictionary *> *pending;
 	NSMutableDictionary<NSString *, ZDCSessionStorageItem *> *storage;
 
 #if TARGET_OS_IPHONE
 	BOOL isReadyForStorage;
 	NSMutableSet *localUserIDsPendingRestore;
+	
+	NSMutableDictionary<NSString *, NSMutableDictionary *> *pending;
 #endif
 }
 
@@ -116,11 +120,10 @@ static NSString *const kSessionDescriptionPrefix_Foreground = @"fg";
 		sessionDict      = [[NSMutableDictionary alloc] initWithCapacity:2];
 		staleSessionDict = [[NSMutableDictionary alloc] initWithCapacity:2];
 		
-		pending = [[NSMutableDictionary alloc] initWithCapacity:4];
 		storage = [[NSMutableDictionary alloc] initWithCapacity:16];
-		
 	#if TARGET_OS_IPHONE
-		 
+		pending = [[NSMutableDictionary alloc] initWithCapacity:4];
+		
 		[[NSNotificationCenter defaultCenter] addObserver: self
 		                                         selector: @selector(applicationDidEnterBackground:)
 		                                             name: UIApplicationDidEnterBackgroundNotification
@@ -1004,6 +1007,7 @@ done:
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark PendingItem Management
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#if TARGET_OS_IPHONE
 
 - (ZDCSessionPendingItem *)pendingItemForTask:(NSURLSessionTask *)task
                                     inSession:(NSURLSession *)session
@@ -1038,6 +1042,7 @@ done:
 	return item;
 }
 
+#endif
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark StorageItem Management
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

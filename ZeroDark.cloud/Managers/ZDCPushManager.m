@@ -32,6 +32,7 @@
 #import "NSDate+ZeroDark.h"
 #import "NSError+Auth0API.h"
 #import "NSError+ZeroDark.h"
+#import "NSURLRequest+ZeroDark.h"
 #import "NSURLResponse+ZeroDark.h"
 
 // Libraries
@@ -872,6 +873,10 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	else if (ephemeralInfo.pollContext)
 	{
 		[self startPollWithContext:ephemeralInfo.pollContext pipeline:pipeline];
+	}
+	else if (ephemeralInfo.multipollContext)
+	{
+		[self startMultipollWithContext:ephemeralInfo.multipollContext pipeline:pipeline];
 	}
 	else
 	{
@@ -2394,9 +2399,23 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				
 				if (operation.putType == ZDCCloudOperationPutType_Node_Data)
 				{
-					ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
+					BOOL isSignal = [node.parentID hasSuffix:@"|signal"];
 					
-					[owner.delegate didPushNodeData:node atPath:path transaction:transaction];
+					if (isSignal)
+					{
+						NSString *recipientID = node.anchor.userID;
+						ZDCUser *recipient = [transaction objectForKey:recipientID inCollection:kZDCCollection_Users];
+						if (recipient)
+						{
+							[owner.delegate didSendMessage:node toRecipient:recipient transaction:transaction];
+						}
+					}
+					else
+					{
+						ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
+						
+						[owner.delegate didPushNodeData:node atPath:path transaction:transaction];
+					}
 				}
 			}
 			
@@ -3695,7 +3714,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		               payloadSig: context.sha256Hash];
 		
 	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request s4Description]);
+		DDLogDonut(@"%@", [request zdcDescription]);
 	#endif
 		
 		NSURLSessionUploadTask *task = nil;
@@ -5634,6 +5653,112 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	[self startMultipollWithContext:multipollContext pipeline:pipeline];
 }
 
+- (void)copyLeafMultipollDidComplete:(ZDCMultipollContext *)pollContext withStatus:(NSDictionary *)pollStatus
+{
+	DDLogAutoTrace();
+	
+	ZDCTaskContext *context = pollContext.taskContext;
+	ZDCCloudOperation *operation = [self operationForContext:context];
+	
+	/**
+	 * pollStatus dictionary format:
+	 * {
+	 *   "status": <http style status code>
+	 *   "ext": {
+	 *     "code": <4th-a specific error code>,
+	 *     "msg" : <human readable string>
+	 *   }
+	 *   "info": {
+	 *     "fileID": <string>,
+	 *     "eTag": <string>,
+	 *     "ts": <integer>
+	 *   }
+	 * }
+	**/
+	
+	NSInteger statusCode = [self statusCodeFromPollStatus:pollStatus];
+	
+	/**
+	 * Known possibilities for:
+	 * - put-if-nonexistent
+	 *
+	 * 200 (OK)
+	 *
+	 * 400 (Bad request)
+	 *   - unknown_user_owner
+	 *   - unknown_user_caller
+	 *   - staging_path_invalid
+	 *   - staging_file_invalid_json
+	 *   - staging_file_invalid_content
+	 *   - staging_file_too_big
+	 *
+	 * 401 (Unauthorized)
+	 *   - unauthorized_permissions_issue
+	 *   - unauthorized_missing_dst_write_permission
+	 *   - unauthorized_missing_share_permission
+	 *
+	 * 403 (Forbidden)
+	 *   - unsupported_permissions_change
+	 *   - unsupported_children_change
+	 *
+	 * 404 (File not found)
+	 *   - precondition_dst_rcrd_missing
+	 *
+	 * 409 (Conflict)
+	 *   - staging_file_disappeared
+	 *   - staging_file_modified
+	 *
+	 * 412 (Precondition failed)
+	 *   - precondition_dst_eTag_mismatch
+	 *
+	**/
+	
+	BOOL didSendMessage = (statusCode == 200);
+	
+	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+		
+		// Mark operation as complete
+		
+		NSString *extName = [self extNameForContext:context];
+		
+		[[transaction ext:extName] completeOperationWithUUID:context.operationUUID];
+		
+		// Update node (if operation was node related)
+		
+		BOOL isOutgoingMessage =
+		  (operation.type == ZDCCloudOperationType_CopyLeaf) &&
+		  ([operation.cloudLocator.cloudPath.dirPrefix isEqualToString:kZDCDirPrefix_MsgsOut]) &&
+		  ([operation.dstCloudLocator.cloudPath.dirPrefix isEqualToString:kZDCDirPrefix_MsgsIn]);
+		
+		if (isOutgoingMessage)
+		{
+			ZDCNode *node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
+			if (node)
+			{
+				NSString *dstUserID = operation.dstCloudLocator.bucketOwner;
+				if (dstUserID && [node.pendingRecipients containsObject:dstUserID])
+				{
+					NSMutableSet<NSString*> *pendingRecipients = [node.pendingRecipients mutableCopy];
+					[pendingRecipients removeObject:dstUserID];
+					
+					node = [node copy];
+					node.pendingRecipients = pendingRecipients;
+					
+					[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
+					
+					// Notify delegate
+					
+					ZDCUser *recipient = [transaction objectForKey:dstUserID inCollection:kZDCCollection_Users];
+					if (recipient && didSendMessage)
+					{
+						[owner.delegate didSendMessage:node toRecipient:recipient transaction:transaction];
+					}
+				}
+			}
+		}
+	}];
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Poll
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5720,7 +5845,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		                  session: auth.aws_session];
 		
 	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request s4Description]);
+		DDLogDonut(@"%@", [request zdcDescription]);
 	#endif
 		
 	#if TARGET_OS_IPHONE
@@ -5909,8 +6034,8 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			NSDate *holdDate = [NSDate dateWithTimeIntervalSinceNow:delay];
 			NSString *ctx = NSStringFromClass([self class]);
 			
-			[pipeline setHoldDate:holdDate forOperationWithUUID:context.operationUUID context:ctx];
-			[pipeline setStatusAsPendingForOperationWithUUID:context.operationUUID];
+			[pipeline setHoldDate:holdDate forOperationWithUUID:operation.uuid context:ctx];
+			[pipeline setStatusAsPendingForOperationWithUUID:operation.uuid];
 			return;
 		}
 		else
@@ -5981,19 +6106,21 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 #pragma mark Multipoll
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)startMultipollWithContext:(ZDCMultipollContext *)pollContext pipeline:(YapDatabaseCloudCorePipeline *)pipeline
+- (void)startMultipollWithContext:(ZDCMultipollContext *)multipollContext
+                         pipeline:(YapDatabaseCloudCorePipeline *)pipeline
 {
 	DDLogAutoTrace();
-	NSParameterAssert(pollContext != nil);
+	NSParameterAssert(multipollContext != nil);
 	NSParameterAssert(pipeline != nil);
 	
-	ZDCTaskContext *context = pollContext.taskContext;
+	ZDCTaskContext *taskContext = multipollContext.taskContext;
+	NSString *localUserID = taskContext.localUserID;
 	
 	// Associate the pollContext with the operation.
 	// This lets us know to keep trying to the poll operation, instead of the staging operation.
 	
-	ZDCCloudOperation *operation = (ZDCCloudOperation *)[pipeline operationWithUUID:context.operationUUID];
-	operation.ephemeralInfo.multipollContext = pollContext;
+	ZDCCloudOperation *operation = (ZDCCloudOperation *)[pipeline operationWithUUID:taskContext.operationUUID];
+	operation.ephemeralInfo.multipollContext = multipollContext;
 	
 	// Edge case check:
 	// If the operation was deleted (unceremoniously by rogue code) then the operation could be nil here.
@@ -6001,13 +6128,13 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	if (operation == nil)
 	{
-		[self skipOperationWithContext:context];
+		[self skipOperationWithContext:taskContext];
 		return;
 	}
 	
 	// Start the polling process.
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
+	[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
 	                                      completionQueue: concurrentQueue
 	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
@@ -6021,14 +6148,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			else
 			{
 				// Auth0 is indicating our account may have been removed.
-				[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+				[owner.networkTools handleAuthFailureForUser:taskContext.localUserID withError:error];
 			}
 			
-			[self multipollDidComplete:nil inSession:nil withError:error context:pollContext responseObject:nil];
+			[self multipollDidComplete:nil inSession:nil withError:error context:multipollContext responseObject:nil];
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:context.localUserID];
+		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
 		
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.backgroundSession;
@@ -6066,29 +6193,25 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		              accessKeyID: auth.aws_accessKeyID
 		                   secret: auth.aws_secret
 		                  session: auth.aws_session
-		               payloadSig: pollContext.sha256Hash];
+		               payloadSig: multipollContext.sha256Hash];
 		
 	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request s4Description]);
+		DDLogDonut(@"%@", [request zdcDescription]);
 	#endif
 		
-		NSURLSessionUploadTask *task = nil;
+		__block NSURLSessionUploadTask *task = nil;
 	#if TARGET_OS_IPHONE
 		
 		task = [session uploadTaskWithRequest: request
-		                             fromFile: context.uploadFileURL
+		                             fromFile: multipollContext.uploadFileURL
 		                             progress: nil
 								  completionHandler:^(NSURLResponse *response, id responseObject, NSError *error)
 		{
-			if ([responseObject isKindOfClass:[NSData class]])
-			{
-				NSString *str = [[NSString alloc] initWithData:(NSData *)responseObject encoding:NSUTF8StringEncoding];
-				DDLogInfo(@"response: %@", str);
-			}
-			else
-			{
-				DDLogInfo(@"response: %@", responseObject);
-			}
+			[self multipollDidComplete: task
+			                 inSession: session.session
+			                 withError: error
+			                   context: multipollContext
+			            responseObject: responseObject];
 		}];
 		
 	#else // macOS
@@ -6100,14 +6223,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		{
 			[self multipollDidComplete: task
 			                 inSession: session.session
-			                 withError: [self cancelledError]
-			                   context: pollContext
+			                 withError: error
+			                   context: multipollContext
 			            responseObject: responseObject];
 		}];
 		
 	#endif
 		
-		[self stashContext:context];
+		[self stashContext:multipollContext];
 		
 		if (operation.ephemeralInfo.abortRequested)
 		{
@@ -6115,18 +6238,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			[self multipollDidComplete: task
 			                 inSession: session.session
 			                 withError: [self cancelledError]
-			                   context: pollContext
+			                   context: multipollContext
 			            responseObject: nil];
 		}
 		else
 		{
-		#if TARGET_OS_IPHONE
-			[owner.sessionManager associateContext:pollContext withTask:task inSession:session.session];
-		#else
 			// When SessionManager gets called for the completion of a dataTask,
 			// it's not given the `responseObject`, which we need in this case.
 			// So we're handling the completion manually.
-		#endif
 			
 			[task resume];
 		}
@@ -6136,10 +6255,228 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 - (void)multipollDidComplete:(NSURLSessionTask *)task
                    inSession:(NSURLSession *)session
                    withError:(nullable NSError *)error
-                     context:(ZDCPollContext *)pollContext
+                     context:(ZDCMultipollContext *)multipollContext
               responseObject:(id)responseObject
 {
-	// Todo...
+	DDLogAutoTrace();
+	
+	[self unstashContext:multipollContext];
+	
+	NSURLResponse *response = task.response;
+	ZDCTaskContext *context = multipollContext.taskContext;
+	YapDatabaseCloudCorePipeline *pipeline = [self pipelineForContext:context];
+	ZDCCloudOperation *operation = [self operationForContext:context];
+	
+	NSInteger httpStatusCode = response.httpStatusCode;
+	
+	if (response && error)
+	{
+		error = nil; // we only care about non-server-response errors
+	}
+	
+	// Known status codes:
+	//
+	// 200 - Success : underlying status was fetched from redis
+	
+	if (error || httpStatusCode != 200)
+	{
+		NSTimeInterval delay;
+		
+		if (error)
+		{
+			// Request failed due to network error.
+			//
+			// Most likely, the pipeline has already been suspended.
+			// This is courtesy of the AppDelegate, which does this when Reachability goes down.
+			// And the pipeline will be automatically resumed once we reconnect to the Internet.
+			//
+			// So we can simply hand the operation back to the pipeline.
+			// To be extra cautious (thread timing considerations), we do so after a short delay.
+			
+			delay = 2.0;
+		}
+		else
+		{
+			// Request failed due to unknown server error.
+			//
+			// We expect the server to return some kind of status to us within the JSON response.
+			// Even if the server doesn't know about the request, it would return a 200 response,
+			// with a JSON payload that would indicate as much.
+			
+			NSInteger successiveFailCount = [operation.ephemeralInfo polling_didFail];
+			
+			delay = [self pollingBackoffForFailCount:successiveFailCount];
+		}
+		
+		NSDate *holdDate = [NSDate dateWithTimeIntervalSinceNow:delay];
+		NSString *ctx = NSStringFromClass([self class]);
+		
+		[pipeline setHoldDate:holdDate forOperationWithUUID:context.operationUUID context:ctx];
+		[pipeline setStatusAsPendingForOperationWithUUID:context.operationUUID];
+		return;
+	}
+	
+	NSString *stagingPath_rcrd = operation.ephemeralInfo.continuation_rcrd;
+	NSString *requestID_rcrd = [self requestIDForStagingPath:stagingPath_rcrd];
+	
+	NSString *stagingPath_data = operation.ephemeralInfo.continuation_data;
+	NSString *requestID_data = [self requestIDForStagingPath:stagingPath_data];
+	
+	NSDictionary *stagingStatus_data = nil;
+	
+	NSInteger statusCode_rcrd = 0;
+	NSInteger statusCode_data = 0;
+	
+	if ([responseObject isKindOfClass:[NSDictionary class]])
+	{
+		NSDictionary *results = (NSDictionary *)responseObject;
+		
+		if (requestID_rcrd)
+		{
+			NSDictionary *stagingStatus = results[requestID_rcrd];
+			
+			if ([stagingStatus isKindOfClass:[NSDictionary class]])
+			{
+				id value = stagingStatus[@"status"];
+				
+				if ([value isKindOfClass:[NSNumber class]])
+					statusCode_rcrd = [(NSNumber *)value integerValue];
+				else if ([value isKindOfClass:[NSString class]])
+					statusCode_rcrd = [(NSString *)value integerValue];
+			}
+		}
+		
+		if (requestID_data)
+		{
+			NSDictionary *stagingStatus = results[requestID_data];
+			
+			if ([stagingStatus isKindOfClass:[NSDictionary class]])
+			{
+				stagingStatus_data = stagingStatus;
+				id value = stagingStatus[@"status"];
+				
+				if ([value isKindOfClass:[NSNumber class]])
+					statusCode_data = [(NSNumber *)value integerValue];
+				else if ([value isKindOfClass:[NSString class]])
+					statusCode_data = [(NSString *)value integerValue];
+			}
+		}
+	}
+	
+	BOOL foundResponse_rcrd = (requestID_rcrd != nil) && (statusCode_rcrd != 0);
+	BOOL foundResponse_data = (requestID_data != nil) && (statusCode_data != 0);
+	
+	if (!foundResponse_rcrd && !foundResponse_data)
+	{
+		// The server hasn't processed any staging files since last check.
+		
+		NSUInteger pollFailCount_total = [operation.ephemeralInfo polling_didFail];
+		
+		// The pollFailCount is never reset !
+		//
+		// So if the server keeps crashing on the same file,
+		// then the pollFailCount will just keep getting bigger and bigger.
+		//
+		// We need to watch out for this,
+		// because if when we invoke `startTouchWithContext:` there's no delay.
+		//
+		// In the past this bug meant that we would execute exponential delay...
+		// until the pollFailCount reached X.
+		// And then we would just send touch commands to the server as fast as possible.
+		
+		const NSUInteger pollingModulus = [self pollingModulus];
+		
+		BOOL pollFailCount_isLoop;
+		NSUInteger pollFailCount_modulus;
+		
+		if (pollFailCount_total < pollingModulus)
+		{
+			pollFailCount_isLoop = NO;
+			pollFailCount_modulus = pollFailCount_total;
+			
+			DDLogInfo(@"pollFailCount: %lu", (unsigned long)pollFailCount_total);
+		}
+		else
+		{
+			pollFailCount_isLoop = YES;
+			pollFailCount_modulus = pollFailCount_total % pollingModulus;
+			
+			DDLogInfo(@"pollFailCount: %lu => %lu",
+			          (unsigned long)pollFailCount_total,
+			          (unsigned long)pollFailCount_modulus);
+		}
+		
+		if (!pollFailCount_isLoop || pollFailCount_modulus != 0)
+		{
+			// Keep polling...
+			//
+			// Note: Even though we use the modulus technique to continually push a new `touch` command to the server,
+			// we continue to force longer delays for polling. If the server is crashing, then there's no reason to
+			// decrease our wait time.
+			
+			NSTimeInterval delay = [self pollingBackoffForFailCount:pollFailCount_total]; // <- Yup (see comment above)
+			NSDate *holdDate = [NSDate dateWithTimeIntervalSinceNow:delay];
+			NSString *ctx = NSStringFromClass([self class]);
+			
+			[pipeline setHoldDate:holdDate forOperationWithUUID:operation.uuid context:ctx];
+			[pipeline setStatusAsPendingForOperationWithUUID:operation.uuid];
+			return;
+		}
+		else
+		{
+			// The server may have "dropped" the staging/touch file.
+			// This could happen if the redis server was restarted.
+			// Or it could be a bug in the server.
+			//
+			// Either way, our solution is to issue a "touch" request for our uploaded staging file.
+			
+			ZDCTouchContext *touchContext = [[ZDCTouchContext alloc] init];
+			touchContext.pollContext = multipollContext;
+			
+			[self startTouchWithContext:touchContext pipeline:pipeline];
+			return;
+		}
+	}
+	
+	// We got a non-zero response from the poll.
+	// We may not be done polling, but we should reset the polling_failCount.
+	
+	[operation.ephemeralInfo polling_didSucceed];
+	
+	if (foundResponse_rcrd)
+	{
+		operation.ephemeralInfo.continuation_rcrd = nil;
+	}
+	
+	if (!foundResponse_data)
+	{
+		// Start polling for data
+		
+		[pipeline setStatusAsPendingForOperationWithUUID:operation.uuid];
+		return;
+	}
+	
+	if (![multipollContext atomicMarkCompleted])
+	{
+		// Already processed (poll request vs push notification)
+		return;
+	}
+	
+	operation.ephemeralInfo.pollContext = nil;
+	
+	switch (operation.type)
+	{
+		case ZDCCloudOperationType_CopyLeaf:
+		{
+			[self copyLeafMultipollDidComplete:multipollContext withStatus:stagingStatus_data];
+			break;
+		}
+		default:
+		{
+			DDLogWarn(@"Unhandled poll response !");
+			break;
+		}
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -6228,7 +6565,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		                  session: auth.aws_session];
 		
 	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request s4Description]);
+		DDLogDonut(@"%@", [request zdcDescription]);
 	#endif
 		
 		NSURLSessionTask *task = nil;

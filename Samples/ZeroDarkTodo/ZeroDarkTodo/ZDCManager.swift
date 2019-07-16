@@ -689,9 +689,11 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		}
 	}
 	
-	func didSendMessage(_ message: ZDCNode, transaction: YapDatabaseReadWriteTransaction) {
+	func didSendMessage(_ message: ZDCNode, toRecipient recipient: ZDCUser, transaction: YapDatabaseReadWriteTransaction) {
 		
-		// Todo...
+		print("ZDC Delegate: didSendMessage:toRecipient: \(recipient.uuid)")
+		
+		// Nothing to do here for this app
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1209,7 +1211,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				
 				guard
 					let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-					let trunkNode = cloudTransaction.trunkNode(.home)
+					let homeNode = cloudTransaction.trunkNode(.home),
+					let inboxNode = cloudTransaction.trunkNode(.inbox)
 				else {
 					continue
 				}
@@ -1229,7 +1232,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// So if we don't always need the full node (like in this particular situation),
 				// then its a little faster to enumerate the nodeIDs.
 				
-				nodeManager.recursiveEnumerateNodeIDs(withParentID: trunkNode.uuid,
+				nodeManager.recursiveEnumerateNodeIDs(withParentID: homeNode.uuid, // <- Enumerating home
 				                                       transaction: transaction,
 				                                             using:
 				{ (nodeID: String, path: [String], recurseInto, stop) in
@@ -1286,6 +1289,17 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 							break;
 						
 						default: break
+					}
+				})
+				
+				nodeManager.enumerateNodeIDs(withParentID: inboxNode.uuid, // <- Enumerating inbox
+				                              transaction: transaction,
+				                                    using:
+				{ (nodeID: String, stop) in
+					
+					let needsDownload = cloudTransaction.nodeIsMarkedAsNeedsDownload(nodeID, components: .all)
+					if needsDownload {
+						self.downloadNode(withNodeID: nodeID, transaction: transaction)
 					}
 				})
 			}
@@ -1667,33 +1681,38 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			// Send a message to the user(s) we added.
 			
-			let sendMessageAsSignal = false
-			if sendMessageAsSignal {
-			
-				for addedUserID in newUsers {
+		#if true
+			//
+			// Send invitation as a signal
+			//
+			for addedUserID in newUsers {
+				
+				if let user = transaction.object(forKey: addedUserID, inCollection: kZDCCollection_Users) as? ZDCUser {
 					
-					if let user = transaction.object(forKey: addedUserID, inCollection: kZDCCollection_Users) as? ZDCUser {
-						
-						do {
-							let signal = try cloudTransaction.sendSignal(toRecipient: user)
-							cloudTransaction.setTag(listID, forNodeID: signal.uuid, withIdentifier: "listID")
-						}
-						catch {
-							print("Error sending message: \(error)")
-						}
+					do {
+						let signal = try cloudTransaction.sendSignal(toRecipient: user)
+						cloudTransaction.setTag(listID, forNodeID: signal.uuid, withIdentifier: "listID")
+					}
+					catch {
+						print("Error sending message: \(error)")
 					}
 				}
 			}
-			else if newUsers.count > 0 {
+			
+		#else
+			//
+			// Send invitation as a message
+			//
+			if newUsers.count > 0 {
 				
 				var addedUsers = [ZDCUser]()
 				for addedUserID in newUsers {
-			
+					
 					if let user = transaction.object(forKey: addedUserID, inCollection: kZDCCollection_Users) as? ZDCUser {
 						addedUsers.append(user)
 					}
 				}
-			
+				
 				do {
 					let message = try cloudTransaction.sendMessage(toRecipients: addedUsers)
 					cloudTransaction.setTag(listID, forNodeID: message.uuid, withIdentifier: "listID")
@@ -1703,6 +1722,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				}
 			}
 			
+		#endif
 		})
 	}
 	

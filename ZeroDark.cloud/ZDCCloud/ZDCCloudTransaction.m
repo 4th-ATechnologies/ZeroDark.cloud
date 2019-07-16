@@ -165,6 +165,7 @@
 	{
 		ZDCNode *dstNode = [[ZDCNode alloc] initWithLocalUserID:localUserID];
 		dstNode.parentID = [self signalParentID];
+		dstNode.encryptionKey = message.encryptionKey;
 		
 		NSString *cloudName = [ZDCNode randomCloudName];
 		dstNode.name = cloudName;

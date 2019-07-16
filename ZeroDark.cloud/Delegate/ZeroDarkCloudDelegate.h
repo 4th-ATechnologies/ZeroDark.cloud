@@ -14,6 +14,7 @@
 #import "ZDCDownloadManager.h" // for ZDCNodeMetaComponents
 #import "ZDCNode.h"
 #import "ZDCTreesystemPath.h"
+#import "ZDCUser.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -270,6 +271,7 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
  *   removes the queued outgoing message.
  */
 - (void)didSendMessage:(ZDCNode *)message
+           toRecipient:(ZDCUser *)recipient
            transaction:(YapDatabaseReadWriteTransaction *)transaction;
 
 #pragma mark Pull

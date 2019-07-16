@@ -87,7 +87,12 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Messaging
 
 /**
- * For messages & signals, this set contains the list of userID's for which the system
+ * For incoming messages (in the inbox), this value will be set to the userID that sent the message.
+ */
+@property (nonatomic, copy, readonly, nullable) NSString *senderID;
+
+/**
+ * For outgoing messages & signals, this set contains the list of userID's for which the system
  * is still working on sending the node.
  */
 @property (nonatomic, copy, readonly, nullable) NSSet<NSString *> *pendingRecipients;
