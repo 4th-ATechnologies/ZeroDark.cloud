@@ -868,7 +868,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		return [ZDCDatabaseManager groupForLocalUserID: cloudNode.localUserID
 		                                        region: cloudLocator.region
 		                                        bucket: cloudLocator.bucket
-		                                     appPrefix: cloudPath.appPrefix
+		                                        zAppID: cloudPath.zAppID
 		                                     dirPrefix: cloudPath.dirPrefix];
 		
 		//
@@ -1168,14 +1168,14 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 + (NSString *)groupForLocalUserID:(NSString *)localUserID
                            region:(AWSRegion)region
                            bucket:(NSString *)bucket
-                        appPrefix:(NSString *)appPrefix
+                           zAppID:(NSString *)zAppID
                         dirPrefix:(NSString *)dirPrefix
 {
 	return [NSString stringWithFormat:@"%@|%@|%@|%@/%@",
 		localUserID,
 		[AWSRegions shortNameForRegion:region],
 		bucket,
-		appPrefix,
+		zAppID,
 		dirPrefix];
 }
 

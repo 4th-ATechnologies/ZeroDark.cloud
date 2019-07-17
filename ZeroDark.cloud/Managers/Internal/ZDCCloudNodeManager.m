@@ -113,7 +113,7 @@ static ZDCCloudNodeManager *sharedInstance = nil;
 		  [ZDCDatabaseManager groupForLocalUserID: localUserID
 		                                   region: region
 		                                   bucket: bucket
-		                                appPrefix: cloudPath.appPrefix
+		                                   zAppID: cloudPath.zAppID
 		                                dirPrefix: cloudPath.dirPrefix];
 		
 		// Binary search performance !!!
@@ -176,7 +176,7 @@ static ZDCCloudNodeManager *sharedInstance = nil;
 		  [ZDCDatabaseManager groupForLocalUserID: parent.localUserID
 		                                   region: parent.cloudLocator.region
 		                                   bucket: parent.cloudLocator.bucket
-		                                appPrefix: parent.cloudLocator.cloudPath.appPrefix
+		                                   zAppID: parent.cloudLocator.cloudPath.zAppID
 		                                dirPrefix: parent.dirPrefix];
 		
 		[viewTransaction_cloud_dirPrefix enumerateKeysAndObjectsInGroup: group
@@ -202,7 +202,7 @@ static ZDCCloudNodeManager *sharedInstance = nil;
 			if ([cloudNode.localUserID isEqualToString:parent.localUserID] &&
 			    cloudNode.cloudLocator.region == parent.cloudLocator.region &&
 			    [cloudNode.cloudLocator.bucket isEqualToString:parent.cloudLocator.bucket] &&
-			    [cloudNode.cloudLocator.cloudPath.appPrefix isEqualToString:parent.cloudLocator.cloudPath.appPrefix] &&
+			    [cloudNode.cloudLocator.cloudPath.zAppID isEqualToString:parent.cloudLocator.cloudPath.zAppID] &&
 			    [cloudNode.cloudLocator.cloudPath.dirPrefix isEqualToString:parent.dirPrefix])
 			{
 				enumBlock(cloudNode, stop);

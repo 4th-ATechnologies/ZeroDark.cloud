@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy, readonly) NSString *userID;
 
 /**
- * Corresponds to `[ZDCCloudPath appPrefix]`.
+ * Corresponds to `[ZDCCloudPath zAppID]`.
  */
 @property (nonatomic, copy, readonly) NSString *zAppID;
 

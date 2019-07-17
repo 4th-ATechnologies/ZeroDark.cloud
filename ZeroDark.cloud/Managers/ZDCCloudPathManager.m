@@ -123,9 +123,9 @@ static ZDCCloudPathManager *sharedInstance = nil;
 	else
 		fileName = cloudName;
 	
-	return [[ZDCCloudPath alloc] initWithAppPrefix: appID
-	                                     dirPrefix: dirPrefix
-	                                      fileName: fileName];
+	return [[ZDCCloudPath alloc] initWithZAppID: appID
+	                                  dirPrefix: dirPrefix
+	                                   fileName: fileName];
 }
 
 /**

@@ -209,9 +209,9 @@
 		                                            type: ZDCCloudOperationType_CopyLeaf];
 		
 		ZDCCloudPath *dstCloudPath =
-		  [[ZDCCloudPath alloc] initWithAppPrefix: zAppID
-		                                dirPrefix: kZDCDirPrefix_MsgsIn
-		                                 fileName: cloudName];
+		  [[ZDCCloudPath alloc] initWithZAppID: zAppID
+		                             dirPrefix: kZDCDirPrefix_MsgsIn
+		                              fileName: cloudName];
 		
 		ZDCCloudLocator *dstCloudLocator =
 		  [[ZDCCloudLocator alloc] initWithRegion: recipient.aws_region
@@ -308,9 +308,9 @@
 	// Create & queue operation
 	
 	ZDCCloudPath *cloudPath =
-	  [[ZDCCloudPath alloc] initWithAppPrefix: zAppID
-	                                dirPrefix: kZDCDirPrefix_MsgsIn
-	                                 fileName: cloudName];
+	  [[ZDCCloudPath alloc] initWithZAppID: zAppID
+	                             dirPrefix: kZDCDirPrefix_MsgsIn
+	                              fileName: cloudName];
 	
 	ZDCCloudLocator *cloudLocator =
 	  [[ZDCCloudLocator alloc] initWithRegion: recipient.aws_region

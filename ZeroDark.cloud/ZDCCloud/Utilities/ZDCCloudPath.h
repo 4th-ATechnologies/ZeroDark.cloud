@@ -18,9 +18,9 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
 	
 	/**
 	 * The first component of a cloudPath.
-	 * Also called the zAppID.
+	 * Also called the app container.
 	 */
-	ZDCCloudPathComponents_AppPrefix           = 1 << 0, // 00001
+	ZDCCloudPathComponents_ZAppID              = 1 << 0, // 00001
 	
 	/**
 	 * The second component of a cloudPath.
@@ -28,23 +28,23 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
 	 */
 	ZDCCloudPathComponents_DirPrefix           = 1 << 1, // 00010
 	
-	/** The fileName (including fileExtension) */
+	/** The filename (including extension) */
 	ZDCCloudPathComponents_FileName_WithExt    = 1 << 2, // 00100
 	
-	/** The fileName (excluding fileExtension) */
+	/** The fileName (excluding extension) */
 	ZDCCloudPathComponents_FileName_WithoutExt = 1 << 3, // 01000
 	
 	/**
-	 * AppPrefx + DirPrefix + FileName_WithExt
+	 * zAppID + dirPrefix + filename (including extension)
 	 */
-	ZDCCloudPathComponents_All_WithExt     = (ZDCCloudPathComponents_AppPrefix |
+	ZDCCloudPathComponents_All_WithExt     = (ZDCCloudPathComponents_ZAppID |
 	                                          ZDCCloudPathComponents_DirPrefix |
 	                                          ZDCCloudPathComponents_FileName_WithExt),   // 00111
 	
 	/**
-	 * AppPrefix + DirPrefix + FileName_WithoutExt
+	 * zAppID + dirPrefix + filename (excluding extension)
 	 */
-	ZDCCloudPathComponents_All_WithoutExt  = (ZDCCloudPathComponents_AppPrefix |
+	ZDCCloudPathComponents_All_WithoutExt  = (ZDCCloudPathComponents_ZAppID |
 	                                          ZDCCloudPathComponents_DirPrefix |
 	                                          ZDCCloudPathComponents_FileName_WithoutExt), // 01011
 };
@@ -60,10 +60,41 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
 + (nullable instancetype)cloudPathFromPath:(NSString *)path;
 
 /**
+ * Returns YES if the given value is a valid zAppID.
+ *
+ * A zAppID has the following requirements:
+ * - minimum of 8 characters
+ * - maximum of 64 characters
+ * - cannot start with a period
+ * - all characters are in set: 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-_
+ */
++ (BOOL)isValidZAppID:(NSString *)zAppID;
+
+/**
+ * Returns YES if the given value is a valid dirPrefix.
+ *
+ * A dirPrefix has the following requirements:
+ * - 32 characters
+ * - all characters are hexadecimal (UPPER-CASE)
+ */
++ (BOOL)isValidDirPrefix:(NSString *)dirPrefix;
+
+/**
+ * Returns YES if the given value is a valid filename.
+ *
+ * A filename has the following requirements;
+ * - 32 characters
+ * - all characters are in zBase32 alphabet
+ * - may or may not have a file extension
+ */
++ (BOOL)isValidFileName:(NSString *)filename;
+
+/**
  * Creates a new instance with the given components.
  *
- * @param appPrefix
- *   Just another name for zAppID.
+ * @param zAppID
+ *   The app container name.
+ *   This is the name you registered via dashboard.zerodark.cloud.
  *
  * @param dirPrefix
  *   Represents the parentNode.dirPrefix value.
@@ -73,12 +104,12 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
  *   The (hashed) name of the file. This is also referred to as the cloudName.
  *   The fileName does not require a fileExtension.
  */
-- (instancetype)initWithAppPrefix:(NSString *)appPrefix
-                        dirPrefix:(NSString *)dirPrefix
-                         fileName:(NSString *)fileName;
+- (instancetype)initWithZAppID:(NSString *)zAppID
+                     dirPrefix:(NSString *)dirPrefix
+                      fileName:(NSString *)fileName;
 
 /** Just another name for zAppID */
-@property (nonatomic, copy, readonly) NSString * appPrefix;
+@property (nonatomic, copy, readonly) NSString * zAppID;
 
 /**
  * Represents the parentNode.dirPrefix value.

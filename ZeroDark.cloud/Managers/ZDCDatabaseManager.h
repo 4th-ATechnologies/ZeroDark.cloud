@@ -257,7 +257,7 @@ extern NSString *const Index_Users_Column_RandomUUID;
 + (NSString *)groupForLocalUserID:(NSString *)localUserID
                            region:(AWSRegion)region
                            bucket:(NSString *)bucket
-                        appPrefix:(NSString *)appPrefix
+                           zAppID:(NSString *)zAppID
                         dirPrefix:(NSString *)dirPrefix;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

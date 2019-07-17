@@ -1,23 +1,23 @@
 #import "ZDCCloudPath.h"
 
 // Encoding/Decoding keys
-static NSString *const k_appPrefix = @"appPrefix";
+static NSString *const k_zAppID    = @"appPrefix";
 static NSString *const k_dirPrefix = @"dirPrefix";
 static NSString *const k_fileName  = @"fileName";
 
 
 @implementation ZDCCloudPath
 
-@synthesize appPrefix = appPrefix;
+@synthesize zAppID = zAppID;
 @synthesize dirPrefix = dirPrefix;
 @synthesize fileName = fileName;
 
-static BOOL ZDCCloudPathParse(NSString **appPrefixPtr,
+static BOOL ZDCCloudPathParse(NSString **zAppIDPtr,
                               NSString **dirPrefixPtr,
                               NSString **fileNamePtr,
                               NSString *path)
 {
-	NSString *appPrefix = nil;
+	NSString *zAppID    = nil;
 	NSString *dirPrefix = nil;
 	NSString *fileName  = nil;
 	
@@ -32,7 +32,7 @@ static BOOL ZDCCloudPathParse(NSString **appPrefixPtr,
 	
 	if (components.count == 3)
 	{
-		appPrefix = components[0];
+		zAppID    = components[0];
 		dirPrefix = components[1];
 		fileName  = components[2];
 	}
@@ -41,7 +41,7 @@ static BOOL ZDCCloudPathParse(NSString **appPrefixPtr,
 		isValid = NO;
 	}
 	
-	if (appPrefixPtr) *appPrefixPtr = appPrefix;
+	if (zAppIDPtr)    *zAppIDPtr    = zAppID;
 	if (dirPrefixPtr) *dirPrefixPtr = dirPrefix;
 	if (fileNamePtr)  *fileNamePtr  = fileName;
 	
@@ -106,13 +106,13 @@ static BOOL ZDCCloudFileNameEqual(NSString *fileName1, NSString *fileName2, ZDCC
 	}
 }
 
-static BOOL ZDCCloudPathEqual(NSString *appPrefix1, NSString *dirPrefix1, NSString *fileName1,
-                             NSString *appPrefix2, NSString *dirPrefix2, NSString *fileName2,
+static BOOL ZDCCloudPathEqual(NSString *zAppID1, NSString *dirPrefix1, NSString *fileName1,
+                             NSString *zAppID2, NSString *dirPrefix2, NSString *fileName2,
                              ZDCCloudPathComponents components)
 {
 	// Performance optimization:
 	// The fileName is the most likely component to be different.
-	// And the appPrefix is the least likely component to be different.
+	// And the zAppID is the least likely component to be different.
 	//
 	// Thus we perform the comparisons in that order.
 	
@@ -124,20 +124,20 @@ static BOOL ZDCCloudPathEqual(NSString *appPrefix1, NSString *dirPrefix1, NSStri
 	if (components & ZDCCloudPathComponents_DirPrefix)
 	{
 		if (dirPrefix1) {
-			if (![dirPrefix1 isEqualToString:dirPrefix2]) return NO;
+			if (![dirPrefix1 isEqual:dirPrefix2]) return NO;
 		}
 		else {
 			if (dirPrefix2) return NO;
 		}
 	}
 	
-	if (components & ZDCCloudPathComponents_AppPrefix)
+	if (components & ZDCCloudPathComponents_ZAppID)
 	{
-		if (appPrefix1) {
-			if (![appPrefix1 isEqualToString:appPrefix2]) return NO;
+		if (zAppID1) {
+			if (![zAppID1 isEqual:zAppID2]) return NO;
 		}
 		else {
-			if (appPrefix2) return NO;
+			if (zAppID2) return NO;
 		}
 	}
 	
@@ -146,20 +146,80 @@ static BOOL ZDCCloudPathEqual(NSString *appPrefix1, NSString *dirPrefix1, NSStri
 
 + (instancetype)cloudPathFromPath:(NSString *)path
 {
-	NSString *appPrefix = nil;
+	NSString *zAppID    = nil;
 	NSString *dirPrefix = nil;
 	NSString *fileName  = nil;
 	
-	BOOL isValid = ZDCCloudPathParse(&appPrefix, &dirPrefix, &fileName, path);
-	if (!isValid)
+	BOOL isValid = ZDCCloudPathParse(&zAppID, &dirPrefix, &fileName, path);
+	if (!isValid) {
 		return nil;
-	else
-		return [[self alloc] initWithAppPrefix:appPrefix dirPrefix:dirPrefix fileName:fileName];
+	}
+	
+	return [[self alloc] initWithZAppID: zAppID
+	                          dirPrefix: dirPrefix
+	                           fileName: fileName];
 }
 
-- (instancetype)initWithAppPrefix:(NSString *)inAppPrefix
-                        dirPrefix:(NSString *)inDirPrefix
-                         fileName:(NSString *)inFileName
+#pragma mark Validity
+
+/**
+ * See header file for description.
+ */
++ (BOOL)isValidZAppID:(NSString *)zAppID
+{
+	if (zAppID.length < 8) return NO;
+	if (zAppID.length > 64) return NO;
+	
+	if ([zAppID hasPrefix:@"."]) return NO;
+	
+	NSString *str =
+	  @"0123456789"
+	  @"abcdefghijklmnopqrstuvwxyz"
+	  @"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	  @".-_";
+	
+	NSCharacterSet *set = [NSCharacterSet characterSetWithCharactersInString:str];
+	NSRange range = [zAppID rangeOfCharacterFromSet:set];
+	
+	return (range.location == 0) && (range.length == zAppID.length);
+}
+
+/**
+ * See header file for description.
+ */
++ (BOOL)isValidDirPrefix:(NSString *)dirPrefix
+{
+	if (dirPrefix.length != 32) return NO;
+	
+	NSCharacterSet *set = [NSCharacterSet characterSetWithCharactersInString:@"0123456789ABCDEF"];
+	NSRange range = [dirPrefix rangeOfCharacterFromSet:set];
+	
+	return (range.location == 0) && (range.length == 32);
+}
+
+/**
+ * See header file for description.
+ */
++ (BOOL)isValidFileName:(NSString *)filename
+{
+	NSRange range = [filename rangeOfString:@"."];
+	if (range.location != NSNotFound) {
+		filename = [filename substringToIndex:range.location];
+	}
+	
+	if (filename.length != 32) return NO;
+	
+	NSCharacterSet *set = [NSCharacterSet characterSetWithCharactersInString:@"ybndrfg8ejkmcpqxot1uwisza345h769"];
+	range = [filename rangeOfCharacterFromSet:set];
+	
+	return (range.location == 0) && (range.length == 32);
+}
+
+#pragma mark Init
+
+- (instancetype)initWithZAppID:(NSString *)inZAppID
+                     dirPrefix:(NSString *)inDirPrefix
+                      fileName:(NSString *)inFileName
 {
 	if (inFileName.length == 0) {
 		return nil;
@@ -167,7 +227,7 @@ static BOOL ZDCCloudPathEqual(NSString *appPrefix1, NSString *dirPrefix1, NSStri
 	
 	if ((self = [super init]))
 	{
-		appPrefix = [inAppPrefix copy];
+		zAppID    = [inZAppID copy];
 		dirPrefix = [inDirPrefix copy];
 		fileName  = [inFileName copy];
 	}
@@ -180,7 +240,7 @@ static BOOL ZDCCloudPathEqual(NSString *appPrefix1, NSString *dirPrefix1, NSStri
 {
 	if ((self = [super init]))
 	{
-		appPrefix = [decoder decodeObjectForKey:k_appPrefix];
+		zAppID    = [decoder decodeObjectForKey:k_zAppID];
 		dirPrefix = [decoder decodeObjectForKey:k_dirPrefix];
 		fileName  = [decoder decodeObjectForKey:k_fileName];
 	}
@@ -189,7 +249,7 @@ static BOOL ZDCCloudPathEqual(NSString *appPrefix1, NSString *dirPrefix1, NSStri
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
-	[coder encodeObject:appPrefix forKey:k_appPrefix];
+	[coder encodeObject:zAppID    forKey:k_zAppID];
 	[coder encodeObject:dirPrefix forKey:k_dirPrefix];
 	[coder encodeObject:fileName  forKey:k_fileName];
 }
@@ -206,7 +266,7 @@ static BOOL ZDCCloudPathEqual(NSString *appPrefix1, NSString *dirPrefix1, NSStri
 {
 	ZDCCloudPath *copy = [[ZDCCloudPath alloc] init];
 	
-	copy->appPrefix = appPrefix;
+	copy->zAppID = zAppID;
 	copy->dirPrefix = dirPrefix;
 	copy->fileName = [self fileNameWithExt:newFileNameExt];
 	
@@ -240,10 +300,10 @@ static BOOL ZDCCloudPathEqual(NSString *appPrefix1, NSString *dirPrefix1, NSStri
 
 - (NSString *)pathWithComponents:(ZDCCloudPathComponents)components
 {
-	NSMutableString *path = [NSMutableString stringWithCapacity:(32 + 1 + 32 + 1 + 32 + 5)];
+	NSMutableString *path = [NSMutableString stringWithCapacity:(64 + 1 + 32 + 1 + 32 + 1 + 16)];
 	
-	if ((components & ZDCCloudPathComponents_AppPrefix) && appPrefix) {
-		[path appendString:appPrefix];
+	if ((components & ZDCCloudPathComponents_ZAppID) && zAppID) {
+		[path appendString:zAppID];
 		[path appendString:@"/"];
 	}
 	
@@ -266,9 +326,9 @@ static BOOL ZDCCloudPathEqual(NSString *appPrefix1, NSString *dirPrefix1, NSStri
 {
 	NSMutableString *path = [NSMutableString stringWithCapacity:(32 + 1 + 32 + 1 + 32 + 5)];
 	
-	if (appPrefix)
+	if (zAppID)
 	{
-		[path appendString:appPrefix];
+		[path appendString:zAppID];
 		[path appendString:@"/"];
 	}
 	
@@ -305,15 +365,15 @@ static BOOL ZDCCloudPathEqual(NSString *appPrefix1, NSString *dirPrefix1, NSStri
 
 - (BOOL)matchesPath:(NSString *)path comparingComponents:(ZDCCloudPathComponents)components
 {
-	NSString *_appPrefix = nil;
+	NSString *_zAppID    = nil;
 	NSString *_dirPrefix = nil;
 	NSString *_fileName  = nil;
 	
-	BOOL isValid = ZDCCloudPathParse(&_appPrefix, &_dirPrefix, &_fileName, path);
+	BOOL isValid = ZDCCloudPathParse(&_zAppID, &_dirPrefix, &_fileName, path);
 	
 	if (!isValid) return NO;
 	
-	return ZDCCloudPathEqual(appPrefix, dirPrefix, fileName, _appPrefix, _dirPrefix, _fileName, components);
+	return ZDCCloudPathEqual(zAppID, dirPrefix, fileName, _zAppID, _dirPrefix, _fileName, components);
 }
 
 - (BOOL)isEqual:(id)another
@@ -338,9 +398,11 @@ static BOOL ZDCCloudPathEqual(NSString *appPrefix1, NSString *dirPrefix1, NSStri
 {
 	if (another == nil) return NO;
 	
-	return ZDCCloudPathEqual(appPrefix, dirPrefix, fileName,
-	                        another->appPrefix, another->dirPrefix, another->fileName, components);
+	return ZDCCloudPathEqual(zAppID, dirPrefix, fileName,
+	                         another->zAppID, another->dirPrefix, another->fileName, components);
 }
+
+#pragma mark Debugging
 
 - (NSString *)description
 {

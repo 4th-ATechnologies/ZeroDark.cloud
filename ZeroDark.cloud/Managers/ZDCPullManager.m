@@ -2686,9 +2686,6 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	NSParameterAssert(pullState != nil);
 	NSParameterAssert(outerCompletionBlock != nil);
 	
-	NSString *const localUserID = pullState.localUserID;
-	NSString *const zAppID = pullState.zAppID;
-	
 	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
 		if ([pullStateManager isPullCancelled:pullState])
@@ -2713,9 +2710,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		
 		ZDCNode *anchorNode = [[ZDCNodeManager sharedInstance] anchorNodeForNode:node transaction:transaction];
 		
-		NSString *appPrefix = anchorNode.anchor.zAppID;
-		if (!appPrefix && [anchorNode isKindOfClass:[ZDCTrunkNode class]]) {
-			appPrefix = [(ZDCTrunkNode *)anchorNode zAppID];
+		NSString *zAppID = anchorNode.anchor.zAppID;
+		if (!zAppID && [anchorNode isKindOfClass:[ZDCTrunkNode class]]) {
+			zAppID = [(ZDCTrunkNode *)anchorNode zAppID];
 		}
 		
 		NSString *rootNodeID = nil;
@@ -2726,7 +2723,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			rootNodeID = anchorNode.uuid;
 		}
 		
-		NSString *prefix = [NSString stringWithFormat:@"%@/%@/", appPrefix, node.dirPrefix];
+		NSString *prefix = [NSString stringWithFormat:@"%@/%@/", zAppID, node.dirPrefix];
 		NSArray<S3ObjectInfo *> *dirList = [pullState popListWithPrefix:prefix rootNodeID:rootNodeID];
 		
 		// Step 2 of 4
@@ -2862,8 +2859,8 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			  [[ZDCNodeManager sharedInstance] findNodeWithCloudPath: cloudPath
 			                                                  bucket: bucket
 			                                                  region: region
-			                                             localUserID: localUserID
-			                                                  zAppID: zAppID
+			                                             localUserID: pullState.localUserID
+			                                                  zAppID: pullState.zAppID
 			                                             transaction: transaction];
 			
 			if (node == nil)
@@ -2872,7 +2869,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				  [[ZDCCloudNodeManager sharedInstance] findCloudNodeWithCloudPath: cloudPath
 				                                                            bucket: bucket
 				                                                            region: region
-				                                                       localUserID: localUserID
+				                                                       localUserID: pullState.localUserID
 				                                                       transaction: transaction];
 				
 				if (cloudNode && [cloudNode.eTag_rcrd isEqualToString:nodeRcrd.eTag])

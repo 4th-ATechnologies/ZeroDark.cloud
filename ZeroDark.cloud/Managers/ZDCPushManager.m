@@ -278,9 +278,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	[stagingPath appendFormat:@"staging/%d/", kStagingVersion];
 	
 	if (isMultipart)
-		[stagingPath appendFormat:@"%@:%@/", operation.cloudLocator.cloudPath.appPrefix, operation.localUserID];
+		[stagingPath appendFormat:@"%@:%@/", operation.cloudLocator.cloudPath.zAppID, operation.localUserID];
 	else
-		[stagingPath appendFormat:@"%@/", operation.cloudLocator.cloudPath.appPrefix];
+		[stagingPath appendFormat:@"%@/", operation.cloudLocator.cloudPath.zAppID];
 	
 	if (isTouch) {
 		[stagingPath appendString:@"touch:"];
