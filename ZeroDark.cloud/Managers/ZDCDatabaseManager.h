@@ -107,7 +107,7 @@ extern NSString *const Ext_Index_Users;
  *
  * Organizes ZDCSplitKey for convenience & quick enumeration.
  *
-  */
+ */
 extern NSString *const Ext_View_SplitKeys;
 extern NSString *const Ext_View_SplitKeys_Date;
 
@@ -123,19 +123,19 @@ extern NSString *const Ext_View_LocalUsers;
 
 /**
  * YapDatabase extension of type: YapDatabaseAutoView <br/>
- * Access via: [transaction ext:Ext_View_Filesystem_Name]
+ * Access via: [transaction ext:Ext_View_Treesystem_Name]
  *
  * Organizes ZDCNode's into a hierarchial view, grouped by parentID & sorted by name.
  */
-extern NSString *const Ext_View_Filesystem_Name;
+extern NSString *const Ext_View_Treesystem_Name;
 
 /**
  * YapDatabase extension of type: YapDatabaseAutoView <br/>
- * Access via: [transaction ext:Ext_View_Filesystem_CloudName]
+ * Access via: [transaction ext:Ext_View_Treesystem_CloudName]
  *
  * Organizes ZDCNode's into a hierarchial view, grouped by parentID & sorted by cloudName.
  */
-extern NSString *const Ext_View_Filesystem_CloudName;
+extern NSString *const Ext_View_Treesystem_CloudName;
 
 /**
  * YapDatabase extension of type: YapDatabaseAutoView <br/>
@@ -147,11 +147,11 @@ extern NSString *const Ext_View_Flat;
 
 /**
  * YapDatabase extension of type: YapDatabaseAutoView <br/>
- * Access via: [transaction ext:Ext_View_Cloud_DirPrefix]
+ * Access via: [transaction ext:Ext_View_CloudNode_DirPrefix]
  *
  * Organizes ZDCCloudNode's into a hierarchial view, grouped by dirPrefix & sorted by cloudName.
  */
-extern NSString *const Ext_View_Cloud_DirPrefix;
+extern NSString *const Ext_View_CloudNode_DirPrefix;
 
 /**
  * YapDatabase extension of type: YapDatabaseAutoView <br/>
@@ -252,7 +252,7 @@ extern NSString *const Index_Users_Column_RandomUUID;
 
 /**
  * For use within:
- * - Ext_View_Cloud_DirPrefix
+ * - Ext_View_CloudNode_DirPrefix
  */
 + (NSString *)groupForLocalUserID:(NSString *)localUserID
                            region:(AWSRegion)region

@@ -72,11 +72,11 @@ static ZDCCloudNodeManager *sharedInstance = nil;
 	
 	YapDatabaseAutoViewTransaction *viewTransaction_cloud_dirPrefix = nil;
 	
-	if ((viewTransaction_cloud_dirPrefix = [transaction ext:Ext_View_Cloud_DirPrefix]))
+	if ((viewTransaction_cloud_dirPrefix = [transaction ext:Ext_View_CloudNode_DirPrefix]))
 	{
 		// Optimal Plan
 		//
-		// The Ext_View_Cloud_DirPrefix is already grouped by dirPrefix & sorted by cloudName.
+		// The Ext_View_CloudNode_DirPrefix is already grouped by dirPrefix & sorted by cloudName.
 		// Which means we can use a binary search algorithm to find it in O(log n).
 		//
 		// Where `n` = Number of S4ClodeNodes for which (due to pre-grouping):
@@ -166,11 +166,11 @@ static ZDCCloudNodeManager *sharedInstance = nil;
 	
 	YapDatabaseAutoViewTransaction *viewTransaction_cloud_dirPrefix = nil;
 	
-	if ((viewTransaction_cloud_dirPrefix = [transaction ext:Ext_View_Cloud_DirPrefix]))
+	if ((viewTransaction_cloud_dirPrefix = [transaction ext:Ext_View_CloudNode_DirPrefix]))
 	{
 		// Optimal Plan
 		//
-		// The Ext_View_Cloud_DirPrefix is already grouped by dirPrefix.
+		// The Ext_View_CloudNode_DirPrefix is already grouped by dirPrefix.
 		
 		NSString *group =
 		  [ZDCDatabaseManager groupForLocalUserID: parent.localUserID
@@ -268,11 +268,11 @@ static ZDCCloudNodeManager *sharedInstance = nil;
 	
 	YapDatabaseAutoViewTransaction *viewTransaction_cloud_dirPrefix = nil;
 	
-	if ((viewTransaction_cloud_dirPrefix = [transaction ext:Ext_View_Cloud_DirPrefix]))
+	if ((viewTransaction_cloud_dirPrefix = [transaction ext:Ext_View_CloudNode_DirPrefix]))
 	{
 		// Optimal Plan
 		//
-		// The Ext_View_Cloud_DirPrefix is already grouped by localUserID.
+		// The Ext_View_CloudNode_DirPrefix is already grouped by localUserID.
 		
 		NSString *prefix = [localUserID stringByAppendingString:@"|"];
 		

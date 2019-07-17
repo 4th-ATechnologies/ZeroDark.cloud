@@ -297,16 +297,16 @@ static ZDCNodeManager *sharedInstance = nil;
 	NSParameterAssert(transaction != nil);
 	NSParameterAssert(enumBlock != nil);
 	
-	YapDatabaseViewTransaction *filesystemViewTransaction = nil;
+	YapDatabaseViewTransaction *treesystemViewTransaction = nil;
 	YapDatabaseViewTransaction *flatViewTransaction = nil;
 	
-	if ((filesystemViewTransaction = [transaction ext:Ext_View_Filesystem_Name]))
+	if ((treesystemViewTransaction = [transaction ext:Ext_View_Treesystem_Name]))
 	{
-		// Use Filesystem View for best performance.
+		// Use Treesystem View for best performance.
 		//
 		// This allows us to directly access only those nodes we're interested in.
 		
-		[filesystemViewTransaction enumerateKeysInGroup:parentID usingBlock:
+		[treesystemViewTransaction enumerateKeysInGroup:parentID usingBlock:
 		    ^(NSString *collection, NSString *key, NSUInteger index, BOOL *stop)
 		{
 			enumBlock(key, stop);
@@ -441,16 +441,16 @@ static ZDCNodeManager *sharedInstance = nil;
 	NSParameterAssert(transaction != nil);
 	NSParameterAssert(enumBlock != nil);
 	
-	YapDatabaseViewTransaction *filesystemViewTransaction = nil;
+	YapDatabaseViewTransaction *treesystemViewTransaction = nil;
 	YapDatabaseViewTransaction *flatViewTransaction = nil;
 	
-	if ((filesystemViewTransaction = [transaction ext:Ext_View_Filesystem_Name]))
+	if ((treesystemViewTransaction = [transaction ext:Ext_View_Treesystem_Name]))
 	{
 		// Use Filesystem View for best performance.
 		//
 		// This allows us to directly access only those nodes we're interested in.
 		
-		[filesystemViewTransaction enumerateKeysAndObjectsInGroup:parentID usingBlock:
+		[treesystemViewTransaction enumerateKeysAndObjectsInGroup:parentID usingBlock:
 		    ^(NSString *collection, NSString *key, id object, NSUInteger index, BOOL *stop)
 		{
 			enumBlock((ZDCNode *)object, stop);
@@ -617,14 +617,14 @@ static ZDCNodeManager *sharedInstance = nil;
 	if (nodeName == nil) return nil;
 	if (parentID == nil) return nil;
     
-    __block ZDCNode *matchingNode = nil;
+	__block ZDCNode *matchingNode = nil;
     
-    YapDatabaseAutoViewTransaction *filesystemViewTransaction = nil;
-    YapDatabaseAutoViewTransaction *flatViewTransaction = nil;
+	YapDatabaseAutoViewTransaction *treesystemViewTransaction = nil;
+	YapDatabaseAutoViewTransaction *flatViewTransaction = nil;
     
-	if ((filesystemViewTransaction = [transaction ext:Ext_View_Filesystem_Name]))
+	if ((treesystemViewTransaction = [transaction ext:Ext_View_Treesystem_Name]))
 	{
-		// Use Filesystem View for best performance.
+		// Use Treesystem View for best performance.
 		//
 		// The Ext_View_Filesystem already has the nodes sorted by name (for each parentID).
 		// Which means we can use a binary search algorithm to find it in O(log n).
@@ -658,11 +658,11 @@ static ZDCNodeManager *sharedInstance = nil;
 		}];
 		
 		// binary search performance !!!
-		NSUInteger index = [filesystemViewTransaction findFirstMatchInGroup:parentID using:find];
+		NSUInteger index = [treesystemViewTransaction findFirstMatchInGroup:parentID using:find];
 		
 		if (index != NSNotFound)
 		{
-			matchingNode = [filesystemViewTransaction objectAtIndex:index inGroup:parentID];
+			matchingNode = [treesystemViewTransaction objectAtIndex:index inGroup:parentID];
 		}
 	}
 	else if ((flatViewTransaction = [transaction ext:Ext_View_Flat]))
@@ -804,12 +804,12 @@ static ZDCNodeManager *sharedInstance = nil;
 	
 	__block ZDCNode *matchingNode = nil;
 	
-	YapDatabaseAutoViewTransaction *filesystemViewTransaction = nil;
+	YapDatabaseAutoViewTransaction *treesystemViewTransaction = nil;
 	YapDatabaseAutoViewTransaction *flatViewTransaction = nil;
 	
-	if ((filesystemViewTransaction = [transaction ext:Ext_View_Filesystem_CloudName]))
+	if ((treesystemViewTransaction = [transaction ext:Ext_View_Treesystem_CloudName]))
 	{
-		// Use Filesystem View for best performance.
+		// Use Treesystem View for best performance.
 		//
 		// The view already has the nodes sorted by cloudName (for each parentID).
 		// Which means we can use a binary search algorithm to find it in O(log n).
@@ -841,11 +841,11 @@ static ZDCNodeManager *sharedInstance = nil;
 		}];
 		
 		// binary search performance !!!
-		NSUInteger index = [filesystemViewTransaction findFirstMatchInGroup:parentID using:find];
+		NSUInteger index = [treesystemViewTransaction findFirstMatchInGroup:parentID using:find];
 		
 		if (index != NSNotFound)
 		{
-			matchingNode = [filesystemViewTransaction objectAtIndex:index inGroup:parentID];
+			matchingNode = [treesystemViewTransaction objectAtIndex:index inGroup:parentID];
 		}
 	}
 	else if ((flatViewTransaction = [transaction ext:Ext_View_Flat]))

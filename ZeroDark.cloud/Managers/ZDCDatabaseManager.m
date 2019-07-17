@@ -34,14 +34,15 @@ NSString *const Ext_Relationship              = @"ZeroDark:graph";
 NSString *const Ext_Index_Nodes               = @"ZeroDark:idx_nodes";
 NSString *const Ext_Index_Users               = @"ZeroDark:idx_users";
 NSString *const Ext_View_LocalUsers           = @"ZeroDark:localUsers";
-NSString *const Ext_View_Filesystem_Name      = @"ZeroDark:fsName";
-NSString *const Ext_View_Filesystem_CloudName = @"ZeroDark:fsCloudName";
+NSString *const Ext_View_Treesystem_Name      = @"ZeroDark:fsName";
+NSString *const Ext_View_Treesystem_CloudName = @"ZeroDark:fsCloudName";
 NSString *const Ext_View_Flat                 = @"ZeroDark:flat";
-NSString *const Ext_View_Cloud_DirPrefix      = @"ZeroDark:fsCloudDirPrefix";
-NSString *const Ext_CloudCore_Prefix          = @"ZeroDark:cloud_";
-NSString *const Ext_ActionManager             = @"ZeroDark:action";
+NSString *const Ext_View_CloudNode_DirPrefix  = @"ZeroDark:fsCloudDirPrefix";
 NSString *const Ext_View_SplitKeys            = @"ZeroDark:splitKeys";
 NSString *const Ext_View_SplitKeys_Date  		 = @"ZeroDark:splitKeys.createDate";
+NSString *const Ext_CloudCore_Prefix          = @"ZeroDark:cloud_";
+NSString *const Ext_ActionManager             = @"ZeroDark:action";
+
 
 
 NSString *const Index_Nodes_Column_CloudID    = @"cloudID";
@@ -655,7 +656,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	                                     versionTag:versionTag
 	                                        options:options];
 	
-	NSString *const extName = Ext_View_Filesystem_Name;
+	NSString *const extName = Ext_View_Treesystem_Name;
 	[database asyncRegisterExtension:ext
 	                        withName:extName
 	                 completionQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
@@ -747,7 +748,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	                                     versionTag: versionTag
 	                                        options: options];
 	
-	NSString *const extName = Ext_View_Filesystem_CloudName;
+	NSString *const extName = Ext_View_Treesystem_CloudName;
 	[database asyncRegisterExtension: ext
 	                        withName: extName
 	                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
@@ -911,7 +912,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	                                     versionTag:version
 	                                        options:options];
 	
-	NSString *const extName = Ext_View_Cloud_DirPrefix;
+	NSString *const extName = Ext_View_CloudNode_DirPrefix;
 	[database asyncRegisterExtension:ext
 	                        withName:extName
 	                 completionQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
@@ -1163,7 +1164,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 
 /**
  * For use within:
- * - Ext_View_Cloud_DirPrefix
+ * - Ext_View_CloudNode_DirPrefix
  */
 + (NSString *)groupForLocalUserID:(NSString *)localUserID
                            region:(AWSRegion)region
