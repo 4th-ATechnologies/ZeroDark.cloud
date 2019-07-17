@@ -36,7 +36,6 @@ custom_categories:
 - name: Model
   children:
   - ZDCCloudDataInfo
-  - ZDCContainerNode
   - ZDCLocalUser
   - ZDCLocalUserAuth
   - ZDCNode
@@ -45,6 +44,7 @@ custom_categories:
   - ZDCShareItem
   - ZDCShareList
   - ZDCSymmetricKey
+  - ZDCTrunkNode
   - ZDCUser
 - name: File & Streams
   children:

@@ -18,7 +18,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- * The ZeroDark.cloud framework encrypts node-names and paths before storing them in the cloud.
+ * The ZeroDark.cloud framework encrypts node-names before storing them in the cloud.
  * This is to maintain zero-knowledge, and protect the customer in situations
  * where the node-names themselves may reveal sensitive information.
  *
@@ -27,31 +27,33 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * Here's the high-level overview:
  *
- * 0. All files are stored in AWS S3.
- *    It should be noted that S3 is NOT a filesystem - it's actually a key value store.
+ * 1. All files are stored in AWS S3.<br/>
+ *    It should be noted that S3 is NOT a filesystem - it's actually a key/value store.
  *    So each treepath needs to get translated to a string that uniquely identifies it.
- *    This string is called the "key" in S3.
- *    And keys in S3 also have certain restrictions, such as a max length of 1024.
+ *    This string is called the "key" in S3 parlance.
+ *    And keys in S3 have certain restrictions, such as a max length of 1024.
  *
- * 1. The mapping from (cleartext) treepath to (encrypted) S3 key is achieved like so:
- *    Cleartext filepath: /foo/bar
- *    Encrypted S3 key:
- *    com.company.app/F8622C33B26C43C7B7DB3A6B26C60057/58fidhxeyyfzgp73hgefpr956jaxa6xs.rcrd
- *    <    zAppID   >/<          dirPrefix           >/<        hasedNodeName         >.ext
+ * 2. ZeroDark maps from (cleartext) treepath to (encrypted) S3 key.<br/>
+ *    This mapping is done to ensure the server cannot read node names. Here's an example
+ *    - Treepath: /foo/bar
+ *    - S3 key: com.company.app/F8622C33B26C43C7B7DB3A6B26C60057/58fidhxeyyfzgp73hgefpr956jaxa6xs.rcrd
  *
- * 2. The first level is the app container.
+ *    The S3 key components are: **{zAppID}/{dirPrefix}/{hasedNodeName}.ext**
+ *
+ * 3. The first path component is the app container.<br/>
  *    Your company may create multiple applications.
  *    So each application gets its own container.
  *
- * 3. Next, every node that has children has something called a "dirPrefix".
- *    The dirPrefix is a UUID string - 32 characters of hexadecimal.
+ * 4. The second path component is called the dirPrefix.<br/>
+ *    A dirPrefix is a UUID - 32 characters of hexadecimal.
  *    For example: "F8622C33B26C43C7B7DB3A6B26C60057"
- *    Every direct child of this node will include the dirPrefix within its key.
+ *    Every parent node registers a dirPrefix.
+ *    And every direct child of the parent node will use this dirPrefix within its key.
  *
- * 4. Similar to a filesystem, each node must have a name.
- *    And the name must be unique within its parent (case-insensitive).
- *    To generate the hashedNodeName, the framework hashes the cleartext name,
- *    combined with the parent directory's salt.
+ * 5. The last path component is the encrypted name.<br/>
+ *    To generate the hashedNodeName, the framework hashes the (cleartext) node name
+ *    (e.g. "Secret coca-cola formula.txt"), combined with the parent directory's salt.
+ *    Thus 2 nodes with the same name, but different parents, will have a different hashedNodeName.
  */
 @interface ZDCCloudPathManager : NSObject
 
@@ -65,7 +67,7 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * - AWS region
  * - AWS bucket
- * - cloudPath (AWS S3 keyPath) (encrypted version of cleartext nodeName)
+ * - cloudPath (AWS S3 keyPath) (encrypted version of cleartext treepath)
  *
  * @param node
  *   The node for which to calculate the cloudLocator.
@@ -81,7 +83,7 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * - AWS region
  * - AWS bucket
- * - cloudPath (AWS S3 keyPath) (encrypted version of cleartext nodeName)
+ * - cloudPath (AWS S3 keyPath) (encrypted version of cleartext treepath)
  *
  * @param node
  *   The node for which to calculate the cloudLocator.
@@ -99,7 +101,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Returns the cloudPath for the node.
- * The cloudPath is the AWS S3 keyPath, which is the encrypted version of the cleartext node-name.
+ * The cloudPath is the AWS S3 keyPath, which is the encrypted version of the cleartext treepath.
  *
  * A cloudPath has the general format: "{zAppID}/{dirPrefix}/{hashedNodeName}.{ext}"
  *
@@ -114,7 +116,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Returns the cloud path for the node.
- * The cloudPath is the AWS S3 keyPath, which is the encrypted version of the cleartext node-name.
+ * The cloudPath is the AWS S3 keyPath, which is the encrypted version of the cleartext treepath.
  *
  * A cloudPath has the general format: "{zAppID}/{dirPrefix}/{hashedNodeName}.{ext}"
  *
