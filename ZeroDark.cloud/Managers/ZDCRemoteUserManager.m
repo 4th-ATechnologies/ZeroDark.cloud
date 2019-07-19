@@ -37,6 +37,7 @@
 {
 	__weak ZeroDarkCloud *owner;
 	
+	YapDatabaseConnection *internalDatabaseConnection;
 	ZDCAsyncCompletionDispatch *asyncCompletionDispatch;
 }
 
@@ -51,6 +52,12 @@
 	{
 		owner = inOwner;
 		
+		// Todo:
+		// - create shared internalDatabaseConnection
+		// - make it read-only
+		//
+		internalDatabaseConnection = [owner.databaseManager.database newConnection];
+		
 		asyncCompletionDispatch = [[ZDCAsyncCompletionDispatch alloc] init];
 	}
 	return self;
@@ -58,8 +65,79 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRemoteUserManager.html
  */
-- (void)createRemoteUserWithID:(NSString *)inRemoteUserID
+- (void)fetchRemoteUserWithID:(NSString *)remoteUserID
+                  requesterID:(NSString *)localUserID
+              completionQueue:(nullable dispatch_queue_t)completionQueue
+              completionBlock:(nullable void (^)(ZDCUser *remoteUser, NSError *error))completionBlock
+{
+	DDLogAutoTrace();
+	
+	NSParameterAssert(remoteUserID != nil);
+	NSParameterAssert(localUserID != nil);
+	
+	remoteUserID = [remoteUserID copy];
+	localUserID = [localUserID copy];
+	
+	// Convert from any random anonymous userID to the standardized anonymous userID that
+	// we use for the ZDCUser in the database.
+	//
+	// For example:
+	// "1ymbquw673gttwpb" => "anonymoususerid1"
+	//
+	if ([ZDCUser isAnonymousID:remoteUserID])
+	{
+		remoteUserID = kZDCAnonymousUserID;
+	}
+	
+	__block ZDCUser *user = nil;
+	__weak typeof(self) weakSelf = self;
+	
+	[internalDatabaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
+		
+		user = [transaction objectForKey:remoteUserID inCollection:kZDCCollection_Users];
+		
+	} completionQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) completionBlock:^{
+		
+		BOOL needsDownload = NO;
+		BOOL needsRefresh = NO;
+		
+		if (user)
+		{
+			if (completionBlock)
+			{
+				dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+					completionBlock(user, nil);
+				}});
+			}
+			
+			// Todo: add logic for needsRefresh
+		}
+		else
+		{
+			needsDownload = YES;
+		}
+		
+		if (needsDownload || needsRefresh)
+		{
+			[weakSelf _fetchRemoteUserWithID: remoteUserID
+			                     requesterID: localUserID
+			                 completionQueue: completionQueue
+			                 completionBlock: completionBlock];
+		}
+	}];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Download Control
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Internal method that handles the download flow.
+ */
+- (void)_fetchRemoteUserWithID:(NSString *)inRemoteUserID
                    requesterID:(NSString *)inLocalUserID
                completionQueue:(nullable dispatch_queue_t)inCompletionQueue
                completionBlock:(nullable void (^)(ZDCUser *remoteUser, NSError *error))inCompletionBlock
@@ -291,7 +369,9 @@
 	}
 }
 
-
+/**
+ * Internal method that handles the download flow.
+ */
 - (void)fetchPublicKeyForRemoteUserID:(NSString *)inRemoteUserID
                           requesterID:(NSString *)inLocalUserID
                       completionQueue:(dispatch_queue_t)inCompletionQueue

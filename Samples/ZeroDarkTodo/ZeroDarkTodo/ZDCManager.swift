@@ -65,11 +65,14 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		
 		if zdc.isDatabaseUnlocked {
 			self.downloadMissingOrOutdatedNodes()
+			self.autoAcceptInvitations()
 			
-			zdc.reachability.setReachabilityStatusChange { (status: AFNetworkReachabilityStatus) in
+			zdc.reachability.setReachabilityStatusChange {[weak self] (status: AFNetworkReachabilityStatus) in
 				
 				if status == .reachableViaWiFi || status == .reachableViaWWAN {
-					self.downloadMissingOrOutdatedNodes()
+					
+					self?.downloadMissingOrOutdatedNodes()
+					self?.autoAcceptInvitations()
 				}
 			}
 		}
@@ -1313,8 +1316,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			let databaseManager = zdc.databaseManager
 		else {
 				
-				// Don't call this method until the database has been unlocked
-				return
+			// Don't call this method until the database has been unlocked
+			return
 		}
 		
 		databaseManager.roDatabaseConnection.asyncRead { (transaction) in
@@ -1336,6 +1339,44 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					self.downloadNode(withNodeID: nodeID, transaction: transaction)
 				}
 			})
+		}
+	}
+	
+	private func autoAcceptInvitations() {
+		
+		guard
+			let zdc = self.zdc,
+			let databaseManager = zdc.databaseManager
+		else {
+			
+			// Don't call this method until the database has been unlocked
+			return
+		}
+		
+		var pendingInvitations: [Invitation] = []
+		databaseManager.roDatabaseConnection.asyncRead { (transaction) in
+			
+			transaction.enumerateKeysAndObjects(inCollection: kZ2DCollection_Invitation,
+			                                           using:
+			{ (listID: String, object: Any, stop) in
+				
+				if let invitation = object as? Invitation {
+					pendingInvitations.append(invitation)
+				}
+			})
+		}
+		
+		for invitation in pendingInvitations {
+			
+			zdc.remoteUserManager!.fetchRemoteUser(withID: invitation.senderID,
+			                                  requesterID: invitation.receiverID,
+			                              completionQueue: DispatchQueue.global())
+			{ (user: ZDCUser?, error) in
+				
+				if (user != nil) {
+					self.acceptInvitation(invitation, usingLocalListTitle: invitation.listName)
+				}
+			}
 		}
 	}
 	
@@ -1615,6 +1656,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		
 		print("processDownloadedInvitation")
 		
+		var downloadedInvitation: Invitation? = nil
+		
 		let zdc = self.zdc!
 		let rwConnection = zdc.databaseManager!.rwDatabaseConnection
 		rwConnection.asyncReadWrite({ (transaction) in
@@ -1628,7 +1671,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			cloudTransaction.unmarkNodeAsNeedsDownload(nodeID, components: .all, ifETagMatches: eTag)
 			
-			var downloadedInvitation: Invitation!
 			do {
 				// Attempt to create an Invitation instance from the downloaded data.
 				// This could fail if:
@@ -1643,9 +1685,47 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				return
 			}
 			
-			transaction.setObject(downloadedInvitation,
-			               forKey: downloadedInvitation.uuid,
+			// Store the new Invitation object in the database.
+			//
+			// YapDatabase is a collection/key/value store.
+			// We store all Invitation objects in the same collection: kZ2DCollection_Invitation
+			// And every invitation has a uuid, which we use as the key in the database.
+			//
+			// Wondering how the object gets serialized / deserialized ?
+			// The Invitation object supports the Swift Codable protocol.
+			
+			transaction.setObject( downloadedInvitation!,
+			               forKey: downloadedInvitation!.uuid,
 			         inCollection: kZ2DCollection_Invitation)
+			
+			// Link the Invitation to the Node
+			//
+			do {
+				try cloudTransaction.linkNodeID( nodeID,
+				                          toKey: downloadedInvitation!.uuid,
+				                   inCollection: kZ2DCollection_Task)
+				
+			} catch {
+				print("Error linking node to invitation: \(error)")
+			}
+			
+		}, completionBlock:{
+			
+			// For testing purposes, we're automatically going to accept the invitation.
+			//
+			if let invitation = downloadedInvitation {
+				
+				zdc.remoteUserManager!.fetchRemoteUser(withID: invitation.senderID,
+				                                  requesterID: invitation.receiverID,
+				                              completionQueue: DispatchQueue.global(qos: .default),
+				                              completionBlock:
+				{(user: ZDCUser?, error) in
+					
+					if (user != nil) {
+						self.acceptInvitation(invitation, usingLocalListTitle: invitation.listName)
+					}
+				})
+			}
 		})
 	}
 	
@@ -1710,27 +1790,9 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			transaction.touchObject(forKey: listID, inCollection: kZ2DCollection_List)
 			
-			// Send a message to the user(s) we added.
+			// Next we need to send an invitation to the user(s) we added.
 			
 		#if true
-			//
-			// Send invitation as a signal
-			//
-			for addedUserID in newUsers {
-				
-				if let user = transaction.object(forKey: addedUserID, inCollection: kZDCCollection_Users) as? ZDCUser {
-					
-					do {
-						let signal = try cloudTransaction.sendSignal(toRecipient: user)
-						cloudTransaction.setTag(listID, forNodeID: signal.uuid, withIdentifier: "listID")
-					}
-					catch {
-						print("Error sending message: \(error)")
-					}
-				}
-			}
-			
-		#else
 			//
 			// Send invitation as a message
 			//
@@ -1753,7 +1815,111 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				}
 			}
 			
+		#else
+			//
+			// Send invitation as a signal (testing code paths)
+			//
+			for addedUserID in newUsers {
+				
+				if let user = transaction.object(forKey: addedUserID, inCollection: kZDCCollection_Users) as? ZDCUser {
+					
+					do {
+						let signal = try cloudTransaction.sendSignal(toRecipient: user)
+						cloudTransaction.setTag(listID, forNodeID: signal.uuid, withIdentifier: "listID")
+					}
+					catch {
+						print("Error sending message: \(error)")
+					}
+				}
+			}
+			
 		#endif
+		})
+	}
+	
+	public func acceptInvitation(_ invitation: Invitation, usingLocalListTitle title: String) {
+		
+		let zdc = self.zdc!
+		let rwConnection = zdc.databaseManager!.rwDatabaseConnection
+		rwConnection.asyncReadWrite({ (transaction) in
+			
+			guard
+				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: invitation.receiverID),
+				let sender = transaction.object(forKey: invitation.senderID, inCollection: kZDCCollection_Users) as? ZDCUser,
+				let cloudPath = ZDCCloudPath.init(fromPath: invitation.cloudPath)
+			else {
+				return
+			}
+			
+			// Step 1:
+			//
+			// We're going to "graft" the remote user's List into our treesystem.
+			// You can visualize this like so:
+			//
+			// (localUser)     (remoteUser)
+			//      |                |
+			//    (home)          (home)
+			//     /  \            /  \
+			//   (A)  (B)=======>(C)  (D)
+			//                   /|\
+			//                  / | \
+			//                (1)(2)(3)
+			//
+			// So we're grafting List (C) into our own treesystem.
+			// And this will allow us to see Todo items (1), (2) & (3).
+			
+			let path = ZDCTreesystemPath(pathComponents: [title], trunk: .home)
+			
+			let node: ZDCNode!
+			do {
+				node = try cloudTransaction.graftNode(withLocalPath: path,
+			                                            remotePath: cloudPath,
+			                                            remoteUser: sender)
+			}
+			catch {
+				print("Error grafting node: \(error)")
+				return
+			}
+			
+			// Step 2:
+			//
+			// Create the corresponding List item.
+			
+			let list = List(localUserID: invitation.receiverID, title: title)
+			
+			transaction.setObject(list, forKey: list.uuid, inCollection: kZ2DCollection_List)
+			
+			// Step 3:
+			//
+			// Link our List with the node.
+			//
+			// This is just a convenience. It provides a persistent mapping between the 2 items.
+			// And allows us to quickly lookup the List given the node. Or vice-versa.
+			
+			do {
+				try cloudTransaction.linkNodeID(node.uuid, toKey: list.uuid, inCollection: kZ2DCollection_List)
+			} catch {
+				print("Error linking node: \(error)")
+			}
+			
+			// Step 4:
+			//
+			// We can now delete the invitation message from the cloud.
+			
+			if let invitationNode = cloudTransaction.linkedNode(forKey: invitation.uuid, inCollection: kZ2DCollection_Invitation) {
+				
+				do {
+					try cloudTransaction.delete(invitationNode)
+				} catch {
+					print("Error deleting node: \(error)")
+				}
+			}
+			
+			// Step 5:
+			//
+			// And we can delete the parsed Invitation object from the database.
+			
+			transaction.removeObject(forKey: invitation.uuid, inCollection: kZ2DCollection_Invitation)
 		})
 	}
 	

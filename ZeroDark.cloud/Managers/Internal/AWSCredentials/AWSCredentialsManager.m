@@ -1,4 +1,4 @@
-#import "AWSCredentialsManagerPrivate.h"
+#import "AWSCredentialsManager.h"
 
 #import "AWSDate.h"
 #import "ZDCConstants.h"
@@ -483,14 +483,18 @@
 
 - (NSError *)missingInvalidUserError
 {
-	NSString *description = @"No matching S4LocalUserAuth for userID.";
-	return [NSError errorWithClass:[self class] code:S4MissingInvalidUser description:description];
+	NSString *description = @"No matching ZDCLocalUserAuth for userID.";
+	return [NSError errorWithClass: [self class]
+	                          code: AWSCredentialsErrorCode_MissingInvalidUser
+	                   description: description];
 }
 
 - (NSError *)noRefreshTokensError
 {
-	NSString *description = @"S4LocalUserAuth has no valid auth0_refreshToken.";
-	return [NSError errorWithClass:[self class] code:S4NoRefreshTokens description:description];
+	NSString *description = @"ZDCLocalUserAuth has no valid auth0_refreshToken.";
+	return [NSError errorWithClass: [self class]
+	                          code: AWSCredentialsErrorCode_NoRefreshTokens
+	                   description: description];
 }
 
 @end

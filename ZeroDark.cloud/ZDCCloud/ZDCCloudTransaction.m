@@ -70,6 +70,11 @@
 	return [NSString stringWithFormat:@"%@|%@|signal", [self localUserID], [self zAppID]];
 }
 
+- (NSString *)graftParentID
+{
+	return [NSString stringWithFormat:@"%@|%@|graft", [self localUserID], [self zAppID]];
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Messaging
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -406,8 +411,6 @@
 		return nil;
 	}
 	
-	NSString *localUserID = [self localUserID];
-	
 	ZDCNode *parentNode = [self nodeWithPath:[path parentPath]];
 	if (parentNode == nil)
 	{
@@ -434,6 +437,8 @@
 		if (outError) *outError = error;
 		return nil;
 	}
+	
+	NSString *localUserID = [self localUserID];
 	
 	ZDCNode *node = [[ZDCNode alloc] initWithLocalUserID:localUserID];
 	node.parentID = parentNode.uuid;
@@ -1008,6 +1013,138 @@
 	
 	if (outError) *outError = nil;
 	return YES;
+}
+
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (nullable ZDCNode *)graftNodeWithLocalPath:(ZDCTreesystemPath *)path
+                                  remotePath:(ZDCCloudPath *)remotePath
+                                  remoteUser:(ZDCUser *)remoteUser
+                                       error:(NSError *_Nullable *_Nullable)outError
+{
+	DDLogAutoTrace();
+	
+	// Proper API usage check
+	if (![databaseTransaction isKindOfClass:[YapDatabaseReadWriteTransaction class]])
+	{
+		// Improper database API usage.
+		// All other YapDatabase extensions throw an exception when this occurs.
+		// Following recommended pattern here.
+		@throw [self requiresReadWriteTransactionException:NSStringFromSelector(_cmd)];
+	}
+	YapDatabaseReadWriteTransaction *rwTransaction = (YapDatabaseReadWriteTransaction *)databaseTransaction;
+	
+	if (path.pathComponents.count == 0)
+	{
+		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
+		NSString *desc = @"Invalid parameter: the given path is invalid";
+		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
+		
+		if (outError) *outError = error;
+		return nil;
+	}
+	
+	ZDCNode *parentNode = [self nodeWithPath:[path parentPath]];
+	if (parentNode == nil)
+	{
+		ZDCCloudErrorCode code = ZDCCloudErrorCode_MissingParent;
+		NSString *desc = @"One or more parents leading up to the given path do not exist.";
+		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
+		
+		if (outError) *outError = error;
+		return nil;
+	}
+	
+	NSString *nodeName = [path.pathComponents lastObject];
+	ZDCNode *existingNode =
+	  [[ZDCNodeManager sharedInstance] findNodeWithName: nodeName
+	                                           parentID: parentNode.uuid
+	                                        transaction: databaseTransaction];
+	
+	if (existingNode)
+	{
+		ZDCCloudErrorCode code = ZDCCloudErrorCode_Conflict;
+		NSString *desc = @"There is already an existing node at the given path.";
+		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
+		
+		if (outError) *outError = error;
+		return nil;
+	}
+	
+	if (remotePath == nil)
+	{
+		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
+		NSString *desc = @"Invalid parameter: remotePath is nil";
+		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
+		
+		if (outError) *outError = error;
+		return nil;
+	}
+	
+	if (remoteUser == nil)
+	{
+		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
+		NSString *desc = @"Invalid parameter: remoteUser is nil";
+		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
+		
+		if (outError) *outError = error;
+		return nil;
+	}
+	
+	NSString *localUserID = [self localUserID];
+	NSString *zAppID = [self zAppID];
+	
+	if ([remoteUser.uuid isEqualToString:localUserID])
+	{
+		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
+		NSString *desc = @"Invalid parameter: you cannot graft your own treesystem";
+		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
+		
+		if (outError) *outError = error;
+		return nil;
+	}
+	
+	ZDCNode *pointeeNode =
+	  [[ZDCNodeManager sharedInstance] findNodeWithCloudPath: remotePath
+	                                                  bucket: remoteUser.aws_bucket
+	                                                  region: remoteUser.aws_region
+	                                             localUserID: localUserID
+	                                                  zAppID: zAppID
+	                                             transaction: rwTransaction];
+	
+	if (pointeeNode == nil)
+	{
+		pointeeNode = [[ZDCNode alloc] initWithLocalUserID:localUserID];
+		pointeeNode.parentID = [self graftParentID];
+		
+		NSString *cloudName = [remotePath fileNameWithExt:nil];
+		pointeeNode.name = cloudName;
+		pointeeNode.explicitCloudName = cloudName;
+		
+		pointeeNode.anchor =
+		  [[ZDCNodeAnchor alloc] initWithUserID: remoteUser.uuid
+		                                 zAppID: remotePath.zAppID
+		                              dirPrefix: remotePath.dirPrefix];
+	}
+	
+	ZDCNode *pointerNode = [[ZDCNode alloc] initWithLocalUserID:localUserID];
+	pointerNode.parentID = parentNode.uuid;
+	pointerNode.name = nodeName;
+	pointerNode.pointeeID = pointeeNode.uuid;
+	
+	[[ZDCNodeManager sharedInstance] resetPermissionsForNode:pointerNode transaction:rwTransaction];
+	
+	[rwTransaction setObject: pointerNode
+	                  forKey: pointerNode.uuid
+	            inCollection: kZDCCollection_Nodes];
+	
+	[self queuePutOpsForNode:pointerNode];
+	
+	if (outError) *outError = nil;
+	return pointerNode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

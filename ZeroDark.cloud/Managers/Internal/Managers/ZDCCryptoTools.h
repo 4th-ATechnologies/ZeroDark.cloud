@@ -10,6 +10,8 @@
 #import <Foundation/Foundation.h>
 #import <YapDatabase/YapDatabase.h>
 
+#import "ZeroDarkCloud.h"
+
 #import "ZDCCloudRcrd.h"
 #import "ZDCLocalUser.h"
 #import "ZDCPublicKey.h"
@@ -22,6 +24,11 @@ NS_ASSUME_NONNULL_BEGIN
  * Common crypto routines used throughout the framework.
  */
 @interface ZDCCryptoTools : NSObject
+
+/**
+ * Standard initialization from ZeroDarkCloud, called during database unlock.
+ */
+- (instancetype)initWithOwner:(ZeroDarkCloud *)owner;
 
 /**
  * Encrypts the given key using the public key.

@@ -47,6 +47,7 @@ NSString *const Ext_ActionManager             = @"ZeroDark:action";
 
 NSString *const Index_Nodes_Column_CloudID    = @"cloudID";
 NSString *const Index_Nodes_Column_DirPrefix  = @"dirPrefix";
+NSString *const Index_Nodes_Column_PointeeID  = @"pointeeID";
 
 NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 
@@ -420,10 +421,12 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	// Indexes the following:
 	// - ZDCNode.cloudID
 	// - ZDCNode.dirPrefix
+	// - ZDCNode.pointeeID
 	
 	YapDatabaseSecondaryIndexSetup *setup = [[YapDatabaseSecondaryIndexSetup alloc] init];
 	[setup addColumn:Index_Nodes_Column_CloudID   withType:YapDatabaseSecondaryIndexTypeText];
 	[setup addColumn:Index_Nodes_Column_DirPrefix withType:YapDatabaseSecondaryIndexTypeText];
+	[setup addColumn:Index_Nodes_Column_PointeeID withType:YapDatabaseSecondaryIndexTypeText];
 	
 	YapDatabaseSecondaryIndexHandler *handler = [YapDatabaseSecondaryIndexHandler withObjectBlock:
 	    ^(YapDatabaseReadTransaction *transaction, NSMutableDictionary *dict,
@@ -434,9 +437,10 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		
 		dict[Index_Nodes_Column_CloudID] = node.cloudID;
 		dict[Index_Nodes_Column_DirPrefix] = node.dirPrefix;
+		dict[Index_Nodes_Column_PointeeID] = node.pointeeID;
 	}];
 	
-	NSString *const versionTag = @"2018-03-09"; // <-- change me if you modify handler block
+	NSString *const versionTag = @"2019-07-17"; // <-- change me if you modify handler block
 	
 	NSSet *whitelist = [NSSet setWithObject:kZDCCollection_Nodes];
 	

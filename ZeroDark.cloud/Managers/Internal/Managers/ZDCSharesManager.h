@@ -7,11 +7,23 @@
  * API Reference : https://4th-atechnologies.github.io/ZeroDark.cloud/
 **/
 
-#import "AWSCredentialsManager.h"
 #import "ZeroDarkCloud.h"
 
-@interface AWSCredentialsManager ()
+@class ZDCLocalUser;
+@class ZDCSplitKey;
 
+NS_ASSUME_NONNULL_BEGIN
+
+@interface ZDCSharesManager : NSObject
+
+/**
+ * Standard initialization from ZeroDarkCloud, called during database unlock.
+ */
 - (instancetype)initWithOwner:(ZeroDarkCloud *)owner;
 
+- (ZDCSplitKey *)splitKeyForLocalUserID:(NSString *)localUserID
+                           withSplitNum:(NSUInteger)splitNum;
+
 @end
+
+NS_ASSUME_NONNULL_END

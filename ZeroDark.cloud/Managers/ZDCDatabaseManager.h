@@ -172,6 +172,9 @@ extern NSString *const Index_Nodes_Column_CloudID;
 /** Secondary Index column name for: `Ext_Index_Nodes` */
 extern NSString *const Index_Nodes_Column_DirPrefix;
 
+/** Secondary Index column name for: `Ext_Index_Nodes` */
+extern NSString *const Index_Nodes_Column_PointeeID;
+
 /** Secondary Index column name for: `Ext_Index_Users` */
 extern NSString *const Index_Users_Column_RandomUUID;
 

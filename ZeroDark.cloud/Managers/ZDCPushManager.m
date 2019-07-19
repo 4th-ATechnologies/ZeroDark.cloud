@@ -8360,10 +8360,10 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	{
 		[pipeline setHoldDate:distantFuture forOperationWithUUID:opUUID context:ctx];
 		
-		[remoteUserManager createRemoteUserWithID: userID
-		                              requesterID: operation.localUserID
-		                          completionQueue: concurrentQueue
-		                          completionBlock:^(ZDCUser *remoteUser, NSError *error)
+		[remoteUserManager fetchRemoteUserWithID: userID
+		                             requesterID: operation.localUserID
+		                         completionQueue: concurrentQueue
+		                         completionBlock:^(ZDCUser *remoteUser, NSError *error)
 		{
 			[pipeline setHoldDate:nil forOperationWithUUID:opUUID context:ctx];
 		}];

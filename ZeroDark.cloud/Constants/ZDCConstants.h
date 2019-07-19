@@ -266,35 +266,23 @@ extern NSString *const kZDCCloudRcrd_Children_Prefix;
 
 /** Key name used within RCRD file stored in the cloud.
     This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
-extern NSString *const kZDCCloudRcrd_Meta_Type;
-
-/** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Meta_Filename;
 
 /** Key name used within RCRD file stored in the cloud.
     This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
-extern NSString *const kZDCCloudRcrd_Meta_DirSalt; // if (type == "directory")
+extern NSString *const kZDCCloudRcrd_Meta_DirSalt;
 
 /** Key name used within RCRD file stored in the cloud.
     This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
-extern NSString *const kZDCCloudRcrd_Meta_OwnerID; // if (type == "share")
+extern NSString *const kZDCCloudRcrd_Meta_Pointer;
 
 /** Key name used within RCRD file stored in the cloud.
     This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
-extern NSString *const kZDCCloudRcrd_Meta_Path;    // if (type == "share")
+extern NSString *const kZDCCloudRcrd_Meta_Pointer_Owner;
 
 /** Key name used within RCRD file stored in the cloud.
     This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
-extern NSString *const kZDCCloudRcrd_Meta_FileID;  // if (type == "share")
-
-/** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
-extern NSString *const kZDCCloudRcrd_Meta_Type_Directory;
-
-/** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
-extern NSString *const kZDCCloudRcrd_Meta_Type_Share;
+extern NSString *const kZDCCloudRcrd_Meta_Pointer_Path;
 
 //
 // Dictionary keys used in .pubKey/.privKey files

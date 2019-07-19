@@ -32,7 +32,6 @@ extern NSString *const ZDCLocalPreferencesChanged_UserInfo_Key;
  *
  * @note Local preferences implies preferences meant for this device only.
  *       This class isn't designed for sync.
- *       If you want preferences to sync across devices, use `ZDCSyncedPreferences`.
  *
  * This class has several benefits over NSUserDefaults.
  *

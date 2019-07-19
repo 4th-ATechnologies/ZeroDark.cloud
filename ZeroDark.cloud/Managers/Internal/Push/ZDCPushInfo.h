@@ -15,7 +15,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- * Parses the dictionary from a remote push notification.
+ * Used for parsing the received dictionary from a remote push notification.
  */
 @interface ZDCPushInfo : NSObject
 

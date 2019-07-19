@@ -725,10 +725,10 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
         dispatch_queue_t concurrentQueue
         = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
         
-        [owner.remoteUserManager createRemoteUserWithID: remoteUserID
-                                            requesterID: localUserID
-                                        completionQueue: concurrentQueue
-                                        completionBlock:^(ZDCUser *remoteUser, NSError *error)
+        [owner.remoteUserManager fetchRemoteUserWithID: remoteUserID
+                                           requesterID: localUserID
+                                       completionQueue: concurrentQueue
+                                       completionBlock:^(ZDCUser *remoteUser, NSError *error)
          {
              
              dispatch_async(dispatch_get_main_queue(), ^{ @autoreleasepool {

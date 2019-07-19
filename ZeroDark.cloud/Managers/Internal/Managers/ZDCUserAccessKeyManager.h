@@ -5,13 +5,13 @@
  * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
  * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
  * API Reference : https://4th-atechnologies.github.io/ZeroDark.cloud/
- **/
+**/
 
-#import <Foundation/Foundation.h>
-
-NS_ASSUME_NONNULL_BEGIN
+#import "ZeroDarkCloud.h"
 
 @class ZDCSymmetricKey;
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface ZDCAccessKeyBlob : NSObject
 
@@ -24,6 +24,8 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface ZDCUserAccessKeyManager : NSObject
+
+- (instancetype)initWithOwner:(ZeroDarkCloud *)owner;
 
 - (ZDCAccessKeyBlob *)blobFromData:(NSData *)blobData
 					   localUserID:(NSString *)localUserID

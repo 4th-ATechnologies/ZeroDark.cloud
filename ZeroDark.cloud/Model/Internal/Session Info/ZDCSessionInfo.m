@@ -1,5 +1,4 @@
 #import "ZDCSessionInfo.h"
-#import "ZDCSessionInfoPrivate.h"
 
 
 @implementation ZDCSessionInfo

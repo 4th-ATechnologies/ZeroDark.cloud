@@ -7,7 +7,7 @@
  * API Reference : https://4th-atechnologies.github.io/ZeroDark.cloud/
 **/
 
-#import "ZDCCryptoToolsPrivate.h"
+#import "ZDCCryptoTools.h"
 
 #import "ZDCNodePrivate.h"
 #import "ZeroDarkCloudPrivate.h"
@@ -366,9 +366,11 @@ done:
 		goto done;
 	}
 	
-	// Is this a message ?
+	// Is this a special type of node ?
 	
-	BOOL isMessage =
+	const BOOL isPointer = node.isPointer;
+	
+	const BOOL isMessage =
 	    [node.parentID hasSuffix:@"|inbox"]
 	 || [node.parentID hasSuffix:@"|outbox"]
 	 || [node.parentID hasSuffix:@"|signal"];
@@ -388,7 +390,7 @@ done:
 	}
 	
 	// Add children section
-	if (!isMessage && node.dirPrefix)
+	if (!isPointer && !isMessage && node.dirPrefix)
 	{
 		BOOL parentNodeAllowsChildren = YES;
 		
@@ -497,8 +499,40 @@ done:
 	
 	if ((missingKeys.count == 0) && (missingUserIDs.count == 0) && (missingServerIDs.count == 0))
 	{
-		// Add meta section
-		if (isMessage)
+		if (isPointer)
+		{
+			NSMutableDictionary *dict_data = [NSMutableDictionary dictionaryWithCapacity:4];
+			
+			dict_data[kZDCCloudRcrd_Meta_Filename] = node.name;
+			
+			ZDCNode *pointee = [transaction objectForKey:node.pointeeID inCollection:kZDCCollection_Nodes];
+			ZDCNodeAnchor *anchor = pointee.anchor;
+			if (anchor)
+			{
+				NSString *cloudName =
+				  [[ZDCCloudPathManager sharedInstance] cloudNameForNode:pointee transaction:transaction];
+				
+				NSString *path =
+				  [NSString stringWithFormat:@"%@/%@/%@", anchor.zAppID, anchor.dirPrefix, cloudName];
+				
+				dict_data[kZDCCloudRcrd_Meta_Pointer] = @{
+					kZDCCloudRcrd_Meta_Pointer_Owner : anchor.userID,
+					kZDCCloudRcrd_Meta_Pointer_Path  : path
+				};
+			}
+			
+			NSData *cleartext_data = [NSJSONSerialization dataWithJSONObject:dict_data options:0 error:&error];
+			if (error) goto done;
+			
+			// The section is encrypted using the node's encryption key.
+			// This way, only those with permission can decrypt it.
+			
+			NSData *encrypted_data = [cleartext_data encryptedDataWithSymmetricKey:node.encryptionKey error:&error];
+			if (error) goto done;
+			
+			dict[kZDCCloudRcrd_Data] = [encrypted_data base64EncodedStringWithOptions:0];
+		}
+		else if (isMessage)
 		{
 			// Messages don't have metadata section.
 			// But the server requires either a data or metadata section.

@@ -4299,10 +4299,10 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 {
 	for (NSString *remoteUserID in pullState.unknownUserIDs)
 	{
-		[owner.remoteUserManager createRemoteUserWithID: remoteUserID
-		                                    requesterID: pullState.localUserID
-		                                completionQueue: concurrentQueue
-		                                completionBlock:^(ZDCUser *remoteUser, NSError *error)
+		[owner.remoteUserManager fetchRemoteUserWithID: remoteUserID
+		                                   requesterID: pullState.localUserID
+		                               completionQueue: concurrentQueue
+		                               completionBlock:^(ZDCUser *remoteUser, NSError *error)
 		{
 			// Ignore...
 		}];

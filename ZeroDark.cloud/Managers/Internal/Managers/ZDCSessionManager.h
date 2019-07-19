@@ -1,4 +1,4 @@
-#import <Foundation/Foundation.h>
+#import "ZeroDarkCloud.h"
 
 #import "ZDCCloudOperation.h"
 #import "ZDCSessionInfo.h"
@@ -12,7 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * The SessionManager manages NSURLSession's for the framework.
  *
- * Each localUser get's their own network session.
+ * Each localUser gets their own network session.
  * On iOS, there are are actually two sessions per user: background & foreground session.
  *
  * The primary task of the SessionManager is to handle the complicated parts of NSURLSession.
@@ -23,6 +23,11 @@ NS_ASSUME_NONNULL_BEGIN
  * download in case the app is terminated.
  */
 @interface ZDCSessionManager : NSObject
+
+/**
+ * Standard initialization from ZeroDarkCloud, called during database unlock.
+ */
+- (instancetype)initWithOwner:(ZeroDarkCloud *)owner;
 
 /**
  * Returns a session for the given userID, creating it on-demand if needed.
@@ -53,6 +58,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)associateStream:(NSInputStream *)stream
                withTask:(NSURLSessionTask *)task
               inSession:(NSURLSession *)session;
+
+/**
+ * Forwarded through the system:
+ * AppDelegate -> ZeroDarkCloud -> ZDCSessionManager
+ */
+- (void)handleEventsForBackgroundURLSession:(NSString *)sessionIdentifier;
 
 @end
 

@@ -8,17 +8,16 @@
  **/
 
 #import "KeyBackup_Base.h"
+
 #import "ZeroDarkCloudPrivate.h"
+#import "Auth0Utilities.h"
 #import "AWSCredentialsManager.h"
 #import "A0UserIdentity.h"
+#import "ZDCAccessCode.h"
+#import "ZDCLocalUser.h"
 #import "ZDCLocalUserAuth.h"
 #import "ZDCLocalUserPrivate.h"
-#import "Auth0Utilities.h"
 #import "ZDCLocalUserManagerPrivate.h"
-#import "ZDCSharesManagerPrivate.h"
-
-#import "ZDCLocalUser.h"
-#import "ZDCAccessCode.h"
 #import "ZDCSplitKey.h"
 
 // Categories

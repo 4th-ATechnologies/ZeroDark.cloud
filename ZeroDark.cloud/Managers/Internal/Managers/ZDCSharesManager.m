@@ -7,11 +7,10 @@
  * API Reference : https://4th-atechnologies.github.io/ZeroDark.cloud/
  **/
 
-#import "ZDCSharesManagerPrivate.h"
+#import "ZDCSharesManager.h"
+
 #import "ZDCDatabaseManager.h"
-
 #import "ZDCLogging.h"
-
 #import "ZDCSplitKey.h"
 
 // Categories
@@ -28,9 +27,8 @@ static const int ddLogLevel = DDLogLevelWarning;
 #endif
 #pragma unused(ddLogLevel)
 
-@implementation ZDCSharesManager
-
-{
+@implementation ZDCSharesManager {
+	
 	__weak ZeroDarkCloud *owner;
 }
 

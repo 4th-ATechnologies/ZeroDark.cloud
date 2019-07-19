@@ -7,27 +7,43 @@
  * API Reference : https://4th-atechnologies.github.io/ZeroDark.cloud/
 **/
 
-#import <Foundation/Foundation.h>
-
+#import "ZeroDarkCloud.h"
 #import "ZDCLocalUserAuth.h"
-//@class A0UserProfile;
 
 /**
- * If an error occurs (is returned in completionBlock),
- * and the NSError.domain is CredentialsManagerErrorDomain,
+ * If an error occurs (i.e. an error is returned via completionBlock),
+ * and the NSError.domain is AWSCredentialsManager,
  * then the NSError.code will be set to one of the following values.
-**/
-typedef NS_ENUM(NSInteger, S4CredentialsErrorCode) {
-	S4MissingInvalidUser,
-	S4NoRefreshTokens
+ */
+typedef NS_ENUM(NSInteger, AWSCredentialsErrorCode) {
+	AWSCredentialsErrorCode_MissingInvalidUser,
+	AWSCredentialsErrorCode_NoRefreshTokens
 };
 
-
+/**
+ * Most of the ZeroDark REST API's require valid AWS credentials.
+ *
+ * These are provided via a standard delegation system.
+ * A refreshToken is used to request temporary AWS credentials.
+ * As long as the refreshToken hasn't been revoked, the server will return AWS credentials.
+ * The temporary credentials are only valid for a short period of time (a few hours).
+ *
+ * This manager is responsible for caching these temporary credentials,
+ * and automatically refreshing them on demand.
+ */
 @interface AWSCredentialsManager : NSObject
 
 /**
- * Fetches the AWS credentials for the given S4LocalUser.uuid.
-**/
+ * Standard initialization from ZeroDarkCloud, called during database unlock.
+ */
+- (instancetype)initWithOwner:(ZeroDarkCloud *)owner;
+
+/**
+ * Fetches the AWS credentials for the given ZDCLocalUser.uuid.
+ *
+ * If cached credentials are available (and not expired), they'll be used.
+ * Otherwise the manager will attempt to refresh the AWS credentials using the refreshToken.
+ */
 - (void)getAWSCredentialsForUser:(NSString *)userID
                  completionQueue:(dispatch_queue_t)completionQueue
                  completionBlock:(void (^)(ZDCLocalUserAuth *auth, NSError *error))completionBlock;
@@ -45,9 +61,8 @@ typedef NS_ENUM(NSInteger, S4CredentialsErrorCode) {
 #pragma mark Utilities
 
 /**
- * Utility method.
- * Helpful to create a S4LocalUserAuth from Auth0APIManager getAWSCredentialsWithRefreshToken
-**/
+ * Utility method for parsing the delegation dictionary returned from the server.
+ */
 - (BOOL)parseLocalUserAuth:(ZDCLocalUserAuth **)localUserAuth
                       uuid:(NSString **)uuid
        fromDelegationToken:(NSDictionary *)delegationToken

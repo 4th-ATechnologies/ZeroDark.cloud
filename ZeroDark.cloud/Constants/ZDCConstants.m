@@ -68,15 +68,12 @@ NSString *const kZDCDirPrefix_Deprecated_Outbox = @"outbox";
 
 /* extern */ NSString *const kZDCCloudRcrd_Children_Prefix = @"prefix";
 
-/* extern */ NSString *const kZDCCloudRcrd_Meta_Type           = @"type";
 /* extern */ NSString *const kZDCCloudRcrd_Meta_Filename       = @"filename";
-/* extern */ NSString *const kZDCCloudRcrd_Meta_DirSalt        = @"dirSalt"; // if (type == "directory")
-/* extern */ NSString *const kZDCCloudRcrd_Meta_OwnerID        = @"ownerID"; // if (type == "share")
-/* extern */ NSString *const kZDCCloudRcrd_Meta_Path           = @"path";    // if (type == "share")
-/* extern */ NSString *const kZDCCloudRcrd_Meta_FileID         = @"fileID";  // if (type == "share")
+/* extern */ NSString *const kZDCCloudRcrd_Meta_DirSalt        = @"dirSalt";
+/* extern */ NSString *const kZDCCloudRcrd_Meta_Pointer        = @"pointer";
 
-/* extern */ NSString *const kZDCCloudRcrd_Meta_Type_Directory = @"directory";
-/* extern */ NSString *const kZDCCloudRcrd_Meta_Type_Share     = @"share";
+/* extern */ NSString *const kZDCCloudRcrd_Meta_Pointer_Owner  = @"owner";
+/* extern */ NSString *const kZDCCloudRcrd_Meta_Pointer_Path   = @"path";
 
 // Dictionary keys used in .pubKey/.privKey files
 

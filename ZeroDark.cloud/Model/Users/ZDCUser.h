@@ -115,8 +115,8 @@ extern NSString *const kZDCUser_metadata_preferedAuth0ID;
  * Contains information about the social identities linked to the user's account.
 **/
 @property (nonatomic, copy, readwrite) NSDictionary * auth0_profiles;
-@property (nonatomic, copy, readwrite, nullable) NSString     * auth0_preferredID;
-@property (nonatomic, copy, readwrite, nullable) NSDate       * auth0_lastUpdated;
+@property (nonatomic, copy, readwrite, nullable) NSString * auth0_preferredID;
+@property (nonatomic, copy, readwrite, nullable) NSDate   * auth0_lastUpdated;
 
 @property (nonatomic, readonly) NSDictionary * preferredProfile;
 @property (nonatomic, readonly) NSString     * displayName;

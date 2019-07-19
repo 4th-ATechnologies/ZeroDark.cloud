@@ -1,4 +1,4 @@
-#import "ZDCSessionManagerPrivate.h"
+#import "ZDCSessionManager.h"
 
 #import "S3ResponseSerialization.h"
 #import "ZDCConstants.h"
@@ -9,8 +9,8 @@
 #import "ZDCLocalUser.h"
 #import "ZDCLogging.h"
 #import "ZDCPushManagerPrivate.h"
-#import "ZDCSessionInfoPrivate.h"
-#import "ZDCSessionUserInfoPrivate.h"
+#import "ZDCSessionInfo.h"
+#import "ZDCSessionUserInfo.h"
 #import "ZDCTaskContext.h"
 #import "ZeroDarkCloudPrivate.h"
 
@@ -162,98 +162,99 @@ static NSString *const kSessionDescriptionPrefix_Foreground = @"fg";
 	
 	YapDatabaseAutoViewConnection *ext = [databaseConnection ext:Ext_View_LocalUsers];
 	BOOL localUserChanged = [ext hasChangesForNotifications:notifications];
-	if (localUserChanged)
-	{
-		dispatch_async(queue, ^{ @autoreleasepool {
+	if (!localUserChanged) {
+		return;
+	}
+	
+	dispatch_async(queue, ^{ @autoreleasepool {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		// Move all entries from the sessionCache to the staleSessionCache.
+		// Then clear the sessionCache.
+		//
+		// When doing a lookup, if an item is missing from the sessionCache,
+		// but is available in the staleSessionCache, this will force
+		// us to refresh the userInfo for the cache entry.
+		
+		[staleSessionDict addEntriesFromDictionary:sessionDict];
+		[sessionDict removeAllObjects];
+		
+	#pragma clang diagnostic pop
+	}});
+		
+	[databaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		// Delete any entries for users that no longer exist.
+		//
+		// I.E.: The user deleted the local account, so we should cleanup all associated resources.
+		//       Doing so will automatically cancel all uploads too.
+		
+		NSMutableArray *userIDs = [NSMutableArray array];
+		
+		dispatch_sync(queue, ^{ @autoreleasepool {
 		#pragma clang diagnostic push
 		#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+
+			for (NSString *userID in sessionDict)
+			{
+				[userIDs addObject:userID];
+			}
 			
-			// Move all entries from the sessionCache to the staleSessionCache.
-			// Then clear the sessionCache.
-			//
-			// When doing a lookup, if an item is missing from the sessionCache,
-			// but is available in the staleSessionCache, this will force
-			// us to refresh the userInfo for the cache entry.
-			
-			[staleSessionDict addEntriesFromDictionary:sessionDict];
-			[sessionDict removeAllObjects];
+			for (NSString *userID in staleSessionDict)
+			{
+				[userIDs addObject:userID];
+			}
 			
 		#pragma clang diagnostic pop
 		}});
 		
-		[databaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
-		#pragma clang diagnostic push
-		#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-			
-			// Delete any entries for users that no longer exist.
-			//
-			// I.E.: The user deleted the local account, so we should cleanup all associated resources.
-			//       Doing so will automatically cancel all uploads too.
-			
-			NSMutableArray *userIDs = [NSMutableArray array];
-			
-			dispatch_sync(queue, ^{ @autoreleasepool {
+		if (userIDs.count == 0) return;
+		
+		NSMutableArray *missingUserIDs = [NSMutableArray arrayWithCapacity:[userIDs count]];
+		
+		for (NSString *userID in userIDs)
+		{
+			if (![transaction hasObjectForKey:userID inCollection:kZDCCollection_Users])
+			{
+				[missingUserIDs addObject:userID];
+			}
+		}
+		
+		if (missingUserIDs.count > 0)
+		{
+			dispatch_async(queue, ^{ @autoreleasepool {
 			#pragma clang diagnostic push
 			#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-
-				for (NSString *userID in sessionDict)
+				
+				for (NSString *userID in missingUserIDs)
 				{
-					[userIDs addObject:userID];
+					ZDCSessionInfo *sessionInfo = sessionDict[userID];
+					if (sessionInfo == nil)
+						sessionInfo = staleSessionDict[userID];
+					
+					if (sessionInfo)
+					{
+					#if TARGET_OS_IPHONE
+						[sessionInfo.foregroundSession invalidateSessionCancelingTasks:YES];
+						[sessionInfo.backgroundSession invalidateSessionCancelingTasks:YES];
+					#else
+						[sessionInfo.session invalidateSessionCancelingTasks:YES];
+					#endif
+					}
 				}
 				
-				for (NSString *userID in staleSessionDict)
-				{
-					[userIDs addObject:userID];
-				}
+				[sessionDict removeObjectsForKeys:missingUserIDs];
+				[staleSessionDict removeObjectsForKeys:missingUserIDs];
 				
 			#pragma clang diagnostic pop
 			}});
-			
-			if (userIDs.count == 0) return;
-			
-			NSMutableArray *missingUserIDs = [NSMutableArray arrayWithCapacity:[userIDs count]];
-			
-			for (NSString *userID in userIDs)
-			{
-				if (![transaction hasObjectForKey:userID inCollection:kZDCCollection_Users])
-				{
-					[missingUserIDs addObject:userID];
-				}
-			}
-			
-			if (missingUserIDs.count > 0)
-			{
-				dispatch_async(queue, ^{ @autoreleasepool {
-				#pragma clang diagnostic push
-				#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-					
-					for (NSString *userID in missingUserIDs)
-					{
-						ZDCSessionInfo *sessionInfo = sessionDict[userID];
-						if (sessionInfo == nil)
-							sessionInfo = staleSessionDict[userID];
-						
-						if (sessionInfo)
-						{
-						#if TARGET_OS_IPHONE
-							[sessionInfo.foregroundSession invalidateSessionCancelingTasks:YES];
-							[sessionInfo.backgroundSession invalidateSessionCancelingTasks:YES];
-						#else
-							[sessionInfo.session invalidateSessionCancelingTasks:YES];
-						#endif
-						}
-					}
-					
-					[sessionDict removeObjectsForKeys:missingUserIDs];
-					[staleSessionDict removeObjectsForKeys:missingUserIDs];
-					
-				#pragma clang diagnostic pop
-				}});
-			}
-			
-		#pragma clang diagnostic pop
-		}];
-	}
+		}
+		
+	#pragma clang diagnostic pop
+	}];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

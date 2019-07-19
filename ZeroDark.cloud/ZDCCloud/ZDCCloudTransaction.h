@@ -269,6 +269,14 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
        withOptions:(ZDCDeleteNodeOptions)options
              error:(NSError *_Nullable *_Nullable)outError;
 
+/**
+ *
+ */
+- (nullable ZDCNode *)graftNodeWithLocalPath:(ZDCTreesystemPath *)path
+                                  remotePath:(ZDCCloudPath *)remotePath
+                                  remoteUser:(ZDCUser *)remoteUser
+                                       error:(NSError *_Nullable *_Nullable)outError;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Linking
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

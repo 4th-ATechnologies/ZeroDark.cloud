@@ -7,9 +7,9 @@
  * API Reference : https://4th-atechnologies.github.io/ZeroDark.cloud/
 **/
 
-#import "ZDCUserAccessKeyManagerPrivate.h"
-#import "ZeroDarkCloudPrivate.h"
+#import "ZDCUserAccessKeyManager.h"
 
+#import "ZeroDarkCloudPrivate.h"
 #import "ZDCSymmetricKey.h"
 
 // Categories

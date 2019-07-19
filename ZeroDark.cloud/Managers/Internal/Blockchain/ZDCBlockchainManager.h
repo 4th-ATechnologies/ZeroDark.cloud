@@ -1,8 +1,13 @@
-#import <Foundation/Foundation.h>
+#import "ZeroDarkCloud.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface ZDCBlockchainManager : NSObject
+
+/**
+ * Standard initialization from ZeroDarkCloud, called during database unlock.
+ */
+- (instancetype)initWithOwner:(ZeroDarkCloud *)owner;
 
 - (void)fetchBlockchainRootForUserID:(NSString *)remoteUserID
 						 requesterID:(NSString *)localUserID
