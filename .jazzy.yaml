@@ -80,7 +80,9 @@ custom_categories:
   - AWSDate
   - AWSPayload
   - AWSRegions
+  - AWSRegion
   - AWSServices
+  - AWSService
   - AWSSignature
 exclude:
 - /*/Internal/*

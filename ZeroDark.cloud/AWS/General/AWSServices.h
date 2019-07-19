@@ -7,7 +7,7 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * This obviously isn't the full list. But this is open source.
  * So go ahead and add what you need. Then feel free to submit a pull request.
-**/
+ */
 typedef NS_ENUM(NSInteger, AWSService) {
 	
 	/** S3 */

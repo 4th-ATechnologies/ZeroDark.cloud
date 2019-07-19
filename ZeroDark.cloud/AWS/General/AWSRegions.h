@@ -8,7 +8,7 @@ NS_ASSUME_NONNULL_BEGIN
  * List of available AWS regions.
  *
  * Source: http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
-**/
+ */
 typedef NS_ENUM(NSInteger, AWSRegion) {
 	
 	/** USA (N. Virginia) */
