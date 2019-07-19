@@ -448,7 +448,8 @@
 	
 	[rwTransaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
 	
-	[self queuePutOpsForNode:node];
+	[self queuePutOperationForNodeRcrd:node];
+	[self queuePutOperationForNodeData:node];
 	
 	if (outError) *outError = nil;
 	return node;
@@ -536,45 +537,64 @@
 	}
 	
 	[rwTransaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
-	[self queuePutOpsForNode:node];
+	
+	[self queuePutOperationForNodeRcrd:node];
+	[self queuePutOperationForNodeData:node];
 	
 	return YES;
 }
 
-/**
- * Helper method.
- * Creates & queues the operations to PUT the node in the cloud.
- */
-- (void)queuePutOpsForNode:(ZDCNode *)node
+- (nullable ZDCCloudOperation *)queuePutOperationForNodeRcrd:(ZDCNode *)node
 {
 	NSString *localUserID = [self localUserID];
 	NSString *zAppID = [self zAppID];
 	
-	ZDCCloudLocator *cloudLocatorRcrd =
+	ZDCCloudLocator *cloudLocator_rcrd =
 	  [[ZDCCloudPathManager sharedInstance] cloudLocatorForNode: node
 	                                              fileExtension: kZDCCloudFileExtension_Rcrd
 	                                                transaction: databaseTransaction];
 	
-	ZDCCloudOperation *opRcrd =
+	if (cloudLocator_rcrd == nil) {
+		return nil;
+	}
+	
+	ZDCCloudOperation *op_rcrd =
 	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
 	                                          zAppID: zAppID
 	                                         putType: ZDCCloudOperationPutType_Node_Rcrd];
 	
-	opRcrd.nodeID = node.uuid;
-	opRcrd.cloudLocator = cloudLocatorRcrd;
+	op_rcrd.nodeID = node.uuid;
+	op_rcrd.cloudLocator = cloudLocator_rcrd;
 	
-	ZDCCloudOperation *opData =
+	[self addOperation:op_rcrd];
+	return op_rcrd;
+}
+
+- (nullable ZDCCloudOperation *)queuePutOperationForNodeData:(ZDCNode *)node
+{
+	NSString *localUserID = [self localUserID];
+	NSString *zAppID = [self zAppID];
+	
+	if (node.isPointer) {
+		return nil;
+	}
+	
+	ZDCCloudLocator *cloudLocator_data =
+	  [[ZDCCloudPathManager sharedInstance] cloudLocatorForNode: node
+	                                              fileExtension: kZDCCloudFileExtension_Data
+	                                                transaction: databaseTransaction];
+	
+	ZDCCloudOperation *op_data =
 	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
 	                                          zAppID: zAppID
 	                                         putType: ZDCCloudOperationPutType_Node_Data];
 	
-	opData.nodeID = node.uuid;
-	opData.cloudLocator = [cloudLocatorRcrd copyWithFileNameExt:kZDCCloudFileExtension_Data];
+	op_data.nodeID = node.uuid;
+	op_data.cloudLocator = cloudLocator_data;
+	op_data.eTag = node.eTag_data;
 	
-	[opData addDependency:opRcrd.uuid];
-	
-	[self addOperation:opRcrd];
-	[self addOperation:opData];
+	[self addOperation:op_data];
+	return op_data;
 }
 
 /**
@@ -701,6 +721,10 @@
 		return nil;
 	}
 	
+	if (node.isPointer) {
+		return nil; // Pointers don't have a DATA fork.
+	}
+	
 	if (![node.localUserID isEqualToString:localUserID]) {
 		return nil;
 	}
@@ -734,7 +758,7 @@
  * Or view the reference docs online:
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
-- (BOOL)deleteNode:(ZDCNode *)node error:(NSError *_Nullable *_Nullable)outError
+- (nullable ZDCCloudOperation *)deleteNode:(ZDCNode *)node error:(NSError *_Nullable *_Nullable)outError
 {
 	ZDCDeleteNodeOptions defaultOptions = ZDCDeleteOutdatedNodes | ZDCDeleteUnknownNodes;
 	
@@ -748,9 +772,9 @@
  * Or view the reference docs online:
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
-- (BOOL)deleteNode:(ZDCNode *)rootNode
-       withOptions:(ZDCDeleteNodeOptions)opts
-             error:(NSError *_Nullable *_Nullable)outError
+- (nullable ZDCCloudOperation *)deleteNode:(ZDCNode *)rootNode
+                               withOptions:(ZDCDeleteNodeOptions)opts
+                                     error:(NSError *_Nullable *_Nullable)outError
 {
 	DDLogAutoTrace();
 	
@@ -770,7 +794,7 @@
 		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
 		
 		if (outError) *outError = error;
-		return NO;
+		return nil;
 	}
 	
 	YapDatabaseReadWriteTransaction *rwTransaction = (YapDatabaseReadWriteTransaction *)databaseTransaction;
@@ -818,7 +842,7 @@
 		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
 		
 		if (outError) *outError = error;
-		return NO;
+		return nil;
 	}
 	
 	NSString *root_cloudPath =
@@ -927,7 +951,7 @@
 		if (jsonError)
 		{
 			if (outError) *outError = jsonError;
-			return NO;
+			return nil;
 		}
 		
 		operation.deleteNodeJSON = jsonData;
@@ -1012,7 +1036,7 @@
 	// Done
 	
 	if (outError) *outError = nil;
-	return YES;
+	return operation;
 }
 
 /**
@@ -1128,6 +1152,10 @@
 		  [[ZDCNodeAnchor alloc] initWithUserID: remoteUser.uuid
 		                                 zAppID: remotePath.zAppID
 		                              dirPrefix: remotePath.dirPrefix];
+		
+		[rwTransaction setObject: pointeeNode
+		                  forKey: pointeeNode.uuid
+		            inCollection: kZDCCollection_Nodes];
 	}
 	
 	ZDCNode *pointerNode = [[ZDCNode alloc] initWithLocalUserID:localUserID];
@@ -1141,7 +1169,7 @@
 	                  forKey: pointerNode.uuid
 	            inCollection: kZDCCollection_Nodes];
 	
-	[self queuePutOpsForNode:pointerNode];
+	[self queuePutOperationForNodeRcrd:pointerNode];
 	
 	if (outError) *outError = nil;
 	return pointerNode;

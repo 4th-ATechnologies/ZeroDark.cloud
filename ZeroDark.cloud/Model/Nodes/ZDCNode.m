@@ -92,6 +92,7 @@ static NSString *const k_pointeeID             = @"pointeeID";
 @synthesize explicitCloudName = explicitCloudName;
 @synthesize anchor = anchor;
 @synthesize pointeeID = pointeeID;
+@dynamic isPointer;
 
 - (void)setDirSalt:(NSData *)newDirSalt
 {
@@ -283,6 +284,11 @@ static NSString *const k_pointeeID             = @"pointeeID";
 - (nullable NSDate *)lastModifed
 {
 	return ZDCLaterDate(lastModified_rcrd, lastModified_data);
+}
+
+- (BOOL)isPointer
+{
+	return (pointeeID != nil);
 }
 
 @end

@@ -246,9 +246,10 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  *   Set to nil on success.
  *   Otherwise returns an error that explains what went wrong.
  *
- * @return YES if the modification was successful. NO otherwise (in which case, outError will be set).
+ * @return If the modification was successful, returns the queued operation.
+ *         Otherwise returns nil, in which case, outError will be set.
  */
-- (BOOL)deleteNode:(ZDCNode *)node error:(NSError *_Nullable *_Nullable)outError;
+- (nullable ZDCCloudOperation *)deleteNode:(ZDCNode *)node error:(NSError *_Nullable *_Nullable)outError;
 
 /**
  * Removes the given node from the treesystem, and enqueues a delete operation to delete it from the cloud.
@@ -263,11 +264,12 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  *   Set to nil on success.
  *   Otherwise returns an error that explains what went wrong.
  *
- * @return YES if the modification was successful. NO otherwise (in which case, outError will be set).
+ * @return If the modification was successful, returns the queued operation.
+ *         Otherwise returns nil, in which case, outError will be set.
  */
-- (BOOL)deleteNode:(ZDCNode *)node
-       withOptions:(ZDCDeleteNodeOptions)options
-             error:(NSError *_Nullable *_Nullable)outError;
+- (nullable ZDCCloudOperation *)deleteNode:(ZDCNode *)node
+                               withOptions:(ZDCDeleteNodeOptions)options
+                                     error:(NSError *_Nullable *_Nullable)outError;
 
 /**
  *

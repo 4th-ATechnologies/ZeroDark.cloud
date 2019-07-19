@@ -179,16 +179,30 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				let encoder = PropertyListEncoder()
 				do {
 					return try encoder.encode(list)
-				} catch {}
+				} catch {
+					print("Error encoding List: \(error)")
+				}
 			}
-			if let task = object as? Task {
+			else if let task = object as? Task {
 				
 				let encoder = PropertyListEncoder()
 				do {
 					return try encoder.encode(task)
-				} catch {}
+				} catch {
+					print("Error encoding Task: \(error)")
+				}
+			}
+			else if let invitation = object as? Invitation {
+				
+				let encoder = PropertyListEncoder()
+				do {
+					return try encoder.encode(invitation)
+				} catch {
+					print("Error encoding Invitation: \(error)")
+				}
 			}
 			
+			print("Error encoding object: Unhandled class")
 			return Data()
 		}
 		return serializer
@@ -205,21 +219,38 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		
 		let deserializer: YapDatabaseDeserializer = {(collection: String, key: String, data: Data) -> Any in
 			
-			if collection == kZ2DCollection_List {
+			switch collection {
+				case kZ2DCollection_List:
 				
-				let decoder = PropertyListDecoder()
-				do {
-					return try decoder.decode(List.self, from: data)
-				} catch {}
-			}
-			if collection == kZ2DCollection_Task {
+					let decoder = PropertyListDecoder()
+					do {
+						return try decoder.decode(List.self, from: data)
+					} catch {
+						print("Error decoding List: \(error)")
+					}
+			
+				case kZ2DCollection_Task:
+			
+					let decoder = PropertyListDecoder()
+					do {
+						return try decoder.decode(Task.self, from: data)
+					} catch {
+						print("Error decoding Task: \(error)")
+					}
+			
+				case kZ2DCollection_Invitation:
+			
+					let decoder = PropertyListDecoder()
+					do {
+						return try decoder.decode(Invitation.self, from: data)
+					} catch {
+						print("Error decoding Invitation: \(error)")
+					}
 				
-				let decoder = PropertyListDecoder()
-				do {
-					return try decoder.decode(Task.self, from: data)
-				} catch {}
+				default: break
 			}
 			
+			print("Error decoding object: Unhandled collection")
 			return NSNull()
 		}
 		return deserializer
@@ -1354,7 +1385,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		}
 		
 		var pendingInvitations: [Invitation] = []
-		databaseManager.roDatabaseConnection.asyncRead { (transaction) in
+		databaseManager.roDatabaseConnection.asyncRead({ (transaction) in
 			
 			transaction.enumerateKeysAndObjects(inCollection: kZ2DCollection_Invitation,
 			                                           using:
@@ -1364,20 +1395,22 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					pendingInvitations.append(invitation)
 				}
 			})
-		}
-		
-		for invitation in pendingInvitations {
 			
-			zdc.remoteUserManager!.fetchRemoteUser(withID: invitation.senderID,
-			                                  requesterID: invitation.receiverID,
-			                              completionQueue: DispatchQueue.global())
-			{ (user: ZDCUser?, error) in
-				
-				if (user != nil) {
-					self.acceptInvitation(invitation, usingLocalListTitle: invitation.listName)
+		}, completionQueue: DispatchQueue.global(), completionBlock: {
+		
+			for invitation in pendingInvitations {
+		
+				zdc.remoteUserManager!.fetchRemoteUser(withID: invitation.senderID,
+				                                  requesterID: invitation.receiverID,
+				                              completionQueue: DispatchQueue.global())
+				{ (user: ZDCUser?, error) in
+		
+					if (user != nil) {
+						self.acceptInvitation(invitation, usingLocalListTitle: invitation.listName)
+					}
 				}
 			}
-		}
+		})
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1698,12 +1731,18 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			               forKey: downloadedInvitation!.uuid,
 			         inCollection: kZ2DCollection_Invitation)
 			
+			if let wtf = transaction.object(forKey: downloadedInvitation!.uuid, inCollection: kZ2DCollection_Invitation) {
+				print("Looking good: \(wtf)")
+			} else {
+				print("WTF")
+			}
+			
 			// Link the Invitation to the Node
 			//
 			do {
 				try cloudTransaction.linkNodeID( nodeID,
 				                          toKey: downloadedInvitation!.uuid,
-				                   inCollection: kZ2DCollection_Task)
+				                   inCollection: kZ2DCollection_Invitation)
 				
 			} catch {
 				print("Error linking node to invitation: \(error)")
@@ -1909,7 +1948,15 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			if let invitationNode = cloudTransaction.linkedNode(forKey: invitation.uuid, inCollection: kZ2DCollection_Invitation) {
 				
 				do {
-					try cloudTransaction.delete(invitationNode)
+					let deleteInviteOp = try cloudTransaction.delete(invitationNode)
+					
+					let listOps = cloudTransaction.addedOperations(forNodeID: node.uuid)
+					for listOp in listOps {
+						deleteInviteOp.addDependency(listOp)
+					}
+					
+					cloudTransaction.modifyOperation(deleteInviteOp)
+					
 				} catch {
 					print("Error deleting node: \(error)")
 				}
