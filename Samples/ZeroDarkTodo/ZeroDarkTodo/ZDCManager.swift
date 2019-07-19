@@ -1893,7 +1893,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			// Step 1:
 			//
 			// We're going to "graft" the remote user's List into our treesystem.
-			// You can visualize this like so:
+			// Here's a visualization:
 			//
 			// (localUser)     (remoteUser)
 			//      |                |
@@ -1909,11 +1909,11 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			let path = ZDCTreesystemPath(pathComponents: [title], trunk: .home)
 			
-			let node: ZDCNode!
+			let listNode: ZDCNode!
 			do {
-				node = try cloudTransaction.graftNode(withLocalPath: path,
-			                                            remotePath: cloudPath,
-			                                            remoteUser: sender)
+				listNode = try cloudTransaction.graftNode(withLocalPath: path,
+			                                                remotePath: cloudPath,
+			                                                remoteUser: sender)
 			}
 			catch {
 				print("Error grafting node: \(error)")
@@ -1936,7 +1936,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			// And allows us to quickly lookup the List given the node. Or vice-versa.
 			
 			do {
-				try cloudTransaction.linkNodeID(node.uuid, toKey: list.uuid, inCollection: kZ2DCollection_List)
+				try cloudTransaction.linkNodeID(listNode.uuid, toKey: list.uuid, inCollection: kZ2DCollection_List)
 			} catch {
 				print("Error linking node: \(error)")
 			}
@@ -1948,9 +1948,24 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			if let invitationNode = cloudTransaction.linkedNode(forKey: invitation.uuid, inCollection: kZ2DCollection_Invitation) {
 				
 				do {
+					// Delete the invitation message from our treesystem.
+					//
 					let deleteInviteOp = try cloudTransaction.delete(invitationNode)
 					
-					let listOps = cloudTransaction.addedOperations(forNodeID: node.uuid)
+					// The returned 'deleteInviteOp' is a ZDCCloudOperation.
+					// These are the operations that get put into the database queue,
+					// and then get executed automatically by the ZeroDark framework.
+					//
+					// We want to tell ZeroDark the following:
+					// - don't delete the invite message until AFTER you've uploaded the List
+					//
+					// In other words, the List node is our formal acceptance of the invitation.
+					// And so we're saying we want to enforce some order to the cloud operations.
+					//
+					// We can do this with dependencies.
+					// We just need to add a dependency to the deleteInviteOp.
+					
+					let listOps = cloudTransaction.addedOperations(forNodeID: listNode.uuid)
 					for listOp in listOps {
 						deleteInviteOp.addDependency(listOp)
 					}

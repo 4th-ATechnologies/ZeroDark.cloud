@@ -786,6 +786,7 @@
 		// Following recommended pattern here.
 		@throw [self requiresReadWriteTransactionException:NSStringFromSelector(_cmd)];
 	}
+	YapDatabaseReadWriteTransaction *rwTransaction = (YapDatabaseReadWriteTransaction *)databaseTransaction;
 	
 	if ([rootNode isKindOfClass:[ZDCTrunkNode class]])
 	{
@@ -797,39 +798,11 @@
 		return nil;
 	}
 	
-	YapDatabaseReadWriteTransaction *rwTransaction = (YapDatabaseReadWriteTransaction *)databaseTransaction;
-	
 	NSString *localUserID = [self localUserID];
 	NSString *zAppID = [self zAppID];
 	
 	ZDCNodeManager *nodeManager = [ZDCNodeManager sharedInstance];
 	ZDCCloudPathManager *cloudPathManager = [ZDCCloudPathManager sharedInstance];
-	
-	// Create JSON structure for delete-node command.
-	// For example:
-	//
-	// {
-	//   "version":1,
-	//   "root":{
-	//     "000/abc123":["eTag","cloudID"],
-	//   },
-	//   "children":{
-	//     "": "11"
-	//     "dirPrefix1":{
-	//       "":"11",
-	//       "cloudID1":"eTag1",
-	//       "cloudID2":"eTag2",
-	//     }
-	//   }
-	// }
-	
-	NSString *strOpts = [NSString stringWithFormat:@"%d%d",
-		((opts & ZDCDeleteOutdatedNodes) ? 1 : 0),
-		((opts & ZDCDeleteUnknownNodes)  ? 1 : 0)
-	];
-	
-	NSMutableDictionary *json = [NSMutableDictionary dictionary];
-	json[@"version"] = @(1);
 	
 	ZDCCloudLocator *root_cloudLocator =
 	  [cloudPathManager cloudLocatorForNode: rootNode
@@ -845,23 +818,67 @@
 		return nil;
 	}
 	
-	NSString *root_cloudPath =
-	  [root_cloudLocator.cloudPath pathWithComponents:(ZDCCloudPathComponents_DirPrefix |
-	                                                   ZDCCloudPathComponents_FileName_WithoutExt)];
+	// Is the node a leaf ?
 	
-	NSString *root_eTag    = rootNode.eTag_rcrd ?: @"";
-	NSString *root_cloudID = rootNode.cloudID   ?: @"";
+	const BOOL isPointer = rootNode.isPointer;
 	
-	json[@"root"] = @{
-		root_cloudPath: @[root_eTag, root_cloudID]
-	};
+	const BOOL isMessage =
+	    [rootNode.parentID hasSuffix:@"|inbox"]
+	 || [rootNode.parentID hasSuffix:@"|outbox"]
+	 || [rootNode.parentID hasSuffix:@"|signal"];
 	
-	NSMutableDictionary *children = [NSMutableDictionary dictionary];
-	json[@"children"] = children;
+	const BOOL isLeaf = isPointer || isMessage;
 	
-	children[@""] = strOpts;
+	NSMutableDictionary *json = nil;
+	NSMutableDictionary *children = nil;
+	NSString *strOpts = nil;
 	
-	// Now enumerate all the children, and fill out the "children" section of the JSON.
+	if (!isLeaf)
+	{
+		// Create JSON structure for delete-node command.
+		// For example:
+		//
+		// {
+		//   "version":1,
+		//   "root":{
+		//     "000/abc123":["eTag","cloudID"],
+		//   },
+		//   "children":{
+		//     "": "11"
+		//     "dirPrefix1":{
+		//       "":"11",
+		//       "cloudID1":"eTag1",
+		//       "cloudID2":"eTag2",
+		//     }
+		//   }
+		// }
+		
+		json = [NSMutableDictionary dictionary];
+		json[@"version"] = @(1);
+	
+		NSString *root_cloudPath =
+		  [root_cloudLocator.cloudPath pathWithComponents:(ZDCCloudPathComponents_DirPrefix |
+		                                                   ZDCCloudPathComponents_FileName_WithoutExt)];
+	
+		NSString *root_eTag    = rootNode.eTag_rcrd ?: @"";
+		NSString *root_cloudID = rootNode.cloudID   ?: @"";
+	
+		json[@"root"] = @{
+			root_cloudPath: @[root_eTag, root_cloudID]
+		};
+	
+		children = [NSMutableDictionary dictionary];
+		json[@"children"] = children;
+	
+		strOpts = [NSString stringWithFormat:@"%d%d",
+			((opts & ZDCDeleteOutdatedNodes) ? 1 : 0),
+			((opts & ZDCDeleteUnknownNodes)  ? 1 : 0)
+		];
+		
+		children[@""] = strOpts;
+	}
+	
+	// Enumerate all the child nodes
 	
 	NSMutableSet<NSString*> *cloudIDs = [NSMutableSet set];
 	NSMutableArray<NSString*> *nodeIDs = [NSMutableArray array];
@@ -881,26 +898,6 @@
 		
 		if (cloudLocator)
 		{
-			// Fill out the JSON info for this child node
-			
-			NSString *cloudID = childNode.cloudID;
-			if (cloudID)
-			{
-				NSString *dirPrefix = cloudLocator.cloudPath.dirPrefix;
-			
-				NSMutableDictionary *dir = children[dirPrefix];
-				if (dir == nil)
-				{
-					dir = [NSMutableDictionary dictionary];
-					children[dirPrefix] = dir;
-			
-					dir[@""] = strOpts;
-				}
-			
-				dir[cloudID] = (childNode.eTag_rcrd ?: @"");
-				[cloudIDs addObject:cloudID];
-			}
-			
 			// Create corresponding ZDCCloudNode
 			
 			ZDCCloudNode *cloudNode =
@@ -910,6 +907,29 @@
 			[rwTransaction setObject: cloudNode
 			                  forKey: cloudNode.uuid
 			            inCollection: kZDCCollection_CloudNodes];
+			
+			if (!isLeaf)
+			{
+				// Fill out the JSON info for this child node
+				
+				NSString *cloudID = childNode.cloudID;
+				if (cloudID)
+				{
+					NSString *dirPrefix = cloudLocator.cloudPath.dirPrefix;
+					
+					NSMutableDictionary *dir = children[dirPrefix];
+					if (dir == nil)
+					{
+						dir = [NSMutableDictionary dictionary];
+						children[dirPrefix] = dir;
+						
+						dir[@""] = strOpts;
+					}
+					
+					dir[cloudID] = (childNode.eTag_rcrd ?: @"");
+					[cloudIDs addObject:cloudID];
+				}
+			}
 		}
 		
 		// Unlink the childNode (if linked)
@@ -929,17 +949,19 @@
 	
 	ZDCCloudOperation *operation = nil;
 	
-	if (NO /* reserved for future optimization */)
+	if (isLeaf)
 	{
 		// Delete-Leaf operation
 		
-	//	operation =
-	//	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
-	//	                                          zAppID: zAppID
-	//	                                            type: ZDCCloudOperationType_DeleteLeaf];
+		operation =
+		  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
+		                                          zAppID: zAppID
+		                                            type: ZDCCloudOperationType_DeleteLeaf];
 	}
 	else
 	{
+		// Delete-Node operation
+		
 		operation =
 		  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
 		                                          zAppID: zAppID
@@ -965,7 +987,6 @@
 	operation.deletedCloudIDs = cloudIDs;
 	
 	// Create corresponding ZDCCloudNode
-	if (root_cloudLocator)
 	{
 		ZDCCloudNode *cloudNode =
 		  [[ZDCCloudNode alloc] initWithLocalUserID: rootNode.localUserID
