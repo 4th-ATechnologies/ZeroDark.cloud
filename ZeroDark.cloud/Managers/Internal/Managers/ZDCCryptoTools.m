@@ -499,11 +499,13 @@ done:
 	
 	if ((missingKeys.count == 0) && (missingUserIDs.count == 0) && (missingServerIDs.count == 0))
 	{
+		NSMutableDictionary *dict_meta = nil;
+		NSMutableDictionary *dict_data = nil;
+		
 		if (isPointer)
 		{
-			NSMutableDictionary *dict_data = [NSMutableDictionary dictionaryWithCapacity:4];
-			
-			dict_data[kZDCCloudRcrd_Meta_Filename] = node.name;
+			dict_meta = [NSMutableDictionary dictionaryWithCapacity:1];
+			dict_meta[kZDCCloudRcrd_Meta_Filename] = node.name;
 			
 			ZDCNode *pointee = [transaction objectForKey:node.pointeeID inCollection:kZDCCollection_Nodes];
 			ZDCNodeAnchor *anchor = pointee.anchor;
@@ -515,22 +517,12 @@ done:
 				NSString *path =
 				  [NSString stringWithFormat:@"%@/%@/%@", anchor.zAppID, anchor.dirPrefix, cloudName];
 				
-				dict_data[kZDCCloudRcrd_Meta_Pointer] = @{
-					kZDCCloudRcrd_Meta_Pointer_Owner : anchor.userID,
-					kZDCCloudRcrd_Meta_Pointer_Path  : path
+				dict_data = [NSMutableDictionary dictionaryWithCapacity:1];
+				dict_data[kZDCCloudRcrd_Data_Pointer] = @{
+					kZDCCloudRcrd_Data_Pointer_Owner : anchor.userID,
+					kZDCCloudRcrd_Data_Pointer_Path  : path
 				};
 			}
-			
-			NSData *cleartext_data = [NSJSONSerialization dataWithJSONObject:dict_data options:0 error:&error];
-			if (error) goto done;
-			
-			// The section is encrypted using the node's encryption key.
-			// This way, only those with permission can decrypt it.
-			
-			NSData *encrypted_data = [cleartext_data encryptedDataWithSymmetricKey:node.encryptionKey error:&error];
-			if (error) goto done;
-			
-			dict[kZDCCloudRcrd_Data] = [encrypted_data base64EncodedStringWithOptions:0];
 		}
 		else if (isMessage)
 		{
@@ -541,27 +533,50 @@ done:
 		}
 		else
 		{
-			NSMutableDictionary *dict_meta = [NSMutableDictionary dictionaryWithCapacity:4];
+			dict_meta = [NSMutableDictionary dictionaryWithCapacity:2];
 	
 			dict_meta[kZDCCloudRcrd_Meta_Filename] = node.name;
 			dict_meta[kZDCCloudRcrd_Meta_DirSalt] = [node.dirSalt base64EncodedStringWithOptions:0];
-	
+		}
+		
+		if (dict_meta)
+		{
 			if (![NSJSONSerialization isValidJSONObject:dict_meta])
 			{
 				error = [self errorWithDescription:@"NSJSONSerialization could not serialize 'meta' section."];
 				goto done;
 			}
-	
-			NSData *cleartext_meta = [NSJSONSerialization dataWithJSONObject:dict_meta options:0 error:&error];
+			
+			NSData *cleartext = [NSJSONSerialization dataWithJSONObject:dict_meta options:0 error:&error];
 			if (error) goto done;
-	
+			
 			// The section is encrypted using the node's encryption key.
 			// This way, only those with permission can decrypt it.
-	
-			NSData *encrypted_meta = [cleartext_meta encryptedDataWithSymmetricKey:node.encryptionKey error:&error];
+			
+			NSData *ciphertext = [cleartext encryptedDataWithSymmetricKey:node.encryptionKey error:&error];
 			if (error) goto done;
-	
-			dict[kZDCCloudRcrd_Meta] = [encrypted_meta base64EncodedStringWithOptions:0];
+			
+			dict[kZDCCloudRcrd_Meta] = [ciphertext base64EncodedStringWithOptions:0];
+		}
+		
+		if (dict_data)
+		{
+			if (![NSJSONSerialization isValidJSONObject:dict_data])
+			{
+				error = [self errorWithDescription:@"NSJSONSerialization could not serialize 'data' section."];
+				goto done;
+			}
+			
+			NSData *cleartext = [NSJSONSerialization dataWithJSONObject:dict_data options:0 error:&error];
+			if (error) goto done;
+			
+			// The section is encrypted using the node's encryption key.
+			// This way, only those with permission can decrypt it.
+			
+			NSData *ciphertext = [cleartext encryptedDataWithSymmetricKey:node.encryptionKey error:&error];
+			if (error) goto done;
+			
+			dict[kZDCCloudRcrd_Data] = [ciphertext base64EncodedStringWithOptions:0];
 		}
 		
 		// Add burnDate

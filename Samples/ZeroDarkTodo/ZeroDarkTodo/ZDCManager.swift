@@ -1772,10 +1772,10 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	// MARK: Sharing Logic
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	public func modifyListPermissions(_ listID     : String,
-												 localUserID  : String,
-												 newUsers     : Set<String>,
-												 removedUsers : Set<String>)
+	public func modifyListSharing(_ listID     : String,
+	                              localUserID  : String,
+	                              newUsers     : Set<String>,
+	                              removedUsers : Set<String>)
 	{
 		if (newUsers.count == 0) && (removedUsers.count == 0) {
 			return
@@ -1786,11 +1786,60 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		rwConnection.asyncReadWrite({ (transaction) in
 			
 			guard let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID) else {
-				
 				return
 			}
-			/*
-			if var node = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List) {
+			
+			// Step 1 of 3:
+			//
+			// To give another user permission to collaborate on our list,
+			// we need to give them read-write permission on the branch.
+			//
+			// Recall that our treesystem looks like this:
+			//
+			//         (home)
+			//         /    \
+			//  (list1)      (list2)
+			//     |           /   \
+			//  (todoA)   (todoB) (todoC)
+			//                      |
+			//                    (imgC)
+			//
+			// So if we want to collaborate on list2,
+			// then we need to add read-write permissions to the following nodes:
+			// - list2
+			// - todoB
+			// - todoC
+			// - imgC
+			//
+			// This will allow our collaboration partner to:
+			// - add todo items
+			// - delete todo items
+			// - modify todo items (including adding, deleting, modifying image)
+			//
+			// Note:
+			//   Permissions work in a familiar *nix style here.
+			//   So our collaboration partner does NOT have permission to delete the list2 node,
+			//   because he/she does NOT have read-write permission for list2's parent node (home).
+			
+			var nodeIDs: [String] = []
+			
+			if let nodeID = cloudTransaction.linkedNodeID(forKey: listID, inCollection: kZ2DCollection_List) {
+				
+				nodeIDs.append(nodeID)
+				zdc.nodeManager.recursiveEnumerateNodeIDs(withParentID: nodeID,
+				                                           transaction: transaction,
+				                                                 using:
+				{ (nodeID, _, _, _) in
+					
+					nodeIDs.append(nodeID)
+				})
+			}
+			
+			for nodeID in nodeIDs {
+				
+				guard var node = transaction.object(forKey: nodeID, inCollection: kZDCCollection_Nodes) as? ZDCNode else {
+					continue
+				}
 				
 				node = node.copy() as! ZDCNode
 				
@@ -1798,6 +1847,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					
 					let shareItem = ZDCShareItem()
 					shareItem.addPermission(ZDCSharePermission.read)
+					shareItem.addPermission(ZDCSharePermission.write)
 					
 					node.shareList.add(shareItem, forUserID: addedUserID)
 				}
@@ -1811,13 +1861,13 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					try cloudTransaction.modifyNode(node)
 					
 				} catch {
-					
 					print("Error modifying node: \(error)")
 					return // from transaction
 				}
 			}
-			*/
 			
+			// Step 2 of 3:
+			//
 			// Modifying the node indirectly modifies the List.
 			// And there are various components of our UI that should update in response to this change.
 			// However, those UI components are looking for changes to the List, not to the node.
@@ -1829,7 +1879,14 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			transaction.touchObject(forKey: listID, inCollection: kZ2DCollection_List)
 			
-			// Next we need to send an invitation to the user(s) we added.
+			// Step 3 of 3:
+			//
+			// Send an invitation to the user(s) we added.
+			//
+			// Our invitation tells the other user(s) about our List,
+			// and invites them to become a collaborator.
+		
+			let permsOps = cloudTransaction.addedOperations()
 			
 		#if true
 			//
@@ -1848,6 +1905,17 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				do {
 					let message = try cloudTransaction.sendMessage(toRecipients: addedUsers)
 					cloudTransaction.setTag(listID, forNodeID: message.uuid, withIdentifier: "listID")
+					
+					let msgOps = cloudTransaction.addedOperations(forNodeID: message.uuid)
+					for msgOp in msgOps {
+						
+						let msgOp = msgOp.copy() as! ZDCCloudOperation
+						for permsOp in permsOps {
+							msgOp.addDependency(permsOp)
+						}
+						
+						cloudTransaction.modifyOperation(msgOp)
+					}
 				}
 				catch {
 					print("Error sending message: \(error)")
@@ -1865,6 +1933,17 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					do {
 						let signal = try cloudTransaction.sendSignal(toRecipient: user)
 						cloudTransaction.setTag(listID, forNodeID: signal.uuid, withIdentifier: "listID")
+						
+						let signalOps = cloudTransaction.addedOperations(forNodeID: signal.uuid)
+						for signalOp in signalOps {
+							
+							let signalOp = signalOp.copy() as! ZDCCloudOperation
+							for permsOp in permsOps {
+								signalOp.addDependency(permsOp)
+							}
+							
+							cloudTransaction.modifyOperation(signalOp)
+						}
 					}
 					catch {
 						print("Error sending message: \(error)")
@@ -1873,6 +1952,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			}
 			
 		#endif
+		
 		})
 	}
 	

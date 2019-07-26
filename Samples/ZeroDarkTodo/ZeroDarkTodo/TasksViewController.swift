@@ -723,10 +723,10 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 															  navigationController: self.navigationController!)
 		{ (newUsers: Set<String>?, removedUsers: Set<String>?) in
 			
-			ZDCManager.sharedInstance.modifyListPermissions(listID,
-			                                                localUserID  : localUserID,
-			                                                newUsers     : newUsers ?? Set<String>(),
-			                                                removedUsers : removedUsers ?? Set<String>())
+			ZDCManager.sharedInstance.modifyListSharing(listID,
+			                                            localUserID  : localUserID,
+			                                            newUsers     : newUsers ?? Set<String>(),
+			                                            removedUsers : removedUsers ?? Set<String>())
 		}
 	}
 	

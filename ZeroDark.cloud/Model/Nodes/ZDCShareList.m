@@ -707,7 +707,7 @@ static NSString *const k_dict    = @"dict";
 				ZDCShareItem *shareItem = [[ZDCShareItem alloc] init];
 				[shareItem addPermission:ZDCSharePermission_LeafsOnly];
 				[shareItem addPermission:ZDCSharePermission_WriteOnce];
-				[shareItem addPermission:ZDCSharePermission_BurnIfOwner];
+				[shareItem addPermission:ZDCSharePermission_BurnIfSender];
 				
 				[shareList addShareItem:shareItem forUserID:@"*"];
 			}

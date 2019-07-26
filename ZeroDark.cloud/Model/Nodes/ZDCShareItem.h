@@ -77,20 +77,20 @@ typedef NS_OPTIONS(unichar, ZDCSharePermission) {
 	 * However, the nodes are considered "write once", in that the user can create them,
 	 * but doesn't have permission to modify them afterwards.
 	 *
-	 * A user's 'msgs' folder utilizes this flag.
-	 * For example, Alice is allowed to write a message into Bob's messages folder,
+	 * A user's inbox utilizes this flag.
+	 * For example, Alice is allowed to write a message into Bob's inbox trunk,
 	 * but Alice doesn't have permission to modify that message afterwards.
 	 *
-	 * @see ZDCSharePermission_BurnIfOwner
+	 * @see ZDCSharePermission_BurnIfSender
 	 */
 	ZDCSharePermission_WriteOnce = 'W',
 
 	/**
-	 * The node can be deleted if they have a 'B' permission in the node itself.
-	 * In other words, they don't need 'w' permission on the parent node,
+	 * The node can be deleted by the sender.
+	 * In other words, the sender doesn't require 'w' permission on the parent node,
 	 * just the 'B' permission on the node to be deleted.
 	 */
-	ZDCSharePermission_BurnIfOwner = 'B'
+	ZDCSharePermission_BurnIfSender = 'B'
 };
 
 /**
@@ -135,7 +135,7 @@ typedef NS_OPTIONS(unichar, ZDCSharePermission) {
  * - `ZDCSharePermission_LeafsOnly`
  * - `ZDCSharePermission_UserOnly`
  * - `ZDCSharePermission_WriteOnce`
- * - `ZDCSharePermission_BurnIfOwner`
+ * - `ZDCSharePermission_BurnIfSender`
  *
  * @see `-hasPermission:`
  * @see `-addPermission:`

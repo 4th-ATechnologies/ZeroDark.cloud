@@ -201,7 +201,7 @@
 			ZDCShareItem *item = [[ZDCShareItem alloc] init];
 			[item addPermission:ZDCSharePermission_LeafsOnly];
 			[item addPermission:ZDCSharePermission_WriteOnce];
-			[item addPermission:ZDCSharePermission_BurnIfOwner];
+			[item addPermission:ZDCSharePermission_BurnIfSender];
 			
 			[dstNode.shareList addShareItem:item forUserID:localUserID];
 		}
@@ -303,7 +303,7 @@
 		ZDCShareItem *item = [[ZDCShareItem alloc] init];
 		[item addPermission:ZDCSharePermission_LeafsOnly];
 		[item addPermission:ZDCSharePermission_WriteOnce];
-		[item addPermission:ZDCSharePermission_BurnIfOwner];
+		[item addPermission:ZDCSharePermission_BurnIfSender];
 		
 		[signal.shareList addShareItem:item forUserID:localUserID];
 	}
@@ -1673,6 +1673,28 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Operations
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (NSArray<ZDCCloudOperation*> *)addedOperations
+{
+	NSMutableArray<ZDCCloudOperation*> *results = [NSMutableArray arrayWithCapacity:2];
+	
+	[self enumerateAddedOperationsUsingBlock:
+	^(YapDatabaseCloudCorePipeline *pipeline,
+	  YapDatabaseCloudCoreOperation *operation, NSUInteger graphIdx, BOOL *stop)
+	{
+		if ([operation isKindOfClass:[ZDCCloudOperation class]])
+		{
+			[results addObject:(ZDCCloudOperation *)operation];
+		}
+	}];
+	
+	return results;
+}
 
 /**
  * See header file for description.

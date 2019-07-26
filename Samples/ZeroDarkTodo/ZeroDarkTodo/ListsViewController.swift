@@ -676,10 +676,10 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 															  navigationController: self.navigationController!)
 		{ (newUsers:Set<String>?, removedUsers:Set<String>?) in
 			
-			ZDCManager.sharedInstance.modifyListPermissions(listID,
-			                                                localUserID  : self.localUserID,
-			                                                newUsers     : newUsers ?? Set<String>(),
-			                                                removedUsers : removedUsers ?? Set<String>())
+			ZDCManager.sharedInstance.modifyListSharing(listID,
+			                                            localUserID  : self.localUserID,
+			                                            newUsers     : newUsers ?? Set<String>(),
+			                                            removedUsers : removedUsers ?? Set<String>())
 		}
 	}
     
@@ -705,10 +705,10 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 															  navigationController: self.navigationController!)
 		{ (newUsers: Set<String>?, removedUsers: Set<String>?) in
 			
-			ZDCManager.sharedInstance.modifyListPermissions(listID,
-			                                                localUserID  : self.localUserID,
-			                                                newUsers     : newUsers ?? Set<String>(),
-			                                                removedUsers : removedUsers ?? Set<String>())
+			ZDCManager.sharedInstance.modifyListSharing(listID,
+			                                            localUserID  : self.localUserID,
+			                                            newUsers     : newUsers ?? Set<String>(),
+			                                            removedUsers : removedUsers ?? Set<String>())
 		}
 	}
 

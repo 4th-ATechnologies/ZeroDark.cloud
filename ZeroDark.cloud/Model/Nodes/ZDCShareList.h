@@ -144,9 +144,6 @@ NS_SWIFT_NAME(countOfUserIDs(excluding:));
  * Sets the shareItem for the given key.
  * Keys are a compound component: "{type}:{identifier}"
  *
- * @see `-setShareItem:forUserID:`
- * @see `-setShareItem:forServerID:`
- *
  * @return NO if a shareItem already exists for the given key.
  *         In which case you shouldn't be replacing it.
  *         You should be modifying the existing shareItem.

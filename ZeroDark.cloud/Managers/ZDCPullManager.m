@@ -2966,7 +2966,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 **/
 - (void)syncPointerNode:(ZDCNode *)pointerNode
               pullState:(ZDCPullState *)pullState
-         dirCompletion:(ZDCPullTaskCompletion)dataCompletionBlock
+          dirCompletion:(ZDCPullTaskCompletion)dataCompletionBlock
 {
 	// Todo...
 }

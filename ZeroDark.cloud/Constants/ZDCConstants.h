@@ -274,15 +274,15 @@ extern NSString *const kZDCCloudRcrd_Meta_DirSalt;
 
 /** Key name used within RCRD file stored in the cloud.
     This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
-extern NSString *const kZDCCloudRcrd_Meta_Pointer;
+extern NSString *const kZDCCloudRcrd_Data_Pointer;
 
 /** Key name used within RCRD file stored in the cloud.
     This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
-extern NSString *const kZDCCloudRcrd_Meta_Pointer_Owner;
+extern NSString *const kZDCCloudRcrd_Data_Pointer_Owner;
 
 /** Key name used within RCRD file stored in the cloud.
     This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
-extern NSString *const kZDCCloudRcrd_Meta_Pointer_Path;
+extern NSString *const kZDCCloudRcrd_Data_Pointer_Path;
 
 //
 // Dictionary keys used in .pubKey/.privKey files

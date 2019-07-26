@@ -559,6 +559,24 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  * Occassionally you may want to tweak an operation's dependencies or priority.
  * You can do that at any time using the underlying functions exposed by YapDatabaseCloudCore.
  *
+ * (See: [YapDatabaseCloudCoreTransaction enumerateAddedOperationsUsingBlock:])
+ *
+ * However, the most common use case is to tweak these within the same database commit
+ * in which you created the operation(s). This method returns the operations that were
+ * added to the queue in THIS transaction.
+ */
+- (NSArray<ZDCCloudOperation*> *)addedOperations;
+
+/**
+ * When you create, modify or delete a node, the system creates and queues operations
+ * to push these changes to the cloud. The operations are stored safely in the database,
+ * and are executed by the PushManager.
+ *
+ * Occassionally you may want to tweak an operation's dependencies or priority.
+ * You can do that at any time using the underlying functions exposed by YapDatabaseCloudCore.
+ *
+ * (See: [YapDatabaseCloudCoreTransaction enumerateAddedOperationsUsingBlock:])
+ *
  * However, the most common use case is to tweak these within the same database commit
  * in which you created the operation(s). This method returns the operations that were
  * added to the queue in THIS transaction.

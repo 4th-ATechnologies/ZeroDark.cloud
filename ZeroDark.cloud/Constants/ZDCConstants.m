@@ -70,10 +70,11 @@ NSString *const kZDCDirPrefix_Deprecated_Outbox = @"outbox";
 
 /* extern */ NSString *const kZDCCloudRcrd_Meta_Filename       = @"filename";
 /* extern */ NSString *const kZDCCloudRcrd_Meta_DirSalt        = @"dirSalt";
-/* extern */ NSString *const kZDCCloudRcrd_Meta_Pointer        = @"pointer";
 
-/* extern */ NSString *const kZDCCloudRcrd_Meta_Pointer_Owner  = @"owner";
-/* extern */ NSString *const kZDCCloudRcrd_Meta_Pointer_Path   = @"path";
+/* extern */ NSString *const kZDCCloudRcrd_Data_Pointer        = @"pointer";
+
+/* extern */ NSString *const kZDCCloudRcrd_Data_Pointer_Owner  = @"owner";
+/* extern */ NSString *const kZDCCloudRcrd_Data_Pointer_Path   = @"path";
 
 // Dictionary keys used in .pubKey/.privKey files
 
