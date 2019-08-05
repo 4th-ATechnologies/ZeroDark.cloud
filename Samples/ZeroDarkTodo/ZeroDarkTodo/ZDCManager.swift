@@ -663,11 +663,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	///
 	func data(forMessage message: ZDCNode, transaction: YapDatabaseReadTransaction) -> ZDCData? {
 		
-		// We're going to send a JSON message.
-		// It will contain our invitation to collaborate on the List.
-		//
-		var dict = [String: String]()
-		
 		// When we enqueued the message, we tagged it with the corresponding listID.
 		// So we can fetch our listID via this tag.
 		guard
@@ -678,42 +673,40 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			return nil
 		}
 		
-		// Here's what we want our message to look like:
-		// {
-		//   "name": "Holiday Groceries",
-		//   "msg": "Hi Bob's, let collaborate on the shopping list for the holidays!",
-		//   "path": "com.4th-a.ZeroDarkTodo/abc123/def456"
-		// }
-		
-		dict["name"] = list.title
-		
-		if let invitation = list.invitations[message.uuid] {
-			dict["msg"] = invitation
-		}
-		else {
-			// If the user didn't type in any specific invitation text, then we can leave the message blank.
-			// And the app will display a generic invitation message.
-		}
-		
-		// We also need to include the cloud path to the node.
+		// Our message needs to include the cloudPath to the node.
 		// This will allow the message receiver to link the node into their treesystem.
 		//
 		// To get the cloudPath, we can use the ZDCCloudPathManager.
-		
-		if let listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List),
-		   let locator = zdc.cloudPathManager.cloudLocator(for: listNode, transaction: transaction)
-		{
-			dict["path"] = locator.cloudPath.path()
-		}
+		//
+		guard
+			let listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List),
+			let cloudPath = zdc.cloudPathManager.cloudPath(for: listNode, transaction: transaction)
 		else {
-			// This information isn't optional !
 			return nil
 		}
+		
+		// Our message needs to include the cloudID for the node.
+		// The cloudID is a UUID for the node, which is assigned by the server.
+		//
+		// By including the cloudID, we ensure the receiver can find our node,
+		// even if we happen to rename it or move it in the future.
+		//
+		// Note that this value is nil until the node has been uploaded.
+		//
+		guard let cloudID = listNode.cloudID else {
+			return nil
+		}
+		
+		let message = list.invitations[message.uuid]
+		let invitation = InvitationCloudJSON(listName: list.title,
+		                                      message: message,
+		                                    cloudPath: cloudPath.path(),
+		                                      cloudID: cloudID)
 		
 		// Convert to JSON, and return data
 		do {
 			let encoder = JSONEncoder()
-			let jsonData = try encoder.encode(dict)
+			let jsonData = try encoder.encode(invitation)
 			return ZDCData(data: jsonData)
 			
 		} catch {
@@ -1970,7 +1963,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			guard
 				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: invitation.receiverID),
 				let sender = transaction.object(forKey: invitation.senderID, inCollection: kZDCCollection_Users) as? ZDCUser,
-				let cloudPath = ZDCCloudPath.init(fromPath: invitation.cloudPath)
+				let remoteCloudPath = ZDCCloudPath.init(fromPath: invitation.cloudPath)
 			else {
 				return
 			}
@@ -1992,13 +1985,14 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			// So we're grafting List (C) into our own treesystem.
 			// And this will allow us to see Todo items (1), (2) & (3).
 			
-			let path = ZDCTreesystemPath(pathComponents: [title], trunk: .home)
+			let localPath = ZDCTreesystemPath(pathComponents: [title], trunk: .home)
 			
 			let listNode: ZDCNode!
 			do {
-				listNode = try cloudTransaction.graftNode(withLocalPath: path,
-			                                                remotePath: cloudPath,
-			                                                remoteUser: sender)
+				listNode = try cloudTransaction.graftNode(withLocalPath: localPath,
+				                                        remoteCloudPath: remoteCloudPath,
+				                                          remoteCloudID: invitation.cloudID,
+				                                             remoteUser: sender)
 			}
 			catch {
 				print("Error grafting node: \(error)")

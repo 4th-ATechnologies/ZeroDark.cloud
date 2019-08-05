@@ -29,6 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy, readwrite, nullable) NSDate *dataLastModified;
 
 @property (nonatomic, strong, readwrite) id rcrdCompletionBlock;
+@property (nonatomic, strong, readwrite, nullable) id ptrCompletionBlock;
 @property (nonatomic, strong, readwrite, nullable) id dirCompletionBlock;
 
 @end

@@ -1066,7 +1066,8 @@
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)graftNodeWithLocalPath:(ZDCTreesystemPath *)path
-                                  remotePath:(ZDCCloudPath *)remotePath
+                             remoteCloudPath:(ZDCCloudPath *)remotePath
+                               remoteCloudID:(NSString *)remoteCloudID
                                   remoteUser:(ZDCUser *)remoteUser
                                        error:(NSError *_Nullable *_Nullable)outError
 {
@@ -1164,6 +1165,7 @@
 	{
 		pointeeNode = [[ZDCNode alloc] initWithLocalUserID:localUserID];
 		pointeeNode.parentID = [self graftParentID];
+		pointeeNode.cloudID = remoteCloudID;
 		
 		NSString *cloudName = [remotePath fileNameWithExt:nil];
 		pointeeNode.name = cloudName;
@@ -1194,37 +1196,6 @@
 	
 	if (outError) *outError = nil;
 	return pointerNode;
-}
-
-/**
- * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
- */
-- (NSDictionary *)graftInviteForNode:(ZDCNode *)node
-{
-	NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:3];
-	
-	dict[@"userID"] = [self localUserID];
-	
-	ZDCCloudPath *cloudPath =
-	  [[ZDCCloudPathManager sharedInstance] cloudPathForNode:node transaction:databaseTransaction];
-	
-	dict[@"path"] = [cloudPath path];
-	
-	if (node.cloudID)
-	{
-		dict[@"cloudID"] = node.cloudID;
-	}
-	else
-	{
-		DDLogWarn(@"Requesting graftInvite dictionary BEFORE node has been uploaded!"
-		          @" You should wait until AFTER the node has been uploaded to get this information."
-		          @" To achieve this, add dependencies to your message/signal operation"
-		          @" so that it depends upon the upload of the target node(s).");
-	}
-	
-	return [dict copy];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

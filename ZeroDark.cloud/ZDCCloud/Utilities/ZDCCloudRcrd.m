@@ -1,6 +1,7 @@
 #import "ZDCCloudRcrd.h"
-#import "ZDCConstants.h"
 
+#import "ZDCConstants.h"
+#import "NSString+ZeroDark.h"
 
 @implementation ZDCCloudRcrd
 
@@ -14,6 +15,10 @@
 @synthesize share;
 @synthesize metadata;
 @synthesize data;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Parsing Children
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (BOOL)usingAdvancedChildrenContainer
 {
@@ -69,5 +74,53 @@
 	return dirPrefix;
 }
 
-@end
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma Parsing Data
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+- (BOOL)isPointer
+{
+	return [self getPointerCloudPath:NULL cloudID:NULL ownerID:NULL];
+}
+
+- (BOOL)getPointerCloudPath:(ZDCCloudPath **)outPath cloudID:(NSString **)outCloudID ownerID:(NSString **)outOwnerID
+{
+	BOOL result = NO;
+	
+	ZDCCloudPath *cloudPath = nil;
+	NSString *cloudID = nil;
+	NSString *ownerID = nil;
+	
+	if (self.data)
+	{
+		NSDictionary *pointer = self.data[kZDCCloudRcrd_Data_Pointer];
+		if ([pointer isKindOfClass:[NSDictionary class]])
+		{
+			NSString *p_owner   = pointer[kZDCCloudRcrd_Data_Pointer_Owner];
+			NSString *p_path    = pointer[kZDCCloudRcrd_Data_Pointer_Path];
+			NSString *p_cloudID = pointer[kZDCCloudRcrd_Data_Pointer_CloudID];
+			
+			if ([p_owner   isKindOfClass:[NSString class]] &&
+			    [p_path    isKindOfClass:[NSString class]] &&
+			    [p_cloudID isKindOfClass:[NSString class]]  )
+			{
+				if ([p_owner isValidUserID]) {
+					ownerID = p_owner;
+				}
+				
+				cloudID = p_cloudID;
+				cloudPath = [ZDCCloudPath cloudPathFromPath:p_path];
+				
+				result = (ownerID != nil) && (cloudID != nil) && (cloudPath != nil);
+			}
+		}
+	}
+	
+	if (outPath) *outPath = cloudPath;
+	if (outCloudID) *outCloudID = cloudID;
+	if (outOwnerID) *outOwnerID = ownerID;
+	
+	return result;
+}
+
+@end

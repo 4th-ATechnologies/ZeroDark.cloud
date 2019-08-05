@@ -25,6 +25,7 @@
 @synthesize dataLastModified;
 
 @synthesize rcrdCompletionBlock;
+@synthesize ptrCompletionBlock;
 @synthesize dirCompletionBlock;
 
 @end

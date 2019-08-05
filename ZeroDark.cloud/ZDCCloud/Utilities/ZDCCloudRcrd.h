@@ -9,6 +9,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import "ZDCCloudPath.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
 /**
@@ -99,6 +101,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, copy, readwrite, nullable) NSDictionary *data;
 
+#pragma mark Parsing Children
+
 /**
  * Standard nodes just have a single "container".
  *
@@ -116,6 +120,20 @@ NS_ASSUME_NONNULL_BEGIN
  * Extracts the standard dirPrefix from the `children` dictionary.
  */
 - (nullable NSString *)dirPrefix;
+
+#pragma mark Parsing Data
+
+/**
+ * Returns YES if the data component contains valid pointer info.
+ */
+- (BOOL)isPointer;
+
+/**
+ * Extracts pointer information from the data component.
+ */
+- (BOOL)getPointerCloudPath:(ZDCCloudPath *_Nullable *_Nullable)outPath
+                    cloudID:(NSString *_Nullable *_Nullable)outCloudID
+                    ownerID:(NSString *_Nullable *_Nullable)outOwnerID;
 
 @end
 

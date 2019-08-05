@@ -284,6 +284,10 @@ extern NSString *const kZDCCloudRcrd_Data_Pointer_Owner;
     This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Data_Pointer_Path;
 
+/** Key name used within RCRD file stored in the cloud.
+    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+extern NSString *const kZDCCloudRcrd_Data_Pointer_CloudID;
+
 //
 // Dictionary keys used in .pubKey/.privKey files
 //

@@ -30,8 +30,9 @@ class Invitation: NSCopying, Codable {
 		case senderID = "senderID"
 		case receiverID = "receiverID"
 		case listName = "listName"
-		case cloudPath = "cloudPath"
 		case message = "message"
+		case cloudPath = "cloudPath"
+		case cloudID = "cloudID"
 	}
 	
 	let uuid: String
@@ -40,30 +41,47 @@ class Invitation: NSCopying, Codable {
 	let receiverID: String
 	
 	let listName: String
-	let cloudPath: String
 	let message: String?
+	
+	let cloudPath: String
+	let cloudID: String
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: Init
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	init(uuid: String, senderID: String, receiverID: String, listName: String, cloudPath: String, message: String?) {
+	init(uuid: String,
+	     senderID: String,
+	     receiverID: String,
+	     listName: String,
+	     message: String?,
+	     cloudPath: String,
+	     cloudID: String)
+	{
 		self.uuid = uuid
 		self.senderID = senderID
 		self.receiverID = receiverID
 		self.listName = listName
-		self.cloudPath = cloudPath
 		self.message = message
+		self.cloudPath = cloudPath
+		self.cloudID = cloudID
 	}
 	
-	convenience init(senderID: String, receiverID: String, listName: String, cloudPath: String, message: String?) {
+	convenience init(senderID: String,
+	                 receiverID: String,
+	                 listName: String,
+	                 message: String?,
+	                 cloudPath: String,
+	                 cloudID: String)
+	{
 		let _uuid = UUID().uuidString
 		self.init(uuid       : _uuid,
 		          senderID   : senderID,
 		          receiverID : receiverID,
 		          listName   : listName,
+		          message    : message,
 		          cloudPath  : cloudPath,
-		          message    : message)
+		          cloudID    : cloudID)
 	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -94,19 +112,20 @@ class Invitation: NSCopying, Codable {
 		self.receiverID = node.localUserID
 		
 		self.listName = cloudJSON.listName
-		self.cloudPath = cloudJSON.cloudPath
 		self.message = cloudJSON.message
+		self.cloudPath = cloudJSON.cloudPath
+		self.cloudID = cloudJSON.cloudID
 	}
 	
 	func copy(with zone: NSZone? = nil) -> Any {
 		
-		let copy =
-		  Invitation(uuid       : uuid,
-		             senderID   : senderID,
-		             receiverID : receiverID,
-		             listName   : listName,
-		             cloudPath  : cloudPath,
-		             message    : message)
+		let copy = Invitation(uuid       : uuid,
+		                      senderID   : senderID,
+		                      receiverID : receiverID,
+		                      listName   : listName,
+		                      message    : message,
+		                      cloudPath  : cloudPath,
+		                      cloudID    : cloudID)
 		return copy
 	}
 }
@@ -121,17 +140,31 @@ class InvitationCloudJSON: Codable {
 	
 	enum CodingKeys: String, CodingKey {
 		case listName = "name"
-		case cloudPath = "path"
 		case message = "msg"
+		case cloudPath = "path"
+		case cloudID = "cloudID"
 	}
 	
 	let listName: String
-	let cloudPath: String
 	let message: String?
+	let cloudPath: String
+	let cloudID: String
+	
+	init(listName: String,
+	     message: String?,
+	     cloudPath: String,
+	     cloudID: String)
+	{
+		self.listName = listName
+		self.message = message
+		self.cloudPath = cloudPath
+		self.cloudID = cloudID
+	}
 	
 	init(fromInvitation invitation: Invitation) {
 		self.listName = invitation.listName
-		self.cloudPath = invitation.cloudPath
 		self.message = invitation.message
+		self.cloudPath = invitation.cloudPath
+		self.cloudID = invitation.cloudID
 	}
 }

@@ -73,8 +73,9 @@ NSString *const kZDCDirPrefix_Deprecated_Outbox = @"outbox";
 
 /* extern */ NSString *const kZDCCloudRcrd_Data_Pointer        = @"pointer";
 
-/* extern */ NSString *const kZDCCloudRcrd_Data_Pointer_Owner  = @"owner";
-/* extern */ NSString *const kZDCCloudRcrd_Data_Pointer_Path   = @"path";
+/* extern */ NSString *const kZDCCloudRcrd_Data_Pointer_Owner   = @"owner";
+/* extern */ NSString *const kZDCCloudRcrd_Data_Pointer_Path    = @"path";
+/* extern */ NSString *const kZDCCloudRcrd_Data_Pointer_CloudID = @"cloudID";
 
 // Dictionary keys used in .pubKey/.privKey files
 

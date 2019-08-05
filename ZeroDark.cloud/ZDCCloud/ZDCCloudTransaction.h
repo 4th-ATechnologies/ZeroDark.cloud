@@ -281,10 +281,15 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  *   The local path for the pointer node.
  *   It will point to the node in the other user's treesystem.
  *
- * @param remotePath
+ * @param remoteCloudPath
  *   The location of the node in the other user's treesystem.
  *   Typically this information is delivered to you via a message/signal.
  *   And the remote user typically gets this information via the `graftInviteForNode:` method.
+ *
+ * @param remoteCloudID
+ *   The cloudID of the node in the other user's treesystem.
+ *   This parameter allows the system to find the corresponding node,
+ *   even if the node gets moved/renamed.
  *
  * @param remoteUser
  *   The owner of the foreign treesystem.
@@ -297,14 +302,10 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  *         Otherwise returns nil, in which case, outError will be set.
  */
 - (nullable ZDCNode *)graftNodeWithLocalPath:(ZDCTreesystemPath *)path
-                                  remotePath:(ZDCCloudPath *)remotePath
+                             remoteCloudPath:(ZDCCloudPath *)remoteCloudPath
+                               remoteCloudID:(NSString *)remoteCloudID
                                   remoteUser:(ZDCUser *)remoteUser
                                        error:(NSError *_Nullable *_Nullable)outError;
-
-/**
- *
- */
-- (NSDictionary *)graftInviteForNode:(ZDCNode *)node;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Linking
