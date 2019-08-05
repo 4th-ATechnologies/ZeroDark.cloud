@@ -1,5 +1,7 @@
 #import "ZDCCloudPath.h"
 
+#import "ZDCConstants.h"
+
 // Encoding/Decoding keys
 static NSString *const k_zAppID    = @"appPrefix";
 static NSString *const k_dirPrefix = @"dirPrefix";
@@ -36,10 +38,13 @@ static BOOL ZDCCloudPathParse(NSString **zAppIDPtr,
 		dirPrefix = components[1];
 		fileName  = components[2];
 		
-		if (![ZDCCloudPath isValidZAppID:zAppID] ||
-		    ![ZDCCloudPath isValidDirPrefix:dirPrefix] ||
-		    ![ZDCCloudPath isValidFileName:fileName])
-		{
+		if (![ZDCCloudPath isValidZAppID:zAppID]) {
+			isValid = NO;
+		}
+		else if (![ZDCCloudPath isValidDirPrefix:dirPrefix]) {
+			isValid = NO;
+		}
+		else if (![ZDCCloudPath isValidFileName:fileName]) {
 			isValid = NO;
 		}
 	}
@@ -192,10 +197,11 @@ static BOOL ZDCCloudPathEqual(NSString *zAppID1, NSString *dirPrefix1, NSString 
 	  @"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	  @".-_";
 	
-	NSCharacterSet *set = [NSCharacterSet characterSetWithCharactersInString:str];
-	NSRange range = [zAppID rangeOfCharacterFromSet:set];
+	NSCharacterSet *goodSet = [NSCharacterSet characterSetWithCharactersInString:str];
+	NSCharacterSet *badSet = [goodSet invertedSet];
 	
-	return (range.location == 0) && (range.length == zAppID.length);
+	NSRange badRange = [zAppID rangeOfCharacterFromSet:badSet];
+	return (badRange.location == NSNotFound);
 }
 
 /**
@@ -205,12 +211,24 @@ static BOOL ZDCCloudPathEqual(NSString *zAppID1, NSString *dirPrefix1, NSString 
  */
 + (BOOL)isValidDirPrefix:(NSString *)dirPrefix
 {
-	if (dirPrefix.length != 32) return NO;
+	if (dirPrefix.length != 32)
+	{
+		if ([dirPrefix isEqualToString:kZDCDirPrefix_Prefs])   return YES;
+		if ([dirPrefix isEqualToString:kZDCDirPrefix_MsgsIn])  return YES;
+		if ([dirPrefix isEqualToString:kZDCDirPrefix_MsgsOut]) return YES;
+		
+		if ([dirPrefix isEqualToString:kZDCDirPrefix_Deprecated_Msgs])   return YES;
+		if ([dirPrefix isEqualToString:kZDCDirPrefix_Deprecated_Inbox])  return YES;
+		if ([dirPrefix isEqualToString:kZDCDirPrefix_Deprecated_Outbox]) return YES;
+		
+		return NO;
+	}
 	
-	NSCharacterSet *set = [NSCharacterSet characterSetWithCharactersInString:@"0123456789ABCDEF"];
-	NSRange range = [dirPrefix rangeOfCharacterFromSet:set];
+	NSCharacterSet *goodSet = [NSCharacterSet characterSetWithCharactersInString:@"0123456789ABCDEF"];
+	NSCharacterSet *badSet = [goodSet invertedSet];
 	
-	return (range.location == 0) && (range.length == 32);
+	NSRange badRange = [dirPrefix rangeOfCharacterFromSet:badSet];
+	return (badRange.location == NSNotFound);
 }
 
 /**
@@ -227,10 +245,11 @@ static BOOL ZDCCloudPathEqual(NSString *zAppID1, NSString *dirPrefix1, NSString 
 	
 	if (filename.length != 32) return NO;
 	
-	NSCharacterSet *set = [NSCharacterSet characterSetWithCharactersInString:@"ybndrfg8ejkmcpqxot1uwisza345h769"];
-	range = [filename rangeOfCharacterFromSet:set];
+	NSCharacterSet *goodSet = [NSCharacterSet characterSetWithCharactersInString:@"ybndrfg8ejkmcpqxot1uwisza345h769"];
+	NSCharacterSet *badSet = [goodSet invertedSet];
 	
-	return (range.location == 0) && (range.length == 32);
+	range = [filename rangeOfCharacterFromSet:badSet];
+	return (range.location == NSNotFound);
 }
 
 /**
