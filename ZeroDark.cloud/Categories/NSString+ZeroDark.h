@@ -36,6 +36,13 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)isZBase32;
 
 /**
+ * Returns YES if:
+ * - the string contains exactly 32 characters
+ * - all the characters in the string are part of the zBase32 character set
+ */
+- (BOOL)isValidUserID;
+
+/**
  * When converting a string to UTF-8 bytes, it's important to remember that 1 UTF-8 character != 1 byte.
  * Each UTF-8 "character" may be 1, 2, 3 or 4 bytes.
  *
@@ -54,7 +61,6 @@ NS_ASSUME_NONNULL_BEGIN
  * Write some doocumentation here
  *
  */
-
 + (NSString *)hexEncodeBytesWithSpaces:(const uint8_t *)bytes
                                 length:(NSUInteger)length;
 

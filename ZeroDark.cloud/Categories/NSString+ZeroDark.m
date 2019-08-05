@@ -53,6 +53,14 @@
 }
 
 /**
+ * See header file for description.
+ */
+- (BOOL)isValidUserID
+{
+	return (self.length == 32) && [self isZBase32];
+}
+
+/**
  * When converting a string to UTF-8 bytes, it's important to remember that 1 UTF-8 character != 1 byte.
  * Each UTF-8 "character" may be 1, 2, 3 or 4 bytes.
  *

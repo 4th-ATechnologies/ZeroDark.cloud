@@ -35,6 +35,13 @@ static BOOL ZDCCloudPathParse(NSString **zAppIDPtr,
 		zAppID    = components[0];
 		dirPrefix = components[1];
 		fileName  = components[2];
+		
+		if (![ZDCCloudPath isValidZAppID:zAppID] ||
+		    ![ZDCCloudPath isValidDirPrefix:dirPrefix] ||
+		    ![ZDCCloudPath isValidFileName:fileName])
+		{
+			isValid = NO;
+		}
 	}
 	else
 	{
@@ -144,6 +151,11 @@ static BOOL ZDCCloudPathEqual(NSString *zAppID1, NSString *dirPrefix1, NSString 
 	return YES;
 }
 
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudPath.html
+ */
 + (instancetype)cloudPathFromPath:(NSString *)path
 {
 	NSString *zAppID    = nil;
@@ -164,6 +176,8 @@ static BOOL ZDCCloudPathEqual(NSString *zAppID1, NSString *dirPrefix1, NSString 
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudPath.html
  */
 + (BOOL)isValidZAppID:(NSString *)zAppID
 {
@@ -186,6 +200,8 @@ static BOOL ZDCCloudPathEqual(NSString *zAppID1, NSString *dirPrefix1, NSString 
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudPath.html
  */
 + (BOOL)isValidDirPrefix:(NSString *)dirPrefix
 {
@@ -199,6 +215,8 @@ static BOOL ZDCCloudPathEqual(NSString *zAppID1, NSString *dirPrefix1, NSString 
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudPath.html
  */
 + (BOOL)isValidFileName:(NSString *)filename
 {
@@ -213,6 +231,17 @@ static BOOL ZDCCloudPathEqual(NSString *zAppID1, NSString *dirPrefix1, NSString 
 	range = [filename rangeOfCharacterFromSet:set];
 	
 	return (range.location == 0) && (range.length == 32);
+}
+
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudPath.html
+ */
++ (BOOL)isValidCloudPath:(NSString *)cloudPath
+{
+	BOOL isValid = ZDCCloudPathParse(NULL, NULL, NULL, cloudPath);
+	return isValid;
 }
 
 #pragma mark Init

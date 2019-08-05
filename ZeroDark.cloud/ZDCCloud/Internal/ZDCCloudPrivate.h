@@ -105,6 +105,18 @@
 - (void)moveCloudLocator:(ZDCCloudLocator *)oldCloudLocator
 			 toCloudLocator:(ZDCCloudLocator *)newCloudLocator;
 
+/**
+ * Enumerates all the operations in the queue,
+ * and returns an array of values extracted from ZDCCloudOperation.changeset_permissions.
+ *
+ * We use the ZDCSyncable protocol to sync permissions changes,
+ * and this is the infor we need to perform a merge.
+ *
+ * @param nodeID
+ *   The node whose operations you're looking for. (nodeID == ZDCNode.uuid)
+ */
+- (NSArray<NSDictionary*> *)pendingPermissionsChangesetsForNodeID:(NSString *)nodeID;
+
 /* Todo ?
 
 - (void)changeCleartextName:(NSString *)oldCleartextName

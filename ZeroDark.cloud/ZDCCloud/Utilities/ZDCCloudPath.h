@@ -90,6 +90,16 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
 + (BOOL)isValidFileName:(NSString *)filename;
 
 /**
+ * Returns YES if the given value is a valid cloudPath.
+ *
+ * A cloudPath is of the form "X/Y/Z", where:
+ * - X is a valid zAppID
+ * - Y is a valid dirPrefix
+ * - Z is a valid filename
+ */
++ (BOOL)isValidCloudPath:(NSString *)cloudPath;
+
+/**
  * Creates a new instance with the given components.
  *
  * @param zAppID

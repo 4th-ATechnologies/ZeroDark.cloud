@@ -272,12 +272,39 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
                                      error:(NSError *_Nullable *_Nullable)outError;
 
 /**
+ * Grafting allows you to add another user's branch into your own treesystem.
+ * It's used for collaboration, as the branch is now shared between multiple users.
  *
+ * @see `graftInviteForNode:`
+ *
+ * @param path
+ *   The local path for the pointer node.
+ *   It will point to the node in the other user's treesystem.
+ *
+ * @param remotePath
+ *   The location of the node in the other user's treesystem.
+ *   Typically this information is delivered to you via a message/signal.
+ *   And the remote user typically gets this information via the `graftInviteForNode:` method.
+ *
+ * @param remoteUser
+ *   The owner of the foreign treesystem.
+ *
+ * @param outError
+ *   Set to nil on success.
+ *   Otherwise returns an error that explains what went wrong.
+ *
+ * @return If the grafting was successful, returns the newly created node.
+ *         Otherwise returns nil, in which case, outError will be set.
  */
 - (nullable ZDCNode *)graftNodeWithLocalPath:(ZDCTreesystemPath *)path
                                   remotePath:(ZDCCloudPath *)remotePath
                                   remoteUser:(ZDCUser *)remoteUser
                                        error:(NSError *_Nullable *_Nullable)outError;
+
+/**
+ *
+ */
+- (NSDictionary *)graftInviteForNode:(ZDCNode *)node;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Linking

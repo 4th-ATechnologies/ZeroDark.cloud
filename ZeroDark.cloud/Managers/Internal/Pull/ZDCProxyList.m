@@ -272,8 +272,8 @@
 		}
 		
 		[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-		                                      completionQueue: queue
-		                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+		                                    completionQueue: queue
+		                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 		{
 			if (error)
 			{

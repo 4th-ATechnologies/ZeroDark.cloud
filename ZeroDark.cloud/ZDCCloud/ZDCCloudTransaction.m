@@ -1196,6 +1196,37 @@
 	return pointerNode;
 }
 
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (NSDictionary *)graftInviteForNode:(ZDCNode *)node
+{
+	NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:3];
+	
+	dict[@"userID"] = [self localUserID];
+	
+	ZDCCloudPath *cloudPath =
+	  [[ZDCCloudPathManager sharedInstance] cloudPathForNode:node transaction:databaseTransaction];
+	
+	dict[@"path"] = [cloudPath path];
+	
+	if (node.cloudID)
+	{
+		dict[@"cloudID"] = node.cloudID;
+	}
+	else
+	{
+		DDLogWarn(@"Requesting graftInvite dictionary BEFORE node has been uploaded!"
+		          @" You should wait until AFTER the node has been uploaded to get this information."
+		          @" To achieve this, add dependencies to your message/signal operation"
+		          @" so that it depends upon the upload of the target node(s).");
+	}
+	
+	return [dict copy];
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Linking
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1757,6 +1788,32 @@
 }
 
 /**
+ * Method declared in ZDCCloudPrivate.h
+ */
+- (NSArray<NSDictionary*> *)pendingPermissionsChangesetsForNodeID:(NSString *)nodeID
+{
+	NSMutableArray<NSDictionary*> *changesets = [NSMutableArray array];
+	
+	[self _enumerateOperationsUsingBlock:^(YapDatabaseCloudCorePipeline *pipeline,
+														YapDatabaseCloudCoreOperation *operation, NSUInteger graphIdx, BOOL *stop)
+	{
+		if ([operation isKindOfClass:[ZDCCloudOperation class]])
+		{
+			__unsafe_unretained ZDCCloudOperation *op = (ZDCCloudOperation *)operation;
+			if ([op.nodeID isEqualToString:nodeID])
+			{
+				NSDictionary *changeset = op.changeset_permissions;
+				if (changeset) {
+					[changesets addObject:changeset];
+				}
+			}
+		}
+	}];
+	
+	return changesets;
+}
+
+/**
  * See header file for description.
  * Or view the reference docs online:
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
@@ -1773,8 +1830,9 @@
 			__unsafe_unretained ZDCCloudOperation *op = (ZDCCloudOperation *)operation;
 			if ([op.nodeID isEqualToString:nodeID])
 			{
-				if (op.changeset_obj) {
-					[changesets addObject:op.changeset_obj];
+				NSDictionary *changeset = op.changeset_obj;
+				if (changeset) {
+					[changesets addObject:changeset];
 				}
 			}
 		}

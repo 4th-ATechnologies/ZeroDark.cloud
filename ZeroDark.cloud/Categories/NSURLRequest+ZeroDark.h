@@ -13,6 +13,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NSURLRequest (ZeroDark)
 
+/**
+ * For debugging: Returns a description of the URL request.
+ */
 - (NSString *)zdcDescription;
 
 @end

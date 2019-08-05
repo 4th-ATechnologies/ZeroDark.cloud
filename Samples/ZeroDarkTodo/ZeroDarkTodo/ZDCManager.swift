@@ -1962,6 +1962,11 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		let rwConnection = zdc.databaseManager!.rwDatabaseConnection
 		rwConnection.asyncReadWrite({ (transaction) in
 			
+			if !transaction.hasObject(forKey: invitation.uuid, inCollection: kZ2DCollection_Invitation) {
+				// We've already processed this invitation
+				return;
+			}
+			
 			guard
 				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: invitation.receiverID),
 				let sender = transaction.object(forKey: invitation.senderID, inCollection: kZDCCollection_Users) as? ZDCUser,
