@@ -120,12 +120,19 @@
 			needsDownload = YES;
 		}
 		
-		if (needsDownload || needsRefresh)
+		if (needsDownload)
 		{
 			[weakSelf _fetchRemoteUserWithID: remoteUserID
 			                     requesterID: localUserID
 			                 completionQueue: completionQueue
 			                 completionBlock: completionBlock];
+		}
+		else if (needsRefresh)
+		{
+			[weakSelf _fetchRemoteUserWithID: remoteUserID
+			                     requesterID: localUserID
+			                 completionQueue: nil
+			                 completionBlock: nil];
 		}
 	}];
 }
@@ -554,6 +561,14 @@
 		ZDCUser *user = [[ZDCUser alloc] initWithUUID:remoteUserID];
 		user.aws_region = region;
 		user.aws_bucket = bucket;
+		
+		if ((value = response[@"deleted"]))
+		{
+			if ([value isKindOfClass:[NSNumber class]])
+			{
+				user.accountDeleted = [(NSNumber *)value boolValue];
+			}
+		}
 
 		completionBlock(user, nil);
 	}];

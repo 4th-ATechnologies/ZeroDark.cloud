@@ -346,8 +346,8 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	[self setupIndex_Nodes];
 	[self setupIndex_Users];
 	[self setupView_LocalUsers];
-	[self setupView_Filesystem_Name];
-	[self setupView_Filesystem_CloudName];
+	[self setupView_Treesystem_Name];
+	[self setupView_Treesystem_CloudName];
 	[self setupView_Flat];
 	[self setupView_CloudDirPrefix];
 	[self setupView_SplitKeys];
@@ -579,12 +579,12 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	}];
 }
 
-- (void)setupView_Filesystem_Name
+- (void)setupView_Treesystem_Name
 {
 	DDLogAutoTrace();
 	
 	//
-	// VIEW - FILE SYSTEM (ZDCNode's sorted by cleartext name)
+	// VIEW - TREESYSTEM (ZDCNode's sorted by cleartext name)
 	//
 	// Sorts items into a hierarchical system, sorted by names.
 	//
@@ -614,9 +614,9 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 			return nil;
 		}
 		
-		// All regular nodes have a parentID.
+		// Regular nodes have a parentID.
+		// Signal nodes have a special parentID: "<localUserID>|<zAppID>|signal".
 		// Container nodes don't have a parentID.
-		// Signal nodes don't have a parentID.
 		//
 		return node.parentID;
 		//
@@ -672,7 +672,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	}];
 }
 
-- (void)setupView_Filesystem_CloudName
+- (void)setupView_Treesystem_CloudName
 {
 	DDLogAutoTrace();
 	
@@ -705,9 +705,9 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 			return nil;
 		}
 		
-		// All regular nodes have a parentID.
+		// Regular nodes have a parentID.
+		// Signal nodes have a special parentID: "<localUserID>|<zAppID>|signal".
 		// Container nodes don't have a parentID.
-		// Signal nodes don't have a parentID.
 		//
 		return node.parentID;
 		//
@@ -773,7 +773,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	//
 	// Sorts all files & directories into a flat system.
 	//
-	// group(localUserID) -> values(every single file & directory)
+	// group(localUserID, zAppID) -> values(every single node)
 	//
 	// Note:
 	// This view is the parent view for other filteredViews.

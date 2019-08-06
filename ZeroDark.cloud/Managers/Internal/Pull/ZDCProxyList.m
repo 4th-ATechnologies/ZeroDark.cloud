@@ -28,7 +28,7 @@
 + (void)recursiveProxyList:(ZeroDarkCloud *)zdc
                     region:(AWSRegion)region
                     bucket:(NSString *)inBucket
-                 cloudPath:(NSString *)inRootCloudPath
+                 cloudPath:(ZDCCloudPath *)inRootCloudPath
                  pullState:(ZDCPullState *)pullState
            completionQueue:(dispatch_queue_t)completionQueue
            completionBlock:(void (^)(NSArray<S3ObjectInfo*>*, NSError*))completionBlock
@@ -48,15 +48,12 @@
 	NSString *const zAppID      = pullState.zAppID;
 	NSString *const pullID      = pullState.pullID;
 	
-	NSArray<NSString *> *rootComponents = [inRootCloudPath componentsSeparatedByString:@"/"];
-	
-	NSString *rootAppPrefix = (rootComponents.count > 0) ? rootComponents[0] : nil;
-	NSParameterAssert(rootAppPrefix != nil);
+	NSString *rootAppPrefix = inRootCloudPath.zAppID;
 	
 	NSMutableArray<NSString *> *pendingCloudPaths = [[NSMutableArray alloc] init];
 	NSMutableArray<S3ObjectInfo *> *fetchedItems = [[NSMutableArray alloc] init];
 	
-	NSString *rootRcrdPath = [inRootCloudPath stringBySettingPathExtension:@"rcrd"];
+	NSString *rootRcrdPath = [inRootCloudPath pathWithExt:@"rcrd"];
 	[pendingCloudPaths addObject:rootRcrdPath];
 	
 	dispatch_queue_t queue = dispatch_queue_create("ZDCProxyList", DISPATCH_QUEUE_SERIAL);

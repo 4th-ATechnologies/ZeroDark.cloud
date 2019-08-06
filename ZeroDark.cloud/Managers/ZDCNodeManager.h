@@ -378,6 +378,14 @@ NS_SWIFT_NAME(findNode(withCloudPath:bucket:region:localUserID:zAppID:transactio
                                      zAppID:(NSString *)zAppID
                                 transaction:(YapDatabaseReadTransaction *)transaction;
 
+/**
+ * Finds the pointer node with the given pointeeID.
+ */
+- (nullable ZDCNode *)findNodeWithPointeeID:(NSString *)pointeeID
+                                localUserID:(NSString *)localUserID
+                                     zAppID:(NSString *)zAppID
+                                transaction:(YapDatabaseReadTransaction *)transaction;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Lists
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -108,29 +108,25 @@ NS_ASSUME_NONNULL_BEGIN
                              transaction:(YapDatabaseReadWriteTransaction *)transaction;
 
 /**
- * Extracts & decrypts information from the given JSON dict.
+ * Parses & decrypts information from the given JSON dict.
  *
  * @param dict
  *   The JSON content of a RCRD file.
  *
  * @param localUserID
- *   The S4LocalUser.uuid to use when attempting to decrypt information.
+ *   The ZDCLocalUser.uuid to use when attempting to decrypt information.
  *   The corresponding private key will be used to attempt unwrapping the file encryption key.
  *
  * @param transaction
  *   This method needs a transaction to fetch various information from the database.
  *
- * @param errorOut
- *   If an error occurs, the corresponding error may be returned via this parameter.
- *
  * @return
  *   An instance of ZDCCloudRcrd, which contains all the cleartext & decrypted information
- *   extracted from the RCRD file.
+ *   extracted from the RCRD file. If errors occur, the ZDCCloudRcrd.errors array will be non-empty.
  */
-- (nullable ZDCCloudRcrd *)decryptCloudRcrdDict:(NSDictionary *)dict
-                                    localUserID:(NSString *)localUserID
-                                    transaction:(YapDatabaseReadTransaction *)transaction
-                                          error:(NSError *_Nullable *_Nullable)errorOut;
+- (ZDCCloudRcrd *)parseCloudRcrdDict:(NSDictionary *)dict
+                         localUserID:(NSString *)localUserID
+                         transaction:(YapDatabaseReadTransaction *)transaction;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark KeyGen

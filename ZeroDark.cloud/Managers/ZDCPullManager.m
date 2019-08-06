@@ -23,6 +23,7 @@
 #import "ZDCPullItem.h"
 #import "ZDCPullStateManager.h"
 #import "ZDCPushManagerPrivate.h"
+#import "ZDCProxyList.h"
 #import "ZDCSyncManagerPrivate.h"
 #import "ZDCWebManager.h"
 #import "ZeroDarkCloudPrivate.h"
@@ -3049,20 +3050,26 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	
 	NSString *pointee_ownerID = pointeeNode.anchor.userID;
 	
+	ZDCCloudPath *pointee_cloudPath =
+	  [[ZDCCloudPath alloc] initWithZAppID: pointeeNode.anchor.zAppID
+	                             dirPrefix: pointeeNode.anchor.dirPrefix
+	                              fileName: pointeeNode.name];
+	
 	// We have 3 tasks to perform here:
 	//
 	// 1.) Fetch owner (if needed)
 	// 2.) Fetch pointee node (if needed)
 	// 3.) Call /listProxy API (recursively)
 	
-	__block void(^step1)(void);
-	__block void(^step2)(void);
-	__block void(^step2b)(void);
-	__block void(^step3)(void);
+	__block void(^Step1)(void);
+	__block void(^Step2)(void);
+	__block void(^Step2B)(void);
+	__block void(^Step3)(void);
+	__block void(^PermanentFail)(ZDCNodeConflict);
 	
 	__block ZDCUser *owner = nil;
 	
-	step1 = ^{ @autoreleasepool {
+	Step1 = ^{ @autoreleasepool {
 		
 		[[self rwConnection] asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 			
@@ -3070,9 +3077,14 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			
 		} completionQueue:concurrentQueue completionBlock:^{
 			
+			if (owner.accountDeleted)
+			{
+				PermanentFail(ZDCNodeConflict_Graft_DstUserAccountDeleted);
+				return;
+			}
 			if (owner)
 			{
-				step2();
+				Step2();
 				return;
 			}
 			
@@ -3087,12 +3099,63 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				}
 				
 				owner = remoteUser;
-				step2();
+				
+				if (owner.accountDeleted) {
+					PermanentFail(ZDCNodeConflict_Graft_DstUserAccountDeleted);
+				}
+				else {
+					Step2();
+				}
 			}];
 		}];
 	}};
 	
-	step1();
+	Step2 = ^{ @autoreleasepool {
+		
+		NSAssert(owner != nil, @"Bad state");
+		
+		NSString *rcrdPath = [pointee_cloudPath pathWithExt:kZDCCloudFileExtension_Rcrd];
+		
+		[self fetchRcrd: rcrdPath
+		         bucket: owner.aws_bucket
+		         region: owner.aws_region
+		      pullState: pullState
+		     completion:
+		^(ZDCCloudRcrd *cloudRcrd, NSData *responseData,
+		  NSString *eTag, NSDate *lastModified, ZDCPullTaskResult *result)
+		{
+			
+		}];
+	}};
+	
+	Step3 = ^{ @autoreleasepool {
+		
+		NSAssert(owner != nil, @"Bad state");
+		
+		[ZDCProxyList recursiveProxyList: zdc
+		                          region: owner.aws_region
+		                          bucket: owner.aws_bucket
+		                       cloudPath: pointee_cloudPath
+		                       pullState: pullState
+		                 completionQueue: concurrentQueue
+		                 completionBlock:^(NSArray<S3ObjectInfo *> *list, NSError *error)
+		{
+			if (error) {
+				Fail(ZDCPullErrorReason_HttpStatusCode, error);
+				return;
+			}
+			
+			[pullState pushList:list withRootNodeID:pointeeNode.uuid];
+			Succeed();
+		}];
+	}};
+	
+	PermanentFail = ^(ZDCNodeConflict conflict){ @autoreleasepool {
+		
+		
+	}};
+	
+	Step1();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4443,7 +4506,6 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		}
 		
 		__block ZDCCloudRcrd *cloudRcrd = nil;
-		__block NSError *decryptError = nil;
 		
 		// Important: The decrypt process is slow.
 		// And we don't want to block all the read-only database connections.
@@ -4451,34 +4513,13 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		
 		[[self decryptConnection] asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
-			cloudRcrd =
-			  [zdc.cryptoTools decryptCloudRcrdDict: jsonDict
-			                            localUserID: localUserID
-			                            transaction: transaction
-			                                  error: &decryptError];
-			
-			if (decryptError)
-			{
-				DDLogWarn(@"Error extracting encryptionKey from CloudKey file:\n"
-				          @" - path: %@\n"
-				          @" - error: %@", nodeRcrdPath, decryptError);
-			}
+			cloudRcrd = [zdc.cryptoTools parseCloudRcrdDict: jsonDict
+			                                    localUserID: localUserID
+			                                    transaction: transaction];
 		
 		} completionQueue:concurrentQueue completionBlock: ^{
 			
-			if (decryptError)
-			{
-				ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
-				result.pullResult = ZDCPullResult_Fail_Unknown;
-				result.pullErrorReason = ZDCPullErrorReason_DecryptionError;
-				result.underlyingError = decryptError;
-				
-				completionBlock(cloudRcrd, responseData, eTag, lastModified, result);
-			}
-			else
-			{
-				completionBlock(cloudRcrd, responseData, eTag, lastModified, [ZDCPullTaskResult success]);
-			}
+			completionBlock(cloudRcrd, responseData, eTag, lastModified, [ZDCPullTaskResult success]);
 		}];
 	}};
 	

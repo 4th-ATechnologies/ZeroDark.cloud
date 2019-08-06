@@ -91,7 +91,7 @@ extern NSString *const kZDCUser_metadata_preferedAuth0ID;
  * The name of a user's AWS S3 bucket.
  * This has the form: "com.4th-a.user.{userID}-{a few chars of randomness}"
  */
-@property (nonatomic, copy,   readwrite, nullable) NSString *aws_bucket;
+@property (nonatomic, copy, readwrite, nullable) NSString *aws_bucket;
 
 #pragma mark Status
 

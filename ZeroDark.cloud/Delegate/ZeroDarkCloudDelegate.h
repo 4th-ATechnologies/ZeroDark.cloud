@@ -72,9 +72,33 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
 	/**
 	 * Your node data is out-of-date:
 	 *
-	 * - you previously queued
+	 * - you previously queued an operation to upload a node's data to the cloud
+	 * - however, a different device has updated the node's data (in the cloud) since the operation was enqueued
+	 * - thus it's no longer safe to upload the version we have locally
+	 *
+	 * The conflict can be resolved by performing one of the following options:
+	 *
+	 * Option A:
+	 * - skip the queued data upload
+	 * - use `[ZDCCloudTransaction skipDataUploadsForNodeID:]`
+	 *
+	 * Option B:
+	 * - download the latest version of the node, and merge the changes
+	 * - use `[ZDCCloudTransaction didMergeDataWithETag:forNodeID:]`
+	 *
+	 * For more information about merging changes in ZeroDark.cloud,
+	 * see the [docs](https://zerodarkcloud.readthedocs.io/en/latest/client/merging/).
 	 */
-	ZDCNodeConflict_Data
+	ZDCNodeConflict_Data,
+	
+	/**
+	 *
+	 */
+	ZDCNodeConflict_Graft_DstUserAccountDeleted,
+	
+	ZDCNodeConflict_Graft_DstNodeNotReadable,
+	
+	ZDCNodeConflict_Graft_DstNodeNotFound
 };
 
 /**

@@ -11,6 +11,7 @@
 
 #import "AWSRegions.h"
 #import "S3ObjectInfo.h"
+#import "ZDCCloudPath.h"
 #import "ZDCPullState.h"
 #import "ZeroDarkCloud.h"
 
@@ -33,7 +34,7 @@
 + (void)recursiveProxyList:(ZeroDarkCloud *)zdc
                     region:(AWSRegion)region
                     bucket:(NSString *)bucket
-                 cloudPath:(NSString *)cloudPath
+                 cloudPath:(ZDCCloudPath *)cloudPath
                  pullState:(ZDCPullState *)pullState
            completionQueue:(dispatch_queue_t)completionQueue
            completionBlock:(void (^)(NSArray<S3ObjectInfo *>*, NSError*))completionBlock;

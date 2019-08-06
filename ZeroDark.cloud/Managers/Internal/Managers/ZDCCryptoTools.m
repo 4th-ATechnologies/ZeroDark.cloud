@@ -692,14 +692,12 @@ done:
 }
 
 /**
- * Extracts & decrypts information from the given JSON dict.
+ * See header file for description.
  */
-- (nullable ZDCCloudRcrd *)decryptCloudRcrdDict:(NSDictionary *)dict
-                                    localUserID:(NSString *)localUserID
-                                    transaction:(YapDatabaseReadTransaction *)transaction
-                                          error:(NSError *_Nullable *_Nullable)errorOut
+- (ZDCCloudRcrd *)parseCloudRcrdDict:(NSDictionary *)dict
+                         localUserID:(NSString *)localUserID
+                         transaction:(YapDatabaseReadTransaction *)transaction
 {
-	NSError *error = nil;
 	ZDCLocalUser *localUser = nil;
 
 	id value;
@@ -717,14 +715,12 @@ done:
 	
 	if (localUser == nil)
 	{
-		error = [self errorWithDescription:@"Missing localUser."];
-		goto done;
+		[cloudRcrd appendError:[self errorWithDescription:@"Missing localUser"]];
 	}
 	
 	if (localUser.publicKeyID == nil)
 	{
-		error = [self errorWithDescription:@"Missing publicKeyID for localUser."];
-		goto done;
+		[cloudRcrd appendError:[self errorWithDescription:@"Missing publicKeyID for localUser"]];
 	}
 	
 	// Version
@@ -776,13 +772,12 @@ done:
 		
 		if (dict_keys == nil)
 		{
-			error = [self errorWithDescription:@"Missing keys section"];
-			goto done;
+			[cloudRcrd appendError:[self errorWithDescription:@"Missing keys section"]];
 		}
 		if (![dict_keys isKindOfClass:[NSDictionary class]])
 		{
-			error = [self errorWithDescription:@"Invalid value for 'keys'"];
-			goto done;
+			[cloudRcrd appendError:[self errorWithDescription:@"Invalid value for keys section: non-dictionary"]];
+			dict_keys = nil;
 		}
 		
 		ZDCShareList *shareList = [[ZDCShareList alloc] initWithDictionary:dict_keys];
@@ -797,12 +792,15 @@ done:
 				encrypted_data = shareItem.key;
 				if (encrypted_data)
 				{
+					NSError *decryptionError = nil;
 					cloudRcrd.encryptionKey =
 					  [self unwrapSymmetricKey: encrypted_data
 					           usingPrivateKey: privKey
-					                     error: &error];
+					                     error: &decryptionError];
 					
-					if (error) goto done;
+					if (decryptionError) {
+						[cloudRcrd appendError:decryptionError];
+					}
 				}
 			}
 		}
@@ -811,43 +809,64 @@ done:
 		
 		if (cloudRcrd.encryptionKey == nil)
 		{
-			error = [self errorWithDescription:@"No encyrption key found."];
-			goto done;
+			[cloudRcrd appendError:[self errorWithDescription:@"No encyrption key found"]];
 		}
 	}
 	
 	// Process metadata
-	if ((encrypted_string = dict[kZDCCloudRcrd_Meta]))
-	{
-		if (![encrypted_string isKindOfClass:[NSString class]])
-		{
-			error = [self errorWithDescription:@"dict[meta] has invalid value."];
-			goto done;
+	do {
+	
+		encrypted_string = dict[kZDCCloudRcrd_Meta];
+		
+		if (encrypted_string == nil) {
+			break;
 		}
 		
+		if (![encrypted_string isKindOfClass:[NSString class]])
+		{
+			NSString *errMsg = @"dict[meta] has bad encrypted value: non-string";
+			
+			[cloudRcrd appendError:[self errorWithDescription:errMsg]];
+			break;
+		}
+	
 		encrypted_data = [[NSData alloc] initWithBase64EncodedString:encrypted_string options:0];
 		if (!encrypted_data)
 		{
-			error = [self errorWithDescription:@"dict[meta] has bad value (1001)."];
-			goto done;
+			NSString *errMsg = @"dict[meta] has bad encrypted value: non-base64-string";
+			
+			[cloudRcrd appendError:[self errorWithDescription:errMsg]];
+			break;
 		}
 		
 		if (encrypted_data.length == 0)
 		{
 			cloudRcrd.metadata = [NSDictionary dictionary];
 		}
-		else
+		else if (cloudRcrd.encryptionKey)
 		{
-			decrypted_data = [encrypted_data decryptedDataWithSymmetricKey:cloudRcrd.encryptionKey error:&error];
-			if (error) goto done;
+			NSError *error = nil;
 			
+			decrypted_data = [encrypted_data decryptedDataWithSymmetricKey:cloudRcrd.encryptionKey error:&error];
+			if (error)
+			{
+				[cloudRcrd appendError:error];
+				break;
+			}
+	
 			NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:decrypted_data options:0 error:&error];
-			if (error) goto done;
+			if (error)
+			{
+				[cloudRcrd appendError:error];
+				break;
+			}
 			
 			if (![dict isKindOfClass:[NSDictionary class]])
 			{
-				error = [self errorWithDescription:@"dict[meta] has bad value (1002)."];
-				goto done;
+				NSString *errMsg = @"dict[meta] has bad decrypted value: non-dictionary";
+				
+				[cloudRcrd appendError:[self errorWithDescription:errMsg]];
+				break;
 			}
 			
 			// Since JSON doesn't support NSData (binary), we may have converted from NSData to NSString.
@@ -855,43 +874,65 @@ done:
 			//
 			NSMutableDictionary *dict_sanitized = [dict mutableCopy];
 			[dict_sanitized normalizeFromJSON];
-			
+	
 			cloudRcrd.metadata = dict_sanitized;
 		}
-	}
+	} while (NO);
 	
 	// Process data
-	if ((encrypted_string = dict[kZDCCloudRcrd_Data]))
-	{
+	do {
+		
+		encrypted_string = dict[kZDCCloudRcrd_Data];
+		
+		if (encrypted_string == nil) {
+			break;
+		}
+	
 		if (![encrypted_string isKindOfClass:[NSString class]])
 		{
-			error = [self errorWithDescription:@"dict[data] has invalid value."];
-			goto done;
+			NSString *errMsg = @"dict[data] has bad encrypted value: non-string";
+			
+			[cloudRcrd appendError:[self errorWithDescription:errMsg]];
+			break;
 		}
 		
 		encrypted_data = [[NSData alloc] initWithBase64EncodedString:encrypted_string options:0];
 		if (!encrypted_data)
 		{
-			error = [self errorWithDescription:@"dict[data] has bad value (1001)."];
-			goto done;
+			NSString *errMsg = @"dict[data] has bad encrypted value: non-base64-string";
+			
+			[cloudRcrd appendError:[self errorWithDescription:errMsg]];
+			break;
 		}
 		
 		if (encrypted_data.length == 0)
 		{
 			cloudRcrd.data = [NSDictionary dictionary];
 		}
-		else
+		else if (cloudRcrd.encryptionKey)
 		{
+			NSError *error = nil;
+			
 			decrypted_data = [encrypted_data decryptedDataWithSymmetricKey:cloudRcrd.encryptionKey error:&error];
-			if (error) goto done;
+			if (error)
+			{
+				[cloudRcrd appendError:error];
+				break;
+			}
 		
 			NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:decrypted_data options:0 error:&error];
-			if (error) goto done;
+			if (error)
+			{
+				[cloudRcrd appendError:error];
+				break;
+			}
 		
 			if (![dict isKindOfClass:[NSDictionary class]])
 			{
-				error = [self errorWithDescription:@"dict[data] has bad value (1002)."];
-				goto done;
+				NSString *errMsg = @"dict[data] has bad decrypted value: non-dictionary";
+				
+				[cloudRcrd appendError:[self errorWithDescription:errMsg]];
+				break;
 			}
 		
 			// Since JSON doesn't support NSData (binary), we may have converted from NSData to NSString.
@@ -902,20 +943,9 @@ done:
 		
 			cloudRcrd.data = dict_sanitized;
 		}
-	}
+	} while (NO);
 	
-done:
 	
-	if (errorOut) *errorOut = error;
-	//
-	// Even is there's an error, we still return the cloudRcrd.
-	// This is because the caller may want to know about the RCRD contents,
-	// even if the decryption failed.
-	//
-	// For example, if unable to decrypt an inbox message, and the version number is supported,
-	// the client may take action to automatically delete the bad message.
-	// And it needs to know the RCRD.version number to make this determination.
-	//
 	return cloudRcrd;
 }
 

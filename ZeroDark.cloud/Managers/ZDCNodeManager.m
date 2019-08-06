@@ -71,6 +71,8 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
  */
 - (nullable ZDCTrunkNode *)trunkNodeForLocalUserID:(NSString *)localUserID
                                             zAppID:(NSString *)zAppID
@@ -89,6 +91,8 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
  */
 - (nullable ZDCTrunkNode *)trunkNodeForNode:(ZDCNode *)node
                                 transaction:(YapDatabaseReadTransaction *)transaction
@@ -115,6 +119,8 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
  */
 - (ZDCNode *)anchorNodeForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
@@ -136,11 +142,10 @@ static ZDCNodeManager *sharedInstance = nil;
 }
 
 /**
- * Returns the owner of a given node.
- *
- * This is done by traversing the node hierarchy, up to the root,
- * searching for a node with an explicit ownerID property. If not found, the localUserID is returned.
-**/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ */
 - (NSString *)ownerIDForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCNode *anchorNode = [self anchorNodeForNode:node transaction:transaction];
@@ -153,6 +158,8 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
  */
 - (nullable ZDCUser *)ownerForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
@@ -166,13 +173,10 @@ static ZDCNodeManager *sharedInstance = nil;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Returns an array of all parent nodeID's of the given node, up to the containerNode.
- *
- * The containerNode will be at index 0,
- * and the immediate parentNodeID will be the last item in the array.
- *
- * @note The term nodeID is short for ZDCNode.uuid.
- **/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ */
 - (NSArray<NSString *> *)parentNodeIDsForNode:(ZDCNode *)node
                                   transaction:(YapDatabaseReadTransaction *)transaction
 {
@@ -198,10 +202,10 @@ static ZDCNodeManager *sharedInstance = nil;
 }
 
 /**
- * Returns the path to the given node.
- * The returned path information is encompassed in a ZDCTreesystemPath,
- * which includes both the cleartext path, as well as ordered list of nodeID's.
-**/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ */
 - (nullable ZDCTreesystemPath *)pathForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
 	DDLogAutoTrace();
@@ -250,6 +254,8 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
  */
 - (BOOL)isNode:(NSString *)inNodeID
  aDescendantOf:(NSString *)potentialParentID
@@ -278,14 +284,10 @@ static ZDCNodeManager *sharedInstance = nil;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Enumerates all ZDCNode.uuid's whose parentID property matches the given parentID.
- *
- * This method is slightly faster than enumerating the ZDCNode objects,
- * as it can skip fetching the objects from the database.
- *
- * This only includes the direct children of the given parent.
- * Further ancestors (grandchildren, etc) are NOT enumerated.
-**/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ */
 - (void)enumerateNodeIDsWithParentID:(NSString *)parentID
                          transaction:(YapDatabaseReadTransaction *)transaction
                           usingBlock:(void (^)(NSString *nodeID, BOOL *stop))enumBlock
@@ -364,6 +366,8 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
  */
 - (void)recursiveEnumerateNodeIDsWithParentID:(NSString *)parentID
                                   transaction:(YapDatabaseReadTransaction *)transaction
@@ -425,11 +429,10 @@ static ZDCNodeManager *sharedInstance = nil;
 }
 
 /**
- * Enumerates all ZDCNode's whose parentID property matches the given parentID.
- *
- * This only includes the direct children of the given parent.
- * Further ancestors (grandchildren, etc) are NOT enumerated.
-**/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ */
 - (void)enumerateNodesWithParentID:(NSString *)parentID
                        transaction:(YapDatabaseReadTransaction *)transaction
                         usingBlock:(void (^)(ZDCNode *node, BOOL *stop))enumBlock
@@ -508,6 +511,8 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
  */
 - (void)recursiveEnumerateNodesWithParentID:(NSString *)parentID
                                 transaction:(YapDatabaseReadTransaction *)transaction
@@ -571,7 +576,9 @@ static ZDCNodeManager *sharedInstance = nil;
 }
 
 /**
- * Returns whether or not the directory has any children nodes.
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
  */
 - (BOOL)isEmptyNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
@@ -595,19 +602,10 @@ static ZDCNodeManager *sharedInstance = nil;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Finds the node with the given name, if it exists, and returns it.
- *
- * @param nodeName
- *   The ZDCNode.name to find.
- *   The name comparison is both case-insensitive & localized. (So in German: daß == dass)
- *
- * @param parentID
- *   One of the following:
- *   - S4Directory.uuid (if within a parent directory)
- *   - S4LocalUser.uuid (if in the root directory)
- *
- * @return The matching ZDCNode, or nil if it doesn't exist.
-**/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ */
 - (ZDCNode *)findNodeWithName:(NSString *)nodeName
                      parentID:(NSString *)parentID
                   transaction:(YapDatabaseReadTransaction *)transaction
@@ -734,17 +732,10 @@ static ZDCNodeManager *sharedInstance = nil;
 }
 
 /**
- * Finds the node with the given path components.
- *
- * @param pathComponents
- *   An array of path components, such as: @[ @"/", @"Documents", @"Inventory.numbers" ]
- *   You can easily produce this parameter using either [NSURL pathComponents] or [NSString pathComponents].
- *
- * @param localUserID
- *   This is the associated user account identifier. (SCLocalUser.uuid)
- *
- * @return The matching ZDCNode, or nil if it doesn't exist.
-**/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ */
 - (nullable ZDCNode *)findNodeWithPath:(ZDCTreesystemPath *)path
                            localUserID:(NSString *)localUserID
                                 zAppID:(NSString *)zAppID
@@ -780,6 +771,8 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
  */
 - (ZDCNode *)findNodeWithCloudName:(NSString *)cloudName
                           parentID:(NSString *)parentID
@@ -920,6 +913,8 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
  */
 - (ZDCNode *)findNodeWithCloudID:(NSString *)cloudID
                      localUserID:(NSString *)localUserID
@@ -930,6 +925,7 @@ static ZDCNodeManager *sharedInstance = nil;
 	
 	if (cloudID == nil) return nil;
 	if (localUserID == nil) return nil;
+	if (zAppID == nil) return nil;
 	
 	__block ZDCNode *matchingNode = nil;
 	
@@ -952,8 +948,13 @@ static ZDCNodeManager *sharedInstance = nil;
 			
 			if ([node.localUserID isEqualToString:localUserID])
 			{
-				matchingNode = node;
-				*stop = YES;
+				ZDCTrunkNode *trunkNode = [self trunkNodeForNode:node transaction:transaction];
+				
+				if ([trunkNode.zAppID isEqualToString:zAppID])
+				{
+					matchingNode = node;
+					*stop = YES;
+				}
 			}
 		}];
 	}
@@ -976,8 +977,13 @@ static ZDCNodeManager *sharedInstance = nil;
 			
 			if ([node.cloudID isEqualToString:cloudID])
 			{
-				matchingNode = node;
-				*stop = YES;
+				ZDCTrunkNode *trunkNode = [self trunkNodeForNode:node transaction:transaction];
+				
+				if ([trunkNode.zAppID isEqualToString:zAppID])
+				{
+					matchingNode = node;
+					*stop = YES;
+				}
 			}
 		}];
 	}
@@ -995,12 +1001,17 @@ static ZDCNodeManager *sharedInstance = nil;
 		{
 			__unsafe_unretained ZDCNode *node = (ZDCNode *)object;
 			
-			if ([node.localUserID isEqualToString:localUserID])
+			if ([node.cloudID isEqualToString:cloudID])
 			{
-				if ([node.cloudID isEqualToString:cloudID])
+				if ([node.localUserID isEqualToString:localUserID])
 				{
-					matchingNode = node;
-					*stop = YES;
+					ZDCTrunkNode *trunkNode = [self trunkNodeForNode:node transaction:transaction];
+					
+					if ([trunkNode.zAppID isEqualToString:zAppID])
+					{
+						matchingNode = node;
+						*stop = YES;
+					}
 				}
 			}
 		}];
@@ -1011,6 +1022,8 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
  */
 - (nullable ZDCNode *)findNodeWithCloudPath:(ZDCCloudPath *)cloudPath
                                      bucket:(NSString *)bucket
@@ -1045,10 +1058,10 @@ static ZDCNodeManager *sharedInstance = nil;
 }
 
 /**
- * Finds the node with a matching dirPrefix.
- *
- * A SecondaryIndex is utilized to make this a very fast lookup.
-**/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ */
 - (nullable ZDCNode *)findNodeWithDirPrefix:(NSString *)prefix
                                     bucket:(NSString *)bucket
                                     region:(AWSRegion)region
@@ -1087,7 +1100,7 @@ static ZDCNodeManager *sharedInstance = nil;
 			
 			if ([node.localUserID isEqualToString:localUserID])
 			{
-				ZDCUser *owner = [[ZDCNodeManager sharedInstance] ownerForNode:node transaction:transaction];
+				ZDCUser *owner = [self ownerForNode:node transaction:transaction];
 				
 				if ([owner.aws_bucket isEqualToString:bucket] && owner.aws_region == region)
 				{
@@ -1116,7 +1129,7 @@ static ZDCNodeManager *sharedInstance = nil;
 			
 			if ([node.dirPrefix isEqualToString:prefix])
 			{
-				ZDCUser *owner = [[ZDCNodeManager sharedInstance] ownerForNode:node transaction:transaction];
+				ZDCUser *owner = [self ownerForNode:node transaction:transaction];
 				
 				if ([owner.aws_bucket isEqualToString:bucket] && owner.aws_region == region)
 				{
@@ -1144,9 +1157,119 @@ static ZDCNodeManager *sharedInstance = nil;
 			{
 				if ([node.localUserID isEqualToString:localUserID])
 				{
-					ZDCUser *owner = [[ZDCNodeManager sharedInstance] ownerForNode:node transaction:transaction];
+					ZDCUser *owner = [self ownerForNode:node transaction:transaction];
 					
 					if ([owner.aws_bucket isEqualToString:bucket] && owner.aws_region == region)
+					{
+						matchingNode = node;
+						*stop = YES;
+					}
+				}
+			}
+		}];
+	}
+	
+	return matchingNode;
+}
+
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ */
+- (nullable ZDCNode *)findNodeWithPointeeID:(NSString *)pointeeID
+                                localUserID:(NSString *)localUserID
+                                     zAppID:(NSString *)zAppID
+                                transaction:(YapDatabaseReadTransaction *)transaction
+{
+	DDLogAutoTrace();
+	
+	if (pointeeID == nil) return nil;
+	if (localUserID == nil) return nil;
+	if (zAppID == nil) return nil;
+	
+	__block ZDCNode *matchingNode = nil;
+	
+	YapDatabaseSecondaryIndexTransaction *secondaryIndexTransaction = nil;
+	YapDatabaseViewTransaction *flatViewTransaction = nil;
+	
+	if ((secondaryIndexTransaction = [transaction ext:Ext_Index_Nodes]))
+	{
+		// Use secondary index for best performance (uses sqlite indexes)
+		//
+		// WHERE pointeeID = ?
+		
+		NSString *queryString = [NSString stringWithFormat:@"WHERE %@ = ?", Index_Nodes_Column_PointeeID];
+		
+		YapDatabaseQuery *query = [YapDatabaseQuery queryWithFormat:queryString, pointeeID];
+		
+		[secondaryIndexTransaction enumerateKeysAndObjectsMatchingQuery:query usingBlock:
+		    ^(NSString *collection, NSString *key, id object, BOOL *stop)
+		{
+			__unsafe_unretained ZDCNode *node = (ZDCNode *)object;
+			
+			if ([node.localUserID isEqualToString:localUserID])
+			{
+				ZDCTrunkNode *trunkNode = [self trunkNodeForNode:node transaction:transaction];
+				
+				if ([trunkNode.zAppID isEqualToString:zAppID])
+				{
+					matchingNode = node;
+					*stop = YES;
+				}
+			}
+		}];
+	}
+	else if ((flatViewTransaction = [transaction ext:Ext_View_Flat]))
+	{
+		// Backup Plan (defensive programming)
+		//
+		// Secondary Index extension isn't ready yet.
+		// It must be still initializing / updating.
+		//
+		// Scan all nodes belonging to the user and look for a match (slow but functional).
+		
+		NSString *group = [ZDCDatabaseManager groupForLocalUserID:localUserID zAppID:zAppID];
+		
+		[flatViewTransaction enumerateKeysAndObjectsInGroup: group
+		                                         usingBlock:
+		    ^(NSString *collection, NSString *key, id object, NSUInteger index, BOOL *stop)
+		{
+			__unsafe_unretained ZDCNode *node = (ZDCNode *)object;
+			
+			if ([node.pointeeID isEqualToString:pointeeID])
+			{
+				ZDCTrunkNode *trunkNode = [self trunkNodeForNode:node transaction:transaction];
+				
+				if ([trunkNode.zAppID isEqualToString:zAppID])
+				{
+					matchingNode = node;
+					*stop = YES;
+				}
+			}
+		}];
+	}
+	else
+	{
+		// Last resort (super defensive programming)
+		//
+		// None of the extensions we want are ready yet.
+		// It must be still initializing / updating.
+		//
+		// Scan the entire nodes collection and look for a match (slowest but functional).
+		
+		[transaction enumerateKeysAndObjectsInCollection:kZDCCollection_Nodes
+		                                      usingBlock:^(NSString *key, id object, BOOL *stop)
+		{
+			__unsafe_unretained ZDCNode *node = (ZDCNode *)object;
+			
+			if ([node.pointeeID isEqualToString:pointeeID])
+			{
+				if ([node.localUserID isEqualToString:localUserID])
+				{
+					ZDCTrunkNode *trunkNode = [self trunkNodeForNode:node transaction:transaction];
+					
+					if ([trunkNode.zAppID isEqualToString:zAppID])
 					{
 						matchingNode = node;
 						*stop = YES;
@@ -1165,6 +1288,8 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
  */
 - (NSArray<NSString *> *)allNodeIDsWithLocalUserID:(NSString *)localUserID
                                        transaction:(YapDatabaseReadTransaction *)transaction
@@ -1230,6 +1355,8 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
  */
 - (NSArray<NSString *> *)allNodeIDsWithLocalUserID:(NSString *)localUserID
                                             zAppID:(NSString *)zAppID
@@ -1286,13 +1413,9 @@ static ZDCNodeManager *sharedInstance = nil;
 }
 
 /**
- * Returns all ZDCNode.uuid's where ZDCNode.cloudID is non-nil.
- * That is, the node has been uploaded at least once.
- *
- * Important: uploaded once != fully synced right at this moment.
- * Rather it means that we expect it to be on the server.
- *
- * Note: This method has been optimized for performance, and is the recommended approach.
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
 **/
 - (NSArray<NSString *> *)allUploadedNodeIDsWithLocalUserID:(NSString *)localUserID
                                                     zAppID:(NSString *)zAppID
@@ -1411,6 +1534,8 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
  */
 - (BOOL)resetPermissionsForNode:(ZDCNode *)node transaction:(YapDatabaseReadWriteTransaction *)transaction
 {
@@ -1449,6 +1574,8 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
  */
 - (NSString *)resolveNamingConflictForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {

@@ -1064,21 +1064,22 @@
 		
 		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
 
-		NSURLQueryItem *name = [NSURLQueryItem queryItemWithName:@"user_id" value:remoteUserID];
-		urlComponents.queryItems = @[ name ];
+		NSURLQueryItem *user_id = [NSURLQueryItem queryItemWithName:@"user_id" value:remoteUserID];
+		NSURLQueryItem *check_archive = [NSURLQueryItem queryItemWithName:@"check_archive" value:@"1"];
+		urlComponents.queryItems = @[ user_id, check_archive ];
 
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"GET";
 	
-		[AWSSignature signRequest:request
-		               withRegion:region
-		                  service:AWSService_APIGateway
-		              accessKeyID:auth.aws_accessKeyID
-		                   secret:auth.aws_secret
-		                  session:auth.aws_session];
+		[AWSSignature signRequest: request
+		               withRegion: region
+		                  service: AWSService_APIGateway
+		              accessKeyID: auth.aws_accessKeyID
+		                   secret: auth.aws_secret
+		                  session: auth.aws_session];
 	
 	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request s4Description]);
+		DDLogDonut(@"%@", [request zdcDescription]);
 	#endif
 		
 		// Send request
