@@ -44,7 +44,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 @implementation ZDCUITools {
 @private
 
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 	
 #if TARGET_OS_IPHONE
 	ZDCPopoverTransition *popoverTransition;
@@ -55,7 +55,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = inOwner;
 	}
 	return self;
 }
@@ -68,7 +68,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 																								completionHandler:(accountSetupViewCompletionHandler __nullable )completionHandler
 {
 	AccountSetupViewController_IOS* vc = [[AccountSetupViewController_IOS alloc]
-													  initWithOwner:owner
+													  initWithOwner:zdc
 													  canDismissWithoutNewAccount:canDismiss
 													  completionHandler:completionHandler];
 	
@@ -88,7 +88,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 												completionHandler:(accountSetupViewCompletionHandler __nullable )completionHandler;
 {
 	AccountSetupViewController_IOS* vc = [[AccountSetupViewController_IOS alloc]
-													  initWithOwner:owner
+													  initWithOwner:zdc
 													  canDismissWithoutNewAccount:YES
 													  completionHandler:completionHandler];
 
@@ -103,7 +103,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 {
 	
 	LocalUserSettingsViewController_IOS* vc = [[LocalUserSettingsViewController_IOS alloc]
-															 initWithOwner:owner 
+															 initWithOwner:zdc
 															 localUserID:localUserID];
 	
 	[navigationController pushViewController:vc animated:YES];
@@ -114,7 +114,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 {
 
 	AccountSetupViewController_IOS* vc = [[AccountSetupViewController_IOS alloc]
-										  initWithOwner:owner];
+										  initWithOwner:zdc];
 
 	[vc pushSocialIdMgmtWithUserID:userID
  		  withNavigationController:navigationController];
@@ -124,7 +124,7 @@ static const int ddLogLevel = DDLogLevelWarning;
                withNavigationController:(UINavigationController*)navigationController
 {
 	KeyBackupViewController_IOS* vc = [[KeyBackupViewController_IOS alloc]
-												  initWithOwner:owner];
+												  initWithOwner:zdc];
 
 	[vc pushBackupAccessKeyWithUserID:localUserID
 			 withNavigationController:navigationController];
@@ -138,7 +138,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 	
 	
 	VerifyPublicKey_IOS* vc = [[VerifyPublicKey_IOS alloc]
-										initWithOwner:owner
+										initWithOwner:zdc
 										remoteUserID:userID
 										localUserID:localUserID];
 	
@@ -152,7 +152,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 								completionHandler:(sharedUsersViewCompletionHandler __nullable )completionHandler
 {
 	
-	RemoteUsersViewController_IOS *vc = [[RemoteUsersViewController_IOS alloc] initWithOwner:owner
+	RemoteUsersViewController_IOS *vc = [[RemoteUsersViewController_IOS alloc] initWithOwner:zdc
 																										  localUserID:localUserID
 																										remoteUserIDs:remoteUserIDs
 																												  title:title
@@ -293,7 +293,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 				  withNavigationController:(UINavigationController*)navigationController
 {
 	ActivityMonitor_IOS* vc = [[ActivityMonitor_IOS alloc]
-										initWithOwner:owner
+										initWithOwner:zdc
 										localUserID:localUserID];
 	
 	[navigationController pushViewController:vc animated:YES];
@@ -303,7 +303,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 - (UIViewController* __nullable)simulatePushNotificationViewController
 {
 	SimulatePushNotificationViewController_IOS*  vc = [[SimulatePushNotificationViewController_IOS alloc]
-																		initWithOwner:owner ];
+																		initWithOwner:zdc ];
 	
 	return vc;
 }
@@ -318,7 +318,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 - (void)deleteRefreshTokenforUserID:(NSString *)localUserID
                     completionBlock:(dispatch_block_t __nullable )completionBlock
 {
-    [owner.awsCredentialsManager flushAWSCredentialsForUserID:localUserID
+    [zdc.awsCredentialsManager flushAWSCredentialsForUserID:localUserID
                                            deleteRefreshToken:YES
                                               completionQueue:nil
                                               completionBlock:completionBlock];

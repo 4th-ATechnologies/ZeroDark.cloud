@@ -174,7 +174,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 @implementation ZDCSearchUserManager
 {
-    __weak ZeroDarkCloud *owner;
+    __weak ZeroDarkCloud *zdc;
     
     dispatch_queue_t cacheQueue;
     void *IsOnCacheQueueKey;
@@ -194,9 +194,9 @@ static const int ddLogLevel = DDLogLevelWarning;
 {
     if ((self = [super init]))
     {
-        owner = inOwner;
+        zdc = inOwner;
         
-        cacheQueue     = dispatch_queue_create("SearchUserManager.cacheQueue", DISPATCH_QUEUE_SERIAL);
+        cacheQueue = dispatch_queue_create("SearchUserManager.cacheQueue", DISPATCH_QUEUE_SERIAL);
     
         IsOnCacheQueueKey = &IsOnCacheQueueKey;
         dispatch_queue_set_specific(cacheQueue, IsOnCacheQueueKey, IsOnCacheQueueKey, NULL);
@@ -207,8 +207,8 @@ static const int ddLogLevel = DDLogLevelWarning;
         resultsCache.allowedKeyClasses = [NSSet setWithObject:[NSString class]];
         resultsCache.allowedObjectClasses = [NSSet setWithObject:[ZDCSearchUserResult class]];
 
-        databaseConnection  = owner.databaseManager.roDatabaseConnection;
-        providerManager     = owner.auth0ProviderManager;
+        databaseConnection  = zdc.databaseManager.roDatabaseConnection;
+        providerManager     = zdc.auth0ProviderManager;
 
     }
     return self;
@@ -599,12 +599,12 @@ static const int ddLogLevel = DDLogLevelWarning;
         return;
     }
     
-  	[owner.webManager searchUserMatch: queryString
-	                         provider: providers.count ? providers.firstObject : nil
-	                           zAppID: owner.zAppID
-	                      requesterID: userID
-	                  completionQueue: dispatch_get_main_queue()
-	                  completionBlock:^(NSURLResponse *response, id responseObject, NSError *error)
+  	[zdc.webManager searchUserMatch: queryString
+	                       provider: providers.count ? providers.firstObject : nil
+	                         zAppID: zdc.zAppID
+	                    requesterID: userID
+	                completionQueue: dispatch_get_main_queue()
+	                completionBlock:^(NSURLResponse *response, id responseObject, NSError *error)
 	{
 		if (error != nil || responseObject == nil)
 		{
@@ -700,7 +700,7 @@ static const int ddLogLevel = DDLogLevelWarning;
                 NSArray* identities = [auth0 objectForKey:@"identities"];
                 NSDictionary* user_metadata = [auth0 objectForKey:kZDCUser_metadataKey];
                 
-                NSDictionary* auth0_profiles = [owner.localUserManager createProfilesFromIdentities:identities
+                NSDictionary* auth0_profiles = [zdc.localUserManager createProfilesFromIdentities:identities
                                                                                      region:[AWSRegions regionForName:region]
                                                                                      bucket:bucket];
                 if(user_id

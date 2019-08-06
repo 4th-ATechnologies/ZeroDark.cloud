@@ -38,7 +38,7 @@
 @implementation ZDCWebManager {
 @private
 	
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 	
 	ZDCAsyncCompletionDispatch *asyncCompletionDispatch;
 	
@@ -59,7 +59,7 @@
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = inOwner;
 		
 		asyncCompletionDispatch = [[ZDCAsyncCompletionDispatch alloc] init];
 		
@@ -339,7 +339,7 @@
 
 					ZDCCachedResponse *cachedResponse = [[ZDCCachedResponse alloc] initWithData:data timeout:timeout];
 
-					YapDatabaseConnection *rwConnection = owner.databaseManager.rwDatabaseConnection;
+					YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
 					[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 
 						[transaction setObject:cachedResponse forKey:requestKey inCollection:kZDCCollection_CachedResponse];
@@ -354,7 +354,7 @@
 
 	__block NSData *cachedResponseData = nil;
 
-	YapDatabaseConnection *roConnection = owner.databaseManager.roDatabaseConnection;
+	YapDatabaseConnection *roConnection = zdc.databaseManager.roDatabaseConnection;
 	[roConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 
 		ZDCCachedResponse *cachedResponse =
@@ -549,9 +549,9 @@
 		completionQueue = dispatch_get_main_queue();
 	}
 
-	[owner.awsCredentialsManager getAWSCredentialsForUser: localUser.uuid
-	                                      completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUser.uuid
+	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -678,9 +678,9 @@
 	if (!completionQueue && completionBlock)
 		completionQueue = dispatch_get_main_queue();
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: localUser.uuid
-	                                      completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUser.uuid
+	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -694,7 +694,7 @@
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUser.uuid];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUser.uuid];
 		
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.foregroundSession;
@@ -718,7 +718,7 @@
 		
 		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
 		
-		NSString *zAppID = owner.zAppID;
+		NSString *zAppID = zdc.zAppID;
 		NSString *platform;
 		#if TARGET_OS_IPHONE
 		  #if DEBUG
@@ -1026,9 +1026,9 @@
 	if (!completionQueue)
 		completionQueue = dispatch_get_main_queue();
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                      completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -1040,7 +1040,7 @@
 		
 		// Generate request
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.foregroundSession;
 	#else
@@ -1351,9 +1351,9 @@
 		}
 	};
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                      completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -1361,7 +1361,7 @@
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
 		ZDCSessionUserInfo *userInfo = sessionInfo.userInfo;
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.foregroundSession;
@@ -1505,9 +1505,9 @@
 		}
 	}
 
-	[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                      completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -1515,7 +1515,7 @@
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
 		ZDCSessionUserInfo *userInfo = sessionInfo.userInfo;
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.foregroundSession;
@@ -1627,9 +1627,9 @@
 	NSString *localUserID = [inLocalUserID copy];
 	NSString *eTag        = [inETag copy];
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                      completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -1642,7 +1642,7 @@
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = canBackground ? sessionInfo.backgroundSession : sessionInfo.foregroundSession;
 	#else
@@ -1744,7 +1744,7 @@
                                   withAuth:(ZDCLocalUserAuth *)auth
 {
 	__block ZDCLocalUser *localUser = nil;
-	YapDatabaseConnection *roConnection = owner.databaseManager.roDatabaseConnection;
+	YapDatabaseConnection *roConnection = zdc.databaseManager.roDatabaseConnection;
 	[roConnection readWithBlock:^(YapDatabaseReadTransaction * _Nonnull transaction) {
 		
 		ZDCUser *user = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
@@ -1813,7 +1813,7 @@
                                    withAuth:(ZDCLocalUserAuth *)auth
 {
 	__block ZDCLocalUser *localUser = nil;
-	[owner.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	[zdc.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
 		ZDCUser *user = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
 		if ([user isKindOfClass:[ZDCLocalUser class]]) {
@@ -1960,9 +1960,9 @@
 		}
 	};
 
-	[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                      completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -2046,9 +2046,9 @@
 		}
 	};
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                      completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -2056,7 +2056,7 @@
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.foregroundSession;
 	#else
@@ -2140,9 +2140,9 @@
 		}
 	};
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                      completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -2150,7 +2150,7 @@
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
 		
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.foregroundSession;
@@ -2249,9 +2249,9 @@
 	
 	NSString *localUserID = [inLocalUserID copy]; // mutable string protection
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                      completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -2264,7 +2264,7 @@
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.foregroundSession;
 	#else
@@ -2381,9 +2381,9 @@
 		return;
 	}
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                      completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -2396,7 +2396,7 @@
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.foregroundSession;
 	#else
@@ -2509,9 +2509,9 @@
 		return;
 	}
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                      completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -2524,7 +2524,7 @@
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.foregroundSession;
 	#else
@@ -2671,9 +2671,9 @@
 		}
 	};
 
-	[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                      completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -2681,7 +2681,7 @@
 			return;
 		}
 
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.foregroundSession;
 	#else
@@ -2797,9 +2797,9 @@
 		}
 	};
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                      completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -2807,7 +2807,7 @@
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.foregroundSession;
 	#else
@@ -2935,9 +2935,9 @@
 		}
 	};
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                      completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -2945,7 +2945,7 @@
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.foregroundSession;
 	#else
@@ -3115,9 +3115,9 @@
 		}
 	}
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                      completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -3125,7 +3125,7 @@
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.foregroundSession;
 	#else
@@ -3275,9 +3275,9 @@
 	
 	dispatch_block_t requestBlock = ^{ @autoreleasepool {
 	
-		[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-		                                      completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-		                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+		[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+		                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+		                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 		{
 			if (error)
 			{
@@ -3285,7 +3285,7 @@
 				return;
 			}
 			
-			ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
+			ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
 		#if TARGET_OS_IPHONE
 			AFURLSessionManager *session = sessionInfo.foregroundSession;
 		#else
@@ -3360,7 +3360,7 @@
 						
 						ZDCCachedResponse *cachedResponse = [[ZDCCachedResponse alloc] initWithData:data timeout:timeout];
 						
-						YapDatabaseConnection *rwDatabaseConnection = owner.databaseManager.rwDatabaseConnection;
+						YapDatabaseConnection *rwDatabaseConnection = zdc.databaseManager.rwDatabaseConnection;
 						[rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 							
 							[transaction setObject:cachedResponse forKey:requestKey inCollection:kZDCCollection_CachedResponse];
@@ -3378,7 +3378,7 @@
 	
 	__block NSData *cachedResponseData = nil;
 	
-	[owner.databaseManager.roDatabaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	[zdc.databaseManager.roDatabaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
 		ZDCCachedResponse *cachedResponse =
 		  [transaction objectForKey:requestKey inCollection:kZDCCollection_CachedResponse];
@@ -4119,12 +4119,12 @@
 	
 	NSString *rootPath = [NSString stringWithFormat:@"/%@.json", root];
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                      completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.foregroundSession;
 	#else

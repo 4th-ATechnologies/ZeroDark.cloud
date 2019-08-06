@@ -78,7 +78,7 @@ static NSString *const kSessionDescriptionPrefix_Foreground = @"fg";
 
 @implementation ZDCSessionManager
 {
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 	
 	YapDatabaseConnection *databaseConnection;
 	
@@ -110,7 +110,7 @@ static NSString *const kSessionDescriptionPrefix_Foreground = @"fg";
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = inOwner;
 		
 		queue = dispatch_queue_create("SessionManager", DISPATCH_QUEUE_SERIAL);
 		
@@ -633,7 +633,7 @@ done:
 			                 inSession: session
 			           createIfMissing: YES];
 			
-			result = pendingItem.downloadedFileURL = [owner.directoryManager generateDownloadURL];
+			result = pendingItem.downloadedFileURL = [zdc.directoryManager generateDownloadURL];
 		}
 		
 	#else // OSX
@@ -646,7 +646,7 @@ done:
 	
 	if (storageItem && storageItem.context)
 	{
-		result = storageItem.downloadedFileURL = [owner.directoryManager generateDownloadURL];
+		result = storageItem.downloadedFileURL = [zdc.directoryManager generateDownloadURL];
 	}
 	
 	return result;
@@ -733,7 +733,7 @@ done:
 {
 	DDLogAutoTrace();
 	
-	NSSet<NSString *> *localUserIDs = owner.databaseManager.previouslyRegisteredLocalUserIDs;
+	NSSet<NSString *> *localUserIDs = zdc.databaseManager.previouslyRegisteredLocalUserIDs;
 	
 	if (localUserIDs.count == 0)
 	{
@@ -864,10 +864,10 @@ done:
 		
 		dispatch_async(sessionInfo.queue, ^{ @autoreleasepool {
 			
-			NSArray<NSString *> *appIDs = [owner.databaseManager previouslyRegisteredAppIDsForUser:localUserID];
+			NSArray<NSString *> *appIDs = [zdc.databaseManager previouslyRegisteredAppIDsForUser:localUserID];
 			for (NSString *appID in appIDs)
 			{
-				[[owner.databaseManager cloudExtForUser:localUserID app:appID] resume];
+				[[zdc.databaseManager cloudExtForUser:localUserID app:appID] resume];
 			}
 		}});
 		
@@ -875,7 +875,7 @@ done:
 		
 		if (storageKeysToRemove)
 		{
-			YapDatabaseConnection *rwDatabaseConnection = owner.databaseManager.rwDatabaseConnection;
+			YapDatabaseConnection *rwDatabaseConnection = zdc.databaseManager.rwDatabaseConnection;
 			[rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 				
 				[transaction removeObjectsForKeys:storageKeysToRemove inCollection:kZDCCollection_SessionStorage];
@@ -920,16 +920,16 @@ done:
 			{
 				if (context.isMeta)
 				{
-					[owner.progressManager setMetaDownloadProgress: progress
-					                                     forNodeID: context.nodeID
-					                                    components: context.components
-					                                   localUserID: context.localUserID];
+					[zdc.progressManager setMetaDownloadProgress: progress
+					                                   forNodeID: context.nodeID
+					                                  components: context.components
+					                                 localUserID: context.localUserID];
 				}
 				else
 				{
-					[owner.progressManager setDataDownloadProgress: progress
-					                                     forNodeID: context.nodeID
-					                                   localUserID: context.localUserID];
+					[zdc.progressManager setDataDownloadProgress: progress
+					                                   forNodeID: context.nodeID
+					                                 localUserID: context.localUserID];
 				}
 			}
 		}
@@ -957,27 +957,27 @@ done:
 			{
 				ZDCDownloadContext *context = (ZDCDownloadContext *)inContext;
 		
-				[owner.downloadManager downloadTaskDidComplete: (NSURLSessionDownloadTask *)task
-				                                     inSession: session
-				                                   withContext: context
-				                                         error: error
-				                             downloadedFileURL: downloadedFileURL];
+				[zdc.downloadManager downloadTaskDidComplete: (NSURLSessionDownloadTask *)task
+				                                   inSession: session
+				                                 withContext: context
+				                                       error: error
+				                           downloadedFileURL: downloadedFileURL];
 			}
 			else
 			{
-				[owner.pushManager downloadTaskDidComplete: (NSURLSessionDownloadTask *)task
-				                                 inSession: session
-				                                 withError: error
-				                                   context: inContext
-				                         downloadedFileURL: downloadedFileURL];
+				[zdc.pushManager downloadTaskDidComplete: (NSURLSessionDownloadTask *)task
+				                               inSession: session
+				                               withError: error
+				                                 context: inContext
+				                       downloadedFileURL: downloadedFileURL];
 			}
 		}
 		else
 		{
-			[owner.pushManager taskDidComplete: task
-			                         inSession: session
-			                         withError: error
-			                           context: inContext];
+			[zdc.pushManager taskDidComplete: task
+			                       inSession: session
+			                       withError: error
+			                         context: inContext];
 		}
 	}});
 }
@@ -993,13 +993,12 @@ done:
 	// So let's flush the rwDatabaseConnection being used by the PushManager & PullManager first.
 	// And then we'll notify the OS that we're done.
 	
-	YapDatabaseConnection *rwConnection = [owner.networkTools rwConnection];
+	YapDatabaseConnection *rwConnection = [zdc.networkTools rwConnection];
 	dispatch_queue_t concurrentQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
-	__weak ZeroDarkCloud *owner = self->owner;
 	[rwConnection flushTransactionsWithCompletionQueue:concurrentQueue completionBlock:^{
 		
-		[owner invokeCompletionHandlerForBackgroundURLSession:session.configuration.identifier];
+		[zdc invokeCompletionHandlerForBackgroundURLSession:session.configuration.identifier];
 	}];
 }
 
@@ -1263,7 +1262,7 @@ done:
 	
 	if (storageItem.contextIsSaved)
 	{
-		YapDatabaseConnection *rwDatabaseConnection = owner.databaseManager.rwDatabaseConnection;
+		YapDatabaseConnection *rwDatabaseConnection = zdc.databaseManager.rwDatabaseConnection;
 		[rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 			
 			[transaction removeObjectForKey:key inCollection:kZDCCollection_SessionStorage];
@@ -1304,7 +1303,7 @@ done:
 				[[UIApplication sharedApplication] endBackgroundTask:taskIdentifier];
 			}];
 		
-		YapDatabaseConnection *rwDatabaseConnection = owner.databaseManager.rwDatabaseConnection;
+		YapDatabaseConnection *rwDatabaseConnection = zdc.databaseManager.rwDatabaseConnection;
 		[rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 			
 			[items enumerateKeysAndObjectsUsingBlock:^(NSString *key, ZDCObject *context, BOOL *stop) {

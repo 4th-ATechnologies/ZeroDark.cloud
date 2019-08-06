@@ -68,7 +68,7 @@
 
 @implementation ZDCImageManager {
 	
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 	
 	YapDatabaseConnection *internalDatabaseConnection;
 	dispatch_queue_t processingQueue;
@@ -95,9 +95,9 @@
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = inOwner;
 		
-		internalDatabaseConnection = [owner.databaseManager.database newConnection];
+		internalDatabaseConnection = [zdc.databaseManager.database newConnection];
 		processingQueue = dispatch_queue_create("ZDCImageManager-processing", DISPATCH_QUEUE_SERIAL);
 		
 		nodeThumbnailsCache = [[NSCache alloc] init];
@@ -128,7 +128,7 @@
 		[[NSNotificationCenter defaultCenter] addObserver: self
 		                                         selector: @selector(diskManagerChanged:)
 		                                             name: ZDCDiskManagerChangedNotification
-		                                           object: owner.diskManager];
+		                                           object: zdc.diskManager];
 	}
 	return self;
 }
@@ -170,7 +170,7 @@
 
 - (void)diskManagerChanged:(NSNotification *)notification
 {
-	if (notification.object != owner.diskManager) return;
+	if (notification.object != zdc.diskManager) return;
 	
 	ZDCDiskManagerChanges *changes = notification.userInfo[kZDCDiskManagerChanges];
 	
@@ -278,10 +278,11 @@
 	__block BOOL nodeIsMarkedAsNeedsDownload = NO;
 	if (options.downloadIfMarkedAsNeedsDownload)
 	{
-		__strong ZeroDarkCloud *zdc = owner;
 		[internalDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 			
-			ZDCCloudTransaction *cloudTransaction = [zdc cloudTransaction:transaction forLocalUserID:node.localUserID];
+			ZDCCloudTransaction *cloudTransaction =
+			  [self->zdc cloudTransaction:transaction forLocalUserID:node.localUserID];
+			
 			nodeIsMarkedAsNeedsDownload =
 			  [cloudTransaction nodeIsMarkedAsNeedsDownload: node.uuid
 			                                     components: ZDCNodeComponents_Thumbnail];
@@ -307,7 +308,7 @@
 		}
 	}
 	
-	ZDCDiskExport *export = [owner.diskManager nodeThumbnail:node];
+	ZDCDiskExport *export = [zdc.diskManager nodeThumbnail:node];
 	
 	BOOL requiresDownload = NO;
 	if (export)
@@ -369,13 +370,13 @@
 			
 			if (isDownload && options.downloadIfMarkedAsNeedsDownload && imageData)
 			{
-				__weak ZeroDarkCloud *owner = strongSelf->owner;
-				YapDatabaseConnection *rwConnection  = owner.databaseManager.rwDatabaseConnection;
+				__strong ZeroDarkCloud *_zdc = strongSelf->zdc;
 				
+				YapDatabaseConnection *rwConnection = _zdc.databaseManager.rwDatabaseConnection;
 				[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 					
 					ZDCCloudTransaction *cloudTransaction =
-					  [owner cloudTransaction:transaction forLocalUserID:node.localUserID];
+					  [_zdc cloudTransaction:transaction forLocalUserID:node.localUserID];
 					
 					[cloudTransaction unmarkNodeAsNeedsDownload: node.uuid
 					                                 components: ZDCNodeComponents_Thumbnail
@@ -419,11 +420,11 @@
 		opts.cacheToDiskManager = YES;
 		
 		downloadTicket =
-		  [owner.downloadManager downloadNodeMeta: node
-		                               components: ZDCNodeMetaComponents_Thumbnail
-		                                  options: opts
-		                          completionQueue: processingQueue
-		                          completionBlock:
+		  [zdc.downloadManager downloadNodeMeta: node
+		                             components: ZDCNodeMetaComponents_Thumbnail
+		                                options: opts
+		                        completionQueue: processingQueue
+		                        completionBlock:
 			^(ZDCCloudDataInfo *header, NSData *metadata, NSData *thumbnail, NSError *error)
 		{
 			didDownload = (thumbnail != nil);
@@ -636,7 +637,7 @@
 		}
 	}
 	
-	ZDCDiskExport *export = [owner.diskManager userAvatar:user forAuth0ID:auth0ID];
+	ZDCDiskExport *export = [zdc.diskManager userAvatar:user forAuth0ID:auth0ID];
 	if (export.isNilPlaceholder)
 	{
 		preFetchBlock(nil, NO);
@@ -710,11 +711,11 @@
 		}
 		
 		ZDCDownloadTicket *ticket =
-		  [owner.downloadManager downloadUserAvatar: user
-		                                    auth0ID: auth0ID
-		                                    options: opts
-		                            completionQueue: processingQueue
-		                            completionBlock:^(NSData *avatar, NSError *error)
+		  [zdc.downloadManager downloadUserAvatar: user
+		                                  auth0ID: auth0ID
+		                                  options: opts
+		                          completionQueue: processingQueue
+		                          completionBlock:^(NSData *avatar, NSError *error)
 		{
 			processingBlock(avatar, error);
 		}];
@@ -795,12 +796,12 @@
 	}};
 	
 	ZDCDownloadTicket *ticket =
-	  [owner.downloadManager downloadUserAvatar: userID
-	                                    auth0ID: auth0ID
-	                                    fromURL: url
-	                                    options: options
-	                            completionQueue: processingQueue
-	                            completionBlock:^(NSData *avatar, NSError *error)
+	  [zdc.downloadManager downloadUserAvatar: userID
+	                                  auth0ID: auth0ID
+	                                  fromURL: url
+	                                  options: options
+	                          completionQueue: processingQueue
+	                          completionBlock:^(NSData *avatar, NSError *error)
 	{
 		processingBlock(avatar, error);
 	}];

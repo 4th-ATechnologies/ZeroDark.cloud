@@ -29,7 +29,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 @implementation ZDCSharesManager {
 	
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 }
 
 - (instancetype)init
@@ -41,8 +41,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
-		
+		zdc = inOwner;
 	}
 	return self;
 }
@@ -59,7 +58,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 {
 	__block ZDCSplitKey* splitKey = NULL;
 	
-	[owner.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction * _Nonnull transaction)
+	[zdc.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction * _Nonnull transaction)
 	 {
 		 
 		 YapDatabaseAutoViewTransaction *viewTransaction = [transaction ext:Ext_View_SplitKeys];

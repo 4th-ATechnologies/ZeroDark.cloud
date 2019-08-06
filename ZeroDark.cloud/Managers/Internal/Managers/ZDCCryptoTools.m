@@ -25,14 +25,14 @@ static NSUInteger const kZDCCloudRcrdCurrentVersion = 3;
 @implementation ZDCCryptoTools {
 @private
 	
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 }
 
 - (instancetype)initWithOwner:(ZeroDarkCloud *)inOwner
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = inOwner;
 	}
 	return self;
 }
@@ -183,7 +183,7 @@ done:
 	
 	ASSERTERR(keyCount == 1, kS4Err_SelfTestFailed);
 	
-	err = S4Key_DecryptFromS4Key(privKeyCtxArray[0], owner.storageKey, &privKeyCtx); CKERR;
+	err = S4Key_DecryptFromS4Key(privKeyCtxArray[0], zdc.storageKey, &privKeyCtx); CKERR;
 	// check that it's a private key
 	ASSERTERR(privKeyCtx->type == kS4KeyType_PublicKey, kS4Err_BadParams);
 	ASSERTERR(privKeyCtx->pub.isPrivate, kS4Err_SelfTestFailed);
@@ -517,11 +517,14 @@ done:
 				NSString *path =
 				  [NSString stringWithFormat:@"%@/%@/%@", anchor.zAppID, anchor.dirPrefix, cloudName];
 				
+				NSMutableDictionary *pointer = [NSMutableDictionary dictionaryWithCapacity:3];
+				
+				pointer[kZDCCloudRcrd_Data_Pointer_Owner] = anchor.userID;
+				pointer[kZDCCloudRcrd_Data_Pointer_Path] = path;
+				pointer[kZDCCloudRcrd_Data_Pointer_CloudID] = pointee.cloudID;
+				
 				dict_data = [NSMutableDictionary dictionaryWithCapacity:1];
-				dict_data[kZDCCloudRcrd_Data_Pointer] = @{
-					kZDCCloudRcrd_Data_Pointer_Owner : anchor.userID,
-					kZDCCloudRcrd_Data_Pointer_Path  : path
-				};
+				dict_data[kZDCCloudRcrd_Data_Pointer] = pointer;
 			}
 		}
 		else if (isMessage)
@@ -965,7 +968,7 @@ done:
 	}
 
 
-	if(!owner || !S4KeyContextRefIsValid(owner.storageKey))
+	if(!zdc || !S4KeyContextRefIsValid(zdc.storageKey))
 	{
 		error = [self errorWithDescription:@"unlocking key not available."];
 		goto done;
@@ -987,7 +990,7 @@ done:
 	ASSERTERR(privKeyCtx->pub.isPrivate,  kS4Err_SelfTestFailed);
 
 	// reserialize it encoded to our storage key
- 	err = S4Key_SerializeToS4Key(privKeyCtx, owner.storageKey, &privKeyData, &keyDataLen); CKERR;
+ 	err = S4Key_SerializeToS4Key(privKeyCtx, zdc.storageKey, &privKeyData, &keyDataLen); CKERR;
  	privKeyStr = [[NSString alloc]initWithBytesNoCopy:privKeyData
 											   length:keyDataLen
 											 encoding:NSUTF8StringEncoding
@@ -1043,7 +1046,7 @@ done:
 	}
 
 
-	if(!owner || !S4KeyContextRefIsValid(owner.storageKey))
+	if(!zdc || !S4KeyContextRefIsValid(zdc.storageKey))
 	{
 		error = [self errorWithDescription:@"unlocking key not available."];
 		goto done;
@@ -1057,7 +1060,7 @@ done:
 	err = S4Key_NewSymmetric(encryptionAlgorithm, keyData.bytes, &symKeyCtx); CKERR;
 
 	symKey = [ZDCSymmetricKey keyWithS4Key:symKeyCtx
-								storageKey:owner.storageKey];
+								storageKey:zdc.storageKey];
 
 
 done:
@@ -1113,7 +1116,7 @@ done:
 								privKeyJSON.UTF8LengthInBytes, &keyCount, &importCtx); CKERR;
 	ASSERTERR(keyCount == 1, kS4Err_SelfTestFailed);
 
-	err = S4Key_DecryptFromS4Key(importCtx[0], owner.storageKey, &privKeyCtx); CKERR;
+	err = S4Key_DecryptFromS4Key(importCtx[0], zdc.storageKey, &privKeyCtx); CKERR;
 
 	err = S4Key_SerializePubKey(privKeyCtx, &keyData, &keyDataLen); CKERR;
 
@@ -1171,11 +1174,11 @@ done:
 
 	err = S4Key_DeserializeKeys((uint8_t*)cloudKey.keyJSON.UTF8String, cloudKey.keyJSON.length, &keyCount, &symKeyCtx ); CKERR;
 	ASSERTERR(keyCount == 1,  kS4Err_SelfTestFailed);
-	err = S4Key_DecryptFromS4Key(symKeyCtx[0], owner.storageKey , &cloudKeyCtx); CKERR;
+	err = S4Key_DecryptFromS4Key(symKeyCtx[0], zdc.storageKey , &cloudKeyCtx); CKERR;
 
 	err = S4Key_DeserializeKeys((uint8_t*)privKey.privKeyJSON.UTF8String, privKey.privKeyJSON.length, &keyCount, &importCtx ); CKERR;
 	ASSERTERR(keyCount == 1,  kS4Err_SelfTestFailed);
-	err = S4Key_DecryptFromS4Key(importCtx[0], owner.storageKey , &privKeyCtx); CKERR;
+	err = S4Key_DecryptFromS4Key(importCtx[0], zdc.storageKey , &privKeyCtx); CKERR;
 
 	err = S4Key_SerializeToS4Key(privKeyCtx, cloudKeyCtx, &keyData, &keyDataLen); CKERR;
 	data = [[NSData alloc] initWithBytesNoCopy:keyData length:keyDataLen freeWhenDone:YES];
@@ -1378,7 +1381,7 @@ done:
 
 		success = [pubKey updateKeyProperty:propertyID
 									  value:value
-								 storageKey:owner.storageKey
+								 storageKey:zdc.storageKey
 									  error:&error];
 
 		if(success && !error)
@@ -1493,7 +1496,7 @@ done:
 	
 	ASSERTERR(keyCount == 1, kS4Err_SelfTestFailed);
 	
-	err = S4Key_DecryptFromS4Key(wtfKeyCtx[0], owner.storageKey, &symKeyCtx); CKERR;
+	err = S4Key_DecryptFromS4Key(wtfKeyCtx[0], zdc.storageKey, &symKeyCtx); CKERR;
 	
 	// get the keydata
 	err = S4Key_GetAllocatedProperty(symKeyCtx, kS4KeyProp_KeyData, NULL, &keyData, &keyDataLen); CKERR;

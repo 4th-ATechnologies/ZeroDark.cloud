@@ -54,7 +54,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 
 @implementation ZDCDatabaseManager
 {
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 	
 	YapDatabaseActionManager *actionManager;
 	
@@ -73,7 +73,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = inOwner;
 		
 		spinlock = OS_SPINLOCK_INIT;
 		registeredCloudDict = [[NSMutableDictionary alloc] initWithCapacity:4];
@@ -252,7 +252,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	
 	[NSKeyedUnarchiver setClass:[ZDCTrunkNode class] forClassName:@"ZDCContainerNode"];
 	
-	NSString *databasePath = owner.databasePath.filePathURL.path;
+	NSString *databasePath = zdc.databasePath.filePathURL.path;
 	DDLogDebug(@"databasePath = %@", databasePath);
 	
 	YapDatabaseOptions *options = [[YapDatabaseOptions alloc] init];
@@ -1305,7 +1305,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		__strong typeof(self) strongSelf = weakSelf;
 		if (strongSelf == nil) return;
 		
-		YapDatabaseConnection *rwConnection = strongSelf->owner.databaseManager.rwDatabaseConnection;
+		YapDatabaseConnection *rwConnection = strongSelf->zdc.databaseManager.rwDatabaseConnection;
 		[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 			
 			[transaction removeObjectForKey:key inCollection:collection];
@@ -1328,7 +1328,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 			__strong typeof(self) strongSelf = weakSelf;
 			if (strongSelf == nil) return;
 			
-			webManager = strongSelf->owner.webManager;
+			webManager = strongSelf->zdc.webManager;
 		}
 		
 		NSString *localUserID = key;
@@ -1347,7 +1347,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 				__strong typeof(self) strongSelf = weakSelf;
 				if (strongSelf == nil) return;
 				
-				YapDatabaseConnection *rwConnection = strongSelf->owner.databaseManager.rwDatabaseConnection;
+				YapDatabaseConnection *rwConnection = strongSelf->rwDatabaseConnection;
 				[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
 					ZDCLocalUser *updatedUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
@@ -1389,7 +1389,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 			__strong typeof(self) strongSelf = weakSelf;
 			if (strongSelf == nil) return;
 			
-			webManager = strongSelf->owner.webManager;
+			webManager = strongSelf->zdc.webManager;
 		}
 		
 		NSString *localUserID = key;
@@ -1403,7 +1403,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 				__strong typeof(self) strongSelf = weakSelf;
 				if (strongSelf == nil) return;
 				
-				YapDatabaseConnection *rwConnection = strongSelf->owner.databaseManager.rwDatabaseConnection;
+				YapDatabaseConnection *rwConnection = strongSelf->rwDatabaseConnection;
 				[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 	
 					ZDCLocalUser *updatedUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
@@ -1443,7 +1443,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 			__strong typeof(self) strongSelf = weakSelf;
 			if (strongSelf == nil) return;
 			
-			localUserManager = strongSelf->owner.localUserManager;
+			localUserManager = strongSelf->zdc.localUserManager;
 		}
 		
 		[localUserManager createRecoveryConnectionForLocalUser:localUser completionQueue:nil completionBlock:nil];
@@ -1462,7 +1462,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		__strong typeof(self) strongSelf = weakSelf;
 		if (strongSelf)
 		{
-			[task performTask:strongSelf->owner];
+			[task performTask:strongSelf->zdc];
 		}
 	};
 	
@@ -1475,7 +1475,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 
 - (NSString *)cloudExtNameForUser:(NSString *)localUserID
 {
-	return [self cloudExtNameForUser:localUserID app:owner.zAppID];
+	return [self cloudExtNameForUser:localUserID app:zdc.zAppID];
 }
 
 /**
@@ -1520,7 +1520,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
  */
 - (nullable ZDCCloud *)cloudExtForUser:(NSString *)localUserID
 {
-	return [self cloudExtForUser:localUserID app:owner.zAppID];
+	return [self cloudExtForUser:localUserID app:zdc.zAppID];
 }
 
 /**
@@ -1590,7 +1590,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	                                 zAppID: appID];
 	
 	id <YapDatabaseCloudCorePipelineDelegate> pipelineDelegate =
-	  (id <YapDatabaseCloudCorePipelineDelegate>)owner;
+	  (id <YapDatabaseCloudCorePipelineDelegate>)zdc;
 	
 	YapDatabaseCloudCorePipeline *pipeline =
 	  [[YapDatabaseCloudCorePipeline alloc] initWithName: YapDatabaseCloudCoreDefaultPipelineName

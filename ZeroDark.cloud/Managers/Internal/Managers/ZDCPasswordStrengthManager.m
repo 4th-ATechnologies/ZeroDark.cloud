@@ -208,10 +208,10 @@ static const int ddLogLevel = DDLogLevelWarning;
 }
 
 @end
-@implementation ZDCPasswordStrengthManager
 
+@implementation ZDCPasswordStrengthManager
 {
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 	
 	NSArray *dictionaryMatchers;
 	NSDictionary *adjacencyGraphs;
@@ -226,7 +226,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = inOwner;
 		
 		[self loadDictionaryMatchers];
 		[self loadAdjacencyGraphs];
@@ -235,11 +235,6 @@ static const int ddLogLevel = DDLogLevelWarning;
 	}
 	return self;
 }
-
-- (void)dealloc
-{
-}
-
 
 - (void)loadDictionaryMatchers {
 	NSMutableArray *matchers = [NSMutableArray array];

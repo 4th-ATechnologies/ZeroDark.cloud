@@ -13,7 +13,7 @@
 {
 @private
 
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 }
 
 NSString *const ZDCprefs_activityMonitor_lastActivityType  = @"lastActivityType";
@@ -32,7 +32,7 @@ NSString *const ZDCprefs_preferedAuth0IDs         = @"preferedAuth0IDs";
 	if ((self = [super initWithCollection:kZDCCollection_Prefs
 									proxy:inOwner.databaseManager.databaseConnectionProxy]))
 	{
-		owner = inOwner;
+		zdc = inOwner;
  	}
 	return self;
 }

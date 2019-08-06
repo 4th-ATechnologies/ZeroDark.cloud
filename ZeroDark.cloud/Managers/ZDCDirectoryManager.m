@@ -25,7 +25,7 @@
 
 @implementation ZDCDirectoryManager
 {
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 }
 
 - (instancetype)init
@@ -37,7 +37,7 @@
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = inOwner;
 	}
 	return self;
 }
@@ -365,7 +365,7 @@
 	NSURL *url = self.cachedDownloadDirectoryURL;
 	if (url == nil)
 	{
-		NSURL *databasePath = owner.databasePath;
+		NSURL *databasePath = zdc.databasePath;
 		NSString *databaseName = [databasePath lastPathComponent];
 		
 		NSURL *dbs = [[self class] zdcCacheDirectoryForDatabaseName:databaseName];

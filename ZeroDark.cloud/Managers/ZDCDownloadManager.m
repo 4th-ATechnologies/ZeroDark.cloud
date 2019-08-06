@@ -132,7 +132,7 @@ static NSUInteger const kMaxFailCount = 8;
 
 @implementation ZDCDownloadManager
 {
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 	
 	dispatch_queue_t downloadQueue;
 	NSMutableDictionary<NSString*, ZDCDownloadRef*> *downloadDict; // only access/modify within downloadQueue
@@ -150,7 +150,7 @@ static NSUInteger const kMaxFailCount = 8;
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = inOwner;
 		
 		downloadQueue = dispatch_queue_create("ZDCDownloadManager", DISPATCH_QUEUE_SERIAL);
 		downloadDict = [[NSMutableDictionary alloc] init];
@@ -210,9 +210,9 @@ static NSUInteger const kMaxFailCount = 8;
                         completionQueue:(dispatch_queue_t)completionQueue
                         completionBlock:(dispatch_block_t)completionBlock
 {
-	__weak ZeroDarkCloud *owner = self->owner;
+	__weak typeof(self) weakSelf = self;
 	
-	YapDatabaseConnection *rwConnection = owner.databaseManager.rwDatabaseConnection;
+	YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
 	[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
 		ZDCNode *updatedNode = [transaction objectForKey:nodeID inCollection:kZDCCollection_Nodes];
@@ -238,10 +238,17 @@ static NSUInteger const kMaxFailCount = 8;
 			ZDCTreesystemPath *path =
 			  [[ZDCNodeManager sharedInstance] pathForNode:updatedNode transaction:transaction];
 			
-			[owner.delegate didDiscoverModifiedNode: updatedNode
-			                             withChange: ZDCNodeChange_Data
-			                                 atPath: path
-			                            transaction: transaction];
+			id<ZeroDarkCloudDelegate> delegate = nil;
+			__strong typeof(self) strongSelf = weakSelf;
+			if (strongSelf)
+			{
+				delegate = strongSelf->zdc.delegate;
+			}
+			
+			[delegate didDiscoverModifiedNode: updatedNode
+			                       withChange: ZDCNodeChange_Data
+			                           atPath: path
+			                      transaction: transaction];
 		}
 			
 	} completionQueue:completionQueue completionBlock:completionBlock];
@@ -318,13 +325,13 @@ static NSUInteger const kMaxFailCount = 8;
 			
 			progress = [[ZDCProgress alloc] init];
 			
-			[owner.progressManager setMetaDownloadProgress: progress
-			                                     forNodeID: node.uuid
-			                                    components: ZDCNodeMetaComponents_Header
-			                                   localUserID: node.localUserID
-			                              existingProgress: &existingProgress
-			                               completionQueue: completionQueue
-			                               completionBlock: completionBlock];
+			[zdc.progressManager setMetaDownloadProgress: progress
+			                                   forNodeID: node.uuid
+			                                  components: ZDCNodeMetaComponents_Header
+			                                 localUserID: node.localUserID
+			                            existingProgress: &existingProgress
+			                             completionQueue: completionQueue
+			                             completionBlock: completionBlock];
 		
 			if (existingProgress) {
 				ticket.progress = existingProgress;
@@ -381,7 +388,7 @@ static NSUInteger const kMaxFailCount = 8;
 		// We can either use our own dedicated databaseConnection, or simply perform it using an async transaction.
 		//
 		__block ZDCCloudLocator *cloudLocator = nil;
-		[owner.databaseManager.roDatabaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
+		[zdc.databaseManager.roDatabaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 	
 			cloudLocator =
 			  [[ZDCCloudPathManager sharedInstance] cloudLocatorForNode: node
@@ -455,7 +462,7 @@ static NSUInteger const kMaxFailCount = 8;
 			__strong typeof(self) strongSelf = weakSelf;
 			if (strongSelf)
 			{
-				awsCredentialsManager = strongSelf->owner.awsCredentialsManager;
+				awsCredentialsManager = strongSelf->zdc.awsCredentialsManager;
 			}
 		}
 		
@@ -495,7 +502,7 @@ static NSUInteger const kMaxFailCount = 8;
 	}
 	else
 	{
-		NSTimeInterval delay = [owner.networkTools exponentialBackoffForFailCount:failCount];
+		NSTimeInterval delay = [zdc.networkTools exponentialBackoffForFailCount:failCount];
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), concurrentQueue, ^{
 			
 			requestBlock();
@@ -513,7 +520,7 @@ static NSUInteger const kMaxFailCount = 8;
 	BOOL canBackground = NO;
 #endif
 	
-	ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:node.localUserID];
+	ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:node.localUserID];
 #if TARGET_OS_IPHONE
 	AFURLSessionManager *session =
 	  canBackground ? sessionInfo.backgroundSession : sessionInfo.foregroundSession;
@@ -554,7 +561,7 @@ static NSUInteger const kMaxFailCount = 8;
 		                            destination: nil
 		                      completionHandler: nil];
 				
-		[owner.sessionManager associateContext:context withTask:task inSession:session.session];
+		[zdc.sessionManager associateContext:context withTask:task inSession:session.session];
 	}
 	else
 	{
@@ -710,7 +717,7 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		// We need to alert the user (so they can re-auth with valid credentials).
 		//
-		[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+		[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 		
 		NSError *error =
 		  [NSError errorWithClass:[self class] code:statusCode description:@"Unauthorized"];
@@ -893,10 +900,10 @@ static NSUInteger const kMaxFailCount = 8;
 			if (piggybackTicket == nil)
 			{
 				NSProgress *piggybackProgress =
-				  [owner.progressManager metaDownloadProgressForNodeID: node.uuid
-				                                            components: @(ZDCNodeMetaComponents_All)
-				                                       completionQueue: completionQueue
-				                                       completionBlock: completionBlock];
+				  [zdc.progressManager metaDownloadProgressForNodeID: node.uuid
+				                                          components: @(ZDCNodeMetaComponents_All)
+				                                     completionQueue: completionQueue
+				                                     completionBlock: completionBlock];
 				if (piggybackProgress)
 				{
 					piggybackTicket = [[ZDCDownloadTicket alloc] initWithOwner: self
@@ -963,13 +970,13 @@ static NSUInteger const kMaxFailCount = 8;
 			
 			progress = [[ZDCProgress alloc] init];
 			
-			[owner.progressManager setMetaDownloadProgress: progress
-			                                     forNodeID: node.uuid
-			                                    components: components
-			                                   localUserID: node.localUserID
-			                              existingProgress: &existingProgress
-			                               completionQueue: completionQueue
-			                               completionBlock: completionBlock];
+			[zdc.progressManager setMetaDownloadProgress: progress
+			                                   forNodeID: node.uuid
+			                                  components: components
+			                                 localUserID: node.localUserID
+			                            existingProgress: &existingProgress
+			                             completionQueue: completionQueue
+			                             completionBlock: completionBlock];
 	
 			if (existingProgress) {
 				ticket.progress = existingProgress;
@@ -1011,7 +1018,7 @@ static NSUInteger const kMaxFailCount = 8;
 	// We can either use our own dedicated databaseConnection, or simply perform it using an async transaction.
 	//
 	__block ZDCCloudLocator *cloudLocator = nil;
-	[owner.databaseManager.roDatabaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	[zdc.databaseManager.roDatabaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
 		cloudLocator =
 		  [[ZDCCloudPathManager sharedInstance] cloudLocatorForNode: node
@@ -1203,7 +1210,7 @@ static NSUInteger const kMaxFailCount = 8;
 			__strong typeof(self) strongSelf = weakSelf;
 			if (strongSelf)
 			{
-				awsCredentialsManager = strongSelf->owner.awsCredentialsManager;
+				awsCredentialsManager = strongSelf->zdc.awsCredentialsManager;
 			}
 		}
 		
@@ -1243,7 +1250,7 @@ static NSUInteger const kMaxFailCount = 8;
 	}
 	else
 	{
-		NSTimeInterval delay = [owner.networkTools exponentialBackoffForFailCount:failCount];
+		NSTimeInterval delay = [zdc.networkTools exponentialBackoffForFailCount:failCount];
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), concurrentQueue, ^{
 			
 			requestBlock();
@@ -1263,7 +1270,7 @@ static NSUInteger const kMaxFailCount = 8;
 	BOOL canBackground = NO;
 #endif
 	
-	ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:node.localUserID];
+	ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:node.localUserID];
 #if TARGET_OS_IPHONE
 	AFURLSessionManager *session =
 	  canBackground ? sessionInfo.backgroundSession : sessionInfo.foregroundSession;
@@ -1320,7 +1327,7 @@ static NSUInteger const kMaxFailCount = 8;
 			                      completionHandler: nil];
 		}
 		
-		[owner.sessionManager associateContext:context withTask:task inSession:session.session];
+		[zdc.sessionManager associateContext:context withTask:task inSession:session.session];
 	}
 	else
 	{
@@ -1331,7 +1338,7 @@ static NSUInteger const kMaxFailCount = 8;
 			[resumeCache removeObjectForKey:resumeKey];
 		}
 		
-		NSURL *dstFileURL = [owner.directoryManager generateDownloadURL];
+		NSURL *dstFileURL = [zdc.directoryManager generateDownloadURL];
 		NSURL* (^destinationHandler)(NSURL*, NSURLResponse*) =
 			^(NSURL *targetPath, NSURLResponse *response)
 		{
@@ -1509,7 +1516,7 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		// We need to alert the user (so they can re-auth with valid credentials).
 		//
-		[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+		[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 		
 		NSError *error =
 		  [NSError errorWithClass:[self class] code:statusCode description:@"Unauthorized"];
@@ -1678,9 +1685,9 @@ static NSUInteger const kMaxFailCount = 8;
 		import.storePersistently = shouldSave;
 		import.eTag = context.header.eTag;
 		
-		[owner.diskManager importNodeThumbnail: import
-		                               forNode: context.ephemeralInfo.node
-		                                 error: nil];
+		[zdc.diskManager importNodeThumbnail: import
+		                             forNode: context.ephemeralInfo.node
+		                               error: nil];
 	}
 }
 
@@ -1695,12 +1702,12 @@ static NSUInteger const kMaxFailCount = 8;
 	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
 		downloadDict[downloadKey] = nil;
-		[owner.progressManager removeMetaDownloadProgressForNodeID: nodeID
-		                                                components: components
-		                                                withHeader: nil
-		                                                  metadata: nil
-		                                                 thumbnail: nil
-		                                                     error: error];
+		[zdc.progressManager removeMetaDownloadProgressForNodeID: nodeID
+		                                              components: components
+		                                              withHeader: nil
+		                                                metadata: nil
+		                                               thumbnail: nil
+		                                                   error: error];
 	#pragma clang diagnostic pop
 	}});
 }
@@ -1718,12 +1725,12 @@ static NSUInteger const kMaxFailCount = 8;
 	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
 		downloadDict[downloadKey] = nil;
-		[owner.progressManager removeMetaDownloadProgressForNodeID: nodeID
-		                                                components: components
-		                                                withHeader: header
-		                                                  metadata: metadata
-		                                                 thumbnail: thumbnail
-		                                                     error: nil];
+		[zdc.progressManager removeMetaDownloadProgressForNodeID: nodeID
+		                                              components: components
+		                                              withHeader: header
+		                                                metadata: metadata
+		                                               thumbnail: thumbnail
+		                                                   error: nil];
 	#pragma clang diagnostic pop
 	}});
 }
@@ -1802,12 +1809,12 @@ static NSUInteger const kMaxFailCount = 8;
 			
 			progress = [[ZDCProgress alloc] init];
 		
-			[owner.progressManager setDataDownloadProgress: progress
-			                                     forNodeID: node.uuid
-			                                   localUserID: node.localUserID
-			                              existingProgress: &existingProgress
-			                               completionQueue: completionQueue
-			                               completionBlock: completionBlock];
+			[zdc.progressManager setDataDownloadProgress: progress
+			                                   forNodeID: node.uuid
+			                                 localUserID: node.localUserID
+			                            existingProgress: &existingProgress
+			                             completionQueue: completionQueue
+			                             completionBlock: completionBlock];
 	
 			if (existingProgress) {
 				ticket.progress = existingProgress;
@@ -1849,7 +1856,7 @@ static NSUInteger const kMaxFailCount = 8;
 	// So it's not safe to perform a synchronous read using the public roDatabaseConnection here.
 	// We can either use our own dedicated databaseConnection, or simply perform it using an async transaction.
 	//
-	[owner.databaseManager.roDatabaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	[zdc.databaseManager.roDatabaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
 		cloudLocator =
 		  [[ZDCCloudPathManager sharedInstance] cloudLocatorForNode: node
@@ -1924,7 +1931,7 @@ static NSUInteger const kMaxFailCount = 8;
 			__strong typeof(self) strongSelf = weakSelf;
 			if (strongSelf)
 			{
-				awsCredentialsManager = strongSelf->owner.awsCredentialsManager;
+				awsCredentialsManager = strongSelf->zdc.awsCredentialsManager;
 			}
 		}
 		
@@ -1964,7 +1971,7 @@ static NSUInteger const kMaxFailCount = 8;
 	}
 	else
 	{
-		NSTimeInterval delay = [owner.networkTools exponentialBackoffForFailCount:failCount];
+		NSTimeInterval delay = [zdc.networkTools exponentialBackoffForFailCount:failCount];
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), concurrentQueue, ^{
 			
 			requestBlock();
@@ -1984,7 +1991,7 @@ static NSUInteger const kMaxFailCount = 8;
 	BOOL canBackground = NO;
 #endif
 	
-	ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:node.localUserID];
+	ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:node.localUserID];
 #if TARGET_OS_IPHONE
 	AFURLSessionManager *session =
 	  canBackground ? sessionInfo.backgroundSession : sessionInfo.foregroundSession;
@@ -2038,7 +2045,7 @@ static NSUInteger const kMaxFailCount = 8;
 			                      completionHandler: nil];
 		}
 		
-		[owner.sessionManager associateContext:context withTask:task inSession:session.session];
+		[zdc.sessionManager associateContext:context withTask:task inSession:session.session];
 	}
 	else
 	{
@@ -2049,7 +2056,7 @@ static NSUInteger const kMaxFailCount = 8;
 			[resumeCache removeObjectForKey:resumeKey];
 		}
 		
-		NSURL *dstFileURL = [owner.directoryManager generateDownloadURL];
+		NSURL *dstFileURL = [zdc.directoryManager generateDownloadURL];
 		NSURL* (^destinationHandler)(NSURL*, NSURLResponse*) =
 			^(NSURL *targetPath, NSURLResponse *response)
 		{
@@ -2210,7 +2217,7 @@ static NSUInteger const kMaxFailCount = 8;
 			return;
 		}
 		
-		[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+		[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 		
 		NSError *error =
 		  [NSError errorWithClass:[self class] code:statusCode description:@"Unauthorized"];
@@ -2331,9 +2338,9 @@ static NSUInteger const kMaxFailCount = 8;
 		import.storePersistently = shouldSave;
 		import.eTag = eTag;
 		
-		result = [owner.diskManager importNodeData: import
-		                                   forNode: context.ephemeralInfo.node
-		                                     error: nil];
+		result = [zdc.diskManager importNodeData: import
+		                                 forNode: context.ephemeralInfo.node
+		                                   error: nil];
 	}
 	
 	return (result ?: cryptoFile);
@@ -2348,10 +2355,10 @@ static NSUInteger const kMaxFailCount = 8;
 	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
 		downloadDict[downloadKey] = nil;
-		[owner.progressManager removeDataDownloadProgressForNodeID: nodeID
-		                                                withHeader: nil
-		                                                cryptoFile: nil
-		                                                     error: error];
+		[zdc.progressManager removeDataDownloadProgressForNodeID: nodeID
+		                                              withHeader: nil
+		                                              cryptoFile: nil
+		                                                   error: error];
 		
 	#pragma clang diagnostic pop
 	}});
@@ -2368,10 +2375,10 @@ static NSUInteger const kMaxFailCount = 8;
 	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 	
 		downloadDict[downloadKey] = nil;
-		[owner.progressManager removeDataDownloadProgressForNodeID: nodeID
-		                                                withHeader: header
-		                                                cryptoFile: cryptoFile
-		                                                     error: nil];
+		[zdc.progressManager removeDataDownloadProgressForNodeID: nodeID
+		                                              withHeader: header
+		                                              cryptoFile: cryptoFile
+		                                                   error: nil];
 		
 	#pragma clang diagnostic pop
 	}});
@@ -2667,10 +2674,10 @@ static NSUInteger const kMaxFailCount = 8;
 		import.storePersistently = shouldSave;
 		import.eTag = eTag;
 		
-		[owner.diskManager importUserAvatar: import
-		                            forUser: user
-		                            auth0ID: auth0ID
-		                              error: nil];
+		[zdc.diskManager importUserAvatar: import
+		                          forUser: user
+		                          auth0ID: auth0ID
+		                            error: nil];
 	}
 }
 
@@ -2684,14 +2691,14 @@ static NSUInteger const kMaxFailCount = 8;
 	{
 		if (sender.isMeta)
 		{
-			[owner.progressManager removeMetaDownloadListenerForNodeID: sender.nodeID
-			                                                components: sender.components
-			                                           completionBlock: sender.completionBlock];
+			[zdc.progressManager removeMetaDownloadListenerForNodeID: sender.nodeID
+			                                              components: sender.components
+			                                         completionBlock: sender.completionBlock];
 		}
 		else
 		{
-			[owner.progressManager removeDataDownloadListenerForNodeID: sender.nodeID
-			                                           completionBlock: sender.completionBlock];
+			[zdc.progressManager removeDataDownloadListenerForNodeID: sender.nodeID
+			                                         completionBlock: sender.completionBlock];
 		}
 	}
 	
@@ -2863,7 +2870,7 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		needsNotifyZeroDarkCloudDelegate = YES;
 		
-		[owner.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+		[zdc.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 			
 			node = [transaction objectForKey:context.nodeID inCollection:kZDCCollection_Nodes];
 			
@@ -2949,21 +2956,25 @@ static NSUInteger const kMaxFailCount = 8;
 	progress.totalUnitCount = 1;
 	progress.completedUnitCount = 1;
 	
-	__weak ZeroDarkCloud *owner = self->owner;
+	[zdc.progressManager setMetaDownloadProgress: progress
+	                                   forNodeID: context.nodeID
+	                                  components: context.components
+	                                 localUserID: context.localUserID];
 	
-	[owner.progressManager setMetaDownloadProgress: progress
-	                                     forNodeID: context.nodeID
-	                                    components: context.components
-	                                   localUserID: context.localUserID];
-	
-	[owner.progressManager addMetaDownloadListenerForNodeID: context.nodeID
-														 completionQueue: nil
-														 completionBlock:
+	__weak typeof(self) weakSelf = self;
+	[zdc.progressManager addMetaDownloadListenerForNodeID: context.nodeID
+	                                      completionQueue: nil
+	                                      completionBlock:
 	^(ZDCCloudDataInfo *header, NSData *metadata, NSData *thumbnail, NSError *error)
 	{
-		if (error) return; // ignore
+		if (error) {
+			return; // ignore
+		}
 		
-		id<ZeroDarkCloudDelegate> delegate = owner.delegate;
+		__strong typeof(self) strongSelf = weakSelf;
+		if (strongSelf == nil) return;
+		
+		id<ZeroDarkCloudDelegate> delegate = strongSelf->zdc.delegate;
 		
 		if ([delegate respondsToSelector:
 		      @selector(didBackgroundDownloadNodeMeta:atPath:withComponents:header:metadata:thumbnail:)])
@@ -2988,20 +2999,24 @@ static NSUInteger const kMaxFailCount = 8;
 	progress.totalUnitCount = 1;
 	progress.completedUnitCount = 1;
 	
-	__weak ZeroDarkCloud *owner = self->owner;
+	[zdc.progressManager setDataDownloadProgress: progress
+	                                   forNodeID: context.nodeID
+	                                 localUserID: context.localUserID];
 	
-	[owner.progressManager setDataDownloadProgress: progress
-	                                     forNodeID: context.nodeID
-	                                   localUserID: context.localUserID];
-	
-	[owner.progressManager addDataDownloadListenerForNodeID: context.nodeID
-	                                        completionQueue: nil
-	                                        completionBlock:
+	__weak typeof(self) weakSelf = self;
+	[zdc.progressManager addDataDownloadListenerForNodeID: context.nodeID
+	                                      completionQueue: nil
+	                                      completionBlock:
 	^(ZDCCloudDataInfo *header, ZDCCryptoFile *cryptoFile, NSError *error)
 	{
-		if (error) return; // ignore
+		if (error) {
+			return; // ignore
+		}
 		
-		id<ZeroDarkCloudDelegate> delegate = owner.delegate;
+		__strong typeof(self) strongSelf = weakSelf;
+		if (strongSelf == nil) return;
+		
+		id<ZeroDarkCloudDelegate> delegate = strongSelf->zdc.delegate;
 		
 		if ([delegate respondsToSelector:
 		      @selector(didBackgroundDownloadNodeData:atPath:withCryptoFile:)])

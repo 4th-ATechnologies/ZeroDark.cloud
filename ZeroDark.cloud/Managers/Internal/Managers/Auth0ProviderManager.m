@@ -70,8 +70,7 @@ NSString *const kAuth0ProviderInfo_Key_64x64Etag    = @"eTag_64x64";
     YapCache        *iconCache;          // must be accessed from within cacheQueue
 
 @private
-	__weak ZeroDarkCloud *owner;
-
+	__weak ZeroDarkCloud *zdc;
 }
 
 @dynamic providersInfo;
@@ -88,7 +87,7 @@ static Auth0ProviderManager *sharedInstance = nil;
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = inOwner;
 
 		cacheQueue     = dispatch_queue_create("Auth0ProviderManager.cacheQueue", DISPATCH_QUEUE_SERIAL);
 
@@ -393,15 +392,14 @@ done:
 	}
 	else
 	{
-		[owner.webManager fetchConfigWithCompletionQueue:dispatch_get_main_queue()
-									 completionBlock:^(NSDictionary * _Nullable config, NSError * _Nullable error)
-		 {
-
-			 if(error)
-			 {
-				 completionBlock(NULL, error);
-				 return;
-			 }
+		[zdc.webManager fetchConfigWithCompletionQueue: dispatch_get_main_queue()
+		                               completionBlock:^(NSDictionary * _Nullable config, NSError * _Nullable error)
+		{
+			if (error)
+			{
+				completionBlock(NULL, error);
+				return;
+			}
 
  			 NSMutableArray* keys = [NSMutableArray arrayWithArray: self.ordererdProviderKeys];
 			 NSMutableArray* supportedKeys = NSMutableArray.array;
@@ -585,7 +583,7 @@ done:
 	__weak typeof(self) weakSelf = self;
 	
 	
-	NSDate* lastUpdate = owner.internalPreferences.lastProviderTableUpdate;
+	NSDate* lastUpdate = zdc.internalPreferences.lastProviderTableUpdate;
 	
 	BOOL needsUpdate = !lastUpdate || forceUpdate;
 	if(!needsUpdate)
@@ -619,7 +617,7 @@ done:
 #pragma clang diagnostic pop
 				 });
 				 
-				 strongSelf->owner.internalPreferences.lastProviderTableUpdate = NSDate.date;
+				 strongSelf->zdc.internalPreferences.lastProviderTableUpdate = NSDate.date;
 				 
 				 [[NSNotificationCenter defaultCenter] postNotificationName:Auth0ProviderManagerDidUpdateNotification
 																					  object:self
@@ -646,7 +644,7 @@ done:
         }
     };
 
-	[owner.webManager fetchConfigWithCompletionQueue:dispatch_get_main_queue()
+	[zdc.webManager fetchConfigWithCompletionQueue:dispatch_get_main_queue()
 								 completionBlock:^(NSDictionary * _Nullable config, NSError * _Nullable error)
 	 {
 		 if(!error)
@@ -786,7 +784,7 @@ done:
         NSURL* sourceURL =  [smiWebURL URLByAppendingPathComponent:missingFile];
         NSURL* destURL =     [smiBase URLByAppendingPathComponent:missingFile];
 
-        [owner.webManager downloadFileFromURL:sourceURL
+        [zdc.webManager downloadFileFromURL:sourceURL
                              andSaveToURL:destURL
                                      eTag:NULL
                           completionQueue:dispatch_get_main_queue()

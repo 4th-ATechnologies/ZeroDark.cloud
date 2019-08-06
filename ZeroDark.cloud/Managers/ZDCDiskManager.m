@@ -325,7 +325,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 
 @implementation ZDCDiskManager
 {
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 	
 	dispatch_queue_t cacheQueue;
 	void *IsOnCacheQueueKey;
@@ -382,7 +382,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = inOwner;
 		
 		cacheQueue   = dispatch_queue_create("DiskManager_cache", DISPATCH_QUEUE_SERIAL);
 		refreshQueue = dispatch_queue_create("DiskManager_refresh", DISPATCH_QUEUE_SERIAL);
@@ -396,7 +396,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		fileManager = [[NSFileManager alloc] init];
 		fileManager.delegate = self;
 		
-		NSString *databaseName = [owner.databasePath lastPathComponent];
+		NSString *databaseName = [zdc.databasePath lastPathComponent];
 		persistentContainerURL = [ZDCDirectoryManager zdcPersistentDirectoryForDatabaseName:databaseName];
 		cacheContainerURL      = [ZDCDirectoryManager zdcCacheDirectoryForDatabaseName:databaseName];
 		
@@ -423,7 +423,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		[[NSNotificationCenter defaultCenter] addObserver: self
 		                                         selector: @selector(databaseModified:)
 		                                             name: YapDatabaseModifiedNotification
-		                                           object: owner.databaseManager.database];
+		                                           object: zdc.databaseManager.database];
 		
 		[[NSNotificationCenter defaultCenter] addObserver: self
 		                                         selector: @selector(pipelineQueueChanged:)
@@ -739,7 +739,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 			  [NSMutableDictionary dictionaryWithCapacity:modifiedUserIDs.count];
 			
 			__weak typeof(self) weakSelf = self;
-			[owner.databaseManager.roDatabaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
+			[zdc.databaseManager.roDatabaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 				
 				for (NSString *userID in modifiedUserIDs)
 				{
@@ -1282,7 +1282,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	NSMutableDictionary<NSString*, NSString*> *map_userID = [NSMutableDictionary dictionary];
 	NSMutableDictionary<NSString*, NSString*> *map_auth0ID = [NSMutableDictionary dictionary];
 	
-	[owner.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	[zdc.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
 		for (NSString *random_uuid in lookup)
 		{
@@ -1754,7 +1754,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	
 	__weak typeof(self) weakSelf = self;
 	
-	[owner.databaseManager.roDatabaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	[zdc.databaseManager.roDatabaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
 		for (NSString *nodeID in cachedNodeIDs)
 		{

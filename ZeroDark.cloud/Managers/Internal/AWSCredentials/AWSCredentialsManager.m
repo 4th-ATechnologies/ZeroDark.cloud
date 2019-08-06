@@ -17,7 +17,7 @@
 
 @implementation AWSCredentialsManager
 {
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 	
 	ZDCAsyncCompletionDispatch *pendingRequests;
 }
@@ -31,7 +31,7 @@
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = inOwner;
 		pendingRequests = [[ZDCAsyncCompletionDispatch alloc] init];
 	}
 	return self;
@@ -67,7 +67,7 @@
 	__block ZDCLocalUser *localUser = nil;
 	__block ZDCLocalUserAuth *localUserAuth = nil;
 	
-	ZDCDatabaseManager *databaseManager = owner.databaseManager;
+	ZDCDatabaseManager *databaseManager = zdc.databaseManager;
 	[databaseManager.roDatabaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
 		localUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
@@ -112,7 +112,7 @@
 		}
 
 		// fetch new token
-		[owner.auth0APIManager
+		[zdc.auth0APIManager
 			getAWSCredentialsWithRefreshToken: localUserAuth.auth0_refreshToken
 			                  completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
 			                  completionBlock:^(NSDictionary *awsToken, NSError *error)
@@ -155,7 +155,7 @@
 			
 			__block ZDCLocalUserAuth *refreshedLocalUserAuth = nil;
 			
-			ZDCDatabaseManager *databaseManager = owner.databaseManager;
+			ZDCDatabaseManager *databaseManager = zdc.databaseManager;
 			[databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 				
 				refreshedLocalUserAuth = [transaction objectForKey:userID inCollection:kZDCCollection_UserAuth];
@@ -211,7 +211,7 @@
                     completionQueue:(dispatch_queue_t)completionQueue
                     completionBlock:(dispatch_block_t)completionBlock
 {
-	ZDCDatabaseManager *databaseManager = owner.databaseManager;
+	ZDCDatabaseManager *databaseManager = zdc.databaseManager;
 	[databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 
 		ZDCLocalUser *refreshedLocalUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
@@ -231,7 +231,7 @@
                      completionQueue:(dispatch_queue_t)completionQueue
                      completionBlock:(dispatch_block_t)completionBlock
 {
-	ZDCDatabaseManager *databaseManager = owner.databaseManager;
+	ZDCDatabaseManager *databaseManager = zdc.databaseManager;
 	[databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 
 		ZDCLocalUserAuth *localUserAuth = nil;
@@ -269,7 +269,7 @@
                            completionQueue:(dispatch_queue_t)completionQueue
                            completionBlock:(void (^)(ZDCLocalUserAuth *auth, NSError *error))completionBlock
 {
-	ZDCDatabaseManager *databaseManager = owner.databaseManager;
+	ZDCDatabaseManager *databaseManager = zdc.databaseManager;
 	[databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 
 		ZDCLocalUserAuth *localUserAuth = nil;

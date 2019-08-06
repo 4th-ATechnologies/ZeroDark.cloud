@@ -110,7 +110,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 @implementation ZDCPushManager  {
 @private
 	
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 	
 	dispatch_queue_t serialQueue;
 	dispatch_queue_t concurrentQueue;
@@ -167,7 +167,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = inOwner;
 		
 		serialQueue     = dispatch_queue_create("ZDCPushManager.serial", DISPATCH_QUEUE_SERIAL);
 		concurrentQueue = dispatch_queue_create("ZDCPushManager.concurrent", DISPATCH_QUEUE_CONCURRENT);
@@ -191,12 +191,12 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (YapDatabaseConnection *)roConnection
 {
-	return owner.databaseManager.roDatabaseConnection; // uses YapDatabaseConnectionPool :)
+	return zdc.databaseManager.roDatabaseConnection; // uses YapDatabaseConnectionPool :)
 }
 
 - (YapDatabaseConnection *)rwConnection
 {
-	return owner.networkTools.rwConnection;
+	return zdc.networkTools.rwConnection;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -460,12 +460,12 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (NSString *)extNameForContext:(ZDCTaskContext *)context
 {
-	return [owner.databaseManager cloudExtNameForUser:context.localUserID app:context.zAppID];
+	return [zdc.databaseManager cloudExtNameForUser:context.localUserID app:context.zAppID];
 }
 
 - (NSString *)extNameForOperation:(ZDCCloudOperation *)operation
 {
-	return [owner.databaseManager cloudExtNameForUser:operation.localUserID app:operation.zAppID];
+	return [zdc.databaseManager cloudExtNameForUser:operation.localUserID app:operation.zAppID];
 }
 
 - (ZDCCloudOperation *)operationForContext:(ZDCTaskContext *)context
@@ -475,14 +475,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (YapDatabaseCloudCorePipeline *)pipelineForContext:(ZDCTaskContext *)context
 {
-	ZDCCloud *ext = [owner.databaseManager cloudExtForUser:context.localUserID app:context.zAppID];
+	ZDCCloud *ext = [zdc.databaseManager cloudExtForUser:context.localUserID app:context.zAppID];
 	
 	return [ext pipelineWithName:context.pipeline];
 }
 
 - (YapDatabaseCloudCorePipeline *)pipelineForOperation:(ZDCCloudOperation *)operation
 {
-	ZDCCloud *ext = [owner.databaseManager cloudExtForUser:operation.localUserID app:operation.zAppID];
+	ZDCCloud *ext = [zdc.databaseManager cloudExtForUser:operation.localUserID app:operation.zAppID];
 	
 	return [ext pipelineWithName:operation.pipeline];
 }
@@ -742,7 +742,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, zAppID);
 	
-	ZDCCloud *ext = [owner.databaseManager cloudExtForUser:localUserID app:zAppID];
+	ZDCCloud *ext = [zdc.databaseManager cloudExtForUser:localUserID app:zAppID];
 	YapDatabaseCloudCorePipeline *pipeline = [ext defaultPipeline];
 	NSArray<ZDCCloudOperation *> *operations = (NSArray<ZDCCloudOperation *> *)[pipeline activeOperations];
 	
@@ -965,8 +965,8 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	if (!requestInfo) return;
 	
 	BOOL isTriggeredFromLocalPush =
-	  [owner.networkTools isRecentRequestID: requestInfo.requestID
-	                                forUser: requestInfo.localUserID];
+	  [zdc.networkTools isRecentRequestID: requestInfo.requestID
+	                              forUser: requestInfo.localUserID];
 	
 	if (!isTriggeredFromLocalPush) return;
 	if (requestInfo.statusCode == 0) return;
@@ -983,7 +983,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	ZDCCloudOperation *operation = nil;
 	ZDCPollContext *pollContext = nil;
 	
-	NSArray<ZDCCloud*> *cloudExts = [owner.databaseManager cloudExtsForUser:request_userID];
+	NSArray<ZDCCloud*> *cloudExts = [zdc.databaseManager cloudExtsForUser:request_userID];
 	for (ZDCCloud *cloudExt in cloudExts)
 	{
 		YapDatabaseCloudCorePipeline *pipeline = [cloudExt defaultPipeline];
@@ -1202,7 +1202,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
                                forLocalUserID:(NSString *)localUserID
                                        zAppID:(NSString *)zAppID
 {
-	ZDCCloud *cloudExt = [owner.databaseManager cloudExtForUser:localUserID app:zAppID];
+	ZDCCloud *cloudExt = [zdc.databaseManager cloudExtForUser:localUserID app:zAppID];
 	
 	__block BOOL detectedInfiniteLoop = NO;
 	__block NSMutableArray<ZDCCloudOperation *> *blockedOps = [NSMutableArray array];
@@ -1459,7 +1459,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		__block NSArray<NSString*> *missingUserIDs = nil;
 		__block NSArray<NSString*> *missingServerIDs = nil;
 		
-		ZDCCryptoTools *cryptoTools = owner.cryptoTools;
+		ZDCCryptoTools *cryptoTools = zdc.cryptoTools;
 		
 		[self.roConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 			
@@ -1538,17 +1538,17 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 					
 					if (isMessage)
 					{
-						data = [owner.delegate dataForMessage:node transaction:transaction];
+						data = [zdc.delegate dataForMessage:node transaction:transaction];
 					}
 					else
 					{
 						ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
 						
-						data = [owner.delegate dataForNode:node atPath:path transaction:transaction];
+						data = [zdc.delegate dataForNode:node atPath:path transaction:transaction];
 						if (data)
 						{
-							metadata = [owner.delegate metadataForNode:node atPath:path transaction:transaction];
-							thumbnail = [owner.delegate thumbnailForNode:node atPath:path transaction:transaction];
+							metadata = [zdc.delegate metadataForNode:node atPath:path transaction:transaction];
+							thumbnail = [zdc.delegate thumbnailForNode:node atPath:path transaction:transaction];
 						}
 					}
 				}
@@ -1820,9 +1820,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	DDLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_Put, @"Invalid operation type");
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                      completionQueue: concurrentQueue
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
+	                                    completionQueue: concurrentQueue
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -1834,14 +1834,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			else
 			{
 				// Auth0 is indicating our account may have been removed.
-				[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+				[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 			}
 			
 			[self putTaskDidComplete:nil inSession:nil withError:error context:context];
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:context.localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:context.localUserID];
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.backgroundSession;
 	#else
@@ -1932,9 +1932,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			                                     progress:nil
 			                            completionHandler:nil];
 			
-			[owner.sessionManager associateStream: context.uploadStream
-			                             withTask: task
-			                            inSession: session.session];
+			[zdc.sessionManager associateStream: context.uploadStream
+			                           withTask: task
+			                          inSession: session.session];
 		}
 		
 	#endif
@@ -1942,11 +1942,11 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		NSProgress *progress = [session uploadProgressForTask:task];
 		context.progress = progress;
 		if (progress) {
-			[owner.progressManager setUploadProgress:progress forOperation:operation];
+			[zdc.progressManager setUploadProgress:progress forOperation:operation];
 		}
 		
 		[self stashContext:context];
-		[owner.networkTools addRecentRequestID:requestID forUser:context.localUserID];
+		[zdc.networkTools addRecentRequestID:requestID forUser:context.localUserID];
 		
 		if (operation.ephemeralInfo.abortRequested)
 		{
@@ -1958,7 +1958,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			[owner.sessionManager associateContext:context withTask:task inSession:session.session];
+			[zdc.sessionManager associateContext:context withTask:task inSession:session.session];
 			[task resume];
 		}
 	}];
@@ -2008,7 +2008,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// - network error (e.g. lost internet connection)
 		// - file modified during read error (from S4InterruptingInputStream)
 		
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 		
 		// If this was a network error (due to loss of Internet connection),
 		// then most likely the pipeline has already been suspended.
@@ -2031,7 +2031,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// Request failed due to AWS S3 issue.
 		// This is rather abnormal, and generally only occurs under specific conditions.
 		
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 		
 		// Increment the failCount for the operation, so we can do exponential backoff.
 		
@@ -2064,7 +2064,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			// Because the bucket gets deleted right away,
 			// even though our authentication sticks around for a few hours.
 			
-			[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+			[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 			
 			// Use a longer delay here.
 			// We want time to check on the status of our account.
@@ -2082,7 +2082,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			//
 			// So we execute exponential backoff algorithm.
 			
-			delay = [owner.networkTools exponentialBackoffForFailCount:successiveFailCount];
+			delay = [zdc.networkTools exponentialBackoffForFailCount:successiveFailCount];
 		}
 		
 		NSDate *holdDate = [NSDate dateWithTimeIntervalSinceNow:delay];
@@ -2170,7 +2170,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	if (statusCode != 200)
 	{
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 		
 		NSInteger extCode = 0;
 		NSString *extMsg = nil;
@@ -2271,7 +2271,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			[pipeline setHoldDate:holdDate forOperationWithUUID:operation.uuid context:ctx];
 			[pipeline setStatusAsPendingForOperationWithUUID:operation.uuid];
 		
-			[owner.pullManager pullRemoteChangesForLocalUserID:operation.localUserID zAppID:operation.zAppID];
+			[zdc.pullManager pullRemoteChangesForLocalUserID:operation.localUserID zAppID:operation.zAppID];
 			
 			if (shouldNotifyDelegateOfConflict)
 			{
@@ -2311,10 +2311,10 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 					
 						if (node)
 						{
-							[owner.delegate didDiscoverConflict: ZDCNodeConflict_Data
-							                            forNode: node
-							                             atPath: path
-							                        transaction: transaction];
+							[zdc.delegate didDiscoverConflict: ZDCNodeConflict_Data
+							                          forNode: node
+							                           atPath: path
+							                      transaction: transaction];
 						}
 					}
 				}];
@@ -2407,14 +2407,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 						ZDCUser *recipient = [transaction objectForKey:recipientID inCollection:kZDCCollection_Users];
 						if (recipient)
 						{
-							[owner.delegate didSendMessage:node toRecipient:recipient transaction:transaction];
+							[zdc.delegate didSendMessage:node toRecipient:recipient transaction:transaction];
 						}
 					}
 					else
 					{
 						ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
 						
-						[owner.delegate didPushNodeData:node atPath:path transaction:transaction];
+						[zdc.delegate didPushNodeData:node atPath:path transaction:transaction];
 					}
 				}
 			}
@@ -2438,7 +2438,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			
 		} completionQueue:concurrentQueue completionBlock:^{
 			
-			[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:YES];
+			[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:YES];
 			
 		}]; // end: readWriteTransaction.completionBlock
 		
@@ -2807,9 +2807,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	NSAssert(operation.multipartInfo, @"Invalid operation type");
 	NSAssert(context.multipart_initiate, @"Invalid context type");
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                      completionQueue: concurrentQueue
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
+	                                    completionQueue: concurrentQueue
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -2821,14 +2821,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			else
 			{
 				// Auth0 is indicating our account may have been removed.
-				[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+				[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 			}
 			
 			[self multipartTaskDidComplete:nil inSession:nil withError:error context:context responseObject:nil];
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:context.localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:context.localUserID];
 		
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.backgroundSession;
@@ -2900,7 +2900,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		else
 		{
 		#if TARGET_OS_IPHONE
-			[owner.sessionManager associateContext:context withTask:task inSession:session.session];
+			[zdc.sessionManager associateContext:context withTask:task inSession:session.session];
 		#else
 			// When SessionManager gets called for the completion of a dataTask,
 			// it's not given the `responseObject`, which we need in this case.
@@ -2918,9 +2918,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	NSAssert(operation.type == ZDCCloudOperationType_Put, @"Invalid operation type");
 	NSAssert(operation.multipartInfo, @"Invalid operation type");
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                      completionQueue: concurrentQueue
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
+	                                    completionQueue: concurrentQueue
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -2932,14 +2932,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			else
 			{
 				// Auth0 is indicating our account may have been removed.
-				[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+				[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 			}
 			
 			[self multipartTaskDidComplete:nil inSession:nil withError:error context:context responseObject:nil];
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:context.localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:context.localUserID];
 		
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.backgroundSession;
@@ -3020,7 +3020,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 															 progress: nil
 												 completionHandler: nil];
 			
-			[owner.sessionManager associateStream:context.uploadStream withTask:task inSession:session.session];
+			[zdc.sessionManager associateStream:context.uploadStream withTask:task inSession:session.session];
 		}
 	#endif
 		else
@@ -3044,7 +3044,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			[owner.sessionManager associateContext:context withTask:task inSession:session.session];
+			[zdc.sessionManager associateContext:context withTask:task inSession:session.session];
 			[task resume];
 		}
 	}];
@@ -3057,9 +3057,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	NSAssert(operation.multipartInfo, @"Invalid operation type");
 	NSAssert(context.multipart_complete, @"Invalid context type");
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                      completionQueue: concurrentQueue
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
+	                                    completionQueue: concurrentQueue
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -3071,14 +3071,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			else
 			{
 				// Auth0 is indicating our account may have been removed.
-				[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+				[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 			}
 			
 			[self multipartTaskDidComplete:nil inSession:nil withError:error context:context responseObject:nil];
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:context.localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:context.localUserID];
 		
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.backgroundSession;
@@ -3101,13 +3101,13 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// Instead we go through our own server, in order to avoid pitfalls with S3.
 		
 		NSMutableURLRequest *request =
-		  [owner.webManager multipartComplete: operation.multipartInfo.stagingPath
-		                         withUploadID: operation.multipartInfo.uploadID
-		                                eTags: eTags
-		                             inBucket: operation.cloudLocator.bucket
-		                               region: operation.cloudLocator.region
-		                       forLocalUserID: operation.localUserID
-		                             withAuth: auth];
+		  [zdc.webManager multipartComplete: operation.multipartInfo.stagingPath
+		                       withUploadID: operation.multipartInfo.uploadID
+		                              eTags: eTags
+		                           inBucket: operation.cloudLocator.bucket
+		                             region: operation.cloudLocator.region
+		                     forLocalUserID: operation.localUserID
+		                           withAuth: auth];
 		
 		NSURLSessionTask *task = nil;
 	#if TARGET_OS_IPHONE
@@ -3154,7 +3154,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		NSString *requestID = [self requestIDForOperation:operation];
 		
 		[self stashContext:context];
-		[owner.networkTools addRecentRequestID:requestID forUser:context.localUserID];
+		[zdc.networkTools addRecentRequestID:requestID forUser:context.localUserID];
 		
 		if (operation.ephemeralInfo.abortRequested)
 		{
@@ -3167,7 +3167,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			[owner.sessionManager associateContext:context withTask:task inSession:session.session];
+			[zdc.sessionManager associateContext:context withTask:task inSession:session.session];
 			[task resume];
 		}
 	}];
@@ -3180,9 +3180,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	NSAssert(operation.multipartInfo, @"Invalid operation type");
 	NSAssert(context.multipart_abort, @"Invalid context type");
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                      completionQueue: concurrentQueue
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
+	                                    completionQueue: concurrentQueue
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -3194,14 +3194,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			else
 			{
 				// Auth0 is indicating our account may have been removed.
-				[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+				[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 			}
 			
 			[self multipartTaskDidComplete:nil inSession:nil withError:error context:context responseObject:nil];
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:context.localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:context.localUserID];
 		
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.backgroundSession;
@@ -3262,7 +3262,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			[owner.sessionManager associateContext:context withTask:task inSession:session.session];
+			[zdc.sessionManager associateContext:context withTask:task inSession:session.session];
 			[task resume];
 		}
 	}];
@@ -3372,7 +3372,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			// Because the bucket gets deleted right away,
 			// even though our authentication sticks around for a few hours.
 			
-			[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+			[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 			
 			if (statusCode == 404)
 			{
@@ -3400,7 +3400,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			//
 			// So we execute exponential backoff algorithm.
 			
-			delay = [owner.networkTools exponentialBackoffForFailCount:successiveFailCount];
+			delay = [zdc.networkTools exponentialBackoffForFailCount:successiveFailCount];
 		}
 		
 		if (delay >= 0)
@@ -3578,7 +3578,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	__block NSArray<NSString*> *missingUserIDs = nil;
 	__block NSArray<NSString*> *missingServerIDs = nil;
 	
-	ZDCCryptoTools *cryptoTools = owner.cryptoTools;
+	ZDCCryptoTools *cryptoTools = zdc.cryptoTools;
 	
 	[[self roConnection] readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
@@ -3662,9 +3662,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	DDLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_Move, @"Invalid operation type");
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                      completionQueue: concurrentQueue
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
+	                                    completionQueue: concurrentQueue
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -3676,14 +3676,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			else
 			{
 				// Auth0 is indicating our account may have been removed.
-				[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+				[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 			}
 			
 			[self moveTaskDidComplete:nil inSession:nil withError:error context:context];
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:context.localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:context.localUserID];
 		
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.backgroundSession;
@@ -3748,11 +3748,11 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		NSProgress *progress = [session uploadProgressForTask:task];
 		context.progress = progress;
 		if (progress) {
-			[owner.progressManager setUploadProgress:progress forOperation:operation];
+			[zdc.progressManager setUploadProgress:progress forOperation:operation];
 		}
 		
 		[self stashContext:context];
-		[owner.networkTools addRecentRequestID:requestID forUser:context.localUserID];
+		[zdc.networkTools addRecentRequestID:requestID forUser:context.localUserID];
 		
 		if (operation.ephemeralInfo.abortRequested)
 		{
@@ -3764,7 +3764,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			[owner.sessionManager associateContext:context withTask:task inSession:session.session];
+			[zdc.sessionManager associateContext:context withTask:task inSession:session.session];
 			[task resume];
 		}
 	}];
@@ -3810,7 +3810,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// Request failed due to network error.
 		// Not error from the server.
 		
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 		
 		// If this was a network error (due to loss of Internet connection),
 		// then most likely, the pipeline has already been suspended.
@@ -3833,7 +3833,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// Request failed due to AWS S3 issue.
 		// This is rather abnormal, and generally only occurs under specific conditions.
 		
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 		
 		NSUInteger successiveFailCount = [operation.ephemeralInfo s3_didFailWithStatusCode:@(statusCode)];
 		DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
@@ -3864,7 +3864,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			// Because the bucket gets deleted right away,
 			// even though our authentication sticks around for a few hours.
 			
-			[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+			[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 			
 			// Use a longer delay here.
 			// We want time to check on the status of our account.
@@ -3882,7 +3882,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			//
 			// So we execute exponential backoff algorithm.
 			
-			delay = [owner.networkTools exponentialBackoffForFailCount:successiveFailCount];
+			delay = [zdc.networkTools exponentialBackoffForFailCount:successiveFailCount];
 		}
 		
 		NSDate *holdDate = [NSDate dateWithTimeIntervalSinceNow:delay];
@@ -3970,7 +3970,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	if (statusCode != 200)
 	{
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 		
 		NSInteger extCode = 0;
 		NSString *extMsg = nil;
@@ -4057,7 +4057,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			[pipeline setHoldDate:holdDate forOperationWithUUID:operation.uuid context:ctx];
 			[pipeline setStatusAsPendingForOperationWithUUID:operation.uuid];
 			
-			[owner.pullManager pullRemoteChangesForLocalUserID:operation.localUserID zAppID:operation.zAppID];
+			[zdc.pullManager pullRemoteChangesForLocalUserID:operation.localUserID zAppID:operation.zAppID];
 			return;
 		}
 	}
@@ -4116,7 +4116,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 	} completionQueue:concurrentQueue completionBlock:^{
 		
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:YES];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:YES];
 	}];
 }
 
@@ -4181,9 +4181,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	DDLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_DeleteLeaf, @"Invalid operation type");
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                      completionQueue: concurrentQueue
-	                                     completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
+	                                    completionQueue: concurrentQueue
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -4195,14 +4195,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			else
 			{
 				// Auth0 is indicating our account may have been removed.
-				[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+				[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 			}
 			
 			[self deleteLeafTaskDidComplete:nil inSession:nil withError:error context:context];
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:context.localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:context.localUserID];
 		
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.backgroundSession;
@@ -4261,11 +4261,11 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		NSProgress *progress = [session uploadProgressForTask:task];
 		context.progress = progress;
 		if (progress) {
-			[owner.progressManager setUploadProgress:progress forOperation:operation];
+			[zdc.progressManager setUploadProgress:progress forOperation:operation];
 		}
 		
 		[self stashContext:context];
-		[owner.networkTools addRecentRequestID:requestID forUser:context.localUserID];
+		[zdc.networkTools addRecentRequestID:requestID forUser:context.localUserID];
 		
 		if (operation.ephemeralInfo.abortRequested)
 		{
@@ -4277,7 +4277,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			[owner.sessionManager associateContext:context withTask:task inSession:session.session];
+			[zdc.sessionManager associateContext:context withTask:task inSession:session.session];
 			[task resume];
 		}
 	}];
@@ -4314,7 +4314,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// Request failed due to network error.
 		// Not error from the server.
 		
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 		
 		// If this was a network error (due to loss of Internet connection),
 		// then most likely, the pipeline has already been suspended.
@@ -4337,7 +4337,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// Request failed due to AWS S3 issue.
 		// This is rather abnormal, and generally only occurs under specific conditions.
 		
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 		
 		NSUInteger successiveFailCount = [operation.ephemeralInfo s3_didFailWithStatusCode:@(statusCode)];
 		DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
@@ -4368,7 +4368,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			// Because the bucket gets deleted right away,
 			// even though our authentication sticks around for a few hours.
 			
-			[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+			[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 			
 			// Use a longer delay here.
 			// We want time to check on the status of our account.
@@ -4386,7 +4386,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			//
 			// So we execute exponential backoff algorithm.
 			
-			delay = [owner.networkTools exponentialBackoffForFailCount:successiveFailCount];
+			delay = [zdc.networkTools exponentialBackoffForFailCount:successiveFailCount];
 		}
 		
 		NSDate *holdDate = [NSDate dateWithTimeIntervalSinceNow:delay];
@@ -4529,7 +4529,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 	} completionQueue:concurrentQueue completionBlock:^{
 		
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:YES];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:YES];
 	}];
 }
 
@@ -4626,9 +4626,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	DDLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_DeleteNode, @"Invalid operation type");
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                      completionQueue: concurrentQueue
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
+	                                    completionQueue: concurrentQueue
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -4640,14 +4640,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			else
 			{
 				// Auth0 is indicating our account may have been removed.
-				[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+				[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 			}
 			
 			[self deleteNodeTaskDidComplete:nil inSession:nil withError:error context:context];
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:context.localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:context.localUserID];
 		
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.backgroundSession;
@@ -4701,11 +4701,11 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		NSProgress *progress = [session uploadProgressForTask:task];
 		context.progress = progress;
 		if (progress) {
-			[owner.progressManager setUploadProgress:progress forOperation:operation];
+			[zdc.progressManager setUploadProgress:progress forOperation:operation];
 		}
 		
 		[self stashContext:context];
-		[owner.networkTools addRecentRequestID:requestID forUser:context.localUserID];
+		[zdc.networkTools addRecentRequestID:requestID forUser:context.localUserID];
 		
 		if (operation.ephemeralInfo.abortRequested)
 		{
@@ -4717,7 +4717,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			[owner.sessionManager associateContext:context withTask:task inSession:session.session];
+			[zdc.sessionManager associateContext:context withTask:task inSession:session.session];
 			[task resume];
 		}
 	}];
@@ -4763,7 +4763,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// Request failed due to network error.
 		// Not error from the server.
 		
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 		
 		// If this was a network error (due to loss of Internet connection),
 		// then most likely, the pipeline has already been suspended.
@@ -4786,7 +4786,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// Request failed due to AWS S3 issue.
 		// This is rather abnormal, and generally only occurs under specific conditions.
 		
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 		
 		NSUInteger successiveFailCount = [operation.ephemeralInfo s3_didFailWithStatusCode:@(statusCode)];
 		DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
@@ -4817,7 +4817,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			// Because the bucket gets deleted right away,
 			// even though our authentication sticks around for a few hours.
 			
-			[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+			[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 			
 			// Use a longer delay here.
 			// We want time to check on the status of our account.
@@ -4835,7 +4835,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			//
 			// So we execute exponential backoff algorithm.
 			
-			delay = [owner.networkTools exponentialBackoffForFailCount:successiveFailCount];
+			delay = [zdc.networkTools exponentialBackoffForFailCount:successiveFailCount];
 		}
 		
 		NSDate *holdDate = [NSDate dateWithTimeIntervalSinceNow:delay];
@@ -4947,7 +4947,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		//
 		// PartialDelete: Step 1 of 2:
 		
-		ZDCCloud *ext = [owner.databaseManager cloudExtForUser:context.localUserID app:context.zAppID];
+		ZDCCloud *ext = [zdc.databaseManager cloudExtForUser:context.localUserID app:context.zAppID];
 		
 		[ext suspend];
 		[self incrementSuspendCountForLocalUserID:context.localUserID zAppID:context.zAppID];
@@ -5004,7 +5004,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 	} completionQueue:concurrentQueue completionBlock:^{
 		
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:YES];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:YES];
 		
 		if (statusCode == 205)
 		{
@@ -5118,7 +5118,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	__block NSArray<NSString*> *missingUserIDs = nil;
 	__block NSArray<NSString*> *missingServerIDs = nil;
 	
-	ZDCCryptoTools *cryptoTools = owner.cryptoTools;
+	ZDCCryptoTools *cryptoTools = zdc.cryptoTools;
 	
 	[self.roConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
@@ -5170,9 +5170,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	DDLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_CopyLeaf, @"Invalid operation type");
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                      completionQueue: concurrentQueue
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
+	                                    completionQueue: concurrentQueue
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -5184,14 +5184,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			else
 			{
 				// Auth0 is indicating our account may have been removed.
-				[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+				[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 			}
 			
 			[self copyLeafTaskDidComplete:nil inSession:nil withError:error context:context];
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:context.localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:context.localUserID];
 		
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.backgroundSession;
@@ -5256,11 +5256,11 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		NSProgress *progress = [session uploadProgressForTask:task];
 		context.progress = progress;
 		if (progress) {
-			[owner.progressManager setUploadProgress:progress forOperation:operation];
+			[zdc.progressManager setUploadProgress:progress forOperation:operation];
 		}
 		
 		[self stashContext:context];
-		[owner.networkTools addRecentRequestID:requestID forUser:context.localUserID];
+		[zdc.networkTools addRecentRequestID:requestID forUser:context.localUserID];
 		
 		if (operation.ephemeralInfo.abortRequested)
 		{
@@ -5272,7 +5272,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			[owner.sessionManager associateContext:context withTask:task inSession:session.session];
+			[zdc.sessionManager associateContext:context withTask:task inSession:session.session];
 			[task resume];
 		}
 	}];
@@ -5318,7 +5318,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// Request failed due to network error.
 		// Not error from the server.
 		
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 		
 		// If this was a network error (due to loss of Internet connection),
 		// then most likely, the pipeline has already been suspended.
@@ -5341,7 +5341,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// Request failed due to AWS S3 issue.
 		// This is rather abnormal, and generally only occurs under specific conditions.
 		
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 		
 		NSUInteger successiveFailCount = [operation.ephemeralInfo s3_didFailWithStatusCode:@(statusCode)];
 		DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
@@ -5372,7 +5372,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			// Because the bucket gets deleted right away,
 			// even though our authentication sticks around for a few hours.
 			
-			[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+			[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 			
 			// Use a longer delay here.
 			// We want time to check on the status of our account.
@@ -5390,7 +5390,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			//
 			// So we execute exponential backoff algorithm.
 			
-			delay = [owner.networkTools exponentialBackoffForFailCount:successiveFailCount];
+			delay = [zdc.networkTools exponentialBackoffForFailCount:successiveFailCount];
 		}
 		
 		NSDate *holdDate = [NSDate dateWithTimeIntervalSinceNow:delay];
@@ -5474,7 +5474,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	if (statusCode != 200)
 	{
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 		
 		NSInteger extCode = 0;
 		NSString *extMsg = nil;
@@ -5569,7 +5569,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			[pipeline setHoldDate:holdDate forOperationWithUUID:operation.uuid context:ctx];
 			[pipeline setStatusAsPendingForOperationWithUUID:operation.uuid];
 		
-			[owner.pullManager pullRemoteChangesForLocalUserID:operation.localUserID zAppID:operation.zAppID];
+			[zdc.pullManager pullRemoteChangesForLocalUserID:operation.localUserID zAppID:operation.zAppID];
 			return;
 		}
 	}
@@ -5751,7 +5751,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 					ZDCUser *recipient = [transaction objectForKey:dstUserID inCollection:kZDCCollection_Users];
 					if (recipient && didSendMessage)
 					{
-						[owner.delegate didSendMessage:node toRecipient:recipient transaction:transaction];
+						[zdc.delegate didSendMessage:node toRecipient:recipient transaction:transaction];
 					}
 				}
 			}
@@ -5789,9 +5789,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	// Start the polling process.
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                      completionQueue: concurrentQueue
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
+	                                    completionQueue: concurrentQueue
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -5803,14 +5803,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			else
 			{
 				// Auth0 is indicating our account may have been removed.
-				[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+				[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 			}
 			
 			[self pollDidComplete:nil inSession:nil withError:error context:pollContext responseObject:nil];
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:context.localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:context.localUserID];
 		
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.backgroundSession;
@@ -5832,7 +5832,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		NSString *path = [NSString stringWithFormat:@"/poll-request/%@", [self requestIDForOperation:operation]];
 		
-		NSURLComponents *urlComponents = [owner.webManager apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [zdc.webManager apiGatewayForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"GET";
@@ -5891,7 +5891,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		else
 		{
 		#if TARGET_OS_IPHONE
-			[owner.sessionManager associateContext:pollContext withTask:task inSession:session.session];
+			[zdc.sessionManager associateContext:pollContext withTask:task inSession:session.session];
 		#else
 			// When SessionManager gets called for the completion of a dataTask,
 			// it's not given the `responseObject`, which we need in this case.
@@ -6134,9 +6134,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	// Start the polling process.
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                      completionQueue: concurrentQueue
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+	                                    completionQueue: concurrentQueue
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -6148,14 +6148,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			else
 			{
 				// Auth0 is indicating our account may have been removed.
-				[owner.networkTools handleAuthFailureForUser:taskContext.localUserID withError:error];
+				[zdc.networkTools handleAuthFailureForUser:taskContext.localUserID withError:error];
 			}
 			
 			[self multipollDidComplete:nil inSession:nil withError:error context:multipollContext responseObject:nil];
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
 		
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.backgroundSession;
@@ -6182,7 +6182,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		
 		NSString *path = @"/poll-request";
-		NSURLComponents *urlComponents = [owner.webManager apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [zdc.webManager apiGatewayForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"POST";
@@ -6509,9 +6509,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	// Start the polling process.
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                      completionQueue: concurrentQueue
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
+	                                    completionQueue: concurrentQueue
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -6523,14 +6523,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			else
 			{
 				// Auth0 is indicating our account may have been removed.
-				[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+				[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 			}
 			
 			[self touchDidComplete:nil inSession:nil withError:error context:touchContext];
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:context.localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:context.localUserID];
 		
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.backgroundSession;
@@ -6602,7 +6602,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			[owner.sessionManager associateContext:touchContext withTask:task inSession:session.session];
+			[zdc.sessionManager associateContext:touchContext withTask:task inSession:session.session];
 			[task resume];
 		}
 	}];
@@ -6688,7 +6688,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			// Because the bucket gets deleted right away,
 			// even though our authentication sticks around for a few hours.
 			
-			[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+			[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 			
 			// Use a longer delay here.
 			// We want time to check on the status of our account.
@@ -6706,7 +6706,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			//
 			// So we execute exponential backoff algorithm.
 			
-			delay = [owner.networkTools exponentialBackoffForFailCount:successiveFailCount];
+			delay = [zdc.networkTools exponentialBackoffForFailCount:successiveFailCount];
 		}
 		
 		NSDate *holdDate = [NSDate dateWithTimeIntervalSinceNow:delay];
@@ -6886,10 +6886,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	ZDCCryptoFile *cryptoFile = nil;
 	if (localUser.isLocal)
 	{
-		ZDCDiskExport *export =
-		  [owner.diskManager userAvatar: localUser
-		                     forAuth0ID: operation.avatar_auth0ID];
-		
+		ZDCDiskExport *export = [zdc.diskManager userAvatar:localUser forAuth0ID:operation.avatar_auth0ID];
 		cryptoFile = export.cryptoFile;
 	}
 	
@@ -6914,9 +6911,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	DDLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_Avatar, @"Invalid operation type");
 	
-	[owner.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                      completionQueue: concurrentQueue
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
+	                                    completionQueue: concurrentQueue
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -6928,14 +6925,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			else
 			{
 				// Auth0 is indicating our account may have been removed.
-				[owner.networkTools handleAuthFailureForUser:context.localUserID withError:error];
+				[zdc.networkTools handleAuthFailureForUser:context.localUserID withError:error];
 			}
 			
 			[self avatarTaskDidComplete:nil inSession:nil withError:error context:context];
 			return;
 		}
 		
-		ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:context.localUserID];
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:context.localUserID];
 		ZDCSessionUserInfo *userInfo = sessionInfo.userInfo;
 	#if TARGET_OS_IPHONE
 		AFURLSessionManager *session = sessionInfo.backgroundSession;
@@ -6960,7 +6957,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		NSString *path = [NSString stringWithFormat:@"/users/avatar/%@", social_userID];
 		
-		NSURLComponents *urlComponents = [owner.webManager apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [zdc.webManager apiGatewayForRegion:region stage:stage path:path];
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 
 	#if TARGET_OS_IPHONE
@@ -7012,7 +7009,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		NSProgress *progress = [session uploadProgressForTask:task];
 		context.progress = progress;
 		if (progress) {
-			[owner.progressManager setUploadProgress:progress forOperation:operation];
+			[zdc.progressManager setUploadProgress:progress forOperation:operation];
 		}
 		
 		[self stashContext:context];
@@ -7027,7 +7024,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			[owner.sessionManager associateContext:context withTask:task inSession:session.session];
+			[zdc.sessionManager associateContext:context withTask:task inSession:session.session];
 			[task resume];
 		}
 	}];
@@ -7080,7 +7077,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// This could be:
 		// - network error (e.g. lost internet connection)
 		
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 		
 		// If this was a network error (due to loss of Internet connection),
 		// then most likely the pipeline has already been suspended.
@@ -7103,7 +7100,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// Request failed due to the server being busy (unable to acquire lock).
 		// This is rather abnormal, but can occur under heavy loads.
 		
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 		
 		// Increment the failCount for the operation, so we can do exponential backoff.
 		
@@ -7118,7 +7115,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			return;
 		}
 		
-		NSTimeInterval delay = [owner.networkTools exponentialBackoffForFailCount:successiveFailCount];
+		NSTimeInterval delay = [zdc.networkTools exponentialBackoffForFailCount:successiveFailCount];
 		
 		NSDate *holdDate = [NSDate dateWithTimeIntervalSinceNow:delay];
 		NSString *ctx = NSStringFromClass([self class]);
@@ -7164,7 +7161,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 	} completionQueue:concurrentQueue completionBlock:^{
 		
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:YES];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:YES];
 	}];
 }
 
@@ -7786,7 +7783,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		{
 			// Unknown error occurred.
 			
-			[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+			[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 			
 			// Just restart the entire operation.
 			// This will kick us back to preparePutOperation:forPipeline:
@@ -7796,7 +7793,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			NSProgress *existing = [owner.progressManager uploadProgressForOperationUUID:context.operationUUID];
+			NSProgress *existing = [zdc.progressManager uploadProgressForOperationUUID:context.operationUUID];
 			if ([existing isKindOfClass:[ZDCProgress class]])
 			{
 				// Note: we ALWAYS set second parameter to `NO`,
@@ -7903,7 +7900,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		NSString *description = NSLocalizedString(@"Preparing multipart upload...", nil);
 		[multipartProgress setUserInfoObject:description forKey:ZDCLocalizedDescriptionKey];
 		
-		[owner.progressManager setUploadProgress:multipartProgress forOperation:operation];
+		[zdc.progressManager setUploadProgress:multipartProgress forOperation:operation];
 	}
 	
 	return YES;
@@ -8053,7 +8050,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			}
 		}
 		
-		NSProgress *progress = [owner.progressManager uploadProgressForOperationUUID:operation.uuid];
+		NSProgress *progress = [zdc.progressManager uploadProgressForOperationUUID:operation.uuid];
 		if ([progress isKindOfClass:[ZDCProgress class]])
 		{
 			[(ZDCProgress *)progress removeChild:context.progress andIncrementBaseUnitCount:success];
@@ -8123,7 +8120,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		ZDCProgress *progress = nil;
 		
-		NSProgress *existing = [owner.progressManager uploadProgressForOperationUUID:operation.uuid];
+		NSProgress *existing = [zdc.progressManager uploadProgressForOperationUUID:operation.uuid];
 		if ([existing isKindOfClass:[ZDCProgress class]])
 		{
 			progress = (ZDCProgress *)existing;
@@ -8131,7 +8128,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		else
 		{
 			progress = [[ZDCProgress alloc] init];
-			[owner.progressManager setUploadProgress:progress forOperation:operation];
+			[zdc.progressManager setUploadProgress:progress forOperation:operation];
 		}
 		
 		ZDCCloudOperation_MultipartInfo *multipartInfo = operation.multipartInfo;
@@ -8285,7 +8282,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	[pipeline setHoldDate:distantFuture forOperationWithUUID:opUUID context:ctx];
 	[pipeline setStatusAsPendingForOperationWithUUID:opUUID];
 	
-	__weak ZeroDarkCloud *zdc = owner;
 	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 	
 		ZDCNode *node = [transaction objectForKey:nodeID inCollection:kZDCCollection_Nodes];
@@ -8350,7 +8346,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	YapDatabaseCloudCorePipeline *pipeline = [self pipelineForOperation:operation];
 	
-	ZDCRemoteUserManager *remoteUserManager = owner.remoteUserManager;
+	ZDCRemoteUserManager *remoteUserManager = zdc.remoteUserManager;
 	
 	NSDate *distantFuture = [NSDate distantFuture];
 	NSUUID *opUUID = operation.uuid;
@@ -8423,7 +8419,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 	} completionQueue:concurrentQueue completionBlock:^{
 		
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 	}];
 }
 
@@ -8461,7 +8457,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 	} completionQueue:concurrentQueue completionBlock:^{
 		
-		[owner.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
+		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 	}];
 }
 
@@ -8475,7 +8471,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 	} completionQueue:concurrentQueue completionBlock:^{
 		
-		[owner.pullManager pullRemoteChangesForLocalUserID:localUserID zAppID:zAppID];
+		[zdc.pullManager pullRemoteChangesForLocalUserID:localUserID zAppID:zAppID];
 	}];
 }
 

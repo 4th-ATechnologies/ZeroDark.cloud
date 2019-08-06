@@ -15,7 +15,7 @@
 @implementation ZDCNetworkTools {
 @private
 	
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 	dispatch_queue_t serialQueue;
 	
 	YapDatabaseConnection *_rwConnection;      // we queue hundreds of transctions - don't block rwDatabaseConnection
@@ -33,7 +33,7 @@
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = inOwner;
 		serialQueue = dispatch_queue_create("ZDCNetworkTools", DISPATCH_QUEUE_SERIAL);
 		
 		recentRequestDict = [[NSMutableDictionary alloc] init];
@@ -55,7 +55,7 @@
 		
 		if (_rwConnection == nil)
 		{
-			_rwConnection = [owner.databaseManager.database newConnection];
+			_rwConnection = [zdc.databaseManager.database newConnection];
 			_rwConnection.name = @"ZDCNetworkTools.pushPull.rwConnection";
 		}
 		
@@ -77,7 +77,7 @@
 		
 		if (_decryptConnection == nil)
 		{
-			_decryptConnection = [owner.databaseManager.database newConnection];
+			_decryptConnection = [zdc.databaseManager.database newConnection];
 			_decryptConnection.name = @"ZDCNetworkTools.pushPull.decryptConnection";
 		}
 		

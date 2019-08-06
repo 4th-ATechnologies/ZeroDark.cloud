@@ -35,7 +35,7 @@
 
 @implementation ZDCRemoteUserManager
 {
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 	
 	YapDatabaseConnection *internalDatabaseConnection;
 	ZDCAsyncCompletionDispatch *asyncCompletionDispatch;
@@ -50,13 +50,13 @@
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = inOwner;
 		
 		// Todo:
 		// - create shared internalDatabaseConnection
 		// - make it read-only
 		//
-		internalDatabaseConnection = [owner.databaseManager.database newConnection];
+		internalDatabaseConnection = [zdc.databaseManager.database newConnection];
 		
 		asyncCompletionDispatch = [[ZDCAsyncCompletionDispatch alloc] init];
 	}
@@ -303,7 +303,7 @@
 		{
 			__strong typeof(self) strongSelf = weakSelf;
 			if (strongSelf) {
-				databaseManager = strongSelf->owner.databaseManager;
+				databaseManager = strongSelf->zdc.databaseManager;
 			}
 		}
 		
@@ -486,10 +486,10 @@
 {
 	DDLogAutoTrace();
 	
-	[owner.webManager fetchInfoForRemoteUserID: remoteUserID
-	                               requesterID: localUserID
-	                           completionQueue: completionQueue
-	                           completionBlock:^(NSDictionary *response, NSError *error)
+	[zdc.webManager fetchInfoForRemoteUserID: remoteUserID
+	                             requesterID: localUserID
+	                         completionQueue: completionQueue
+	                         completionBlock:^(NSDictionary *response, NSError *error)
 	{
 		if (error)
 		{
@@ -566,10 +566,10 @@
                                              NSString *preferredAuth0ID,
                                              NSError *error))completionBlock
 {
-	[owner.webManager fetchFilteredAuth0Profile: remoteUser.uuid
-	                                requesterID: localUserID
-	                            completionQueue: completionQueue
-	                            completionBlock:^(NSURLResponse *urlResponse, id responseObject, NSError *error)
+	[zdc.webManager fetchFilteredAuth0Profile: remoteUser.uuid
+	                              requesterID: localUserID
+	                          completionQueue: completionQueue
+	                          completionBlock:^(NSURLResponse *urlResponse, id responseObject, NSError *error)
 	{
 		if (error)
 		{
@@ -712,15 +712,15 @@
      completionQueue:(dispatch_queue_t)completionQueue
      completionBlock:(void (^)(ZDCPublicKey *publicKey, NSError *error))completionBlock
 {
-	[owner.webManager downloadDataAtPath: kZDCCloudFileName_PublicKey
-	                            inBucket: remoteUser.aws_bucket
-	                              region: remoteUser.aws_region
-	                            withETag: nil
-	                               range: nil
-	                         requesterID: localUserID
-	                       canBackground: NO
-	                     completionQueue: completionQueue
-	                     completionBlock:^(NSURLResponse *response, id responseObject, NSError *error)
+	[zdc.webManager downloadDataAtPath: kZDCCloudFileName_PublicKey
+	                          inBucket: remoteUser.aws_bucket
+	                            region: remoteUser.aws_region
+	                          withETag: nil
+	                             range: nil
+	                       requesterID: localUserID
+	                     canBackground: NO
+	                   completionQueue: completionQueue
+	                   completionBlock:^(NSURLResponse *response, id responseObject, NSError *error)
 	{
 		if (error)
 		{

@@ -90,7 +90,7 @@
 
 @implementation ZDCProgressManager
 {
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 	
 	dispatch_queue_t queue;
 	void *IsOnQueueKey;
@@ -117,7 +117,7 @@
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = inOwner;
 		
 		queue = dispatch_queue_create("ZDCProgressManager", DISPATCH_QUEUE_SERIAL);
 		 

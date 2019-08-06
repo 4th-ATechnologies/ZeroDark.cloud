@@ -40,7 +40,7 @@
 
 @implementation ZDCLocalUserManager
 {
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 	
 	Auth0ProviderManager* 		providerManager;
 
@@ -57,8 +57,8 @@
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
-		providerManager = owner.auth0ProviderManager;
+		zdc = inOwner;
+		providerManager = zdc.auth0ProviderManager;
 	}
 	return self;
 }
@@ -427,11 +427,11 @@
 	}
 	
 	ZDCPublicKey *privKey =
-	  [owner.cryptoTools createPrivateKeyFromJSON: privKeyJSON
-	                                    accessKey: accessKeyData
-	                          encryptionAlgorithm: encryptionAlgorithm
-	                                  localUserID: localUser.uuid
-	                                        error: &error];
+	  [zdc.cryptoTools createPrivateKeyFromJSON: privKeyJSON
+	                                  accessKey: accessKeyData
+	                        encryptionAlgorithm: encryptionAlgorithm
+	                                localUserID: localUser.uuid
+	                                      error: &error];
 	
 	if (error) {
 		DDLogError(@"CryptoTools: createPrivateKeyFromJSON failed: %@", error);
@@ -439,9 +439,9 @@
 	}
 	
 	ZDCSymmetricKey *accessKey =
-	  [owner.cryptoTools createSymmetricKey: accessKeyData
-	                    encryptionAlgorithm: encryptionAlgorithm
-	                                  error: &error];
+	  [zdc.cryptoTools createSymmetricKey: accessKeyData
+	                  encryptionAlgorithm: encryptionAlgorithm
+	                                error: &error];
 	
 	if (error) {
 		DDLogError(@"CryptoTools: createSymmetricKey failed: %@", error);
@@ -479,7 +479,7 @@
 		@(ZDCTreesystemTrunk_Outbox)
 	];
 	
-	NSString *const zAppID = owner.zAppID;
+	NSString *const zAppID = zdc.zAppID;
 	
 	for (NSNumber *trunkNum in trunks)
 	{
@@ -493,9 +493,9 @@
 			                                     zAppID: zAppID
 			                                      trunk: trunk];
 	
-			[owner.cryptoTools setDirSaltForTrunkNode: trunkNode
-			                            withLocalUser: localUser
-			                                accessKey: accessKey];
+			[zdc.cryptoTools setDirSaltForTrunkNode: trunkNode
+			                          withLocalUser: localUser
+			                              accessKey: accessKey];
 	
 			ZDCShareList *shareList =
 			  [ZDCShareList defaultShareListForTrunk: trunk
@@ -575,8 +575,8 @@
 
 	// Delete all the nodes
 	NSArray<NSString *> *allNodeIDs =
-     [owner.nodeManager allNodeIDsWithLocalUserID: localUserID
-	                                   transaction: transaction];
+     [zdc.nodeManager allNodeIDsWithLocalUserID: localUserID
+	                                 transaction: transaction];
     
 	[transaction removeObjectsForKeys:allNodeIDs inCollection:kZDCCollection_Nodes];
     
@@ -588,7 +588,7 @@
 	
 	// Migrate user avatar's from persistent to cached.
 	
-	[owner.diskManager makeUserAvatarPersistent:NO forUserID:localUserID];
+	[zdc.diskManager makeUserAvatarPersistent:NO forUserID:localUserID];
 
 	// Write the remote user & public key (private key info has been removed)
 	
@@ -617,7 +617,7 @@
 		});
 	};
 	
-	ZeroDarkCloud *owner = self->owner;
+	__weak typeof(self) weakSelf = self;
 	dispatch_queue_t concurrentQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
 	__block NSDictionary * user_metadata     = nil;
@@ -634,10 +634,18 @@
 	//
 	parameterCheck = ^{ @autoreleasepool {
 
+		ZeroDarkCloud *zdc = nil;
+		{
+			__strong typeof(self) strongSelf = weakSelf;
+			if (strongSelf) {
+				zdc = strongSelf->zdc;
+			}
+		}
+		
 		__block ZDCLocalUser *localUser = nil;
 		__block ZDCLocalUserAuth *auth = nil;
 		
-		[owner.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+		[zdc.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 
 			localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
 			auth = [transaction objectForKey:localUserID inCollection:kZDCCollection_UserAuth];
@@ -660,12 +668,19 @@
 
 	fetchProfile = ^void (ZDCLocalUser *localUser){ @autoreleasepool {
 
-		[owner.webManager fetchAuth0ProfileForLocalUserID: localUser.uuid
-		                                  completionQueue: concurrentQueue
-		                                  completionBlock:
-		 ^(NSURLResponse *urlResponse, id responseObject, NSError *error)
-		 {
-
+		ZeroDarkCloud *zdc = nil;
+		{
+			__strong typeof(self) strongSelf = weakSelf;
+			if (strongSelf) {
+				zdc = strongSelf->zdc;
+			}
+		}
+		
+		[zdc.webManager fetchAuth0ProfileForLocalUserID: localUser.uuid
+		                                completionQueue: concurrentQueue
+		                                completionBlock:
+		^(NSURLResponse *urlResponse, id responseObject, NSError *error)
+		{
 			 NSInteger statusCode = urlResponse.httpStatusCode;
 
 			 if (statusCode != 200)
@@ -715,14 +730,22 @@
 
 	updateDatabase = ^{ @autoreleasepool {
 
-		NSString* preferedAuth0ID 	= user_metadata[kZDCUser_metadata_preferedAuth0ID];
-
+		ZeroDarkCloud *zdc = nil;
+		{
+			__strong typeof(self) strongSelf = weakSelf;
+			if (strongSelf) {
+				zdc = strongSelf->zdc;
+			}
+		}
+		
+		NSString *preferedAuth0ID 	= user_metadata[kZDCUser_metadata_preferedAuth0ID];
 		if (!preferedAuth0ID)
 		{
 			preferedAuth0ID = [Auth0Utilities firstAvailableAuth0IDFromProfiles:auth0_profiles];
 		}
 
-		[owner.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+		YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
+		[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 
 			ZDCLocalUser *localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
 
@@ -879,7 +902,7 @@
 	__block NSData *privKeyData = nil;
 	__block NSData *pubKeyData  = nil;
 
-	[owner.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction)
+	[zdc.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction)
 	{
 		__strong typeof(self) strongSelf = weakSelf;
 		if (!strongSelf) return;
@@ -905,7 +928,7 @@
 										  error: &error];
 		if (error) return; // from transaction block
 
-		[strongSelf->owner.cryptoTools updateKeyProperty: kZDCCloudRcrd_Auth0ID
+		[strongSelf->zdc.cryptoTools updateKeyProperty: kZDCCloudRcrd_Auth0ID
 										value: auth0IDData
 							  withPublicKeyID: localUser.publicKeyID
 								  transaction: transaction
@@ -916,12 +939,12 @@
 		[transaction objectForKey: localUser.publicKeyID
 					 inCollection: kZDCCollection_PublicKeys];
 
-		privKeyData = [strongSelf->owner.cryptoTools exportPrivateKey: privateKey
+		privKeyData = [strongSelf->zdc.cryptoTools exportPrivateKey: privateKey
 											   encryptedTo: cloneKey
 													 error: &error];
 		if (error) return; // from transaction block
 
-		pubKeyData = [strongSelf->owner.cryptoTools exportPublicKey: privateKey
+		pubKeyData = [strongSelf->zdc.cryptoTools exportPublicKey: privateKey
 												   error: &error];
 		//	if (error) return; // from transaction block
 
@@ -937,7 +960,7 @@
 		}
 
 		// code here to upload privKeyData and pubKeyData
-		[strongSelf->owner.webManager updatePrivKey: privKeyData
+		[strongSelf->zdc.webManager updatePrivKey: privKeyData
 							 pubKey: pubKeyData
 					 forLocalUserID: userID
 					completionQueue: dispatch_get_main_queue()
@@ -958,7 +981,7 @@
     __weak typeof(self) weakSelf = self;
     
  
-	YapDatabaseConnection *rwConnection = owner.databaseManager.rwDatabaseConnection;
+	YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
 	[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
         __strong typeof(self) strongSelf = weakSelf;
@@ -1022,10 +1045,10 @@
 	// but don't update DB until we know what the real values on the server are.
 
 	cloneKey = [ZDCSymmetricKey keyWithAlgorithm:kCipher_Algorithm_2FISH256
-									 storageKey:owner.storageKey];
+									 storageKey:zdc.storageKey];
 
 	privateKey = [ZDCPublicKey privateKeyWithOwner:localUser.uuid
-									   storageKey:owner.storageKey
+									   storageKey:zdc.storageKey
 										algorithm:kCipher_Algorithm_ECC41417];
 
 	// Sign the auth0 ID into the public key
@@ -1038,7 +1061,7 @@
 
 		[privateKey updateKeyProperty:kZDCCloudRcrd_Auth0ID
 								value:auth0IDData
-						   storageKey:owner.storageKey
+						   storageKey:zdc.storageKey
 								error:&exportError];
 	}
 
@@ -1048,7 +1071,7 @@
 		return;
 	}
 
-	NSData *privKeyData = [owner.cryptoTools exportPrivateKey:privateKey
+	NSData *privKeyData = [zdc.cryptoTools exportPrivateKey:privateKey
 												   encryptedTo:cloneKey
 														 error:&exportError];
 	if (exportError)
@@ -1057,7 +1080,7 @@
 		return;
 	}
 
-	NSData *pubKeyData = [owner.cryptoTools exportPublicKey:privateKey
+	NSData *pubKeyData = [zdc.cryptoTools exportPublicKey:privateKey
 													   error:&exportError];
 	if (exportError)
 	{
@@ -1126,7 +1149,7 @@
 			}
 
 			// check that its a real key.
-			NSString* locator = [strongSelf->owner.cryptoTools keyIDforPrivateKeyData:pkData error:&parsingError];
+			NSString* locator = [strongSelf->zdc.cryptoTools keyIDforPrivateKeyData:pkData error:&parsingError];
 
 			if (parsingError)
 			{
@@ -1137,7 +1160,7 @@
 			if (localUser.publicKeyID)
 			{
 				__block ZDCPublicKey *userPubKey = nil;
-				[strongSelf->owner.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+				[strongSelf->zdc.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 
 					userPubKey =  [transaction objectForKey: localUser.publicKeyID
 											   inCollection: kZDCCollection_PublicKeys];
@@ -1212,7 +1235,7 @@
 		__strong typeof(self) strongSelf = weakSelf;
 		if (!strongSelf) return;
 
-		[strongSelf->owner.webManager uploadPrivKey:privKeyData
+		[strongSelf->zdc.webManager uploadPrivKey:privKeyData
 								 pubKey:pubKeyData
 						   forLocalUser:localUser
 							   withAuth:auth
@@ -1293,7 +1316,7 @@
 		// There's no reason for the `localUser.needsCreateRecoveryConnection` flag to be set.
 		// So we can simply unset the flag, and then we're done.
 		//
-		YapDatabaseConnection *rwConnection = owner.databaseManager.rwDatabaseConnection;
+		YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
 		[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 			
 			ZDCLocalUser *localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
@@ -1388,7 +1411,7 @@
 		__strong typeof(self) strongSelf = weakSelf;
 		if (!strongSelf) return;
 		
-		[strongSelf->owner.webManager linkAuth0ID: inLocalUser.auth0_primary
+		[strongSelf->zdc.webManager linkAuth0ID: inLocalUser.auth0_primary
 		                 toRecoveryID: recovery_auth0ID
 		                      forUser: localUserID
 		              completionQueue: queue
@@ -1429,7 +1452,7 @@
 		// update the refresh token for the exitsing account
 		// update the auth0 primary for the exitsing account
 
-		YapDatabaseConnection *rwConnection = strongSelf->owner.databaseManager.rwDatabaseConnection;
+		YapDatabaseConnection *rwConnection = strongSelf->zdc.databaseManager.rwDatabaseConnection;
 		[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 
 			ZDCLocalUser *localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
@@ -1489,7 +1512,7 @@
 	
 	// Register push token with server (if possible & if needed)
 	//
-	[owner registerPushTokenForLocalUsersIfNeeded];
+	[zdc registerPushTokenForLocalUsersIfNeeded];
 }
 
 /**
@@ -1509,10 +1532,10 @@
 		import.storePersistently = YES;
 		
 		NSError *error = nil;
-		[owner.diskManager importUserAvatar: import
-		                            forUser: localUser
-		                            auth0ID: auth0ID
-		                              error: &error];
+		[zdc.diskManager importUserAvatar: import
+		                          forUser: localUser
+		                          auth0ID: auth0ID
+		                            error: &error];
 		
 		if (error) {
 			DDLogWarn(@"Error importing image: %@", error);
@@ -1521,21 +1544,21 @@
 	}
 	else
 	{
-		[owner.diskManager deleteUserAvatar:localUser.uuid forAuth0ID:auth0ID];
+		[zdc.diskManager deleteUserAvatar:localUser.uuid forAuth0ID:auth0ID];
 	}
 	
 	ZDCCloudOperation *op =
 	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUser.uuid
-	                                          zAppID: owner.zAppID
+	                                          zAppID: zdc.zAppID
 	                                            type: ZDCCloudOperationType_Avatar];
 	
 	op.avatar_auth0ID = auth0ID;
 	op.avatar_oldETag = oldAvatarData ? [[AWSPayload rawMD5HashForPayload:oldAvatarData] lowercaseHexString] : nil;
 	op.avatar_newETag = newAvatarData ? [[AWSPayload rawMD5HashForPayload:newAvatarData] lowercaseHexString] : nil;
 	
-	NSString *extName = [owner.databaseManager cloudExtNameForUser:localUser.uuid app:owner.zAppID];
+	NSString *extName = [zdc.databaseManager cloudExtNameForUser:localUser.uuid app:zdc.zAppID];
 	
-	YapDatabaseConnection *rwConnection = owner.databaseManager.rwDatabaseConnection;
+	YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
 	[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
 		ZDCCloudTransaction *ext = [transaction ext:extName];

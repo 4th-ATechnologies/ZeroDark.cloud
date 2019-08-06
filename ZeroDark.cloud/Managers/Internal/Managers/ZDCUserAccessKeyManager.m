@@ -38,14 +38,14 @@
 @implementation ZDCUserAccessKeyManager{
 @private
 
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 }
 
 - (instancetype)initWithOwner:(ZeroDarkCloud *)inOwner
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = inOwner;
 	}
 	return self;
 }
@@ -70,7 +70,7 @@
 	err = S4Key_NewSymmetric(algorithm, blobData.bytes, &newcloneKeyCtx); CKERR;
 
 	symKey = [ZDCSymmetricKey keyWithS4Key:newcloneKeyCtx
-								storageKey:owner.storageKey];
+								storageKey:zdc.storageKey];
 
 	// create the blob
 	blob = [[ZDCAccessKeyBlob alloc] initWithLocalUserID:localUserID

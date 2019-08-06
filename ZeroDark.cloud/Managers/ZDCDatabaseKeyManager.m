@@ -57,7 +57,7 @@ goto done;  \
 
 @implementation ZDCDatabaseKeyManager
 {
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 
 	S4KeyContextRef sKeyCtx;
 
@@ -72,7 +72,7 @@ goto done;  \
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = inOwner;
 	}
 	return self;
 }
@@ -227,7 +227,7 @@ done:
 	// - the database file it's associated with
 	//
 	NSString *appOwner = [ZDCDirectoryManager bundleIdentifier];
-	NSString *dbFilename = owner.databasePath.lastPathComponent;
+	NSString *dbFilename = zdc.databasePath.lastPathComponent;
 	
 	return [NSString stringWithFormat:@"%@|%@.keyChainPassphrase", appOwner, dbFilename];
 }
@@ -512,7 +512,7 @@ done:
 	size_t      dataLen = 0;
 
 	err = HASH_NormalizePassPhrase((uint8_t*) passPhrase.UTF8String, passPhrase.UTF8LengthInBytes,
-								   (uint8_t*) owner.zAppID.UTF8String, owner.zAppID.UTF8LengthInBytes,
+								   (uint8_t*) zdc.zAppID.UTF8String, zdc.zAppID.UTF8LengthInBytes,
 								   &passCode, &passCodeLen); CKERR;
 
 	err = S4Key_SerializeToPassCode(sKeyCtx,
@@ -579,7 +579,7 @@ done:
 								  error:&error ])
 	{
 		err = HASH_NormalizePassPhrase((uint8_t*) passPhrase.UTF8String, passPhrase.UTF8LengthInBytes,
-									   (uint8_t*) owner.zAppID.UTF8String, owner.zAppID.UTF8LengthInBytes,
+									   (uint8_t*) zdc.zAppID.UTF8String, zdc.zAppID.UTF8LengthInBytes,
 									   &passCode, &passCodeLen); CKERR;
 
 		err = S4Key_DecryptFromPassCode(unlockingKey,
@@ -651,7 +651,7 @@ done:
 	// - the database file it's associated with
 	//
 	NSString *appOwner = [ZDCDirectoryManager bundleIdentifier];
-	NSString *dbFilename = owner.databasePath.lastPathComponent;
+	NSString *dbFilename = zdc.databasePath.lastPathComponent;
 	
 	return [NSString stringWithFormat:@"%@|%@.biometricPassphrase", appOwner, dbFilename];
 }
@@ -954,7 +954,7 @@ done:
 
 - (NSURL*) storageBlobURL
 {
-	NSURL *url = [owner.databasePath URLByAppendingPathExtension:@"p2k"];
+	NSURL *url = [zdc.databasePath URLByAppendingPathExtension:@"p2k"];
 	return url;
 }
 

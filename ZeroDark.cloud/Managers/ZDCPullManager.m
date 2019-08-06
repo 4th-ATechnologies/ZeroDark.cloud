@@ -121,7 +121,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 @implementation ZDCPullManager {
 @private
 	
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 	
 	dispatch_queue_t concurrentQueue;
 	
@@ -136,11 +136,11 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	return nil; // To access this class use: ZeroDarkCloud.pullManager
 }
 
-- (instancetype)initWithOwner:(ZeroDarkCloud *)inOwner
+- (instancetype)initWithOwner:(ZeroDarkCloud *)owner
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = owner;
 		
 		concurrentQueue = dispatch_queue_create("ZDCPullManager.concurrent", DISPATCH_QUEUE_CONCURRENT);
 		pullStateManager = [[ZDCPullStateManager alloc] init];
@@ -154,17 +154,17 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 
 - (YapDatabaseConnection *)roConnection
 {
-	return owner.databaseManager.roDatabaseConnection; // uses YapDatabaseConnectionPool :)
+	return zdc.databaseManager.roDatabaseConnection; // uses YapDatabaseConnectionPool :)
 }
 
 - (YapDatabaseConnection *)rwConnection
 {
-	return owner.networkTools.rwConnection;
+	return zdc.networkTools.rwConnection;
 }
 
 - (YapDatabaseConnection *)decryptConnection
 {
-	return owner.networkTools.decryptConnection;
+	return zdc.networkTools.decryptConnection;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -307,9 +307,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			[task cancel];
 		}
 		
-		[owner.syncManager notifyPullStoppedForLocalUserID: localUserID
-		                                            zAppID: zAppID
-		                                        withResult: ZDCPullResult_ManuallyAborted];
+		[zdc.syncManager notifyPullStoppedForLocalUserID: localUserID
+		                                          zAppID: zAppID
+		                                      withResult: ZDCPullResult_ManuallyAborted];
 	}
 }
 
@@ -333,8 +333,8 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	if (requestInfo)
 	{
 		isTriggeredFromLocalPush =
-		  [owner.networkTools isRecentRequestID: requestInfo.requestID
-		                                forUser: requestInfo.localUserID];
+		  [zdc.networkTools isRecentRequestID: requestInfo.requestID
+		                              forUser: requestInfo.localUserID];
 	}
 	
 	__block BOOL needsPull = NO;
@@ -435,8 +435,8 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 {
 	DDLogTrace(@"[%@] StartPull", pullState.localUserID);
 	
-	[owner.syncManager notifyPullStartedForLocalUserID: pullState.localUserID
-	                                            zAppID: pullState.zAppID];
+	[zdc.syncManager notifyPullStartedForLocalUserID: pullState.localUserID
+	                                          zAppID: pullState.zAppID];
 	
 #if ZDCPullManager_Fake_Pull
 	
@@ -490,13 +490,13 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			NSString *latestChangeToken = pullInfo.latestChangeID_local;
 			[transaction addCompletionQueue:self->concurrentQueue completionBlock:^{
 			
-				[self->owner.syncManager notifyPullStoppedForLocalUserID: pullState.localUserID
-				                                                  zAppID: pullState.zAppID
-				                                              withResult: result.pullResult];
+				[self->zdc.syncManager notifyPullStoppedForLocalUserID: pullState.localUserID
+				                                                zAppID: pullState.zAppID
+				                                            withResult: result.pullResult];
 	
-				[self->owner.pushManager resumeOperationsPendingPullCompletion: latestChangeToken
-				                                                forLocalUserID: pullState.localUserID
-				                                                        zAppID: pullState.zAppID];
+				[self->zdc.pushManager resumeOperationsPendingPullCompletion: latestChangeToken
+				                                              forLocalUserID: pullState.localUserID
+				                                                      zAppID: pullState.zAppID];
 			}];
 			
 			[self->pullStateManager deletePullState:pullState];
@@ -504,9 +504,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		else
 		{
 			[self->pullStateManager deletePullState:pullState];
-			[self->owner.syncManager notifyPullStoppedForLocalUserID: pullState.localUserID
-			                                                  zAppID: pullState.zAppID
-			                                              withResult: result.pullResult];
+			[self->zdc.syncManager notifyPullStoppedForLocalUserID: pullState.localUserID
+			                                                zAppID: pullState.zAppID
+			                                            withResult: result.pullResult];
 		}
 	}};
 	
@@ -518,7 +518,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 #else
 	
 	__block ZDCChangeList *pullInfo = nil;
-	[owner.databaseManager.roDatabaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	[zdc.databaseManager.roDatabaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
 		pullInfo = [transaction objectForKey:pullState.localUserID inCollection:kZDCCollection_PullState];
 		
@@ -704,9 +704,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		}
 		else if (statusCode == 401 || statusCode == 403) // Unauthorized
 		{
-			[owner.networkTools handleAuthFailureForUser: pullState.localUserID
-			                                   withError: error
-			                                   pullState: pullState];
+			[zdc.networkTools handleAuthFailureForUser: pullState.localUserID
+			                                 withError: error
+			                                 pullState: pullState];
 			
 			ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
 			result.pullResult = ZDCPullResult_Fail_Auth;
@@ -876,9 +876,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	
 	dispatch_block_t requestBlock = ^{ @autoreleasepool {
 		
-		[owner.awsCredentialsManager getAWSCredentialsForUser: pullState.localUserID
-		                                      completionQueue: concurrentQueue
-		                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+		[zdc.awsCredentialsManager getAWSCredentialsForUser: pullState.localUserID
+		                                    completionQueue: concurrentQueue
+		                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 		{
 			if (error)
 			{
@@ -892,9 +892,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				}
 				else
 				{
-					[owner.networkTools handleAuthFailureForUser: pullState.localUserID
-					                                   withError: error
-					                                   pullState: pullState];
+					[zdc.networkTools handleAuthFailureForUser: pullState.localUserID
+					                                 withError: error
+					                                 pullState: pullState];
 					
 					ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
 					result.pullResult = ZDCPullResult_Fail_Auth;
@@ -906,7 +906,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				}
 			}
 			
-			ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:pullState.localUserID];
+			ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:pullState.localUserID];
 		#if TARGET_OS_IPHONE
 			AFURLSessionManager *session = sessionInfo.foregroundSession;
 		#else
@@ -933,7 +933,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			
 			NSString *path = [NSString stringWithFormat:@"/pull/%@", changeToken];
 			
-			NSURLComponents *urlComponents = [owner.webManager apiGatewayForRegion:region stage:stage path:path];
+			NSURLComponents *urlComponents = [zdc.webManager apiGatewayForRegion:region stage:stage path:path];
 			
 			NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 			request.HTTPMethod = @"GET";
@@ -966,7 +966,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	}
 	else
 	{
-		NSTimeInterval delay = [owner.networkTools exponentialBackoffForFailCount:failCount];
+		NSTimeInterval delay = [zdc.networkTools exponentialBackoffForFailCount:failCount];
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), concurrentQueue, ^{
 			
 			requestBlock();
@@ -1257,10 +1257,10 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 					[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
 					
 					ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
-					[owner.delegate didDiscoverModifiedNode: node
-					                             withChange: ZDCNodeChange_Data
-					                                 atPath: path
-					                            transaction: transaction];
+					[zdc.delegate didDiscoverModifiedNode: node
+					                           withChange: ZDCNodeChange_Data
+					                               atPath: path
+					                          transaction: transaction];
 				}
 			}
 		}
@@ -1545,10 +1545,10 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 					          inCollection: kZDCCollection_Nodes];
 					
 					ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
-					[owner.delegate didDiscoverModifiedNode: node
-					                             withChange: ZDCNodeChange_Data
-					                                 atPath: path
-					                            transaction: transaction];
+					[zdc.delegate didDiscoverModifiedNode: node
+					                           withChange: ZDCNodeChange_Data
+					                               atPath: path
+					                          transaction: transaction];
 				}
 			}
 		}
@@ -2152,9 +2152,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		}
 		else if (statusCode == 401 || statusCode == 403) // Unauthorized
 		{
-			[owner.networkTools handleAuthFailureForUser: localUserID
-			                                   withError: error
-			                                   pullState: pullState];
+			[zdc.networkTools handleAuthFailureForUser: localUserID
+			                                 withError: error
+			                                 pullState: pullState];
 			
 			ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
 			result.pullResult = ZDCPullResult_Fail_Auth;
@@ -2232,9 +2232,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	
 	dispatch_block_t requestBlock = ^{ @autoreleasepool {
 		
-		[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-		                                      completionQueue: concurrentQueue
-		                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+		[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+		                                    completionQueue: concurrentQueue
+		                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 		{
  			if (error)
 			{
@@ -2248,9 +2248,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				}
 				else
 				{
-					[owner.networkTools handleAuthFailureForUser: localUserID
-					                                   withError: error
-					                                   pullState: pullState];
+					[zdc.networkTools handleAuthFailureForUser: localUserID
+					                                 withError: error
+					                                 pullState: pullState];
 					
 					ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
 					result.pullResult = ZDCPullResult_Fail_Auth;
@@ -2262,7 +2262,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				}
 			}
 			
-			ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
+			ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
 			
 		#if TARGET_OS_IPHONE
 			AFURLSessionManager *session = sessionInfo.foregroundSession;
@@ -2283,9 +2283,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			}
 			
 			NSString *path = @"/pull";
-			
-			NSURLComponents *urlComponents =
-				[owner.webManager apiGatewayForRegion:region stage:stage path:path];
+			NSURLComponents *urlComponents = [zdc.webManager apiGatewayForRegion:region stage:stage path:path];
 			
 			NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 			request.HTTPMethod = @"GET";
@@ -2318,7 +2316,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	}
 	else
 	{
-		NSTimeInterval delay = [owner.networkTools exponentialBackoffForFailCount:failCount];
+		NSTimeInterval delay = [zdc.networkTools exponentialBackoffForFailCount:failCount];
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), concurrentQueue, ^{
 			
 			requestBlock();
@@ -2535,7 +2533,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		}
 		else if (statusCode == 401 || statusCode == 403) // Unauthorized
 		{
-			[owner.networkTools handleAuthFailureForUser:localUserID withError:error pullState:pullState];
+			[zdc.networkTools handleAuthFailureForUser:localUserID withError:error pullState:pullState];
 			
 			ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
 			result.pullResult = ZDCPullResult_Fail_Auth;
@@ -2603,9 +2601,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	
 	requestBlock = ^{ @autoreleasepool {
 		
-		[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-		                                      completionQueue: concurrentQueue
-		                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+		[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+		                                    completionQueue: concurrentQueue
+		                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 		{
  			if (error)
 			{
@@ -2619,9 +2617,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				}
 				else
 				{
-					[owner.networkTools handleAuthFailureForUser: localUserID
-					                                   withError: error
-					                                   pullState: pullState];
+					[zdc.networkTools handleAuthFailureForUser: localUserID
+					                                 withError: error
+					                                 pullState: pullState];
 					
 					ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
 					result.pullResult = ZDCPullResult_Fail_Auth;
@@ -2633,7 +2631,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				}
 			}
 			
-			ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
+			ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
 		#if TARGET_OS_IPHONE
 			AFURLSessionManager *session = sessionInfo.foregroundSession;
 		#else
@@ -2697,7 +2695,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			return;
 		}
 		
-		NSTimeInterval delay = [owner.networkTools exponentialBackoffForFailCount:failCount];
+		NSTimeInterval delay = [zdc.networkTools exponentialBackoffForFailCount:failCount];
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), concurrentQueue, ^{
 			
 			requestBlock();
@@ -2962,10 +2960,10 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 					[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
 					
 					ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
-					[owner.delegate didDiscoverModifiedNode: node
-					                             withChange: ZDCNodeChange_Data
-					                                 atPath: path
-					                            transaction: transaction];
+					[zdc.delegate didDiscoverModifiedNode: node
+					                           withChange: ZDCNodeChange_Data
+					                               atPath: path
+					                          transaction: transaction];
 				}
 	
 				if (node.dirPrefix)
@@ -3005,7 +3003,96 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
               pullState:(ZDCPullState *)pullState
           ptrCompletion:(ZDCPullTaskCompletion)ptrCompletionBlock
 {
-	NSLog(@"Ur momma wears combat boots");
+	
+	if (ddLogLevel & DDLogFlagTrace)
+	{
+		DDLogTrace(@"[%@] Sync pointee: %@", pullState.localUserID, pointeeNode.uuid);
+	}
+	
+	void(^Fail)(ZDCPullErrorReason, NSError*) = ^(ZDCPullErrorReason reason, NSError *error){ @autoreleasepool {
+		
+		ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
+		result.pullResult = ZDCPullResult_Fail_Unknown;
+		result.pullErrorReason = reason;
+		result.underlyingError = error;
+		
+		ptrCompletionBlock(nil, result);
+		return;
+	}};
+	
+	void (^Succeed)(void) = ^{ @autoreleasepool {
+		
+		if ([pullStateManager isPullCancelled:pullState])
+		{
+			return;
+		}
+		
+//		NSString *rcrdPath = [pointee_cloudPath stringBySettingPathExtension:@"rcrd"];
+//		NSString *dataPath = [pointee_cloudPath stringBySettingPathExtension:@"data"];
+//
+//		S3ObjectInfo *rcrdInfo = [pullState popItemWithPath:rcrdPath rootNodeID:pointerNode.uuid];
+//		S3ObjectInfo *dataInfo = [pullState popItemWithPath:dataPath rootNodeID:pointerNode.uuid];
+//
+//		[self queueSyncNodeRcrd:rcrdPath
+//							rcrdETag:rcrdInfo.eTag
+//							nodeData:(dataInfo ? dataPath : nil)
+//							dataETag:dataInfo.eTag
+//							  bucket:owner.aws_bucket
+//							  region:owner.aws_region
+//							parentID:pointerNode.parentID
+//							  source:pointerNode
+//						  pullState:pullState
+//					dataCompletion:dataCompletionBlock
+//				  xattrCompletion:xattrCompletionBlock
+//				 subDirCompletion:subDirCompletionBlock];
+	}};
+	
+	NSString *pointee_ownerID = pointeeNode.anchor.userID;
+	
+	// We have 3 tasks to perform here:
+	//
+	// 1.) Fetch owner (if needed)
+	// 2.) Fetch pointee node (if needed)
+	// 3.) Call /listProxy API (recursively)
+	
+	__block void(^step1)(void);
+	__block void(^step2)(void);
+	__block void(^step2b)(void);
+	__block void(^step3)(void);
+	
+	__block ZDCUser *owner = nil;
+	
+	step1 = ^{ @autoreleasepool {
+		
+		[[self rwConnection] asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
+			
+			owner = [transaction objectForKey:pointee_ownerID inCollection:kZDCCollection_Users];
+			
+		} completionQueue:concurrentQueue completionBlock:^{
+			
+			if (owner)
+			{
+				step2();
+				return;
+			}
+			
+			[zdc.remoteUserManager fetchRemoteUserWithID: pointee_ownerID
+			                                 requesterID: pullState.localUserID
+			                             completionQueue: concurrentQueue
+			                             completionBlock:^(ZDCUser *remoteUser, NSError *error)
+			{
+				if (error) {
+					Fail(ZDCPullErrorReason_HttpStatusCode, error);
+					return;
+				}
+				
+				owner = remoteUser;
+				step2();
+			}];
+		}];
+	}};
+	
+	step1();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3040,8 +3127,8 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	}
 	
 	NSSet<NSString *> *preferredNodeIDs = nil;
-	if ([owner.delegate respondsToSelector:@selector(preferredNodeIDsForPullingRcrds)]) {
-		preferredNodeIDs = [owner.delegate preferredNodeIDsForPullingRcrds];
+	if ([zdc.delegate respondsToSelector:@selector(preferredNodeIDsForPullingRcrds)]) {
+		preferredNodeIDs = [zdc.delegate preferredNodeIDsForPullingRcrds];
 	}
 	
 	// Smart dequeue algorithm
@@ -3085,8 +3172,8 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		// Send signal to localUserManager.
 		// This allows it to update its internal state, and also post a NSNotification for the user.
 		
-		[owner.syncManager notifyPullFoundChangesForLocalUserID: pullState.localUserID
-		                                                 zAppID: pullState.zAppID];
+		[zdc.syncManager notifyPullFoundChangesForLocalUserID: pullState.localUserID
+		                                               zAppID: pullState.zAppID];
 	}
 	
 	[self fetchRcrd: pullItem.rcrdPath
@@ -3177,7 +3264,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	NSString *const localUserID = pullState.localUserID;
 	NSString *const zAppID = pullState.zAppID;
 	
-	NSString *const extName = [owner.databaseManager cloudExtNameForUser:localUserID app:zAppID];
+	NSString *const extName = [zdc.databaseManager cloudExtNameForUser:localUserID app:zAppID];
 	ZDCCloudTransaction *const cloudTransaction = (ZDCCloudTransaction *)[transaction ext:extName];
 	
 	// Search for a matching node in the database.
@@ -3345,10 +3432,10 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				
 				// Notify the delegate
 				
-				[owner.delegate didDiscoverMovedNode: node
-				                                from: oldCleartextPath
-				                                  to: newCleartextPath
-				                         transaction: transaction];
+				[zdc.delegate didDiscoverMovedNode: node
+				                              from: oldCleartextPath
+				                                to: newCleartextPath
+				                       transaction: transaction];
 			}
 		}
 		else if (!cloudIDMatches && cloudPathMatches)
@@ -3368,10 +3455,10 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			ZDCTreesystemPath *cleartextPath =
 			  [nodeManager pathForNode:node transaction:transaction];
 			
-			[owner.delegate didDiscoverConflict: ZDCNodeConflict_Path
-			                            forNode: node
-			                             atPath: cleartextPath
-			                        transaction: transaction];
+			[zdc.delegate didDiscoverConflict: ZDCNodeConflict_Path
+			                          forNode: node
+			                           atPath: cleartextPath
+			                      transaction: transaction];
 			
 			// Did the delegate take action ?
 			
@@ -3437,10 +3524,10 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				
 				// Notify the delegate
 				
-				[owner.delegate didDiscoverMovedNode: node
-				                                from: oldCleartextPath
-				                                  to: newCleartextPath
-				                         transaction: transaction];
+				[zdc.delegate didDiscoverMovedNode: node
+				                              from: oldCleartextPath
+				                                to: newCleartextPath
+				                       transaction: transaction];
 				
 				// This means we don't actually have a matching node for this file.
 				
@@ -3466,7 +3553,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	NSString *const localUserID = pullState.localUserID;
 	NSString *const zAppID = pullState.zAppID;
 	
-	NSString *const extName = [owner.databaseManager cloudExtNameForUser:localUserID app:zAppID];
+	NSString *const extName = [zdc.databaseManager cloudExtNameForUser:localUserID app:zAppID];
 	ZDCCloudTransaction *const cloudTransaction = (ZDCCloudTransaction *)[transaction ext:extName];
 	
 	// Update node's info (if needed).
@@ -3518,10 +3605,10 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
 		
 		ZDCTreesystemPath *path = [nodeManager pathForNode:node transaction:transaction];
-			[owner.delegate didDiscoverModifiedNode: node
-			                             withChange: ZDCNodeChange_Treesystem
-			                                 atPath: path
-			                            transaction: transaction];
+			[zdc.delegate didDiscoverModifiedNode: node
+			                           withChange: ZDCNodeChange_Treesystem
+			                               atPath: path
+			                          transaction: transaction];
 	}
 	
 	// Check for unknown users
@@ -3722,7 +3809,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
 
 	ZDCTreesystemPath *path = [nodeManager pathForNode:node transaction:transaction];
-	[owner.delegate didDiscoverNewNode:node atPath:path transaction:transaction];
+	[zdc.delegate didDiscoverNewNode:node atPath:path transaction:transaction];
 
 	// Check for unknown users
 
@@ -3749,7 +3836,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		[transaction setObject:child forKey:child.uuid inCollection:kZDCCollection_Nodes];
 		
 		ZDCTreesystemPath *path = [nodeManager pathForNode:child transaction:transaction];
-		[owner.delegate didDiscoverNewNode:child atPath:path transaction:transaction];
+		[zdc.delegate didDiscoverNewNode:child atPath:path transaction:transaction];
 	}
 	
 	if (ptrCompletionBlock)
@@ -3896,7 +3983,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	
 	NSMutableSet<NSString *> *dirtyNodeIDs = [NSMutableSet set];
 	
-	NSString *extName = [owner.databaseManager cloudExtNameForUser:pullState.localUserID app:pullState.zAppID];
+	NSString *extName = [zdc.databaseManager cloudExtNameForUser:pullState.localUserID app:pullState.zAppID];
 	
 	[[transaction ext:extName] enumerateOperationsUsingBlock:
 	  ^(YapDatabaseCloudCorePipeline *pipeline,
@@ -3925,20 +4012,20 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		
 		[transaction removeObjectsForKeys:[allNodeIDs allObjects] inCollection:kZDCCollection_Nodes];
 		
-		[owner.delegate didDiscoverDeletedNode: rootDeletedNode
-		                                atPath: rootDeletedPath
-		                             timestamp: timestamp
-		                           transaction: transaction];
+		[zdc.delegate didDiscoverDeletedNode: rootDeletedNode
+		                              atPath: rootDeletedPath
+		                           timestamp: timestamp
+		                         transaction: transaction];
 	}
 	else
 	{
 		// Complicated case:
 		// We can't delete the root node because there are dirty ancestors.
 		
-		[owner.delegate didDiscoverDeletedDirtyNode: rootDeletedNode
-		                             dirtyAncestors: [dirtyNodeIDs allObjects]
-		                                  timestamp: timestamp
-		                                transaction: transaction];
+		[zdc.delegate didDiscoverDeletedDirtyNode: rootDeletedNode
+		                           dirtyAncestors: [dirtyNodeIDs allObjects]
+		                                timestamp: timestamp
+		                              transaction: transaction];
 		
 		NSMutableSet<NSString *> *dirtyParentNodeIDs = [NSMutableSet set];
 		
@@ -4026,10 +4113,10 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			[transaction removeObjectForKey:nodeID inCollection:kZDCCollection_Nodes];
 			
 			ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
-			[owner.delegate didDiscoverDeletedNode: node
-			                                atPath: path
-			                             timestamp: timestamp
-			                           transaction: transaction];
+			[zdc.delegate didDiscoverDeletedNode: node
+			                              atPath: path
+			                           timestamp: timestamp
+			                         transaction: transaction];
 		}
 		
 		NSMutableSet<NSString *> *allDirtyNodeIDs =
@@ -4137,7 +4224,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			
 			// We need to alert the user (so they can re-auth with valid credentials).
 			
-			[owner.networkTools handleAuthFailureForUser:localUserID withError:error pullState:pullState];
+			[zdc.networkTools handleAuthFailureForUser:localUserID withError:error pullState:pullState];
 			
 			ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
 			result.pullResult = ZDCPullResult_Fail_Auth;
@@ -4185,9 +4272,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	
 	dispatch_block_t requestBlock = ^{ @autoreleasepool {
 		
-		[owner.awsCredentialsManager getAWSCredentialsForUser: localUserID
-		                                      completionQueue: concurrentQueue
-		                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+		[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+		                                    completionQueue: concurrentQueue
+		                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 		{
 			if (error)
 			{
@@ -4201,9 +4288,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				}
 				else
 				{
-					[owner.networkTools handleAuthFailureForUser: localUserID
-					                                   withError: error
-					                                   pullState: pullState];
+					[zdc.networkTools handleAuthFailureForUser: localUserID
+					                                 withError: error
+					                                 pullState: pullState];
 					
 					ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
 					result.pullResult = ZDCPullResult_Fail_Auth;
@@ -4215,7 +4302,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				}
 			}
 			
-			ZDCSessionInfo *sessionInfo = [owner.sessionManager sessionInfoForUserID:localUserID];
+			ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
 		#if TARGET_OS_IPHONE
 			AFURLSessionManager *session = sessionInfo.foregroundSession;
 		#else
@@ -4264,7 +4351,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	}
 	else
 	{
-		NSTimeInterval delay = [owner.networkTools exponentialBackoffForFailCount:failCount];
+		NSTimeInterval delay = [zdc.networkTools exponentialBackoffForFailCount:failCount];
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), concurrentQueue, ^{
 			
 			requestBlock();
@@ -4365,10 +4452,10 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		[[self decryptConnection] asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
 			cloudRcrd =
-			  [owner.cryptoTools decryptCloudRcrdDict: jsonDict
-			                              localUserID: localUserID
-			                              transaction: transaction
-			                                    error: &decryptError];
+			  [zdc.cryptoTools decryptCloudRcrdDict: jsonDict
+			                            localUserID: localUserID
+			                            transaction: transaction
+			                                  error: &decryptError];
 			
 			if (decryptError)
 			{
@@ -4471,10 +4558,10 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 {
 	for (NSString *remoteUserID in pullState.unknownUserIDs)
 	{
-		[owner.remoteUserManager fetchRemoteUserWithID: remoteUserID
-		                                   requesterID: pullState.localUserID
-		                               completionQueue: concurrentQueue
-		                               completionBlock:^(ZDCUser *remoteUser, NSError *error)
+		[zdc.remoteUserManager fetchRemoteUserWithID: remoteUserID
+		                                 requesterID: pullState.localUserID
+		                             completionQueue: concurrentQueue
+		                             completionBlock:^(ZDCUser *remoteUser, NSError *error)
 		{
 			// Ignore...
 		}];
