@@ -54,10 +54,7 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
  */
 @interface ZDCCloudPath : NSObject <NSCoding, NSCopying>
 
-/**
- * Attempts to parse the given string into a cloudPath.
- */
-+ (nullable instancetype)cloudPathFromPath:(NSString *)path;
+#pragma mark Validation
 
 /**
  * Returns YES if the given value is a valid zAppID.
@@ -99,6 +96,13 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
  */
 + (BOOL)isValidCloudPath:(NSString *)cloudPath;
 
+#pragma mark Creation
+
+/**
+ * Attempts to parse the given string into a cloudPath.
+ */
++ (nullable instancetype)cloudPathFromPath:(NSString *)path;
+
 /**
  * Creates a new instance with the given components.
  *
@@ -118,7 +122,12 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
                      dirPrefix:(NSString *)dirPrefix
                       fileName:(NSString *)fileName;
 
-/** Just another name for zAppID */
+#pragma mark Properties
+
+/**
+ * The app container name.
+ * This is the name you registered via dashboard.zerodark.cloud.
+ */
 @property (nonatomic, copy, readonly) NSString * zAppID;
 
 /**
@@ -133,6 +142,8 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
  */
 @property (nonatomic, copy, readonly) NSString * fileName;
 
+#pragma mark FileName
+
 /**
  * Extracts the fileExtension, if it includes ones.
  * E.g. "rcrd" or "data".
@@ -144,6 +155,8 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
  * and with the given fileNameExt added instead.
  */
 - (NSString *)fileNameWithExt:(nullable NSString *)fileNameExt;
+
+#pragma mark Path (as string)
 
 /**
  * Returns the full cloudPath in string form. (i.e. with '/' separator between components)
@@ -160,6 +173,8 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
  */
 - (NSString *)pathWithExt:(nullable NSString *)fileNameExt;
 
+#pragma mark Comparison (with string)
+
 /** Returns YES if the fileNames match (including fileExtension). */
 - (BOOL)matchesFileName:(NSString *)fileName;
 
@@ -172,6 +187,8 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
 /** Returns YES if the cloudPath matches the given path, comparing only the given components. */
 - (BOOL)matchesPath:(NSString *)path comparingComponents:(ZDCCloudPathComponents)components;
 
+#pragma mark Equality
+
 /** Compares the cloudPaths, and returns YES if they match exactly. */
 - (BOOL)isEqualToCloudPath:(ZDCCloudPath *)another;
 
@@ -180,6 +197,8 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
 
 /** Compares the cloudPaths, but only comparing the given components. */
 - (BOOL)isEqualToCloudPath:(ZDCCloudPath *)another components:(ZDCCloudPathComponents)components;
+
+#pragma mark Copying
 
 /**
  * Returns a copy with a different fileExtension.

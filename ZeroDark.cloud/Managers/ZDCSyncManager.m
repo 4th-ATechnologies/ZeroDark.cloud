@@ -383,9 +383,9 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 					
 					[self updateTimerForSyncState:syncState withNextPull:nextRetry];
 				}
-				else if (result == ZDCPullResult_Fail_Unknown)
+				else if (result == ZDCPullResult_Fail_Other)
 				{
-					// Pull failed for unknown reason.
+					// Pull failed for some other reason.
 					// Retry again after a longer delay.
 					
 					syncState.lastPullFailed = YES;

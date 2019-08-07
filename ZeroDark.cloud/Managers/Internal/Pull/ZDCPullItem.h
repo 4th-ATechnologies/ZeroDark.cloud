@@ -10,6 +10,7 @@
 #import <Foundation/Foundation.h>
 
 #import "AWSRegions.h"
+#import "ZDCCloudPath.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -20,11 +21,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, copy, readwrite) NSArray<NSString*> *parents;
 
-@property (nonatomic, copy, readwrite) NSString *rcrdPath;
+@property (nonatomic, copy, readwrite) ZDCCloudPath *rcrdCloudPath;
 @property (nonatomic, copy, readwrite, nullable) NSString *rcrdETag;
 @property (nonatomic, copy, readwrite, nullable) NSDate *rcrdLastModified;
 
-@property (nonatomic, copy, readwrite, nullable) NSString *dataPath;
+@property (nonatomic, copy, readwrite, nullable) ZDCCloudPath *dataCloudPath;
 @property (nonatomic, copy, readwrite, nullable) NSString *dataETag;
 @property (nonatomic, copy, readwrite, nullable) NSDate *dataLastModified;
 

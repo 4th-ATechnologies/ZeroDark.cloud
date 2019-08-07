@@ -35,20 +35,20 @@ typedef NS_ENUM(NSInteger, ZDCPullResult) {
 	ZDCPullResult_Fail_CloudChanged = 2,
 	
 	/**
-	 * The pull operation failed.
-	 *
-	 * The framework encountered an unknown error during the pull process.
-	 * When this failure occurs, the framework will rety, using a delay based on exponential backoff.
-	 */
-	ZDCPullResult_Fail_Unknown = 3,
-	
-	/**
 	 * The pull operation failed due to an authentication problem.
 	 *
 	 * The framework will be unable to retry a pull until the user is reauthenticated.
 	 * Typically this occurs when the user account has been suspended or deleted (due to a missed payment).
 	 */
-	ZDCPullResult_Fail_Auth = 4,
+	ZDCPullResult_Fail_Auth = 3,
+	
+	/**
+	 * The pull operation failed.
+	 *
+	 * The framework encountered an unknown error during the pull process.
+	 * When this failure occurs, the framework will rety, using a delay based on exponential backoff.
+	 */
+	ZDCPullResult_Fail_Other = 4,
 };
 
 /**

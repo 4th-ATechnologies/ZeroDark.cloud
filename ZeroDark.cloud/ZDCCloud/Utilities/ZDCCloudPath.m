@@ -321,7 +321,7 @@ static BOOL ZDCCloudPathEqual(NSString *zAppID1, NSString *dirPrefix1, NSString 
 	return copy;
 }
 
-#pragma mark General
+#pragma mark FileName
 
 - (NSString *)fileNameExt
 {
@@ -340,6 +340,8 @@ static BOOL ZDCCloudPathEqual(NSString *zAppID1, NSString *dirPrefix1, NSString 
 	
 	return newFileName;
 }
+
+#pragma mark Path (as string)
 
 - (NSString *)path
 {
@@ -423,6 +425,8 @@ static BOOL ZDCCloudPathEqual(NSString *zAppID1, NSString *dirPrefix1, NSString 
 	
 	return ZDCCloudPathEqual(zAppID, dirPrefix, fileName, _zAppID, _dirPrefix, _fileName, components);
 }
+
+#pragma mark Equality
 
 - (BOOL)isEqual:(id)another
 {

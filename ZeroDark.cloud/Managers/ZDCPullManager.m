@@ -57,51 +57,36 @@
 
 static NSUInteger const kMaxFailCount = 8;
 
-static NSString* NSStringFromPullResult(ZDCPullResult cloudPullResult)
-{
-	switch (cloudPullResult)
-	{
-		case ZDCPullResult_Success           : return @"Success";
-		case ZDCPullResult_ManuallyAborted   : return @"ManuallyAborted";
-		case ZDCPullResult_Fail_Auth         : return @"Fail_Auth";
-		case ZDCPullResult_Fail_CloudChanged : return @"Fail_CloudChanged";
-		case ZDCPullResult_Fail_Unknown      : return @"Fail_Unknown";
-		default                              : return @"?";
-	}
-}
 
 typedef NS_ENUM(NSInteger, ZDCPullErrorReason) {
 	
 	ZDCPullErrorReason_None = 0,
 	
-	ZDCPullErrorReason_IgnoringPartialFile,
-	ZDCPullErrorReason_MissingMessageAttachment,
-	ZDCPullErrorReason_ExceededMaxRetries,
-	ZDCPullErrorReason_AwsAuthError,
 	ZDCPullErrorReason_Auth0Error,
-	ZDCPullErrorReason_DecryptionError,
+	ZDCPullErrorReason_AwsAuthError,
+	ZDCPullErrorReason_ExceededMaxRetries,
 	ZDCPullErrorReason_BadData,
 	ZDCPullErrorReason_HttpStatusCode,
-	ZDCPullErrorReason_FileIDMismatch,
-	ZDCPullErrorReason_ShareWithinShare
+	ZDCPullErrorReason_FileIDMismatch
 };
 
 @interface ZDCPullTaskResult : NSObject
 
 + (ZDCPullTaskResult *)success;
 
-// General status
 @property (nonatomic, readwrite) ZDCPullResult pullResult;
 @property (nonatomic, readwrite) ZDCPullErrorReason pullErrorReason;
 @property (nonatomic, readwrite) NSInteger httpStatusCode;
 @property (nonatomic, readwrite) NSError *underlyingError;
 
-// Node info
-@property (nonatomic, readwrite) NSString *nodeID;
-
 @end
 
 @implementation ZDCPullTaskResult
+
+@synthesize pullResult = pullResult;
+@synthesize pullErrorReason = pullErrorReason;
+@synthesize httpStatusCode = httpStatusCode;
+@synthesize underlyingError = underlyingError;
 
 + (ZDCPullTaskResult *)success
 {
@@ -109,6 +94,49 @@ typedef NS_ENUM(NSInteger, ZDCPullErrorReason) {
 	result.pullResult = ZDCPullResult_Success;
 	
 	return result;
+}
+
+- (NSString *)description
+{
+	if (pullResult == ZDCPullResult_Success) {
+		return @"Success";
+	}
+	if (pullResult == ZDCPullResult_ManuallyAborted) {
+		return @"ManuallyAborted";
+	}
+	
+	NSMutableString *description = [NSMutableString stringWithCapacity:100];
+	
+	switch (pullResult)
+	{
+		case ZDCPullResult_Fail_Auth         : [description appendString:@"Fail_Auth"];         break;
+		case ZDCPullResult_Fail_CloudChanged : [description appendString:@"Fail_CloudChanged"]; break;
+		case ZDCPullResult_Fail_Other        : [description appendString:@"Fail_Other"];        break;
+		default                              : [description appendString:@"Fail_Unknown"];      break;
+	}
+	
+	[description appendString:@": "];
+	
+	switch (pullErrorReason)
+	{
+		case ZDCPullErrorReason_Auth0Error          : [description appendString:@"Auth0"];              break;
+		case ZDCPullErrorReason_AwsAuthError        : [description appendString:@"AwsAuth"];            break;
+		case ZDCPullErrorReason_ExceededMaxRetries  : [description appendString:@"ExceededMaxRetries"]; break;
+		case ZDCPullErrorReason_BadData             : [description appendString:@"BadData"];            break;
+		case ZDCPullErrorReason_HttpStatusCode      : [description appendString:@"HttpStatusCode"];     break;
+		case ZDCPullErrorReason_FileIDMismatch      : [description appendString:@"FileIDMismatch"];     break;
+		default                                     : [description appendString:@"?"];                  break;
+	}
+	
+	if (httpStatusCode != 0) {
+		[description appendFormat:@": %ld", (long)httpStatusCode];
+	}
+	
+	if (underlyingError) {
+		[description appendFormat:@": %@", underlyingError];
+	}
+	
+	return description;
 }
 
 @end
@@ -455,10 +483,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	ZDCPullTaskCompletion finalCompletionBlock =
 	^(YapDatabaseReadWriteTransaction *transaction, ZDCPullTaskResult *result) { @autoreleasepool {
 		
-		DDLogTrace(@"[%@] FinishPull: %@",
-		           pullState.localUserID, NSStringFromPullResult(result.pullResult));
+		DDLogTrace(@"[%@] FinishPull: %@", pullState.localUserID, result);
 		
-		NSAssert(result != nil, @"Bad parameter for block: S4SyncResult");
+		NSAssert(result != nil, @"Bad parameter for block: ZDCPullTaskResult");
 		if (result.pullResult == ZDCPullResult_Success) {
 			NSAssert(transaction != nil, @"Bad parameter for block: transaction is nil (with success status)");
 		}
@@ -687,7 +714,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			if (newFailCount > kMaxFailCount)
 			{
 				ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
-				result.pullResult = ZDCPullResult_Fail_Unknown;
+				result.pullResult = ZDCPullResult_Fail_Other;
 				result.pullErrorReason = ZDCPullErrorReason_ExceededMaxRetries;
 				result.underlyingError = error;
 				
@@ -760,7 +787,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			// Even when redis database reboots.
 			
 			ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
-			result.pullResult = ZDCPullResult_Fail_Unknown;
+			result.pullResult = ZDCPullResult_Fail_Other;
 			result.pullErrorReason = ZDCPullErrorReason_BadData;
 			
 			if ([responseObject isKindOfClass:[NSData class]])
@@ -1093,13 +1120,23 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	ZDCCloudPath *cloudPath = [ZDCCloudPath cloudPathFromPath:path];
 	AWSRegion region = [AWSRegions regionForName:regionStr];
 	
+	if (cloudID == nil || cloudPath == nil || region == AWSRegion_Invalid || bucket == nil)
+	{
+		// Bad change item !
+		
+		DDLogTrace(@"[%@] BadChangeItem: %@", pullState.localUserID, change);
+		
+		[self fallbackToFullPullWithPullState:pullState finalCompletion:finalCompletionBlock];
+		return;
+	}
+	
 	BOOL isRcrd = [cloudPath.fileNameExt isEqualToString:kZDCCloudFileExtension_Rcrd];
 	
 	ZDCPullTaskCompletion continuationBlock =
 	^(YapDatabaseReadWriteTransaction *transaction, ZDCPullTaskResult *result) { @autoreleasepool {
 		
-		DDLogTrace(@"[%@] ProcessPendingChange: put-if-match: continuationBlock: result = %ld",
-		           pullState.localUserID, (long)result.pullResult);
+		DDLogTrace(@"[%@] ProcessPendingChange: put-if-match: result = %@",
+		           pullState.localUserID, result);
 		
 		NSAssert(result != nil, @"Bad parameter for block: ZDCPullTaskResult");
 		if (result.pullResult == ZDCPullResult_Success) {
@@ -1231,7 +1268,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 					item.bucket = bucket;
 					item.parents = @[ node.parentID ];
 					
-					item.rcrdPath = path;
+					item.rcrdCloudPath = cloudPath;
 					item.rcrdETag = eTag;
 					item.rcrdLastModified = timestamp;
 					
@@ -1352,6 +1389,16 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	ZDCCloudPath *cloudPath = [ZDCCloudPath cloudPathFromPath:path];
 	AWSRegion region = [AWSRegions regionForName:regionStr];
 	
+	if (cloudID == nil || cloudPath == nil || region == AWSRegion_Invalid || bucket == nil)
+	{
+		// Bad change item !
+		
+		DDLogTrace(@"[%@] BadChangeItem: %@", pullState.localUserID, change);
+		
+		[self fallbackToFullPullWithPullState:pullState finalCompletion:finalCompletionBlock];
+		return;
+	}
+	
 	BOOL isRcrd = [cloudPath.fileNameExt isEqualToString:kZDCCloudFileExtension_Rcrd];
 	
 	__block YAPUnfairLock innerLock = YAP_UNFAIR_LOCK_INIT;
@@ -1379,7 +1426,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		}
 		
 		uint remaining = atomic_fetch_sub(&pendingCount, 1) - 1;
-		DDLogTrace(@"[%@] ProcessPendingChange: put-if-nonexistent: remaining=%u",
+		DDLogTrace(@"[%@] ProcessPendingChange: put-if-nonexistent: remaining = %u",
 			pullState.localUserID,
 			remaining);
 		
@@ -1387,8 +1434,8 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		{
 			result = cumulativeResult;
 			
-			DDLogTrace(@"[%@] ProcessPendingChange: put-if-nonexistent: continuationBlock: result = %ld",
-			           pullState.localUserID, (long)result.pullResult);
+			DDLogTrace(@"[%@] ProcessPendingChange: put-if-nonexistent: result = %@",
+			           pullState.localUserID, result);
 			
 			if (result.pullResult != ZDCPullResult_Success)
 			{
@@ -1516,7 +1563,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 					item.bucket = bucket;
 					item.parents = @[ node.parentID ]; // only need direct parent
 					
-					item.rcrdPath = path;
+					item.rcrdCloudPath = cloudPath;
 					item.rcrdETag = eTag;
 					item.rcrdLastModified = timestamp;
 					
@@ -1611,9 +1658,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				ZDCPullItem *item = [[ZDCPullItem alloc] init];
 				item.region = region;
 				item.bucket = bucket;
-				item.parents = @[ parentNode.uuid ]; // only need direct parent
+				item.parents = @[ parentNode.uuid ]; // only need direct parent (not a full pull)
 				
-				item.rcrdPath = path;
+				item.rcrdCloudPath = cloudPath;
 				item.rcrdETag = eTag;
 				item.rcrdLastModified = timestamp;
 				
@@ -1627,16 +1674,14 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			}
 			else
 			{
-				ZDCCloudPath *rcrdCloudPath = [cloudPath copyWithFileNameExt:kZDCCloudFileExtension_Rcrd];
-				
 				ZDCPullItem *item = [[ZDCPullItem alloc] init];
 				item.region = region;
 				item.bucket = bucket;
-				item.parents = @[ parentNode.uuid ]; // only need direct parent
+				item.parents = @[ parentNode.uuid ]; // only need direct parent (not a full pull)
 				
-				item.rcrdPath = rcrdCloudPath.path;
+				item.rcrdCloudPath = [cloudPath copyWithFileNameExt:kZDCCloudFileExtension_Rcrd];
 				
-				item.dataPath = path;
+				item.dataCloudPath = cloudPath;
 				item.dataETag = eTag;
 				item.dataLastModified = timestamp;
 				
@@ -1682,11 +1727,21 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	ZDCCloudPath *dstCloudPath = [ZDCCloudPath cloudPathFromPath:dstPath];
 	AWSRegion region = [AWSRegions regionForName:regionStr];
 	
+	if (cloudID == nil || srcCloudPath == nil || dstCloudPath == nil || region == AWSRegion_Invalid || bucket == nil)
+	{
+		// Bad change item !
+		
+		DDLogTrace(@"[%@] BadChangeItem: %@", pullState.localUserID, change);
+		
+		[self fallbackToFullPullWithPullState:pullState finalCompletion:finalCompletionBlock];
+		return;
+	}
+	
 	ZDCPullTaskCompletion continuationBlock =
 	^(YapDatabaseReadWriteTransaction *transaction, ZDCPullTaskResult *result) { @autoreleasepool {
 		
-		DDLogTrace(@"[%@] ProcessPendingChange: move: continuationBlock: result = %ld",
-		           pullState.localUserID, (long)result.pullResult);
+		DDLogTrace(@"[%@] ProcessPendingChange: move: result = %@",
+		           pullState.localUserID, result);
 		
 		NSAssert(result != nil, @"Bad parameter for block: ZDCPullTaskResult");
 		if (result.pullResult == ZDCPullResult_Success) {
@@ -1828,14 +1883,12 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				// Expected flow under good conditions.
 				// Fetch the modified RCRD, so we can get its name & possibly new permissions list.
 				
-				NSString *dstRcrdPath = [dstCloudPath pathWithExt:kZDCCloudFileExtension_Rcrd];
-				
 				ZDCPullItem *item = [[ZDCPullItem alloc] init];
 				item.region = region;
 				item.bucket = bucket;
 				item.parents = @[ dstParentNode.uuid ]; // only need direct parent
 				
-				item.rcrdPath = dstRcrdPath;
+				item.rcrdCloudPath = [dstCloudPath copyWithFileNameExt:kZDCCloudFileExtension_Rcrd];
 				item.rcrdETag = eTag;
 				item.rcrdLastModified = timestamp;
 				
@@ -1919,6 +1972,16 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	
 	ZDCCloudPath *cloudPath = [ZDCCloudPath cloudPathFromPath:path];
 	AWSRegion region = [AWSRegions regionForName:regionStr];
+	
+	if (cloudID == nil || cloudPath == nil || region == AWSRegion_Invalid || bucket == nil)
+	{
+		// Bad change item !
+		
+		DDLogTrace(@"[%@] BadChangeItem: %@", pullState.localUserID, change);
+		
+		[self fallbackToFullPullWithPullState:pullState finalCompletion:finalCompletionBlock];
+		return;
+	}
 	
 	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
@@ -2071,7 +2134,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
                         finalCompletion:(ZDCPullTaskCompletion)finalCompletionBlock
 {
 	NSString *const localUserID = pullState.localUserID;
-	DDLogTrace(@"[%@] FallbackToFullSync", localUserID);
+	DDLogTrace(@"[%@] FallbackToFullPull", localUserID);
 	
 	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
@@ -2109,7 +2172,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	if (failCount > kMaxFailCount)
 	{
 		ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
-		result.pullResult = ZDCPullResult_Fail_Unknown;
+		result.pullResult = ZDCPullResult_Fail_Other;
 		result.pullErrorReason = ZDCPullErrorReason_ExceededMaxRetries;
 		
 		finalCompletionBlock(nil, result);
@@ -2189,7 +2252,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			// Even when redis database reboots.
 			
 			ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
-			result.pullResult = ZDCPullResult_Fail_Unknown;
+			result.pullResult = ZDCPullResult_Fail_Other;
 			result.pullErrorReason = ZDCPullErrorReason_BadData;
 			
 			if ([responseObject isKindOfClass:[NSData class]])
@@ -2412,7 +2475,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		       pullState: pullState
 		      completion:^(ZDCPullTaskResult *result)
 		{
-			NSAssert(result != nil, @"Bad parameter for block: S4SyncResult");
+			NSAssert(result != nil, @"Bad parameter for block: ZDCPullTaskResult");
 			
 			if ([pullStateManager isPullCancelled:pullState]) {
 				return;
@@ -2559,7 +2622,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		if (s3Response == nil)
 		{
 			ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
-			result.pullResult = ZDCPullResult_Fail_Unknown;
+			result.pullResult = ZDCPullResult_Fail_Other;
 			result.pullErrorReason = ZDCPullErrorReason_BadData;
 			
 			if ([responseObject isKindOfClass:[NSData class]])
@@ -2688,7 +2751,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		if (failCount > kMaxFailCount)
 		{
 			ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
-			result.pullResult = ZDCPullResult_Fail_Unknown;
+			result.pullResult = ZDCPullResult_Fail_Other;
 			result.pullErrorReason = ZDCPullErrorReason_ExceededMaxRetries;
 			result.underlyingError = error;
 			
@@ -2871,6 +2934,14 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			NSString *dataKey = [bareKey stringByAppendingPathExtension:kZDCCloudFileExtension_Data];
 	
 			nodeData = PopFileWithKey(dataKey);
+			
+			ZDCCloudPath *rcrdCloudPath = [ZDCCloudPath cloudPathFromPath:nodeRcrd.key];
+			
+			if (rcrdCloudPath == nil)
+			{
+				DDLogTrace(@"[%@] Ignoring invalid node path: %@", pullState.localUserID, nodeRcrd.key);
+				continue;
+			}
 	
 			// Here's what we know at this point (given the nodeRcrd & nodeData):
 			// - the cloud path(s)
@@ -2887,11 +2958,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			//
 			// 2. We have a matching ZDCCloudNode, but not a matching S4Node because we deleted it.
 			//    (i.e. we have a delete-node operation in the queue for the item)
-	
-			ZDCCloudPath *cloudPath = [ZDCCloudPath cloudPathFromPath:nodeRcrd.key];
 			
 			ZDCNode *node =
-			  [[ZDCNodeManager sharedInstance] findNodeWithCloudPath: cloudPath
+			  [[ZDCNodeManager sharedInstance] findNodeWithCloudPath: rcrdCloudPath
 			                                                  bucket: bucket
 			                                                  region: region
 			                                             localUserID: pullState.localUserID
@@ -2901,7 +2970,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			if (node == nil)
 			{
 				ZDCCloudNode *cloudNode =
-				  [[ZDCCloudNodeManager sharedInstance] findCloudNodeWithCloudPath: cloudPath
+				  [[ZDCCloudNodeManager sharedInstance] findCloudNodeWithCloudPath: rcrdCloudPath
 				                                                            bucket: bucket
 				                                                            region: region
 				                                                       localUserID: pullState.localUserID
@@ -2933,11 +3002,11 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				item.bucket = bucket;
 				item.parents = parents;
 				
-				item.rcrdPath = nodeRcrd.key;
+				item.rcrdCloudPath = rcrdCloudPath;
 				item.rcrdETag = nodeRcrd.eTag;
 				item.rcrdLastModified = nodeRcrd.lastModified;
 				
-				item.dataPath = nodeData.key;
+				item.dataCloudPath = [rcrdCloudPath copyWithFileNameExt:kZDCCloudFileExtension_Data];
 				item.dataETag = nodeData.eTag;
 				item.dataLastModified = nodeData.lastModified;
 				
@@ -3013,7 +3082,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	void(^Fail)(ZDCPullErrorReason, NSError*) = ^(ZDCPullErrorReason reason, NSError *error){ @autoreleasepool {
 		
 		ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
-		result.pullResult = ZDCPullResult_Fail_Unknown;
+		result.pullResult = ZDCPullResult_Fail_Other;
 		result.pullErrorReason = reason;
 		result.underlyingError = error;
 		
@@ -3216,14 +3285,14 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
  */
 - (void)pullItem:(ZDCPullItem *)pullItem pullState:(ZDCPullState *)pullState
 {
-	DDLogTrace(@"[%@] Pull item: %@", pullState.localUserID, pullItem.rcrdPath);
+	DDLogTrace(@"[%@] Pull item: %@", pullState.localUserID, pullItem.rcrdCloudPath);
 	
 	NSParameterAssert(pullItem != nil);
 	NSParameterAssert(pullState != nil);
 	
 	NSParameterAssert(pullItem.region != AWSRegion_Invalid);
 	NSParameterAssert(pullItem.bucket != nil);
-	NSParameterAssert(pullItem.rcrdPath != nil);
+	NSParameterAssert(pullItem.rcrdCloudPath != nil);
 	
 	NSParameterAssert(pullItem.parents.count > 0);
 	
@@ -3239,7 +3308,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		                                               zAppID: pullState.zAppID];
 	}
 	
-	[self fetchRcrd: pullItem.rcrdPath
+	[self fetchRcrd: [pullItem.rcrdCloudPath path]
 	         bucket: pullItem.bucket
 	         region: pullItem.region
 	      pullState: pullState
@@ -3250,15 +3319,23 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		
 		if (result.pullResult != ZDCPullResult_Success)
 		{
-			// Unrecoverable failure.
-			// Either cloud contents changed mid-pull, or we encountered an authentication failure.
+			// Pull failure.
+			//
+			// Possible reasons:
+			// - Authentication failure
+			// - Network failure
+			// - Cloud contents changed mid-pull
 			
-			DDLogInfo(@"[%@] fetchRcrd failure: %d", pullState.localUserID, (int)result);
+			DDLogInfo(@"[%@] FetchRcrd failure: %@", pullState.localUserID, result);
 			
 			ZDCPullTaskCompletion rcrdCompletionBlock = pullItem.rcrdCompletionBlock;
+			ZDCPullTaskCompletion ptrCompletionBlock = pullItem.ptrCompletionBlock;
 			ZDCPullTaskCompletion dirCompletionBlock = pullItem.dirCompletionBlock;
 			
 			rcrdCompletionBlock(nil, result);
+			if (ptrCompletionBlock) {
+				ptrCompletionBlock(nil, result);
+			}
 			if (dirCompletionBlock) {
 				dirCompletionBlock(nil, result);
 			}
@@ -3273,11 +3350,24 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				return;
 			}
 			
-			ZDCCloudPath *remoteCloudPath = [ZDCCloudPath cloudPathFromPath:pullItem.rcrdPath];
+			if (cloudRcrd.cloudID == nil || cloudRcrd.encryptionKey == nil || cloudRcrd.metadata == nil)
+			{
+				DDLogTrace(@"[%@] No read-permissions for node: %@",
+				           pullState.localUserID,
+				           [pullItem.rcrdCloudPath pathWithExt:nil]);
+				
+				[self createOrUpdateCloudNode: pullItem
+				                         eTag: eTag
+				                 lastModified: lastModified
+				                    pullState: pullState
+				                  transaction: transaction];
+				return;
+			}
+			
 			NSString *parentID = [pullItem.parents lastObject];
 			
 			ZDCNode *node =
-			  [self findNodeWithRemoteCloudPath: remoteCloudPath
+			  [self findNodeWithRemoteCloudPath: pullItem.rcrdCloudPath
 			                          cloudRcrd: cloudRcrd
 				                        parentID: parentID
 			                          pullState: pullState
@@ -3298,7 +3388,6 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			else
 			{
 				[self createNodeWithCloudRcrd: cloudRcrd
-				                    cloudPath: remoteCloudPath
 				                     parentID: parentID
 				                     pullItem: pullItem
 				                    pullState: pullState
@@ -3308,6 +3397,56 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		}]; // end: [[self rwConnection] asyncReadWriteWithBlock:...]
 		
 	}]; // end: [self fetchRcrd:...]
+}
+
+- (void)createOrUpdateCloudNode:(ZDCPullItem *)pullItem
+                           eTag:(NSString *)eTag
+                   lastModified:(NSDate *)lastModified
+                      pullState:(ZDCPullState *)pullState
+                    transaction:(YapDatabaseReadWriteTransaction *)transaction
+{
+	ZDCCloudNode *cloudNode =
+	  [[ZDCCloudNodeManager sharedInstance]
+	    findCloudNodeWithCloudPath: pullItem.rcrdCloudPath
+	                        bucket: pullItem.bucket
+	                        region: pullItem.region
+	                   localUserID: pullState.localUserID
+	                   transaction: transaction];
+	
+	if (cloudNode == nil)
+	{
+		ZDCCloudLocator *cloudLocator =
+		  [[ZDCCloudLocator alloc] initWithRegion: pullItem.region
+		                                   bucket: pullItem.bucket
+		                                cloudPath: pullItem.rcrdCloudPath];
+		
+		cloudNode =
+		  [[ZDCCloudNode alloc] initWithLocalUserID: pullState.localUserID
+		                               cloudLocator: cloudLocator];
+	}
+	
+	if (![cloudNode.eTag_rcrd isEqual:eTag]) {
+		cloudNode.eTag_rcrd = eTag;
+	}
+	if (pullItem.dataETag && ![cloudNode.eTag_data isEqual:pullItem.dataETag]) {
+		cloudNode.eTag_data = pullItem.dataETag;
+	}
+	
+	[transaction setObject:cloudNode forKey:cloudNode.uuid inCollection:kZDCCollection_CloudNodes];
+	
+	ZDCPullTaskResult *result = [ZDCPullTaskResult success];
+	
+	ZDCPullTaskCompletion rcrdCompletionBlock = pullItem.rcrdCompletionBlock;
+	ZDCPullTaskCompletion ptrCompletionBlock = pullItem.ptrCompletionBlock;
+	ZDCPullTaskCompletion dirCompletionBlock = pullItem.dirCompletionBlock;
+	
+	rcrdCompletionBlock(transaction, result);
+	if (ptrCompletionBlock) {
+		ptrCompletionBlock(transaction, result);
+	}
+	if (dirCompletionBlock) {
+		dirCompletionBlock(transaction, result);
+	}
 }
 
 /**
@@ -3661,9 +3800,8 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			DDLogError(@"Error merging shareList: %@", mergeError);
 		}
 	}
-
-	BOOL nodeHasChanges = node.hasChanges;
-	if (nodeHasChanges)
+	
+	if (node.hasChanges)
 	{
 		[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
 		
@@ -3751,7 +3889,6 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 }
 
 - (void)createNodeWithCloudRcrd:(ZDCCloudRcrd *)cloudRcrd
-                      cloudPath:(ZDCCloudPath *)cloudPath
                        parentID:(NSString *)parentID
                        pullItem:(ZDCPullItem *)pullItem
                       pullState:(ZDCPullState *)pullState
@@ -3759,7 +3896,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 {
 	ZDCNodeManager *const nodeManager = [ZDCNodeManager sharedInstance];
 	
-	NSString *remoteCloudName = [cloudPath fileNameWithExt:nil];
+	NSString *remoteCloudName = [pullItem.rcrdCloudPath fileNameWithExt:nil];
 	
 	ZDCNode *node = [[ZDCNode alloc] initWithLocalUserID:pullState.localUserID];
 	node.parentID = parentID;
@@ -3874,6 +4011,19 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	ZDCTreesystemPath *path = [nodeManager pathForNode:node transaction:transaction];
 	[zdc.delegate didDiscoverNewNode:node atPath:path transaction:transaction];
 
+	for (ZDCNode *child in children)
+	{
+		if (child.isImmutable) {
+			// Already had this child in the database - not new, not discovered
+			continue;
+		}
+		
+		[transaction setObject:child forKey:child.uuid inCollection:kZDCCollection_Nodes];
+		
+		ZDCTreesystemPath *path = [nodeManager pathForNode:child transaction:transaction];
+		[zdc.delegate didDiscoverNewNode:child atPath:path transaction:transaction];
+	}
+	
 	// Check for unknown users
 
 	NSSet<NSString *> *unknownUserIDs = [self unknownUserIDsForNode:node transaction:transaction];
@@ -3888,19 +4038,6 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	ZDCPullTaskCompletion dirCompletionBlock = pullItem.dirCompletionBlock;
 
 	rcrdCompletionBlock(transaction, [ZDCPullTaskResult success]);
-	
-	for (ZDCNode *child in children)
-	{
-		if (child.isImmutable) {
-			// Already had this child in the database - not new, not discovered
-			continue;
-		}
-		
-		[transaction setObject:child forKey:child.uuid inCollection:kZDCCollection_Nodes];
-		
-		ZDCTreesystemPath *path = [nodeManager pathForNode:child transaction:transaction];
-		[zdc.delegate didDiscoverNewNode:child atPath:path transaction:transaction];
-	}
 	
 	if (ptrCompletionBlock)
 	{
@@ -4259,7 +4396,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			if (newFailCount > kMaxFailCount)
 			{
 				ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
-				result.pullResult = ZDCPullResult_Fail_Unknown;
+				result.pullResult = ZDCPullResult_Fail_Other;
 				result.pullErrorReason = ZDCPullErrorReason_ExceededMaxRetries;
 				result.underlyingError = error;
 				
@@ -4483,7 +4620,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			if (error)
 			{
 				ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
-				result.pullResult = ZDCPullResult_Fail_Unknown;
+				result.pullResult = ZDCPullResult_Fail_Other;
 				result.pullErrorReason = ZDCPullErrorReason_BadData;
 				result.underlyingError = error;
 				
@@ -4497,7 +4634,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			NSError *error = [self errorWithDescription:dsc];
 			
 			ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
-			result.pullResult = ZDCPullResult_Fail_Unknown;
+			result.pullResult = ZDCPullResult_Fail_Other;
 			result.pullErrorReason = ZDCPullErrorReason_BadData;
 			result.underlyingError = error;
 			

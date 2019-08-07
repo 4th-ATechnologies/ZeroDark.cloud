@@ -16,11 +16,11 @@
 
 @synthesize parents;
 
-@synthesize rcrdPath;
+@synthesize rcrdCloudPath;
 @synthesize rcrdETag;
 @synthesize rcrdLastModified;
 
-@synthesize dataPath;
+@synthesize dataCloudPath;
 @synthesize dataETag;
 @synthesize dataLastModified;
 

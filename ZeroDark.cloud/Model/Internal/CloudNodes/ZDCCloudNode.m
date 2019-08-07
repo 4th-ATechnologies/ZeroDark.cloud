@@ -53,7 +53,7 @@ static NSString *const k_isQueuedForDeletion     = @"isDeletion";
 	{
 		uuid = [[NSUUID UUID] UUIDString];
 		localUserID = [inLocalUserID copy];
-		cloudLocator = [inCloudLocator copy];
+		cloudLocator = [inCloudLocator copyWithFileNameExt:nil];
 	}
 	return self;
 }
