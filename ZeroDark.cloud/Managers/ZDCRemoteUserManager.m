@@ -14,6 +14,7 @@
 #import "ZDCAsyncCompletionDispatch.h"
 #import "ZDCConstants.h"
 #import "ZDCLogging.h"
+#import "ZeroDarkCloudPrivate.h"
 
 // Categories
 #import "NSURLResponse+ZeroDark.h"
@@ -493,10 +494,10 @@
 {
 	DDLogAutoTrace();
 	
-	[zdc.webManager fetchInfoForRemoteUserID: remoteUserID
-	                             requesterID: localUserID
-	                         completionQueue: completionQueue
-	                         completionBlock:^(NSDictionary *response, NSError *error)
+	[zdc.restManager fetchInfoForRemoteUserID: remoteUserID
+	                              requesterID: localUserID
+	                          completionQueue: completionQueue
+	                          completionBlock:^(NSDictionary *response, NSError *error)
 	{
 		if (error)
 		{
@@ -581,10 +582,10 @@
                                              NSString *preferredAuth0ID,
                                              NSError *error))completionBlock
 {
-	[zdc.webManager fetchFilteredAuth0Profile: remoteUser.uuid
-	                              requesterID: localUserID
-	                          completionQueue: completionQueue
-	                          completionBlock:^(NSURLResponse *urlResponse, id responseObject, NSError *error)
+	[zdc.restManager fetchFilteredAuth0Profile: remoteUser.uuid
+	                               requesterID: localUserID
+	                           completionQueue: completionQueue
+	                           completionBlock:^(NSURLResponse *urlResponse, id responseObject, NSError *error)
 	{
 		if (error)
 		{
@@ -727,15 +728,15 @@
      completionQueue:(dispatch_queue_t)completionQueue
      completionBlock:(void (^)(ZDCPublicKey *publicKey, NSError *error))completionBlock
 {
-	[zdc.webManager downloadDataAtPath: kZDCCloudFileName_PublicKey
-	                          inBucket: remoteUser.aws_bucket
-	                            region: remoteUser.aws_region
-	                          withETag: nil
-	                             range: nil
-	                       requesterID: localUserID
-	                     canBackground: NO
-	                   completionQueue: completionQueue
-	                   completionBlock:^(NSURLResponse *response, id responseObject, NSError *error)
+	[zdc.networkTools downloadDataAtPath: kZDCCloudFileName_PublicKey
+	                            inBucket: remoteUser.aws_bucket
+	                              region: remoteUser.aws_region
+	                            withETag: nil
+	                               range: nil
+	                         requesterID: localUserID
+	                       canBackground: NO
+	                     completionQueue: completionQueue
+	                     completionBlock:^(NSURLResponse *response, id responseObject, NSError *error)
 	{
 		if (error)
 		{

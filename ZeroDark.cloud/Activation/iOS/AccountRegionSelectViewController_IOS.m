@@ -68,9 +68,9 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 	NSNumber*                   preferedRegion;
 
-	YapDatabaseConnection *		databaseConnection;
-	AFNetworkReachabilityManager* reachability;
-	ZDCWebManager * 			 webManager;
+	YapDatabaseConnection        * databaseConnection;
+	AFNetworkReachabilityManager * reachability;
+	ZDCRestManager               * restManager;
 }
 
 
@@ -159,7 +159,7 @@ static NSString *const kRegions	      		= @"regions";
 
 	databaseConnection = accountSetupVC.owner.databaseManager.uiDatabaseConnection;
 	reachability = accountSetupVC.owner.reachability;
-	webManager = accountSetupVC.owner.webManager;
+	restManager = accountSetupVC.owner.restManager;
 
 	hasInternet = reachability.isReachable;
 
@@ -566,7 +566,7 @@ static NSString *const kRegions	      		= @"regions";
 
 	__weak typeof(self) weakSelf = self;
 
-	[webManager fetchConfigWithCompletionQueue:dispatch_get_main_queue()
+	[restManager fetchConfigWithCompletionQueue:dispatch_get_main_queue()
 							   completionBlock:^(NSDictionary * _Nullable config, NSError * _Nullable error)
 	 {
 #pragma clang diagnostic push

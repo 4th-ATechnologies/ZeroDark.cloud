@@ -7,10 +7,10 @@
  * API Reference : https://4th-atechnologies.github.io/ZeroDark.cloud/
 **/
 
-#import "ZDCWebManager.h"
+#import "ZDCRestManager.h"
 #import "ZeroDarkCloud.h"
 
-@interface ZDCWebManager (Private)
+@interface ZDCRestManager (Private)
 
 - (instancetype)initWithOwner:(ZeroDarkCloud *)owner;
 

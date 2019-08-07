@@ -41,6 +41,9 @@
 
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
+#ifndef robbie_hanson
+#define robbie_hanson 1
+#endif
 #if DEBUG
   static const int ddLogLevel = DDLogLevelWarning;
 #else
@@ -3101,13 +3104,13 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// Instead we go through our own server, in order to avoid pitfalls with S3.
 		
 		NSMutableURLRequest *request =
-		  [zdc.webManager multipartComplete: operation.multipartInfo.stagingPath
-		                       withUploadID: operation.multipartInfo.uploadID
-		                              eTags: eTags
-		                           inBucket: operation.cloudLocator.bucket
-		                             region: operation.cloudLocator.region
-		                     forLocalUserID: operation.localUserID
-		                           withAuth: auth];
+		  [zdc.restManager multipartComplete: operation.multipartInfo.stagingPath
+		                        withUploadID: operation.multipartInfo.uploadID
+		                               eTags: eTags
+		                            inBucket: operation.cloudLocator.bucket
+		                              region: operation.cloudLocator.region
+		                      forLocalUserID: operation.localUserID
+		                            withAuth: auth];
 		
 		NSURLSessionTask *task = nil;
 	#if TARGET_OS_IPHONE
@@ -5832,7 +5835,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		NSString *path = [NSString stringWithFormat:@"/poll-request/%@", [self requestIDForOperation:operation]];
 		
-		NSURLComponents *urlComponents = [zdc.webManager apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [zdc.restManager apiGatewayForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"GET";
@@ -6182,7 +6185,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		
 		NSString *path = @"/poll-request";
-		NSURLComponents *urlComponents = [zdc.webManager apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [zdc.restManager apiGatewayForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"POST";
@@ -6957,7 +6960,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		NSString *path = [NSString stringWithFormat:@"/users/avatar/%@", social_userID];
 		
-		NSURLComponents *urlComponents = [zdc.webManager apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [zdc.restManager apiGatewayForRegion:region stage:stage path:path];
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 
 	#if TARGET_OS_IPHONE

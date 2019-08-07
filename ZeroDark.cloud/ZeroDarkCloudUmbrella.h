@@ -39,9 +39,9 @@
 #import "ZDCPullManager.h"
 #import "ZDCPushManager.h"
 #import "ZDCRemoteUserManager.h"
+#import "ZDCRestManager.h"
 #import "ZDCSearchUserManager.h"
 #import "ZDCSyncManager.h"
-#import "ZDCWebManager.h"
 
 // Model
 #import "ZDCCloudNode.h"

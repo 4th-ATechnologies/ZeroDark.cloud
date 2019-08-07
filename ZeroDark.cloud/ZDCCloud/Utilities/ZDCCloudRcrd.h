@@ -17,7 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
  * This class represents the decrypted information within a RCRD file.
  *
  * Every node that gets stored in the cloud gets split into 2 files:
- * - the RCRD file contains the filesystem metadata (name of file, permissions, etc)
+ * - the RCRD file contains the treesystem metadata (name of file, permissions, etc)
  * - the DATA file contains the actual content of the node
  *
  * ZeroDark.cloud downloads RCRD files automatically (which are small),

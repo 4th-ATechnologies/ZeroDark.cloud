@@ -106,7 +106,7 @@ typedef void (^UserAvatarDownloadCompletionBlock)(NSData *_Nullable avatar, NSEr
 /**
  * The DownloadManager is your one-stop-shop for downloading data from the cloud.
  *
- * Recall that the ZeroDark.cloud framework will automatically fetch the filesystem outline for you.
+ * Recall that the ZeroDark.cloud framework will automatically fetch the treesystem outline for you.
  * That is, it will tell you about the nodes that exist in the cloud, what their names are,
  * and what the tree/heirarchy looks like. But you're in complete control when it comes to downloading
  * the actual data (node content). This allows you to optimize for your app. For example:

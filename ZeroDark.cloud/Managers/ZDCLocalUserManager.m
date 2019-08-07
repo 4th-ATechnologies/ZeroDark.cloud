@@ -676,9 +676,9 @@
 			}
 		}
 		
-		[zdc.webManager fetchAuth0ProfileForLocalUserID: localUser.uuid
-		                                completionQueue: concurrentQueue
-		                                completionBlock:
+		[zdc.restManager fetchAuth0ProfileForLocalUserID: localUser.uuid
+		                                 completionQueue: concurrentQueue
+		                                 completionBlock:
 		^(NSURLResponse *urlResponse, id responseObject, NSError *error)
 		{
 			 NSInteger statusCode = urlResponse.httpStatusCode;
@@ -906,6 +906,8 @@
 	{
 		__strong typeof(self) strongSelf = weakSelf;
 		if (!strongSelf) return;
+		
+		ZDCCryptoTools *cryptoTools = strongSelf->zdc.cryptoTools;
 
 		ZDCLocalUser* localUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
 		if (!localUser || !localUser.isLocal)
@@ -928,24 +930,25 @@
 										  error: &error];
 		if (error) return; // from transaction block
 
-		[strongSelf->zdc.cryptoTools updateKeyProperty: kZDCCloudRcrd_Auth0ID
-										value: auth0IDData
-							  withPublicKeyID: localUser.publicKeyID
-								  transaction: transaction
-										error: &error];
+		[cryptoTools updateKeyProperty: kZDCCloudRcrd_Auth0ID
+		                         value: auth0IDData
+		               withPublicKeyID: localUser.publicKeyID
+		                   transaction: transaction
+		                         error: &error];
+		
 		if (error) return; // from transaction block
 
 		ZDCPublicKey *privateKey =
 		[transaction objectForKey: localUser.publicKeyID
 					 inCollection: kZDCCollection_PublicKeys];
 
-		privKeyData = [strongSelf->zdc.cryptoTools exportPrivateKey: privateKey
-											   encryptedTo: cloneKey
-													 error: &error];
+		privKeyData = [cryptoTools exportPrivateKey: privateKey
+		                                encryptedTo: cloneKey
+		                                      error: &error];
+		
 		if (error) return; // from transaction block
 
-		pubKeyData = [strongSelf->zdc.cryptoTools exportPublicKey: privateKey
-												   error: &error];
+		pubKeyData = [cryptoTools exportPublicKey:privateKey error:&error];
 		//	if (error) return; // from transaction block
 
 	} completionQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) completionBlock:^{
@@ -958,13 +961,15 @@
 			InvokeCompletionBlock(error);
 			return;
 		}
+		
+		ZDCRestManager *restManager = strongSelf->zdc.restManager;
 
 		// code here to upload privKeyData and pubKeyData
-		[strongSelf->zdc.webManager updatePrivKey: privKeyData
-							 pubKey: pubKeyData
-					 forLocalUserID: userID
-					completionQueue: dispatch_get_main_queue()
-					completionBlock: processingBlock];
+		[restManager updatePrivKey: privKeyData
+		                    pubKey: pubKeyData
+		            forLocalUserID: userID
+		           completionQueue: dispatch_get_main_queue()
+		           completionBlock: processingBlock];
 	}];
 }
 
@@ -1234,13 +1239,15 @@
 
 		__strong typeof(self) strongSelf = weakSelf;
 		if (!strongSelf) return;
+		
+		ZDCRestManager *restManager = strongSelf->zdc.restManager;
 
-		[strongSelf->zdc.webManager uploadPrivKey:privKeyData
-								 pubKey:pubKeyData
-						   forLocalUser:localUser
-							   withAuth:auth
-						completionQueue:concurrentQueue
-						completionBlock:processResponseBlock];
+		[restManager uploadPrivKey: privKeyData
+		                    pubKey: pubKeyData
+		              forLocalUser: localUser
+		                  withAuth: auth
+		           completionQueue: concurrentQueue
+		           completionBlock: processResponseBlock];
 	}};
 
 	retryRequest = ^{ @autoreleasepool {
@@ -1411,13 +1418,15 @@
 		__strong typeof(self) strongSelf = weakSelf;
 		if (!strongSelf) return;
 		
-		[strongSelf->zdc.webManager linkAuth0ID: inLocalUser.auth0_primary
-		                 toRecoveryID: recovery_auth0ID
-		                      forUser: localUserID
-		              completionQueue: queue
-		              completionBlock:
-		  ^(NSURLResponse *urlResponse, id responseObject, NSError *error)
-		 {
+		ZDCRestManager *restManager = strongSelf->zdc.restManager;
+		
+		[restManager linkAuth0ID: inLocalUser.auth0_primary
+		            toRecoveryID: recovery_auth0ID
+		                 forUser: localUserID
+		         completionQueue: queue
+		         completionBlock:
+		^(NSURLResponse *urlResponse, id responseObject, NSError *error)
+		{
 			NSInteger statusCode = urlResponse.httpStatusCode;
 
 			if (error)

@@ -64,7 +64,7 @@
 	// So we store them with a special parentID.
 	//
 	// This makes them searchable via:
-	// - Ext_View_Filesystem
+	// - Ext_View_Treesystem
 	// - Ext_View_Flat
 	
 	return [NSString stringWithFormat:@"%@|%@|signal", [self localUserID], [self zAppID]];
@@ -818,7 +818,7 @@
 		return nil;
 	}
 	
-	// Is the node a leaf ?
+	// What kind of node are we dealing with here ?
 	
 	const BOOL isPointer = rootNode.isPointer;
 	
@@ -881,7 +881,7 @@
 	// Enumerate all the child nodes
 	
 	NSMutableSet<NSString*> *cloudIDs = [NSMutableSet set];
-	NSMutableArray<NSString*> *nodeIDs = [NSMutableArray array];
+	NSMutableArray<NSString*> *childNodeIDs = [NSMutableArray array];
 	
 	[nodeManager recursiveEnumerateNodesWithParentID: rootNode.uuid
 	                                     transaction: databaseTransaction
@@ -890,44 +890,47 @@
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
-		[nodeIDs addObject:childNode.uuid];
+		[childNodeIDs addObject:childNode.uuid];
 		
-		ZDCCloudLocator *cloudLocator =
-		  [cloudPathManager cloudLocatorForNode: childNode
-		                            transaction: databaseTransaction];
-		
-		if (cloudLocator)
+		if (!isPointer)
 		{
-			// Create corresponding ZDCCloudNode
-			
-			ZDCCloudNode *cloudNode =
-			  [[ZDCCloudNode alloc] initWithLocalUserID: childNode.localUserID
-			                               cloudLocator: cloudLocator];
-			
-			[rwTransaction setObject: cloudNode
-			                  forKey: cloudNode.uuid
-			            inCollection: kZDCCollection_CloudNodes];
-			
-			if (!isLeaf)
+			ZDCCloudLocator *cloudLocator =
+			  [cloudPathManager cloudLocatorForNode: childNode
+			                            transaction: databaseTransaction];
+		
+			if (cloudLocator)
 			{
-				// Fill out the JSON info for this child node
+				// Create corresponding ZDCCloudNode
 				
-				NSString *cloudID = childNode.cloudID;
-				if (cloudID)
+				ZDCCloudNode *cloudNode =
+				  [[ZDCCloudNode alloc] initWithLocalUserID: childNode.localUserID
+				                               cloudLocator: cloudLocator];
+		
+				[rwTransaction setObject: cloudNode
+				                  forKey: cloudNode.uuid
+				            inCollection: kZDCCollection_CloudNodes];
+		
+				if (!isLeaf)
 				{
-					NSString *dirPrefix = cloudLocator.cloudPath.dirPrefix;
-					
-					NSMutableDictionary *dir = children[dirPrefix];
-					if (dir == nil)
+					// Fill out the JSON info for this child node
+		
+					NSString *cloudID = childNode.cloudID;
+					if (cloudID)
 					{
-						dir = [NSMutableDictionary dictionary];
-						children[dirPrefix] = dir;
-						
-						dir[@""] = strOpts;
+						NSString *dirPrefix = cloudLocator.cloudPath.dirPrefix;
+		
+						NSMutableDictionary *dir = children[dirPrefix];
+						if (dir == nil)
+						{
+							dir = [NSMutableDictionary dictionary];
+							children[dirPrefix] = dir;
+		
+							dir[@""] = strOpts;
+						}
+		
+						dir[cloudID] = (childNode.eTag_rcrd ?: @"");
+						[cloudIDs addObject:cloudID];
 					}
-					
-					dir[cloudID] = (childNode.eTag_rcrd ?: @"");
-					[cloudIDs addObject:cloudID];
 				}
 			}
 		}
@@ -1027,13 +1030,55 @@
 	
 	// Delete all the ZDCNode's from the treesystem
 	
-	[nodeIDs addObject:rootNode.uuid];
-	[rwTransaction removeObjectsForKeys:nodeIDs inCollection:kZDCCollection_Nodes];
+	BOOL pointeeIsRetained = NO;
+	if (isPointer)
+	{
+		// Delete the pointer itself
+		[rwTransaction removeObjectForKey:rootNode.uuid inCollection:kZDCCollection_Nodes];
+		
+		// Are the other references to the pointee (and children) ?
+		
+		ZDCNode *pointeeNode = [rwTransaction objectForKey:rootNode.pointeeID inCollection:kZDCCollection_Nodes];
+		
+		if (![pointeeNode.parentID isEqualToString:[self graftParentID]])
+		{
+			pointeeIsRetained = YES;
+		}
+		else
+		{
+			ZDCNode *retainerNode =
+			  [[ZDCNodeManager sharedInstance] findNodeWithPointeeID: rootNode.pointeeID
+			                                             localUserID: localUserID
+			                                                  zAppID: zAppID
+			                                             transaction: rwTransaction];
+			if (retainerNode) {
+				pointeeIsRetained = YES;
+			}
+		}
+		
+		if (!pointeeIsRetained)
+		{
+			[rwTransaction removeObjectsForKeys:childNodeIDs inCollection:kZDCCollection_Nodes];
+		}
+	}
+	else // if (!isPointer)
+	{
+		[rwTransaction removeObjectForKey:rootNode.uuid inCollection:kZDCCollection_Nodes];
+		[rwTransaction removeObjectsForKeys:childNodeIDs inCollection:kZDCCollection_Nodes];
+	}
 	
 	// Skip put-data operations for any node we're deleting.
 	//
 	// Note that we're not skipping put:rcrd or move operations.
 	// That's an optimization that requires a MUCH more complicated solution.
+	
+	NSMutableSet<NSString *> *targetNodeIDs = [NSMutableSet set];
+	[targetNodeIDs addObject:rootNode.uuid];
+	
+	if (!isPointer || !pointeeIsRetained)
+	{
+		[targetNodeIDs addObjectsFromArray:childNodeIDs];
+	}
 	
 	NSMutableSet<NSUUID *> *opUUIDs = [NSMutableSet set];
 	
@@ -1045,7 +1090,7 @@
 		{
 			__unsafe_unretained ZDCCloudOperation *op = (ZDCCloudOperation *)operation;
 			
-			if (op.isPutNodeDataOperation && op.nodeID && [nodeIDs containsObject:op.nodeID])
+			if (op.isPutNodeDataOperation && op.nodeID && [targetNodeIDs containsObject:op.nodeID])
 			{
 				[opUUIDs addObject:op.uuid];
 			}

@@ -185,6 +185,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** The functionality of ZeroDarkCloud is split into multiple managers, separated by task.
     Once the database is unlocked, this returns non-nil. */
+@property (nonatomic, readonly, nullable) ZDCRestManager * restManager;
+
+/** The functionality of ZeroDarkCloud is split into multiple managers, separated by task.
+    Once the database is unlocked, this returns non-nil. */
 @property (nonatomic, readonly, nullable) ZDCSearchUserManager * searchManager;
 
 /** The functionality of ZeroDarkCloud is split into multiple managers, separated by task.
@@ -194,10 +198,6 @@ NS_ASSUME_NONNULL_BEGIN
 /** The functionality of ZeroDarkCloud is split into multiple managers, separated by task.
     Once the database is unlocked, this returns non-nil. */
 @property (nonatomic, readonly, nullable) ZDCUITools * uiTools;
-
-/** The functionality of ZeroDarkCloud is split into multiple managers, separated by task.
-    Once the database is unlocked, this returns non-nil. */
-@property (nonatomic, readonly, nullable) ZDCWebManager * webManager;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Convenience Methods

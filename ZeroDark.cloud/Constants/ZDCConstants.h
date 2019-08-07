@@ -100,7 +100,7 @@ extern NSString *const kZDCCloudFileName_PrivateKey; // PBKDF2 encrypted, requir
 //
 
 /**
- * The RCRD file contains ONLY the filesystem metadata.
+ * The RCRD file contains ONLY the treesystem metadata.
  * That is:
  * - the (encrypted) filename
  * - the list of permissions

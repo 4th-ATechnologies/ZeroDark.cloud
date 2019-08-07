@@ -8,36 +8,33 @@
  **/
 
 #import "BackupComboViewController_IOS.h"
-#import <ZeroDarkCloud/ZeroDarkCloud.h>
+
+#import "LanguageListViewController_IOS.h"
+#import "PasswordStrengthUIView.h"
+#import "UISecureTextField.h"
+#import "ZDCAccessCode.h"
+#import "ZDCConstantsPrivate.h"
+#import "ZDCLogging.h"
+#import "ZDCPasswordStrengthCalculator.h"
 #import "ZeroDarkCloudPrivate.h"
 
-#import "ZDCConstantsPrivate.h"
-#import "UISecureTextField.h"
-#import "PasswordStrengthUIView.h"
-
-#import "ZDCAccessCode.h"
-#import "LanguageListViewController_IOS.h"
+#import "RKTagsView.h"
 
 // Categories
-#import "ZDCLogging.h"
-#import "OSImage+QRCode.h"
-#import "RKTagsView.h"
-#import "OSImage+ZeroDark.h"
 #import "NSString+ZeroDark.h"
+#import "OSImage+QRCode.h"
+#import "OSImage+ZeroDark.h"
 #import "UIImageViewPasteable.h"
 
 // Libraries
 #import <MobileCoreServices/MobileCoreServices.h>
 #import <Photos/Photos.h>
 
-#import "ZDCLogging.h"
-
-
 // Log levels: off, error, warn, info, verbose
 #if DEBUG
-static const int ddLogLevel = DDLogLevelVerbose;
+  static const int ddLogLevel = DDLogLevelVerbose;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+  static const int ddLogLevel = DDLogLevelWarning;
 #endif
 #pragma unused(ddLogLevel)
 
@@ -226,7 +223,6 @@ static const int ddLogLevel = DDLogLevelWarning;
 	IBOutlet __weak PasswordStrengthUIView  *_strengthField;
 	IBOutlet __weak UILabel                 *_lblStrength;
 	
-	ZDCPasswordStrengthManager  				*pwdStrengthMgr;
 	ZDCPasswordStrength							*pwdStrength;
 	
 	IBOutlet  NSLayoutConstraint *	_bottomPWDConstraintKBShow;
@@ -264,8 +260,6 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (void)viewDidLoad {
 	[super viewDidLoad];
-	
-	pwdStrengthMgr = self.keyBackupVC.owner.passwordStrength;
 
 	_tagView.lineSpacing = 4;
 	_tagView.interitemSpacing = 4;
@@ -788,7 +782,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 	_strengthField.hidden = string.length == 0;
 	_lblStrength.hidden = string.length == 0;
 	
-	pwdStrength = [pwdStrengthMgr strengthForPassword:string];
+	pwdStrength = [ZDCPasswordStrengthCalculator strengthForPassword:string];
 	_strengthField.score = pwdStrength.score;
 	_lblStrength.text = pwdStrength.scoreLabel;
 	

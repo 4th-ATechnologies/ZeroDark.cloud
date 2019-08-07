@@ -13,7 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * This notification is broadcast when changes are discovered in the cloud,
- * and the PullManager has started working to update the filesystem/tree state.
+ * and the PullManager has started working to update the treesystem state.
  *
  * The following keys are available in the notification's userInfo:
  * - kLocalUserIDKey : value is string
@@ -26,7 +26,7 @@ extern NSString *const ZDCPullStartedNotification;
 /**
  * This notification is broadcast after:
  * - changes were discovered in the cloud
- * - the PullManager attempted to update the filesystem/tree state
+ * - the PullManager attempted to update the treesystem state
  * - and the PullManager is now done with its attempt (either success or failure)
  *
  * The following keys are available in the notification's userInfo:
@@ -191,7 +191,7 @@ extern NSString *const kPullResultKey;
  * It's important to understand what a "pull" means within the context of the ZeroDark.cloud framework,
  * as its meaning may differ from the perspective of your application.
  * The ZeroDark.cloud framework automatically updates the local cache of the
- * filesystem/tree heirarchy to match that of the cloud. This tree heirarchy
+ * treesystem hierarchy to match that of the cloud. This tree heirarchy
  * that it maintains is separate from the node data. For example, if it discovers
  * that new nodes have been added to the cloud, it automatically downloads the
  * tree information (node name, position within tree, permsissions, etc),

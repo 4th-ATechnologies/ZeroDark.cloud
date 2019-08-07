@@ -491,8 +491,8 @@ typedef void (^UploadCompletionBlock)(BOOL success);
  * If available, returns the upload progress for the node.
  *
  * A data upload is a ZDCCloudOperation whose `putType` is ZDCCloudOperationPutType_Node_Data.
- * That is, an upload of the node's data - the actual content.
- * As opposed to the RCRD - filesystem bookkeeping stuff.
+ * That is, an upload of the node's data => the actual content.
+ * As opposed to the RCRD => treesystem bookkeeping stuff.
  *
  * @param nodeID
  *   The node you're interested in. (nodeID == ZDCNode.uuid)
@@ -505,8 +505,8 @@ typedef void (^UploadCompletionBlock)(BOOL success);
  * If available, returns the upload progress for the node.
  *
  * A data upload is a ZDCCloudOperation whose `putType` is ZDCCloudOperationPutType_Node_Data.
- * That is, an upload of the node's data - the actual content.
- * As opposed to the RCRD - filesystem bookkeeping stuff.
+ * That is, an upload of the node's data => the actual content.
+ * As opposed to the RCRD => treesystem bookkeeping stuff.
  *
  * @param nodeID
  *   The node you're interested in. (nodeID == ZDCNode.uuid)
@@ -593,7 +593,7 @@ typedef void (^UploadCompletionBlock)(BOOL success);
  * tells you whether or not: ZDCCloudOperation.putType == ZDCCloudOperationPutType_Node_Data
  *
  * In other words, is this the operation that's uploading the actual data for a node.
- * (As opposed to, say, the filesystem metadata.)
+ * (As opposed to, say, the treesystem metadata.)
  */
 @property (nonatomic, readonly) BOOL isDataUpload;
 

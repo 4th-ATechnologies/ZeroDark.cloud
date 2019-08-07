@@ -7,9 +7,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- * Facilitates access to the REST API of the ZeroDark.cloud server.
+ * Facilitates access to the REST API of the ZeroDark.cloud servers.
  */
-@interface ZDCWebManager : NSObject
+@interface ZDCRestManager : NSObject
 
 /**
  * API Gateway URLS have the following form:
@@ -253,26 +253,8 @@ NS_ASSUME_NONNULL_BEGIN
                                NSError *_Nullable error))completionBlock;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark S3
+#pragma mark Sync
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * Downloads the file into memory.
- * 
- * If canBackground is set to YES, then on iOS a download task will be used,
- * and the downloaded file will be automatically read into memory for the completionBlock.
- * 
- * The 'responseObject' will be the downloaded data (on sucess).
- */
-- (void)downloadDataAtPath:(NSString *)remotePath
-                  inBucket:(NSString *)bucket
-                    region:(AWSRegion)region
-                  withETag:(nullable NSString *)eTag
-                     range:(nullable NSValue *)range
-               requesterID:(NSString *)localUserID
-             canBackground:(BOOL)canBackground
-           completionQueue:(nullable dispatch_queue_t)completionQueue
-           completionBlock:(nullable void (^)(NSURLResponse *response, id _Nullable responseObject, NSError *_Nullable error))completion;
 
 /**
  * Multipart-complete proxy, facilitated by ZeroDark server.
@@ -317,16 +299,6 @@ NS_ASSUME_NONNULL_BEGIN
                                      region:(AWSRegion)region
                              forLocalUserID:(NSString *)localUserID
                                    withAuth:(ZDCLocalUserAuth *)auth;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark General Download
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-- (void)downloadFileFromURL:(NSURL *)sourceURL
-               andSaveToURL:(NSURL *)destinationURL
-                       eTag:(nullable NSString *)eTag
-            completionQueue:(nullable dispatch_queue_t)completionQueue
-            completionBlock:(void (^)(NSString *_Nullable eTag, NSError *_Nullable error))completionBlock;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Auth0

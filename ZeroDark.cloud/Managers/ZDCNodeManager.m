@@ -318,7 +318,7 @@ static ZDCNodeManager *sharedInstance = nil;
 	{
 		// Backup Plan (defensive programming)
 		//
-		// Filesystem View extension isn't ready yet.
+		// Treesystem View extension isn't ready yet.
 		// It must be still initializing / updating.
 		//
 		// Scan all nodes belonging to the user and look for a match (slow but functional).
@@ -449,7 +449,7 @@ static ZDCNodeManager *sharedInstance = nil;
 	
 	if ((treesystemViewTransaction = [transaction ext:Ext_View_Treesystem_Name]))
 	{
-		// Use Filesystem View for best performance.
+		// Use Treesystem View for best performance.
 		//
 		// This allows us to directly access only those nodes we're interested in.
 		
@@ -463,7 +463,7 @@ static ZDCNodeManager *sharedInstance = nil;
 	{
 		// Backup Plan (defensive programming)
 		//
-		// Filesystem View extension isn't ready yet.
+		// Treesystem View extension isn't ready yet.
 		// It must be still initializing / updating.
 		//
 		// Scan all nodes belonging to the user and look for a match (slow but functional).
@@ -624,7 +624,7 @@ static ZDCNodeManager *sharedInstance = nil;
 	{
 		// Use Treesystem View for best performance.
 		//
-		// The Ext_View_Filesystem already has the nodes sorted by name (for each parentID).
+		// The Ext_View_Treesystem already has the nodes sorted by name (for each parentID).
 		// Which means we can use a binary search algorithm to find it in O(log n).
 		//
 		// Where `n` = Number of ZDCNode's for which (due to pre-grouping):
@@ -667,7 +667,7 @@ static ZDCNodeManager *sharedInstance = nil;
 	{
 		// Backup Plan (defensive programming)
 		//
-		// Filesystem View extension isn't ready yet.
+		// Treesystem View extension isn't ready yet.
 		// It must be still initializing / updating.
 		//
 		// Scan all nodes belonging to the user and look for a match (slow but functional).
@@ -845,7 +845,7 @@ static ZDCNodeManager *sharedInstance = nil;
 	{
 		// Backup Plan (defensive programming)
 		//
-		// Filesystem View extension isn't ready yet.
+		// Treesystem View extension isn't ready yet.
 		// It must be still initializing / updating.
 		//
 		// Scan all nodes belonging to the user and look for a match (slow but functional).

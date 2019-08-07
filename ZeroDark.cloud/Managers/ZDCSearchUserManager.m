@@ -599,12 +599,12 @@ static const int ddLogLevel = DDLogLevelWarning;
         return;
     }
     
-  	[zdc.webManager searchUserMatch: queryString
-	                       provider: providers.count ? providers.firstObject : nil
-	                         zAppID: zdc.zAppID
-	                    requesterID: userID
-	                completionQueue: dispatch_get_main_queue()
-	                completionBlock:^(NSURLResponse *response, id responseObject, NSError *error)
+  	[zdc.restManager searchUserMatch: queryString
+	                        provider: providers.count ? providers.firstObject : nil
+	                          zAppID: zdc.zAppID
+	                     requesterID: userID
+	                 completionQueue: dispatch_get_main_queue()
+	                 completionBlock:^(NSURLResponse *response, id responseObject, NSError *error)
 	{
 		if (error != nil || responseObject == nil)
 		{

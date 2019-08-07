@@ -61,7 +61,7 @@ typedef NS_ENUM(NSUInteger, ZDCCloudOperationPutType) {
 	
 	/**
 	 * Represents a put of the "*.rcrd" file for a node in the treesystem.
-	 * The RCRD file contains only the filesystem metadata, which includes info such as:
+	 * The RCRD file contains only the treesystem metadata, which includes info such as:
 	 * - permissions
 	 * - filename (encrypted)
 	 * - cloudID (server-assigned uuid, used to track a node during moves)

@@ -289,16 +289,16 @@
 		#endif
 			
 			NSMutableURLRequest *request =
-				[zdc.webManager listProxyWithPaths: requestCloudPaths
-				                         appPrefix: rootAppPrefix
-				                            pullID: pullID
-				                    continuationID: continuation_id
-				                continuationOffset: continuation_offset
-			                    continuationToken: continuation_token
-				                          inBucket: bucket
-				                            region: region
-				                    forLocalUserID: localUserID
-				                          withAuth: auth];
+				[zdc.restManager listProxyWithPaths: requestCloudPaths
+				                          appPrefix: rootAppPrefix
+				                             pullID: pullID
+				                     continuationID: continuation_id
+				                 continuationOffset: continuation_offset
+			                     continuationToken: continuation_token
+				                           inBucket: bucket
+				                             region: region
+				                     forLocalUserID: localUserID
+				                           withAuth: auth];
 			
 			NSURLSessionDataTask *task =
 			  [session dataTaskWithRequest: request

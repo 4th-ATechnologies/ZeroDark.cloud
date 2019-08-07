@@ -22,6 +22,11 @@
 @synthesize url = url;
 @synthesize isDirectory = isDirectory;
 
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCFilesystemMonitor.html
+ */
 - (instancetype)initWithFileURL:(NSURL *)fileURL
 {
 	if ((self = [super init]))
@@ -33,6 +38,11 @@
 	return self;
 }
 
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCFilesystemMonitor.html
+ */
 - (instancetype)initWithDirectoryURL:(NSURL *)directoryURL
 {
 	if ((self = [super init]))
@@ -51,6 +61,11 @@
 	}
 }
 
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCFilesystemMonitor.html
+ */
 - (BOOL)monitorWithMask:(dispatch_source_vnode_flags_t)mask
                   queue:(dispatch_queue_t)queue
                   block:(void (^)(dispatch_source_vnode_flags_t mask))block
@@ -106,8 +121,10 @@
 }
 
 /**
- * Returns a mask with every possible event
-**/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCFilesystemMonitor.html
+ */
 + (dispatch_source_vnode_flags_t)vnode_flags_all
 {
 	dispatch_source_vnode_flags_t mask =
@@ -118,8 +135,10 @@
 }
 
 /**
- * Returns a mask with flags only for when the actual bytes change
-**/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCFilesystemMonitor.html
+ */
 + (dispatch_source_vnode_flags_t)vnode_flags_data_changed
 {
 	dispatch_source_vnode_flags_t mask =
@@ -129,8 +148,10 @@
 }
 
 /**
- * Utility method that returns a string listing the flags specified by the given mask;
-**/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCFilesystemMonitor.html
+ */
 + (NSString *)vnode_flags_description:(dispatch_source_vnode_flags_t)mask
 {
 	NSMutableArray *flags = [NSMutableArray arrayWithCapacity:8];

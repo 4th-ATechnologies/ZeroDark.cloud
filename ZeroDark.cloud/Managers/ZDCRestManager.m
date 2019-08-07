@@ -1,4 +1,4 @@
-#import "ZDCWebManagerPrivate.h"
+#import "ZDCRestManagerPrivate.h"
 
 #import "AWSCredentialsManager.h"
 #import "AWSPayload.h"
@@ -31,11 +31,11 @@
 
 #define CLAMP(min, num, max) (MAX(min, MIN(max, num)))
 
-#ifndef AWS_STAGE
+#if DEBUG && robbie_hanson && !defined(AWS_STAGE)
 #define AWS_STAGE @"dev"
 #endif
 
-@implementation ZDCWebManager {
+@implementation ZDCRestManager {
 @private
 	
 	__weak ZeroDarkCloud *zdc;
@@ -45,7 +45,6 @@
 	dispatch_queue_t billing_queue;
 	NSMutableDictionary *billing_history;
 }
-
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wimplicit-retain-self"
@@ -63,7 +62,7 @@
 		
 		asyncCompletionDispatch = [[ZDCAsyncCompletionDispatch alloc] init];
 		
-		billing_queue = dispatch_queue_create("ZDCWebManager", DISPATCH_QUEUE_SERIAL);
+		billing_queue = dispatch_queue_create("ZDCRestManager", DISPATCH_QUEUE_SERIAL);
 		billing_history = [[NSMutableDictionary alloc] initWithCapacity:1];
 	}
 	return self;
@@ -1602,136 +1601,8 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark S3
+#pragma mark Sync
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-- (void)downloadDataAtPath:(NSString *)inRemotePath
-                  inBucket:(NSString *)inBucket
-                    region:(AWSRegion)region
-                  withETag:(NSString *)inETag
-                     range:(NSValue *)range
-               requesterID:(NSString *)inLocalUserID
-             canBackground:(BOOL)canBackground
-           completionQueue:(nullable dispatch_queue_t)completionQueue
-           completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
-{
-	DDLogAutoTrace();
-	
-	if (!completionBlock) return;
-	
-	if (!completionQueue)
-		completionQueue = dispatch_get_main_queue();
-	
-	// Mutable string protection
-	NSString *remotePath  = [inRemotePath copy];
-	NSString *bucket      = [inBucket copy];
-	NSString *localUserID = [inLocalUserID copy];
-	NSString *eTag        = [inETag copy];
-	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
-	{
-		if (error)
-		{
-			if (completionBlock)
-			{
-				dispatch_async(completionQueue, ^{
-					completionBlock(nil, nil, error);
-				});
-			}
-			return;
-		}
-		
-		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
-	#if TARGET_OS_IPHONE
-		AFURLSessionManager *session = canBackground ? sessionInfo.backgroundSession : sessionInfo.foregroundSession;
-	#else
-		AFURLSessionManager *session = sessionInfo.session;
-	#endif
-		
-		NSURLComponents *urlComponents = nil;
-		NSMutableURLRequest *request =
-		  [S3Request getObject:remotePath inBucket:bucket region:region outUrlComponents:&urlComponents];
-		
-		if (eTag)
-			[request setValue:[NSString stringWithFormat:@"\"%@\"", eTag] forHTTPHeaderField:@"If-Match"];
-		
-		if (range)
-		{
-			NSRange byteRange = range.rangeValue;
-			if (byteRange.length > 0)
-			{
-				NSString *rangeString = [NSString stringWithFormat:@"bytes=%lu-%lu",
-				                          (unsigned long)(byteRange.location),
-				                          (unsigned long)(byteRange.location + byteRange.length - 1)];
-				
-				[request setValue:rangeString forHTTPHeaderField:@"Range"];
-			}
-		}
-		
-		[AWSSignature signRequest:request
-		               withRegion:region
-		                  service:AWSService_S3
-		              accessKeyID:auth.aws_accessKeyID
-		                   secret:auth.aws_secret
-		                  session:auth.aws_session];
-		
-		void (^completionBlockWrapper)(NSURLResponse *response, id responseObject, NSError *error);
-		completionBlockWrapper = ^(NSURLResponse *response, id responseObject, NSError *error){
-			
-			if (!completionBlock) return;
-			
-			if (completionQueue == sessionInfo.queue)
-			{
-				completionBlock(response, responseObject, error);
-			}
-			else
-			{
-				dispatch_async(completionQueue, ^{ @autoreleasepool{
-					completionBlock(response, responseObject, error);
-				}});
-			}
-		};
-		
-		NSURLSessionTask *task = nil;
-		
-	#if TARGET_OS_IPHONE
-		if (canBackground)
-		{
-			task = [session downloadTaskWithRequest:request
-													 progress:nil
-												 destination:^NSURL *(NSURL *targetPath, NSURLResponse *response)
-			{
-				return [ZDCDirectoryManager generateTempURL];
-													 
-			} completionHandler:^(NSURLResponse *response, NSURL *downloadedFileURL, NSError *error) {
-				
-				id responseObject = nil;
-				if (downloadedFileURL)
-				{
-					responseObject = [NSData dataWithContentsOfURL:downloadedFileURL];
-					[[NSFileManager defaultManager] removeItemAtURL:downloadedFileURL error:nil];
-				}
-				
-				completionBlockWrapper(response, responseObject, error);
-			}];
-		}
-		else
-	#endif
-		{
-			task = [session dataTaskWithRequest: request
-			                     uploadProgress: nil
-			                   downloadProgress: nil
-			                  completionHandler:^(NSURLResponse *response, id responseObject, NSError *error)
-			{
-				completionBlockWrapper(response, responseObject, error);
-			}];
-		}
-		
-		[task resume];
-	}];
-}
 
 /**
  * See header file for description.
@@ -1875,69 +1746,6 @@
 	                  session:auth.aws_session];
 	
 	return request;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark General download
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-- (void)downloadFileFromURL:(NSURL *)sourceURL
-               andSaveToURL:(NSURL *)destinationURL
-                       eTag:(NSString *)eTag
-            completionQueue:(dispatch_queue_t)completionQueue
-            completionBlock:(void (^)(NSString *eTag, NSError *error))completionBlock
-{
-	void (^InvokeCompletionBlock)(NSString*, NSError*) =
-	^(NSString *eTag, NSError *error)
-	{
-		if (completionBlock)
-		{
-			dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
-				completionBlock(eTag, error);
-			}});
-		}
-	};
-	
-	NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
-	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
-	
-	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:sourceURL];
-	[request setHTTPMethod:@"GET"];
-	
-	if (eTag) {
-		[request setValue:[NSString stringWithFormat:@"\"%@\"", eTag] forHTTPHeaderField:@"If-None-Match"];
-	}
-	
-	NSURLSessionDownloadTask* task =
-	  [session downloadTaskWithRequest:request
-	                 completionHandler:^(NSURL *location, NSURLResponse *response, NSError *error)
-	{
-		if(error)
-		{
-			InvokeCompletionBlock(nil,error);
-		}
-		else
-		{
-			NSInteger statusCode = response.httpStatusCode;
-			if (statusCode != 200)
-			{
-				InvokeCompletionBlock(nil, [self errorWithStatusCode:statusCode description:@"Invalid response from server"]);
-			}
-			else if(!location)
-			{
-				InvokeCompletionBlock(nil, [self errorWithStatusCode:204 description:@"No data from server"]);
-			}
-			else
-			{
-				[NSFileManager.defaultManager removeItemAtURL:destinationURL error:NULL];
-				[NSFileManager.defaultManager moveItemAtURL:location toURL:destinationURL error:&error];
-				
-				InvokeCompletionBlock(!error?response.eTag:nil, error);
-			}
-		}
-	}];
-	
-	[task resume];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4174,25 +3982,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Errors
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-- (NSError *)errorWithStatusCode:(NSInteger)statusCode responseData:(id)responseData
-{
-	NSDictionary *details = nil;
-	NSString *responseString = nil;
-	
-	if ([responseData isKindOfClass:[NSData class]])
-	{
-		responseString = [[NSString alloc] initWithData:(NSData *)responseData encoding:NSUTF8StringEncoding];
-	}
-	
-	if (responseString || responseData)
-	{
-		details = @{ NSUnderlyingErrorKey: (responseString ?: responseData) };
-	}
-	
-	NSString *domain = [NSError domainForClass:[self class]];
-	return [NSError errorWithDomain:domain code:statusCode userInfo:details];
-}
 
 - (NSError *)errorWithStatusCode:(NSInteger)statusCode description:(NSString *)description
 {

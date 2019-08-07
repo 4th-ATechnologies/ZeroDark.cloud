@@ -16,12 +16,14 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- * Various shared utilities between PullManager & PushManager.
- * This class is private, and is designed to be used ONLY by ZDCPullManager & ZDCPushManager.
+ * Various shared utilities for networking.
+ * Primarily used by the PullManager & PushManager.
 **/
 @interface ZDCNetworkTools : NSObject
 
 - (instancetype)initWithOwner:(ZeroDarkCloud *)owner;
+
+#pragma mark PushManager & PullManager
 
 - (YapDatabaseConnection *)rwConnection;
 - (YapDatabaseConnection *)decryptConnection;
@@ -35,6 +37,35 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)handleAuthFailureForUser:(NSString *)userID
                        withError:(NSError *)error
                        pullState:(nullable ZDCPullState *)pullState;
+
+#pragma mark General
+
+/**
+ * Downloads the file into memory.
+ *
+ * If canBackground is set to YES, then on iOS a download task will be used,
+ * and the downloaded file will be automatically read into memory for the completionBlock.
+ *
+ * The 'responseObject' will be the downloaded data (on sucess).
+ */
+- (void)downloadDataAtPath:(NSString *)remotePath
+                  inBucket:(NSString *)bucket
+                    region:(AWSRegion)region
+                  withETag:(nullable NSString *)eTag
+                     range:(nullable NSValue *)range
+               requesterID:(NSString *)localUserID
+             canBackground:(BOOL)canBackground
+           completionQueue:(nullable dispatch_queue_t)completionQueue
+           completionBlock:(nullable void (^)(NSURLResponse *response, id _Nullable responseObject, NSError *_Nullable error))completion;
+
+/**
+ * Downloads a generic URL using an ephemeral session.
+ */
+- (void)downloadFileFromURL:(NSURL *)sourceURL
+               andSaveToURL:(NSURL *)destinationURL
+                       eTag:(nullable NSString *)eTag
+            completionQueue:(nullable dispatch_queue_t)completionQueue
+            completionBlock:(void (^)(NSString *_Nullable eTag, NSError *_Nullable error))completionBlock;
 
 @end
 

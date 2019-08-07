@@ -387,10 +387,10 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
  *   The node that was moved and/or renamed.
  *
  * @param oldPath
- *   The filesystem path of the node before it was moved.
+ *   The treesystem path of the node before it was moved.
  *
  * @param newPath
- *   The filesystem path of the node after it was moved.
+ *   The treesystem path of the node after it was moved.
  *
  * @param transaction
  *   An active read-write transaction.
@@ -416,7 +416,7 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
  *   The node that was deleted.
  *
  * @param path
- *   The filesystem path of the node that was deleted.
+ *   The treesystem path of the node that was deleted.
  *
  * @param timestamp
  *   The date & time the delete was performed by the server.
@@ -511,7 +511,7 @@ NS_SWIFT_NAME(didDiscoverConflict(_:forNode:atPath:transaction:));
  *   The node for which the meta download was requested.
  *
  * @param path
- *   The filesystem path of the node.
+ *   The treesystem path of the node.
  *
  * @param components
  *   The meta components that were requested.
@@ -552,7 +552,7 @@ NS_SWIFT_NAME(didDiscoverConflict(_:forNode:atPath:transaction:));
  *   The node for which the data download was requested.
  *
  * @param path
- *   The filesystem path of the node.
+ *   The treesystem path of the node.
  *
  * @param cryptoFile
  *   The cryptoFile provides everything you need to read an encrypted file.
@@ -565,7 +565,7 @@ NS_SWIFT_NAME(didDiscoverConflict(_:forNode:atPath:transaction:));
 
 /**
  * The PullManager automatically downloads the tree hierarchy, sans data.
- * That is, it downloads the node filesystem metadata (filename & permissions),
+ * That is, it downloads the node treesystem metadata (filename & permissions),
  * but it doesn't download the node data (e.g. serialized objects, files, etc).
  *
  * This is typically very fast, because the tree hierarchy information is small,

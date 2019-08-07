@@ -13,7 +13,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- * The ZeroDark.cloud framework provides a tree-based "filesystem" in the cloud.
+ * The ZeroDark.cloud framework provides a treesystem in the cloud.
  *
  * It's important to understand: Treesystem != Filesystem
  *

@@ -268,7 +268,7 @@ done:
 	// - dcauqok66griorw7m7487itp3rtrceem.rcrd
 	// - dcauqok66griorw7m7487itp3rtrceem.data
 	//
-	// The RCRD file is JSON, and stores ONLY the filesystem metadata.
+	// The RCRD file is JSON, and stores ONLY the treesystem metadata.
 	// That is, the minimum amount of information the server needs to correctly process the node.
 	//
 	// Here's a real world example:

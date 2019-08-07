@@ -7,9 +7,10 @@
  * API Reference : https://4th-atechnologies.github.io/ZeroDark.cloud/
  **/
 
-#import "ZDCPasswordStrengthManagerPrivate.h"
-#import "ZDCLogging.h"
+#import "ZDCPasswordStrengthCalculator.h"
 
+#import "ZDCLogging.h"
+#import "ZeroDarkCloud.h"
 
 #import "BBEntropyCenter.h"
 #import "BBDictionaryMatcher.h"
@@ -31,23 +32,20 @@ static const double SECOND_PER_GUESS = SINGLE_GUESS / ATTACKER_COUNT;
 
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
-#if DEBUG && robbie_hanson
-static const int ddLogLevel = DDLogLevelInfo;
-#elif DEBUG
-static const int ddLogLevel = DDLogLevelWarning;
+#if DEBUG
+  static const int ddLogLevel = DDLogLevelWarning;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+  static const int ddLogLevel = DDLogLevelWarning;
 #endif
 #pragma unused(ddLogLevel)
 
-
 @interface ZDCPasswordStrength ()
 
-@property (nonatomic) double entropy;
-@property (nonatomic) double crackTime;
-@property (strong, nonatomic) NSString *password;
-@property (strong, nonatomic) NSArray *matchSequence;
-@property (strong, nonatomic) NSString *crackTimeDisplay;
+@property (nonatomic, assign, readwrite) double entropy;
+@property (nonatomic, assign, readwrite) double crackTime;
+@property (nonatomic, copy, readwrite) NSString *password;
+@property (nonatomic, copy, readwrite) NSArray *matchSequence;
+@property (nonatomic, copy, readwrite) NSString *crackTimeDisplay;
 
 @end
 
@@ -209,51 +207,55 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 @end
 
-@implementation ZDCPasswordStrengthManager
-{
-	__weak ZeroDarkCloud *zdc;
-	
-	NSArray *dictionaryMatchers;
-	NSDictionary *adjacencyGraphs;
-}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (instancetype)init
-{
-	return nil; // To access this class use: ZeroDarkCloud.localUserManager
-}
+@implementation ZDCPasswordStrengthCalculator
 
-- (instancetype)initWithOwner:(ZeroDarkCloud *)inOwner
+static NSArray *dictionaryMatchers = nil;
+static NSDictionary *adjacencyGraphs = nil;
+
++ (void)loadDictionaryMatchers
 {
-	if ((self = [super init]))
-	{
-		zdc = inOwner;
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
 		
-		[self loadDictionaryMatchers];
-		[self loadAdjacencyGraphs];
+		NSMutableArray *matchers = [NSMutableArray array];
+		
+		NSString *jsonPath = [[ZeroDarkCloud frameworkBundle] pathForResource:@"frequency_lists" ofType:@"json"];
+		NSData *jsonData = [NSData dataWithContentsOfFile:jsonPath];
+		NSDictionary *dicts = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:jsonData options:0 error:nil];
+		
+		for (NSString *dictName in dicts)
+		{
+			NSArray *list = dicts[dictName];
+			
+			BBDictionaryMatcher *matcher = [[BBDictionaryMatcher alloc] initWithDictionaryName:dictName andList:list];
+			if (matcher) {
+				[matchers addObject:matcher];
+			}
+		}
+		
+		dictionaryMatchers = matchers;
+	});
+}
+
++ (void)loadAdjacencyGraphs
+{
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		
+		NSString *jsonPath = [[ZeroDarkCloud frameworkBundle] pathForResource:@"adjacency_graphs" ofType:@"json"];
+		NSData *jsonData = [NSData dataWithContentsOfFile:jsonPath];
+		adjacencyGraphs = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:jsonData options:0 error:nil];
+		
 		[BBEntropyCenter initializeWithAdjacencyGraphs: adjacencyGraphs];
-		
-	}
-	return self;
+	});
 }
 
-- (void)loadDictionaryMatchers {
-	NSMutableArray *matchers = [NSMutableArray array];
-	NSString *jsonPath = [[ZeroDarkCloud frameworkBundle] pathForResource:@"frequency_lists" ofType:@"json"];
-	NSData *jsonData = [NSData dataWithContentsOfFile:jsonPath];
-	NSDictionary *dicts = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:jsonData options:0 error:nil];
-	for (NSString *dictName in dicts) {
-		[matchers addObject:[[BBDictionaryMatcher alloc] initWithDictionaryName:dictName andList:[dicts objectForKey:dictName]]];
-	}
-	 dictionaryMatchers = matchers;
-}
-
-- (void)loadAdjacencyGraphs {
-	NSString *jsonPath = [[ZeroDarkCloud frameworkBundle] pathForResource:@"adjacency_graphs" ofType:@"json"];
-	NSData *jsonData = [NSData dataWithContentsOfFile:jsonPath];
-	adjacencyGraphs = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:jsonData options:0 error:nil];
-}
-
-- (NSArray *)match:(NSString *)password {
++ (NSArray *)match:(NSString *)password
+{
 	NSMutableArray *result = [NSMutableArray array];
 	
 	for (BBDictionaryMatcher *matcher in dictionaryMatchers) {
@@ -281,16 +283,18 @@ static const int ddLogLevel = DDLogLevelWarning;
 	return result;
 }
 
-
--(ZDCPasswordStrength*)strengthForPassword:(NSString*)password
++ (ZDCPasswordStrength*)strengthForPassword:(NSString*)password
 {
-	ZDCPasswordStrength* pws = [[ZDCPasswordStrength alloc] init];
-
+	[self loadDictionaryMatchers];
+	[self loadAdjacencyGraphs];
+	
+	ZDCPasswordStrength *pws = [[ZDCPasswordStrength alloc] init];
 	pws.password = password;
+	
 	NSArray *matches = [self match:password];
 	[pws scoreMinimumEntropyWithMatches:matches];
-	return pws;
 	
+	return pws;
 }
 
 @end

@@ -20,8 +20,7 @@
 #import "ZDCSyncManagerPrivate.h"
 #import "ZDCTask_UnregisterPushToken.h"
 #import "ZDCUIToolsPrivate.h"
-#import "ZDCWebManagerPrivate.h"
-#import "ZDCPasswordStrengthManagerPrivate.h"
+#import "ZDCRestManagerPrivate.h"
 
 // Categories
 #import "NSDate+ZeroDark.h"
@@ -70,10 +69,9 @@
 @property (nonatomic, readwrite, nullable) ZDCSharesManager  		 * sharesManager;
 @property (nonatomic, readwrite, nullable) ZDCSyncManager          * syncManager;
 @property (nonatomic, readwrite, nullable) ZDCRemoteUserManager    * remoteUserManager;
+@property (nonatomic, readwrite, nullable) ZDCRestManager          * restManager;
 @property (nonatomic, readwrite, nullable) ZDCUserAccessKeyManager * userAccessKeyManager;
 @property (nonatomic, readwrite, nullable) ZDCUITools        	    * uiTools;
-@property (nonatomic, readwrite, nullable) ZDCWebManager           * webManager;
-@property (nonatomic, readwrite, nullable) ZDCPasswordStrengthManager           * passwordStrength;
 
 @property (atomic, readwrite, strong, nullable) NSString *pushToken;
 
@@ -115,7 +113,6 @@
 @synthesize auth0ProviderManager;
 @synthesize searchManager;
 @synthesize sharesManager;
-@synthesize passwordStrength;
 
 @synthesize pushToken = _mustUseAtomicProperty_pushToken;
 
@@ -356,7 +353,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 		self.localUserManager = [[ZDCLocalUserManager alloc] initWithOwner:self];
 		self.sessionManager = [[ZDCSessionManager alloc] initWithOwner:self];
 		self.remoteUserManager = [[ZDCRemoteUserManager alloc] initWithOwner:self];
-		self.webManager  = [[ZDCWebManager alloc] initWithOwner:self];
+		self.restManager  = [[ZDCRestManager alloc] initWithOwner:self];
 		
 		self.syncManager = [[ZDCSyncManager alloc] initWithOwner:self];
 		self.pullManager = [[ZDCPullManager alloc] initWithOwner:self]; // must come after networkTools
@@ -367,7 +364,6 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 		self.searchManager = [[ZDCSearchUserManager alloc] initWithOwner:self];
 		self.blockchainManager = [[ZDCBlockchainManager alloc] initWithOwner:self];
  		self.sharesManager = [[ZDCSharesManager alloc] initWithOwner:self];
-		self.passwordStrength = [[ZDCPasswordStrengthManager alloc] initWithOwner:self];
 
 	done:
 

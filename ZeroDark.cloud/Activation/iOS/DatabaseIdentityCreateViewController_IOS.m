@@ -8,23 +8,21 @@
 **/
 
 #import "DatabaseIdentityCreateViewController_IOS.h"
-#import "ZeroDarkCloud.h"
-#import "ZeroDarkCloudPrivate.h"
-#import "ZDCLogging.h"
 
 #import "Auth0APIManager.h"
-#import "NSError+Auth0API.h"
-
 #import "Auth0ProviderManager.h"
 #import "Auth0Utilities.h"
-#import "UISecureTextField.h"
-#import "UIButton+Activation.h"
-
 #import "PasswordStrengthUIView.h"
-#import "UISecureTextField.h"
 #import "SCLAlertView.h"
-#import "UIColor+Crayola.h"
+#import "UISecureTextField.h"
+#import "ZDCLogging.h"
+#import "ZDCPasswordStrengthCalculator.h"
+#import "ZeroDarkCloudPrivate.h"
 
+// Categories
+#import "NSError+Auth0API.h"
+#import "UIButton+Activation.h"
+#import "UIColor+Crayola.h"
 
 // Libraries
 #import <AudioToolbox/AudioToolbox.h>
@@ -33,9 +31,9 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG
-static const int ddLogLevel = DDLogLevelWarning;
+  static const int ddLogLevel = DDLogLevelWarning;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+  static const int ddLogLevel = DDLogLevelWarning;
 #endif
 #pragma unused(ddLogLevel)
 
@@ -59,7 +57,6 @@ static const int ddLogLevel = DDLogLevelWarning;
 	IBOutlet __weak UISecureTextField       *_txtVrfPwdField;
 	IBOutlet __weak UIImageView             *_imgVrfPwdOK;
 
-	ZDCPasswordStrengthManager  		*pwdStrengthMgr;
  	ZDCPasswordStrength					*pwdStrength;
 	OSImage                         *checkImage;
 	OSImage                         *failImage;
@@ -75,8 +72,6 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (void)viewDidLoad {
 	[super viewDidLoad];
-
-	pwdStrengthMgr = self.accountSetupVC.owner.passwordStrength;
 	
 	isInAddDBView = [self.restorationIdentifier isEqualToString:@"DatabaseIdentityCreateViewController_ADDIOS"];
 
@@ -267,7 +262,7 @@ replacementString:(NSString *)string
 		_strengthField.hidden = proposedString.length == 0;
 		_lblStrength.hidden = proposedString.length == 0;
 
-		pwdStrength = [pwdStrengthMgr strengthForPassword:proposedString];
+		pwdStrength = [ZDCPasswordStrengthCalculator strengthForPassword:proposedString];
 		_strengthField.score = pwdStrength.score;
 		_lblStrength.text = pwdStrength.scoreLabel;
 

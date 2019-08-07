@@ -345,7 +345,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	__weak typeof(self) weakSelf = self;
 	
 	// in case this user has never registered this app.
-	[owner.webManager setupAccountForLocalUser:self.user
+	[owner.restManager setupAccountForLocalUser:self.user
 												 withAuth:self.auth
 												  zAppIDs:@[owner.zAppID]
 										completionQueue:nil
@@ -1542,7 +1542,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	
 	user = [self localUserForUserID:localUserID];
 	
-	[owner.webManager linkAuth0ID: profile.userId
+	[owner.restManager linkAuth0ID: profile.userId
 								 forUser: user
 					  completionQueue: nil
 					  completionBlock:^(NSURLResponse *urlResponse, id linkResoponse, NSError *error)
@@ -1668,7 +1668,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 			 
 		 }
 		 
-		 [strongSelf->owner.webManager unlinkAuth0ID: auth0ID
+		 [strongSelf->owner.restManager unlinkAuth0ID: auth0ID
 										 forUser: self->user
 							  completionQueue: dispatch_get_main_queue()
 							  completionBlock:^(NSURLResponse *urlResponse, id responseObject, NSError *error)

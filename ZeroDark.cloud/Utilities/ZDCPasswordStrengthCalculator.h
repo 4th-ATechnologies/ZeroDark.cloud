@@ -22,9 +22,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface ZDCPasswordStrengthManager : NSObject
+@interface ZDCPasswordStrengthCalculator : NSObject
 
--(ZDCPasswordStrength*)strengthForPassword:(NSString*)password;
++ (ZDCPasswordStrength *)strengthForPassword:(NSString *)password;
 
 @end
 

@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
  * When you want upload a new node to the cloud, a ZDCNode instance will need to be created.
  * This can be done in several different ways.
  *
- * - You can link your own database object to a filesystem path,
+ * - You can link your own database object to a treesystem path,
  *   which will implicitly create the ZDCNode for you.
  * - You can link your own database object to a ZDCNode that you manually create.
  * - Or you can manually create & manage ZDCNode objects directly.
@@ -134,7 +134,7 @@ NS_ASSUME_NONNULL_BEGIN
  * Every node has a server-assigned uuid, called the cloudID.
  * This value is immutable - once set by the server, it cannot be changed.
  *
- * The sync system uses the cloudID to detect when a node has been renamed or moved within the filesystem.
+ * The sync system uses the cloudID to detect when a node has been renamed or moved within the treesystem.
  * Since the server assigns this value, it is unknown until either:
  * - we've successfully uploaded the node's RCRD to the server at least once
  * - we've downloaded the node's RCRD from the server at least once
@@ -166,7 +166,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * The date in which the RCRD file was last modified on the server.
- * This relates to the last time the node's "filesystem" information was changed, such as permissions.
+ * This relates to the last time the node's treesystem information was changed, such as permissions.
  */
 @property (nonatomic, readonly, nullable) NSDate *lastModified_rcrd;
 

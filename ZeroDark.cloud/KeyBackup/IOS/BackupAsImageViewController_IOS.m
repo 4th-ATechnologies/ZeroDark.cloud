@@ -9,28 +9,26 @@
  **/
 
 #import "BackupAsImageViewController_IOS.h"
-#import <ZeroDarkCloud/ZeroDarkCloud.h>
-#import "ZeroDarkCloudPrivate.h"
-#import "ZDCConstantsPrivate.h"
-#import "UISecureTextField.h"
+
 #import "PasswordStrengthUIView.h"
 #import "UIImageViewPasteable.h"
-
+#import "UISecureTextField.h"
 #import "ZDCAccessCode.h"
+#import "ZDCConstantsPrivate.h"
+#import "ZDCLogging.h"
+#import "ZDCPasswordStrengthCalculator.h"
+#import "ZeroDarkCloudPrivate.h"
 
 // Categories
 #import "OSImage+ZeroDark.h"
 #import "OSImage+QRCode.h"
 #import "NSString+ZeroDark.h"
 
-#import "ZDCLogging.h"
-
-
 // Log levels: off, error, warn, info, verbose
 #if DEBUG
-static const int ddLogLevel = DDLogLevelVerbose;
+  static const int ddLogLevel = DDLogLevelVerbose;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+  static const int ddLogLevel = DDLogLevelWarning;
 #endif
 #pragma unused(ddLogLevel)
 
@@ -54,7 +52,6 @@ static const int ddLogLevel = DDLogLevelWarning;
 	IBOutlet __weak UIBarButtonItem  	*_bbnNext;
 	IBOutlet __weak UIBarButtonItem  	*_bbnAction;
 
-	ZDCPasswordStrengthManager  		*pwdStrengthMgr;
 	ZDCPasswordStrength					*pwdStrength;
 
 	UISwipeGestureRecognizer 	    *swipeLeft;
@@ -76,8 +73,6 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (void)viewDidLoad {
 	[super viewDidLoad];
-
-	pwdStrengthMgr = self.keyBackupVC.owner.passwordStrength;
 
 	_strengthField.hidden = YES;
 	_strengthField.showZeroScore = YES;
@@ -312,7 +307,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 	_strengthField.hidden = string.length == 0;
 	_lblStrength.hidden = string.length == 0;
 
-	pwdStrength = [pwdStrengthMgr strengthForPassword:string];
+	pwdStrength = [ZDCPasswordStrengthCalculator strengthForPassword:string];
 	_strengthField.score = pwdStrength.score;
 	_lblStrength.text = pwdStrength.scoreLabel;
 }

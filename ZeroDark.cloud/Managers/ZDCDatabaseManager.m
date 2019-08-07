@@ -1321,14 +1321,14 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	
 	YapActionItemBlock block = ^(NSString *collection, NSString *key, ZDCLocalUser *localUser, id metadata){
 		
-		ZDCWebManager *webManager = nil;
+		ZDCRestManager *restManager = nil;
 		
 		{ // Scoping: don't retain strongSelf accidentally within network completion callback
 			
 			__strong typeof(self) strongSelf = weakSelf;
 			if (strongSelf == nil) return;
 			
-			webManager = strongSelf->zdc.webManager;
+			restManager = strongSelf->zdc.restManager;
 		}
 		
 		NSString *localUserID = key;
@@ -1336,9 +1336,9 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		
 		DDLogBlue(@"Registering push token for user: %@, token :%@", localUserID, pushToken);
 		
-		[webManager registerPushTokenForLocalUser: localUser
-		                          completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-		                          completionBlock:^(NSURLResponse *urlResponse, id responseObject, NSError *error)
+		[restManager registerPushTokenForLocalUser: localUser
+		                           completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+		                           completionBlock:^(NSURLResponse *urlResponse, id responseObject, NSError *error)
 		{
 			NSInteger statusCode = [urlResponse httpStatusCode];
 	
@@ -1382,47 +1382,46 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	
 	YapActionItemBlock block = ^(NSString *collection, NSString *key, ZDCLocalUser *localUser, id metadata){
 		
-		ZDCWebManager *webManager = nil;
+		ZDCRestManager *restManager = nil;
 		
 		{ // Scoping: don't retain strongSelf accidentally within network completion callback
 			
 			__strong typeof(self) strongSelf = weakSelf;
 			if (strongSelf == nil) return;
 			
-			webManager = strongSelf->zdc.webManager;
+			restManager = strongSelf->zdc.restManager;
 		}
 		
 		NSString *localUserID = key;
 		
-		[webManager fetchUserExists: localUserID
-		            completionQueue: dispatch_get_global_queue(QOS_CLASS_UTILITY, 0)
-		            completionBlock:^(BOOL exists, NSError *error)
+		[restManager fetchUserExists: localUserID
+		             completionQueue: dispatch_get_global_queue(QOS_CLASS_UTILITY, 0)
+		             completionBlock:^(BOOL exists, NSError *error)
 		{
-			if (!error)
-			{
-				__strong typeof(self) strongSelf = weakSelf;
-				if (strongSelf == nil) return;
-				
-				YapDatabaseConnection *rwConnection = strongSelf->rwDatabaseConnection;
-				[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
-	
-					ZDCLocalUser *updatedUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
-					updatedUser = [updatedUser copy];
-	
-					updatedUser.needsCheckAccountDeleted = NO;
-	
-					if (!exists)
-					{
-						updatedUser.accountDeleted = YES;
-					}
-					
-					[transaction setObject:updatedUser forKey:updatedUser.uuid inCollection:kZDCCollection_Users];
-				}];
-			}
-			else
+			if (error)
 			{
 				// YapActionManager will automatically try again in the future.
+				return;
 			}
+			
+			__strong typeof(self) strongSelf = weakSelf;
+			if (strongSelf == nil) return;
+			
+			YapDatabaseConnection *rwConnection = strongSelf->rwDatabaseConnection;
+			[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+				
+				ZDCLocalUser *updatedUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
+				updatedUser = [updatedUser copy];
+				
+				updatedUser.needsCheckAccountDeleted = NO;
+				
+				if (!exists)
+				{
+					updatedUser.accountDeleted = YES;
+				}
+				
+				[transaction setObject:updatedUser forKey:updatedUser.uuid inCollection:kZDCCollection_Users];
+			}];
 		}];
 	};
 	

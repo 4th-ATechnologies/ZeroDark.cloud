@@ -6,7 +6,6 @@
 #import "ZDCConstantsPrivate.h"
 #import "ZDCDirectoryManager.h"
 #import "ZDCLogging.h"
-#import "ZDCWebManager.h"
 
 // Categories
 #import "NSData+S4.h"
@@ -392,8 +391,8 @@ done:
 	}
 	else
 	{
-		[zdc.webManager fetchConfigWithCompletionQueue: dispatch_get_main_queue()
-		                               completionBlock:^(NSDictionary * _Nullable config, NSError * _Nullable error)
+		[zdc.restManager fetchConfigWithCompletionQueue: dispatch_get_main_queue()
+		                                completionBlock:^(NSDictionary * _Nullable config, NSError * _Nullable error)
 		{
 			if (error)
 			{
@@ -644,9 +643,9 @@ done:
         }
     };
 
-	[zdc.webManager fetchConfigWithCompletionQueue:dispatch_get_main_queue()
-								 completionBlock:^(NSDictionary * _Nullable config, NSError * _Nullable error)
-	 {
+	[zdc.restManager fetchConfigWithCompletionQueue: dispatch_get_main_queue()
+	                                completionBlock:^(NSDictionary * _Nullable config, NSError * _Nullable error)
+	{
 		 if(!error)
 		 {
 			 NSArray<NSDictionary *> *availableProviders = [config objectForKey:kSupportedConfigurations_Key_Providers];
@@ -779,35 +778,35 @@ done:
 
     pendingCount = missingFiles.count;
 
-    for(NSString* missingFile in missingFiles)
-    {
-        NSURL* sourceURL =  [smiWebURL URLByAppendingPathComponent:missingFile];
-        NSURL* destURL =     [smiBase URLByAppendingPathComponent:missingFile];
+	for (NSString *missingFile in missingFiles)
+	{
+		NSURL *sourceURL = [smiWebURL URLByAppendingPathComponent:missingFile];
+		NSURL *destURL   = [smiBase URLByAppendingPathComponent:missingFile];
+		
+		[zdc.networkTools downloadFileFromURL: sourceURL
+		                         andSaveToURL: destURL
+		                                eTag: nil
+		                     completionQueue: dispatch_get_main_queue()
+		                     completionBlock:^(NSString *eTag, NSError *downloadError)
+		{
+			if (!downloadError && eTag)
+			{
+				dispatch_sync(dictQueue, ^{
+				#pragma clang diagnostic push
+				#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+					
+					[eTagDict setObject:eTag forKey:missingFile];
+					
+				#pragma clang diagnostic pop
+				});
+			}
+			
+			if (downloadError && !error)
+				error = downloadError;
 
-        [zdc.webManager downloadFileFromURL:sourceURL
-                             andSaveToURL:destURL
-                                     eTag:NULL
-                          completionQueue:dispatch_get_main_queue()
-                          completionBlock:^(NSString *eTag, NSError *downloadError)
-         {
-             if(!downloadError && eTag)
-             {
-                 dispatch_sync(dictQueue, ^{
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-                     [eTagDict setObject:eTag forKey:missingFile];
-#pragma clang diagnostic pop
-                 });
-             }
-
-             if(downloadError && !error)
-                 error = downloadError;
-
-             downloadCompleteBlock();
-         }];
-
-    }
-
+			downloadCompleteBlock();
+		}];
+	}
 }
 
 

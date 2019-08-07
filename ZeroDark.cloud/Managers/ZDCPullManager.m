@@ -24,8 +24,8 @@
 #import "ZDCPullStateManager.h"
 #import "ZDCPushManagerPrivate.h"
 #import "ZDCProxyList.h"
+#import "ZDCRestManager.h"
 #import "ZDCSyncManagerPrivate.h"
-#import "ZDCWebManager.h"
 #import "ZeroDarkCloudPrivate.h"
 
 // Categories
@@ -43,6 +43,9 @@
 
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
+#ifndef robbie_hanson
+#define robbie_hanson 1
+#endif
 #if DEBUG && robbie_hanson
   static const int ddLogLevel = DDLogLevelVerbose | DDLogFlagTrace;
 #elif DEBUG
@@ -194,6 +197,16 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 - (YapDatabaseConnection *)decryptConnection
 {
 	return zdc.networkTools.decryptConnection;
+}
+
+- (ZDCCloudTransaction *)cloudTransactionForPullState:(ZDCPullState *)pullState
+                                          transaction:(YapDatabaseReadTransaction *)transaction
+{
+	NSString *const extName =
+	  [zdc.databaseManager cloudExtNameForUser: pullState.localUserID
+	                                       app: pullState.zAppID];
+	
+	return (ZDCCloudTransaction *)[transaction ext:extName];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -961,7 +974,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			
 			NSString *path = [NSString stringWithFormat:@"/pull/%@", changeToken];
 			
-			NSURLComponents *urlComponents = [zdc.webManager apiGatewayForRegion:region stage:stage path:path];
+			NSURLComponents *urlComponents = [zdc.restManager apiGatewayForRegion:region stage:stage path:path];
 			
 			NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 			request.HTTPMethod = @"GET";
@@ -1145,7 +1158,12 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		
 		if (result.pullResult != ZDCPullResult_Success)
 		{
-			if (result.httpStatusCode == 404)
+			// One would think AWS would return a 404 for files that no longer exist.
+			// But one would be wrong !
+			//
+			// If the keyPath doesn't exist in the bucket, then S3 returns a 403 !
+			//
+			if (result.httpStatusCode == 404 || result.httpStatusCode == 403)
 			{
 				[self fallbackToFullPullWithPullState: pullState
 				                      finalCompletion: finalCompletionBlock];
@@ -1252,7 +1270,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			//
 			// We know about the node, so we just need to determine if it's changed.
 			
-			if (isRcrd) // RCRD changed (filesystem metadata such as: name, permissions, etc)
+			if (isRcrd) // RCRD changed (treesystem metadata such as: name, permissions, etc)
 			{
 				if (eTag && [node.eTag_rcrd isEqualToString:eTag])
 				{
@@ -1439,7 +1457,12 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			
 			if (result.pullResult != ZDCPullResult_Success)
 			{
-				if (result.httpStatusCode == 404)
+				// One would think AWS would return a 404 for files that no longer exist.
+				// But one would be wrong !
+				//
+				// If the keyPath doesn't exist in the bucket, then S3 returns a 403 !
+				//
+				if (result.httpStatusCode == 404 || result.httpStatusCode == 403)
 				{
 					[self fallbackToFullPullWithPullState: pullState
 					                      finalCompletion: finalCompletionBlock];
@@ -1750,7 +1773,12 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		
 		if (result.pullResult != ZDCPullResult_Success)
 		{
-			if (result.httpStatusCode == 404)
+			// One would think AWS would return a 404 for files that no longer exist.
+			// But one would be wrong !
+			//
+			// If the keyPath doesn't exist in the bucket, then S3 returns a 403 !
+			//
+			if (result.httpStatusCode == 404 || result.httpStatusCode == 403)
 			{
 				[self fallbackToFullPullWithPullState: pullState
 											 finalCompletion: finalCompletionBlock];
@@ -2347,7 +2375,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			}
 			
 			NSString *path = @"/pull";
-			NSURLComponents *urlComponents = [zdc.webManager apiGatewayForRegion:region stage:stage path:path];
+			NSURLComponents *urlComponents = [zdc.restManager apiGatewayForRegion:region stage:stage path:path];
 			
 			NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 			request.HTTPMethod = @"GET";
@@ -3059,7 +3087,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		// So we need to invoke the innerCompletionBlock anyway.
 		//
 		// If there weren't any other sub-tasks, then we'll recursively call completionBlocks,
-		// moving up the filesystem hierarchy until we reach a directory that isn't complete.
+		// moving up the treesystem hierarchy until we reach a directory that isn't complete.
 	
 		innerCompletionBlock(transaction, [ZDCPullTaskResult success]);
 	}];
@@ -3073,21 +3101,18 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
               pullState:(ZDCPullState *)pullState
           ptrCompletion:(ZDCPullTaskCompletion)ptrCompletionBlock
 {
+	NSString *pointee_ownerID = pointeeNode.anchor.userID;
 	
-	if (ddLogLevel & DDLogFlagTrace)
-	{
-		DDLogTrace(@"[%@] Sync pointee: %@", pullState.localUserID, pointeeNode.uuid);
-	}
+	ZDCCloudPath *pointee_cloudPath =
+	  [[ZDCCloudPath alloc] initWithZAppID: pointeeNode.anchor.zAppID
+	                             dirPrefix: pointeeNode.anchor.dirPrefix
+	                              fileName: pointeeNode.explicitCloudName];
 	
-	void(^Fail)(ZDCPullErrorReason, NSError*) = ^(ZDCPullErrorReason reason, NSError *error){ @autoreleasepool {
-		
-		ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
-		result.pullResult = ZDCPullResult_Fail_Other;
-		result.pullErrorReason = reason;
-		result.underlyingError = error;
+	DDLogTrace(@"[%@] Sync pointee: %@", pullState.localUserID, pointee_cloudPath);
+	
+	void (^Fail)(ZDCPullTaskResult*) = ^(ZDCPullTaskResult *result){ @autoreleasepool {
 		
 		ptrCompletionBlock(nil, result);
-		return;
 	}};
 	
 	void (^Succeed)(void) = ^{ @autoreleasepool {
@@ -3117,12 +3142,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 //				 subDirCompletion:subDirCompletionBlock];
 	}};
 	
-	NSString *pointee_ownerID = pointeeNode.anchor.userID;
 	
-	ZDCCloudPath *pointee_cloudPath =
-	  [[ZDCCloudPath alloc] initWithZAppID: pointeeNode.anchor.zAppID
-	                             dirPrefix: pointeeNode.anchor.dirPrefix
-	                              fileName: pointeeNode.name];
 	
 	// We have 3 tasks to perform here:
 	//
@@ -3162,8 +3182,14 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			                             completionQueue: concurrentQueue
 			                             completionBlock:^(ZDCUser *remoteUser, NSError *error)
 			{
-				if (error) {
-					Fail(ZDCPullErrorReason_HttpStatusCode, error);
+				if (error)
+				{
+					ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
+					result.pullResult = ZDCPullResult_Fail_Other;
+					result.pullErrorReason = ZDCPullErrorReason_HttpStatusCode;
+					result.underlyingError = error;
+					
+					Fail(result);
 					return;
 				}
 				
@@ -3193,8 +3219,30 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		^(ZDCCloudRcrd *cloudRcrd, NSData *responseData,
 		  NSString *eTag, NSDate *lastModified, ZDCPullTaskResult *result)
 		{
+			if (result != ZDCPullResult_Success)
+			{
+				Fail(result);
+				return;
+			}
 			
+			if (cloudRcrd.cloudID && ![cloudRcrd.cloudID isEqual:@"foobar"])
+			{
+				Step2B();
+			}
+			
+			if (cloudRcrd.cloudID == nil || cloudRcrd.encryptionKey == nil || cloudRcrd.metadata == nil)
+			{
+				PermanentFail(ZDCNodeConflict_Graft_DstNodeNotReadable);
+				return;
+			}
+			
+			Step3();
 		}];
+	}};
+	
+	Step2B = ^{ @autoreleasepool {
+		
+		
 	}};
 	
 	Step3 = ^{ @autoreleasepool {
@@ -3209,8 +3257,14 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		                 completionQueue: concurrentQueue
 		                 completionBlock:^(NSArray<S3ObjectInfo *> *list, NSError *error)
 		{
-			if (error) {
-				Fail(ZDCPullErrorReason_HttpStatusCode, error);
+			if (error)
+			{
+				ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
+				result.pullResult = ZDCPullResult_Fail_Other;
+				result.pullErrorReason = ZDCPullErrorReason_HttpStatusCode;
+				result.underlyingError = error;
+				
+				Fail(result);
 				return;
 			}
 			
@@ -3221,7 +3275,38 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	
 	PermanentFail = ^(ZDCNodeConflict conflict){ @autoreleasepool {
 		
+		__weak id<ZeroDarkCloudDelegate> delegate = zdc.delegate;
 		
+		[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+			
+			ZDCNodeManager *nodeManager = [ZDCNodeManager sharedInstance];
+			ZDCCloudTransaction *const cloudTransaction =
+			  [self cloudTransactionForPullState:pullState transaction:transaction];
+			
+			ZDCNode *pointerNode = nil;
+			while ((pointerNode = [nodeManager findNodeWithPointeeID: pointeeNode.uuid
+			                                             localUserID: pullState.localUserID
+			                                                  zAppID: pullState.zAppID
+			                                             transaction: transaction]))
+			{
+				ZDCTreesystemPath *pointerPath =
+				  [[ZDCNodeManager sharedInstance] pathForNode:pointerNode transaction:transaction];
+				
+				[delegate didDiscoverConflict: conflict
+				                      forNode: pointerNode
+				                       atPath: pointerPath
+				                  transaction: transaction];
+				
+				[cloudTransaction deleteNode:pointerNode error:nil];
+				
+				[delegate didDiscoverDeletedNode: pointerNode
+												  atPath: pointerPath
+											  timestamp: nil
+											transaction: transaction];
+			}
+			
+			Succeed();
+		}];
 	}};
 	
 	Step1();
@@ -3461,13 +3546,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	ZDCNodeManager *const nodeManager = [ZDCNodeManager sharedInstance];
 	ZDCCloudPathManager *const cloudPathManager = [ZDCCloudPathManager sharedInstance];
 	
+	ZDCCloudTransaction *const cloudTransaction = [self cloudTransactionForPullState:pullState transaction:transaction];
+	
 	NSString *remoteCloudName = [remoteCloudPath fileNameWithExt:nil];
-	
-	NSString *const localUserID = pullState.localUserID;
-	NSString *const zAppID = pullState.zAppID;
-	
-	NSString *const extName = [zdc.databaseManager cloudExtNameForUser:localUserID app:zAppID];
-	ZDCCloudTransaction *const cloudTransaction = (ZDCCloudTransaction *)[transaction ext:extName];
 	
 	// Search for a matching node in the database.
 	//
@@ -3752,11 +3833,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 {
 	ZDCNodeManager *const nodeManager = [ZDCNodeManager sharedInstance];
 	
-	NSString *const localUserID = pullState.localUserID;
-	NSString *const zAppID = pullState.zAppID;
-	
-	NSString *const extName = [zdc.databaseManager cloudExtNameForUser:localUserID app:zAppID];
-	ZDCCloudTransaction *const cloudTransaction = (ZDCCloudTransaction *)[transaction ext:extName];
+	ZDCCloudTransaction *const cloudTransaction = [self cloudTransactionForPullState:pullState transaction:transaction];
 	
 	// Update node's info (if needed).
 	
@@ -4150,7 +4227,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
  *
  * This method will determine if its safe to delete the node and any descendents.
  * It will then only delete what it can safely,
- * and update the appropriate S4CloudNode entries.
+ * and update the appropriate ZDCCloudNode entries.
 **/
 - (void)remoteDeleteNode:(ZDCNode *)rootDeletedNode
                timestamp:(nullable NSDate *)timestamp
@@ -4443,7 +4520,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			
 			DDLogTrace(@"[%@] Error fetching keyPath (%d): %@", pullState.localUserID, (int)statusCode, keyPath);
 			
-			if ((statusCode != 403) && (statusCode != 404))
+			if ((statusCode != 404) && (statusCode != 403))
 			{
 				DDLogError(@"AWS S3 returned unknown status code: %ld", (long)statusCode);
 			}

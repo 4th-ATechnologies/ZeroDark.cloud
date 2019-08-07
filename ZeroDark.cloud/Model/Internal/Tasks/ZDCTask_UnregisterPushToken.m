@@ -94,11 +94,11 @@ static NSString *const k_regionStr = @"regionStr";
 	NSString *task_uuid = self.uuid;         // avoid retaining self
 	__weak ZeroDarkCloud *weakOwner = owner; // avoid retaining owner
 	
-	[owner.webManager unregisterPushToken: pushToken
-	                            forUserID: self.userID
-	                               region: self.region
-	                      completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                      completionBlock:^(NSURLResponse *response, NSError *error)
+	[owner.restManager unregisterPushToken: pushToken
+	                             forUserID: self.userID
+	                                region: self.region
+	                       completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                       completionBlock:^(NSURLResponse *response, NSError *error)
 	{
 		NSUInteger statusCode = 0;
 		if (response) {

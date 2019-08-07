@@ -108,7 +108,7 @@ goto done;  \
 		return;
 	}
 	
-	[owner.webManager fetchMerkleTreeFile: root
+	[owner.restManager fetchMerkleTreeFile: root
 	                      requesterID: requesterID
 	                  completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
 	                  completionBlock:
