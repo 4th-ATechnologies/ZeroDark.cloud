@@ -1,6 +1,7 @@
 #import <Foundation/Foundation.h>
 
 #import "AWSRegions.h"
+#import "ZDCCloudLocator.h"
 #import "ZDCLocalUser.h"
 #import "ZDCLocalUserAuth.h"
 

@@ -19,6 +19,10 @@
 #import "NSURLRequest+ZeroDark.h"
 #import "NSURLResponse+ZeroDark.h"
 
+#ifndef robbie_hanson
+  #define robbie_hanson 1
+#endif
+
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG && robbie_hanson
@@ -702,7 +706,7 @@
 	request.HTTPBody = bodyData;
 	
 #if DEBUG && robbie_hanson
-	DDLogDonut(@"%@", [request s4Description]);
+	DDLogDonut(@"%@", [request zdcDescription]);
 #endif
 	
 	NSURLSessionDataTask *task =
@@ -772,7 +776,7 @@
 	                  session:auth.aws_session];
 	
 #if DEBUG && robbie_hanson
-	DDLogDonut(@"%@", [request s4Description]);
+	DDLogDonut(@"%@", [request zdcDescription]);
 #endif
 	
 	// Send request
@@ -1010,7 +1014,7 @@
 	request.HTTPMethod = @"GET";
 	
 #if DEBUG && robbie_hanson
-	DDLogDonut(@"%@", [request s4Description]);
+	DDLogDonut(@"%@", [request zdcDescription]);
 #endif
 	
 	// Send request
@@ -1401,7 +1405,7 @@
 		                  session: auth.aws_session];
 		
 	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request s4Description]);
+		DDLogDonut(@"%@", [request zdcDescription]);
 	#endif
 
 		// Are we uploading or deleting?
@@ -1627,10 +1631,10 @@
 	#endif
 		
 		NSString *stage = userInfo.stage;
-		if (!stage)
-		{
+	//	if (!stage)
+	//	{
 			stage = DEFAULT_AWS_STAGE;
-		}
+	//	}
 
 		// Generate request
 
@@ -2036,7 +2040,7 @@
 		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
 		
 	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request s4Description]);
+		DDLogDonut(@"%@", [request zdcDescription]);
 	#endif
 		
 		[AWSSignature signRequest: request
@@ -2163,7 +2167,7 @@
 		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
 		
 	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request s4Description]);
+		DDLogDonut(@"%@", [request zdcDescription]);
 	#endif
 		
 		[AWSSignature signRequest:request
@@ -2286,7 +2290,7 @@
 		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
 		
 	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request s4Description]);
+		DDLogDonut(@"%@", [request zdcDescription]);
 	#endif
 		
 		[AWSSignature signRequest:request
@@ -2539,7 +2543,7 @@
 		request.HTTPMethod = @"GET";
 		
 	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request s4Description]);
+		DDLogDonut(@"%@", [request zdcDescription]);
 	#endif
 		
 		[AWSSignature signRequest:request
@@ -2673,7 +2677,7 @@
 		request.HTTPMethod = @"GET";
 		
 	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request s4Description]);
+		DDLogDonut(@"%@", [request zdcDescription]);
 	#endif
 		
 		[AWSSignature signRequest:request
@@ -2857,7 +2861,7 @@
 		}
 		
 	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request s4Description]);
+		DDLogDonut(@"%@", [request zdcDescription]);
 	#endif
 		
 		[AWSSignature signRequest:request
@@ -3010,7 +3014,7 @@
 			[request setHTTPMethod:@"GET"];
 			
 		#if DEBUG && robbie_hanson
-			DDLogDonut(@"%@", [request s4Description]);
+			DDLogDonut(@"%@", [request zdcDescription]);
 		#endif
 			
 			[AWSSignature signRequest:request
@@ -3839,7 +3843,7 @@
 		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
 
 	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request s4Description]);
+		DDLogDonut(@"%@", [request zdcDescription]);
 	#endif
 		
 		NSURLSessionDataTask *task =

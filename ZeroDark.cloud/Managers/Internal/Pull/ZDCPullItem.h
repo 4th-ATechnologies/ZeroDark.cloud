@@ -14,7 +14,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ZDCPullItem : NSObject
+@interface ZDCPullItem : NSObject <NSCopying>
 
 @property (nonatomic, assign, readwrite) AWSRegion region;
 @property (nonatomic, copy, readwrite) NSString *bucket;
