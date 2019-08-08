@@ -52,13 +52,14 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Configures the user's account, which includes tasks such as creating the user's bucket.
  *
- * Does not require the given ZDCLocalUser or ZDCLocalUserAuth to be stored in the database.
+ * This method is used during user setup & activation.
+ * As such, it does not require the given ZDCLocalUser or ZDCLocalUserAuth to be stored in the database.
  *
  * @param localUser
- *   The localUser we're setting up. (Not required to be stored in the database.)
+ *   The localUser we're setting up.
  *
  * @param auth
- *   Valid authentication for the localUser. (Not required to be stored in the database.)
+ *   Valid authentication for the localUser.
  *
  * @param zAppIDs
  *   A list of zAppID's that we're activating for the user.
@@ -79,16 +80,6 @@ NS_ASSUME_NONNULL_BEGIN
                                            NSString *_Nullable syncedSalt,
                                            NSDate *_Nullable activationDate,
                                            NSError *_Nullable error))completionBlock;
-
-
-/**
- * Documentation ?
- */
-- (void)updateMetaDataForLocalUser:(ZDCLocalUser *)user
-                          metaData:(NSDictionary*)metaData
-                   completionQueue:(nullable dispatch_queue_t)completionQueue
-                   completionBlock:(void (^)(NSDictionary *_Nullable response,
-                                             NSError *_Nullable error))completionBlock;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Push
@@ -171,19 +162,41 @@ NS_ASSUME_NONNULL_BEGIN
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Use's server API for atomic upload of priv/pub key pair.
+ * Attempts to set the user's privateKey/publicKey pair.
+ * If the user doesn't already have a set of keys, the server will accept the pair.
+ * Otherwise, the server will reject the request, and return the existing pair.
  *
- * - The privKey data should be a PBKDF2 wrapped private key (requires access key to unlock).
- *   The privKey file is only readable by the owner.
- * - The pubKey is JSON, and is world-readable.
- * - The files are in the root of the user's bucket, and are named ".privKey" & ".pubKey".
+ * - The privKey file should be a PBKDF2 wrapped private key (i.e. requires accessKey to decrypt)
+ * - The pubKey file should be JSON
+ * - The files get stored in the root of the user's bucket, and are named ".privKey" & ".pubKey".
+ * - The ".privKey" file is only readable by the bucket owner (in terms of S3 permissions)
+ * - The ".pubKey" file is world-readable
  *
  * This method is used during user setup & activation.
  * As such, it does not require the given ZDCLocalUser or ZDCLocalUserAuth to be stored in the database.
-**/
+ *
+ * @param privKey
+ *   Serialzed PBKDF2 wrapped private key (i.e. requires accessKey to decrypt)
+ *
+ * @param pubKey
+ *   Serialized JSON that contains public key information.
+ *
+ * @param localUser
+ *   The localUser for which we should upload the key pairs.
+ *
+ * @param auth
+ *   A valid authentication instance - required to authenticate the request.
+ *
+ * @param completionQueue
+ *   The dispatch_queue to use when invoking the completionBlock
+ *   If you pass nil, the main thread will automatically be used.
+ *
+ * @param completionBlock
+ *   Invoked with the result of the request.
+ */
 - (void)uploadPrivKey:(NSData *)privKey
                pubKey:(NSData *)pubKey
-         forLocalUser:(ZDCLocalUser *)user
+         forLocalUser:(ZDCLocalUser *)localUser
              withAuth:(ZDCLocalUserAuth *)auth
       completionQueue:(nullable dispatch_queue_t)completionQueue
       completionBlock:(void (^)(NSData *_Nullable data,
@@ -198,7 +211,7 @@ NS_ASSUME_NONNULL_BEGIN
  * 
  * Note:
  *   The server allows us to update this (signed) list,
- *   but doesn't allow us to actually change the publicKey.
+ *   but doesn't allow us to actually change the publicKey value.
  */
 - (void)updatePubKeySigs:(NSData *)pubKey
           forLocalUserID:(NSString *)localUserID
@@ -308,7 +321,46 @@ NS_ASSUME_NONNULL_BEGIN
                              forLocalUserID:(NSString *)localUserID
                                    withAuth:(ZDCLocalUserAuth *)auth;
 
-// LostAndFound goes here
+/**
+ * Used during grafting if the target node cannot be located.
+ *
+ * In some cases, a node may get renamed or moved, which results in its cloudPath changing as well.
+ * When this happens, previously issued collaboration requests would contain an out-of-date cloudPath.
+ * However, the server keeps an partial index that maps from cloudID to cloudPath.
+ * So the client can ask the server to lookup the correct cloudPath.
+ *
+ * The server will return a result if:
+ * - the node still exists in the given bucket
+ * - the requester has read-permission for the node
+ *
+ * @param cloudID
+ *   The correct cloudID for the target node.
+ *
+ * @param bucket
+ *   The correct bucket that contains the target node.
+ *
+ * @param region
+ *   The correct region for the bucket.
+ *
+ * @param localUserID
+ *   The localUserID that will be used to send the request.
+ *   The request will be authenticated with this user's information.
+ *
+ * @param completionQueue
+ *   The dispatch queue on which to invoke the completion block.
+ *   If unspecified, the main thread is used.
+ *
+ * @param completionBlock
+ *   Invoked with the raw response from the server.
+ */
+- (void)lostAndFound:(NSString *)cloudID
+              bucket:(NSString *)bucket
+              region:(AWSRegion)region
+         requesterID:(NSString *)localUserID
+     completionQueue:(nullable dispatch_queue_t)completionQueue
+     completionBlock:(void (^)(NSURLResponse *response,
+                                id  _Nullable responseObject,
+                           NSError *_Nullable error))completionBlock;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Auth0
@@ -437,7 +489,7 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * The result will include billing & usage information for the user's account,
  * as well as detailed information on a per-app basis.
-**/
+ */
 - (void)fetchCurrentBilling:(NSString *)localUserID
             completionQueue:(nullable dispatch_queue_t)completionQueue
             completionBlock:(void (^)(NSDictionary *_Nullable billing, NSError *_Nullable error))completionBlock;
@@ -461,6 +513,19 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Blockchain
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Downloads the merkle tree JSON file from the server.
+ * This is part of the flow of verifying a user's publicKey:
+ *
+ * - Query the Ethereum blockchain for a specific userID
+ * - If the response includes a merkleTreeRoot, then
+ * - Download the corresponding merkleTree
+ * - Verify the publicKey in the merkleTree matches what you expect
+ * - Verify the merkleTree itself
+ *
+ * More detailed information on how this works can be found here:
+ * https://medium.com/storm4/how-the-storm4-smart-contract-works-a3e242f1bf65
+ */
 - (void)fetchMerkleTreeFile:(NSString *)root
                 requesterID:(NSString *)localUserID
             completionQueue:(nullable dispatch_queue_t)inCompletionQueue

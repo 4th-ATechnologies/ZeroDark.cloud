@@ -14,6 +14,7 @@
 #import "ZDCLogging.h"
 #import "ZeroDarkCloudPrivate.h"
 
+// Categories
 #import "NSError+ZeroDark.h"
 #import "NSURLRequest+ZeroDark.h"
 #import "NSURLResponse+ZeroDark.h"
@@ -31,8 +32,12 @@
 
 #define CLAMP(min, num, max) (MAX(min, MIN(max, num)))
 
-#if DEBUG && robbie_hanson && !defined(AWS_STAGE)
-#define AWS_STAGE @"dev"
+#ifndef DEFAULT_AWS_STAGE
+  #if DEBUG && robbie_hanson
+    #define DEFAULT_AWS_STAGE @"dev"
+  #else
+    #define DEFAULT_AWS_STAGE @"prod"
+  #endif
 #endif
 
 @implementation ZDCRestManager {
@@ -73,10 +78,10 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Returns the API Gateway ID that matches the region & stage.
- * 
- * E.g.: rsuraaljlh
-**/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ */
 - (NSString *)apiGatewayIDForRegion:(AWSRegion)region stage:(NSString *)stage
 {
 	switch(region)
@@ -100,11 +105,10 @@
 }
 
 /**
- * Returns NSURLComponents instance with `scheme`, `host` & `path` properties set.
- *
- * Your path property should NOT include the stage component.
- * This will be added for you automatically.
-**/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ */
 - (NSURLComponents *)apiGatewayForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path
 {
 	NSString *regionStr = [AWSRegions shortNameForRegion:region];
@@ -135,11 +139,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * See header file
-**/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ */
 - (void)fetchConfigWithCompletionQueue:(nullable dispatch_queue_t)inCompletionQueue
                        completionBlock:(void(^)(NSDictionary *_Nullable config,
-                                                NSError *_Nullable error))inCompletionBlock
+                                                     NSError *_Nullable error))inCompletionBlock
 {
 	DDLogAutoTrace();
 
@@ -152,9 +158,9 @@
 	NSString *requestKey = NSStringFromSelector(_cmd);
 
 	NSUInteger requestCount =
-	[asyncCompletionDispatch pushCompletionQueue:inCompletionQueue
-								 completionBlock:inCompletionBlock
-										  forKey:requestKey];
+	  [asyncCompletionDispatch pushCompletionQueue:inCompletionQueue
+	                               completionBlock:inCompletionBlock
+	                                      forKey:requestKey];
 
 	if (requestCount > 1)
 	{
@@ -303,12 +309,7 @@
 	dispatch_block_t requestBlock = ^{ @autoreleasepool {
 		
 		AWSRegion region = AWSRegion_Master;
-
-	#ifdef AWS_STAGE // See PrefixHeader.pch
-		NSString *stage = AWS_STAGE;
-	#else
-		NSString *stage = @"prod";
-	#endif
+		NSString *stage = DEFAULT_AWS_STAGE;
 
 		NSString *path = @"/config";
 		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
@@ -428,11 +429,7 @@
 	NSString *awsStage = localUser.aws_stage;
 	if (!awsStage)
 	{
-	#ifdef AWS_STAGE // See PrefixHeader.pch
-		awsStage = AWS_STAGE;
-	#else
-		awsStage = @"prod";
-	#endif
+		awsStage = DEFAULT_AWS_STAGE;
 	}
 
 	NSString *path = @"/activation/setup";
@@ -532,139 +529,15 @@
 	[task resume];
 }
 
-/**
- * See header file for description.
- */
-- (void)updateMetaDataForLocalUser:(ZDCLocalUser *)localUser
-						  metaData:(NSDictionary*)metaData
-				   completionQueue:(nullable dispatch_queue_t)completionQueue
-				   completionBlock:(void (^)(NSDictionary *_Nullable response, NSError *_Nullable error))completionBlock
-{
-
-	DDLogAutoTrace();
-	NSParameterAssert(localUser != nil);
-
-	if (!completionQueue && completionBlock) {
-		completionQueue = dispatch_get_main_queue();
-	}
-
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUser.uuid
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
-	{
-		if (error)
-		{
-			if (completionBlock)
-			{
-				dispatch_async(completionQueue, ^{
-					completionBlock(nil, error);
-				});
-			}
-			return;
-		}
-
-
-		NSString *stage = localUser.aws_stage;
-		if (!stage)
-		{
-		#ifdef AWS_STAGE // See PrefixHeader.pch
-			stage = AWS_STAGE;
-		#else
-			stage = @"prod";
-		#endif
-		}
-
-		AWSRegion region = AWSRegion_Master; // Activation always goes through Oregon
-
-		NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithDictionary:metaData];
-		NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:nil];
-
-		NSString *path = @"/auth0/updateUserMetadata";
-
-		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
-
-		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
-		request.HTTPMethod = @"POST";
-		request.HTTPBody = jsonData;
-
-		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-
-		[AWSSignature signRequest: request
-		               withRegion: region
-		                  service: AWSService_APIGateway
-		              accessKeyID: auth.aws_accessKeyID
-		                   secret: auth.aws_secret
-		                  session: auth.aws_session];
-
-	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request s4Description]);
-	#endif
-
-		// Send request
-
-		NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
-		NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
-
-		NSURLSessionDataTask *task =
-			[session dataTaskWithRequest: request
-			           completionHandler:^(NSData *data, NSURLResponse *response, NSError *sessionError)
-		{
-			NSMutableDictionary *json = nil;
-			NSError *error = sessionError;
-
-			if (response)
-			{
-				error = nil; // we only care about non-server-response errors
-			}
-
-			if (!error)
-			{
-				NSInteger statusCode = response.httpStatusCode;
-
-				json = [[NSJSONSerialization JSONObjectWithData:data options:0 error:&error] mutableCopy];
-				if (json)
-				{
-					if ([json isKindOfClass:[NSDictionary class]])
-					{
-						if (json[@"statusCode"] == nil)
-						{
-							json[@"statusCode"] = @(statusCode);
-						}
-					}
-					else
-					{
-						DDLogError(@"Activation API returned non-dictionary JSON: URL(%@) type(%@): %@",
-						           [urlComponents URL], [json class], json);
-
-						json = nil;
-					}
-				}
-
-				if (json == nil)
-				{
-					NSString *description = @"Server returned unparsable response.";
-					error = [NSError errorWithClass:[self class] code:1000 description:description];
-				}
-
-				if (completionBlock)
-				{
-					dispatch_async(completionQueue, ^{ @autoreleasepool {
-						completionBlock(json, error);
-					}});
-				}
-			}
-		}];
-
-		[task resume];
-	}];
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Push
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ */
 - (void)registerPushTokenForLocalUser:(ZDCLocalUser *)localUser
                       completionQueue:(dispatch_queue_t)completionQueue
                       completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
@@ -706,11 +579,7 @@
 		NSString *stage = userInfo.stage;
 		if (!stage)
 		{
-		#ifdef AWS_STAGE // See PrefixHeader.pch
-			stage = AWS_STAGE;
-		#else
-			stage = @"prod";
-		#endif
+			stage = DEFAULT_AWS_STAGE;
 		}
 		
 		NSString *path = @"/registerPushToken";
@@ -775,12 +644,10 @@
 }
 
 /**
- * Unregister iOS/macOS pushtoken with API gateway.
- *
- * Invoke this method:
- * - when deleting a localUser from the device
- * - if you ever receive a push notification for an unknown localUserID
-**/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ */
 - (void)unregisterPushToken:(NSString *)pushToken
                   forUserID:(NSString *)userID
                      region:(AWSRegion)region
@@ -802,14 +669,9 @@
 	if (region == AWSRegion_Invalid)
 		region = AWSRegion_US_West_2;
 	
-#ifdef AWS_STAGE // See PrefixHeader.pch
-	NSString *stage = AWS_STAGE;
-#else
-	NSString *stage = @"prod";
-#endif
+	NSString *stage = DEFAULT_AWS_STAGE;
 	
 	NSString *path = @"/unregisterPushToken";
-	
 	NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
 	
 	NSString *platform;
@@ -866,16 +728,10 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Fetches the user's info from the server, which includes:
- * 
- * - region  (NSString)
- * - bucket  (NSString)
- * - created (NSDate)
- * - stage   (NSString)
- * 
- * Uses ephemeralSessionConfiguration.
- * Does not require the given ZDCLocalUser or ZDCLocalUserAuth to be stored in the database.
-**/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ */
 - (void)fetchInfoForLocalUser:(ZDCLocalUser *)localUser
                      withAuth:(ZDCLocalUserAuth *)auth
               completionQueue:(dispatch_queue_t)completionQueue
@@ -898,11 +754,7 @@
 	NSString *stage = localUser.aws_stage;
 	if (!stage)
 	{
-	#ifdef AWS_STAGE // See PrefixHeader.pch
-		stage = AWS_STAGE;
-	#else
-		stage = @"prod";
-	#endif
+		stage = DEFAULT_AWS_STAGE;
 	}
 	
 	NSString *path = @"/users/info";
@@ -938,7 +790,7 @@
 		if (!error)
 		{
 			if (data.length == 0)
-				error = [self errorWithStatusCode:[response httpStatusCode] description:@"Not Found"];
+				error = [NSError errorWithClass:[self class] code:[response httpStatusCode] description:@"Not Found"];
 			else
 				json = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
 		}
@@ -949,13 +801,13 @@
 			if (errorMessage)
 			{
 				NSUInteger statusCode = [json[@"statusCode"] unsignedIntegerValue];
-				error = [self errorWithStatusCode:statusCode description:errorMessage];
+				error = [NSError errorWithClass:[self class] code:statusCode description:errorMessage];
 			}
 		}
 		
 		if (!json && !error)
 		{
-			error = [self errorWithStatusCode:500 description:@"Invalid response from server"];
+			error = [NSError errorWithClass:[self class] code:500 description:@"Invalid response from server"];
 		}
 		
 		if (json && !error)
@@ -1006,11 +858,10 @@
 }
 
 /**
- * Fetches the remote user's info from the server, which includes:
- *
- * - region (NSString)
- * - bucket (NSString)
-**/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ */
 - (void)fetchInfoForRemoteUserID:(NSString *)remoteUserID
                      requesterID:(NSString *)localUserID
                  completionQueue:(nullable dispatch_queue_t)completionQueue
@@ -1052,11 +903,7 @@
 		NSString *stage = userInfo.stage;
 		if (!stage)
 		{
-		#ifdef AWS_STAGE // See PrefixHeader.pch
-			stage = AWS_STAGE;
-		#else
-			stage = @"prod";
-		#endif
+			stage = DEFAULT_AWS_STAGE;
 		}
 
 		NSString *path = @"/users/info/";
@@ -1107,13 +954,13 @@
 				if (errorMessage)
 				{
 					NSUInteger statusCode = [jsonDict[@"statusCode"] unsignedIntegerValue];
-					jsonError = [self errorWithStatusCode:statusCode description:errorMessage];
+					jsonError = [NSError errorWithClass:[self class] code:statusCode description:errorMessage];
 				}
 			}
 			
 			if (!jsonDict && !error && !jsonError)
 			{
-				error = [self errorWithStatusCode:500 description:@"Invalid response from server"];
+				error = [NSError errorWithClass:[self class] code:500 description:@"Invalid response from server"];
 			}
 			
 			if (error || jsonError)
@@ -1135,10 +982,10 @@
 }
 
 /**
- * Queries the server to see if the given user still exists.
- * Returns NO if the user has been deleted from the system.
- * E.g. user's free trial expired (without becoming a customer), or user stopped paying their bill.
-**/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ */
 - (void)fetchUserExists:(NSString *)userID
         completionQueue:(nullable dispatch_queue_t)completionQueue
         completionBlock:(void (^)(BOOL exists, NSError *_Nullable error))completionBlock
@@ -1153,12 +1000,7 @@
 	// Generate request
 	
 	AWSRegion region = AWSRegion_Master; // Account status always goes through Oregon
-	
-#ifdef AWS_STAGE // See PrefixHeader.pch
-	NSString *stage = AWS_STAGE;
-#else
-	NSString *stage = @"prod";
-#endif
+	NSString *stage = DEFAULT_AWS_STAGE;
 	
 	NSString *path = [NSString stringWithFormat:@"/users/exists/%@", userID];
 	
@@ -1209,7 +1051,7 @@
 		
 		if (!error && !validResponse)
 		{
-			error = [self errorWithStatusCode:500 description:@"Invalid response from server"];
+			error = [NSError errorWithClass:[self class] code:500 description:@"Invalid response from server"];
 		}
 		
 		if (completionBlock)
@@ -1230,7 +1072,9 @@
 
 /**
  * See header file for description.
-**/
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ */
 - (void)uploadPrivKey:(NSData *)privKey
                pubKey:(NSData *)pubKey
          forLocalUser:(ZDCLocalUser *)user
@@ -1286,11 +1130,7 @@
 	NSString *stage = user.aws_stage;
 	if (!stage)
 	{
-	#ifdef AWS_STAGE // See PrefixHeader.pch
-		stage = AWS_STAGE;
-	#else
-		stage = @"prod";
-	#endif
+		stage = DEFAULT_AWS_STAGE;
 	}
 
 	// Generate request
@@ -1327,7 +1167,9 @@
 }
 
 /**
- * See header file for documentation.
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
  */
 - (void)updatePubKeySigs:(NSData *)pubKey
           forLocalUserID:(NSString *)localUserID
@@ -1374,11 +1216,7 @@
 		NSString *stage = userInfo.stage;
 		if (!stage)
 		{
-		#ifdef AWS_STAGE // See PrefixHeader.pch
-			stage = AWS_STAGE;
-		#else
-			stage = @"prod";
-		#endif
+			stage = DEFAULT_AWS_STAGE;
 		}
 		
 		// Create JSON for request
@@ -1437,6 +1275,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
  */
 - (void)updateAvatar:(NSData *)rawAvatarData
          contentType:(NSString *)contentType
@@ -1448,17 +1288,15 @@
 {
 	DDLogAutoTrace();
 
+	NSParameterAssert(rawAvatarData != nil);
 	NSParameterAssert(localUserID != nil);
-	
-	if (!completionQueue && completionBlock)
-		completionQueue = dispatch_get_main_queue();
 	
 	void (^InvokeCompletionBlock)(NSURLResponse*, id, NSError*) =
 	^(NSURLResponse *response, id responseObject, NSError *error)
 	{
 		if (completionBlock)
 		{
-			dispatch_async(completionQueue, ^{ @autoreleasepool {
+			dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
 				completionBlock(response, responseObject, error);
 			}});
 		}
@@ -1472,7 +1310,7 @@
 	
 	if (![social_provider isEqualToString:@"auth0"])
 	{
-		NSError *error = [self errorWithStatusCode:400 description:@"Invalid auth0ID"];
+		NSError *error = [NSError errorWithClass:[self class] code:400 description:@"Invalid auth0ID"];
 		
 		InvokeCompletionBlock(nil, nil, error);
 		return;
@@ -1498,7 +1336,7 @@
 
 		if (jsonData.length > (1024 * 1024 * 10))
 		{
-			NSError *error = [self errorWithStatusCode:400 description:@"Avatar image is too big !"];
+			NSError *error = [NSError errorWithClass:[self class] code:400 description:@"Avatar image is too big !"];
 
 			InvokeCompletionBlock(nil, nil, error);
 			return;
@@ -1527,11 +1365,7 @@
 		NSString *stage = userInfo.stage;
 		if (!stage)
 		{
-		#ifdef AWS_STAGE // See PrefixHeader.pch
-			stage = AWS_STAGE;
-		#else
-			stage = @"prod";
-		#endif
+			stage = DEFAULT_AWS_STAGE;
 		}
 
 		// Generate request
@@ -1606,6 +1440,8 @@
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
  */
 - (NSMutableURLRequest *)multipartComplete:(NSString *)key
                               withUploadID:(NSString *)uploadID
@@ -1628,11 +1464,7 @@
 	NSString *stage = localUser.aws_stage;
 	if (!stage)
 	{
-	#ifdef AWS_STAGE // See PrefixHeader.pch
-		stage = AWS_STAGE;
-	#else
-		stage = @"prod";
-	#endif
+		stage = DEFAULT_AWS_STAGE;
 	}
 	
 	NSString *path = @"/multipartComplete";
@@ -1671,8 +1503,10 @@
 }
 
 /**
- *
-**/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ */
 - (NSMutableURLRequest *)listProxyWithPaths:(NSArray<NSString *> *)paths
                                   appPrefix:(NSString *)appPrefix
                                      pullID:(NSString *)pullID
@@ -1696,11 +1530,7 @@
 	NSString *stage = localUser.aws_stage;
 	if (!stage)
 	{
-	#ifdef AWS_STAGE // See PrefixHeader.pch
-		stage = AWS_STAGE;
-	#else
-		stage = @"prod";
-	#endif
+		stage = DEFAULT_AWS_STAGE;
 	}
 	
 	NSString *path = @"/listProxy";
@@ -1746,6 +1576,103 @@
 	                  session:auth.aws_session];
 	
 	return request;
+}
+
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ */
+- (void)lostAndFound:(NSString *)cloudID
+              bucket:(NSString *)bucket
+              region:(AWSRegion)region
+         requesterID:(NSString *)localUserID
+     completionQueue:(nullable dispatch_queue_t)completionQueue
+     completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
+{
+	DDLogAutoTrace();
+	
+	NSParameterAssert(cloudID != nil);
+	NSParameterAssert(bucket != nil);
+	NSParameterAssert(region != AWSRegion_Invalid);
+	NSParameterAssert(localUserID != nil);
+	
+	void (^InvokeCompletionBlock)(NSURLResponse*, id, NSError*) =
+	^(NSURLResponse *response, id responseObject, NSError *error)
+	{
+		if (completionBlock)
+		{
+			dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+				completionBlock(response, responseObject, error);
+			}});
+		}
+	};
+	
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	{
+		if (error)
+		{
+			InvokeCompletionBlock(nil, nil, error);
+			return;
+		}
+		
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
+		ZDCSessionUserInfo *userInfo = sessionInfo.userInfo;
+	#if TARGET_OS_IPHONE
+		AFURLSessionManager *session = sessionInfo.foregroundSession;
+	#else
+		AFURLSessionManager *session = sessionInfo.session;
+	#endif
+		
+		NSString *stage = userInfo.stage;
+		if (!stage)
+		{
+			stage = DEFAULT_AWS_STAGE;
+		}
+
+		// Generate request
+
+		NSString *path = @"/lostAndFound";
+		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+		
+		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
+		request.HTTPMethod = @"POST";
+		
+		NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:16];
+		
+		jsonDict[@"bucket"]  = bucket;
+		jsonDict[@"file_id"] = cloudID;
+		
+		NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:nil];
+		request.HTTPBody = jsonData;
+		
+		// macOS will automatically add the following incorrect HTTP header:
+		// Content-Type: application/x-www-form-urlencoded
+		//
+		// So we explicitly set it here.
+		//
+		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+		
+		[AWSSignature signRequest: request
+		               withRegion: region
+		                  service: AWSService_APIGateway
+		              accessKeyID: auth.aws_accessKeyID
+		                   secret: auth.aws_secret
+		                  session: auth.aws_session];
+		
+		NSURLSessionDataTask *task =
+			[session dataTaskWithRequest: request
+			              uploadProgress: nil
+			            downloadProgress: nil
+			           completionHandler:^(NSURLResponse *response, id responseObject, NSError *error)
+		{
+			InvokeCompletionBlock(response, responseObject, error);
+		}];
+
+		[task resume];
+	}];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1796,12 +1723,7 @@
 		// Thus we're going to always direct the query to the us-west-2 center.
 		
 		AWSRegion region = AWSRegion_Master;
-
-	#ifdef AWS_STAGE // See PrefixHeader.pch
-		NSString *stage = AWS_STAGE;
-	#else
-		NSString *stage = @"prod";
-	#endif
+		NSString *stage = DEFAULT_AWS_STAGE;
 
 		NSString *path = [NSString stringWithFormat:@"/auth0/fetch/%@", localUserID];
 
@@ -1831,9 +1753,10 @@
 }
 
 /**
- * Fetches the user's public info (auth0 app_metadata & user_metadata) via the API Gateway.
- * This allows one to fetch the region and bucket for a given auth0ID.
-**/
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ */
 - (void)fetchFilteredAuth0Profile:(NSString *)remoteUserID
                       requesterID:(NSString *)localUserID
                   completionQueue:(dispatch_queue_t)completionQueue
@@ -1891,11 +1814,7 @@
 		NSString *stage = userInfo.stage;
 		if (!stage)
 		{
-		#ifdef AWS_STAGE // See PrefixHeader.pch
-			stage = AWS_STAGE;
-		#else
-			stage = @"prod";
-		#endif
+			stage = DEFAULT_AWS_STAGE;
 		}
 
 		NSString *path = [NSString stringWithFormat:@"/auth0/fetch/%@", remoteUserID];
@@ -1986,11 +1905,7 @@
 		NSString *stage = userInfo.stage;
 		if (!stage)
 		{
-		#ifdef AWS_STAGE // See PrefixHeader.pch
-			stage = AWS_STAGE;
-		#else
-			stage = @"prod";
-		#endif
+			stage = DEFAULT_AWS_STAGE;
 		}
 
 		NSString *path = @"/auth0/search";
@@ -2099,11 +2014,7 @@
 		NSString *stage = userInfo.stage;
 		if (!stage)
 		{
-		#ifdef AWS_STAGE // See PrefixHeader.pch
-			stage = AWS_STAGE;
-		#else
-			stage = @"prod";
-		#endif
+			stage = DEFAULT_AWS_STAGE;
 		}
 		
 		NSString *path = @"/auth0/linkRecovery";
@@ -2182,7 +2093,7 @@
 		{
 			dispatch_async(dispatch_get_main_queue(), ^{
 				NSString *desc = @"Internal error, primary user ID Not Found";
-				NSError *error = [self errorWithStatusCode:0 description:desc];
+				NSError *error = [NSError errorWithClass:[self class] code:0 description:desc];
 				
 				completionBlock(nil, nil, error);
 			});
@@ -2231,11 +2142,7 @@
 		NSString *stage = userInfo.stage;
 		if (!stage)
 		{
-		#ifdef AWS_STAGE // See PrefixHeader.pch
-			stage = AWS_STAGE;
-		#else
-			stage = @"prod";
-		#endif
+			stage = DEFAULT_AWS_STAGE;
 		}
 		
 		NSString *path = @"/auth0/linkIdentity";
@@ -2310,7 +2217,7 @@
 		{
 			dispatch_async(dispatch_get_main_queue(), ^{
 				NSString *desc = @"Internal error, primary user ID Not Found";
-				NSError *error = [self errorWithStatusCode:0 description:desc];
+				NSError *error = [NSError errorWithClass:[self class] code:0 description:desc];
 				
 				completionBlock(nil, nil, error);
 			});
@@ -2359,11 +2266,7 @@
 		NSString *stage = userInfo.stage;
 		if (!stage)
 		{
-		#ifdef AWS_STAGE // See PrefixHeader.pch
-			stage = AWS_STAGE;
-		#else
-			stage = @"prod";
-		#endif
+			stage = DEFAULT_AWS_STAGE;
 		}
 		
 		NSString *path = @"/auth0/unlinkIdentity";
@@ -2503,11 +2406,7 @@
 		NSString *stage = userInfo.stage;
 		if (!stage)
 		{
-		#ifdef AWS_STAGE // See PrefixHeader.pch
-			stage = AWS_STAGE;
-		#else
-			stage = @"prod";
-		#endif
+			stage = DEFAULT_AWS_STAGE;
 		}
 
 		// Create JSON for request
@@ -2629,11 +2528,7 @@
 		NSString *stage = userInfo.stage;
 		if (!stage)
 		{
-		#ifdef AWS_STAGE // See PrefixHeader.pch
-			stage = AWS_STAGE;
-		#else
-			stage = @"prod";
-		#endif
+			stage = DEFAULT_AWS_STAGE;
 		}
 		
 		NSString *path = @"/payment/isCustomer";
@@ -2767,11 +2662,7 @@
 		NSString *stage = userInfo.stage;
 		if (!stage)
 		{
-		#ifdef AWS_STAGE // See PrefixHeader.pch
-			stage = AWS_STAGE;
-		#else
-			stage = @"prod";
-		#endif
+			stage = DEFAULT_AWS_STAGE;
 		}
 		
 		NSString *path = @"/payment/balance";
@@ -2946,11 +2837,7 @@
 		NSString *stage = userInfo.stage;
 		if (!stage)
 		{
-		#ifdef AWS_STAGE // See PrefixHeader.pch
-			stage = AWS_STAGE;
-		#else
-			stage = @"prod";
-		#endif
+			stage = DEFAULT_AWS_STAGE;
 		}
 		
 		NSString *path = @"/billing/usage";
@@ -3106,11 +2993,7 @@
 			NSString *stage = userInfo.stage;
 			if (!stage)
 			{
-			#ifdef AWS_STAGE // See PrefixHeader.pch
-				stage = AWS_STAGE;
-			#else
-				stage = @"prod";
-			#endif
+				stage = DEFAULT_AWS_STAGE;
 			}
 			
 			NSString *path = @"/billing/usage";
@@ -3903,6 +3786,11 @@
 #pragma mark Blockchain
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ */
 - (void)fetchMerkleTreeFile:(NSString *)root
                 requesterID:(NSString *)localUserID
             completionQueue:(dispatch_queue_t)inCompletionQueue
@@ -3977,23 +3865,6 @@
 		
 		[task resume];
 	}];
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Errors
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-- (NSError *)errorWithStatusCode:(NSInteger)statusCode description:(NSString *)description
-{
-	NSDictionary *details = nil;
-	
-	if (description)
-	{
-		details = @{ NSUnderlyingErrorKey: description };
-	}
-	
-	NSString *domain = [NSError domainForClass:[self class]];
-	return [NSError errorWithDomain:domain code:statusCode userInfo:details];
 }
 
 #pragma clang diagnostic pop

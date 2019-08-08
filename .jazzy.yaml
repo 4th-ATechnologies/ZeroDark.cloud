@@ -29,10 +29,10 @@ custom_categories:
   - ZDCPullManager
   - ZDCPushManager
   - ZDCRemoteUserManager
+  - ZDCRestManager
   - ZDCSearchUserManager
   - ZDCSyncManager
   - ZDCUITools
-  - ZDCWebManager
 - name: Model
   children:
   - ZDCCloudDataInfo
