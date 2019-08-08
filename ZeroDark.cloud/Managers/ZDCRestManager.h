@@ -13,17 +13,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * API Gateway URLS have the following form:
- * - https://[apiGatewayID].execute-api.[region].amazonaws.com/[stage]
+ * - https://{apiGatewayID}.execute-api.{region}.amazonaws.com/{stage}
  *
  * This method returns the API Gateway ID that matches the region & stage.
  * 
- * E.g.: rsuraaljlh
+ * For example: "rsuraaljlh"
  */
 - (nullable NSString *)apiGatewayIDForRegion:(AWSRegion)region stage:(NSString *)stage;
 
 /**
  * API Gateway URLS have the following form:
- * - https://[apiGatewayID].execute-api.[region].amazonaws.com/[stage]
+ * - https://{apiGatewayID}.execute-api.{region}.amazonaws.com/{stage}
  *
  * This method fills out the URL for you, and returns a (configurable) NSURLComponents instance.
  * 
@@ -37,7 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Fetches ID4 configuration information from the server.
+ * Fetches configuration information from the server.
  *
  * This is a JSON file that describes information such as the list of supported social providers.
  */
@@ -83,7 +83,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Documentation ?
-**/
+ */
 - (void)updateMetaDataForLocalUser:(ZDCLocalUser *)user
                           metaData:(NSDictionary*)metaData
                    completionQueue:(nullable dispatch_queue_t)completionQueue
@@ -95,23 +95,23 @@ NS_ASSUME_NONNULL_BEGIN
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Registers iOS/macOS pushtoken with the server.
+ * Registers the given iOS/macOS pushToken with the server.
  *
- * Invoke this method during account setup.
-**/
+ * This method is invoked during account setup.
+ */
 - (void)registerPushTokenForLocalUser:(ZDCLocalUser *)localUser
                       completionQueue:(nullable dispatch_queue_t)completionQueue
                       completionBlock:(void (^)(NSURLResponse *_Nullable response,
-                                                id _Nullable responseObject,
-                                                NSError *_Nullable error))completion;
+                                                           id  _Nullable responseObject,
+                                                      NSError *_Nullable error))completion;
 
 /**
- * Unregister iOS/macOS pushtoken with the server.
+ * Unregisters the given iOS/macOS pushToken with the server.
  *
- * Invoke this method:
+ * This method is invoked:
  * - when deleting a localUser from the device
- * - if you ever receive a push notification for an unknown localUserID
-**/
+ * - if we ever receive a push notification for an unknown localUserID
+ */
 - (void)unregisterPushToken:(NSString *)pushToken
                   forUserID:(NSString *)userID
                      region:(AWSRegion)region
@@ -132,7 +132,7 @@ NS_ASSUME_NONNULL_BEGIN
  * 
  * Uses ephemeralSessionConfiguration.
  * Does not require the given ZDCLocalUser or ZDCLocalUserAuth to be stored in the database.
-**/
+ */
 - (void)fetchInfoForLocalUser:(ZDCLocalUser *)user
                      withAuth:(ZDCLocalUserAuth *)auth
               completionQueue:(nullable dispatch_queue_t)completionQueue
@@ -141,7 +141,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Documentation ?
-**/
+ */
 - (void)fetchAuth0ProfileForLocalUserID:(NSString*) localUserID
 					  completionQueue:(dispatch_queue_t)completionQueue
 					  completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock;
@@ -191,17 +191,25 @@ NS_ASSUME_NONNULL_BEGIN
                                 NSError *_Nullable error))completionBlock;
 
 /**
- * Atomically update the existing the priv and pub Key file to the user's bucket & region.
+ * Update the publicKey for the user.
  *
- * This method is used when updating the social IDs.
-**/
-- (void)updatePrivKey:(NSData *)privKey
-               pubKey:(NSData *)pubKey
-       forLocalUserID:(NSString *)localUserID
-      completionQueue:(nullable dispatch_queue_t)completionQueue
-      completionBlock:(void (^)(NSURLResponse *_Nullable response, id _Nullable responseObject, NSError *_Nullable error))completionBlock;
+ * This method is used when updating the list of attached social identities.
+ * The list is signed by the private key, and added to the pubKey JSON file.
+ * 
+ * Note:
+ *   The server allows us to update this (signed) list,
+ *   but doesn't allow us to actually change the publicKey.
+ */
+- (void)updatePubKeySigs:(NSData *)pubKey
+          forLocalUserID:(NSString *)localUserID
+         completionQueue:(nullable dispatch_queue_t)completionQueue
+         completionBlock:(void (^)(NSURLResponse *_Nullable response,
+                                              id  _Nullable responseObject,
+                                         NSError *_Nullable error))completionBlock;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Avatar
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Updates a user's avatar on the server, either by uploading a new avatar or deleting whatever is there.
@@ -300,6 +308,8 @@ NS_ASSUME_NONNULL_BEGIN
                              forLocalUserID:(NSString *)localUserID
                                    withAuth:(ZDCLocalUserAuth *)auth;
 
+// LostAndFound goes here
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Auth0
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -307,7 +317,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Fetches the user's public info (whitelisted identity info) via the API Gateway.
  * This information includes:
- * - userID (official ZeroDark.cloud userID, as opposed to auth0 social identity ID)
+ * - userID (official ZeroDark.cloud userID, as opposed to auth0 identity ID)
  * - user's region
  * - user's bucket
  */

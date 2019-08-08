@@ -1507,7 +1507,6 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	NSParameterAssert(profile != nil);
 	NSParameterAssert(localUserID != nil);
 	__weak typeof(self) weakSelf = self;
-	
 
 	void (^InvokeCompletionBlock)(NSError*) = ^(NSError * error){
 		
@@ -1533,9 +1532,9 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	if (isAlreadyLinkedToSameUser)
 	{
 		NSString *failText = NSLocalizedString(
-															@"The identity you selected is already linked to another Storm4 Account.",
-															@"identity you selected is already linked."
-															);
+			@"The identity you selected is already linked to another Storm4 Account.",
+			@"identity you selected is already linked."
+		);
 		
 		InvokeCompletionBlock([self errorWithDescription:failText statusCode:500]);
 	}
@@ -1543,53 +1542,48 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	user = [self localUserForUserID:localUserID];
 	
 	[owner.restManager linkAuth0ID: profile.userId
-								 forUser: user
-					  completionQueue: nil
-					  completionBlock:^(NSURLResponse *urlResponse, id linkResoponse, NSError *error)
-	 {
-		 __strong typeof(self) strongSelf = weakSelf;
-		 if(!strongSelf) return;
+	                       forUser: user
+	               completionQueue: nil
+	               completionBlock:^(NSURLResponse *urlResponse, id linkResoponse, NSError *error)
+	{
+		if (error)
+		{
+			InvokeCompletionBlock(error);
+			return;
+		}
+		
+		NSInteger statusCode = 0;
+		if ([urlResponse isKindOfClass:[NSHTTPURLResponse class]])
+		{
+			statusCode = [(NSHTTPURLResponse *)urlResponse statusCode];
+		}
+		
+		if (statusCode != 200)
+		{
+			InvokeCompletionBlock([self errorWithDescription:@"Bad status response" statusCode:statusCode]);
+			return;
+		}
 		 
-
-		 if (error)
-		 {
-			 InvokeCompletionBlock(error);
-			 return;
-		 }
-		 
-		 NSInteger statusCode = 0;
-		 if ([urlResponse isKindOfClass:[NSHTTPURLResponse class]])
-		 {
-			 statusCode = [(NSHTTPURLResponse *)urlResponse statusCode];
-		 }
-		 
-		 if (statusCode != 200)
-		 {
-			 InvokeCompletionBlock([self errorWithDescription:@"Bad status response" statusCode:statusCode]);
-			 return;
-		 }
-		 
-		 [strongSelf processLinkUnlinkResponseAndUpdateUser: linkResoponse
-												completionQueue: dispatch_get_main_queue()
-												completionBlock:^(NSError *error)
-		  {
-			  if (error)
-			  {
-				  InvokeCompletionBlock(error);
-				  return;
-			  }
-			  
-			  [strongSelf->owner.localUserManager updatePubKeyForUserID: localUserID
-													  completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-													  completionBlock:^(NSError *error)
-				{
-					InvokeCompletionBlock(error);
-				}];
-			  
-		  }];
-		 
-		 
-	 }];
+		[weakSelf processLinkUnlinkResponseAndUpdateUser: linkResoponse
+		                                 completionQueue: dispatch_get_main_queue()
+		                                 completionBlock:^(NSError *error)
+		{
+			if (error)
+			{
+				InvokeCompletionBlock(error);
+				return;
+			}
+			
+			ZDCLocalUserManager *localUserManager = weakSelf.owner.localUserManager;
+			
+			[localUserManager updatePubKeyForLocalUserID: localUserID
+			                            completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+			                            completionBlock:^(NSError *error)
+			{
+				InvokeCompletionBlock(error);
+			}];
+		}];
+	}];
 }
 
 - (void)unlinkAuth0ID:(NSString *)auth0ID
@@ -1705,7 +1699,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 					}
 					strongSelf->user = [self localUserForUserID: localUserID];
 					
-					[strongSelf->owner.localUserManager updatePubKeyForUserID: localUserID
+					[strongSelf->owner.localUserManager updatePubKeyForLocalUserID: localUserID
 															completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
 															completionBlock:^(NSError *error)
 					 {

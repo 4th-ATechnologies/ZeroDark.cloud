@@ -864,8 +864,8 @@
 /**
  * Updates the pubKey in the cloud by signing the new set of auth0 ID's into the JSON.
  **/
-- (void)updatePubKeyForUserID:(NSString *)userID
-			  completionQueue:(dispatch_queue_t)completionQueue
+- (void)updatePubKeyForLocalUserID:(NSString *)localUserID
+                   completionQueue:(dispatch_queue_t)completionQueue
 			  completionBlock:(void (^)(NSError *error))completionBlock
 {
 	DDLogAutoTrace();
@@ -898,36 +898,39 @@
 		InvokeCompletionBlock(nil);
 	};
 
-	__block NSError* error      = nil;
-	__block NSData *privKeyData = nil;
-	__block NSData *pubKeyData  = nil;
+	__block NSError *error     = nil;
+	__block NSData *pubKeyData = nil;
 
-	[zdc.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction)
-	{
+	YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
+	[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+		
 		__strong typeof(self) strongSelf = weakSelf;
 		if (!strongSelf) return;
 		
 		ZDCCryptoTools *cryptoTools = strongSelf->zdc.cryptoTools;
 
-		ZDCLocalUser* localUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+		ZDCLocalUser *localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
 		if (!localUser || !localUser.isLocal)
 		{
-			InvokeCompletionBlock([self errorWithDescription:@"Bad parameter: localUser is nil"]);
+			error = [self errorWithDescription:@"Bad parameter: unknown localUser"];
 			return;
 		}
 
-		ZDCSymmetricKey *cloneKey = [transaction objectForKey:localUser.accessKeyID
-												 inCollection:kZDCCollection_SymmetricKeys];
+		ZDCSymmetricKey *cloneKey =
+		  [transaction objectForKey: localUser.accessKeyID
+		               inCollection: kZDCCollection_SymmetricKeys];
+		
 		if (!cloneKey)
 		{
-			InvokeCompletionBlock([self errorWithDescription:@"Bad parameter: cloneKey is nil"]);
+			error = [self errorWithDescription:@"Bad parameter: cloneKey is nil"];
 			return;
 		}
 
 		NSData *auth0IDData =
-		[NSJSONSerialization dataWithJSONObject: localUser.auth0_profiles.allKeys
-										options: 0
-										  error: &error];
+		  [NSJSONSerialization dataWithJSONObject: localUser.auth0_profiles.allKeys
+		                                  options: 0
+		                                    error: &error];
+		
 		if (error) return; // from transaction block
 
 		[cryptoTools updateKeyProperty: kZDCCloudRcrd_Auth0ID
@@ -939,22 +942,12 @@
 		if (error) return; // from transaction block
 
 		ZDCPublicKey *privateKey =
-		[transaction objectForKey: localUser.publicKeyID
-					 inCollection: kZDCCollection_PublicKeys];
-
-		privKeyData = [cryptoTools exportPrivateKey: privateKey
-		                                encryptedTo: cloneKey
-		                                      error: &error];
-		
-		if (error) return; // from transaction block
+		  [transaction objectForKey: localUser.publicKeyID
+		               inCollection: kZDCCollection_PublicKeys];
 
 		pubKeyData = [cryptoTools exportPublicKey:privateKey error:&error];
-		//	if (error) return; // from transaction block
 
 	} completionQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) completionBlock:^{
-
-		__strong typeof(self) strongSelf = weakSelf;
-		if (!strongSelf) return;
 
 		if (error)
 		{
@@ -962,14 +955,15 @@
 			return;
 		}
 		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
 		ZDCRestManager *restManager = strongSelf->zdc.restManager;
 
-		// code here to upload privKeyData and pubKeyData
-		[restManager updatePrivKey: privKeyData
-		                    pubKey: pubKeyData
-		            forLocalUserID: userID
-		           completionQueue: dispatch_get_main_queue()
-		           completionBlock: processingBlock];
+		[restManager updatePubKeySigs: pubKeyData
+		               forLocalUserID: localUserID
+		              completionQueue: dispatch_get_main_queue()
+		              completionBlock: processingBlock];
 	}];
 }
 

@@ -837,12 +837,12 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 			//
 			// Here's an actual bug report from the field:
 			// - user A was disabled
-			// - i updated macOS to the new version
-			// - i re-enabled user A
+			// - macOS updated to a new version
+			// - user A was re-enabled
 			// - user A wasn't getting push notifications
 			//
 			// Diagnosis:
-			// - push token changed with version update
+			// - push token changed with OS update
 			// - app launch ignored user A
 			// - re-enabling user A did not cause new push token to be registered with server
 			//

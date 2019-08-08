@@ -745,15 +745,15 @@
 		request.HTTPMethod = @"POST";
 		request.HTTPBody = bodyData;
 		
-		[AWSSignature signRequest:request
-		               withRegion:region
-		                  service:AWSService_APIGateway
-		              accessKeyID:auth.aws_accessKeyID
-		                   secret:auth.aws_secret
-		                  session:auth.aws_session];
+		[AWSSignature signRequest: request
+		               withRegion: region
+		                  service: AWSService_APIGateway
+		              accessKeyID: auth.aws_accessKeyID
+		                   secret: auth.aws_secret
+		                  session: auth.aws_session];
 		
 	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request s4Description]);
+		DDLogDonut(@"%@", [request zdcDescription]);
 	#endif
 		
 		NSURLSessionDataTask *task =
@@ -1326,15 +1326,16 @@
 	[task resume];
 }
 
-- (void)updatePrivKey:(NSData *)privKey
-               pubKey:(NSData *)pubKey
-       forLocalUserID:(NSString *)localUserID
-      completionQueue:(dispatch_queue_t)completionQueue
-      completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
+/**
+ * See header file for documentation.
+ */
+- (void)updatePubKeySigs:(NSData *)pubKey
+          forLocalUserID:(NSString *)localUserID
+         completionQueue:(dispatch_queue_t)completionQueue
+         completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
 {
 	DDLogAutoTrace();
 	
-	NSParameterAssert(privKey.length > 0);
 	NSParameterAssert(pubKey.length > 0);
 	
 	if (!completionQueue && completionBlock)
@@ -1384,8 +1385,7 @@
 		
 		NSError *jsonError = nil;
 		NSDictionary *jsonDict = @{
-			@"privKey" : [privKey base64EncodedStringWithOptions:0],
-			@"pubKey"  : [pubKey base64EncodedStringWithOptions:0]
+			@"pubKey": [pubKey base64EncodedStringWithOptions:0]
 		};
 		
 		NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:&jsonError];
@@ -1397,7 +1397,7 @@
 		
 		// Generate request
 		
-		NSString *path = @"/users/privPubKeySigs";
+		NSString *path = @"/users/pubKeySigs";
 		
 		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
 		
@@ -1407,12 +1407,12 @@
 		
 		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
 		
-		[AWSSignature signRequest:request
-		               withRegion:region
-		                  service:AWSService_APIGateway
-		              accessKeyID:auth.aws_accessKeyID
-		                   secret:auth.aws_secret
-		                  session:auth.aws_session];
+		[AWSSignature signRequest: request
+		               withRegion: region
+		                  service: AWSService_APIGateway
+		              accessKeyID: auth.aws_accessKeyID
+		                   secret: auth.aws_secret
+		                  session: auth.aws_session];
 		
 	#if DEBUG // && robbie_hanson
 		DDLogDonut(@"%@", [request zdcDescription]);

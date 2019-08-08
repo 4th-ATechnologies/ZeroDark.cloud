@@ -71,14 +71,17 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)refreshAuth0ProfilesForLocalUserID:(NSString *)userID
 						   completionQueue:(nullable dispatch_queue_t)completionQueue
 						   completionBlock:(nullable void (^)( NSError *error))completionBlock;
-/**
- * Write some doocumentation here
- *
- */
 
-- (void)updatePubKeyForUserID:(NSString *)userID
-			  completionQueue:(dispatch_queue_t)completionQueue
-			  completionBlock:(void (^)(NSError *error))completionBlock;
+/**
+ * The ".pubKey" file stored on the server contains a (signed) list of
+ * social identities that have been linked to the account.
+ * This is an additional security step to protect the user.
+ *
+ * This method updates the ".pubKey" file, by updated the signed list of identities.
+ */
+- (void)updatePubKeyForLocalUserID:(NSString *)localUserID
+                   completionQueue:(nullable dispatch_queue_t)completionQueue
+                   completionBlock:(void (^)(NSError *error))completionBlock;
 
 /**
  * Write some doocumentation here
