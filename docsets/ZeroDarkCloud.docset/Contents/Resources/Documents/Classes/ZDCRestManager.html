@@ -933,7 +933,8 @@
                       <div class="abstract">
                         <p>Configures the user&rsquo;s account, which includes tasks such as creating the user&rsquo;s bucket.</p>
 
-<p>Does not require the given ZDCLocalUser or ZDCLocalUserAuth to be stored in the database.</p>
+<p>This method is used during user setup &amp; activation.
+ As such, it does not require the given ZDCLocalUser or ZDCLocalUserAuth to be stored in the database.</p>
 
                       </div>
                       <div class="declaration">
@@ -968,7 +969,7 @@
                               </td>
                               <td>
                                 <div>
-                                  <p>The localUser we&rsquo;re setting up. (Not required to be stored in the database.)</p>
+                                  <p>The localUser we&rsquo;re setting up.</p>
                                 </div>
                               </td>
                             </tr>
@@ -980,7 +981,7 @@
                               </td>
                               <td>
                                 <div>
-                                  <p>Valid authentication for the localUser. (Not required to be stored in the database.)</p>
+                                  <p>Valid authentication for the localUser.</p>
                                 </div>
                               </td>
                             </tr>
@@ -1023,43 +1024,6 @@ If not specified, the main thread is used.</p>
                             </tr>
                           </tbody>
                         </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:objc(cs)ZDCRestManager(im)updateMetaDataForLocalUser:metaData:completionQueue:completionBlock:"></a>
-                    <a name="//apple_ref/objc/Method/-updateMetaDataForLocalUser:metaData:completionQueue:completionBlock:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCRestManager(im)updateMetaDataForLocalUser:metaData:completionQueue:completionBlock:">-updateMetaDataForLocalUser:metaData:completionQueue:completionBlock:</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Documentation ?</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">updateMetaDataForLocalUser</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCLocalUser.html">ZDCLocalUser</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">user</span>
-                          <span class="nf">metaData</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="nv">metaData</span>
-                   <span class="nf">completionQueue</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">dispatch_queue_t</span><span class="p">)</span><span class="nv">completionQueue</span>
-                   <span class="nf">completionBlock</span><span class="p">:</span>
-                       <span class="p">(</span><span class="n">nonnull</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSDictionary</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">,</span>
-                                         <span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">))</span><span class="n">completionBlock</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">updateMetaData</span><span class="p">(</span><span class="k">for</span> <span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCLocalUser.html">ZDCLocalUser</a></span><span class="p">,</span> <span class="nv">metaData</span><span class="p">:</span> <span class="p">[</span><span class="kt">AnyHashable</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">],</span> <span class="nv">completionQueue</span><span class="p">:</span> <span class="kt">DispatchQueue</span><span class="p">?,</span> <span class="nv">completionBlock</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">([</span><span class="kt">AnyHashable</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">]?,</span> <span class="kt">Error</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1359,18 +1323,20 @@ Does not require the given ZDCLocalUser or ZDCLocalUserAuth to be stored in the 
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        
+                        <p>Attempts to set the user&rsquo;s privateKey/publicKey pair.
+ If the user doesn&rsquo;t already have a set of keys, the server will accept the pair.
+ Otherwise, the server will reject the request, and return the existing pair.</p>
+
 <ul>
-<li>Use&rsquo;s server API for atomic upload of priv/pub key pair.
-*</li>
-<li>- The privKey data should be a PBKDF2 wrapped private key (requires access key to unlock).</li>
-<li>The privKey file is only readable by the owner.</li>
-<li>- The pubKey is JSON, and is world-readable.</li>
-<li>- The files are in the root of the user&rsquo;s bucket, and are named <q>.privKey</q> &amp; <q>.pubKey</q>.
-*</li>
-<li>This method is used during user setup &amp; activation.</li>
-<li>As such, it does not require the given ZDCLocalUser or ZDCLocalUserAuth to be stored in the database.</li>
+<li>The privKey file should be a PBKDF2 wrapped private key (i.e. requires accessKey to decrypt)</li>
+<li>The pubKey file should be JSON</li>
+<li>The files get stored in the root of the user&rsquo;s bucket, and are named <q>.privKey</q> &amp; <q>.pubKey</q>.</li>
+<li>The <q>.privKey</q> file is only readable by the bucket owner (in terms of S3 permissions)</li>
+<li>The <q>.pubKey</q> file is world-readable</li>
 </ul>
+
+<p>This method is used during user setup &amp; activation.
+ As such, it does not require the given ZDCLocalUser or ZDCLocalUserAuth to be stored in the database.</p>
 
                       </div>
                       <div class="declaration">
@@ -1379,7 +1345,7 @@ Does not require the given ZDCLocalUser or ZDCLocalUserAuth to be stored in the 
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">uploadPrivKey</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSData</span> <span class="o">*</span><span class="p">)</span><span class="nv">privKey</span>
                <span class="nf">pubKey</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSData</span> <span class="o">*</span><span class="p">)</span><span class="nv">pubKey</span>
-         <span class="nf">forLocalUser</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCLocalUser.html">ZDCLocalUser</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">user</span>
+         <span class="nf">forLocalUser</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCLocalUser.html">ZDCLocalUser</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">localUser</span>
              <span class="nf">withAuth</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCLocalUserAuth.html">ZDCLocalUserAuth</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">auth</span>
       <span class="nf">completionQueue</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">dispatch_queue_t</span><span class="p">)</span><span class="nv">completionQueue</span>
       <span class="nf">completionBlock</span><span class="p">:(</span><span class="n">nonnull</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSData</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">,</span>
@@ -1389,9 +1355,89 @@ Does not require the given ZDCLocalUser or ZDCLocalUserAuth to be stored in the 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">uploadPrivKey</span><span class="p">(</span><span class="n">_</span> <span class="nv">privKey</span><span class="p">:</span> <span class="kt">Data</span><span class="p">,</span> <span class="nv">pubKey</span><span class="p">:</span> <span class="kt">Data</span><span class="p">,</span> <span class="k">for</span> <span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCLocalUser.html">ZDCLocalUser</a></span><span class="p">,</span> <span class="n">with</span> <span class="nv">auth</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCLocalUserAuth.html">ZDCLocalUserAuth</a></span><span class="p">,</span> <span class="nv">completionQueue</span><span class="p">:</span> <span class="kt">DispatchQueue</span><span class="p">?,</span> <span class="nv">completionBlock</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Data</span><span class="p">?,</span> <span class="kt">URLResponse</span><span class="p">?,</span> <span class="kt">Error</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">uploadPrivKey</span><span class="p">(</span><span class="n">_</span> <span class="nv">privKey</span><span class="p">:</span> <span class="kt">Data</span><span class="p">,</span> <span class="nv">pubKey</span><span class="p">:</span> <span class="kt">Data</span><span class="p">,</span> <span class="k">for</span> <span class="nv">localUser</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCLocalUser.html">ZDCLocalUser</a></span><span class="p">,</span> <span class="n">with</span> <span class="nv">auth</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCLocalUserAuth.html">ZDCLocalUserAuth</a></span><span class="p">,</span> <span class="nv">completionQueue</span><span class="p">:</span> <span class="kt">DispatchQueue</span><span class="p">?,</span> <span class="nv">completionBlock</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Data</span><span class="p">?,</span> <span class="kt">URLResponse</span><span class="p">?,</span> <span class="kt">Error</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>privKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Serialzed PBKDF2 wrapped private key (i.e. requires accessKey to decrypt)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>pubKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Serialized JSON that contains public key information.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>localUser</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The localUser for which we should upload the key pairs.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>auth</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A valid authentication instance - required to authenticate the request.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completionQueue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The dispatch_queue to use when invoking the completionBlock
+If you pass nil, the main thread will automatically be used.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completionBlock</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Invoked with the result of the request.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </section>
                   </div>
@@ -1416,7 +1462,7 @@ Does not require the given ZDCLocalUser or ZDCLocalUserAuth to be stored in the 
 
 <p>Note:
    The server allows us to update this (signed) list,
-   but doesn&rsquo;t allow us to actually change the publicKey.</p>
+   but doesn&rsquo;t allow us to actually change the publicKey value.</p>
 
                       </div>
                       <div class="declaration">
@@ -2242,7 +2288,19 @@ Either the primary or secondary auth_id doesn&rsquo;t exist.</li>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////</p>
+                        <p>Downloads the merkle tree JSON file from the server.
+ This is part of the flow of verifying a user&rsquo;s publicKey:</p>
+
+<ul>
+<li>Query the Ethereum blockchain for a specific userID</li>
+<li>If the response includes a merkleTreeRoot, then</li>
+<li>Download the corresponding merkleTree</li>
+<li>Verify the publicKey in the merkleTree matches what you expect</li>
+<li>Verify the merkleTree itself</li>
+</ul>
+
+<p>More detailed information on how this works can be found here:
+ <a href="https://medium.com/storm4/how-the-storm4-smart-contract-works-a3e242f1bf65">https://medium.com/storm4/how-the-storm4-smart-contract-works-a3e242f1bf65</a></p>
 
                       </div>
                       <div class="declaration">

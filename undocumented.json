@@ -240,14 +240,14 @@
     },
     {
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCRestManager.h",
-      "line": 445,
+      "line": 458,
       "symbol": "ZDCRestManager.-fetchPreviousBilling:withYear:month:completionQueue:completionBlock:",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCRestManager.h",
-      "line": 452,
+      "line": 465,
       "symbol": "ZDCRestManager.-productPurchasedByUser:productIdentifier:transactionIdentifier:appStoreReceipt:completionQueue:completionBlock:",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
