@@ -68,10 +68,6 @@
 	return result;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark NSXMLParser Delegate Methods
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 // EXAMPLE RESPONSES:
 
 // GET /?prefix=folder1
@@ -179,76 +175,8 @@
 				
 				NSDictionary *objDict = (NSDictionary *)value;
 				
-				NSString *key = nil;
-				NSString *eTag = nil;
-				NSDate *lastModified = nil;
-				uint64_t size = 0;
-				S3StorageClass storageClass = S3StorageClass_Standard;
-				
-				value = objDict[@"Key"];
-				if (value && [value isKindOfClass:[NSString class]])
-				{
-					key = (NSString *)value;
-				}
-				
-				value = objDict[@"ETag"];
-				if (value && [value isKindOfClass:[NSString class]])
-				{
-					eTag = (NSString *)value;
-					
-					eTag = [eTag stringByRemovingPercentEncoding];
-					
-					NSCharacterSet *quotes = [NSCharacterSet characterSetWithCharactersInString:@"\""];
-					eTag = [eTag stringByTrimmingCharactersInSet:quotes];
-				}
-				
-				value = objDict[@"LastModified"];
-				if (value && [value isKindOfClass:[NSString class]])
-				{
-					lastModified = [AWSDate parseISO8601Timestamp:(NSString *)value];
-				}
-				
-				value = objDict[@"Size"];
-				if (value)
-				{
-					if ([value isKindOfClass:[NSNumber class]]) {
-						size = [(NSNumber *)value unsignedLongLongValue];
-					}
-					else if ([value isKindOfClass:[NSString class]]) {
-						[AWSNumber parseUInt64:&size fromString:(NSString *)value];
-					}
-				}
-				
-				value = objDict[@"StorageClass"];
-				if (value && [value isKindOfClass:[NSString class]])
-				{
-					if ([(NSString *)value isEqualToString:@"STANDARD"])
-					{
-						storageClass = S3StorageClass_Standard;
-					}
-					else if ([(NSString *)value isEqualToString:@"STANDARD_IA"])
-					{
-						storageClass = S3StorageClass_InfrequentAccess;
-					}
-					else if ([(NSString *)value isEqualToString:@"REDUCED_REDUNDANCY"])
-					{
-						storageClass = S3StorageClass_ReducedRedundancy;
-					}
-					else if ([(NSString *)value isEqualToString:@"GLACIER"])
-					{
-						storageClass = S3StorageClass_Glacier;
-					}
-				}
-				
-				if (key && eTag && lastModified)
-				{
-					S3ObjectInfo *objInfo = [[S3ObjectInfo alloc] init];
-					objInfo.key = key;
-					objInfo.eTag = eTag;
-					objInfo.lastModified = lastModified;
-					objInfo.size = size;
-					objInfo.storageClass = storageClass;
-					
+				S3ObjectInfo *objInfo = [self parseObjectInfo:objDict];
+				if (objInfo) {
 					[objectList addObject:objInfo];
 				}
 			}
@@ -299,6 +227,88 @@
 	response.initiateMultipartUpload = result;
 	
 	return response;
+}
+
++ (nullable S3ObjectInfo *)parseObjectInfo:(NSDictionary *)dict
+{
+	id value = nil;
+	
+	NSString *key = nil;
+	NSString *eTag = nil;
+	NSDate *lastModified = nil;
+	uint64_t size = 0;
+	S3StorageClass storageClass = S3StorageClass_Standard;
+
+	value = dict[@"Key"];
+	if (value && [value isKindOfClass:[NSString class]])
+	{
+		key = (NSString *)value;
+	}
+
+	value = dict[@"ETag"];
+	if (value && [value isKindOfClass:[NSString class]])
+	{
+		eTag = (NSString *)value;
+		
+		eTag = [eTag stringByRemovingPercentEncoding];
+		
+		NSCharacterSet *quotes = [NSCharacterSet characterSetWithCharactersInString:@"\""];
+		eTag = [eTag stringByTrimmingCharactersInSet:quotes];
+	}
+
+	value = dict[@"LastModified"];
+	if (value && [value isKindOfClass:[NSString class]])
+	{
+		lastModified = [AWSDate parseISO8601Timestamp:(NSString *)value];
+	}
+
+	value = dict[@"Size"];
+	if (value)
+	{
+		if ([value isKindOfClass:[NSNumber class]]) {
+			size = [(NSNumber *)value unsignedLongLongValue];
+		}
+		else if ([value isKindOfClass:[NSString class]]) {
+			[AWSNumber parseUInt64:&size fromString:(NSString *)value];
+		}
+	}
+
+	value = dict[@"StorageClass"];
+	if (value && [value isKindOfClass:[NSString class]])
+	{
+		if ([(NSString *)value isEqualToString:@"STANDARD"])
+		{
+			storageClass = S3StorageClass_Standard;
+		}
+		else if ([(NSString *)value isEqualToString:@"STANDARD_IA"])
+		{
+			storageClass = S3StorageClass_InfrequentAccess;
+		}
+		else if ([(NSString *)value isEqualToString:@"REDUCED_REDUNDANCY"])
+		{
+			storageClass = S3StorageClass_ReducedRedundancy;
+		}
+		else if ([(NSString *)value isEqualToString:@"GLACIER"])
+		{
+			storageClass = S3StorageClass_Glacier;
+		}
+	}
+
+	if (key && eTag && lastModified)
+	{
+		S3ObjectInfo *objInfo = [[S3ObjectInfo alloc] init];
+		objInfo.key = key;
+		objInfo.eTag = eTag;
+		objInfo.lastModified = lastModified;
+		objInfo.size = size;
+		objInfo.storageClass = storageClass;
+		
+		return objInfo;
+	}
+	else
+	{
+		return nil;
+	}
 }
 
 @end

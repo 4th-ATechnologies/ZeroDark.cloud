@@ -22,6 +22,7 @@
 #import "ZDCChangeList.h"
 #import "ZDCPullItem.h"
 #import "ZDCPullStateManager.h"
+#import "ZDCPullTaskCompletion.h"
 #import "ZDCPullTaskResult.h"
 #import "ZDCPushManagerPrivate.h"
 #import "ZDCProxyList.h"
@@ -35,14 +36,6 @@
 #import "NSString+ZeroDark.h"
 #import "NSURLRequest+ZeroDark.h"
 #import "NSURLResponse+ZeroDark.h"
-
-// Libraries
-#import <YapDatabase/YapDatabaseAtomic.h>
-#import <libkern/OSAtomic.h>
-#import <os/lock.h>
-#import <stdatomic.h>
-
-@class ZDCPullTaskResult;
 
 #ifndef robbie_hanson
   #define robbie_hanson 1
@@ -63,8 +56,6 @@
 /* extern */ NSString *const kETagKey    = @"eTag";
 
 static NSUInteger const kMaxFailCount = 8;
-
-typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transaction, ZDCPullTaskResult *result);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
@@ -1302,42 +1293,27 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	
 	BOOL isRcrd = [cloudPath.fileNameExt isEqualToString:kZDCCloudFileExtension_Rcrd];
 	
-	__block YAPUnfairLock innerLock = YAP_UNFAIR_LOCK_INIT;
-	__block ZDCPullTaskResult *cumulativeResult = nil;
-	__block atomic_uint pendingCount = 0;
+	ZDCPullTaskMultiCompletion *multiCompletion = nil;
+	{ // Scoping
 
-	ZDCPullTaskCompletion continuationBlock =
-	^(YapDatabaseReadWriteTransaction *transaction, ZDCPullTaskResult *result){ @autoreleasepool {
-		
-		NSAssert(result != nil, @"Bad parameter for block: ZDCPullTaskResult");
-		if (result.pullResult == ZDCPullResult_Success) {
-			NSAssert(transaction != nil, @"Bad parameter for block: transaction is nil (with success status)");
-		}
-		
-		YAPUnfairLockLock(&innerLock);
-		@try {
-			
-			if (!cumulativeResult || result.pullResult != ZDCPullResult_Success)
-			{
-				cumulativeResult = result;
+		ZDCPullTaskSingleCompletion taskCompletion =
+		^(YapDatabaseReadWriteTransaction *transaction, ZDCPullTaskResult *result, uint remaining) {
+	
+			NSAssert(result != nil, @"Bad parameter for block: ZDCPullTaskResult");
+			if (result.pullResult == ZDCPullResult_Success) {
+				NSAssert(transaction != nil, @"Bad parameter for block: transaction is nil (with success status)");
 			}
-		}
-		@finally {
-			YAPUnfairLockUnlock(&innerLock);
-		}
-		
-		uint remaining = atomic_fetch_sub(&pendingCount, 1) - 1;
-		DDLogTrace(@"[%@] ProcessPendingChange: put-if-nonexistent: remaining = %u",
-			pullState.localUserID,
-			remaining);
-		
-		if (remaining == 0)
-		{
-			result = cumulativeResult;
 			
+			DDLogTrace(@"[%@] ProcessPendingChange: put-if-nonexistent: remaining = %u",
+			           pullState.localUserID, remaining);
+		};
+	
+		ZDCPullTaskCompletion finalCompletion =
+		^(YapDatabaseReadWriteTransaction *transaction, ZDCPullTaskResult *result) {
+	
 			DDLogTrace(@"[%@] ProcessPendingChange: put-if-nonexistent: result = %@",
 			           pullState.localUserID, result);
-			
+	
 			if (result.pullResult != ZDCPullResult_Success)
 			{
 				// One would think AWS would return a 404 for files that no longer exist.
@@ -1354,29 +1330,34 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				{
 					finalCompletionBlock(transaction, result);
 				}
-				
+	
 				return;
 			}
-			
+	
 			ZDCChangeList *pullInfo =
 			  [transaction objectForKey: pullState.localUserID
 			               inCollection: kZDCCollection_PullState];
-			
+	
 			pullInfo = [pullInfo copy];
 			[pullInfo didProcessChangeIDs:[changeIDs set]];
-			
+	
 			[transaction setObject: pullInfo
-			                forKey: pullState.localUserID
-			          inCollection: kZDCCollection_PullState];
-			
+								 forKey: pullState.localUserID
+						 inCollection: kZDCCollection_PullState];
+	
 			[transaction addCompletionQueue:concurrentQueue completionBlock:^{
-				
+	
 				[self continuePullWithPullInfo: pullInfo
 				                     pullState: pullState
 				               finalCompletion: finalCompletionBlock];
 			}];
-		}
-	}};
+		};
+		
+		multiCompletion =
+		  [[ZDCPullTaskMultiCompletion alloc] initWithPendingCount: 1
+		                                       taskCompletionBlock: taskCompletion
+		                                      finalCompletionBlock: finalCompletion];
+	}
 	
 	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 	
@@ -1447,7 +1428,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			                                                       transaction: transaction];
 		}
 		
-		BOOL done = YES;
+		BOOL aborted = NO;
 		
 		if (node)
 		{
@@ -1473,12 +1454,11 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 					item.rcrdETag = eTag;
 					item.rcrdLastModified = timestamp;
 					
-					item.rcrdCompletionBlock = continuationBlock;
-					item.ptrCompletionBlock = continuationBlock;
+					item.rcrdCompletionBlock = multiCompletion.wrapper;
+					item.ptrCompletionBlock = multiCompletion.wrapper;
 					item.dirCompletionBlock = nil;
 					
-					done = NO;
-					atomic_fetch_add(&pendingCount, 2);
+					[multiCompletion incrementPendingCount:2];
 					[self pullItem:item pullState:pullState];
 				}
 			}
@@ -1555,7 +1535,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				// then we've somehow become out-of-sync with the cloud.
 				// And we need to fallback to a full pull.
 				
-				done = NO;
+				aborted = YES;
 				[self fallbackToFullPullWithPullState: pullState
 				                      finalCompletion: finalCompletionBlock];
 			}
@@ -1570,12 +1550,11 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				item.rcrdETag = eTag;
 				item.rcrdLastModified = timestamp;
 				
-				item.rcrdCompletionBlock = continuationBlock;
-				item.ptrCompletionBlock = continuationBlock;
+				item.rcrdCompletionBlock = multiCompletion.wrapper;
+				item.ptrCompletionBlock = multiCompletion.wrapper;
 				item.dirCompletionBlock = nil;
 				
-				done = NO;
-				atomic_fetch_add(&pendingCount, 2);
+				[multiCompletion incrementPendingCount:2];
 				[self pullItem:item pullState:pullState];
 			}
 			else
@@ -1591,19 +1570,17 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				item.dataETag = eTag;
 				item.dataLastModified = timestamp;
 				
-				item.rcrdCompletionBlock = continuationBlock;
-				item.ptrCompletionBlock = continuationBlock;
+				item.rcrdCompletionBlock = multiCompletion.wrapper;
+				item.ptrCompletionBlock = multiCompletion.wrapper;
 				item.dirCompletionBlock = nil;
 				
-				done = NO;
-				atomic_fetch_add(&pendingCount, 2);
+				[multiCompletion incrementPendingCount:2];
 				[self pullItem:item pullState:pullState];
 			}
 		}
-				 
-		if (done) {
-			atomic_fetch_add(&pendingCount, 1);
-			continuationBlock(transaction, [ZDCPullTaskResult success]);
+		
+		if (!aborted) {
+			multiCompletion.wrapper(transaction, [ZDCPullTaskResult success]);
 		}
 	}];
 }
@@ -2398,44 +2375,32 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				return;
 			}
 			
-			__block YAPUnfairLock innerLock = YAP_UNFAIR_LOCK_INIT;
-			__block ZDCPullTaskResult *cumulativeResult = nil;
-			__block atomic_uint pendingCount = trunkNodes.count;
-			
-			ZDCPullTaskCompletion innerCompletionBlock =
-			^(YapDatabaseReadWriteTransaction *transaction, ZDCPullTaskResult *opResult){ @autoreleasepool {
+			ZDCPullTaskMultiCompletion *multiCompletion = nil;
+			{ // Scoping
 				
-				NSAssert(opResult != nil, @"Bad parameter for block: ZDCPullTaskResult");
-
-				dispatch_async(concurrentQueue, ^{ @autoreleasepool {
-					
-					if (![pullStateManager isPullCancelled:pullState]) {
-						[self dequeueNextItemIfPossible:pullState];
+				ZDCPullTaskSingleCompletion taskCompletion =
+				^(YapDatabaseReadWriteTransaction *transaction, ZDCPullTaskResult *result, uint remaining){
+	
+					NSAssert(result != nil, @"Bad parameter for block: ZDCPullTaskResult");
+					if (result.pullResult == ZDCPullResult_Success) {
+						NSAssert(transaction != nil, @"Bad parameter for block: transaction is nil (with success status)");
 					}
-				}});
-				
-				YAPUnfairLockLock(&innerLock);
-				@try {
-
-					if (!cumulativeResult || opResult.pullResult != ZDCPullResult_Success)
-					{
-						cumulativeResult = opResult;
-					}
-				}
-				@finally {
-					YAPUnfairLockUnlock(&innerLock);
-				}
-				
-				uint remaining = atomic_fetch_sub(&pendingCount, 1) - 1;
-				if (ddLogLevel & DDLogFlagTrace)
-				{
+	
+					dispatch_async(concurrentQueue, ^{ @autoreleasepool {
+	
+						if (![pullStateManager isPullCancelled:pullState]) {
+							[self dequeueNextItemIfPossible:pullState];
+						}
+					}});
+	
 					DDLogTrace(@"[%@] Trunk nodes remaining = %u", pullState.localUserID, remaining);
-				}
-				if (remaining == 0)
-				{
-					finalCompletionBlock(transaction, cumulativeResult);
-				}
-			}};
+				};
+	
+				multiCompletion =
+				  [[ZDCPullTaskMultiCompletion alloc] initWithPendingCount: (uint)trunkNodes.count
+				                                       taskCompletionBlock: taskCompletion
+				                                      finalCompletionBlock: finalCompletionBlock];
+			}
 			
 			for (ZDCTrunkNode *trunkNode in trunkNodes)
 			{
@@ -2443,7 +2408,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				        bucket: bucket
 				        region: region
 				     pullState: pullState
-				    completion: innerCompletionBlock];
+				    completion: multiCompletion.wrapper];
 			}
 			
 		//	[self syncAvatarsWithBucket: bucket
@@ -2687,13 +2652,13 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
           bucket:(NSString *)bucket
           region:(AWSRegion)region
        pullState:(ZDCPullState *)pullState
-      completion:(ZDCPullTaskCompletion)outerCompletionBlock
+      completion:(ZDCPullTaskCompletion)nodeCompletion
 {
 	NSParameterAssert(node != nil);
 	NSParameterAssert(bucket != nil);
 	NSParameterAssert(region != AWSRegion_Invalid);
 	NSParameterAssert(pullState != nil);
-	NSParameterAssert(outerCompletionBlock != nil);
+	NSParameterAssert(nodeCompletion != nil);
 	
 	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
@@ -2739,45 +2704,33 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		//
 		// Prep work for processing files & sub-directories.
 	
-		__block YAPUnfairLock innerLock = YAP_UNFAIR_LOCK_INIT;
-		__block ZDCPullTaskResult *cumulativeResult = nil;
-		__block atomic_uint pendingCount = 1; // Yes, one is correct. See last step.
-
-		ZDCPullTaskCompletion innerCompletionBlock =
-		^(YapDatabaseReadWriteTransaction *transaction, ZDCPullTaskResult *opResult){ @autoreleasepool {
-
-			NSAssert(opResult != nil, @"Bad parameter for block: ZDCPullTaskResult");
-
-			dispatch_async(concurrentQueue, ^{ @autoreleasepool {
-				
-				if (![pullStateManager isPullCancelled:pullState]) {
-					[self dequeueNextItemIfPossible:pullState];
-				}
-			}});
+		ZDCPullTaskMultiCompletion *multiCompletion = nil;
+		{ // Scoping
 			
-			YAPUnfairLockLock(&innerLock);
-			@try {
-
-				if (!cumulativeResult || opResult.pullResult != ZDCPullResult_Success)
-				{
-					cumulativeResult = opResult;
+			ZDCPullTaskSingleCompletion taskCompletion =
+			^(YapDatabaseReadWriteTransaction *transaction, ZDCPullTaskResult *result, uint remaining){
+	
+				NSAssert(result != nil, @"Bad parameter for block: ZDCPullTaskResult");
+				if (result.pullResult == ZDCPullResult_Success) {
+					NSAssert(transaction != nil, @"Bad parameter for block: transaction is nil (with success status)");
 				}
-			}
-			@finally {
-				YAPUnfairLockUnlock(&innerLock);
-			}
-
-			uint remaining = atomic_fetch_sub(&pendingCount, 1) - 1;
-			DDLogTrace(@"[%@] Syncing node's children (remaining=%u): %@",
-				pullState.localUserID,
-				remaining,
-				log_path.fullPath);
-			
-			if (remaining == 0)
-			{
-				outerCompletionBlock(transaction, cumulativeResult);
-			}
-		}};
+	
+				dispatch_async(concurrentQueue, ^{ @autoreleasepool {
+	
+					if (![pullStateManager isPullCancelled:pullState]) {
+						[self dequeueNextItemIfPossible:pullState];
+					}
+				}});
+	
+				DDLogTrace(@"[%@] Syncing node's children (remaining=%u): %@",
+							  pullState.localUserID, remaining, log_path.fullPath);
+			};
+	
+			multiCompletion =
+			  [[ZDCPullTaskMultiCompletion alloc] initWithPendingCount: 1 // Yes, one is correct. See last step.
+			                                       taskCompletionBlock: taskCompletion
+			                                      finalCompletionBlock: nodeCompletion];
+		}
 		
 		NSMutableArray<S3ObjectInfo *>* remainingFiles = [dirList mutableCopy];
 	
@@ -2847,7 +2800,6 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			nodeData = PopFileWithKey(dataKey);
 			
 			ZDCCloudPath *rcrdCloudPath = [ZDCCloudPath cloudPathFromPath:nodeRcrd.key];
-			
 			if (rcrdCloudPath == nil)
 			{
 				DDLogTrace(@"[%@] Ignoring invalid node path: %@", pullState.localUserID, nodeRcrd.key);
@@ -2921,11 +2873,11 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				item.dataETag = nodeData.eTag;
 				item.dataLastModified = nodeData.lastModified;
 				
-				item.rcrdCompletionBlock = innerCompletionBlock;
-				item.ptrCompletionBlock = innerCompletionBlock; // if node is a pointer
-				item.dirCompletionBlock = innerCompletionBlock; // if node has children
+				item.rcrdCompletionBlock = multiCompletion.wrapper;
+				item.ptrCompletionBlock = nil;
+				item.dirCompletionBlock = multiCompletion.wrapper; // if node has children
 				
-				atomic_fetch_add(&pendingCount, 3);
+				[multiCompletion incrementPendingCount:2];
 				[self queuePullItem:item pullState:pullState];
 			}
 			else
@@ -2946,15 +2898,45 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 					                               atPath: path
 					                          transaction: transaction];
 				}
-	
-				if (node.dirPrefix)
+				
+				if (node.isPointer)
 				{
-					atomic_fetch_add(&pendingCount, 1);
+					ZDCNode *pointee = [transaction objectForKey:node.pointeeID inCollection:kZDCCollection_Nodes];
+					
+					if (pointee)
+					{
+						ZDCPullItem *item = [[ZDCPullItem alloc] init];
+						item.region = region;
+						item.bucket = bucket;
+						item.parents = parents;
+						
+						item.rcrdCloudPath = rcrdCloudPath;
+						item.rcrdETag = nodeRcrd.eTag;
+						item.rcrdLastModified = nodeRcrd.lastModified;
+						
+						item.dataCloudPath = [rcrdCloudPath copyWithFileNameExt:kZDCCloudFileExtension_Data];
+						item.dataETag = nodeData.eTag;
+						item.dataLastModified = nodeData.lastModified;
+						
+						item.rcrdCompletionBlock = multiCompletion.wrapper;
+						item.ptrCompletionBlock = nil;
+						item.dirCompletionBlock = multiCompletion.wrapper; // if node has children
+						
+						[multiCompletion incrementPendingCount:2];
+						[self syncPointeeNode: pointee
+						          pointerNode: node
+						             pullItem: item
+						            pullState: pullState];
+					}
+				}
+				else if (node.dirPrefix)
+				{
+					[multiCompletion incrementPendingCount:1];
 					[self syncNode: node
 					        bucket: bucket
 					        region: region
 					     pullState: pullState
-					    completion: innerCompletionBlock];
+					    completion: multiCompletion.wrapper];
 				}
 			}
 	
@@ -2972,7 +2954,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 		// If there weren't any other sub-tasks, then we'll recursively call completionBlocks,
 		// moving up the treesystem hierarchy until we reach a directory that isn't complete.
 	
-		innerCompletionBlock(transaction, [ZDCPullTaskResult success]);
+		multiCompletion.wrapper(transaction, [ZDCPullTaskResult success]);
 	}];
 }
 
@@ -2985,66 +2967,20 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
                pullItem:(ZDCPullItem *)pullItem
               pullState:(ZDCPullState *)pullState
 {
-	if (pointerNode.isImmutable) {
-		pointerNode = [pointerNode copy];
+	if (pointeeNode.isImmutable) {
+		pointeeNode = [pointeeNode copy];
 	}
+	[pointerNode makeImmutable];
 	
-	NSString *const pointee_ownerID = pointeeNode.anchor.userID;
-	
-	void (^Fail)(ZDCPullTaskResult*) = ^(ZDCPullTaskResult *result){ @autoreleasepool {
-		
-		ZDCPullTaskCompletion rcrdCompletionBlock = pullItem.rcrdCompletionBlock;
-		ZDCPullTaskCompletion ptrCompletionBlock = pullItem.ptrCompletionBlock;
-		ZDCPullTaskCompletion dirCompletionBlock = pullItem.dirCompletionBlock;
-		
-		rcrdCompletionBlock(nil, result);
-		if (ptrCompletionBlock) {
-			ptrCompletionBlock(nil, result);
-		}
-		if (dirCompletionBlock) {
-			dirCompletionBlock(nil, result);
-		}
-	}};
-	
-	void (^Succeed)(void) = ^{ @autoreleasepool {
-		
-		if ([pullStateManager isPullCancelled:pullState])
-		{
-			return;
-		}
-		
-//		NSString *rcrdPath = [pointee_cloudPath stringBySettingPathExtension:@"rcrd"];
-//		NSString *dataPath = [pointee_cloudPath stringBySettingPathExtension:@"data"];
-//
-//		S3ObjectInfo *rcrdInfo = [pullState popItemWithPath:rcrdPath rootNodeID:pointerNode.uuid];
-//		S3ObjectInfo *dataInfo = [pullState popItemWithPath:dataPath rootNodeID:pointerNode.uuid];
-//
-//		[self queueSyncNodeRcrd:rcrdPath
-//							rcrdETag:rcrdInfo.eTag
-//							nodeData:(dataInfo ? dataPath : nil)
-//							dataETag:dataInfo.eTag
-//							  bucket:owner.aws_bucket
-//							  region:owner.aws_region
-//							parentID:pointerNode.parentID
-//							  source:pointerNode
-//						  pullState:pullState
-//					dataCompletion:dataCompletionBlock
-//				  xattrCompletion:xattrCompletionBlock
-//				 subDirCompletion:subDirCompletionBlock];
-	}};
-	
-	//
-	// 2.) Fetch pointee node (if needed)
-	// 3.) Call /listProxy API (recursively)
+	__block ZDCUser *owner = nil;
 	
 	__block void(^Step1)(void);
 	__block void(^Step2A)(void);
 	__block void(^Step2B)(void);
 	__block void(^Step3)(ZDCCloudPath*, ZDCCloudRcrd*, NSString*, NSDate*);
 	__block void(^Step4)(ZDCCloudPath*);
+	__block void(^Fail)(ZDCPullTaskResult*);
 	__block void(^PermanentFail)(ZDCNodeConflict);
-	
-	__block ZDCUser *owner = nil;
 	
 	// Step 1 of 4:
 	//
@@ -3053,45 +2989,33 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	//
 	Step1 = ^{ @autoreleasepool {
 		
-		[[self rwConnection] asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
-			
-			owner = [transaction objectForKey:pointee_ownerID inCollection:kZDCCollection_Users];
-			
-		} completionQueue:concurrentQueue completionBlock:^{
-			
-			if (owner)
+		NSString *const ownerID = pointeeNode.anchor.userID;
+		
+		// Attempt to fetch the user from the database.
+		// If missing, the remoteUserManager will automatically download the user for us.
+		//
+		[zdc.remoteUserManager fetchRemoteUserWithID: ownerID
+		                                 requesterID: pullState.localUserID
+		                             completionQueue: concurrentQueue
+		                             completionBlock:^(ZDCUser *remoteUser, NSError *error)
+		{
+			if (error)
 			{
-				if (owner.accountDeleted)
-					PermanentFail(ZDCNodeConflict_Graft_DstUserAccountDeleted);
-				else
-					Step2A();
+				ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
+				result.pullResult = ZDCPullResult_Fail_Other;
+				result.pullErrorReason = ZDCPullErrorReason_HttpStatusCode;
+				result.underlyingError = error;
 				
+				Fail(result);
 				return;
 			}
 			
-			[zdc.remoteUserManager fetchRemoteUserWithID: pointee_ownerID
-			                                 requesterID: pullState.localUserID
-			                             completionQueue: concurrentQueue
-			                             completionBlock:^(ZDCUser *remoteUser, NSError *error)
-			{
-				if (error)
-				{
-					ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
-					result.pullResult = ZDCPullResult_Fail_Other;
-					result.pullErrorReason = ZDCPullErrorReason_HttpStatusCode;
-					result.underlyingError = error;
-					
-					Fail(result);
-					return;
-				}
-				
-				owner = remoteUser;
-				
-				if (owner.accountDeleted)
-					PermanentFail(ZDCNodeConflict_Graft_DstUserAccountDeleted);
-				else
-					Step2A();
-			}];
+			owner = remoteUser;
+			
+			if (owner.accountDeleted)
+				PermanentFail(ZDCNodeConflict_Graft_DstUserAccountDeleted);
+			else
+				Step2A();
 		}];
 	}};
 	
@@ -3146,9 +3070,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			}
 			else
 			{
-				// Temp: Force test our API
-				Step2B();
-			//	Step3(cloudPath, cloudRcrd, eTag, lastModified);
+				Step3(cloudPath, cloudRcrd, eTag, lastModified);
 			}
 		}];
 	}};
@@ -3292,7 +3214,7 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			    ![pointeeNode.anchor.dirPrefix isEqualToString:cloudPath.dirPrefix])
 			{
 				pointeeNode.anchor =
-				  [[ZDCNodeAnchor alloc] initWithUserID: pointee_ownerID
+				  [[ZDCNodeAnchor alloc] initWithUserID: owner.uuid
 				                                 zAppID: cloudPath.zAppID
 				                              dirPrefix: cloudPath.dirPrefix];
 			}
@@ -3455,19 +3377,29 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			
 			rcrdCompletionBlock(transaction, [ZDCPullTaskResult success]);
 			
-			if (ptrCompletionBlock) {
-				ptrCompletionBlock(transaction, [ZDCPullTaskResult success]);
-			}
-			
-			if (dirCompletionBlock) {
+			if (ptrCompletionBlock || dirCompletionBlock)
+			{
 				Step4(cloudPath);
 			}
 		}];
 	}};
 	
+	// Step 4 of 4:
+	//
+	// If we're being asked to recursively pull the sub-directories,
+	// then we need to ask the server for the list of children under this node.
+	//
 	Step4 = ^(ZDCCloudPath *cloudPath){ @autoreleasepool {
 		
 		NSAssert(owner != nil, @"Bad state");
+		
+		ZDCPullTaskCompletion ptrCompletionBlock = pullItem.ptrCompletionBlock;
+		ZDCPullTaskCompletion dirCompletionBlock = pullItem.dirCompletionBlock;
+		
+		NSAssert(( ptrCompletionBlock && !dirCompletionBlock) ||
+		         (!ptrCompletionBlock &&  dirCompletionBlock), @"Unexpected state: XOR required");
+		
+		ZDCPullTaskCompletion completionBlock = ptrCompletionBlock ?: dirCompletionBlock;
 		
 		[ZDCProxyList recursiveProxyList: zdc
 		                          region: owner.aws_region
@@ -3484,13 +3416,35 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				result.pullErrorReason = ZDCPullErrorReason_HttpStatusCode;
 				result.underlyingError = error;
 				
-				Fail(result);
+				completionBlock(nil, result);
 				return;
 			}
 			
 			[pullState pushList:list withRootNodeID:pointeeNode.uuid];
-			Succeed();
+			
+			[self syncNode: pointeeNode
+			        bucket: owner.aws_bucket
+			        region: owner.aws_region
+			     pullState: pullState
+			    completion: completionBlock];
 		}];
+	}};
+	
+	Fail = ^(ZDCPullTaskResult *result){ @autoreleasepool {
+		
+		ZDCPullTaskCompletion rcrdCompletionBlock = pullItem.rcrdCompletionBlock;
+		ZDCPullTaskCompletion ptrCompletionBlock = pullItem.ptrCompletionBlock;
+		ZDCPullTaskCompletion dirCompletionBlock = pullItem.dirCompletionBlock;
+		
+		rcrdCompletionBlock(nil, result);
+		
+		if (ptrCompletionBlock) {
+			ptrCompletionBlock(nil, result);
+		}
+		
+		if (dirCompletionBlock) {
+			dirCompletionBlock(nil, result);
+		}
 	}};
 	
 	PermanentFail = ^(ZDCNodeConflict conflict){ @autoreleasepool {
@@ -3525,7 +3479,24 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 											transaction: transaction];
 			}
 			
-			Succeed();
+			// Handle completionBlocks
+			//
+			// Although we failed to pull the pointee node,
+			// the pull result itself succeeded.
+			
+			ZDCPullTaskCompletion rcrdCompletionBlock = pullItem.rcrdCompletionBlock;
+			ZDCPullTaskCompletion ptrCompletionBlock = pullItem.ptrCompletionBlock;
+			ZDCPullTaskCompletion dirCompletionBlock = pullItem.dirCompletionBlock;
+			
+			rcrdCompletionBlock(transaction, [ZDCPullTaskResult success]);
+			
+			if (ptrCompletionBlock) {
+				ptrCompletionBlock(transaction, [ZDCPullTaskResult success]);
+			}
+			
+			if (dirCompletionBlock) {
+				dirCompletionBlock(transaction, [ZDCPullTaskResult success]);
+			}
 		}];
 	}};
 	
@@ -3557,9 +3528,6 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 - (void)dequeueNextItemIfPossible:(ZDCPullState *)pullState
 {
 	if (pullState.tasksCount >= 8) {
-		DDLogTrace(@"[%@] dequeueNextItemIfPossible: at capacity (pending=%lu)",
-			pullState.localUserID,
-			(unsigned long)pullState.queueLength);
 		return;
 	}
 	
@@ -3571,11 +3539,9 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 	// Smart dequeue algorithm
 	ZDCPullItem *item = [pullState dequeueItemWithPreferredNodeIDs:preferredNodeIDs];
 	if (item == nil) {
-		DDLogTrace(@"[%@] dequeueNextItemIfPossible: empty", pullState.localUserID);
 		return;
 	}
 	
-	DDLogTrace(@"[%@] dequeueNextItemIfPossible: dequeueing", pullState.localUserID);
 	[self pullItem:item pullState:pullState];
 }
 
@@ -4165,13 +4131,18 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 				[children addObject:child];
 			}];
 			
+			ZDCPullTaskMultiCompletion *multiCompletion =
+			  [[ZDCPullTaskMultiCompletion alloc] initWithPendingCount: (uint)children.count
+			                                       taskCompletionBlock: nil
+			                                      finalCompletionBlock: dirCompletionBlock];
+			
 			for (ZDCNode *child in children)
 			{
 				[self syncNode: child
 				        bucket: pullItem.bucket
 				        region: pullItem.region
 				     pullState: pullState
-				    completion: dirCompletionBlock];
+				    completion: multiCompletion.wrapper];
 			}
 		}
 		else if (node.dirPrefix && node.dirSalt)
@@ -4370,13 +4341,18 @@ typedef void(^ZDCPullTaskCompletion)(YapDatabaseReadWriteTransaction *transactio
 			// It's using the old cleartext children style.
 			// So the node doesn't actually have any direct children.
 			
+			ZDCPullTaskMultiCompletion *multiCompletion =
+			  [[ZDCPullTaskMultiCompletion alloc] initWithPendingCount: (uint)children.count
+			                                       taskCompletionBlock: NULL
+			                                      finalCompletionBlock: dirCompletionBlock];
+			
 			for (ZDCNode *child in children)
 			{
 				[self syncNode: child
 				        bucket: pullItem.bucket
 				        region: pullItem.region
 				     pullState: pullState
-				    completion: dirCompletionBlock];
+				    completion: multiCompletion.wrapper];
 			}
 		}
 		else if (node.dirPrefix && node.dirSalt)

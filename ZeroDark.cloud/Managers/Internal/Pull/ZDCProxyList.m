@@ -14,7 +14,7 @@
 #import "AWSNumber.h"
 #import "AWSSignature.h"
 #import "S3ObjectInfo.h"
-#import "S3ResponsePrivate.h"
+#import "S3ResponseParser.h"
 #import "ZDCSessionManager.h"
 #import "ZeroDarkCloudPrivate.h"
 
@@ -51,9 +51,9 @@
 	NSString *rootAppPrefix = inRootCloudPath.zAppID;
 	
 	NSMutableArray<NSString *> *pendingCloudPaths = [[NSMutableArray alloc] init];
-	NSMutableArray<S3ObjectInfo *> *fetchedItems = [[NSMutableArray alloc] init];
+	NSMutableDictionary<NSString*, S3ObjectInfo*> *results = [[NSMutableDictionary alloc] init];
 	
-	NSString *rootRcrdPath = [inRootCloudPath pathWithExt:@"rcrd"];
+	NSString *const rootRcrdPath = [inRootCloudPath pathWithExt:@"rcrd"];
 	[pendingCloudPaths addObject:rootRcrdPath];
 	
 	dispatch_queue_t queue = dispatch_queue_create("ZDCProxyList", DISPATCH_QUEUE_SERIAL);
@@ -91,8 +91,6 @@
 		
 		failCount = 0;
 		
-		NSLog(@"responseObject: %@", responseObject);
-		
 		NSMutableSet *recursive_prefixes = [NSMutableSet set];
 		
 		NSDictionary *response_object = responseObject;
@@ -113,15 +111,12 @@
 			if (![children isKindOfClass:[NSDictionary class]])
 				children = @{};
 			
-			for (NSString *prefix_type in children)
+			for (NSString *name in children)
 			{
-				if ([prefix_type isEqualToString:@"dir"] || [prefix_type isEqualToString:@"comments"])
-				{
-					NSString *child_prefix = children[prefix_type];
-					NSString *file_prefix = [NSString stringWithFormat:@"%@/%@", rootAppPrefix, child_prefix];
+				NSString *dir_prefix = children[name];
+				NSString *file_prefix = [NSString stringWithFormat:@"%@/%@", rootAppPrefix, dir_prefix];
 					
-					[recursive_prefixes addObject:file_prefix];
-				}
+				[recursive_prefixes addObject:file_prefix];
 			}
 		}
 		
@@ -131,93 +126,21 @@
 		
 		for (NSDictionary *item_info in list)
 		{
-			id value;
-			
-			NSString *key = nil;
-			NSString *eTag = nil;
-			NSDate *lastModified = nil;
-			uint64_t size = 0;
-			S3StorageClass storageClass = S3StorageClass_Standard;
-			
-			value = item_info[@"Key"];
-			if (value && [value isKindOfClass:[NSString class]])
+			S3ObjectInfo *item = [S3ResponseParser parseObjectInfo:item_info];
+			if (item)
 			{
-				key = (NSString *)value;
-			}
+				results[item.key] = item;
 			
-			value = item_info[@"ETag"];
-			if (value && [value isKindOfClass:[NSString class]])
-			{
-				eTag = (NSString *)value;
-				
-				eTag = [eTag stringByRemovingPercentEncoding];
-				
-				NSCharacterSet *quotes = [NSCharacterSet characterSetWithCharactersInString:@"\""];
-				eTag = [eTag stringByTrimmingCharactersInSet:quotes];
-			}
-			
-			value = item_info[@"LastModified"];
-			if (value && [value isKindOfClass:[NSString class]])
-			{
-				lastModified = [AWSDate parseISO8601Timestamp:(NSString *)value];
-			}
-			
-			value = item_info[@"Size"];
-			if (value)
-			{
-				if ([value isKindOfClass:[NSNumber class]]) {
-					size = [(NSNumber *)value unsignedLongLongValue];
-				}
-				else if ([value isKindOfClass:[NSString class]]) {
-					[AWSNumber parseUInt64:&size fromString:(NSString *)value];
-				}
-			}
-			
-			value = item_info[@"StorageClass"];
-			if (value && [value isKindOfClass:[NSString class]])
-			{
-				if ([(NSString *)value isEqualToString:@"STANDARD"])
-				{
-					storageClass = S3StorageClass_Standard;
-				}
-				else if ([(NSString *)value isEqualToString:@"STANDARD_IA"])
-				{
-					storageClass = S3StorageClass_InfrequentAccess;
-				}
-				else if ([(NSString *)value isEqualToString:@"REDUCED_REDUNDANCY"])
-				{
-					storageClass = S3StorageClass_ReducedRedundancy;
-				}
-				else if ([(NSString *)value isEqualToString:@"GLACIER"])
-				{
-					storageClass = S3StorageClass_Glacier;
-				}
-			}
-			
-			if (key && eTag && lastModified)
-			{
-				S3ObjectInfo *objInfo = [[S3ObjectInfo alloc] init];
-				objInfo.key = key;
-				objInfo.eTag = eTag;
-				objInfo.lastModified = lastModified;
-				objInfo.size = size;
-				objInfo.storageClass = storageClass;
-				
-				[fetchedItems addObject:objInfo];
-			}
-			
-			if (key)
-			{
-				NSArray<NSString *> *keyComponents = [key componentsSeparatedByString:@"/"];
+				NSArray<NSString *> *keyComponents = [item.key componentsSeparatedByString:@"/"];
 				
 				NSString *keyAppPrefix = keyComponents.count > 0 ? keyComponents[0] : @"";
 				NSString *keyDirPrefix = keyComponents.count > 1 ? keyComponents[1] : @"";
 				
 				NSString *keyPrefix = [NSString stringWithFormat:@"%@/%@", keyAppPrefix, keyDirPrefix];
 				
-				if ([recursive_prefixes containsObject:keyPrefix] && [key hasSuffix:@".rcrd"])
+				if ([recursive_prefixes containsObject:keyPrefix] && [item.key hasSuffix:@".rcrd"])
 				{
-					[pendingCloudPaths addObject:key];
+					[pendingCloudPaths addObject:item.key];
 				}
 			}
 		}
@@ -236,8 +159,9 @@
 		
 			if (pendingCloudPaths.count == 0)
 			{
+				NSArray<S3ObjectInfo *> *fetchedItems = [results allValues];
 				dispatch_async(completionQueue, ^{ @autoreleasepool {
-					completionBlock([fetchedItems copy], nil);
+					completionBlock(fetchedItems, nil);
 				}});
 			}
 			else
@@ -338,7 +262,7 @@
 	resetBlock = ^{ @autoreleasepool {
 		
 		[pendingCloudPaths removeAllObjects];
-		[fetchedItems removeAllObjects];
+		[results removeAllObjects];
 		
 		[pendingCloudPaths addObject:rootRcrdPath];
 		
