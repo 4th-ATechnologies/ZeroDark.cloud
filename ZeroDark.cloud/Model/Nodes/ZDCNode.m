@@ -44,26 +44,6 @@ static NSString *const k_pointeeID             = @"pointeeID";
 
 @implementation ZDCNode
 
-+ (NSData *)randomEncryptionKey
-{
-	return [NSData s4RandomBytes:kZDCNode_EncryptionKeySizeInBytes];
-}
-
-+ (NSData *)randomDirSalt
-{
-	return [NSData s4RandomBytes:kZDCNode_DirSaltKeySizeInBytes];
-}
-
-+ (NSString *)randomDirPrefix
-{
-	return [NSString zdcUUIDString];
-}
-
-+ (NSString *)randomCloudName
-{
-	return [[NSData s4RandomBytes:20] zBase32String];
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Properties
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -289,6 +269,64 @@ static NSString *const k_pointeeID             = @"pointeeID";
 - (BOOL)isPointer
 {
 	return (pointeeID != nil);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Random
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
++ (NSData *)randomEncryptionKey
+{
+	return [NSData s4RandomBytes:kZDCNode_EncryptionKeySizeInBytes];
+}
+
++ (NSData *)randomDirSalt
+{
+	return [NSData s4RandomBytes:kZDCNode_DirSaltKeySizeInBytes];
+}
+
++ (NSString *)randomDirPrefix
+{
+	return [NSString zdcUUIDString];
+}
+
++ (NSString *)randomCloudName
+{
+	return [[NSData s4RandomBytes:20] zBase32String];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Special ParentID's
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
++ (NSString *)signalParentIDForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
+{
+	return [NSString stringWithFormat:@"%@|%@|signal", localUserID, zAppID];
+}
+
++ (NSString *)graftParentIDForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
+{
+	return [NSString stringWithFormat:@"%@|%@|graft", localUserID, zAppID];
+}
+
++ (BOOL)getLocalUserID:(NSString **)outLocalUserID
+                zAppID:(NSString **)outZAppID
+          fromParentID:(NSString *)parentID
+{
+	NSArray<NSString *> *components = [parentID componentsSeparatedByString:@"|"];
+	if (components.count != 3)
+	{
+		if (outLocalUserID) *outLocalUserID = nil;
+		if (outZAppID) *outZAppID = nil;
+		return NO;
+	}
+	
+	NSString *localUserID = components[0];
+	NSString *zAppID = components[1];
+	
+	if (outLocalUserID) *outLocalUserID = localUserID;
+	if (outZAppID) *outZAppID = zAppID;
+	return YES;
 }
 
 @end

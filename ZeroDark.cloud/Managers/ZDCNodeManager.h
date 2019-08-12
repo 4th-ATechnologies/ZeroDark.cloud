@@ -25,11 +25,12 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)sharedInstance;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Trunks & Anchors
+#pragma mark Containers
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Returns a specific trunk (top-level root node).
+ *
  * This method only returns nil if you pass an invalid parameter.
  *
  * @param localUserID
@@ -54,6 +55,8 @@ NS_ASSUME_NONNULL_BEGIN
  * A "trunk node" is a top-level root node.
  * This method walks up the tree until it finds the corresponding trunk.
  *
+ * This method only returns nil if you pass a node that isn't part of the treesystem.
+ *
  * @param node
  *   Find the trunk for this node.
  *   (The node doesn't need to be stored in the database for this method to work.
@@ -75,14 +78,36 @@ NS_ASSUME_NONNULL_BEGIN
  * The anchorNode is found by traversing up the node hierarchy towards the trunkNode,
  * and searching for a node with anchor information.
  * If not found, the trunkNode is returned.
+ *
+ * This method only returns nil if you pass a node that isn't part of the treesystem.
+ *
+ * @param node
+ *   Find the anchorNode for this node.
+ *   (The node doesn't need to be stored in the database for this method to work.
+ *    But it will need to have a proper `-[ZDCNode parentID]` property set.)
+ *
+ * @param transaction
+ *   A database transaction - allows the method to read from the database.
  */
-- (ZDCNode *)anchorNodeForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction;
+- (nullable ZDCNode *)anchorNodeForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Owners
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Returns the owner of a given node.
  *
  * This is done by traversing the node hierarchy, up to the root,
  * searching for a node with an explicit ownerID property. If not found, the localUserID is returned.
+ *
+ * @param node
+ *   Find the ownerID for this node.
+ *   (The node doesn't need to be stored in the database for this method to work.
+ *    But it will need to have a proper `-[ZDCNode parentID]` property set.)
+ *
+ * @param transaction
+ *   A database transaction - allows the method to read from the database.
  */
 - (NSString *)ownerIDForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction;
 
@@ -90,8 +115,25 @@ NS_ASSUME_NONNULL_BEGIN
  * Invokes `ownerIDForNode:transaction:`, and then uses the result to fetch the corresponding ZDCUser.
  *
  * The ZDCUser instance may be nil if the system hasn't been able to download the user yet.
+ * If the ownerID is a non-local user, you can use the `ZDCRemoteUserManager` to download the user.
  */
 - (nullable ZDCUser *)ownerForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Pointers
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * If the given node is a pointer (node.isPointer == true),
+ * then this method follows the pointer (recursively, if needed) until the target node is found.
+ *
+ * If the given node is not a pointer (node.isPointer == false), it simply returns the given node.
+ *
+ * Only returns nil if:
+ * - node is a pointer
+ * - node's target doesn't currently exist
+ */
+- (nullable ZDCNode *)targetNodeForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Local Path

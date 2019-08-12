@@ -4,6 +4,7 @@
 #import "ZDCDatabaseManager.h"
 #import "ZDCLocalUser.h"
 #import "ZDCLogging.h"
+#import "ZDCNodePrivate.h"
 #import "ZDCPublicKey.h"
 #import "ZDCTreesystemPath.h"
 #import "ZDCTrunkNode.h"
@@ -51,22 +52,7 @@ static ZDCNodeManager *sharedInstance = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Errors
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-- (NSError *)errorWithDescription:(NSString *)description
-{
-	NSDictionary *userInfo = nil;
-	if (description) {
-		userInfo = @{ NSLocalizedDescriptionKey: description };
-	}
-	
-	NSString *domain = NSStringFromClass([self class]);
-	return [NSError errorWithDomain:domain code:0 userInfo:userInfo];
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Containers & Anchors
+#pragma mark Containers
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -109,7 +95,21 @@ static ZDCNodeManager *sharedInstance = nil;
 		}
 		else
 		{
-			node = [transaction objectForKey:node.parentID inCollection:kZDCCollection_Nodes];
+			if ([node.parentID hasSuffix:@"|graft"])
+			{
+				NSString *localUserID = nil;
+				NSString *zAppID = nil;
+				[ZDCNode getLocalUserID:&localUserID zAppID:&zAppID fromParentID:node.parentID];
+				
+				node = [self findNodeWithPointeeID: node.uuid
+				                       localUserID: localUserID
+				                            zAppID: zAppID
+				                       transaction: transaction];
+			}
+			else
+			{
+				node = [transaction objectForKey:node.parentID inCollection:kZDCCollection_Nodes];
+			}
 		}
 		
 	} while (node);
@@ -122,7 +122,7 @@ static ZDCNodeManager *sharedInstance = nil;
  * Or view the reference docs online:
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
  */
-- (ZDCNode *)anchorNodeForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
+- (nullable ZDCNode *)anchorNodeForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCNode *anchorNode = node;
 
@@ -141,6 +141,10 @@ static ZDCNodeManager *sharedInstance = nil;
 	return anchorNode;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Owners
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
  * See header file for description.
  * Or view the reference docs online:
@@ -153,7 +157,7 @@ static ZDCNodeManager *sharedInstance = nil;
 	if (anchorNode.anchor)
 		return anchorNode.anchor.userID;
 	else
-		return anchorNode.localUserID;
+		return node.localUserID;
 }
 
 /**
@@ -166,6 +170,28 @@ static ZDCNodeManager *sharedInstance = nil;
 	NSString *ownerID = [self ownerIDForNode:node transaction:transaction];
 	
 	return [transaction objectForKey:ownerID inCollection:kZDCCollection_Users];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Pointers
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ */
+- (nullable ZDCNode *)targetNodeForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
+{
+	if (!node.isPointer) return node;
+	
+	ZDCNode *target = node;
+	do {
+		target = [transaction objectForKey:target.pointeeID inCollection:kZDCCollection_Nodes];
+		
+	} while (target.isPointer);
+	
+	return target;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -189,11 +215,26 @@ static ZDCNodeManager *sharedInstance = nil;
 	
 	do
 	{
-		parent = [transaction objectForKey:parentID inCollection:kZDCCollection_Nodes];
-		if (parent)
+		if ([parentID hasSuffix:@"|graft"])
+		{
+			NSString *localUserID = nil;
+			NSString *zAppID = nil;
+			[ZDCNode getLocalUserID:&localUserID zAppID:&zAppID fromParentID:node.parentID];
+			
+			parent = [self findNodeWithPointeeID: node.uuid
+			                         localUserID: localUserID
+			                              zAppID: zAppID
+			                         transaction: transaction];
+		}
+		else
+		{
+			parent = [transaction objectForKey:parentID inCollection:kZDCCollection_Nodes];
+		}
+		
+		parentID = parent.parentID;
+		if (parentID && ![parentID hasSuffix:@"|graft"])
 		{
 			[parents insertObject:parentID atIndex:0];
-			parentID = parent.parentID;
 		}
 	
 	} while (parent && parentID);
@@ -228,7 +269,22 @@ static ZDCNodeManager *sharedInstance = nil;
 	
 	while (YES)
 	{
-		node = [transaction objectForKey:node.parentID inCollection:kZDCCollection_Nodes];
+		if ([node.parentID hasSuffix:@"|graft"])
+		{
+			NSString *localUserID = nil;
+			NSString *zAppID = nil;
+			[ZDCNode getLocalUserID:&localUserID zAppID:&zAppID fromParentID:node.parentID];
+			
+			node = [self findNodeWithPointeeID: node.uuid
+			                       localUserID: localUserID
+			                            zAppID: zAppID
+			                       transaction: transaction];
+		}
+		else
+		{
+			node = [transaction objectForKey:node.parentID inCollection:kZDCCollection_Nodes];
+		}
+		
 		if ([node isKindOfClass:[ZDCTrunkNode class]])
 		{
 			trunkNode = (ZDCTrunkNode *)node;
@@ -236,7 +292,10 @@ static ZDCNodeManager *sharedInstance = nil;
 		}
 		else if (node)
 		{
-			[pathComponents insertObject:(node.name ?: @"") atIndex:0];
+			if (![node.parentID hasSuffix:@"|graft"])
+			{
+				[pathComponents insertObject:(node.name ?: @"") atIndex:0];
+			}
 		}
 		else
 		{

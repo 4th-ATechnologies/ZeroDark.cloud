@@ -153,6 +153,20 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
 - (nullable ZDCTrunkNode *)trunkNode:(ZDCTreesystemTrunk)trunk;
 
 /**
+ * If the given node is a pointer (node.isPointer == true),
+ * then this method follows the pointer (recursively, if needed) until the target node is found.
+ *
+ * If the given node is not a pointer (node.isPointer == false), it simply returns the given node.
+ *
+ * Only returns nil if:
+ * - node is a pointer
+ * - node's target doesn't currently exist
+ *
+ * This method is short-hand for `[ZDCNodeManager targetNodeForNode:transaction:]`
+ */
+- (nullable ZDCNode *)targetNode:(ZDCNode *)node;
+
+/**
  * Returns the existing node with the given path.
  *
  * @note You can find many other utility functions for inspecting the node treesystem in the `ZDCNodeManager`.

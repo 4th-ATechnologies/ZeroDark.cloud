@@ -27,7 +27,6 @@ class List: NSCopying, Codable {
 		case uuid = "uuid"
 		case localUserID = "localUserID"
 		case title = "title"
-		case invitations = "invitations"
 	}
 	
 	/// We store `List` objects in the database.
@@ -58,17 +57,11 @@ class List: NSCopying, Codable {
 	/// The title is what the user types in when they create the List.
 	///
 	var title: String
-	
-	/// If you invite other users to collaborate on a list,
-	/// this dictionary stores the invitation message.
-	/// 
-	var invitations: [String: String]
 
 	init(uuid: String, localUserID: String, title: String) {
 		self.uuid = uuid
 		self.localUserID = localUserID
 		self.title = title
-		self.invitations = Dictionary()
 	}
 	
 	convenience init(localUserID: String, title: String) {
@@ -94,7 +87,6 @@ class List: NSCopying, Codable {
 		self.localUserID = node.localUserID
 		
 		self.title = cloudJSON.title
-		self.invitations = Dictionary()
 	}
 	
 	func cloudEncode() throws -> Data {

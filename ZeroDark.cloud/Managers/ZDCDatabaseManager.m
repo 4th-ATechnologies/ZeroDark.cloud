@@ -52,9 +52,14 @@ NSString *const Index_Nodes_Column_PointeeID  = @"pointeeID";
 NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 
 
-@implementation ZDCDatabaseManager
-{
+@implementation ZDCDatabaseManager {
+	
 	__weak ZeroDarkCloud *zdc;
+	dispatch_queue_t serialQueue;
+	
+	YapDatabaseConnection *_internal_roConnection;
+	YapDatabaseConnection *_internal_rwConnection;
+	YapDatabaseConnection *_internal_decryptConnection;
 	
 	YapDatabaseActionManager *actionManager;
 	
@@ -75,6 +80,8 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	{
 		zdc = inOwner;
 		
+		serialQueue = dispatch_queue_create("ZDCDatabaseManager", DISPATCH_QUEUE_SERIAL);
+		
 		spinlock = OS_SPINLOCK_INIT;
 		registeredCloudDict = [[NSMutableDictionary alloc] initWithCapacity:4];
 	}
@@ -82,7 +89,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Instance
+#pragma mark Properties
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 @synthesize database = database;
@@ -102,6 +109,97 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 - (YapDatabaseConnection *)roDatabaseConnection
 {
 	return [roConnectionPool connection];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Internal
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * For internal use only (by the ZeroDarkCloud Framework).
+ */
+- (YapDatabaseConnection *)internal_roConnection
+{
+	__block YapDatabaseConnection *connection = nil;
+	
+	dispatch_sync(serialQueue, ^{ @autoreleasepool {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		if (_internal_roConnection == nil)
+		{
+			_internal_roConnection = [database newConnection];
+			_internal_roConnection.name = @"ZeroDarkCloud.Internal.roConnection";
+			
+		#if DEBUG
+			_internal_roConnection.permittedTransactions = YDB_AnyReadTransaction;
+		#endif
+		}
+		
+		connection = _internal_roConnection;
+		
+	#pragma clang diagnostic pop
+	}});
+	
+	return connection;
+}
+
+/**
+ * For internal use only (by the ZeroDarkCloud Framework).
+ */
+- (YapDatabaseConnection *)internal_rwConnection
+{
+	__block YapDatabaseConnection *connection = nil;
+	
+	dispatch_sync(serialQueue, ^{ @autoreleasepool {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		if (_internal_rwConnection == nil)
+		{
+			_internal_rwConnection = [database newConnection];
+			_internal_rwConnection.name = @"ZeroDarkCloud.Internal.rwConnection";
+			
+		#if DEBUG
+			_internal_rwConnection.permittedTransactions = YDB_AnyReadWriteTransaction;
+		#endif
+		}
+		
+		connection = _internal_rwConnection;
+		
+	#pragma clang diagnostic pop
+	}});
+	
+	return connection;
+}
+
+/**
+ * For internal use only (by the ZeroDarkCloud Framework).
+ */
+- (YapDatabaseConnection *)internal_decryptConnection
+{
+	__block YapDatabaseConnection *connection = nil;
+	
+	dispatch_sync(serialQueue, ^{ @autoreleasepool {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		if (_internal_decryptConnection == nil)
+		{
+			_internal_decryptConnection = [database newConnection];
+			_internal_decryptConnection.name = @"ZeroDarkCloud.Internal.decryptConnection";
+			
+		#if DEBUG
+			_internal_decryptConnection.permittedTransactions = YDB_AnyReadTransaction;
+		#endif
+		}
+		
+		connection = _internal_decryptConnection;
+		
+	#pragma clang diagnostic pop
+	}});
+	
+	return connection;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -286,12 +384,13 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		kZDCCollection_SplitKeys,
 	]];
 	
-	database = [[YapDatabase alloc] initWithPath: databasePath
-	                                  serializer: [self databaseSerializer:config collections:collections]
-	                                deserializer: [self databaseDeserializer:config collections:collections]
-	                                preSanitizer: [self databasePreSanitizer:config collections:collections]
-	                               postSanitizer: [self databasePostSanitizer:config collections:collections]
-	                                     options: options];
+	database =
+	  [[YapDatabase alloc] initWithPath: databasePath
+	                         serializer: [self databaseSerializer:config collections:collections]
+	                       deserializer: [self databaseDeserializer:config collections:collections]
+	                       preSanitizer: [self databasePreSanitizer:config collections:collections]
+	                      postSanitizer: [self databasePostSanitizer:config collections:collections]
+	                            options: options];
 	
 	if (database == nil) {
 		return NO;
@@ -615,6 +714,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		}
 		
 		// Regular nodes have a parentID.
+		// Graft nodes have a special parentID: "<localUserID>|<zAppID>|graft".
 		// Signal nodes have a special parentID: "<localUserID>|<zAppID>|signal".
 		// Container nodes don't have a parentID.
 		//
@@ -706,6 +806,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		}
 		
 		// Regular nodes have a parentID.
+		// Graft nodes have a special parentID: "<localUserID>|<zAppID>|graft".
 		// Signal nodes have a special parentID: "<localUserID>|<zAppID>|signal".
 		// Container nodes don't have a parentID.
 		//

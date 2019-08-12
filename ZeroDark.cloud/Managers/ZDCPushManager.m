@@ -17,6 +17,7 @@
 #import "ZDCCloudOperationPrivate.h"
 #import "ZDCCloudNodeManager.h"
 #import "ZDCConstantsPrivate.h"
+#import "ZDCDatabaseManagerPrivate.h"
 #import "ZDCLogging.h"
 #import "ZDCNodePrivate.h"
 #import "ZDCDataPromisePrivate.h"
@@ -194,12 +195,12 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (YapDatabaseConnection *)roConnection
 {
-	return zdc.databaseManager.roDatabaseConnection; // uses YapDatabaseConnectionPool :)
+	return [zdc.databaseManager internal_roConnection];
 }
 
 - (YapDatabaseConnection *)rwConnection
 {
-	return zdc.networkTools.rwConnection;
+	return [zdc.databaseManager internal_rwConnection];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1464,7 +1465,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		ZDCCryptoTools *cryptoTools = zdc.cryptoTools;
 		
-		[self.roConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+		[[self roConnection] readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 			
 			node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
 			if (node)
@@ -1519,7 +1520,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		__block ZDCData *metadata = nil;
 		__block ZDCData *thumbnail = nil;
 		
-		[self.roConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+		[[self roConnection] readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 			
 			if (asyncData)
 			{
@@ -2671,7 +2672,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	__block ZDCNode *node = nil;
 	
-	[self.roConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	[[self roConnection] readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
 		node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
 	}];
@@ -5123,7 +5124,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	ZDCCryptoTools *cryptoTools = zdc.cryptoTools;
 	
-	[self.roConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	[[self roConnection] readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
 		srcNode = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
 		dstNode = [transaction objectForKey:operation.dstNodeID inCollection:kZDCCollection_Nodes];
@@ -6881,7 +6882,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	}};
 	
 	__block ZDCLocalUser *localUser = nil;
-	[self.roConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	[[self roConnection] readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
 		localUser = [transaction objectForKey:operation.localUserID inCollection:kZDCCollection_Users];
 	}];

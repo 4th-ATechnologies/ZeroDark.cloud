@@ -10,6 +10,7 @@
 #import "ZDCNetworkTools.h"
 
 #import "S3Request.h"
+#import "ZDCDatabaseManagerPrivate.h"
 #import "ZDCLocalUserPrivate.h"
 #import "ZeroDarkCloudPrivate.h"
 
@@ -23,9 +24,6 @@
 	
 	__weak ZeroDarkCloud *zdc;
 	dispatch_queue_t serialQueue;
-	
-	YapDatabaseConnection *_rwConnection;      // we queue hundreds of transactions - don't block rwDatabaseConnection
-	YapDatabaseConnection *_decryptConnection; // decryption is slow - don't block roDatabaseConnection
 	
 	NSMutableDictionary *recentRequestDict;  // must access through serialQueue
 }
@@ -45,54 +43,6 @@
 		recentRequestDict = [[NSMutableDictionary alloc] init];
 	}
 	return self;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Database Connections
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-- (YapDatabaseConnection *)rwConnection
-{
-	__block YapDatabaseConnection *connection = nil;
-	
-	dispatch_sync(serialQueue, ^{ @autoreleasepool {
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-		
-		if (_rwConnection == nil)
-		{
-			_rwConnection = [zdc.databaseManager.database newConnection];
-			_rwConnection.name = @"ZDCNetworkTools.pushPull.rwConnection";
-		}
-		
-		connection = _rwConnection;
-		
-	#pragma clang diagnostic pop
-	}});
-	
-	return connection;
-}
-
-- (YapDatabaseConnection *)decryptConnection
-{
-	__block YapDatabaseConnection *connection = nil;
-	
-	dispatch_sync(serialQueue, ^{ @autoreleasepool {
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-		
-		if (_decryptConnection == nil)
-		{
-			_decryptConnection = [zdc.databaseManager.database newConnection];
-			_decryptConnection.name = @"ZDCNetworkTools.pushPull.decryptConnection";
-		}
-		
-		connection = _decryptConnection;
-		
-	#pragma clang diagnostic pop
-	}});
-	
-	return connection;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -203,7 +153,8 @@
 		accountNeedsA0Token = YES;
 	}
 	
-	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+	YapDatabaseConnection *rwConnection = zdc.databaseManager.internal_rwConnection;
+	[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 	
 		ZDCLocalUser *user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
 		user = [user copy];

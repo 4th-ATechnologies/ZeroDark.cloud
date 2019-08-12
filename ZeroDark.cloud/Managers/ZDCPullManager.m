@@ -17,6 +17,7 @@
 #import "ZDCCloudNodeManager.h"
 #import "ZDCCloudPrivate.h"
 #import "ZDCConstantsPrivate.h"
+#import "ZDCDatabaseManagerPrivate.h"
 #import "ZDCLogging.h"
 #import "ZDCNodePrivate.h"
 #import "ZDCChangeList.h"
@@ -97,17 +98,17 @@ static NSUInteger const kMaxFailCount = 8;
 
 - (YapDatabaseConnection *)roConnection
 {
-	return zdc.databaseManager.roDatabaseConnection; // uses YapDatabaseConnectionPool :)
+	return [zdc.databaseManager internal_roConnection];
 }
 
 - (YapDatabaseConnection *)rwConnection
 {
-	return zdc.networkTools.rwConnection;
+	return [zdc.databaseManager internal_rwConnection];
 }
 
 - (YapDatabaseConnection *)decryptConnection
 {
-	return zdc.networkTools.decryptConnection;
+	return [zdc.databaseManager internal_decryptConnection];
 }
 
 - (ZDCCloudTransaction *)cloudTransactionForPullState:(ZDCPullState *)pullState

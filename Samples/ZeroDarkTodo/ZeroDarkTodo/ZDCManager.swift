@@ -83,13 +83,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		return zdcManager
 	}()
 	
-	/// Called from AppDelegate.
-	/// Just gives us a place to setup the sharedInstance.
-	///
-	class func setup() {
-		let _ = sharedInstance.zdc
-	}
-	
 	/// Returns the ZeroDarkCloud instance used by the app.
 	///
 	class func zdc() -> ZeroDarkCloud {
@@ -697,9 +690,20 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			return nil
 		}
 		
-		let message = list.invitations[message.uuid]
+		// In the future, we may want to allow our user to type a message.
+		// For example:
+		//
+		//   "Hey Bob, we have a lot of shopping to do for the holidays. Let's collaborate on this list !!!"
+		//
+		// This sample app doesn't include this UI.
+		// But you can test it out by hard-coding a message here.
+		//
+		let msgText: String? = nil
+		
+		// Create invitation wrapper
+		//
 		let invitation = InvitationCloudJSON(listName: list.title,
-		                                      message: message,
+		                                      message: msgText,
 		                                    cloudPath: cloudPath.path(),
 		                                      cloudID: cloudID)
 		
@@ -762,15 +766,38 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				//
 				switch path.pathComponents.count {
 					
-					case 1:
-						// This is a List object.
-						cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+					case 1: // This is a List object.
 						
-						// We can download it now.
-						downloadNode(node, at: path)
+						// First, we need to check if this is a pointer node.
+						// That is:
+						// - is this a shared list ?
+						// - and is the list owned by another user ?
+						//
+						// For example, if Alice is sharing a list with Bob,
+						// then Bob may have a pointer node that points to Alice's list:
+						//
+						//   (Alice.home)        (Bob.home)
+						//       /   \               /   \
+						// (listA)   (listB)<===(listC)   (listD)
+						//
+						// So listC is actually just a pointer to listB.
+						// In this scenario, we want to download listC.
+						//
+						// (Because listB doesn't have any data associated with it.
+						//  It's just a pointer: nothing to download.)
+						//
+						if let node = cloudTransaction.targetNode(node) {
+							
+							// Mark the node as "needs download"
+							cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+						
+							// We can download it now.
+							downloadNode(node, at: path)
+						}
 					
-					case 2:
-						// This is a Task object.
+					case 2: // This is a Task object.
+						
+						
 						cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
 						
 						// Download it now IFF we have the parent List already.
@@ -780,8 +807,22 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 							downloadNode(node, at: path)
 						}
 					
-					case 3:
-						// This is a Task IMAGE.
+					case 3: // This is a Task IMAGE.
+						
+						// Mark the node as "needs download".
+						//
+						// Images are a little special.
+						// The data in the cloud contains both:
+						// - a full size version of the image
+						// - a small thumbnail version of the image
+						//
+						// We have the ability to download these separately.
+						// And the "needs download" interface is actually a bitmask
+						// that allows us to mark each component separately.
+						//
+						// So we mark both as needing download here.
+						// And they get unmarked individually as they're downloaded.
+						//
 						let components: ZDCNodeComponents = [.thumbnail, .data]
 						cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: components)
 					
@@ -855,7 +896,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			// What kind of node is this ?
 			//
-			// If it's in the home trun, it could be:
+			// If it's in the home trunk, it could be:
 			// - List object
 			// - Task object
 			// - Task image
@@ -1276,8 +1317,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					//
 					switch path.count
 					{
-						case 0:
-							// This is a List object.
+						case 0: // This is a List object.
+							
 							// - treesystem path = /X
 							// - nodeID          = X
 							// - path array      = []
@@ -1295,8 +1336,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 								recurseInto[0] = false
 							}
 						
-						case 1:
-							// This is a Task object.
+						case 1: // This is a Task object.
+							
 							// - treesystem path = /X/Y
 							// - nodeID          = Y
 							// - path array      = [X]
@@ -1306,8 +1347,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 									self.downloadNode(withNodeID: nodeID, transaction: transaction)
 							}
 						
-						case 2:
-							// This is a Task image.
+						case 2: // This is a Task image.
+							
 							// - treesystem path = /X/Y/Z
 							// - nodeID          = Z
 							// - path array      = [X, Y]
@@ -1447,6 +1488,35 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			} catch {
 				print("Error parsing list from cloudData: \(error)")
 				return
+			}
+			
+			// If the list is a shared list, then we give it the local name.
+			//
+			// For example, if Alice is sharing a list with Bob,
+			// then Bob may have a pointer node that points to Alice's list:
+			//
+			//   (Alice.home)        (Bob.home)
+			//       /   \               /   \
+			// (listA)   (listB)<===(listC)   (listD)
+			//
+			// So listC is actually just a pointer to listB.
+			// And we just downloaded listB.
+			//
+			// For example:
+			// - listB.title == "Our first Thanksgiving!!! {Heart}{Rainbow}{Unicorn}"
+			// - listC.node.name = "Thanksgiving Shopping"
+			//
+			// We use listC.node.name on this device.
+			//
+			if node.anchor != nil {
+				
+				if let pointer = zdc.nodeManager.findNode(withPointeeID: node.uuid,
+				                                            localUserID: node.localUserID,
+				                                                 zAppID: kZDC_zAppID,
+				                                            transaction: transaction)
+				{
+					downloadedList.title = pointer.name ?? downloadedList.title
+				}
 			}
 			
 			if let existingList = cloudTransaction.linkedObject(forNodeID: nodeID) as? List {

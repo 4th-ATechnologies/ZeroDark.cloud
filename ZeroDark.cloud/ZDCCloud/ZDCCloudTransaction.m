@@ -67,12 +67,12 @@
 	// - Ext_View_Treesystem
 	// - Ext_View_Flat
 	
-	return [NSString stringWithFormat:@"%@|%@|signal", [self localUserID], [self zAppID]];
+	return [ZDCNode signalParentIDForLocalUserID:[self localUserID] zAppID:[self zAppID]];
 }
 
 - (NSString *)graftParentID
 {
-	return [NSString stringWithFormat:@"%@|%@|graft", [self localUserID], [self zAppID]];
+	return [ZDCNode graftParentIDForLocalUserID:[self localUserID] zAppID:[self zAppID]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -361,6 +361,16 @@
 	                                                         zAppID: [self zAppID]
 	                                                          trunk: trunk
 	                                                    transaction: databaseTransaction];
+}
+
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (nullable ZDCNode *)targetNode:(ZDCNode *)node
+{
+	return [[ZDCNodeManager sharedInstance] targetNodeForNode:node transaction:databaseTransaction];
 }
 
 /**

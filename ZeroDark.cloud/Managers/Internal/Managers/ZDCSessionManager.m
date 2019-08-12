@@ -80,7 +80,7 @@ static NSString *const kSessionDescriptionPrefix_Foreground = @"fg";
 {
 	__weak ZeroDarkCloud *zdc;
 	
-	YapDatabaseConnection *databaseConnection;
+	YapDatabaseConnection *internal_roConnection;
 	
 	dispatch_queue_t queue;
 	void *IsOnQueueKey;
@@ -130,17 +130,12 @@ static NSString *const kSessionDescriptionPrefix_Foreground = @"fg";
 		                                           object: nil];
 	#endif
 		
-		YapDatabase *database = inOwner.databaseManager.database;
-		
-		databaseConnection = [database newConnection];
-		databaseConnection.objectCacheLimit = 20;
-		databaseConnection.metadataCacheEnabled = NO;
-		databaseConnection.name = @"SessionManager";
+		internal_roConnection = [zdc.databaseManager internal_roConnection];
 	
 		[[NSNotificationCenter defaultCenter] addObserver: self
 		                                         selector: @selector(databaseConnectionDidUpdate:)
 		                                             name: YapDatabaseModifiedNotification
-		                                           object: database];
+		                                           object: zdc.databaseManager.database];
 	
 	#if TARGET_OS_IPHONE
 		[self restoreTasksInBackgroundSessions];
@@ -160,7 +155,7 @@ static NSString *const kSessionDescriptionPrefix_Foreground = @"fg";
 {
 	NSArray *notifications = @[notification];
 	
-	YapDatabaseAutoViewConnection *ext = [databaseConnection ext:Ext_View_LocalUsers];
+	YapDatabaseAutoViewConnection *ext = [internal_roConnection ext:Ext_View_LocalUsers];
 	BOOL localUserChanged = [ext hasChangesForNotifications:notifications];
 	if (!localUserChanged) {
 		return;
@@ -182,8 +177,10 @@ static NSString *const kSessionDescriptionPrefix_Foreground = @"fg";
 		
 	#pragma clang diagnostic pop
 	}});
-		
-	[databaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	
+	__block NSMutableArray *missingUserIDs = nil;
+	
+	[internal_roConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
@@ -213,7 +210,7 @@ static NSString *const kSessionDescriptionPrefix_Foreground = @"fg";
 		
 		if (userIDs.count == 0) return;
 		
-		NSMutableArray *missingUserIDs = [NSMutableArray arrayWithCapacity:[userIDs count]];
+		missingUserIDs = [NSMutableArray arrayWithCapacity:[userIDs count]];
 		
 		for (NSString *userID in userIDs)
 		{
@@ -223,35 +220,32 @@ static NSString *const kSessionDescriptionPrefix_Foreground = @"fg";
 			}
 		}
 		
-		if (missingUserIDs.count > 0)
+	#pragma clang diagnostic pop
+	} completionQueue:queue completionBlock:^{
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		if (missingUserIDs.count == 0) return;
+		
+		for (NSString *userID in missingUserIDs)
 		{
-			dispatch_async(queue, ^{ @autoreleasepool {
-			#pragma clang diagnostic push
-			#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-				
-				for (NSString *userID in missingUserIDs)
-				{
-					ZDCSessionInfo *sessionInfo = sessionDict[userID];
-					if (sessionInfo == nil)
-						sessionInfo = staleSessionDict[userID];
-					
-					if (sessionInfo)
-					{
-					#if TARGET_OS_IPHONE
-						[sessionInfo.foregroundSession invalidateSessionCancelingTasks:YES];
-						[sessionInfo.backgroundSession invalidateSessionCancelingTasks:YES];
-					#else
-						[sessionInfo.session invalidateSessionCancelingTasks:YES];
-					#endif
-					}
-				}
-				
-				[sessionDict removeObjectsForKeys:missingUserIDs];
-				[staleSessionDict removeObjectsForKeys:missingUserIDs];
-				
-			#pragma clang diagnostic pop
-			}});
+			ZDCSessionInfo *sessionInfo = sessionDict[userID];
+			if (sessionInfo == nil)
+				sessionInfo = staleSessionDict[userID];
+			
+			if (sessionInfo)
+			{
+			#if TARGET_OS_IPHONE
+				[sessionInfo.foregroundSession invalidateSessionCancelingTasks:YES];
+				[sessionInfo.backgroundSession invalidateSessionCancelingTasks:YES];
+			#else
+				[sessionInfo.session invalidateSessionCancelingTasks:YES];
+			#endif
+			}
 		}
+	
+		[sessionDict removeObjectsForKeys:missingUserIDs];
+		[staleSessionDict removeObjectsForKeys:missingUserIDs];
 		
 	#pragma clang diagnostic pop
 	}];
@@ -434,7 +428,7 @@ done:
 		// For this reason we explicitly perform the database read outside the queue in this method.
 		
 		__block ZDCLocalUser *user = nil;
-		[databaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+		[internal_roConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 			
 			user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
 		}];
@@ -787,7 +781,7 @@ done:
 	NSMutableArray<NSURLSessionTask *> *matchedTasks = [NSMutableArray arrayWithCapacity:capacity];
 	NSMutableArray<ZDCObject *> *contexts         = [NSMutableArray arrayWithCapacity:capacity];
 	
-	[databaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	[internal_roConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
 		for (NSURLSessionUploadTask *task in uploadTasks)
 		{
@@ -993,7 +987,7 @@ done:
 	// So let's flush the rwDatabaseConnection being used by the PushManager & PullManager first.
 	// And then we'll notify the OS that we're done.
 	
-	YapDatabaseConnection *rwConnection = [zdc.networkTools rwConnection];
+	YapDatabaseConnection *rwConnection = [zdc.databaseManager internal_rwConnection];
 	dispatch_queue_t concurrentQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
 	[rwConnection flushTransactionsWithCompletionQueue:concurrentQueue completionBlock:^{

@@ -13,6 +13,7 @@
 #import "Auth0Utilities.h"
 #import "ZDCAsyncCompletionDispatch.h"
 #import "ZDCConstants.h"
+#import "ZDCDatabaseManagerPrivate.h"
 #import "ZDCLogging.h"
 #import "ZeroDarkCloudPrivate.h"
 
@@ -38,7 +39,7 @@
 {
 	__weak ZeroDarkCloud *zdc;
 	
-	YapDatabaseConnection *internalDatabaseConnection;
+	YapDatabaseConnection *internal_roConnection;
 	ZDCAsyncCompletionDispatch *asyncCompletionDispatch;
 }
 
@@ -53,12 +54,7 @@
 	{
 		zdc = inOwner;
 		
-		// Todo:
-		// - create shared internalDatabaseConnection
-		// - make it read-only
-		//
-		internalDatabaseConnection = [zdc.databaseManager.database newConnection];
-		
+		internal_roConnection = [zdc.databaseManager internal_roConnection];
 		asyncCompletionDispatch = [[ZDCAsyncCompletionDispatch alloc] init];
 	}
 	return self;
@@ -96,7 +92,7 @@
 	__block ZDCUser *user = nil;
 	__weak typeof(self) weakSelf = self;
 	
-	[internalDatabaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	[internal_roConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
 		user = [transaction objectForKey:remoteUserID inCollection:kZDCCollection_Users];
 		

@@ -39,9 +39,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, SettingsViewControllerDel
 	{
 		// Configure CocoaLumberjack
 		DDLog.add(DDOSLogger.sharedInstance)
+		DDLog.add(DDTTYLogger.sharedInstance)
 		
 		// Setup ZeroDarkCloud
-		ZDCManager.setup()
+		let _ = ZDCManager.sharedInstance;
 
 		// Register with APNs
 		UIApplication.shared.registerForRemoteNotifications()

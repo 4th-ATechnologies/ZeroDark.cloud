@@ -45,6 +45,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, copy, readwrite, nullable) ZDCNodeAnchor *anchor;
 
+#pragma mark Special ParentID's
+
++ (NSString *)signalParentIDForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID;
+
++ (NSString *)graftParentIDForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID;
+
++ (BOOL)getLocalUserID:(NSString *_Nullable *_Nullable)outLocalUserID
+                zAppID:(NSString *_Nullable *_Nullable)outZAppID
+          fromParentID:(NSString *)parentID;
+
 @end
 
 NS_ASSUME_NONNULL_END

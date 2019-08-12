@@ -97,9 +97,9 @@ static ZDCCloudPathManager *sharedInstance = nil;
 	
 	NSString *dirPrefix = nil;
 	
-	if ([node.parentID hasSuffix:@"|signal"])
+	if (node.anchor)
 	{
-		dirPrefix = kZDCDirPrefix_MsgsIn;
+		dirPrefix = node.anchor.dirPrefix;
 	}
 	else
 	{

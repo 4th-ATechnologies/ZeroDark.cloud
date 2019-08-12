@@ -25,9 +25,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark PushManager & PullManager
 
-- (YapDatabaseConnection *)rwConnection;
-- (YapDatabaseConnection *)decryptConnection;
-
 - (NSTimeInterval)exponentialBackoffForFailCount:(NSUInteger)failCount;
 
 - (void)addRecentRequestID:(NSString *)requestID forUser:(NSString *)localUserID;

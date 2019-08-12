@@ -10,6 +10,7 @@
 #import "ZDCImageManagerPrivate.h"
 
 #import "Auth0Utilities.h"
+#import "ZDCDatabaseManagerPrivate.h"
 #import "ZDCDownloadManagerPrivate.h"
 #import "ZDCLogging.h"
 
@@ -70,7 +71,7 @@
 	
 	__weak ZeroDarkCloud *zdc;
 	
-	YapDatabaseConnection *internalDatabaseConnection;
+	YapDatabaseConnection *internal_roConnection;
 	dispatch_queue_t processingQueue;
 	
 	NSCache<NSString*, ZDCCachedImageItem*> *nodeThumbnailsCache;
@@ -97,7 +98,7 @@
 	{
 		zdc = inOwner;
 		
-		internalDatabaseConnection = [zdc.databaseManager.database newConnection];
+		internal_roConnection = [zdc.databaseManager internal_roConnection];
 		processingQueue = dispatch_queue_create("ZDCImageManager-processing", DISPATCH_QUEUE_SERIAL);
 		
 		nodeThumbnailsCache = [[NSCache alloc] init];
@@ -278,7 +279,7 @@
 	__block BOOL nodeIsMarkedAsNeedsDownload = NO;
 	if (options.downloadIfMarkedAsNeedsDownload)
 	{
-		[internalDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+		[internal_roConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 			
 			ZDCCloudTransaction *cloudTransaction =
 			  [self->zdc cloudTransaction:transaction forLocalUserID:node.localUserID];

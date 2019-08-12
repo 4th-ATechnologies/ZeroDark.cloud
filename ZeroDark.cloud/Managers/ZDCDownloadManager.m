@@ -978,12 +978,7 @@ static NSUInteger const kMaxFailCount = 8;
 			                             completionQueue: completionQueue
 			                             completionBlock: completionBlock];
 	
-			if (existingProgress) {
-				ticket.progress = existingProgress;
-			}
-			else {
-				ticket.progress = progress;
-			}
+			ticket.progress = existingProgress ?: progress;
 	
 			if (!ref) {
 				ref = downloadDict[downloadKey] = [[ZDCDownloadRef alloc] init];
@@ -1032,10 +1027,11 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		ZDCDownloadTicket *dependency =
 		  [strongSelf downloadNodeHeader: node
-		                        options: options
-		         preFetchedCloudLocator: cloudLocator
-		                completionQueue: concurrentQueue
-		                completionBlock:^(ZDCCloudDataInfo *header, NSData *ignore1, NSData *ignore2, NSError *error)
+		                         options: options
+		          preFetchedCloudLocator: cloudLocator
+		                 completionQueue: concurrentQueue
+		                 completionBlock:
+		^(ZDCCloudDataInfo *header, NSData *ignore1, NSData *ignore2, NSError *error)
 		{
 			if (error)
 			{
