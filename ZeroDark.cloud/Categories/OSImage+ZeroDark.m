@@ -300,8 +300,6 @@
 	}
 	[smallImage unlockFocus];
 	
-	//	DDLogMagenta(@"orignal %ld, resize %ld", image.dataWithJPEG.length, smallImage.dataWithJPEG.length);
-	
 	return smallImage;
 	
 #endif

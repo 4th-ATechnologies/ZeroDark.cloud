@@ -14,9 +14,9 @@
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
 #if DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
 @interface ZDCDirectoryManager ()
@@ -76,7 +76,7 @@
 	#endif
 		
 		if (error) {
-			DDLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
+			ZDCLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
 		}
 		
 		appSupportDirectoryURL = url;
@@ -115,7 +115,7 @@
 	#endif
 		
 		if (error) {
-			DDLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
+			ZDCLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
 		}
 		
 		appCacheDirectoryURL = url;
@@ -143,7 +143,7 @@
 																	  error: &error];
 		
 		if (error) {
-			DDLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
+			ZDCLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
 		}
 		
 		tempDirectoryURL = url;
@@ -175,7 +175,7 @@
 																	  error: &error];
 		
 		if (error) {
-			DDLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
+			ZDCLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
 		}
 		
 		zdcPersistentDirectoryURL = url;
@@ -203,7 +203,7 @@
 																	  error: &error];
 		
 		if (error) {
-			DDLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
+			ZDCLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
 		}
 		
 		zdcCacheDirectoryURL = url;
@@ -227,7 +227,7 @@
 															attributes: nil
 																  error: &error];
 	if (error) {
-		DDLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
+		ZDCLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
 	}
 	
 	return url;
@@ -248,7 +248,7 @@
 															attributes: nil
 																  error: &error];
 	if (error) {
-		DDLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
+		ZDCLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
 	}
 	
 	return url;
@@ -299,7 +299,7 @@
 		                                               error: &error];
 
 		if (error) {
-			DDLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
+			ZDCLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
 		}
 
 		smiCacheDirectoryURL = url;
@@ -378,7 +378,7 @@
 		                                               error: &error];
 
 		if (error) {
-			DDLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
+			ZDCLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
 		}
 		else {
 			self.cachedDownloadDirectoryURL = url;

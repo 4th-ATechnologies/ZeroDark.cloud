@@ -6,11 +6,11 @@
 #import <mach/mach.h>
 
 #if DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 
 /* extern */ NSString *const ZDCStreamFileMinOffset        = @"ZDCStreamFileMinOffset";
@@ -216,7 +216,7 @@ struct ZDCInputStream_Mach_Message {
 		return returnEOFOnWouldBlock;
 	}
 	
-//	DDLogWarn(@"Unhandled propertyForKey: %@", key);
+//	ZDCLogWarn(@"Unhandled propertyForKey: %@", key);
 //	return nil;
 	
 	return [super propertyForKey:key];
@@ -288,7 +288,7 @@ struct ZDCInputStream_Mach_Message {
 		return YES;
 	}
 	
-//	DDLogWarn(@"Unhandled setProperty:forKey: %@", key);
+//	ZDCLogWarn(@"Unhandled setProperty:forKey: %@", key);
 //	return NO;
 	
 	return [super setProperty:property forKey:key];
@@ -336,7 +336,7 @@ struct ZDCInputStream_Mach_Message {
 			mach_msg_return_t error = mach_msg_send(&message.header);
 		
 			if (error != MACH_MSG_SUCCESS) {
-				DDLogError(@"Error sending on CFMachPort: %d", error);
+				ZDCLogError(@"Error sending on CFMachPort: %d", error);
 			}
 		}
 		
@@ -346,7 +346,7 @@ struct ZDCInputStream_Mach_Message {
 			mach_msg_return_t error = mach_msg_send(&message.header);
 			
 			if (error != MACH_MSG_SUCCESS) {
-				DDLogError(@"Error sending on NSMachPort: %d", error);
+				ZDCLogError(@"Error sending on NSMachPort: %d", error);
 			}
 		}
 	}

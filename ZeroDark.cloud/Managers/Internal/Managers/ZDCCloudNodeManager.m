@@ -11,9 +11,9 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
 
@@ -64,7 +64,7 @@ static ZDCCloudNodeManager *sharedInstance = nil;
 		NSParameterAssert(localUserID != nil);
 		NSParameterAssert(transaction != nil);
 		
-		DDLogWarn(@"Method invoked with invalid parameter(s): %@", THIS_METHOD);
+		ZDCLogWarn(@"Method invoked with invalid parameter(s): %@", THIS_METHOD);
 		return nil;
 	}
 	

@@ -40,11 +40,11 @@
 
 // Log levels: off, error, warn, info, verbose
 #if DEBUG
-static const int ddLogLevel = DDLogLevelVerbose;
+static const int zdcLogLevel = ZDCLogLevelVerbose;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 
 typedef enum {
@@ -927,7 +927,7 @@ typedef enum {
 
 - (IBAction)pasteButtonTapped:(id)sender
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	UIImage *image = [[UIPasteboard generalPasteboard] image];
 	if (image)
 	{
@@ -1062,7 +1062,7 @@ typedef enum {
 
 - (IBAction)photosButtonTapped:(id)sender
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if(ZDCConstants.appHasPhotosPermission)
 	{
@@ -1121,7 +1121,7 @@ typedef enum {
 
 - (void)showPhotoPicker
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	photoPicker = [[UIImagePickerController alloc] init];
 	photoPicker.delegate      = (id <UINavigationControllerDelegate, UIImagePickerControllerDelegate>)self;
@@ -1134,7 +1134,7 @@ typedef enum {
 
 - (void)showDocPicker
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	docPicker = [[UIDocumentPickerViewController alloc] initWithDocumentTypes:@[ (__bridge NSString *)kUTTypeImage]
 																							 inMode:UIDocumentPickerModeImport];
 	
@@ -1150,7 +1150,7 @@ typedef enum {
 
 - (void)documentPicker:(UIDocumentPickerViewController *)documentPicker didPickDocumentAtURL:(NSURL *)url
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (url)
 	{
@@ -1165,7 +1165,7 @@ typedef enum {
 
 - (void)documentPickerWasCancelled:(UIDocumentPickerViewController *)controller
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	docPicker = nil;
 }
@@ -1176,7 +1176,7 @@ typedef enum {
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)sender
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	__weak typeof(self) weakSelf = self;
 	
 	[self dismissViewControllerAnimated:YES completion:^{
@@ -1192,7 +1192,7 @@ typedef enum {
 
 - (void)imagePickerController:(UIImagePickerController *)sender didFinishPickingMediaWithInfo:(NSDictionary *)info
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	__weak typeof(self) weakSelf = self;
 
 	UIImage *image = nil;
@@ -1292,7 +1292,6 @@ typedef enum {
 								 color:UIColor.whiteColor];
 	
 	isUsingCarmera = YES;
-	//    DDLogRed(@"startReading");
 }
 
 
@@ -1308,8 +1307,6 @@ typedef enum {
 	// Remove the video preview layer from the viewPreview view's layer.
 	if(videoPreviewLayer)
 		[videoPreviewLayer removeFromSuperlayer];
-	
-	//    DDLogRed(@"stopReading");
 }
 
 - (void)startOverlayHideTimer
@@ -1622,7 +1619,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 - (void)keyboardWillShow:(NSNotification *)notification
 {
 	__weak typeof(self) weakSelf = self;
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	// With multitasking on iPad, all visible apps are notified when the keyboard appears and disappears.
 	// The value of [UIKeyboardIsLocalUserInfoKey] is YES for the app that caused the keyboard to appear
@@ -1665,7 +1662,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 
 - (void)keyboardWillHide:(NSNotification *)notification
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	// With multitasking on iPad, all visible apps are notified when the keyboard appears and disappears.
 	// The value of [UIKeyboardIsLocalUserInfoKey] is YES for the app that caused the keyboard to appear

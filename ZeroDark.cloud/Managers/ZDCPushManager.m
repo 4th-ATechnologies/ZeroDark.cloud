@@ -46,9 +46,9 @@
 #define robbie_hanson 1
 #endif
 #if DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
 static int const kStagingVersion = 3;
@@ -739,7 +739,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
  */
 - (void)abortOperationsForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (localUserID == nil) return;
 	if (zAppID == nil) return;
@@ -751,7 +751,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	NSArray<ZDCCloudOperation *> *operations = (NSArray<ZDCCloudOperation *> *)[pipeline activeOperations];
 	
 	if (operations.count > 0) {
-		DDLogVerbose(@"canceling operations (all reportedly active): %@", operations);
+		ZDCLogVerbose(@"canceling operations (all reportedly active): %@", operations);
 	}
 	
 	// Order matters:
@@ -805,10 +805,10 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
  */
 - (void)abortOperations:(NSArray<ZDCCloudOperation *> *)operations
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (operations.count > 0) {
-		DDLogVerbose(@"canceling operations (may or may not be active): %@", operations);
+		ZDCLogVerbose(@"canceling operations (may or may not be active): %@", operations);
 	}
 	
 	// Order matters:
@@ -925,7 +925,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			}
 			default:
 			{
-				DDLogError(@"%@ - Unsupported operation type: %lu", THIS_METHOD, (unsigned long)type);
+				ZDCLogError(@"%@ - Unsupported operation type: %lu", THIS_METHOD, (unsigned long)type);
 			#if DEBUG
 				NSAssert(NO, @"Unsupported operation type: %lu", (unsigned long)type);
 			#endif
@@ -1006,7 +1006,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	if (!pollContext) return;
 	if (![pollContext atomicMarkCompleted]) return;
 	
-	DDLogVerbose(@"Short-circuit poll for operation %@: %ld",
+	ZDCLogVerbose(@"Short-circuit poll for operation %@: %ld",
 	             request_id,
 	       (long)pushInfo.requestInfo.statusCode);
 	
@@ -1084,10 +1084,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	{
 		ZDCPollContext *context = (ZDCPollContext *)inContext;
 		
-	#if DEBUG && robbie_hanson
-		DDLogCookie(@"PollComplete w/ operationUUID: %@", context.taskContext.operationUUID);
-	#endif
-		
 		[self pollDidComplete: task
 		            inSession: session
 		            withError: error
@@ -1122,10 +1118,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	{
 		ZDCTaskContext *context = (ZDCTaskContext *)inContext;
 		ZDCCloudOperation *operation = [self operationForContext:context];
-		
-	#if DEBUG && robbie_hanson
-		DDLogCookie(@"TaskDidComplete w/ operationUUID: %@", context.operationUUID);
-	#endif
 	
 		if (operation == nil)
 		{
@@ -1142,7 +1134,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			}
 			else
 			{
-				DDLogCookie(@"Unable to find operation w/ uuid: %@", context.operationUUID);
+				ZDCLogWarn(@"Unable to find operation w/ uuid: %@", context.operationUUID);
 			}
 		}
 	
@@ -1189,10 +1181,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	else if ([inContext isKindOfClass:[ZDCTouchContext class]])
 	{
 		ZDCTouchContext *context = (ZDCTouchContext *)inContext;
-		
-	#if DEBUG && robbie_hanson
-		DDLogCookie(@"TouchTaskDidComplete w/ operationUUID: %@", context.pollContext.taskContext.operationUUID);
-	#endif
 		
 		[self touchDidComplete:task inSession:session withError:error context:context];
 	}
@@ -1281,7 +1269,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 - (void)preparePutOperation:(ZDCCloudOperation *)operation
                 forPipeline:(YapDatabaseCloudCorePipeline *)pipeline
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_Put, @"Invalid operation type");
 	
 	// Create context with boilerplate values
@@ -1295,7 +1283,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	 || operation.cloudLocator.bucket == nil
 	 || operation.cloudLocator.cloudPath == nil)
 	{
-		DDLogWarn(@"Skipping PUT operation: invalid op.cloudLocator: %@", operation.cloudLocator);
+		ZDCLogWarn(@"Skipping PUT operation: invalid op.cloudLocator: %@", operation.cloudLocator);
 		
 		[self skipOperationWithContext:context];
 		return;
@@ -1330,7 +1318,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		if (error)
 		{
-			DDLogError(@"Error writing operation.data (%@): %@", tempFileURL.path, error);
+			ZDCLogError(@"Error writing operation.data (%@): %@", tempFileURL.path, error);
 		}
 		
 		context.uploadFileURL = tempFileURL;
@@ -1491,7 +1479,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		if (error)
 		{
-			DDLogWarn(@"Error creating PUT operation: %@: %@", operation.cloudLocator.cloudPath, error);
+			ZDCLogWarn(@"Error creating PUT operation: %@: %@", operation.cloudLocator.cloudPath, error);
 			
 			[self skipOperationWithContext:context];
 		}
@@ -1576,7 +1564,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		if (!asyncData && !data)
 		{
 			if (node) {
-				DDLogWarn(@"Delegate failed to create data for PUT operation: %@", operation.cloudLocator.cloudPath);
+				ZDCLogWarn(@"Delegate failed to create data for PUT operation: %@", operation.cloudLocator.cloudPath);
 			}
 			
 			[self skipOperationWithContext:context];
@@ -1802,7 +1790,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			DDLogWarn(@"Delegate returned bad data for PUT operation: %@", operation.cloudLocator.cloudPath);
+			ZDCLogWarn(@"Delegate returned bad data for PUT operation: %@", operation.cloudLocator.cloudPath);
 			
 			[self skipOperationWithContext:context];
 		}
@@ -1812,7 +1800,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	#if DEBUG
 		NSAssert(NO, @"Unrecognized putType !");
 	#else
-		DDLogError(@"Unrecognized putType !");
+		ZDCLogError(@"Unrecognized putType !");
 		[self skipOperationWithContext:context];
 	#endif
 	}
@@ -1821,7 +1809,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 - (void)startPutOperation:(ZDCCloudOperation *)operation
               withContext:(ZDCTaskContext *)context
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_Put, @"Invalid operation type");
 	
 	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
@@ -1973,7 +1961,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
                  withError:(NSError *)error
                    context:(ZDCTaskContext *)context
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[self unstashContext:context];
 	
@@ -2040,7 +2028,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// Increment the failCount for the operation, so we can do exponential backoff.
 		
 		NSUInteger successiveFailCount = [operation.ephemeralInfo s3_didFailWithStatusCode:@(statusCode)];
-		DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
+		ZDCLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
 		
 		if (successiveFailCount > 10)
 		{
@@ -2077,7 +2065,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			DDLogWarn(@"Received unknown statusCode from S3: %ld", (long)statusCode);
+			ZDCLogWarn(@"Received unknown statusCode from S3: %ld", (long)statusCode);
 			
 			// The operation failed for some unknown reason.
 			//
@@ -2113,7 +2101,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)putPollDidComplete:(ZDCPollContext *)pollContext withStatus:(NSDictionary *)pollStatus
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	ZDCTaskContext *context = pollContext.taskContext;
 	ZDCCloudOperation *operation = [self operationForContext:context];
@@ -2180,7 +2168,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		NSString *extMsg = nil;
 		[self getExtCode:&extCode msg:&extMsg fromPollStatus:pollStatus];
 		
-		DDLogInfo(@"Conflict: %ld: %@", (long)extCode, extMsg);
+		ZDCLogInfo(@"Conflict: %ld: %@", (long)extCode, extMsg);
 		
 		// Decide what to do
 		
@@ -2195,7 +2183,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			// but may occur if somebody is trying to trick our server.
 			
 			NSUInteger successiveFailCount = [operation.ephemeralInfo s4_didFailWithExtStatusCode:@(extCode)];
-			DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
+			ZDCLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
 			
 			if (successiveFailCount > 10)
 			{
@@ -2231,7 +2219,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			}
 			
 			NSUInteger successiveFailCount = [operation.ephemeralInfo s4_didFailWithExtStatusCode:@(extCode)];
-			DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
+			ZDCLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
 			
 			if (successiveFailCount > 10)
 			{
@@ -2580,7 +2568,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)prepareMultipartOperation:(ZDCCloudOperation *)operation forPipeline:(YapDatabaseCloudCorePipeline *)pipeline
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_Put, @"Invalid operation type");
 	NSAssert(operation.multipartInfo, @"Invalid operation type");
 	
@@ -2636,10 +2624,10 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			if (error)
 			{
 				if ([self isFileModifiedDuringReadError:error]) {
-					DDLogInfo(@"File modified during SHA256 hash: retrying operation...");
+					ZDCLogInfo(@"File modified during SHA256 hash: retrying operation...");
 				}
 				else {
-					DDLogInfo(@"Error during SHA256 hash: %@", error);
+					ZDCLogInfo(@"Error during SHA256 hash: %@", error);
 				}
 				
 				[self removeTaskForMultipartOperation:context didSucceed:NO];
@@ -2777,7 +2765,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			DDLogWarn(@"Error creating PUT operation: %@: unknown cryptoFile format", operation.cloudLocator.cloudPath);
+			ZDCLogWarn(@"Error creating PUT operation: %@: unknown cryptoFile format", operation.cloudLocator.cloudPath);
 			
 			[self skipOperationWithContext:context];
 		}
@@ -2786,7 +2774,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)startMultipartOperation:(ZDCCloudOperation *)operation withContext:(ZDCTaskContext *)context
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_Put, @"Invalid operation type");
 	NSAssert(operation.multipartInfo, @"Invalid operation type");
 	
@@ -2806,7 +2794,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)startMultipartInitiate:(ZDCCloudOperation *)operation withContext:(ZDCTaskContext *)context
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_Put, @"Invalid operation type");
 	NSAssert(operation.multipartInfo, @"Invalid operation type");
 	NSAssert(context.multipart_initiate, @"Invalid context type");
@@ -2918,7 +2906,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)startMultipartIndex:(ZDCCloudOperation *)operation withContext:(ZDCTaskContext *)context
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_Put, @"Invalid operation type");
 	NSAssert(operation.multipartInfo, @"Invalid operation type");
 	
@@ -3056,7 +3044,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)startMultipartComplete:(ZDCCloudOperation *)operation withContext:(ZDCTaskContext *)context
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_Put, @"Invalid operation type");
 	NSAssert(operation.multipartInfo, @"Invalid operation type");
 	NSAssert(context.multipart_complete, @"Invalid context type");
@@ -3130,7 +3118,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		if (writeError)
 		{
-			DDLogError(@"Error writing operation.data (%@): %@", tempFileURL.path, writeError);
+			ZDCLogError(@"Error writing operation.data (%@): %@", tempFileURL.path, writeError);
 		}
 		
 		request.HTTPBody = nil;
@@ -3179,7 +3167,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)startMultipartAbort:(ZDCCloudOperation *)operation withContext:(ZDCTaskContext *)context
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_Put, @"Invalid operation type");
 	NSAssert(operation.multipartInfo, @"Invalid operation type");
 	NSAssert(context.multipart_abort, @"Invalid context type");
@@ -3278,7 +3266,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
                          context:(ZDCTaskContext *)context
                   responseObject:(id)responseObject
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[self unstashContext:context];
 	
@@ -3311,7 +3299,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	if (error)
 	{
-		DDLogInfo(@"multipartTask: err: %@", error.userInfo[NSLocalizedDescriptionKey] ?: error);
+		ZDCLogInfo(@"multipartTask: err: %@", error.userInfo[NSLocalizedDescriptionKey] ?: error);
 		
 		// Request failed due to client-side error.
 		// Not error from the server.
@@ -3348,7 +3336,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// Increment the failCount for the operation, so we can do exponential backoff.
 		
 		NSUInteger successiveFailCount = [operation.ephemeralInfo s3_didFailWithStatusCode:@(statusCode)];
-		DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
+		ZDCLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
 		
 		if (successiveFailCount > 10)
 		{
@@ -3395,7 +3383,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			DDLogWarn(@"Received unknown statusCode from S3: %ld", (long)statusCode);
+			ZDCLogWarn(@"Received unknown statusCode from S3: %ld", (long)statusCode);
 			
 			// The operation failed for some unknown reason.
 			//
@@ -3534,7 +3522,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)prepareMoveOperation:(ZDCCloudOperation *)operation forPipeline:(YapDatabaseCloudCorePipeline *)pipeline
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_Move, @"Invalid operation type");
 	
 	// Create context with boilerplate values
@@ -3548,7 +3536,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	 || operation.cloudLocator.bucket == nil
 	 || operation.cloudLocator.cloudPath == nil)
 	{
-		DDLogWarn(@"Skipping move operation: invalid op.cloudLocator: %@", operation.cloudLocator);
+		ZDCLogWarn(@"Skipping move operation: invalid op.cloudLocator: %@", operation.cloudLocator);
 		
 		[self skipOperationWithContext:context];
 		return;
@@ -3559,7 +3547,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	 || operation.dstCloudLocator.bucket == nil
 	 || operation.dstCloudLocator.cloudPath == nil)
 	{
-		DDLogWarn(@"Skipping move operation: invalid op.dstCloudLocator: %@", operation.dstCloudLocator);
+		ZDCLogWarn(@"Skipping move operation: invalid op.dstCloudLocator: %@", operation.dstCloudLocator);
 		
 		[self skipOperationWithContext:context];
 		return;
@@ -3567,7 +3555,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	if ([operation.cloudLocator isEqualToCloudLocatorIgnoringExt:operation.dstCloudLocator])
 	{
-		DDLogWarn(@"Skipping move operation: src == dst: %@", operation);
+		ZDCLogWarn(@"Skipping move operation: src == dst: %@", operation);
 		
 		[self skipOperationWithContext:context];
 		return;
@@ -3611,7 +3599,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	if (error)
 	{
-		DDLogWarn(@"Error creating operation data (%@) %@", operation.cloudLocator.cloudPath, error);
+		ZDCLogWarn(@"Error creating operation data (%@) %@", operation.cloudLocator.cloudPath, error);
 		
 		[self skipOperationWithContext:context];
 	}
@@ -3643,7 +3631,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		if (error)
 		{
-			DDLogError(@"Error writing operation.data (%@): %@", tempFileURL.path, error);
+			ZDCLogError(@"Error writing operation.data (%@): %@", tempFileURL.path, error);
 		}
 		
 		context.uploadFileURL = tempFileURL;
@@ -3663,7 +3651,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)startMoveOperation:(ZDCCloudOperation *)operation withContext:(ZDCTaskContext *)context
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_Move, @"Invalid operation type");
 	
 	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
@@ -3717,10 +3705,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		                  session: auth.aws_session
 		               payloadSig: context.sha256Hash];
 		
-	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request zdcDescription]);
-	#endif
-		
 		NSURLSessionUploadTask *task = nil;
 	#if TARGET_OS_IPHONE
 		
@@ -3731,12 +3715,12 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		{
 			if ([responseObject isKindOfClass:[NSData class]])
 			{
-				NSString *str = [[NSString alloc] initWithData:(NSData *)responseObject encoding:NSUTF8StringEncoding];
-				DDLogInfo(@"response: %@", str);
+				ZDCLogInfo(@"response: %@",
+					[[NSString alloc] initWithData:(NSData *)responseObject encoding:NSUTF8StringEncoding]);
 			}
 			else
 			{
-				DDLogInfo(@"response: %@", responseObject);
+				ZDCLogInfo(@"response: %@", responseObject);
 			}
 		}];
 		
@@ -3779,7 +3763,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
                   withError:(NSError *)error
                     context:(ZDCTaskContext *)context
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[self unstashContext:context];
 	
@@ -3840,7 +3824,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 		
 		NSUInteger successiveFailCount = [operation.ephemeralInfo s3_didFailWithStatusCode:@(statusCode)];
-		DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
+		ZDCLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
 		
 		if (successiveFailCount > 10)
 		{
@@ -3877,7 +3861,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			DDLogWarn(@"Received unknown statusCode from S3: %ld", (long)statusCode);
+			ZDCLogWarn(@"Received unknown statusCode from S3: %ld", (long)statusCode);
 			
 			// The operation failed for some unknown reason.
 			//
@@ -3913,7 +3897,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)movePollDidComplete:(ZDCPollContext *)pollContext withStatus:(NSDictionary *)pollStatus
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	ZDCTaskContext *context = pollContext.taskContext;
 	ZDCCloudOperation *operation = [self operationForContext:context];
@@ -3980,7 +3964,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		NSString *extMsg = nil;
 		[self getExtCode:&extCode msg:&extMsg fromPollStatus:pollStatus];
 		
-		DDLogInfo(@"Conflict: %ld: %@", (long)extCode, extMsg);
+		ZDCLogInfo(@"Conflict: %ld: %@", (long)extCode, extMsg);
 		
 		// Decide what to do
 		
@@ -3994,7 +3978,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			// but may occur if somebody is trying to trick our server.
 			
 			NSUInteger successiveFailCount = [operation.ephemeralInfo s4_didFailWithExtStatusCode:@(extCode)];
-			DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
+			ZDCLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
 			
 			if (successiveFailCount > 10)
 			{
@@ -4025,7 +4009,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		else
 		{
 			NSUInteger successiveFailCount = [operation.ephemeralInfo s4_didFailWithExtStatusCode:@(extCode)];
-			DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
+			ZDCLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
 		
 			if (successiveFailCount > 10)
 			{
@@ -4130,7 +4114,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)prepareDeleteLeafOperation:(ZDCCloudOperation *)operation forPipeline:(YapDatabaseCloudCorePipeline *)pipeline
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_DeleteLeaf, @"Invalid operation type");
 	
 	// Create context
@@ -4144,7 +4128,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	 || operation.cloudLocator.bucket == nil
 	 || operation.cloudLocator.cloudPath == nil)
 	{
-		DDLogWarn(@"Skipping delete-leaf operation: invalid op.cloudLocator: %@", operation.cloudLocator);
+		ZDCLogWarn(@"Skipping delete-leaf operation: invalid op.cloudLocator: %@", operation.cloudLocator);
 		
 		[self skipOperationWithContext:context];
 		return;
@@ -4167,7 +4151,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	if (operation.deletedCloudIDs.count == 0)
 	{
-		DDLogWarn(@"Skipping delete-leaf operation: unknown cloudID (original upload failed): %@",
+		ZDCLogWarn(@"Skipping delete-leaf operation: unknown cloudID (original upload failed): %@",
 		          operation.cloudLocator);
 		
 		[self skipOperationWithContext:context];
@@ -4182,7 +4166,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)startDeleteLeafOperation:(ZDCCloudOperation *)operation withContext:(ZDCTaskContext *)context
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_DeleteLeaf, @"Invalid operation type");
 	
 	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
@@ -4235,10 +4219,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		                   secret: auth.aws_secret
 		                  session: auth.aws_session
 		               payloadSig: context.sha256Hash];
-	
-	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request zdcDescription]);
-	#endif
 		
 		NSURLSessionTask *task = nil;
 	#if TARGET_OS_IPHONE
@@ -4292,7 +4272,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
                         withError:(NSError *)error
                           context:(ZDCTaskContext *)context
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSURLResponse *response = task.response;
 	
@@ -4344,7 +4324,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 		
 		NSUInteger successiveFailCount = [operation.ephemeralInfo s3_didFailWithStatusCode:@(statusCode)];
-		DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
+		ZDCLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
 		
 		if (successiveFailCount > 10)
 		{
@@ -4381,7 +4361,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			DDLogWarn(@"Received unknown statusCode from S3: %ld", (long)statusCode);
+			ZDCLogWarn(@"Received unknown statusCode from S3: %ld", (long)statusCode);
 			
 			// The operation failed for some unknown reason.
 			//
@@ -4417,7 +4397,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)deleteLeafPollDidComplete:(ZDCPollContext *)pollContext withStatus:(NSDictionary *)pollStatus
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	ZDCTaskContext *context = pollContext.taskContext;
 	ZDCCloudOperation *operation = [self operationForContext:context];
@@ -4544,7 +4524,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 - (void)prepareDeleteNodeOperation:(ZDCCloudOperation *)operation
                        forPipeline:(YapDatabaseCloudCorePipeline *)pipeline
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_DeleteNode, @"Invalid operation type");
 	
 	// Create context with boilerplate values
@@ -4558,7 +4538,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	 || operation.cloudLocator.bucket == nil
 	 || operation.cloudLocator.cloudPath == nil)
 	{
-		DDLogWarn(@"Skipping delete-node operation: invalid op.cloudLocator: %@", operation.cloudLocator);
+		ZDCLogWarn(@"Skipping delete-node operation: invalid op.cloudLocator: %@", operation.cloudLocator);
 		
 		[self skipOperationWithContext:context];
 		return;
@@ -4601,7 +4581,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		if (error)
 		{
-			DDLogError(@"Error writing operation.data (%@): %@", tempFileURL.path, error);
+			ZDCLogError(@"Error writing operation.data (%@): %@", tempFileURL.path, error);
 		}
 		
 		context.uploadFileURL = tempFileURL;
@@ -4619,7 +4599,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	}
 	else
 	{
-		DDLogWarn(@"Missing operation data: %@", operation.cloudLocator.cloudPath);
+		ZDCLogWarn(@"Missing operation data: %@", operation.cloudLocator.cloudPath);
 		
 		[self skipOperationWithContext:context];
 	}
@@ -4627,7 +4607,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)startDeleteNodeOperation:(ZDCCloudOperation *)operation withContext:(ZDCTaskContext *)context
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_DeleteNode, @"Invalid operation type");
 	
 	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
@@ -4680,10 +4660,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		                   secret: auth.aws_secret
 		                  session: auth.aws_session
 		               payloadSig: context.sha256Hash];
-	
-	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request zdcDescription]);
-	#endif
 		
 		NSURLSessionUploadTask *task = nil;
 	#if TARGET_OS_IPHONE
@@ -4732,7 +4708,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
                         withError:(NSError *)error
                           context:(ZDCTaskContext *)context
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[self unstashContext:context];
 	
@@ -4793,7 +4769,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 		
 		NSUInteger successiveFailCount = [operation.ephemeralInfo s3_didFailWithStatusCode:@(statusCode)];
-		DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
+		ZDCLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
 		
 		if (successiveFailCount > 10)
 		{
@@ -4830,7 +4806,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			DDLogWarn(@"Received unknown statusCode from S3: %ld", (long)statusCode);
+			ZDCLogWarn(@"Received unknown statusCode from S3: %ld", (long)statusCode);
 			
 			// The operation failed for some unknown reason.
 			//
@@ -4866,7 +4842,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)deleteNodePollDidComplete:(ZDCPollContext *)pollContext withStatus:(NSDictionary *)pollStatus
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	ZDCTaskContext *context = pollContext.taskContext;
 	ZDCCloudOperation *operation = [self operationForContext:context];
@@ -5029,7 +5005,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 - (void)prepareCopyLeafOperation:(ZDCCloudOperation *)operation
                      forPipeline:(YapDatabaseCloudCorePipeline *)pipeline
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_CopyLeaf, @"Invalid operation type");
 	
 	// Create context with boilerplate values
@@ -5043,7 +5019,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	 || operation.cloudLocator.bucket == nil
 	 || operation.cloudLocator.cloudPath == nil)
 	{
-		DDLogWarn(@"Skipping copy-leaf operation: invalid op.cloudLocator: %@", operation.cloudLocator);
+		ZDCLogWarn(@"Skipping copy-leaf operation: invalid op.cloudLocator: %@", operation.cloudLocator);
 		
 		[self skipOperationWithContext:context];
 		return;
@@ -5054,7 +5030,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	 || operation.dstCloudLocator.bucket == nil
 	 || operation.dstCloudLocator.cloudPath == nil)
 	{
-		DDLogWarn(@"Skipping copy-leaf operation: invalid op.dstCloudLocator: %@", operation.dstCloudLocator);
+		ZDCLogWarn(@"Skipping copy-leaf operation: invalid op.dstCloudLocator: %@", operation.dstCloudLocator);
 		
 		[self skipOperationWithContext:context];
 		return;
@@ -5062,7 +5038,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	if ([operation.cloudLocator isEqualToCloudLocatorIgnoringExt:operation.dstCloudLocator])
 	{
-		DDLogWarn(@"Skipping copy-leaf operation: src == dst: %@", operation);
+		ZDCLogWarn(@"Skipping copy-leaf operation: src == dst: %@", operation);
 		
 		[self skipOperationWithContext:context];
 		return;
@@ -5095,7 +5071,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		if (error)
 		{
-			DDLogError(@"Error writing operation.data (%@): %@", tempFileURL.path, error);
+			ZDCLogError(@"Error writing operation.data (%@): %@", tempFileURL.path, error);
 		}
 		
 		context.uploadFileURL = tempFileURL;
@@ -5151,7 +5127,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	if (error)
 	{
-		DDLogWarn(@"Error creating PUT operation: %@: %@", operation.cloudLocator.cloudPath, error);
+		ZDCLogWarn(@"Error creating PUT operation: %@: %@", operation.cloudLocator.cloudPath, error);
 		
 		[self skipOperationWithContext:context];
 	}
@@ -5171,7 +5147,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)startCopyLeafOperation:(ZDCCloudOperation *)operation withContext:(ZDCTaskContext *)context
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_CopyLeaf, @"Invalid operation type");
 	
 	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
@@ -5225,10 +5201,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		                  session: auth.aws_session
 		               payloadSig: context.sha256Hash];
 		
-	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request zdcDescription]);
-	#endif
-		
 		NSURLSessionUploadTask *task = nil;
 	#if TARGET_OS_IPHONE
 		
@@ -5239,12 +5211,12 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		{
 			if ([responseObject isKindOfClass:[NSData class]])
 			{
-				NSString *str = [[NSString alloc] initWithData:(NSData *)responseObject encoding:NSUTF8StringEncoding];
-				DDLogInfo(@"response: %@", str);
+				ZDCLogInfo(@"response: %@",
+				  [[NSString alloc] initWithData:(NSData *)responseObject encoding:NSUTF8StringEncoding]);
 			}
 			else
 			{
-				DDLogInfo(@"response: %@", responseObject);
+				ZDCLogInfo(@"response: %@", responseObject);
 			}
 		}];
 		
@@ -5287,7 +5259,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
                       withError:(NSError *)error
                         context:(ZDCTaskContext *)context
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[self unstashContext:context];
 	
@@ -5348,7 +5320,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:NO];
 		
 		NSUInteger successiveFailCount = [operation.ephemeralInfo s3_didFailWithStatusCode:@(statusCode)];
-		DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
+		ZDCLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
 		
 		if (successiveFailCount > 10)
 		{
@@ -5385,7 +5357,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			DDLogWarn(@"Received unknown statusCode from S3: %ld", (long)statusCode);
+			ZDCLogWarn(@"Received unknown statusCode from S3: %ld", (long)statusCode);
 			
 			// The operation failed for some unknown reason.
 			//
@@ -5421,7 +5393,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)copyLeafPollDidComplete:(ZDCPollContext *)pollContext withStatus:(NSDictionary *)pollStatus
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	ZDCTaskContext *context = pollContext.taskContext;
 	ZDCCloudOperation *operation = [self operationForContext:context];
@@ -5484,7 +5456,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		NSString *extMsg = nil;
 		[self getExtCode:&extCode msg:&extMsg fromPollStatus:pollStatus];
 		
-		DDLogInfo(@"Conflict: %ld: %@", (long)extCode, extMsg);
+		ZDCLogInfo(@"Conflict: %ld: %@", (long)extCode, extMsg);
 		
 		// Decide what to do
 		
@@ -5498,7 +5470,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			// but may occur if somebody is trying to trick our server.
 			
 			NSUInteger successiveFailCount = [operation.ephemeralInfo s4_didFailWithExtStatusCode:@(extCode)];
-			DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
+			ZDCLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
 			
 			if (successiveFailCount > 10)
 			{
@@ -5529,7 +5501,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		else
 		{
 			NSUInteger successiveFailCount = [operation.ephemeralInfo s4_didFailWithExtStatusCode:@(extCode)];
-			DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
+			ZDCLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
 			
 			if (successiveFailCount > 10)
 			{
@@ -5615,7 +5587,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	NSData *json_data = [NSJSONSerialization dataWithJSONObject:json_dict options:0 error:&json_error];
 	
 	if (json_error) {
-		DDLogError(@"JSON serialization error: %@", json_error);
+		ZDCLogError(@"JSON serialization error: %@", json_error);
 	}
 	
 	//operation.ephemeralInfo.
@@ -5641,7 +5613,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	if (error)
 	{
-		DDLogError(@"Error writing operation.data (%@): %@", tempFileURL.path, error);
+		ZDCLogError(@"Error writing operation.data (%@): %@", tempFileURL.path, error);
 	}
 	
 	multipollContext.uploadFileURL = tempFileURL;
@@ -5659,7 +5631,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)copyLeafMultipollDidComplete:(ZDCMultipollContext *)pollContext withStatus:(NSDictionary *)pollStatus
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	ZDCTaskContext *context = pollContext.taskContext;
 	ZDCCloudOperation *operation = [self operationForContext:context];
@@ -5769,7 +5741,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)startPollWithContext:(ZDCPollContext *)pollContext pipeline:(YapDatabaseCloudCorePipeline *)pipeline
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSParameterAssert(pollContext != nil);
 	NSParameterAssert(pipeline != nil);
 	
@@ -5848,10 +5820,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		                   secret: auth.aws_secret
 		                  session: auth.aws_session];
 		
-	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request zdcDescription]);
-	#endif
-		
 	#if TARGET_OS_IPHONE
 		
 		// Background NSURLSession's don't really support data tasks.
@@ -5913,7 +5881,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
                 context:(ZDCPollContext *)pollContext
          responseObject:(id)responseObject
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[self unstashContext:pollContext];
 	
@@ -6014,14 +5982,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			pollFailCount_isLoop = NO;
 			pollFailCount_modulus = pollFailCount_total;
 			
-			DDLogInfo(@"pollFailCount: %lu", (unsigned long)pollFailCount_total);
+			ZDCLogInfo(@"pollFailCount: %lu", (unsigned long)pollFailCount_total);
 		}
 		else
 		{
 			pollFailCount_isLoop = YES;
 			pollFailCount_modulus = pollFailCount_total % pollingModulus;
 			
-			DDLogInfo(@"pollFailCount: %lu => %lu",
+			ZDCLogInfo(@"pollFailCount: %lu => %lu",
 			          (unsigned long)pollFailCount_total,
 			          (unsigned long)pollFailCount_modulus);
 		}
@@ -6100,7 +6068,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		default :
 		{
-			DDLogWarn(@"Unhandled poll response !");
+			ZDCLogWarn(@"Unhandled poll response !");
 			break;
 		}
 	}
@@ -6113,7 +6081,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 - (void)startMultipollWithContext:(ZDCMultipollContext *)multipollContext
                          pipeline:(YapDatabaseCloudCorePipeline *)pipeline
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSParameterAssert(multipollContext != nil);
 	NSParameterAssert(pipeline != nil);
 	
@@ -6199,10 +6167,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		                  session: auth.aws_session
 		               payloadSig: multipollContext.sha256Hash];
 		
-	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request zdcDescription]);
-	#endif
-		
 		__block NSURLSessionUploadTask *task = nil;
 	#if TARGET_OS_IPHONE
 		
@@ -6262,7 +6226,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
                      context:(ZDCMultipollContext *)multipollContext
               responseObject:(id)responseObject
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[self unstashContext:multipollContext];
 	
@@ -6398,14 +6362,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			pollFailCount_isLoop = NO;
 			pollFailCount_modulus = pollFailCount_total;
 			
-			DDLogInfo(@"pollFailCount: %lu", (unsigned long)pollFailCount_total);
+			ZDCLogInfo(@"pollFailCount: %lu", (unsigned long)pollFailCount_total);
 		}
 		else
 		{
 			pollFailCount_isLoop = YES;
 			pollFailCount_modulus = pollFailCount_total % pollingModulus;
 			
-			DDLogInfo(@"pollFailCount: %lu => %lu",
+			ZDCLogInfo(@"pollFailCount: %lu => %lu",
 			          (unsigned long)pollFailCount_total,
 			          (unsigned long)pollFailCount_modulus);
 		}
@@ -6477,7 +6441,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		default:
 		{
-			DDLogWarn(@"Unhandled poll response !");
+			ZDCLogWarn(@"Unhandled poll response !");
 			break;
 		}
 	}
@@ -6489,7 +6453,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)startTouchWithContext:(ZDCTouchContext *)touchContext pipeline:(YapDatabaseCloudCorePipeline *)pipeline
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSParameterAssert(touchContext != nil);
 	NSParameterAssert(pipeline != nil);
 	
@@ -6568,10 +6532,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		                   secret: auth.aws_secret
 		                  session: auth.aws_session];
 		
-	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request zdcDescription]);
-	#endif
-		
 		NSURLSessionTask *task = nil;
 	#if TARGET_OS_IPHONE
 		
@@ -6617,7 +6577,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
                withError:(NSError *)error
                  context:(ZDCTouchContext *)touchContext
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[self unstashContext:touchContext];
 	
@@ -6664,7 +6624,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// This is rather abnormal, and generally only occurs under specific conditions.
 		
 		NSUInteger successiveFailCount = [operation.ephemeralInfo s3_didFailWithStatusCode:@(statusCode)];
-		DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
+		ZDCLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
 		
 		if (successiveFailCount > 10)
 		{
@@ -6701,7 +6661,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			DDLogWarn(@"Received unknown statusCode from S3: %ld", (long)statusCode);
+			ZDCLogWarn(@"Received unknown statusCode from S3: %ld", (long)statusCode);
 			
 			// The operation failed for some unknown reason.
 			//
@@ -6738,7 +6698,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 - (void)prepareAvatarOperation:(ZDCCloudOperation *)operation
                    forPipeline:(YapDatabaseCloudCorePipeline *)pipeline
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_Avatar, @"Invalid operation type");
 	
 	// Create context with boilerplate values
@@ -6749,7 +6709,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	if (operation.avatar_auth0ID == nil)
 	{
-		DDLogWarn(@"Skipping AVATAR operation: nil auth0ID");
+		ZDCLogWarn(@"Skipping AVATAR operation: nil auth0ID");
 		
 		[self skipOperationWithContext:context];
 		return;
@@ -6840,7 +6800,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 			if (jsonData.length > (1024 * 1024 * 10))
 			{
-				DDLogError(@"Avatar image is too big !");
+				ZDCLogError(@"Avatar image is too big !");
 				
 				// Non-recoverable error
 				[self skipOperationWithContext:context];
@@ -6863,7 +6823,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 			if (error)
 			{
-				DDLogError(@"Error writing operation.data (%@): %@", tempFileURL.path, error);
+				ZDCLogError(@"Error writing operation.data (%@): %@", tempFileURL.path, error);
 			}
 		
 			context.uploadFileURL = tempFileURL;
@@ -6912,7 +6872,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 - (void)startAvatarOperation:(ZDCCloudOperation *)operation
                  withContext:(ZDCTaskContext *)context
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_Avatar, @"Invalid operation type");
 	
 	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
@@ -7039,7 +6999,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
                     withError:(NSError *)error
                       context:(ZDCTaskContext *)context
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[self unstashContext:context];
 	
@@ -7109,7 +7069,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// Increment the failCount for the operation, so we can do exponential backoff.
 		
 		NSUInteger successiveFailCount = [operation.ephemeralInfo s3_didFailWithStatusCode:@(statusCode)];
-		DDLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
+		ZDCLogInfo(@"successiveFailCount: %lu", (unsigned long)successiveFailCount);
 		
 		if (successiveFailCount > 10)
 		{
@@ -7414,7 +7374,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
         completionQueue:(dispatch_queue_t)completionQueue
         completionBlock:(void (^)(BOOL match, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSParameterAssert(stream != nil);
 	NSParameterAssert(completionQueue != nil);
@@ -7459,7 +7419,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
           completionQueue:(dispatch_queue_t)completionQueue
           completionBlock:(void (^)(NSURL *fileURL, NSString *sha256Hash, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSString *randomFileName = [[NSUUID UUID] UUIDString];
 	
@@ -7533,7 +7493,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			if (bytesRead < 0)
 			{
 				// Error reading
-				DDLogError(@"inputStream.error: %@", outputStream.streamError);
+				ZDCLogError(@"inputStream.error: %@", outputStream.streamError);
 				
 				error = inputStream.streamError;
 				if (error == nil) {
@@ -7556,7 +7516,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				if (bytesWritten <= 0)
 				{
 					// Error writing
-					DDLogError(@"outputStream.error: %@", outputStream.streamError);
+					ZDCLogError(@"outputStream.error: %@", outputStream.streamError);
 					
 					error = outputStream.streamError;
 					if (error == nil) {
@@ -7614,7 +7574,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
                    metadata:(nullable NSData *)rawMetadata
                   thumbnail:(nullable NSData *)rawThumbnail
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	uint64_t cloudFileSize = 0;
 	Cleartext2CloudFileInputStream *cloudStream = nil;
@@ -7889,7 +7849,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	                                error: &paramError];
 	
 	if (paramError) {
-		DDLogError(@"ZDCFileChecksum paramError: %@", paramError);
+		ZDCLogError(@"ZDCFileChecksum paramError: %@", paramError);
 	}
 	
 	if (checksumProgress)
@@ -7912,7 +7872,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (ZDCTaskContext *)nextTaskForMultipartOperation:(ZDCCloudOperation *)operation
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	ZDCCloudOperation_MultipartInfo *multipartInfo = operation.multipartInfo;
 	
@@ -8027,7 +7987,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)removeTaskForMultipartOperation:(ZDCTaskContext *)context didSucceed:(BOOL)success
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	ZDCCloudOperation *operation = [self operationForContext:context];
 	
@@ -8068,19 +8028,19 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
  */
 - (void)restoreInProgressMultipartContext:(ZDCTaskContext *)context
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	ZDCCloudOperation *operation = [self operationForContext:context];
 	ZDCCloudOperation_MultipartInfo *multipartInfo = operation.multipartInfo;
 	
 	if (multipartInfo == nil)
 	{
-		DDLogWarn(@"ignoring - called with non-multipart context");
+		ZDCLogWarn(@"ignoring - called with non-multipart context");
 		return;
 	}
 	if (context.progress == nil)
 	{
-		DDLogWarn(@"ignoring - called with nil context.progress");
+		ZDCLogWarn(@"ignoring - called with nil context.progress");
 		return;
 	}
 	
@@ -8113,7 +8073,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)refreshProgressForMultipartOperation:(ZDCCloudOperation *)operation
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	dispatch_sync(serialQueue, ^{ @autoreleasepool {
 		
@@ -8238,7 +8198,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)abortMultipartOperation:(ZDCCloudOperation *)operation
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	__block BOOL opModified = NO;
 	
@@ -8275,7 +8235,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)fixMissingKeysForNodeID:(NSString *)nodeID operation:(ZDCCloudOperation *)operation
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	YapDatabaseCloudCorePipeline *pipeline = [self pipelineForOperation:operation];
 	
@@ -8310,7 +8270,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)fixMissingKeysForMessageID:(NSString *)messageID operation:(ZDCCloudOperation *)operation
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 //	YapDatabaseCloudCorePipeline *pipeline = [self pipelineForOperation:operation];
 //	
@@ -8346,7 +8306,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)fetchMissingUsers:(NSArray<NSString*> *)missingUserIDs forOperation:(ZDCCloudOperation *)operation
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	YapDatabaseCloudCorePipeline *pipeline = [self pipelineForOperation:operation];
 	
@@ -8378,7 +8338,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	NSParameterAssert(context != nil);
 #else
 	if (context == nil) {
-		DDLogError(@"retryOperationWithContext: context is nil !");
+		ZDCLogError(@"retryOperationWithContext: context is nil !");
 		return;
 	}
 #endif
@@ -8402,7 +8362,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	NSParameterAssert(context != nil);
 #else
 	if (context == nil) {
-		DDLogError(@"skipOperationWithContext: context is nil !");
+		ZDCLogError(@"skipOperationWithContext: context is nil !");
 		return;
 	}
 #endif
@@ -8431,7 +8391,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
                        errorInfo:(NSDictionary *)errorInfo
                  stopSyncingNode:(BOOL)stopSyncingNode
 {
-	DDLogInfo(@"Failing operation with info: %@", errorInfo);
+	ZDCLogInfo(@"Failing operation with info: %@", errorInfo);
 	
 	NSString *extName = [self extNameForContext:context];
 	
@@ -8467,7 +8427,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)forceFullPullForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		

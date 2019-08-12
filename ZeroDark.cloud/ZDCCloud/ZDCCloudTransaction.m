@@ -25,13 +25,13 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG && robbie_hanson
-  static const int ddLogLevel = DDLogLevelVerbose;
+  static const int zdcLogLevel = ZDCLogLevelVerbose;
 #elif DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 @interface YapDatabaseReadTransaction ()
 - (id)objectForCollectionKey:(YapCollectionKey *)cacheKey withRowid:(int64_t)rowid;
@@ -87,7 +87,7 @@
 - (nullable ZDCNode *)sendMessageToRecipients:(NSArray<ZDCUser*> *)recipients
                                         error:(NSError *_Nullable *_Nullable)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	// Proper API usage check
 	if (![databaseTransaction isKindOfClass:[YapDatabaseReadWriteTransaction class]])
@@ -242,7 +242,7 @@
 - (nullable ZDCNode *)sendSignalToRecipient:(ZDCUser *)recipient
                                       error:(NSError *_Nullable *_Nullable)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	// Proper API usage check
 	if (![databaseTransaction isKindOfClass:[YapDatabaseReadWriteTransaction class]])
@@ -399,7 +399,7 @@
 - (nullable ZDCNode *)createNodeWithPath:(ZDCTreesystemPath *)path
                                    error:(NSError *_Nullable *_Nullable)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	// Proper API usage check
 	if (![databaseTransaction isKindOfClass:[YapDatabaseReadWriteTransaction class]])
@@ -472,7 +472,7 @@
  */
 - (BOOL)createNode:(ZDCNode *)node error:(NSError *_Nullable *_Nullable)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	// Proper API usage check
 	if (![databaseTransaction isKindOfClass:[YapDatabaseReadWriteTransaction class]])
@@ -614,7 +614,7 @@
  */
 - (BOOL)modifyNode:(ZDCNode *)newNode error:(NSError *_Nullable *_Nullable)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	// Proper API usage check
 	if (![databaseTransaction isKindOfClass:[YapDatabaseReadWriteTransaction class]])
@@ -786,7 +786,7 @@
                                withOptions:(ZDCDeleteNodeOptions)opts
                                      error:(NSError *_Nullable *_Nullable)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	// Proper API usage check
 	if (![databaseTransaction isKindOfClass:[YapDatabaseReadWriteTransaction class]])
@@ -1126,7 +1126,7 @@
                                   remoteUser:(ZDCUser *)remoteUser
                                        error:(NSError *_Nullable *_Nullable)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	// Proper API usage check
 	if (![databaseTransaction isKindOfClass:[YapDatabaseReadWriteTransaction class]])
@@ -1267,7 +1267,7 @@
       inCollection:(nullable NSString *)collection
              error:(NSError *_Nullable *_Nullable)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	// Proper API usage check
 	if (![databaseTransaction isKindOfClass:[YapDatabaseReadWriteTransaction class]])
@@ -2015,7 +2015,7 @@
 **/
 - (void)skipMoveOperationsForNodeID:(NSString *)nodeID excluding:(NSUUID *)operationUUID
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	// Proper API usage check
 	if (![databaseTransaction isKindOfClass:[YapDatabaseReadWriteTransaction class]])
@@ -2052,7 +2052,7 @@
 **/
 - (void)skipPutOperations:(NSSet<NSUUID *> *)opUUIDs
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	// Proper API usage check
 	if (![databaseTransaction isKindOfClass:[YapDatabaseReadWriteTransaction class]])
@@ -2134,7 +2134,7 @@
 - (void)moveCloudLocator:(ZDCCloudLocator *)oldCloudLocator
           toCloudLocator:(ZDCCloudLocator *)newCloudLocator
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	// Proper API usage check
 	if (![databaseTransaction isKindOfClass:[YapDatabaseReadWriteTransaction class]])
@@ -2144,11 +2144,11 @@
 	}
 	
 	if (oldCloudLocator == nil) {
-		DDLogWarn(@"%@ - Ignoring request: oldCloudLocator is nil", THIS_METHOD);
+		ZDCLogWarn(@"%@ - Ignoring request: oldCloudLocator is nil", THIS_METHOD);
 		return;
 	}
 	if (newCloudLocator == nil) {
-		DDLogWarn(@"%@ - Ignoring request: newCloudLocator is nil", THIS_METHOD);
+		ZDCLogWarn(@"%@ - Ignoring request: newCloudLocator is nil", THIS_METHOD);
 		return;
 	}
 	
@@ -2657,12 +2657,12 @@
 
 - (void)didCompleteOperation:(YapDatabaseCloudCoreOperation *)operation
 {
-//	DDLogCookie(@"Did COMPLETE operation: %@", operation.uuid);
+//	ZDCLogCookie(@"Did COMPLETE operation: %@", operation.uuid);
 }
 
 - (void)didSkipOperation:(YapDatabaseCloudCoreOperation *)operation
 {
-//	DDLogCookie(@"Did SKIP operation: %@", operation.uuid);
+//	ZDCLogCookie(@"Did SKIP operation: %@", operation.uuid);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2684,7 +2684,7 @@
            withMetadata:(id)metadata
                   rowid:(int64_t)rowid
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[super didInsertObject:object forCollectionKey:collectionKey withMetadata:metadata rowid:rowid];
 }
@@ -2704,7 +2704,7 @@
            withMetadata:(id)metadata
                   rowid:(int64_t)rowid
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[super didUpdateObject:object forCollectionKey:collectionKey withMetadata:metadata rowid:rowid];
 }
@@ -2720,7 +2720,7 @@
 **/
 - (void)didReplaceObject:(id)object forCollectionKey:(YapCollectionKey *)collectionKey withRowid:(int64_t)rowid
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[super didReplaceObject:object forCollectionKey:collectionKey withRowid:rowid];
 }

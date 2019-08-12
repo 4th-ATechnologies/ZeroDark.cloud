@@ -30,13 +30,13 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG && robbie_hanson
-  static const int ddLogLevel = DDLogLevelVerbose | DDLogFlagTrace;
+  static const int zdcLogLevel = ZDCLogLevelVerbose | ZDCLogFlagTrace;
 #elif DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 static NSUInteger const kMaxFailCount = 8;
 
@@ -267,7 +267,7 @@ static NSUInteger const kMaxFailCount = 8;
                           completionQueue:(nullable dispatch_queue_t)completionQueue
                           completionBlock:(NodeMetaDownloadCompletionBlock)completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	ZDCCloudDataInfo *upToDateHeader = nil;
 	if ([node.cloudDataInfo.eTag isEqual:node.eTag_data])
@@ -417,7 +417,7 @@ static NSUInteger const kMaxFailCount = 8;
                     options:(ZDCDownloadOptions *)options
                   failCount:(NSUInteger)failCount
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSString *nodeID = node.uuid;
 	dispatch_queue_t concurrentQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
@@ -629,7 +629,7 @@ static NSUInteger const kMaxFailCount = 8;
                                      error:(nullable NSError *)error
                               responseData:(nullable NSData *)responseData
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSString *nodeID = context.nodeID;
 	
@@ -741,7 +741,7 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		if ((statusCode != 403) && (statusCode != 404))
 		{
-			DDLogError(@"AWS S3 returned unknown status code: %ld", (long)statusCode);
+			ZDCLogError(@"AWS S3 returned unknown status code: %ld", (long)statusCode);
 		}
 		
 		NSError *error =
@@ -807,7 +807,7 @@ static NSUInteger const kMaxFailCount = 8;
                         completionQueue:(nullable dispatch_queue_t)completionQueue
                         completionBlock:(NodeMetaDownloadCompletionBlock)completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (!node.isImmutable) {
 		node = [node immutableCopy];
@@ -1075,7 +1075,7 @@ static NSUInteger const kMaxFailCount = 8;
                   options:(ZDCDownloadOptions *)options
                 failCount:(NSUInteger)failCount
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSString *nodeID = node.uuid;
 	dispatch_queue_t concurrentQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
@@ -1258,7 +1258,7 @@ static NSUInteger const kMaxFailCount = 8;
               withContext:(ZDCDownloadContext *)context
                      auth:(ZDCLocalUserAuth *)auth
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 #if TARGET_OS_IPHONE
 	BOOL canBackground = context.options.canDownloadWhileInBackground;
@@ -1416,7 +1416,7 @@ static NSUInteger const kMaxFailCount = 8;
                                    error:(nullable NSError *)error
                             responseData:(nullable NSData *)responseData
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	__weak typeof(self) weakSelf = self;
 	
@@ -1536,7 +1536,7 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		if ((statusCode != 403) && (statusCode != 404) && (statusCode != 412))
 		{
-			DDLogError(@"AWS S3 returned unknown status code: %ld", (long)statusCode);
+			ZDCLogError(@"AWS S3 returned unknown status code: %ld", (long)statusCode);
 		}
 		
 		NSError *error =
@@ -1743,7 +1743,7 @@ static NSUInteger const kMaxFailCount = 8;
                         completionQueue:(nullable dispatch_queue_t)completionQueue
                         completionBlock:(NodeDataDownloadCompletionBlock)completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (!node.isImmutable) {
 		node = [node immutableCopy];
@@ -1884,7 +1884,7 @@ static NSUInteger const kMaxFailCount = 8;
                   options:(ZDCDownloadOptions *)options
                 failCount:(NSUInteger)failCount
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSString *const nodeID = node.uuid;
 	dispatch_queue_t concurrentQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
@@ -1979,7 +1979,7 @@ static NSUInteger const kMaxFailCount = 8;
               withContext:(ZDCDownloadContext *)context
                      auth:(ZDCLocalUserAuth *)auth
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 #if TARGET_OS_IPHONE
 	BOOL canBackground = context.options.canDownloadWhileInBackground;
@@ -2122,7 +2122,7 @@ static NSUInteger const kMaxFailCount = 8;
                                    error:(nullable NSError *)error
                        downloadedFileURL:(nullable NSURL *)downloadedFileURL
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSString *const nodeID = context.nodeID;
 	
@@ -2235,7 +2235,7 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		if ((statusCode != 403) && (statusCode != 404))
 		{
-			DDLogError(@"AWS S3 returned unknown status code: %ld", (long)statusCode);
+			ZDCLogError(@"AWS S3 returned unknown status code: %ld", (long)statusCode);
 		}
 		
 		NSError *error =
@@ -2393,7 +2393,7 @@ static NSUInteger const kMaxFailCount = 8;
                           completionQueue:(nullable dispatch_queue_t)completionQueue
                           completionBlock:(UserAvatarDownloadCompletionBlock)completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (!auth0ID) {
 		auth0ID = user.auth0_preferredID;
@@ -2494,7 +2494,7 @@ static NSUInteger const kMaxFailCount = 8;
                            completionQueue:(nullable dispatch_queue_t)completionQueue
                            completionBlock:(UserAvatarDownloadCompletionBlock)completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	ZDCUser *user = nil;
 	NSString *userID = nil;
@@ -2836,7 +2836,7 @@ static NSUInteger const kMaxFailCount = 8;
                           error:(NSError *)error
               downloadedFileURL:(NSURL *)downloadedFileURL
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 #if TARGET_OS_IOS
 	BOOL needsNotifyZeroDarkCloudDelegate = NO;
@@ -2945,7 +2945,7 @@ static NSUInteger const kMaxFailCount = 8;
 - (void)installDelegateInvocationForMetaContext:(ZDCDownloadContext *)context
                                            path:(ZDCTreesystemPath *)path
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSParameterAssert(context.isMeta);
 	
 	NSProgress *progress = [[NSProgress alloc] init];
@@ -2988,7 +2988,7 @@ static NSUInteger const kMaxFailCount = 8;
 - (void)installDelegateInvocationForDataContext:(ZDCDownloadContext *)context
                                            path:(ZDCTreesystemPath *)path
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSParameterAssert(!context.isMeta);
 	
 	NSProgress *progress = [[NSProgress alloc] init];

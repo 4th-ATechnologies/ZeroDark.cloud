@@ -30,11 +30,11 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG && robbie_hanson
-  static const int ddLogLevel = DDLogLevelInfo;
+  static const int zdcLogLevel = ZDCLogLevelInfo;
 #elif DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
 /* extern */ NSString *const ZDCDiskManagerChangedNotification = @"ZDCDiskManagerChanged";
@@ -889,7 +889,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		                                               error: &error];
 	
 		if (error) {
-			DDLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
+			ZDCLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
 		}
 	}
 }
@@ -975,7 +975,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 **/
 - (void)scanDirectoryWithMode:(ZDCStorageMode)mode type:(ZDCFileType)type format:(ZDCCryptoFileFormat)format
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSURL *directoryURL = [self URLForMode:mode type:type format:format];
 	
@@ -1092,7 +1092,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
                             type:(ZDCFileType)type
                           format:(ZDCCryptoFileFormat)format
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	dispatch_async(cacheQueue, ^{ @autoreleasepool {
 	#pragma clang diagnostic push
@@ -1226,7 +1226,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
                             type:(ZDCFileType)type
                           format:(ZDCCryptoFileFormat)format
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	// Dispatch queue considerations:
 	//
@@ -1523,7 +1523,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 					[[NSFileManager defaultManager] removeItemAtURL:matchingInfo.fileURL error:&error];
 					
 					if (error) {
-						DDLogWarn(@"Error deleting fileURL(%@): %@", [matchingInfo.fileURL path], error);
+						ZDCLogWarn(@"Error deleting fileURL(%@): %@", [matchingInfo.fileURL path], error);
 					}
 					
 					[infos removeObjectAtIndex:matchingIndex];
@@ -1710,7 +1710,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
  */
 - (void)garbageCollection:(dispatch_block_t)completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(dispatch_get_specific(IsOnCacheQueueKey), @"MUST be invoked within the cacheQueue");
 	
 	// Step 1 of 5:
@@ -1891,7 +1891,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 			[[NSFileManager defaultManager] removeItemAtURL:info.fileURL error:&error];
 			
 			if (error) {
-				DDLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
+				ZDCLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
 			}
 			
 			NSString *key = info.nodeID ?: info.userID;
@@ -1980,7 +1980,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 					[[NSFileManager defaultManager] removeItemAtURL:info.fileURL error:&error];
 					
 					if (error) {
-						DDLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
+						ZDCLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
 					}
 					
 					NSString *key = info.nodeID ?: info.userID;
@@ -2166,7 +2166,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	
 - (void)timerFire
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[self deleteExpiredItemsFromCachePool:ZDCFileType_NodeData];
 	[self deleteExpiredItemsFromCachePool:ZDCFileType_NodeThumbnail];
@@ -2413,7 +2413,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	if (result < 0)
 	{
 		if (errno != ENOATTR) {
-			DDLogError(@"%@: getxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"%@: getxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
 		}
 	}
 	
@@ -2433,7 +2433,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	int result = setxattr(path, name, &value, sizeof(value), 0, 0);
 	
 	if (result < 0) {
-		DDLogError(@"%@: setxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+		ZDCLogError(@"%@: setxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
 	}
 }
 
@@ -2447,7 +2447,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	if (result < 0)
 	{
 		if (errno != ENOATTR) {
-			DDLogError(@"%@: getxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"%@: getxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
 		}
 	}
 	
@@ -2466,7 +2466,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		int result = setxattr(path, name, &value, sizeof(value), 0, 0);
 		
 		if (result < 0) {
-			DDLogError(@"%@: setxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"%@: setxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
 		}
 	}
 	else
@@ -2474,7 +2474,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		int result = removexattr(path, name, 0);
 		
 		if (result < 0) {
-			DDLogError(@"%@: removexattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"%@: removexattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
 		}
 	}
 }
@@ -2489,7 +2489,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	if (result < 0)
 	{
 		if (errno != ENOATTR) {
-			DDLogError(@"%@: getxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"%@: getxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
 		}
 	}
 	
@@ -2508,7 +2508,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		int result = setxattr(path, name, &value, sizeof(value), 0, 0);
 		
 		if (result < 0) {
-			DDLogError(@"%@: setxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"%@: setxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
 		}
 	}
 	else
@@ -2516,7 +2516,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		int result = removexattr(path, name, 0);
 		
 		if (result < 0) {
-			DDLogError(@"%@: removexattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"%@: removexattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
 		}
 	}
 }
@@ -2532,7 +2532,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	if (result < 0)
 	{
 		if (errno != ENOATTR) {
-			DDLogError(@"%@: getxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"%@: getxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
 		}
 	}
 	
@@ -2561,7 +2561,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	int result = setxattr(path, name, &numMilliseconds, sizeof(numMilliseconds), 0, 0);
 	
 	if (result < 0) {
-		DDLogError(@"%@: setxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+		ZDCLogError(@"%@: setxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
 	}
 }
 
@@ -2584,7 +2584,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 			success = YES;
 		}
 		else {
-			DDLogError(@"%@: getxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"%@: getxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
 		}
 	}
 	else if (result == 0)
@@ -2599,7 +2599,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		NSData *decrypted = [encrypted decryptedDataWithSymmetricKey:encryptionKey error:&error];
 		
 		if (error) {
-			DDLogError(@"%@: decryption error: %@", THIS_METHOD, error);
+			ZDCLogError(@"%@: decryption error: %@", THIS_METHOD, error);
 		}
 		else {
 			eTag = [[NSString alloc] initWithData:decrypted encoding:NSUTF8StringEncoding];
@@ -2625,7 +2625,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		
 		if (error)
 		{
-			DDLogError(@"%@: encryption error: %@", THIS_METHOD, error);
+			ZDCLogError(@"%@: encryption error: %@", THIS_METHOD, error);
 		}
 		else if (encrypted)
 		{
@@ -2634,7 +2634,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 			int result = setxattr(path, name, buffer, encrypted.length, 0, 0);
 			
 			if (result < 0) {
-				DDLogError(@"%@: setxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+				ZDCLogError(@"%@: setxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
 			}
 		}
 	}
@@ -2643,7 +2643,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		int result = removexattr(path, name, 0);
 		
 		if (result < 0) {
-			DDLogError(@"%@: removexattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"%@: removexattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
 		}
 	}
 }
@@ -2695,7 +2695,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	
 	void (^WarnIfMainThread)(void) = ^{
 		if ([NSThread isMainThread]) {
-			DDLogWarn(@"Performing synchronous disk IO (+encryption) on the main thread."
+			ZDCLogWarn(@"Performing synchronous disk IO (+encryption) on the main thread."
 			          @" This is NOT recommended."
 						 @" (via: [%@ %@]", THIS_FILE, THIS_METHOD);
 		}
@@ -2711,7 +2711,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		                              outputURL: srcURL
 		                                  error: &error];
 		if (error) {
-			DDLogWarn(@"Error encrypting import.cleartextData: %@", error);
+			ZDCLogWarn(@"Error encrypting import.cleartextData: %@", error);
 		}
 	}
 	else if (import.cleartextFileURL)
@@ -2724,7 +2724,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		                              outputURL: srcURL
 		                                  error: &error];
 		if (error) {
-			DDLogWarn(@"Error encrypting import.cleartextFileURL: %@", error);
+			ZDCLogWarn(@"Error encrypting import.cleartextFileURL: %@", error);
 		}
 	}
 	else
@@ -2744,7 +2744,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 			                           toKey: node.encryptionKey
 			                           error: &error];
 			if (error) {
-				DDLogWarn(@"Error re-encrypting import.cryptoFile: %@", error);
+				ZDCLogWarn(@"Error re-encrypting import.cryptoFile: %@", error);
 			}
 		}
 	}
@@ -2766,7 +2766,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	
 	if (error)
 	{
-		DDLogWarn(@"Error moving file: src(%@) -> dst(%@): %@",
+		ZDCLogWarn(@"Error moving file: src(%@) -> dst(%@): %@",
 		            [srcURL path], [dstURL path], error);
 		
 		if (outError) *outError = error;
@@ -2815,7 +2815,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 					[[NSFileManager defaultManager] removeItemAtURL:info.fileURL error:&error];
 					
 					if (error) {
-						DDLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
+						ZDCLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
 					}
 					
 					[infos removeObjectAtIndex:i];
@@ -2898,7 +2898,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
  */
 - (BOOL)hasNodeData:(NSString *)nodeID
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	__block BOOL result = NO;
 	
@@ -2933,7 +2933,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
  */
 - (nullable ZDCDiskExport *)nodeData:(ZDCNode *)node
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	return [self nodeData:node preferredFormat:ZDCCryptoFileFormat_Unknown];
 }
@@ -2944,7 +2944,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 - (nullable ZDCDiskExport *)nodeData:(ZDCNode *)node
                      preferredFormat:(ZDCCryptoFileFormat)preferredFormat
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	if (node == nil) return nil;
 	
 	__block NSURL *fileURL = nil;
@@ -3069,7 +3069,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
  */
 - (void)deleteNodeDataForNodeIDs:(NSArray<NSString*> *)nodeIDs
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	dispatch_block_t block = ^{ @autoreleasepool {
 	#pragma clang diagnostic push
@@ -3096,7 +3096,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 						[[NSFileManager defaultManager] removeItemAtURL:info.fileURL error:&error];
 			
 						if (error) {
-							DDLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
+							ZDCLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
 						}
 						
 						[infos removeObjectAtIndex:i];
@@ -3179,7 +3179,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 					[[NSFileManager defaultManager] removeItemAtURL:srcInfo.fileURL error:&error];
 			
 					if (error) {
-						DDLogWarn(@"Error deleting fileURL(%@): %@", [srcInfo.fileURL path], error);
+						ZDCLogWarn(@"Error deleting fileURL(%@): %@", [srcInfo.fileURL path], error);
 					}
 					else
 					{
@@ -3217,7 +3217,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 					
 					if (error)
 					{
-						DDLogWarn(@"Error moving file: src(%@) -> dst(%@): %@",
+						ZDCLogWarn(@"Error moving file: src(%@) -> dst(%@): %@",
 						            [srcInfo.fileURL path], [dstFileURL path], error);
 					}
 					else
@@ -3236,7 +3236,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 					
 					if (error)
 					{
-						DDLogWarn(@"Error copying file: src(%@) -> dst(%@): %@",
+						ZDCLogWarn(@"Error copying file: src(%@) -> dst(%@): %@",
 						           [srcInfo.fileURL path], [dstFileURL path], error);
 					}
 					else
@@ -3280,7 +3280,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
                                         forNode:(ZDCNode *)node
                                           error:(NSError *_Nullable *_Nullable)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSError *error = nil;
 	
@@ -3315,7 +3315,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	
 	void (^WarnIfMainThread)(void) = ^{
 		if ([NSThread isMainThread]) {
-			DDLogWarn(@"Performing synchronous disk IO (+encryption) on the main thread."
+			ZDCLogWarn(@"Performing synchronous disk IO (+encryption) on the main thread."
 			          @" This is NOT recommended."
 						 @" (via: [%@ %@]", THIS_FILE, THIS_METHOD);
 		}
@@ -3333,7 +3333,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		                              outputURL: srcURL
 		                                  error: &error];
 		if (error) {
-			DDLogWarn(@"Error encrypting import.cleartextData: %@", error);
+			ZDCLogWarn(@"Error encrypting import.cleartextData: %@", error);
 		}
 	}
 	else if (import.cleartextFileURL)
@@ -3346,7 +3346,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		                              outputURL: srcURL
 		                                  error: &error];
 		if (error) {
-			DDLogWarn(@"Error encrypting import.cleartextFileURL: %@", error);
+			ZDCLogWarn(@"Error encrypting import.cleartextFileURL: %@", error);
 		}
 	}
 	else if (import.cryptoFile)
@@ -3366,7 +3366,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 			                           toKey: node.encryptionKey
 			                           error: &error];
 			if (error) {
-				DDLogWarn(@"Error re-encrypting import.cryptoFile: %@", error);
+				ZDCLogWarn(@"Error re-encrypting import.cryptoFile: %@", error);
 			}
 		}
 	}
@@ -3393,7 +3393,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	
 	if (error)
 	{
-		DDLogWarn(@"Error moving file: src(%@) -> dst(%@): %@",
+		ZDCLogWarn(@"Error moving file: src(%@) -> dst(%@): %@",
 		            [srcURL path], [dstURL path], error);
 		
 		if (outError) *outError = error;
@@ -3446,7 +3446,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 					[[NSFileManager defaultManager] removeItemAtURL:info.fileURL error:&error];
 					
 					if (error) {
-						DDLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
+						ZDCLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
 					}
 					
 					[infos removeObjectAtIndex:i];
@@ -3529,7 +3529,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
  */
 - (BOOL)hasNodeThumbnail:(NSString *)nodeID
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	__block BOOL result = NO;
 	
@@ -3564,7 +3564,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
  */
 - (nullable ZDCDiskExport *)nodeThumbnail:(ZDCNode *)node
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	if (node == nil) return nil;
 	
 	__block NSURL *fileURL = nil;
@@ -3670,7 +3670,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
  */
 - (void)deleteNodeThumbnailsForNodeIDs:(NSArray<NSString*> *)nodeIDs
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	dispatch_block_t block = ^{ @autoreleasepool {
 	#pragma clang diagnostic push
@@ -3697,7 +3697,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 						[[NSFileManager defaultManager] removeItemAtURL:info.fileURL error:&error];
 			
 						if (error) {
-								DDLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
+								ZDCLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
 						}
 			
 						[infos removeObjectAtIndex:i];
@@ -3780,7 +3780,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 					[[NSFileManager defaultManager] removeItemAtURL:srcInfo.fileURL error:&error];
 			
 					if (error) {
-						DDLogWarn(@"Error deleting fileURL(%@): %@", [srcInfo.fileURL path], error);
+						ZDCLogWarn(@"Error deleting fileURL(%@): %@", [srcInfo.fileURL path], error);
 					}
 					else
 					{
@@ -3818,7 +3818,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 					
 					if (error)
 					{
-						DDLogWarn(@"Error moving file: src(%@) -> dst(%@): %@",
+						ZDCLogWarn(@"Error moving file: src(%@) -> dst(%@): %@",
 						            [srcInfo.fileURL path], [dstFileURL path], error);
 					}
 					else
@@ -3837,7 +3837,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 					
 					if (error)
 					{
-						DDLogWarn(@"Error copying file: src(%@) -> dst(%@): %@",
+						ZDCLogWarn(@"Error copying file: src(%@) -> dst(%@): %@",
 						           [srcInfo.fileURL path], [dstFileURL path], error);
 					}
 					else
@@ -3919,7 +3919,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	
 	void (^WarnIfMainThread)(void) = ^{
 		if ([NSThread isMainThread]) {
-			DDLogWarn(@"Performing synchronous disk IO (+encryption) on the main thread."
+			ZDCLogWarn(@"Performing synchronous disk IO (+encryption) on the main thread."
 			          @" This is NOT recommended."
 						 @" (via: [%@ %@]", THIS_FILE, THIS_METHOD);
 		}
@@ -3937,7 +3937,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		                              outputURL: srcURL
 		                                  error: &error];
 		if (error) {
-			DDLogWarn(@"Error encrypting import.cleartextData: %@", error);
+			ZDCLogWarn(@"Error encrypting import.cleartextData: %@", error);
 		}
 	}
 	else if (import.cleartextFileURL)
@@ -3950,7 +3950,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		                              outputURL: srcURL
 		                                  error: &error];
 		if (error) {
-			DDLogWarn(@"Error encrypting import.cleartextFileURL: %@", error);
+			ZDCLogWarn(@"Error encrypting import.cleartextFileURL: %@", error);
 		}
 	}
 	else if (import.cryptoFile)
@@ -3970,7 +3970,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 			                           toKey: user.random_encryptionKey
 			                           error: &error];
 			if (error) {
-				DDLogWarn(@"Error re-encrypting import.cryptoFile: %@", error);
+				ZDCLogWarn(@"Error re-encrypting import.cryptoFile: %@", error);
 			}
 		}
 	}
@@ -4001,7 +4001,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	
 	if (error)
 	{
-		DDLogWarn(@"Error moving file: src(%@) -> dst(%@): %@",
+		ZDCLogWarn(@"Error moving file: src(%@) -> dst(%@): %@",
 		            [srcURL path], [dstURL path], error);
 		
 		if (outError) *outError = error;
@@ -4054,7 +4054,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 					[[NSFileManager defaultManager] removeItemAtURL:info.fileURL error:&error];
 					
 					if (error) {
-						DDLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
+						ZDCLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
 					}
 					
 					[infos removeObjectAtIndex:i];
@@ -4146,7 +4146,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
  */
 - (BOOL)hasUserAvatar:(NSString *)userID forAuth0ID:(nullable NSString *)auth0ID
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	__block BOOL result = NO;
 	
@@ -4193,7 +4193,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
  */
 - (nullable ZDCDiskExport *)userAvatar:(ZDCUser *)user forAuth0ID:(nullable NSString *)auth0ID
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (user == nil) return nil;
 	NSParameterAssert([user isKindOfClass:[ZDCUser class]]);
@@ -4315,7 +4315,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
  */
 - (void)deleteUserAvatarsForUserIDs:(NSArray<NSString*> *)userIDs
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (userIDs.count == 0) return;
 	
@@ -4344,7 +4344,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 						[[NSFileManager defaultManager] removeItemAtURL:info.fileURL error:&error];
 			
 						if (error) {
-								DDLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
+								ZDCLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
 						}
 			
 						[infos removeObjectAtIndex:i];
@@ -4393,7 +4393,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
  */
 - (void)deleteUserAvatarsForTuples:(NSArray<YapCollectionKey*> *)tuples
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (tuples.count == 0) return;
 	
@@ -4426,7 +4426,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 						[[NSFileManager defaultManager] removeItemAtURL:info.fileURL error:&error];
 						
 						if (error) {
-							DDLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
+							ZDCLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
 						}
 						
 						[infos removeObjectAtIndex:i];
@@ -4490,7 +4490,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 					[[NSFileManager defaultManager] removeItemAtURL:info.fileURL error:&error];
 					
 					if (error) {
-						DDLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
+						ZDCLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
 					}
 					
 					[infos removeObjectAtIndex:i];
@@ -4572,7 +4572,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 					[[NSFileManager defaultManager] removeItemAtURL:srcInfo.fileURL error:&error];
 			
 					if (error) {
-						DDLogWarn(@"Error deleting fileURL(%@): %@", [srcInfo.fileURL path], error);
+						ZDCLogWarn(@"Error deleting fileURL(%@): %@", [srcInfo.fileURL path], error);
 					}
 					else
 					{
@@ -4612,7 +4612,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 					
 					if (error)
 					{
-						DDLogWarn(@"Error moving file: src(%@) -> dst(%@): %@",
+						ZDCLogWarn(@"Error moving file: src(%@) -> dst(%@): %@",
 						            [srcInfo.fileURL path], [dstFileURL path], error);
 					}
 					else
@@ -4631,7 +4631,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 					
 					if (error)
 					{
-						DDLogWarn(@"Error copying file: src(%@) -> dst(%@): %@",
+						ZDCLogWarn(@"Error copying file: src(%@) -> dst(%@): %@",
 						           [srcInfo.fileURL path], [dstFileURL path], error);
 					}
 					else

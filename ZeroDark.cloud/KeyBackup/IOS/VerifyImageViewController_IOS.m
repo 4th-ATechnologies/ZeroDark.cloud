@@ -38,11 +38,11 @@
 
 // Log levels: off, error, warn, info, verbose
 #if DEBUG
-static const int ddLogLevel = DDLogLevelVerbose;
+static const int zdcLogLevel = ZDCLogLevelVerbose;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 
 
@@ -460,7 +460,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (IBAction)pasteButtonTapped:(id)sender
 {
-    DDLogAutoTrace();
+    ZDCLogAutoTrace();
     UIImage *image = [[UIPasteboard generalPasteboard] image];
     if (image)
     {
@@ -566,7 +566,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (IBAction)photosButtonTapped:(id)sender
 {
-    DDLogAutoTrace();
+    ZDCLogAutoTrace();
     
     if(ZDCConstants.appHasPhotosPermission)
     {
@@ -625,7 +625,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (void)showPhotoPicker
 {
-    DDLogAutoTrace();
+    ZDCLogAutoTrace();
     
     photoPicker = [[UIImagePickerController alloc] init];
     photoPicker.delegate      = (id <UINavigationControllerDelegate, UIImagePickerControllerDelegate>)self;
@@ -638,7 +638,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (void)showDocPicker
 {
-    DDLogAutoTrace();
+    ZDCLogAutoTrace();
     docPicker = [[UIDocumentPickerViewController alloc] initWithDocumentTypes:@[ (__bridge NSString *)kUTTypeImage]
                                                                        inMode:UIDocumentPickerModeImport];
     
@@ -654,7 +654,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (void)documentPicker:(UIDocumentPickerViewController *)documentPicker didPickDocumentAtURL:(NSURL *)url
 {
-    DDLogAutoTrace();
+    ZDCLogAutoTrace();
     
     if (url)
     {
@@ -669,7 +669,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (void)documentPickerWasCancelled:(UIDocumentPickerViewController *)controller
 {
-    DDLogAutoTrace();
+    ZDCLogAutoTrace();
     
     docPicker = nil;
 }
@@ -680,7 +680,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)sender
 {
-    DDLogAutoTrace();
+    ZDCLogAutoTrace();
 	__weak typeof(self) weakSelf = self;
    [self dismissViewControllerAnimated:YES completion:^{
 		 
@@ -695,7 +695,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (void)imagePickerController:(UIImagePickerController *)sender didFinishPickingMediaWithInfo:(NSDictionary *)info
 {
-    DDLogAutoTrace();
+    ZDCLogAutoTrace();
  	__weak typeof(self) weakSelf = self;
     UIImage *image = nil;
     NSString *mediaType = [info objectForKey:UIImagePickerControllerMediaType];
@@ -793,7 +793,6 @@ static const int ddLogLevel = DDLogLevelWarning;
                           color:UIColor.whiteColor];
     
     isUsingCarmera = YES;
-    //    DDLogRed(@"startReading");
 }
 
 
@@ -809,8 +808,6 @@ static const int ddLogLevel = DDLogLevelWarning;
     // Remove the video preview layer from the viewPreview view's layer.
     if(videoPreviewLayer)
         [videoPreviewLayer removeFromSuperlayer];
-    
-    //    DDLogRed(@"stopReading");
 }
 
 - (void)startOverlayHideTimer

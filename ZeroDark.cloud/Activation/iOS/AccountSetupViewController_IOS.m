@@ -33,9 +33,9 @@
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
 #if DEBUG
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
 @implementation AccountSetupSubViewController_Base
@@ -787,7 +787,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 		 didShowViewController:(UIViewController *)viewController
 						  animated:(BOOL)animated
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 }
 
 
@@ -983,7 +983,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 - (void)pushReauthenticateWithUserID:(NSString* __nonnull)userID
 {
 	
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSError* error = NULL;
 	if(! [self commonInitWithUserID:userID error:&error])
@@ -1108,7 +1108,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 			withNavigationController:(UINavigationController*)navigationController
 
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSError* error = NULL;
 	if(! [self commonInitWithUserID:userID error:&error])
@@ -1126,7 +1126,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 - (void)pushDataBaseAccountLogin:(NSString* __nonnull)userID
 		  withNavigationController:(UINavigationController*)navigationController
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSError* error = NULL;
 	if(! [self commonInitWithUserID:userID error:&error])
@@ -1144,7 +1144,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 - (void)pushDataBaseAccountCreate:(NSString* __nonnull)userID
 			withNavigationController:(UINavigationController*)navigationController
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSError* error = NULL;
 	if(! [self commonInitWithUserID:userID error:&error])
@@ -1161,7 +1161,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 							 provider:(NSDictionary* __nonnull)provider
 		withNavigationController:(UINavigationController*)navigationController
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSError* error = NULL;
 	if(! [self commonInitWithUserID:userID error:&error])

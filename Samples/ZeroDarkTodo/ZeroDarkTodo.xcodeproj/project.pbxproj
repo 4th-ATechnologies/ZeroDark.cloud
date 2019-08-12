@@ -34,6 +34,7 @@
 		9905BE772543CA55E0F8382E /* Pods_ios_ZeroDarkTodo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E376CFB205C720437B250618 /* Pods_ios_ZeroDarkTodo.framework */; };
 		DC1A75AD2268CD4C009E5C4E /* CloudCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1A75AC2268CD4C009E5C4E /* CloudCodable.swift */; };
 		DC7DD80522D3B18000677034 /* Invitation.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC7DD80422D3B18000677034 /* Invitation.swift */; };
+		DCB1A6BA2301FE3100414198 /* CustomLogFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCB1A6B92301FE3100414198 /* CustomLogFormatter.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -74,6 +75,7 @@
 		DC1A75AC2268CD4C009E5C4E /* CloudCodable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudCodable.swift; sourceTree = "<group>"; };
 		DC349B1122342B3000F1542F /* ZeroDarkTodo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ZeroDarkTodo.entitlements; sourceTree = "<group>"; };
 		DC7DD80422D3B18000677034 /* Invitation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Invitation.swift; sourceTree = "<group>"; };
+		DCB1A6B92301FE3100414198 /* CustomLogFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomLogFormatter.swift; sourceTree = "<group>"; };
 		E376CFB205C720437B250618 /* Pods_ios_ZeroDarkTodo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ios_ZeroDarkTodo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -133,6 +135,7 @@
 				2EE89F91220E6188006B6663 /* Localizable.strings */,
 				2E0C4161220B658000D05BC9 /* ZeroDarkTodo-Bridging-Header.h */,
 				DC349B1122342B3000F1542F /* ZeroDarkTodo.entitlements */,
+				DCB1A6B92301FE3100414198 /* CustomLogFormatter.swift */,
 			);
 			path = ZeroDarkTodo;
 			sourceTree = "<group>";
@@ -311,6 +314,7 @@
 				DC1A75AD2268CD4C009E5C4E /* CloudCodable.swift in Sources */,
 				2E5C092522591F2200AC7DDC /* ListsViewController.swift in Sources */,
 				2E0C41502207CC5900D05BC9 /* Task.swift in Sources */,
+				DCB1A6BA2301FE3100414198 /* CustomLogFormatter.swift in Sources */,
 				2E51A2FA223DC8F200B2036F /* IconTitleButton.m in Sources */,
 				2E9D044C2229DFA20070D2E5 /* InitialViewController.swift in Sources */,
 				2E0C41522207D49400D05BC9 /* TaskDetailsViewController.swift in Sources */,

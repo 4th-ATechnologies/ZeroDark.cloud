@@ -35,11 +35,11 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 #define PROVIDER_TABLE_UPDATE_MAX_INTERVAL (30 * 86400)
 
@@ -110,7 +110,7 @@ static Auth0ProviderManager *sharedInstance = nil;
 			[self decompressIconFileWithError:&error];
 
 			if (error) {
-				DDLogError(@"%@: Error decompressing icon files: %@", THIS_METHOD, error);
+				ZDCLogError(@"%@: Error decompressing icon files: %@", THIS_METHOD, error);
 			}
 		}
 
@@ -226,7 +226,7 @@ static Auth0ProviderManager *sharedInstance = nil;
 
         default:
 
-            DDLogError(@"%@: Invalid Auth0ProviderIconType requested: %ld", THIS_METHOD, type);
+            ZDCLogError(@"%@: Invalid Auth0ProviderIconType requested: %ld", THIS_METHOD, type);
             return nil;
             break;
     }

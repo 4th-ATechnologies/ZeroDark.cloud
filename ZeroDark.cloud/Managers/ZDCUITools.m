@@ -16,13 +16,13 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG && robbie_hanson
-static const int ddLogLevel = DDLogLevelInfo | DDLogFlagTrace;
+static const int zdcLogLevel = ZDCLogLevelInfo | ZDCLogFlagTrace;
 #elif DEBUG
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 
 #if TARGET_OS_IPHONE
@@ -248,7 +248,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (void)fixSettingsViewController:(FixSettingsViewController_IOS *)sender dismissViewControllerAnimated:(BOOL) animated
 {
-    DDLogAutoTrace();
+    ZDCLogAutoTrace();
     
     [sender dismissViewControllerAnimated:YES
                                completion:^{  }];

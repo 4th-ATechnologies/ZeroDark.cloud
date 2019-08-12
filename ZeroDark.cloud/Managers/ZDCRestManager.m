@@ -26,13 +26,13 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG && robbie_hanson
-  static const int ddLogLevel = DDLogLevelInfo | DDLogFlagTrace;
+  static const int zdcLogLevel = ZDCLogLevelInfo | ZDCLogFlagTrace;
 #elif DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 #define CLAMP(min, num, max) (MAX(min, MIN(max, num)))
 
@@ -151,7 +151,7 @@
                        completionBlock:(void(^)(NSDictionary *_Nullable config,
                                                      NSError *_Nullable error))inCompletionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 
 	if (!inCompletionBlock)
 		return;
@@ -403,7 +403,7 @@
 														 NSDate *_Nullable activationDate,
 														 NSError *_Nullable error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSParameterAssert(localUser != nil);
 	NSParameterAssert(auth != nil);
@@ -451,10 +451,6 @@
 	              accessKeyID: auth.aws_accessKeyID
 	                   secret: auth.aws_secret
 	                  session: auth.aws_session];
-	
-#if DEBUG && robbie_hanson
-	DDLogDonut(@"%@", [request zdcDescription]);
-#endif
 	
 	// Send request
 	
@@ -546,7 +542,7 @@
                       completionQueue:(dispatch_queue_t)completionQueue
                       completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSParameterAssert(localUser != nil);
 	
 	localUser = [localUser copy];
@@ -625,10 +621,6 @@
 		                   secret: auth.aws_secret
 		                  session: auth.aws_session];
 		
-	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request zdcDescription]);
-	#endif
-		
 		NSURLSessionDataTask *task =
 		[session dataTaskWithRequest: request
 		              uploadProgress: nil
@@ -658,7 +650,7 @@
             completionQueue:(dispatch_queue_t)completionQueue
             completionBlock:(void (^)(NSURLResponse *response, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSParameterAssert(pushToken != nil);
 	NSParameterAssert(userID != nil);
 	
@@ -705,16 +697,11 @@
 	request.HTTPMethod = @"POST";
 	request.HTTPBody = bodyData;
 	
-#if DEBUG && robbie_hanson
-	DDLogDonut(@"%@", [request zdcDescription]);
-#endif
-	
 	NSURLSessionDataTask *task =
 	[session dataTaskWithRequest:request
 	          completionHandler:^(NSData *data, NSURLResponse *response, NSError *sessionError)
 	{
-		NSUInteger statusCode = response.httpStatusCode;
-		DDLogRed(@"/unregisterPushToken => %lu", (unsigned long)statusCode);
+		ZDCLogInfo(@"/unregisterPushToken => %lu", (unsigned long)response.httpStatusCode);
 		
 		if (completionBlock)
 		{
@@ -741,7 +728,7 @@
               completionQueue:(dispatch_queue_t)completionQueue
               completionBlock:(void (^)(NSDictionary *response, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSParameterAssert(auth != nil);
 	NSParameterAssert(auth.aws_accessKeyID != nil); // Need this to sign request
@@ -774,10 +761,6 @@
 	              accessKeyID:auth.aws_accessKeyID
 	                   secret:auth.aws_secret
 	                  session:auth.aws_session];
-	
-#if DEBUG && robbie_hanson
-	DDLogDonut(@"%@", [request zdcDescription]);
-#endif
 	
 	// Send request
 	
@@ -871,7 +854,7 @@
                  completionQueue:(nullable dispatch_queue_t)completionQueue
                  completionBlock:(void (^)(NSDictionary *response, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSParameterAssert(remoteUserID != nil);
 	NSParameterAssert(localUserID != nil);
@@ -927,10 +910,6 @@
 		              accessKeyID: auth.aws_accessKeyID
 		                   secret: auth.aws_secret
 		                  session: auth.aws_session];
-	
-	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request zdcDescription]);
-	#endif
 		
 		// Send request
 	
@@ -994,7 +973,7 @@
         completionQueue:(nullable dispatch_queue_t)completionQueue
         completionBlock:(void (^)(BOOL exists, NSError *_Nullable error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSParameterAssert(userID != nil);
 	
@@ -1012,10 +991,6 @@
 	
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"GET";
-	
-#if DEBUG && robbie_hanson
-	DDLogDonut(@"%@", [request zdcDescription]);
-#endif
 	
 	// Send request
 	
@@ -1086,7 +1061,7 @@
       completionQueue:(dispatch_queue_t)completionQueue
       completionBlock:(void (^)(NSData *data, NSURLResponse *response, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSParameterAssert(privKey.length > 0);
 	NSParameterAssert(pubKey.length > 0);
@@ -1155,10 +1130,6 @@
 	              accessKeyID:auth.aws_accessKeyID
 	                   secret:auth.aws_secret
 	                  session:auth.aws_session];
-         
-#if DEBUG // && robbie_hanson
-	DDLogDonut(@"%@", [request zdcDescription]);
-#endif
 	
 	NSURLSessionDataTask *task =
 	  [session dataTaskWithRequest:request
@@ -1180,7 +1151,7 @@
          completionQueue:(dispatch_queue_t)completionQueue
          completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSParameterAssert(pubKey.length > 0);
 	
@@ -1256,10 +1227,6 @@
 		                   secret: auth.aws_secret
 		                  session: auth.aws_session];
 		
-	#if DEBUG // && robbie_hanson
-		DDLogDonut(@"%@", [request zdcDescription]);
-	#endif
-		
 		NSURLSessionDataTask *task =
 			[session uploadTaskWithRequest:request
 			                      fromData:jsonData
@@ -1290,7 +1257,7 @@
      completionQueue:(nullable dispatch_queue_t)completionQueue
      completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 
 	NSParameterAssert(rawAvatarData != nil);
 	NSParameterAssert(localUserID != nil);
@@ -1403,10 +1370,6 @@
 		              accessKeyID: auth.aws_accessKeyID
 		                   secret: auth.aws_secret
 		                  session: auth.aws_session];
-		
-	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request zdcDescription]);
-	#endif
 
 		// Are we uploading or deleting?
 		if (jsonData)
@@ -1594,7 +1557,7 @@
      completionQueue:(nullable dispatch_queue_t)completionQueue
      completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSParameterAssert(cloudID != nil);
 	NSParameterAssert(bucket != nil);
@@ -1766,7 +1729,7 @@
                   completionQueue:(dispatch_queue_t)completionQueue
                   completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	remoteUserID = [remoteUserID copy]; // mutable string protection
 	localUserID = [localUserID copy];   // mutable string protection
@@ -1855,7 +1818,7 @@
         completionQueue:(dispatch_queue_t)completionQueue
         completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	queryString = [queryString copy];
 	localUserID = [localUserID copy];
@@ -1973,7 +1936,7 @@
     completionQueue:(nullable dispatch_queue_t)completionQueue
     completionBlock:(nullable void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSString *localUserID = [inLocalUserID copy]; // mutable string protection
 	
@@ -2039,10 +2002,6 @@
 		
 		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
 		
-	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request zdcDescription]);
-	#endif
-		
 		[AWSSignature signRequest: request
 		               withRegion: region
 		                  service: AWSService_APIGateway
@@ -2083,7 +2042,7 @@
     completionQueue:(dispatch_queue_t)completionQueue
     completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (!completionQueue)
 		completionQueue = dispatch_get_main_queue();
@@ -2166,10 +2125,6 @@
 		
 		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
 		
-	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request zdcDescription]);
-	#endif
-		
 		[AWSSignature signRequest:request
 		               withRegion:region
 		                  service:AWSService_APIGateway
@@ -2207,7 +2162,7 @@
       completionQueue:(dispatch_queue_t)completionQueue
       completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (!completionQueue)
 		completionQueue = dispatch_get_main_queue();
@@ -2289,10 +2244,6 @@
 		
 		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
 		
-	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request zdcDescription]);
-	#endif
-		
 		[AWSSignature signRequest:request
 		               withRegion:region
 		                  service:AWSService_APIGateway
@@ -2336,13 +2287,11 @@
 			   completionQueue:(nullable dispatch_queue_t)inCompletionQueue
 			   completionBlock:(void (^)(NSURLResponse *response, id _Nullable responseObject, NSError *_Nullable error))inCompletionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 
 	NSParameterAssert(inLocalUserID != nil);
 	NSParameterAssert(productIdentifier != nil);
 	NSParameterAssert(appStoreReceipt != nil);
- 
-//	DDLogRed(@"productPurchasedByUser %@",  [appStoreReceipt base64EncodedStringWithOptions:0]);
 
 	NSString *localUserID = [inLocalUserID copy]; // mutable string protection
 
@@ -2429,10 +2378,6 @@
 		request.HTTPBody = jsonData;
 
 		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-
-	#if DEBUG
-		DDLogDonut(@"%@", [request zdcDescription]);
-	#endif
 		
 		// Send request
 		[AWSSignature signRequest: request
@@ -2466,7 +2411,7 @@
         completionQueue:(nullable dispatch_queue_t)inCompletionQueue
         completionBlock:(void (^)(BOOL isPayingCustomer, NSError *_Nullable error))inCompletionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSString *localUserID = [inLocalUserID copy]; // mutable string protection
 	
@@ -2542,10 +2487,6 @@
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"GET";
 		
-	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request zdcDescription]);
-	#endif
-		
 		[AWSSignature signRequest:request
 		               withRegion:region
 		                  service:AWSService_APIGateway
@@ -2600,7 +2541,7 @@
             completionQueue:(nullable dispatch_queue_t)inCompletionQueue
             completionBlock:(void (^)(double credit, NSError *_Nullable error))inCompletionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSString *localUserID = [inLocalUserID copy]; // mutable string protection
 	
@@ -2676,10 +2617,6 @@
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"GET";
 		
-	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request zdcDescription]);
-	#endif
-		
 		[AWSSignature signRequest:request
 		               withRegion:region
 		                  service:AWSService_APIGateway
@@ -2734,7 +2671,7 @@
             completionQueue:(dispatch_queue_t)inCompletionQueue
             completionBlock:(void (^)(NSDictionary *billing, NSError *error))inCompletionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSString *localUserID = [inLocalUserID copy]; // mutable string protection
 	
@@ -2860,10 +2797,6 @@
 			[request setValue:xIfModifiedSince forHTTPHeaderField:@"X-If-Modified-Since"];
 		}
 		
-	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request zdcDescription]);
-	#endif
-		
 		[AWSSignature signRequest:request
 		               withRegion:region
 		                  service:AWSService_APIGateway
@@ -2929,7 +2862,7 @@
              completionQueue:(nullable dispatch_queue_t)inCompletionQueue
              completionBlock:(void (^)(NSDictionary *billing, NSError *error))inCompletionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSString *localUserID = [inLocalUserID copy]; // mutable string protection
 	
@@ -3012,10 +2945,6 @@
 			
 			NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 			[request setHTTPMethod:@"GET"];
-			
-		#if DEBUG && robbie_hanson
-			DDLogDonut(@"%@", [request zdcDescription]);
-		#endif
 			
 			[AWSSignature signRequest:request
 			               withRegion:region
@@ -3144,7 +3073,7 @@
 **/
 - (NSDictionary *)calculateMonthlyInfoForBilling:(NSDictionary *)inBilling user:(NSString *)localUserID
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (inBilling == nil) return nil;
 	
@@ -3800,7 +3729,7 @@
             completionQueue:(dispatch_queue_t)inCompletionQueue
             completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))inCompletionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSParameterAssert(root != nil);
 	NSParameterAssert(localUserID != nil);
 	
@@ -3841,10 +3770,6 @@
 		request.HTTPMethod = @"GET";
 		
 		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-
-	#if DEBUG && robbie_hanson
-		DDLogDonut(@"%@", [request zdcDescription]);
-	#endif
 		
 		NSURLSessionDataTask *task =
 		  [session dataTaskWithRequest: request

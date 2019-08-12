@@ -27,18 +27,18 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG && robbie_hanson
-  static const int ddLogLevel = DDLogLevelInfo;
+  static const int zdcLogLevel = ZDCLogLevelInfo;
 #elif DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
-#ifdef DDLogError
+#ifdef ZDCLogError
 #define CKERROR                                                                     \
 if(error) {                                                                       \
-DDLogError(@"ERROR %@ %@:%d", error.localizedDescription, THIS_FILE, __LINE__); \
+ZDCLogError(@"ERROR %@ %@:%d", error.localizedDescription, THIS_FILE, __LINE__); \
 goto done;                                                                      \
 }
 #else
@@ -84,7 +84,7 @@ goto done;  \
              completionQueue:(dispatch_queue_t)completionQueue
              completionBlock:(void (^)(NSDictionary * info, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	void (^InvokeCompletionBlock)(NSDictionary*, NSError*) = ^(NSDictionary *info, NSError *error){
 		

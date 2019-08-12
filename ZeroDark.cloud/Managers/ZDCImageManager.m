@@ -23,13 +23,13 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG && robbie_hanson
-  static const int ddLogLevel = DDLogLevelVerbose | DDLogFlagTrace;
+  static const int zdcLogLevel = ZDCLogLevelVerbose | ZDCLogFlagTrace;
 #elif DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 @interface ZDCCachedImageItem : NSObject
 
@@ -230,7 +230,7 @@
              preFetchBlock:(void(NS_NOESCAPE^)(OSImage *_Nullable image, BOOL willFetch))preFetchBlock
             postFetchBlock:(void(^)(OSImage *_Nullable image, NSError *_Nullable error))postFetchBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	return [self _fetchNodeThumbnail: node
 	                    withCacheKey: node.uuid
@@ -251,7 +251,7 @@
              preFetchBlock:(void(NS_NOESCAPE^)(OSImage *_Nullable image, BOOL willFetch))preFetchBlock
             postFetchBlock:(void(^)(OSImage *_Nullable image, NSError *_Nullable error))postFetchBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSString *cacheKey = nil;
 	if (processingID) {
@@ -573,7 +573,7 @@
           preFetchBlock:(void(NS_NOESCAPE^)(OSImage *_Nullable image, BOOL willFetch))preFetchBlock
          postFetchBlock:(void(^)(OSImage *_Nullable image, NSError *_Nullable error))postFetchBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSString *auth0ID = user.auth0_preferredID;
 	if (!auth0ID) {
@@ -600,7 +600,7 @@
           preFetchBlock:(void(NS_NOESCAPE^)(OSImage *_Nullable image, BOOL willFetch))preFetchBlock
          postFetchBlock:(void(^)(OSImage *_Nullable image, NSError *_Nullable error))postFetchBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSString *auth0ID = user.auth0_preferredID;
 	if (!auth0ID) {

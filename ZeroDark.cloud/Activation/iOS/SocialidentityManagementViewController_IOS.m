@@ -32,11 +32,11 @@
 
 // Log levels: off, error, warn, info, verbose
 #if DEBUG
-static const int ddLogLevel = DDLogLevelVerbose;
+static const int zdcLogLevel = ZDCLogLevelVerbose;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 
 
@@ -151,7 +151,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 -(void)viewDidDisappear:(BOOL)animated
 {
 	[super viewDidDisappear:animated];
-	//    DDLogAutoTrace();
+	//    ZDCLogAutoTrace();
 
 	if( registered)
 	{
@@ -212,7 +212,7 @@ static const int ddLogLevel = DDLogLevelWarning;
  **/
 - (void)reachabilityChanged:(NSNotification *)notification
 {
-    DDLogAutoTrace();
+    ZDCLogAutoTrace();
 	__weak typeof(self) weakSelf = self;
 
     BOOL newHasInternet = reachability.isReachable;
@@ -272,7 +272,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (IBAction)btnAddSocialTapped:(id)sender
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 
 	[self addProviderforUserID:localUserID];
 }

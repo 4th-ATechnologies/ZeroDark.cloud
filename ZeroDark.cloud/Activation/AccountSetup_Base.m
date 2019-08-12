@@ -25,9 +25,9 @@
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
 #if DEBUG
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
 
@@ -403,7 +403,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	NSString *aws_id = app_metadata[@"aws_id"];
 	if (aws_id == nil)
 	{
-		DDLogWarn(@"profile is missing required info: app_metadata.aws_id");
+		ZDCLogWarn(@"profile is missing required info: app_metadata.aws_id");
 		return nil;
 	}
 	
@@ -1260,7 +1260,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 {
 	__weak typeof(self) weakSelf = self;
 
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSParameterAssert(completionBlock);
 	
@@ -1502,7 +1502,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	 completionQueue:(nullable dispatch_queue_t)completionQueue
 	 completionBlock:(nullable void (^)(NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSParameterAssert(profile != nil);
 	NSParameterAssert(localUserID != nil);
@@ -1591,7 +1591,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 		completionQueue:(dispatch_queue_t)completionQueue
 		completionBlock:(void (^)(NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSParameterAssert(auth0ID != nil);
 	NSParameterAssert(localUserID != nil);
@@ -1717,7 +1717,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 										 completionQueue:(dispatch_queue_t)completionQueue
 										 completionBlock:(void (^)(NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	void (^InvokeCompletionBlock)(NSError *) = ^(NSError * error){
 		

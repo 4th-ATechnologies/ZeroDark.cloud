@@ -25,9 +25,9 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
 #define CKS4ERR  if ((err != kS4Err_NoErr)) { goto S4ErrOccurred; }
@@ -46,7 +46,7 @@
                      completionQueue:(nullable dispatch_queue_t)completionQueue
                      completionBlock:(void (^)(ZDCCryptoFile *cryptoFile, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	encryptionKey = [encryptionKey copy]; // mutable data protection
 	
@@ -100,7 +100,7 @@
                 outputStream:(NSOutputStream *)outStream
                        error:(NSError **)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	Cleartext2CacheFileInputStream *inStream =
 	  [[Cleartext2CacheFileInputStream alloc] initWithCleartextFileURL: inFileURL
@@ -154,7 +154,7 @@
                      completionQueue:(nullable dispatch_queue_t)completionQueue
                      completionBlock:(void (^)(ZDCCryptoFile *_Nullable cryptoFile, NSError *_Nullable error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	encryptionKey = [encryptionKey copy]; // mutable data protection
 	
@@ -205,7 +205,7 @@
                 outputStream:(NSOutputStream *)outStream
                        error:(NSError **)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	Cleartext2CacheFileInputStream *inStream =
 	  [[Cleartext2CacheFileInputStream alloc] initWithCleartextData: cleartextData
@@ -229,7 +229,7 @@
                    outputURL:(NSURL *)outputFileURL
                        error:(NSError **)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	Cleartext2CacheFileInputStream *inStream =
 	  [[Cleartext2CacheFileInputStream alloc] initWithCleartextData: cleartextData
@@ -254,7 +254,7 @@
                        toCacheFileWithKey:(NSData *)encryptionKey
                                     error:(NSError *_Nullable *_Nullable)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	Cleartext2CacheFileInputStream *inStream =
 	  [[Cleartext2CacheFileInputStream alloc] initWithCleartextData: cleartextData
@@ -639,7 +639,7 @@ done:
                      completionQueue:(nullable dispatch_queue_t)completionQueue
                      completionBlock:(void (^)(ZDCCryptoFile *cryptoFile, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	encryptionKey = [encryptionKey copy]; // mutable data protection
 	metadata = [metadata copy];           // mutable data protection
@@ -700,7 +700,7 @@ done:
                 outputStream:(NSOutputStream *)outStream
                        error:(NSError **)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	Cleartext2CloudFileInputStream *inStream =
 	  [[Cleartext2CloudFileInputStream alloc] initWithCleartextFileURL: inFileURL
@@ -732,7 +732,7 @@ done:
                    outputURL:(NSURL *)outputFileURL
                        error:(NSError **)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	Cleartext2CloudFileInputStream *inStream =
 	  [[Cleartext2CloudFileInputStream alloc] initWithCleartextFileURL: inFileURL
@@ -766,7 +766,7 @@ done:
                      completionQueue:(nullable dispatch_queue_t)completionQueue
                      completionBlock:(void (^)(ZDCCryptoFile *cryptoFile, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	encryptionKey = [encryptionKey copy]; // mutable data protection
 	metadata = [metadata copy];           // mutable data protection
@@ -824,7 +824,7 @@ done:
                 outputStream:(NSOutputStream *)outStream
                        error:(NSError **)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	Cleartext2CloudFileInputStream *inStream =
 	  [[Cleartext2CloudFileInputStream alloc] initWithCleartextData: cleartextData
@@ -853,7 +853,7 @@ done:
                    outputURL:(NSURL *)outputFileURL
                        error:(NSError **)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	Cleartext2CloudFileInputStream *inStream =
 	  [[Cleartext2CloudFileInputStream alloc] initWithCleartextData: cleartextData
@@ -883,7 +883,7 @@ done:
                                 thumbnail:(nullable NSData *)thumbnail
                                     error:(NSError *_Nullable *_Nullable)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	Cleartext2CloudFileInputStream *inStream =
 	  [[Cleartext2CloudFileInputStream alloc] initWithCleartextData: cleartextData
@@ -1269,7 +1269,7 @@ done:
                   completionQueue:(nullable dispatch_queue_t)completionQueue
                   completionBlock:(void (^)(NSURL *_Nullable cleartexFileURL, NSError *_Nullable error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (cryptoFile.fileFormat == ZDCCryptoFileFormat_CacheFile)
 	{
@@ -1312,7 +1312,7 @@ done:
            toOutputStream:(NSOutputStream *)outputStream
                     error:(NSError **)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (cryptoFile.fileFormat == ZDCCryptoFileFormat_CacheFile)
 	{
@@ -1343,7 +1343,7 @@ done:
 + (nullable NSData *)decryptCryptoFileIntoMemory:(ZDCCryptoFile *)cryptoFile
                                            error:(NSError *_Nullable *_Nullable)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (cryptoFile.fileFormat == ZDCCryptoFileFormat_CacheFile)
 	{
@@ -1374,7 +1374,7 @@ done:
                             completionBlock:(void (^)(NSData *_Nullable cleartext,
                                                       NSError *_Nullable error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (cryptoFile.fileFormat == ZDCCryptoFileFormat_CacheFile)
 	{
@@ -1423,7 +1423,7 @@ done:
                  completionQueue:(nullable dispatch_queue_t)completionQueue
                  completionBlock:(void (^)(NSURL *cleartexFileURL, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	encryptionKey = [encryptionKey copy]; // mutable data protection
 	
@@ -1514,7 +1514,7 @@ done:
           toOutputStream:(NSOutputStream *)outStream
                    error:(NSError **)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSError *error =
 	 [self _decryptCacheFile: inFileURL
@@ -1535,7 +1535,7 @@ done:
                                     retainToken:(nullable id)retainToken
                                           error:(NSError *_Nullable *_Nullable)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSError *error = nil;
 	NSData *cleartext = nil;
@@ -1579,7 +1579,7 @@ done:
                            completionQueue:(nullable dispatch_queue_t)completionQueue
                            completionBlock:(void (^)(NSData *_Nullable cleartext, NSError *_Nullable error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	encryptionKey = [encryptionKey copy]; // mutable data protection
 	
@@ -1653,7 +1653,7 @@ done:
                          toOutputStream:(NSOutputStream *)outStream
                            withProgress:(nullable NSProgress *)progress
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSError *error = nil;
 	CacheFile2CleartextInputStream *inStream = nil;
@@ -1821,7 +1821,7 @@ done:
                                            NSURL *_Nullable cleartextFileURL,
                                            NSError *_Nullable error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	encryptionKey = [encryptionKey copy]; // mutable data protection
 	
@@ -1944,7 +1944,7 @@ done:
                                     retainToken:(nullable id)retainToken
                                           error:(NSError *_Nullable *_Nullable)outError
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSError *error = nil;
 	NSData *cleartext = nil;
@@ -1995,7 +1995,7 @@ done:
                                                      NSData *_Nullable cleartext,
                                                      NSError *_Nullable error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	encryptionKey = [encryptionKey copy]; // mutable data protection
 	
@@ -2351,7 +2351,7 @@ done:
                  completionQueue:(nullable dispatch_queue_t)completionQueue
                  completionBlock:(void (^)(NSURL *outputFileURL, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	cacheFileEncryptionKey = [cacheFileEncryptionKey copy]; // mutable data protection
 	cloudFileEncryptionKey = [cloudFileEncryptionKey copy]; // mutable data protection
@@ -2588,7 +2588,7 @@ done:
                                            NSData *metadata, NSData *thumbnail,
                                            NSURL *cacheFileURL, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	cloudFileEncryptionKey = [cloudFileEncryptionKey copy]; // mutable data protection
 	cacheFileEncryptionKey = [cacheFileEncryptionKey copy]; // mutable data protection
@@ -2916,7 +2916,7 @@ done:
               completionQueue:(nullable dispatch_queue_t)completionQueue
               completionBlock:(void (^)(NSURL *_Nullable dstFileURL, NSError *_Nullable error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	inEncryptionKey = [inEncryptionKey copy]; // mutable data protection
 	outEncryptionKey = [outEncryptionKey copy]; // mutable data protection

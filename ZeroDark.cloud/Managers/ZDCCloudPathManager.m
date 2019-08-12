@@ -10,9 +10,9 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
 @implementation ZDCCloudPathManager
@@ -86,7 +86,7 @@ static ZDCCloudPathManager *sharedInstance = nil;
 {
 	ZDCNode *anchorNode = [[ZDCNodeManager sharedInstance] anchorNodeForNode:node transaction:transaction];
 	
-	NSString *appID = node.anchor.zAppID;
+	NSString *appID = anchorNode.anchor.zAppID;
 	if (!appID && [anchorNode isKindOfClass:[ZDCTrunkNode class]]) {
 		appID = [(ZDCTrunkNode *)anchorNode zAppID];
 	}
@@ -139,19 +139,19 @@ static ZDCCloudPathManager *sharedInstance = nil;
 	
 	NSString *parentID = node.parentID;
 	if (parentID == nil) {
-		DDLogWarn(@"Cannot derive cloudName for node(%@): node.parentID is nil", node.name);
+		ZDCLogWarn(@"Cannot derive cloudName for node(%@): node.parentID is nil", node.name);
 		return nil;
 	}
 	
 	ZDCNode *parent = [transaction objectForKey:parentID inCollection:kZDCCollection_Nodes];
 	if (parent == nil) {
-		DDLogWarn(@"Cannot derive cloudName for node(%@): node.parent is missing", node.name);
+		ZDCLogWarn(@"Cannot derive cloudName for node(%@): node.parent is missing", node.name);
 		return nil;
 	}
 	
 	NSData *dirSalt = parent.dirSalt;
 	if (dirSalt == nil) {
-		DDLogWarn(@"Cannot derive cloudName for node(%@): node.parent.dirSalt is nil", node.name);
+		ZDCLogWarn(@"Cannot derive cloudName for node(%@): node.parent.dirSalt is nil", node.name);
 		return nil;
 	}
 	

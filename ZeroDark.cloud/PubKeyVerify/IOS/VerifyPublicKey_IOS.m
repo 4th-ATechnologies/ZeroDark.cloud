@@ -26,9 +26,9 @@
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
 #if DEBUG
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
 @implementation VerifyPublicKey_IOS
@@ -482,7 +482,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (void)refreshBlockChainInfo
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	__weak typeof(self) weakSelf = self;
 
 	if (!_remoteUserID || !_localUserID) return;

@@ -16,11 +16,11 @@
 
 // Log levels: off, error, warn, info, verbose
 #if DEBUG
-static const int ddLogLevel = DDLogLevelVerbose;
+static const int zdcLogLevel = ZDCLogLevelVerbose;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 
 @implementation IntroViewController_IOS
@@ -57,14 +57,14 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (IBAction)TESTButtonClicked:(id)sender
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 }
 
 
 
 - (IBAction)SignInButtonClicked:(id)sender
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 
  	self.accountSetupVC.setupMode = AccountSetupMode_ExistingAccount;
 
@@ -74,7 +74,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (IBAction)StartTrialButtonClicked:(id)sender
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 
 	self.accountSetupVC.setupMode = AccountSetupMode_Trial;
 

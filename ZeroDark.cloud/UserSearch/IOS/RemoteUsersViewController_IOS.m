@@ -31,9 +31,9 @@
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
 #if DEBUG
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
 @interface NSString (badgeText)
@@ -213,7 +213,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 -(void)prefsChanged:(NSNotification *)notification
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSString *prefs_key = [notification.userInfo objectForKey:ZDCLocalPreferencesChanged_UserInfo_Key];
 	

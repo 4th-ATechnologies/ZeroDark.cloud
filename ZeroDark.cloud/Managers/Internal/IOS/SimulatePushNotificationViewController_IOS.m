@@ -18,9 +18,9 @@
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
 #if DEBUG
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
 @implementation SimulatePushNotificationViewController_IOS
@@ -88,7 +88,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (void)pullStarted:(NSNotification *)notification
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 
 	if(!_actPush.isAnimating){
 		[_actPush startAnimating];
@@ -99,7 +99,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (void)pullStopped:(NSNotification *)notification
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if(_actPush.isAnimating){
 		[_actPush stopAnimating];
@@ -110,7 +110,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (void)pushStarted:(NSNotification *)notification
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if(!_actPush.isAnimating){
 		[_actPush startAnimating];
@@ -121,7 +121,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 
 - (void)pushStopped:(NSNotification *)notification
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 
 	if(_actPush.isAnimating){
 		[_actPush stopAnimating];

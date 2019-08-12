@@ -28,11 +28,11 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 
 typedef NS_ENUM(NSInteger, ZDCButton) {
@@ -162,7 +162,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 
 - (void)viewWillDisappear:(BOOL)animated
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[[NSNotificationCenter defaultCenter] removeObserver:self  ];
 	
@@ -560,7 +560,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 
 - (IBAction)doneButtonTapped:(id)sender
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (hasChanges)
 	{
@@ -643,7 +643,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 
 - (IBAction)pasteButtonTapped:(id)sender
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	UIImage *image = [[UIPasteboard generalPasteboard] image];
 	if (image)
@@ -657,7 +657,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 
 - (IBAction)cameraButtonTapped:(id)sender
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	__weak typeof(self) weakSelf = self;
 	
 	// check camera authorization status
@@ -705,7 +705,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 							  sourceRect:(CGRect)sourceRect
 
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	[self showDocPicker];
 }
 
@@ -714,7 +714,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 						  sourceRect:(CGRect)sourceRect
 
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	__weak typeof(self) weakSelf = self;
 	
 	if(ZDCConstants.appHasPhotosPermission)
@@ -752,7 +752,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 
 - (void)presentCamera
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	photoPicker = [[UIImagePickerController alloc] init];
 	photoPicker.delegate      = (id <UINavigationControllerDelegate, UIImagePickerControllerDelegate>)self;
@@ -766,7 +766,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 
 - (void)showPhotoPicker
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	photoPicker = [[UIImagePickerController alloc] init];
 	photoPicker.delegate      = (id <UINavigationControllerDelegate, UIImagePickerControllerDelegate>)self;
@@ -779,7 +779,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 
 - (void)showDocPicker
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	docPicker = [[UIDocumentPickerViewController alloc] initWithDocumentTypes:@[ (__bridge NSString *)kUTTypeImage]
 																							 inMode:UIDocumentPickerModeImport];
 	
@@ -795,7 +795,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 
 - (void)documentPicker:(UIDocumentPickerViewController *)documentPicker didPickDocumentAtURL:(NSURL *)url
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (url)
 	{
@@ -815,7 +815,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 
 - (void)documentPickerWasCancelled:(UIDocumentPickerViewController *)controller
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	docPicker = nil;
 }
@@ -826,7 +826,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)sender
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	
 	__weak typeof(self) weakSelf = self;
@@ -844,7 +844,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 
 - (void)imagePickerController:(UIImagePickerController *)sender didFinishPickingMediaWithInfo:(NSDictionary *)info
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	__weak typeof(self) weakSelf = self;
 	

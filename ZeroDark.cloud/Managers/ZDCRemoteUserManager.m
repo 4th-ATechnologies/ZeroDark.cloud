@@ -26,13 +26,13 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG && robbie_hanson
-  static const int ddLogLevel = DDLogLevelInfo;
+  static const int zdcLogLevel = ZDCLogLevelInfo;
 #elif DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 
 @implementation ZDCRemoteUserManager
@@ -70,7 +70,7 @@
               completionQueue:(nullable dispatch_queue_t)completionQueue
               completionBlock:(nullable void (^)(ZDCUser *remoteUser, NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSParameterAssert(remoteUserID != nil);
 	NSParameterAssert(localUserID != nil);
@@ -146,7 +146,7 @@
                completionQueue:(nullable dispatch_queue_t)inCompletionQueue
                completionBlock:(nullable void (^)(ZDCUser *remoteUser, NSError *error))inCompletionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSParameterAssert(inRemoteUserID != nil);
 	NSParameterAssert(inLocalUserID != nil);
@@ -246,7 +246,7 @@
 	//
 	fetchAuth0Info = ^void (ZDCUser *user){ @autoreleasepool {
 
-		DDLogVerbose(@"fetchAuth0Info() - %@", remoteUserID);
+		ZDCLogVerbose(@"fetchAuth0Info() - %@", remoteUserID);
 		NSAssert(user != nil, @"Bad state");
 		
 		[weakSelf _fetchFilteredAuth0Profile: user
@@ -274,7 +274,7 @@
 	//
 	fetchPubKey = ^void (ZDCUser *user){ @autoreleasepool {
 		
-		DDLogVerbose(@"fetchPubKey() - %@", remoteUserID);
+		ZDCLogVerbose(@"fetchPubKey() - %@", remoteUserID);
 		NSAssert(user != nil, @"Bad state");
 		
 		[weakSelf _fetchPubKey: user
@@ -300,7 +300,7 @@
 	//
 	storeInfoInDatabase = ^void (ZDCUser *user, ZDCPublicKey *pubKey){ @autoreleasepool {
 		
-		DDLogVerbose(@"storeUserInDatabase() - %@", remoteUserID);
+		ZDCLogVerbose(@"storeUserInDatabase() - %@", remoteUserID);
 		NSAssert(user != nil, @"Bad state");
 		
 		ZDCDatabaseManager *databaseManager = nil;
@@ -381,7 +381,7 @@
                       completionQueue:(dispatch_queue_t)inCompletionQueue
                       completionBlock:(void (^)(ZDCPublicKey *_Nullable pubKey, NSError *_Nullable error))inCompletionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSParameterAssert(inRemoteUserID != nil);
 	NSParameterAssert(inLocalUserID != nil);
@@ -441,7 +441,7 @@
 	//
 	fetchBasicInfo = ^{ @autoreleasepool {
 		
-		DDLogVerbose(@"fetchBasicInfo() - %@", remoteUserID);
+		ZDCLogVerbose(@"fetchBasicInfo() - %@", remoteUserID);
 		
 		[weakSelf _fetchRemoteUser: remoteUserID
 		               requesterID: localUserID
@@ -464,7 +464,7 @@
 	//
 	fetchPubKey = ^void (ZDCUser *user){ @autoreleasepool {
         
-		DDLogVerbose(@"fetchPubKey() - %@", remoteUserID);
+		ZDCLogVerbose(@"fetchPubKey() - %@", remoteUserID);
 		NSAssert(user != nil, @"Bad state");
 		
 		[weakSelf _fetchPubKey: user
@@ -488,7 +488,7 @@
          completionQueue:(dispatch_queue_t)completionQueue
          completionBlock:(void (^)(ZDCUser *_Nullable user, NSError *_Nullable error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[zdc.restManager fetchInfoForRemoteUserID: remoteUserID
 	                              requesterID: localUserID

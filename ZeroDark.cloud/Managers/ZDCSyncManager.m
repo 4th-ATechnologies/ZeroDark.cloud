@@ -22,13 +22,13 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG && robbie_hanson
-  static const int ddLogLevel = DDLogLevelInfo;
+  static const int zdcLogLevel = ZDCLogLevelInfo;
 #elif DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 /* extern */ NSString *const ZDCPullStartedNotification = @"ZDCPullStartedNotification";
 /* extern */ NSString *const ZDCPullStoppedNotification = @"ZDCPullStoppedNotification";
@@ -213,7 +213,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
  */
 - (void)notifyPullStartedForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSParameterAssert(localUserID != nil);
 	NSParameterAssert(zAppID != nil);
@@ -254,7 +254,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
  */
 - (void)notifyPullFoundChangesForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSParameterAssert(localUserID != nil);
 	NSParameterAssert(zAppID != nil);
@@ -299,7 +299,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
                                  zAppID:(NSString *)zAppID
                              withResult:(ZDCPullResult)result
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSParameterAssert(localUserID != nil);
 	NSParameterAssert(zAppID != nil);
@@ -428,7 +428,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
  */
 - (void)reachabilityChanged:(NSNotification *)notification
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	AFNetworkReachabilityStatus status = AFNetworkReachabilityStatusUnknown;
 	
@@ -471,7 +471,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
  */
 - (void)databaseConnectionDidUpdate:(NSNotification *)notification
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSArray *notifications = @[notification];
 	
@@ -487,7 +487,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 
 - (void)pipelineActiveStatusChanged:(NSNotification *)notification
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	YapDatabaseCloudCorePipeline *sender_pipeline = (YapDatabaseCloudCorePipeline *)notification.object;
 	YapDatabaseCloudCore *sender_cloudCore = sender_pipeline.owner;
@@ -543,7 +543,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 
 - (void)pipelineQueueChanged:(NSNotification *)notification
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	YapDatabaseCloudCorePipeline *sender_pipeline = (YapDatabaseCloudCorePipeline *)notification.object;
 	YapDatabaseCloudCore *sender_cloudCore = sender_pipeline.owner;
@@ -566,7 +566,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 
 - (void)progressListChanged:(NSNotification *)notification
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	ZDCProgressManagerChanges *changes = notification.userInfo[kZDCProgressManagerChanges];
 	
@@ -579,7 +579,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
  */
 - (void)applicationDidBecomeActive:(NSNotification *)notification
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	// Note: the 'hasInternet' variable is only safe to access/modify within the 'queue'.
 	
@@ -608,7 +608,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 
 - (void)postPullStartedNotificationForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSParameterAssert(localUserID != nil);
 	NSParameterAssert(zAppID != nil);
 	
@@ -634,7 +634,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
                                             appID:(NSString *)appID
                                            result:(ZDCPullResult)pullResult
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSParameterAssert(localUserID != nil);
 	NSParameterAssert(appID != nil);
 	
@@ -659,7 +659,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 
 - (void)postPushStartedNotification:(NSString *)localUserID
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSParameterAssert(localUserID != nil);
 	
 	NSString *const appID = zdc.zAppID;
@@ -683,7 +683,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 
 - (void)postPushStoppedNotification:(NSString *)localUserID
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSParameterAssert(localUserID != nil);
 	
 	NSString *const appID = zdc.zAppID;
@@ -707,7 +707,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 
 - (void)postSyncingNodeIDsChangedNotification:(NSString *)localUserID
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSParameterAssert(localUserID != nil);
 	
 	NSString *const appID = zdc.zAppID;
@@ -743,7 +743,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
  */
 - (void)refreshLocalUsers
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSMutableDictionary<NSString *, ZDCLocalUser *> *localUsers = [NSMutableDictionary dictionaryWithCapacity:1];
 	
@@ -784,7 +784,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
  */
 - (void)manageLocalUsers:(NSDictionary<NSString *, ZDCLocalUser *> *)inLocalUsers
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(dispatch_get_specific(IsOnQueueKey), @"Must be executed within queue");
 	
 	NSString *zAppID = zdc.zAppID;
@@ -936,7 +936,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
  */
 - (void)pullChangesForAllEnabledUsersIfNeeded
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(dispatch_get_specific(IsOnQueueKey), @"Must be executed within queue");
 	
 	NSDate *now = [NSDate date];
@@ -987,7 +987,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 **/
 - (void)abortPullAndSuspendPushForAllUsers
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(dispatch_get_specific(IsOnQueueKey), @"Must be executed within queue");
 	
 	NSString *const appID = zdc.zAppID;
@@ -1021,7 +1021,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 
 - (void)updateTimerForAllUsers
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(dispatch_get_specific(IsOnQueueKey), @"Must be executed within queue");
 	
 	[syncStates enumerateKeysAndObjectsUsingBlock:
@@ -1039,7 +1039,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 
 - (void)updateTimerForLocalUserID:(NSString *)localUserID
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(dispatch_get_specific(IsOnQueueKey), @"Must be executed within queue");
 	
 	ZDCLocalUserSyncState *syncState = syncStates[localUserID];
@@ -1057,7 +1057,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 
 - (void)updateTimerForSyncState:(ZDCLocalUserSyncState *)syncState withNextPull:(NSDate *)nextPull
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert(dispatch_get_specific(IsOnQueueKey), @"Must be executed within queue");
 	
 	if (nextPull)
@@ -1122,7 +1122,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
  */
 - (void)pullChangesForAllLocalUsers
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	__weak typeof(self) weakSelf = self;
 	dispatch_block_t block = ^{ @autoreleasepool {
@@ -1166,7 +1166,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
  */
 - (void)pausePushForLocalUserID:(NSString *)localUserID andAbortUploads:(BOOL)shouldAbortUploads
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (localUserID == nil) return;
 	
@@ -1194,7 +1194,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
  */
 - (void)pausePushForAllLocalUsersAndAbortUploads:(BOOL)shouldAbortUploads
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	__weak typeof(self) weakSelf = self;
 	dispatch_block_t block = ^{ @autoreleasepool {
@@ -1254,7 +1254,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
  */
 - (void)resumePushForLocalUserID:(NSString *)localUserID
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	if (localUserID == nil) return;
 	
 	__weak typeof(self) weakSelf = self;
@@ -1281,7 +1281,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
  */
 - (void)resumePushForAllLocalUsers
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	__weak typeof(self) weakSelf = self;
 	dispatch_block_t block = ^{ @autoreleasepool {
@@ -1336,7 +1336,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
  */
 - (BOOL)isPushingPausedForLocalUserID:(NSString *)localUserID
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	if (localUserID == nil) return NO;
 	
 	__block BOOL result = NO;
@@ -1366,7 +1366,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
  */
 - (BOOL)isPushingPausedForAllUsers
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	__block BOOL result = NO;
 	
@@ -1406,7 +1406,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
  */
 - (BOOL)isPushingPausedForAnyUser
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	__block BOOL result = NO;
 	
@@ -1662,7 +1662,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 
 - (void)refreshSyncingNodeIDsForLocalUserID:(NSString *)localUserID
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (localUserID == nil) return;
 	

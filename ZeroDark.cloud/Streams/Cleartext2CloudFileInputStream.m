@@ -15,11 +15,11 @@
 #import <S4Crypto/S4Crypto.h>
 
 #if DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 @interface ZDCInputStream (Private)
 
@@ -165,7 +165,7 @@ typedef NS_ENUM(NSInteger, ZDCCloudFileEncryptState) {
 
 - (void)dealloc
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[self close];
 }
@@ -508,7 +508,7 @@ typedef NS_ENUM(NSInteger, ZDCCloudFileEncryptState) {
 
 - (void)open
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (streamStatus != NSStreamStatusNotOpen) {
 		return;
@@ -617,7 +617,7 @@ typedef NS_ENUM(NSInteger, ZDCCloudFileEncryptState) {
 
 - (void)close
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (streamStatus == NSStreamStatusClosed) return;
 	
@@ -701,7 +701,7 @@ typedef NS_ENUM(NSInteger, ZDCCloudFileEncryptState) {
 
 - (NSInteger)read:(uint8_t *)requestBuffer maxLength:(NSUInteger)requestBufferMallocSize
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (streamStatus == NSStreamStatusNotOpen ||
 	    streamStatus == NSStreamStatusError   ||
@@ -1448,7 +1448,7 @@ done:
 				[self notifyDelegateOfEvent:streamEvent];
 			}
 			else {
-				DDLogVerbose(@"Ignoring inputStream.NSStreamEventOpenCompleted: We handle this ourself");
+				ZDCLogVerbose(@"Ignoring inputStream.NSStreamEventOpenCompleted: We handle this ourself");
 			}
 			break;
 			
@@ -1465,7 +1465,7 @@ done:
 				[self notifyDelegateOfEvent:streamEvent];
 			}
 			else {
-				DDLogVerbose(@"Ignoring inputStream.NSStreamEventEndEncountered: We handle this ourself");
+				ZDCLogVerbose(@"Ignoring inputStream.NSStreamEventEndEncountered: We handle this ourself");
 			}
 			break;
 			

@@ -19,13 +19,13 @@
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
 #if DEBUG && robbie_hanson
-  static const int ddLogLevel = DDLogLevelWarning | DDLogFlagTrace;
+  static const int zdcLogLevel = ZDCLogLevelWarning | ZDCLogFlagTrace;
 #elif DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 static NSString *const kSessionDescriptionPrefix_Background = @"bg";
 static NSString *const kSessionDescriptionPrefix_Foreground = @"fg";
@@ -483,7 +483,7 @@ done:
 - (AFURLSessionManager *)createSessionForLocalUserID:(NSString *)localUserID
                                         isBackground:(BOOL)isBackgroundSession
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	// Note: The session identifier (for background sessions) MUST be the localUserID.
 	// We depend on this being true in 'handleEventsForBackgroundURLSession:'.
@@ -567,7 +567,7 @@ done:
             isBackground:(BOOL)isBackgroundSession
             withUserInfo:(ZDCSessionUserInfo *)userInfo
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	session.responseSerializer = [S3ResponseSerialization serializer];
 }
@@ -581,7 +581,7 @@ done:
  */
 - (void)handleEventsForBackgroundURLSession:(NSString *)sessionIdentifier
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSString *localUserID = nil;
 	BOOL isBackgroundSession = NO;
@@ -725,7 +725,7 @@ done:
 **/
 - (void)restoreTasksInBackgroundSessions
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSSet<NSString *> *localUserIDs = zdc.databaseManager.previouslyRegisteredLocalUserIDs;
 	
@@ -772,7 +772,7 @@ done:
                  inSession:(NSURLSession *)session
             forLocalUserID:(NSString *)localUserID
 {
-	DDLogTrace(@"%@ %@", THIS_METHOD, localUserID);
+	ZDCLogTrace(@"%@ %@", THIS_METHOD, localUserID);
 	
 	ZDCSessionInfo *sessionInfo = [self sessionInfoForUserID:localUserID];
 	
@@ -1163,7 +1163,7 @@ done:
 		}
 		else
 		{
-			DDLogWarn(
+			ZDCLogWarn(
 			  @"The NSInputStream you have provided for an upload task is not copyable."
 			  @" So we are being forced to return nil via URLSession:task:needNewBodyStream:."
 			  @" This may result in an infinite loop if the task always uses an auth challenge.");

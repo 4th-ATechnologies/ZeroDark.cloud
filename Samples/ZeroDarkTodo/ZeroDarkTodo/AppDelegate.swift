@@ -38,7 +38,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, SettingsViewControllerDel
 	                 didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool
 	{
 		// Configure CocoaLumberjack
-		DDLog.add(DDOSLogger.sharedInstance)
+	//	DDLog.add(DDOSLogger.sharedInstance)
+		
+		DDTTYLogger.sharedInstance.logFormatter = CustomLogFormatter()
 		DDLog.add(DDTTYLogger.sharedInstance)
 		
 		// Setup ZeroDarkCloud

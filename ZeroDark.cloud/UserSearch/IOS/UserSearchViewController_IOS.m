@@ -32,9 +32,9 @@
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
 #if DEBUG
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
 @interface NSString (badgeText)
@@ -404,7 +404,7 @@ static const int ddLogLevel = DDLogLevelWarning;
 //
 //-(void)prefsChanged:(NSNotification *)notification
 //{
-//    DDLogAutoTrace();
+//    ZDCLogAutoTrace();
 //
 //    NSString *prefs_key = [notification.userInfo objectForKey:ZDCLocalPreferencesChanged_UserInfo_Key];
 //
@@ -427,7 +427,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 
 - (void)keyboardWillShow:(NSNotification *)notification
 {
-    DDLogAutoTrace();
+    ZDCLogAutoTrace();
     
     __weak typeof(self) weakSelf = self;
     
@@ -470,7 +470,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 
 - (void)keyboardWillHide:(NSNotification *)notification
 {
-    DDLogAutoTrace();
+    ZDCLogAutoTrace();
     
     // With multitasking on iPad, all visible apps are notified when the keyboard appears and disappears.
     // The value of [UIKeyboardIsLocalUserInfoKey] is YES for the app that caused the keyboard to appear
@@ -543,7 +543,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 
 - (IBAction)btnFilterTapped:(id)sender
 {
-    DDLogAutoTrace();
+    ZDCLogAutoTrace();
     
     UIButton* btn = sender;
 
@@ -880,8 +880,6 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 
 - (void)startNewSearchQuery:(NSTimer*)theTimer
 {
-    //   DDLogGreen(@"startNewSearchQuery" );
-    
     [self queryForUsersByName:_searchBar.text];
     [queryStartTimer invalidate];
     queryStartTimer = NULL;

@@ -26,9 +26,9 @@
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
 #if DEBUG
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
 typedef NS_ENUM(NSInteger, ActivityType) {
@@ -173,7 +173,7 @@ static NSString *const kActionStatus   = @"action";
 
 - (void)refreshUploadList
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSMutableArray *_rawOperations = [[NSMutableArray alloc] init];
 	NSMutableDictionary *_rawOperationsDict = [[NSMutableDictionary alloc] init];
@@ -306,7 +306,7 @@ static NSString *const kActionStatus   = @"action";
 
 - (void)refreshDownloadList
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSMutableArray<NSString *> *_downloadNodes = nil;
 	BOOL allUsersSelected = selectedLocalUserID == nil;
@@ -484,7 +484,7 @@ static NSString *const kActionStatus   = @"action";
 
 - (void)refreshSourceList
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	// Update `localUserIDs`
 	__block NSMutableArray <NSString *> * _localUserIDs = NSMutableArray.array;
@@ -537,7 +537,7 @@ static NSString *const kActionStatus   = @"action";
 
 - (void)refreshStatusLabel
 {
-	//	DDLogAutoTrace(); // too noisy
+	//	ZDCLogAutoTrace(); // too noisy
 	
 	BOOL allUsersSelected = selectedLocalUserID == nil;
 
@@ -575,7 +575,7 @@ static NSString *const kActionStatus   = @"action";
  **/
 - (void)refreshActionStatus
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	BOOL allUsersSelected = selectedLocalUserID == nil;
 
@@ -681,7 +681,7 @@ static NSString *const kActionStatus   = @"action";
  **/
 - (void)setSyncStatus:(NSString *)inStatus forLocalUserID:(nullable NSString *)localUserID
 {
-	//	DDLogAutoTrace(); // too noisy
+	//	ZDCLogAutoTrace(); // too noisy
 	NSAssert([NSThread isMainThread], @"Called from wrong thread");
 	
 	NSString *status = [inStatus copy];
@@ -703,7 +703,7 @@ static NSString *const kActionStatus   = @"action";
  **/
 - (void)setAdvisoryStatus:(NSString *)inStatus forLocalUserID:(nullable NSString *)localUserID
 {
-	//	DDLogAutoTrace(); // too noisy
+	//	ZDCLogAutoTrace(); // too noisy
 	NSAssert([NSThread isMainThread], @"Called from wrong thread");
 	
 	NSString *status = [inStatus copy];
@@ -726,7 +726,7 @@ static NSString *const kActionStatus   = @"action";
  **/
 - (void)setActionStatus:(NSString *)inStatus forLocalUserID:(nullable NSString *)localUserID
 {
-	//	DDLogAutoTrace(); // too noisy
+	//	ZDCLogAutoTrace(); // too noisy
 	NSAssert([NSThread isMainThread], @"Called from wrong thread");
 	
 	NSString *status = [inStatus copy];
@@ -924,7 +924,7 @@ static NSString *const kActionStatus   = @"action";
 
 - (IBAction)segmentedControlChanged:(id)sender
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if(sender == _segActivity)
 	{
@@ -946,7 +946,7 @@ static NSString *const kActionStatus   = @"action";
 {
 	BOOL allUsersSelected = selectedLocalUserID == nil;
 
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[owner.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		

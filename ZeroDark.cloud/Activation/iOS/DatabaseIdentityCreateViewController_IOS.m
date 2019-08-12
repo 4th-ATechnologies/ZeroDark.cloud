@@ -31,11 +31,11 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 
 @implementation DatabaseIdentityCreateViewController_IOS
@@ -353,7 +353,7 @@ replacementString:(NSString *)string
 							  username:(NSString *)username
 							  password:(NSString *)password
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSAssert([NSThread isMainThread], @"Need to be on main thread for UI stuff");
 
 	__weak typeof(self) weakSelf = self;
@@ -450,7 +450,7 @@ replacementString:(NSString *)string
 - (void)tryDatabaseLoginWithUserName:(NSString *)userName
 							password:(NSString *)password
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 
 	_btnCreate.enabled = NO;
 	[self.view endEditing:YES];

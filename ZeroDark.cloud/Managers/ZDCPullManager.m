@@ -45,13 +45,13 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG && robbie_hanson
-  static const int ddLogLevel = DDLogLevelVerbose | DDLogFlagTrace;
+  static const int zdcLogLevel = ZDCLogLevelVerbose | ZDCLogFlagTrace;
 #elif DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 /* extern */ NSString *const kAuth0IDKey = @"auth0";
 /* extern */ NSString *const kETagKey    = @"eTag";
@@ -350,7 +350,7 @@ static NSUInteger const kMaxFailCount = 8;
 **/
 - (void)startPullWithPullState:(ZDCPullState *)pullState
 {
-	DDLogTrace(@"[%@] StartPull", pullState.localUserID);
+	ZDCLogTrace(@"[%@] StartPull", pullState.localUserID);
 	
 	[zdc.syncManager notifyPullStartedForLocalUserID: pullState.localUserID
 	                                          zAppID: pullState.zAppID];
@@ -371,7 +371,7 @@ static NSUInteger const kMaxFailCount = 8;
 	ZDCPullTaskCompletion finalCompletionBlock =
 	^(YapDatabaseReadWriteTransaction *transaction, ZDCPullTaskResult *result) { @autoreleasepool {
 		
-		DDLogTrace(@"[%@] FinishPull: %@", pullState.localUserID, result);
+		ZDCLogTrace(@"[%@] FinishPull: %@", pullState.localUserID, result);
 		
 		NSAssert(result != nil, @"Bad parameter for block: ZDCPullTaskResult");
 		if (result.pullResult == ZDCPullResult_Success) {
@@ -467,7 +467,7 @@ static NSUInteger const kMaxFailCount = 8;
                        pullState:(ZDCPullState *)pullState
                  finalCompletion:(ZDCPullTaskCompletion)finalCompletionBlock
 {
-	DDLogTrace(@"[%@] ContinuePull", pullState.localUserID);
+	ZDCLogTrace(@"[%@] ContinuePull", pullState.localUserID);
 	
 	if (pullInfo.latestChangeID_local)
 	{
@@ -538,7 +538,7 @@ static NSUInteger const kMaxFailCount = 8;
 		}
 		else
 		{
-			DDLogTrace(@"[%@] StartFullPull", pullState.localUserID);
+			ZDCLogTrace(@"[%@] StartFullPull", pullState.localUserID);
 			
 			// Start full pull algorithm.
 			//
@@ -565,7 +565,7 @@ static NSUInteger const kMaxFailCount = 8;
                 pullState:(ZDCPullState *)pullState
           finalCompletion:(ZDCPullTaskCompletion)finalCompletionBlock
 {
-	DDLogTrace(@"[%@] FetchChanges", pullState.localUserID);
+	ZDCLogTrace(@"[%@] FetchChanges", pullState.localUserID);
 	
 	__block NSURLSessionDataTask *task = nil;
 	
@@ -586,7 +586,7 @@ static NSUInteger const kMaxFailCount = 8;
 			NSString *msg = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 			if (msg)
 			{
-				DDLogError(@"[%@] API-Gateway: /pull/{change_token}: err (ignoring): %@",
+				ZDCLogError(@"[%@] API-Gateway: /pull/{change_token}: err (ignoring): %@",
 				           pullState.localUserID, msg);
 			}
 			
@@ -685,7 +685,7 @@ static NSUInteger const kMaxFailCount = 8;
 				{
 					NSString *errMsg = [NSString stringWithFormat:@"API-Gateway: /pull/{change_token}: response: %@", msg];
 					
-					DDLogError(@"[%@] %@", pullState.localUserID, errMsg);
+					ZDCLogError(@"[%@] %@", pullState.localUserID, errMsg);
 					result.underlyingError = [self errorWithDescription:errMsg];
 				}
 			}
@@ -961,7 +961,7 @@ static NSUInteger const kMaxFailCount = 8;
 	}
 	else
 	{
-		DDLogWarn(@"[%@] Unknown command: %@", pullState.localUserID, command);
+		ZDCLogWarn(@"[%@] Unknown command: %@", pullState.localUserID, command);
 		
 		// Fallback to performing a full sync.
 		[self fallbackToFullPullWithPullState: pullState
@@ -996,7 +996,7 @@ static NSUInteger const kMaxFailCount = 8;
                               pullState:(ZDCPullState *)pullState
                         finalCompletion:(ZDCPullTaskCompletion)finalCompletionBlock
 {
-	DDLogTrace(@"[%@] ProcessPendingChange: put-if-match", pullState.localUserID);
+	ZDCLogTrace(@"[%@] ProcessPendingChange: put-if-match", pullState.localUserID);
 
 	NSString *cloudID   = change.fileID;
 	NSString *path      = change.path;
@@ -1012,7 +1012,7 @@ static NSUInteger const kMaxFailCount = 8;
 	{
 		// Bad change item !
 		
-		DDLogTrace(@"[%@] BadChangeItem: %@", pullState.localUserID, change);
+		ZDCLogTrace(@"[%@] BadChangeItem: %@", pullState.localUserID, change);
 		
 		[self fallbackToFullPullWithPullState:pullState finalCompletion:finalCompletionBlock];
 		return;
@@ -1023,7 +1023,7 @@ static NSUInteger const kMaxFailCount = 8;
 	ZDCPullTaskCompletion continuationBlock =
 	^(YapDatabaseReadWriteTransaction *transaction, ZDCPullTaskResult *result) { @autoreleasepool {
 		
-		DDLogTrace(@"[%@] ProcessPendingChange: put-if-match: result = %@",
+		ZDCLogTrace(@"[%@] ProcessPendingChange: put-if-match: result = %@",
 		           pullState.localUserID, result);
 		
 		NSAssert(result != nil, @"Bad parameter for block: ZDCPullTaskResult");
@@ -1270,7 +1270,7 @@ static NSUInteger const kMaxFailCount = 8;
                                     pullState:(ZDCPullState *)pullState
                               finalCompletion:(ZDCPullTaskCompletion)finalCompletionBlock
 {
-	DDLogTrace(@"[%@] ProcessPendingChange: put-if-nonexistent", pullState.localUserID);
+	ZDCLogTrace(@"[%@] ProcessPendingChange: put-if-nonexistent", pullState.localUserID);
 
 	NSString *cloudID   = change.fileID;
 	NSString *path      = change.path;
@@ -1286,7 +1286,7 @@ static NSUInteger const kMaxFailCount = 8;
 	{
 		// Bad change item !
 		
-		DDLogTrace(@"[%@] BadChangeItem: %@", pullState.localUserID, change);
+		ZDCLogTrace(@"[%@] BadChangeItem: %@", pullState.localUserID, change);
 		
 		[self fallbackToFullPullWithPullState:pullState finalCompletion:finalCompletionBlock];
 		return;
@@ -1305,14 +1305,14 @@ static NSUInteger const kMaxFailCount = 8;
 				NSAssert(transaction != nil, @"Bad parameter for block: transaction is nil (with success status)");
 			}
 			
-			DDLogTrace(@"[%@] ProcessPendingChange: put-if-nonexistent: remaining = %u",
+			ZDCLogTrace(@"[%@] ProcessPendingChange: put-if-nonexistent: remaining = %u",
 			           pullState.localUserID, remaining);
 		};
 	
 		ZDCPullTaskCompletion finalCompletion =
 		^(YapDatabaseReadWriteTransaction *transaction, ZDCPullTaskResult *result) {
 	
-			DDLogTrace(@"[%@] ProcessPendingChange: put-if-nonexistent: result = %@",
+			ZDCLogTrace(@"[%@] ProcessPendingChange: put-if-nonexistent: result = %@",
 			           pullState.localUserID, result);
 	
 			if (result.pullResult != ZDCPullResult_Success)
@@ -1597,7 +1597,7 @@ static NSUInteger const kMaxFailCount = 8;
                         pullState:(ZDCPullState *)pullState
                   finalCompletion:(ZDCPullTaskCompletion)finalCompletionBlock
 {
-	DDLogTrace(@"[%@] ProcessPendingChange: move", pullState.localUserID);
+	ZDCLogTrace(@"[%@] ProcessPendingChange: move", pullState.localUserID);
 
 	NSString *cloudID   = change.fileID;
 	NSString *srcPath   = change.srcPath;
@@ -1615,7 +1615,7 @@ static NSUInteger const kMaxFailCount = 8;
 	{
 		// Bad change item !
 		
-		DDLogTrace(@"[%@] BadChangeItem: %@", pullState.localUserID, change);
+		ZDCLogTrace(@"[%@] BadChangeItem: %@", pullState.localUserID, change);
 		
 		[self fallbackToFullPullWithPullState:pullState finalCompletion:finalCompletionBlock];
 		return;
@@ -1624,7 +1624,7 @@ static NSUInteger const kMaxFailCount = 8;
 	ZDCPullTaskCompletion continuationBlock =
 	^(YapDatabaseReadWriteTransaction *transaction, ZDCPullTaskResult *result) { @autoreleasepool {
 		
-		DDLogTrace(@"[%@] ProcessPendingChange: move: result = %@",
+		ZDCLogTrace(@"[%@] ProcessPendingChange: move: result = %@",
 		           pullState.localUserID, result);
 		
 		NSAssert(result != nil, @"Bad parameter for block: ZDCPullTaskResult");
@@ -1851,7 +1851,7 @@ static NSUInteger const kMaxFailCount = 8;
                           pullState:(ZDCPullState *)pullState
                     finalCompletion:(ZDCPullTaskCompletion)finalCompletionBlock
 {
-	DDLogTrace(@"[%@] ProcessPendingChange: delete", pullState.localUserID);
+	ZDCLogTrace(@"[%@] ProcessPendingChange: delete", pullState.localUserID);
 
 	NSString *cloudID   = change.fileID;
 	NSString *path      = change.path;
@@ -1866,7 +1866,7 @@ static NSUInteger const kMaxFailCount = 8;
 	{
 		// Bad change item !
 		
-		DDLogTrace(@"[%@] BadChangeItem: %@", pullState.localUserID, change);
+		ZDCLogTrace(@"[%@] BadChangeItem: %@", pullState.localUserID, change);
 		
 		[self fallbackToFullPullWithPullState:pullState finalCompletion:finalCompletionBlock];
 		return;
@@ -2023,7 +2023,7 @@ static NSUInteger const kMaxFailCount = 8;
                         finalCompletion:(ZDCPullTaskCompletion)finalCompletionBlock
 {
 	NSString *const localUserID = pullState.localUserID;
-	DDLogTrace(@"[%@] FallbackToFullPull", localUserID);
+	ZDCLogTrace(@"[%@] FallbackToFullPull", localUserID);
 	
 	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
@@ -2056,7 +2056,7 @@ static NSUInteger const kMaxFailCount = 8;
                                finalCompletion:(ZDCPullTaskCompletion)finalCompletionBlock
 {
 	NSString *const localUserID = pullState.localUserID;
-	DDLogTrace(@"[%@] PrefetchLatestChangeToken", localUserID);
+	ZDCLogTrace(@"[%@] PrefetchLatestChangeToken", localUserID);
 	
 	if (failCount > kMaxFailCount)
 	{
@@ -2087,7 +2087,7 @@ static NSUInteger const kMaxFailCount = 8;
 			NSString *msg = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 			if (msg)
 			{
-				DDLogError(@"[%@] API-Gateway: /pull: err (ignoring): %@", localUserID, msg);
+				ZDCLogError(@"[%@] API-Gateway: /pull: err (ignoring): %@", localUserID, msg);
 			}
 			
 			error = nil; // we only care about non-server-response errors
@@ -2151,7 +2151,7 @@ static NSUInteger const kMaxFailCount = 8;
 				{
 					NSString *errMsg = [NSString stringWithFormat:@"API-Gateway: /pull: unexpected response: %@", msg];
 					
-					DDLogError(@"[%@] %@", localUserID, errMsg);
+					ZDCLogError(@"[%@] %@", localUserID, errMsg);
 					result.underlyingError = [self errorWithDescription:errMsg];
 				}
 			}
@@ -2279,7 +2279,7 @@ static NSUInteger const kMaxFailCount = 8;
 
 - (void)startFullPull:(ZDCPullState *)pullState finalCompletion:(ZDCPullTaskCompletion)finalCompletionBlock
 {
-	DDLogTrace(@"[%@] Start full pull", pullState.localUserID);
+	ZDCLogTrace(@"[%@] Start full pull", pullState.localUserID);
 	
 	NSParameterAssert(pullState != nil);
 	NSParameterAssert(finalCompletionBlock != nil);
@@ -2394,7 +2394,7 @@ static NSUInteger const kMaxFailCount = 8;
 						}
 					}});
 	
-					DDLogTrace(@"[%@] Trunk nodes remaining = %u", pullState.localUserID, remaining);
+					ZDCLogTrace(@"[%@] Trunk nodes remaining = %u", pullState.localUserID, remaining);
 				};
 	
 				multiCompletion =
@@ -2428,7 +2428,7 @@ static NSUInteger const kMaxFailCount = 8;
         completion:(void(^)(ZDCPullTaskResult *result))completionBlock
 {
 	NSString *const localUserID = pullState.localUserID;
-	DDLogTrace(@"[%@] List bucket: %@", localUserID, bucket);
+	ZDCLogTrace(@"[%@] List bucket: %@", localUserID, bucket);
 	
 	__block NSURLSessionDataTask *task = nil;
 	
@@ -2455,7 +2455,7 @@ static NSUInteger const kMaxFailCount = 8;
 			NSString *msg = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 			if (msg)
 			{
-				DDLogError(@"S3 list-dir: error.data: %@", msg);
+				ZDCLogError(@"S3 list-dir: error.data: %@", msg);
 			}
 		}
 		
@@ -2509,7 +2509,7 @@ static NSUInteger const kMaxFailCount = 8;
 				{
 					NSString *errMsg = [NSString stringWithFormat:@"S3 list-dir: response: %@", msg];
 					
-					DDLogError(@"%@", errMsg);
+					ZDCLogError(@"%@", errMsg);
 					result.underlyingError = [self errorWithDescription:errMsg];
 				}
 			}
@@ -2522,8 +2522,6 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		if (s3Response.nextContinuationToken)
 		{
-			DDLogRed(@"s3Response.nextContinuationToken: %@", s3Response.nextContinuationToken);
-			
 			failCount = 0;
 			continuationToken = s3Response.nextContinuationToken;
 			
@@ -2604,10 +2602,6 @@ static NSUInteger const kMaxFailCount = 8;
 			                   secret:auth.aws_secret
 			                  session:auth.aws_session];
 			
-		#if DEBUG && robbie_hanson
-			DDLogDonut(@"%@", [request zdcDescription]);
-		#endif
-			
 			task = [session dataTaskWithRequest: request
 			                     uploadProgress: nil
 			                   downloadProgress: nil
@@ -2669,10 +2663,10 @@ static NSUInteger const kMaxFailCount = 8;
 		}
 		
 		ZDCTreesystemPath *log_path = nil;
-		if (ddLogLevel & DDLogFlagTrace)
+		if (zdcLogLevel & ZDCLogFlagTrace)
 		{
 			log_path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
-			DDLogTrace(@"[%@] Sync node: %@", pullState.localUserID, log_path.fullPath);
+			ZDCLogTrace(@"[%@] Sync node: %@", pullState.localUserID, log_path.fullPath);
 		}
 		
 		// Step 1 of 4
@@ -2723,7 +2717,7 @@ static NSUInteger const kMaxFailCount = 8;
 					}
 				}});
 	
-				DDLogTrace(@"[%@] Syncing node's children (remaining=%u): %@",
+				ZDCLogTrace(@"[%@] Syncing node's children (remaining=%u): %@",
 							  pullState.localUserID, remaining, log_path.fullPath);
 			};
 	
@@ -2803,7 +2797,7 @@ static NSUInteger const kMaxFailCount = 8;
 			ZDCCloudPath *rcrdCloudPath = [ZDCCloudPath cloudPathFromPath:nodeRcrd.key];
 			if (rcrdCloudPath == nil)
 			{
-				DDLogTrace(@"[%@] Ignoring invalid node path: %@", pullState.localUserID, nodeRcrd.key);
+				ZDCLogTrace(@"[%@] Ignoring invalid node path: %@", pullState.localUserID, nodeRcrd.key);
 				continue;
 			}
 	
@@ -3033,7 +3027,7 @@ static NSUInteger const kMaxFailCount = 8;
 		                             dirPrefix: pointeeNode.anchor.dirPrefix
 		                              fileName: pointeeNode.explicitCloudName];
 		
-		DDLogTrace(@"[%@] Sync pointee: %@", pullState.localUserID, cloudPath);
+		ZDCLogTrace(@"[%@] Sync pointee: %@", pullState.localUserID, cloudPath);
 		
 		NSString *rcrdPath = [cloudPath pathWithExt:kZDCCloudFileExtension_Rcrd];
 		
@@ -3191,7 +3185,7 @@ static NSUInteger const kMaxFailCount = 8;
 			
 			if ([pullStateManager isPullCancelled:pullState])
 			{
-				DDLogTrace(@"[%@] Pull aborted", pullState.localUserID);
+				ZDCLogTrace(@"[%@] Pull aborted", pullState.localUserID);
 				return;
 			}
 			
@@ -3254,7 +3248,7 @@ static NSUInteger const kMaxFailCount = 8;
 				                                   error: &mergeError];
 				
 				if (mergeError) {
-					DDLogError(@"Error merging shareList: %@", mergeError);
+					ZDCLogError(@"Error merging shareList: %@", mergeError);
 				}
 			}
 			
@@ -3557,7 +3551,7 @@ static NSUInteger const kMaxFailCount = 8;
  */
 - (void)pullItem:(ZDCPullItem *)pullItem pullState:(ZDCPullState *)pullState
 {
-	DDLogTrace(@"[%@] Pull item: %@", pullState.localUserID, pullItem.rcrdCloudPath);
+	ZDCLogTrace(@"[%@] Pull item: %@", pullState.localUserID, pullItem.rcrdCloudPath);
 	
 	NSParameterAssert(pullItem != nil);
 	NSParameterAssert(pullState != nil);
@@ -3598,7 +3592,7 @@ static NSUInteger const kMaxFailCount = 8;
 			// - Network failure
 			// - Cloud contents changed mid-pull
 			
-			DDLogInfo(@"[%@] FetchRcrd failure: %@", pullState.localUserID, result);
+			ZDCLogInfo(@"[%@] FetchRcrd failure: %@", pullState.localUserID, result);
 			
 			ZDCPullTaskCompletion rcrdCompletionBlock = pullItem.rcrdCompletionBlock;
 			ZDCPullTaskCompletion ptrCompletionBlock = pullItem.ptrCompletionBlock;
@@ -3618,13 +3612,13 @@ static NSUInteger const kMaxFailCount = 8;
 			
 			if ([pullStateManager isPullCancelled:pullState])
 			{
-				DDLogTrace(@"[%@] Pull aborted", pullState.localUserID);
+				ZDCLogTrace(@"[%@] Pull aborted", pullState.localUserID);
 				return;
 			}
 			
 			if (cloudRcrd.cloudID == nil || cloudRcrd.encryptionKey == nil || cloudRcrd.metadata == nil)
 			{
-				DDLogTrace(@"[%@] No read-permissions for node: %@",
+				ZDCLogTrace(@"[%@] No read-permissions for node: %@",
 				           pullState.localUserID,
 				           [pullItem.rcrdCloudPath pathWithExt:nil]);
 				
@@ -3860,7 +3854,7 @@ static NSUInteger const kMaxFailCount = 8;
 				}
 				else
 				{
-					DDLogWarn(@"Hash Mismatch: calculated cloudName(%@) != remoteCloudName(%@)",
+					ZDCLogWarn(@"Hash Mismatch: calculated cloudName(%@) != remoteCloudName(%@)",
 								  localCloudName, remoteCloudName);
 		
 					node.explicitCloudName = remoteCloudName;
@@ -3957,7 +3951,7 @@ static NSUInteger const kMaxFailCount = 8;
 				NSString *localCloudName = [cloudPathManager cloudNameForNode:node transaction:transaction];
 				if (![localCloudName isEqualToString:remoteCloudName])
 				{
-					DDLogWarn(@"Hash Mismatch: calculated cloudName(%@) != remoteCloudName(%@)",
+					ZDCLogWarn(@"Hash Mismatch: calculated cloudName(%@) != remoteCloudName(%@)",
 								 localCloudName, remoteCloudName);
 					
 					node.explicitCloudName = remoteCloudName;
@@ -4061,7 +4055,7 @@ static NSUInteger const kMaxFailCount = 8;
 											 error: &mergeError];
 		
 		if (mergeError) {
-			DDLogError(@"Error merging shareList: %@", mergeError);
+			ZDCLogError(@"Error merging shareList: %@", mergeError);
 		}
 	}
 	
@@ -4187,7 +4181,7 @@ static NSUInteger const kMaxFailCount = 8;
 		NSString *localCloudName = [[ZDCCloudPathManager sharedInstance] cloudNameForNode:node transaction:transaction];
 		if (![localCloudName isEqualToString:remoteCloudName])
 		{
-			DDLogWarn(@"Hash Mismatch: calculated cloudName(%@) != remoteCloudName(%@)",
+			ZDCLogWarn(@"Hash Mismatch: calculated cloudName(%@) != remoteCloudName(%@)",
 						localCloudName, remoteCloudName);
 			
 			node.explicitCloudName = remoteCloudName;
@@ -4229,7 +4223,7 @@ static NSUInteger const kMaxFailCount = 8;
 											 error: &mergeError];
 		
 		if (mergeError) {
-			DDLogError(@"Error merging shareList: %@", mergeError);
+			ZDCLogError(@"Error merging shareList: %@", mergeError);
 		}
 	}
 	else
@@ -4397,7 +4391,7 @@ static NSUInteger const kMaxFailCount = 8;
 	
 	if ([pointer_ownerID isEqualToString:pullState.localUserID])
 	{
-		DDLogWarn(@"Ignoring pointer to localUser's own treesystem");
+		ZDCLogWarn(@"Ignoring pointer to localUser's own treesystem");
 		return nil;
 	}
 	
@@ -4411,7 +4405,7 @@ static NSUInteger const kMaxFailCount = 8;
 		NSString *ownerID = [nodeManager ownerIDForNode:pointee transaction:transaction];
 		if (![ownerID isEqualToString:pointer_ownerID])
 		{
-			DDLogWarn(@"Ignoring bad pointer - cloudID collision detected");
+			ZDCLogWarn(@"Ignoring bad pointer - cloudID collision detected");
 			return nil;
 		}
 	}
@@ -4679,7 +4673,7 @@ static NSUInteger const kMaxFailCount = 8;
 		{
 			// Try request again (using exponential backoff)
 			
-			DDLogTrace(@"[%@] Error fetching keyPath: %@ - %@", pullState.localUserID, keyPath, error);
+			ZDCLogTrace(@"[%@] Error fetching keyPath: %@ - %@", pullState.localUserID, keyPath, error);
 			
 			NSUInteger newFailCount = failCount + 1;
 			
@@ -4710,7 +4704,7 @@ static NSUInteger const kMaxFailCount = 8;
 		{
 			// Authentication failed.
 			
-			DDLogTrace(@"[%@] Error fetching keyPath (401): %@", pullState.localUserID, keyPath);
+			ZDCLogTrace(@"[%@] Error fetching keyPath (401): %@", pullState.localUserID, keyPath);
 			
 			// We need to alert the user (so they can re-auth with valid credentials).
 			
@@ -4731,11 +4725,11 @@ static NSUInteger const kMaxFailCount = 8;
 			//
 			// If the keyPath doesn't exist in the bucket, then S3 returns a 403 !
 			
-			DDLogTrace(@"[%@] Error fetching keyPath (%d): %@", pullState.localUserID, (int)statusCode, keyPath);
+			ZDCLogTrace(@"[%@] Error fetching keyPath (%d): %@", pullState.localUserID, (int)statusCode, keyPath);
 			
 			if ((statusCode != 404) && (statusCode != 403))
 			{
-				DDLogError(@"AWS S3 returned unknown status code: %ld", (long)statusCode);
+				ZDCLogError(@"AWS S3 returned unknown status code: %ld", (long)statusCode);
 			}
 			
 			ZDCPullTaskResult *result = [[ZDCPullTaskResult alloc] init];
@@ -4747,7 +4741,7 @@ static NSUInteger const kMaxFailCount = 8;
 			return;
 		}
 		
-		DDLogTrace(@"[%@] Fetched keyPath (%d): %@", pullState.localUserID, (int)statusCode, keyPath);
+		ZDCLogTrace(@"[%@] Fetched keyPath (%d): %@", pullState.localUserID, (int)statusCode, keyPath);
 		
 		NSString *eTag = [urlResponse eTag];
 		NSDate *lastModified = [urlResponse lastModified];
@@ -4827,7 +4821,7 @@ static NSUInteger const kMaxFailCount = 8;
 			
 			if (![pullStateManager isPullCancelled:pullState])
 			{
-				DDLogTrace(@"[%@] Fetching keyPath: %@", pullState.localUserID, keyPath);
+				ZDCLogTrace(@"[%@] Fetching keyPath: %@", pullState.localUserID, keyPath);
 				
 				[pullState addTask:task];
 				[task resume];

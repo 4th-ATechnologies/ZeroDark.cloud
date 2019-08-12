@@ -24,13 +24,13 @@
 
 
 #if DEBUG && robbie_hanson
-static const int ddLogLevel = DDLogLevelVerbose | DDLogFlagTrace;
+static const int zdcLogLevel = ZDCLogLevelVerbose | ZDCLogFlagTrace;
 #elif DEBUG
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 NSString *const kPassPhraseSourceKey_keychain     = @"keychain";
 NSString *const kPassPhraseSourceKey_keyboard     = @"keyboard";
@@ -42,10 +42,10 @@ static  NSString *const kPassPhraseSourceKey      = @"passPhraseSource";
 static Cipher_Algorithm  defaultKeyCipherAlgorithm	=	 kCipher_Algorithm_2FISH256;
 static P2K_Algorithm  	defaultP2KAlgorithm			=	 kP2K_Algorithm_Argon2i;
 
-#ifdef DDLogError
+#ifdef ZDCLogError
 #define CKERROR                                                                     \
 if(error) {                                                                       \
-DDLogError(@"ERROR %@ %@:%d", error.localizedDescription, THIS_FILE, __LINE__); \
+ZDCLogError(@"ERROR %@ %@:%d", error.localizedDescription, THIS_FILE, __LINE__); \
 goto done;                                                                      \
 }
 #else

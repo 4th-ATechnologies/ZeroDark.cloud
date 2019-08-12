@@ -15,13 +15,13 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG && robbie_hanson
-  static const int ddLogLevel = DDLogLevelVerbose;
+  static const int zdcLogLevel = ZDCLogLevelVerbose;
 #elif DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 
 @implementation ZDCCloudConnection
@@ -43,7 +43,7 @@
 **/
 - (id)newReadTransaction:(YapDatabaseReadTransaction *)databaseTransaction
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	ZDCCloudTransaction *transaction =
 	  [[ZDCCloudTransaction alloc] initWithParentConnection:self
@@ -57,7 +57,7 @@
 **/
 - (id)newReadWriteTransaction:(YapDatabaseReadWriteTransaction *)databaseTransaction
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	ZDCCloudTransaction *transaction =
 	  [[ZDCCloudTransaction alloc] initWithParentConnection:self

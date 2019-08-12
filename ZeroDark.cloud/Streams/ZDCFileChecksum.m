@@ -18,13 +18,13 @@
 #import <S4Crypto/S4Crypto.h>
 
 #if DEBUG && robbie_hanson
-  static const int ddLogLevel = DDLogLevelVerbose | DDLogFlagTrace;
+  static const int zdcLogLevel = ZDCLogLevelVerbose | ZDCLogFlagTrace;
 #elif DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 
 @interface ZDCFileChecksumInstruction () {
@@ -508,7 +508,7 @@
 								
 								if (err != kS4Err_NoErr)
 								{
-									DDLogWarn(@"HASH_Init: err = %d", err);
+									ZDCLogWarn(@"HASH_Init: err = %d", err);
 									
 									instruction->error = [NSError errorWithS4Error:err];
 									InvokeCallbackBlockWithError(instruction);
@@ -583,7 +583,7 @@
 								
 								if (err != kS4Err_NoErr)
 								{
-									DDLogWarn(@"HASH_Update: err = %d", err);
+									ZDCLogWarn(@"HASH_Update: err = %d", err);
 									
 									instruction->error = [NSError errorWithS4Error:err];
 									InvokeCallbackBlockWithError(instruction);
@@ -597,7 +597,7 @@
 									
 									if (err != kS4Err_NoErr)
 									{
-										DDLogWarn(@"HASH_Final: err = %d", err);
+										ZDCLogWarn(@"HASH_Final: err = %d", err);
 										
 										instruction->error = [NSError errorWithS4Error:err];
 										InvokeCallbackBlockWithError(instruction);
@@ -626,7 +626,7 @@
 								
 								if (err != kS4Err_NoErr)
 								{
-									DDLogWarn(@"HASH_Update: err = %d", err);
+									ZDCLogWarn(@"HASH_Update: err = %d", err);
 									
 									instruction->error = [NSError errorWithS4Error:err];
 									InvokeCallbackBlockWithError(instruction);
@@ -676,7 +676,7 @@
 							
 							if (err != kS4Err_NoErr)
 							{
-								DDLogWarn(@"HASH_Init: err = %d", err);
+								ZDCLogWarn(@"HASH_Init: err = %d", err);
 								
 								instruction->error = [NSError errorWithS4Error:err];
 								InvokeCallbackBlockWithError(instruction);
@@ -698,7 +698,7 @@
 						
 						if (err != kS4Err_NoErr)
 						{
-							DDLogWarn(@"HASH_Final: err = %d", err);
+							ZDCLogWarn(@"HASH_Final: err = %d", err);
 							
 							instruction->error = [NSError errorWithS4Error:err];
 							InvokeCallbackBlockWithError(instruction);
@@ -1131,7 +1131,7 @@
 						
 						if (err != kS4Err_NoErr)
 						{
-							DDLogWarn(@"HASH_Init: err = %d", err);
+							ZDCLogWarn(@"HASH_Init: err = %d", err);
 							
 							instruction->error = [NSError errorWithS4Error:err];
 							InvokeCallbackBlockWithError(instruction);
@@ -1206,7 +1206,7 @@
 						
 						if (err != kS4Err_NoErr)
 						{
-							DDLogWarn(@"HASH_Update: err = %d", err);
+							ZDCLogWarn(@"HASH_Update: err = %d", err);
 							
 							instruction->error = [NSError errorWithS4Error:err];
 							InvokeCallbackBlockWithError(instruction);
@@ -1220,7 +1220,7 @@
 							
 							if (err != kS4Err_NoErr)
 							{
-								DDLogWarn(@"HASH_Final: err = %d", err);
+								ZDCLogWarn(@"HASH_Final: err = %d", err);
 								
 								instruction->error = [NSError errorWithS4Error:err];
 								InvokeCallbackBlockWithError(instruction);
@@ -1249,7 +1249,7 @@
 						
 						if (err != kS4Err_NoErr)
 						{
-							DDLogWarn(@"HASH_Update: err = %d", err);
+							ZDCLogWarn(@"HASH_Update: err = %d", err);
 							
 							instruction->error = [NSError errorWithS4Error:err];
 							InvokeCallbackBlockWithError(instruction);
@@ -1301,7 +1301,7 @@
 					
 					if (err != kS4Err_NoErr)
 					{
-						DDLogWarn(@"HASH_Init: err = %d", err);
+						ZDCLogWarn(@"HASH_Init: err = %d", err);
 						
 						instruction->error = [NSError errorWithS4Error:err];
 						InvokeCallbackBlockWithError(instruction);
@@ -1323,7 +1323,7 @@
 				
 				if (err != kS4Err_NoErr)
 				{
-					DDLogWarn(@"HASH_Final: err = %d", err);
+					ZDCLogWarn(@"HASH_Final: err = %d", err);
 					
 					instruction->error = [NSError errorWithS4Error:err];
 					InvokeCallbackBlockWithError(instruction);

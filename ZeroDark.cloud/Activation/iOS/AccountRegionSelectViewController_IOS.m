@@ -25,11 +25,11 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 
 @implementation AccountRegionSelectViewController_IOS
@@ -220,7 +220,7 @@ static NSString *const kRegions	      		= @"regions";
  **/
 - (void)reachabilityChanged:(NSNotification *)notification
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	__weak typeof(self) weakSelf = self;
 
 	BOOL newHasInternet = reachability.isReachable;
@@ -515,44 +515,39 @@ static NSString *const kRegions	      		= @"regions";
 	[self calulatePreferedRegion];
 }
 
--(void)ping:(GBPing *)pinger didReceiveReplyWithSummary:(GBPingSummary *)summary
+- (void)ping:(GBPing *)pinger didReceiveReplyWithSummary:(GBPingSummary *)summary
 {
-	//   DDLogGreen(@"REPLY>  %@", summary);
+//	ZDCLogVerbose(@"REPLY>  %@", summary);
 
 	[self setPingInfoForHost:pinger.host pingInfo:summary];
 }
 
--(void)ping:(GBPing *)pinger didReceiveUnexpectedReplyWithSummary:(GBPingSummary *)summary
+- (void)ping:(GBPing *)pinger didReceiveUnexpectedReplyWithSummary:(GBPingSummary *)summary
 {
-	//    DDLogGreen(@"BREPLY> %@", summary);
+//	ZDCLogVerbose(@"BREPLY> %@", summary);
 
 	[self setPingInfoForHost:pinger.host pingInfo:nil];
-
 }
 
--(void)ping:(GBPing *)pinger didTimeoutWithSummary:(GBPingSummary *)summary
+- (void)ping:(GBPing *)pinger didTimeoutWithSummary:(GBPingSummary *)summary
 {
-	//    DDLogGreen(@"TIMOUT> %@", summary);
+//	ZDCLogVerbose(@"TIMOUT> %@", summary);
 
 	[self setPingInfoForHost:pinger.host pingInfo:nil];
-
 }
 
--(void)ping:(GBPing *)pinger didFailWithError:(NSError *)error
+- (void)ping:(GBPing *)pinger didFailWithError:(NSError *)error
 {
-	//    DDLogGreen(@"FAIL>   %@", error);
+//	ZDCLogVerbose(@"FAIL>   %@", error);
 
 	[self setPingInfoForHost:pinger.host pingInfo:nil];
-
 }
 
--(void)ping:(GBPing *)pinger didFailToSendPingWithSummary:(GBPingSummary *)summary error:(NSError *)error
+- (void)ping:(GBPing *)pinger didFailToSendPingWithSummary:(GBPingSummary *)summary error:(NSError *)error
 {
-
-	//    DDLogGreen(@"FSENT>  %@, %@", summary, error);
+//	ZDCLogGreen(@"FSENT>  %@, %@", summary, error);
 
 	[self setPingInfoForHost:pinger.host pingInfo:nil];
-
 }
 
 

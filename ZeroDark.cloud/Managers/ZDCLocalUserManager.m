@@ -29,13 +29,13 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG && robbie_hanson
-  static const int ddLogLevel = DDLogLevelInfo;
+  static const int zdcLogLevel = ZDCLogLevelInfo;
 #elif DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 
 @implementation ZDCLocalUserManager
@@ -411,7 +411,7 @@
 	                           error: &error];
 	
 	if (error) {
-		DDLogError(@"BIP39Mnemonic: keyFromMnemonic failed: %@", error);
+		ZDCLogError(@"BIP39Mnemonic: keyFromMnemonic failed: %@", error);
 		return error;
 	}
 	
@@ -434,7 +434,7 @@
 	                                      error: &error];
 	
 	if (error) {
-		DDLogError(@"CryptoTools: createPrivateKeyFromJSON failed: %@", error);
+		ZDCLogError(@"CryptoTools: createPrivateKeyFromJSON failed: %@", error);
 		return error;
 	}
 	
@@ -444,7 +444,7 @@
 	                                error: &error];
 	
 	if (error) {
-		DDLogError(@"CryptoTools: createSymmetricKey failed: %@", error);
+		ZDCLogError(@"CryptoTools: createSymmetricKey failed: %@", error);
 		return error;
 	}
 	
@@ -605,7 +605,7 @@
                            completionQueue:(nullable dispatch_queue_t)completionQueue
                            completionBlock:(nullable void (^)( NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSParameterAssert(localUserID != nil);
 
 	void (^InvokeCompletionBlock)(NSError * error) = ^(NSError * error){
@@ -868,7 +868,7 @@
                    completionQueue:(dispatch_queue_t)completionQueue
 			  completionBlock:(void (^)(NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	__weak typeof(self) weakSelf = self;
 
 	void (^InvokeCompletionBlock)(NSError*) = ^(NSError *error){
@@ -1024,7 +1024,7 @@
                     completionQueue:(nullable dispatch_queue_t)completionQueue
                     completionBlock:(void (^)(NSData *pKToUnlock,  NSError *error))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	__weak typeof(self) weakSelf = self;
 
 	void (^InvokeCompletionBlock)(NSData *pKToUnlock, NSError *error) = ^(NSData *pKToUnlock, NSError *error){
@@ -1285,7 +1285,7 @@
 {
 	__weak typeof(self) weakSelf = self;
 
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 
 	void (^InvokeCompletionBlock)(NSError *) = ^(NSError *error){
 
@@ -1541,7 +1541,7 @@
 		                            error: &error];
 		
 		if (error) {
-			DDLogWarn(@"Error importing image: %@", error);
+			ZDCLogWarn(@"Error importing image: %@", error);
 			return;
 		}
 	}

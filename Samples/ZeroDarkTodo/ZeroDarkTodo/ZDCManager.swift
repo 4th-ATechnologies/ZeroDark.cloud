@@ -8,6 +8,7 @@
 /// Sample App: ZeroDarkTodo
 
 import UIKit
+import CocoaLumberjack
 import ZeroDarkCloud
 
 extension Notification.Name {
@@ -22,7 +23,6 @@ extension Notification.Name {
 		Notification.Name("ZDCPushStartedNotification")
 	static let ZDCPushStoppedNotification =
 		Notification.Name("ZDCPushStoppedNotification")
-
 }
 
 let kNotificationsKey = "notifications"
@@ -49,6 +49,12 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	
 	private init(databaseName: String, zAppID: String) {
 		super.init()
+		
+	#if DEBUG
+		dynamicLogLevel = .all
+	#else
+		dynamicLogLevel = .warning
+	#endif
 
 		zdc = ZeroDarkCloud(delegate: self,
 		                databaseName: databaseName,
@@ -60,7 +66,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			zdc.unlockOrCreateDatabase(config)			
 		} catch {
 			
-			print("Ooops! Something went wrong: \(error)")
+			DDLogError("Ooops! Something went wrong: \(error)")
 		}
 		
 		if zdc.isDatabaseUnlocked {
@@ -173,7 +179,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				do {
 					return try encoder.encode(list)
 				} catch {
-					print("Error encoding List: \(error)")
+					DDLogError("Error encoding List: \(error)")
 				}
 			}
 			else if let task = object as? Task {
@@ -182,7 +188,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				do {
 					return try encoder.encode(task)
 				} catch {
-					print("Error encoding Task: \(error)")
+					DDLogError("Error encoding Task: \(error)")
 				}
 			}
 			else if let invitation = object as? Invitation {
@@ -191,11 +197,11 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				do {
 					return try encoder.encode(invitation)
 				} catch {
-					print("Error encoding Invitation: \(error)")
+					DDLogError("Error encoding Invitation: \(error)")
 				}
 			}
 			
-			print("Error encoding object: Unhandled class")
+			DDLogError("Error encoding object: Unhandled class")
 			return Data()
 		}
 		return serializer
@@ -219,7 +225,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					do {
 						return try decoder.decode(List.self, from: data)
 					} catch {
-						print("Error decoding List: \(error)")
+						DDLogError("Error decoding List: \(error)")
 					}
 			
 				case kZ2DCollection_Task:
@@ -228,7 +234,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					do {
 						return try decoder.decode(Task.self, from: data)
 					} catch {
-						print("Error decoding Task: \(error)")
+						DDLogError("Error decoding Task: \(error)")
 					}
 			
 				case kZ2DCollection_Invitation:
@@ -237,13 +243,13 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					do {
 						return try decoder.decode(Invitation.self, from: data)
 					} catch {
-						print("Error decoding Invitation: \(error)")
+						DDLogError("Error decoding Invitation: \(error)")
 					}
 				
 				default: break
 			}
 			
-			print("Error decoding object: Unhandled collection")
+			DDLogError("Error decoding object: Unhandled collection")
 			return NSNull()
 		}
 		return deserializer
@@ -275,7 +281,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		database.asyncRegister(view, withName: extName) {(ready) in
 			
 			if !ready {
-				print("Error registering \(extName) !!!")
+				DDLogError("Error registering \(extName) !!!")
 			}
 		}
 	}
@@ -373,7 +379,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		database.asyncRegister(view, withName: extName) {(ready) in
 			
 			if !ready {
-				print("Error registering \(extName) !!!")
+				DDLogError("Error registering \(extName) !!!")
 			}
 		}
 	}
@@ -426,7 +432,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		database.asyncRegister(view, withName: extName) { (ready) in
 			
 			if !ready {
-				print("Error registering \(extName) !!!")
+				DDLogError("Error registering \(extName) !!!")
 			}
 		}
 	}
@@ -489,7 +495,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		database.asyncRegister(hooks, withName: extName) {(ready) in
 			
 			if !ready {
-				print("Error registering \(extName) !!!")
+				DDLogError("Error registering \(extName) !!!")
 			}
 		}
 	}
@@ -530,7 +536,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 						return ZDCData(data: data)
 						
 					} catch {
-						print("Error in list.cloudEncode(): \(error)")
+						DDLogError("Error in list.cloudEncode(): \(error)")
 					}
 				}
 			}
@@ -544,7 +550,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 						return ZDCData(data: data)
 						
 					} catch {
-						print("Error in task.cloudEncode(): \(error)")
+						DDLogError("Error in task.cloudEncode(): \(error)")
 					}
 				}
 			}
@@ -642,7 +648,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	///
 	func didPushNodeData(_ node: ZDCNode, at path: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
 		
-		print("ZDC Delegate: didPushNodeData:at: \(path.fullPath())")
+		DDLogInfo("didPushNodeData:at: \(path.fullPath())")
 		
 		// Nothing to do here for this app
 	}
@@ -715,14 +721,14 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 		} catch {
 			
-			print("Error encoding message dict to JSON: \(error)")
+			DDLogError("Error encoding message dict to JSON: \(error)")
 			return nil
 		}
 	}
 	
 	func didSendMessage(_ message: ZDCNode, toRecipient recipient: ZDCUser, transaction: YapDatabaseReadWriteTransaction) {
 		
-		print("ZDC Delegate: didSendMessage:toRecipient: \(recipient.uuid)")
+		DDLogInfo("didSendMessage:toRecipient: \(recipient.uuid)")
 		
 		// Nothing to do here for this app
 	}
@@ -736,7 +742,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	///
 	func didDiscoverNewNode(_ node: ZDCNode, at path: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
 		
-		print("ZDC Delegate: didDiscoverNewNode:at: \(path.fullPath())")
+		DDLogInfo("didDiscoverNewNode:at: \(path.fullPath())")
 		
 		guard let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: node.localUserID) else {
 			return
@@ -831,7 +837,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 						// In fact, the ZDCImageManager will help us out with it.
 					
 					default:
-						print("Unknown cloud path: \(path)")
+						DDLogError("Unknown cloud path: \(path)")
 				}
 			
 			case .inbox:
@@ -861,7 +867,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	///
 	func didDiscoverModifiedNode(_ node: ZDCNode, with change: ZDCNodeChange, at path: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
 		
-		print("ZDC Delegate: didDiscoverModifiedNode::at: \(path.fullPath())")
+		DDLogInfo("didDiscoverModifiedNode::at: \(path.fullPath())")
 		
 		guard let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: node.localUserID) else {
 			return
@@ -946,7 +952,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 							// In fact, the ZDCImageManager will help us out with it.
 					
 						default:
-							print("Unknown cloud path: \(path)")
+							DDLogError("Unknown cloud path: \(path)")
 					}
 				
 				case .inbox:
@@ -974,7 +980,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	
 	func didDiscoverMovedNode(_ node: ZDCNode, from oldPath: ZDCTreesystemPath, to newPath: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
 		
-		print("ZDC Delegate: didDiscoverMovedNode: \(oldPath.fullPath()) => \(newPath.fullPath())")
+		DDLogInfo("didDiscoverMovedNode: \(oldPath.fullPath()) => \(newPath.fullPath())")
 		
 		// We don't move nodes around in this app, so there's nothing to do.
 		//
@@ -986,7 +992,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	
 	func didDiscoverDeletedNode(_ node: ZDCNode, at path: ZDCTreesystemPath, timestamp: Date?, transaction: YapDatabaseReadWriteTransaction) {
 		
-		print("ZDC Delegate: didDiscoverDeletedNode:at: \(path.fullPath())")
+		DDLogInfo("didDiscoverDeletedNode:at: \(path.fullPath())")
 		
 		guard let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: node.localUserID) else {
 			return
@@ -1043,13 +1049,13 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			default:
 				
-				print("Unknown cloud path: \(path)")
+				DDLogError("Unknown cloud path: \(path)")
 		}
 	}
 	
 	func didDiscoverConflict(_ conflict: ZDCNodeConflict, forNode node: ZDCNode, atPath path: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
 		
-		print("ZDC Delegate: didDiscoverConflict: \(conflict)")
+		DDLogInfo("didDiscoverConflict: \(conflict)")
 		
 		if conflict == .path {
 			
@@ -1101,7 +1107,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				
 				default:
 					
-					print("Unknown cloud path: \(path)")
+					DDLogError("Unknown cloud path: \(path)")
 			}
 		}
 	}
@@ -1123,7 +1129,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	
 	private func downloadNode(_ node: ZDCNode, at path: ZDCTreesystemPath) {
 		
-		print("downloadNode:at: \(path.fullPath())")
+		DDLogInfo("downloadNode:at: \(path.fullPath())")
 		
 		let nodeID = node.uuid
 		
@@ -1171,7 +1177,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		
 		if !isListNode && !isTaskNode && !isInvitation {
 			
-			print("No clue what you're asking me to download...")
+			DDLogError("No clue what you're asking me to download...")
 			return
 		}
 		
@@ -1222,7 +1228,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					}
 					
 				} catch {
-					print("Error reading cryptoFile: \(error)")
+					DDLogError("Error reading cryptoFile: \(error)")
 				}
 				
 				// File cleanup.
@@ -1236,6 +1242,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	///
 	///
 	private func downloadMissingOrOutdatedNodes() {
+		
+		DDLogInfo("downloadMissingOrOutdatedNodes()")
 		
 		guard
 			let zdc = self.zdc,
@@ -1376,6 +1384,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	
 	private func downloadMissingOrOutdatedTasks(forListID listID: String, localUserID: String) {
 		
+		DDLogInfo("downloadMissingOrOutdatedTasks()")
+		
 		guard
 			let zdc = self.zdc,
 			let databaseManager = zdc.databaseManager
@@ -1408,6 +1418,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	}
 	
 	private func autoAcceptInvitations() {
+		
+		DDLogInfo("autoAcceptInvitations()")
 		
 		guard
 			let zdc = self.zdc,
@@ -1455,6 +1467,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	///
 	private func processDownloadedList(_ cleartext: Data, forNodeID nodeID: String, withETag eTag: String) {
 		
+		DDLogInfo("processDownloadedList()")
+		
 		var listID: String? = nil
 		var localUserID: String? = nil
 		
@@ -1486,7 +1500,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				downloadedList = try List(fromCloudData: cleartext, node: node)
 				
 			} catch {
-				print("Error parsing list from cloudData: \(error)")
+				DDLogError("Error parsing list from cloudData: \(error)")
 				return
 			}
 			
@@ -1598,7 +1612,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					try cloudTransaction.linkNodeID(nodeID, toKey: downloadedList.uuid, inCollection: kZ2DCollection_List)
 					
 				} catch {
-					print("Error linking node to list: \(error)")
+					DDLogError("Error linking node to list: \(error)")
 					
 					transaction.rollback()
 					return // from block
@@ -1623,6 +1637,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	/// Invoked after a Task object has been downloaded from the cloud.
 	///
 	private func processDownloadedTask(_ cleartext: Data, forNodeID nodeID: String, withETag eTag: String) {
+		
+		DDLogInfo("processDownloadedTask()")
 		
 		let zdc = self.zdc!
 		let rwConnection = zdc.databaseManager!.rwDatabaseConnection
@@ -1657,7 +1673,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				
 			} catch {
 				
-				print("Error parsing task from cloudData: \(error)")
+				DDLogError("Error parsing task from cloudData: \(error)")
 				return // from block
 			}
 			
@@ -1707,7 +1723,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					
 				} catch {
 					
-					print("Error merging changes from cloudData: \(error)")
+					DDLogError("Error merging changes from cloudData: \(error)")
 					
 					// Since merge failed, we just fallback to using the cloud version.
 					// We just need to change its uuid to match.
@@ -1735,7 +1751,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					try cloudTransaction.linkNodeID(nodeID, toKey: downloadedTask.uuid, inCollection: kZ2DCollection_Task)
 					
 				} catch {
-					print("Error linking node to task: \(error)")
+					DDLogError("Error linking node to task: \(error)")
 				}
 				
 				// Where does this Task object go within the context of the UI ?
@@ -1750,7 +1766,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	///
 	private func processDownloadedInvitation(_ cleartext: Data, forNodeID nodeID: String, withETag eTag: String) {
 		
-		print("processDownloadedInvitation")
+		DDLogInfo("processDownloadedInvitation()")
 		
 		var downloadedInvitation: Invitation? = nil
 		
@@ -1777,7 +1793,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				downloadedInvitation = try Invitation(fromCloudData: cleartext, node: node)
 				
 			} catch {
-				print("Error parsing Invitation from cloudData: \(error)")
+				DDLogError("Error parsing Invitation from cloudData: \(error)")
 				return
 			}
 			
@@ -1794,12 +1810,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			               forKey: downloadedInvitation!.uuid,
 			         inCollection: kZ2DCollection_Invitation)
 			
-			if let wtf = transaction.object(forKey: downloadedInvitation!.uuid, inCollection: kZ2DCollection_Invitation) {
-				print("Looking good: \(wtf)")
-			} else {
-				print("WTF")
-			}
-			
 			// Link the Invitation to the Node
 			//
 			do {
@@ -1808,7 +1818,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				                   inCollection: kZ2DCollection_Invitation)
 				
 			} catch {
-				print("Error linking node to invitation: \(error)")
+				DDLogError("Error linking node to invitation: \(error)")
 			}
 			
 		}, completionBlock:{
@@ -1924,7 +1934,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					try cloudTransaction.modifyNode(node)
 					
 				} catch {
-					print("Error modifying node: \(error)")
+					DDLogError("Error modifying node: \(error)")
 					return // from transaction
 				}
 			}
@@ -1981,7 +1991,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					}
 				}
 				catch {
-					print("Error sending message: \(error)")
+					DDLogError("Error sending message: \(error)")
 				}
 			}
 			
@@ -2009,7 +2019,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 						}
 					}
 					catch {
-						print("Error sending message: \(error)")
+						print("\(LOG_PREFIX): Error sending message: \(error)")
 					}
 				}
 			}
@@ -2065,7 +2075,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				                                             remoteUser: sender)
 			}
 			catch {
-				print("Error grafting node: \(error)")
+				DDLogError("Error grafting node: \(error)")
 				return
 			}
 			
@@ -2087,7 +2097,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			do {
 				try cloudTransaction.linkNodeID(listNode.uuid, toKey: list.uuid, inCollection: kZ2DCollection_List)
 			} catch {
-				print("Error linking node: \(error)")
+				DDLogError("Error linking node: \(error)")
 			}
 			
 			// Step 4:
@@ -2122,7 +2132,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					cloudTransaction.modifyOperation(deleteInviteOp)
 					
 				} catch {
-					print("Error deleting node: \(error)")
+					DDLogError("Error deleting node: \(error)")
 				}
 			}
 			
@@ -2166,7 +2176,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				do {
 					try cloudTransaction.delete(imageNode)
 				} catch {
-					print("Error deleting taskImageNode: \(error)")
+					DDLogError("Error deleting taskImageNode: \(error)")
 				}
 			}
 			
@@ -2191,7 +2201,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			let imageData = image.dataWithJPEG(),
 			let thumbnailData = image.withMaxSize(CGSize(width: 256, height: 256))?.dataWithPNG()
 		else {
-			print("Unable to convert image to JPEG !")
+			DDLogError("Unable to convert image to JPEG !")
 			return
 		}
 		
@@ -2231,7 +2241,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				try zdc.diskManager?.importNodeThumbnail(diskImport, for: imageNode)
 				
 			} catch {
-				print("Error storing image in DiskManager: \(error)")
+				DDLogError("Error storing image in DiskManager: \(error)")
 				return
 			}
 			
@@ -2253,7 +2263,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 						try cloudTransaction.createNode(imageNode)
 					}
 					catch {
-						print("Error creating imageNode: \(error)")
+						DDLogError("Error creating imageNode: \(error)")
 					}
 					
 				} else {

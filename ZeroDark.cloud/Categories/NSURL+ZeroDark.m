@@ -41,8 +41,6 @@
 
 		if (entry.fileMode & S_IFDIR)
 		{
-			//           DDLogPurple(@"DeCompress Dir %@", entry.fileName);
-
 			// check if directory bit is set
 			[fm createDirectoryAtURL:targetPath
 		 withIntermediateDirectories:YES
@@ -61,8 +59,6 @@
 						  attributes:nil
 							   error:&error];
 			if(error) goto done;
-
-			//            DDLogPurple(@"DeCompress file %@", entry.fileName);
 
 			NSData* outData = [entry newDataWithError:&error];
 			if(error) goto done;

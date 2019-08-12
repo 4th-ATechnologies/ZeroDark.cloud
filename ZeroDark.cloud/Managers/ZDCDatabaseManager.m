@@ -21,9 +21,9 @@
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
 #if DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
 NSString *const UIDatabaseConnectionWillUpdateNotification = @"UIDatabaseConnectionWillUpdateNotification";
@@ -344,14 +344,14 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 
 - (BOOL)setupDatabase:(ZDCDatabaseConfig *)config
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	// Create the database
 	
 	[NSKeyedUnarchiver setClass:[ZDCTrunkNode class] forClassName:@"ZDCContainerNode"];
 	
 	NSString *databasePath = zdc.databasePath.filePathURL.path;
-	DDLogDebug(@"databasePath = %@", databasePath);
+	ZDCLogDebug(@"databasePath = %@", databasePath);
 	
 	YapDatabaseOptions *options = [[YapDatabaseOptions alloc] init];
 	options.corruptAction = YapDatabaseCorruptAction_Rename;
@@ -487,7 +487,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 
 - (void)setupRelationship
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	//
 	// GRAPH RELATIONSHIP
@@ -505,14 +505,14 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	                 completionBlock:^(BOOL ready)
 	{
 		if (!ready) {
-			DDLogError(@"Error registering \"%@\" !!!", extName);
+			ZDCLogError(@"Error registering \"%@\" !!!", extName);
 		}
 	}];
 }
 
 - (void)setupIndex_Nodes
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	//
 	// SECONDARY INDEX - NODES
@@ -559,14 +559,14 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	                 completionBlock:^(BOOL ready)
 	{
 		if (!ready) {
-			DDLogError(@"Error registering \"%@\" !!!", extName);
+			ZDCLogError(@"Error registering \"%@\" !!!", extName);
 		}
 	}];
 }
 
 - (void)setupIndex_Users
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	//
 	// SECONDARY INDEX - USERS
@@ -607,7 +607,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	                 completionBlock:^(BOOL ready)
 	{
 		if (!ready) {
-			DDLogError(@"Error registering \"%@\" !!!", extName);
+			ZDCLogError(@"Error registering \"%@\" !!!", extName);
 		}
 	}];
 }
@@ -615,7 +615,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 
 - (void)setupView_LocalUsers
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
     //
     // VIEW - LOCAL USERS
@@ -673,14 +673,14 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	                 completionBlock:^(BOOL ready)
 	{
 		if (!ready) {
-			DDLogError(@"Error registering \"%@\" !!!", extName);
+			ZDCLogError(@"Error registering \"%@\" !!!", extName);
 		}
 	}];
 }
 
 - (void)setupView_Treesystem_Name
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	//
 	// VIEW - TREESYSTEM (ZDCNode's sorted by cleartext name)
@@ -767,14 +767,14 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	                 completionBlock:^(BOOL ready)
 	{
 		if (!ready) {
-			DDLogError(@"Error registering \"%@\" !!!", extName);
+			ZDCLogError(@"Error registering \"%@\" !!!", extName);
 		}
 	}];
 }
 
 - (void)setupView_Treesystem_CloudName
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	//
 	// VIEW - FILE SYSTEM (ZDCNode's sorted by cloudName)
@@ -860,14 +860,14 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	                 completionBlock:^(BOOL ready)
 	{
 		if (!ready) {
-			DDLogError(@"Error registering \"%@\" !!!", extName);
+			ZDCLogError(@"Error registering \"%@\" !!!", extName);
 		}
 	}];
 }
 
 - (void)setupView_Flat
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	//
 	// VIEW - FLAT
@@ -942,14 +942,14 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	                 completionBlock:^(BOOL ready)
 	{
 		if (!ready) {
-			DDLogError(@"Error registering \"%@\" !!!", extName);
+			ZDCLogError(@"Error registering \"%@\" !!!", extName);
 		}
 	}];
 }
 
 - (void)setupView_CloudDirPrefix
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	//
 	// VIEW - HIERARCHICAL CLOUD (sorted by dirPrefix)
@@ -1024,14 +1024,14 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	                 completionBlock:^(BOOL ready)
 	{
 		if (!ready) {
-			DDLogError(@"Error registering \"%@\" !!!", extName);
+			ZDCLogError(@"Error registering \"%@\" !!!", extName);
 		}
 	}];
 }
 
 - (void)setupView_SplitKeys
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	  //
     // VIEW - SplitKeys for user
@@ -1079,14 +1079,14 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	                 completionBlock:^(BOOL ready)
 	{
 		if (!ready) {
-			DDLogError(@"Error registering \"%@\" !!!", extName);
+			ZDCLogError(@"Error registering \"%@\" !!!", extName);
 		}
 	}];
 }
 
 - (void)setupView_SplitKeys_Date
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	//
 	// VIEW - SplitKeys for user
@@ -1134,14 +1134,14 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	                 completionBlock:^(BOOL ready)
 	{
 		if (!ready) {
-			DDLogError(@"Error registering \"%@\" !!!", extName);
+			ZDCLogError(@"Error registering \"%@\" !!!", extName);
 		}
 	}];
 }
 
 - (void)setupCloudExtensions
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	//
 	// CLOUD CORE
@@ -1188,7 +1188,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 
 - (void)setupActionManager
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	//
 	// ACTION MANAGER
@@ -1213,7 +1213,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	                 completionBlock:^(BOOL ready)
 	{
 		if (!ready) {
-			DDLogError(@"Error registering \"%@\" !!!", extName);
+			ZDCLogError(@"Error registering \"%@\" !!!", extName);
 		}
 	}];
 }
@@ -1247,7 +1247,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 
 - (void)didRegisterAllExtensions
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	// The actionManager was inititalized in a suspended state.
 	//
@@ -1435,7 +1435,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		NSString *localUserID = key;
 		NSString *pushToken = localUser.pushToken;
 		
-		DDLogBlue(@"Registering push token for user: %@, token :%@", localUserID, pushToken);
+		ZDCLogDebug(@"Registering push token for user: %@, token :%@", localUserID, pushToken);
 		
 		[restManager registerPushTokenForLocalUser: localUser
 		                           completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
@@ -1468,7 +1468,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 				// YapActionManager will automatically try again in the future.
 		
 				if (!error) {
-					DDLogRed(@"registerPushToken failed with status code: %d", (int)statusCode);
+					ZDCLogInfo(@"registerPushToken failed with status code: %d", (int)statusCode);
 				}
 			}
 		}];
@@ -1667,7 +1667,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 **/
 - (ZDCCloud *)registerCloudExtensionForUser:(NSString *)inLocalUserID app:(NSString *)inAppID
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	NSString *localUserID = [inLocalUserID copy]; // mutable string protection
 	NSString *appID = [inAppID copy];             // mutable string protection
@@ -1748,7 +1748,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	{
 		if (!ready)
 		{
-			DDLogError(@"Error registering \"%@\" !!!", extName);
+			ZDCLogError(@"Error registering \"%@\" !!!", extName);
 		}
 	}];
 	
@@ -1783,7 +1783,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	
 	[database asyncUnregisterExtensionWithName:extName completionBlock:^{
 		
-		DDLogVerbose(@"Unregistered extension: %@", extName);
+		ZDCLogVerbose(@"Unregistered extension: %@", extName);
 	}];
 	
 	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, appID);

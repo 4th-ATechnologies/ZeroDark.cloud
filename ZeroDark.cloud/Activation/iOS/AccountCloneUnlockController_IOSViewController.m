@@ -24,11 +24,11 @@
 
 // Log levels: off, error, warn, info, verbose
 #if DEBUG
-static const int ddLogLevel = DDLogLevelVerbose;
+static const int zdcLogLevel = ZDCLogLevelVerbose;
 #else
-static const int ddLogLevel = DDLogLevelWarning;
+static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 
 @implementation AccountCloneUnlockController_IOS
@@ -186,7 +186,7 @@ static const NSUInteger max_tries = 4;
 
 - (IBAction)btnUnlockClicked:(id)sender
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	//
 	NSError* error = NULL;
 	
@@ -314,7 +314,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 
 - (void)keyboardWillShow:(NSNotification *)notification
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	__weak typeof(self) weakSelf = self;
 
 	// With multitasking on iPad, all visible apps are notified when the keyboard appears and disappears.
@@ -359,7 +359,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 
 - (void)keyboardWillHide:(NSNotification *)notification
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 
 	// With multitasking on iPad, all visible apps are notified when the keyboard appears and disappears.
 	// The value of [UIKeyboardIsLocalUserInfoKey] is YES for the app that caused the keyboard to appear

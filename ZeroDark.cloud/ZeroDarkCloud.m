@@ -34,9 +34,9 @@
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
 #if DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
 @interface ZeroDarkCloud () <YapDatabaseCloudCorePipelineDelegate>
@@ -161,7 +161,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 			if (CTFontManagerRegisterGraphicsFont(font, &error) == NO)
 			{
 				CFStringRef errorDescription = CFErrorCopyDescription(error);
-				DDLogError(@"Failed to load font: %@", errorDescription);
+				ZDCLogError(@"Failed to load font: %@", errorDescription);
 				CFRelease(errorDescription);
 			}
 
@@ -294,7 +294,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 
 - (nullable NSError *)unlockOrCreateDatabase:(ZDCDatabaseConfig *)config
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	__block NSError *error = nil;
 	__block S4Err	err = kS4Err_NoErr;
@@ -519,14 +519,14 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 				if (!needsRegisterPushToken && refreshEverySoOften &&
 				    [refreshEverySoOften isAfter:localUser.lastPushTokenRegistration])
 				{
-					DDLogRed(@"Forcing push notification refresh for: %@", localUser.displayName);
+					ZDCLogInfo(@"Forcing push notification refresh for: %@", localUser.displayName);
 					needsRegisterPushToken = YES;
 				}
 				
 				if (!needsRegisterPushToken && forceReregisterPushAfterDate &&
 				    [forceReregisterPushAfterDate isAfter:localUser.lastPushTokenRegistration])
 				{
-					DDLogRed(@"Forcing push notification (re)registration for: %@", localUser.displayName);
+					ZDCLogInfo(@"Forcing push notification (re)registration for: %@", localUser.displayName);
 					needsRegisterPushToken = YES;
 				}
 				
@@ -634,7 +634,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
                 completionQueue:(nullable dispatch_queue_t)completionQueue
                 completionBlock:(nullable void (^)(BOOL newData, BOOL failed))completionBlock
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	NSParameterAssert(pushInfo != nil);
 	
 	void (^InvokeCompletionBlock)(BOOL, BOOL) = ^(BOOL newData, BOOL failed){
@@ -763,7 +763,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 - (BOOL)handleEventsForBackgroundURLSession:(NSString *)sessionIdentifier
                           completionHandler:(void (^)(void))completionHandler
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (![sessionIdentifier hasPrefix:@"zdc:"]) {
 		return NO;
@@ -800,7 +800,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 
 - (void)invokeCompletionHandlerForBackgroundURLSession:(NSString *)sessionIdentifier
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	dispatch_block_t block = ^{
 	#pragma clang diagnostic push

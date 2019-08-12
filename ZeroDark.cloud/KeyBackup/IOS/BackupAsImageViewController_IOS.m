@@ -26,11 +26,11 @@
 
 // Log levels: off, error, warn, info, verbose
 #if DEBUG
-  static const int ddLogLevel = DDLogLevelVerbose;
+  static const int zdcLogLevel = ZDCLogLevelVerbose;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
  
 @implementation BackupAsImageViewController_IOS
@@ -355,7 +355,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 
 - (void)keyboardWillShow:(NSNotification *)notification
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 
 	__weak typeof(self) weakSelf = self;
 
@@ -411,7 +411,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 
 - (void)keyboardWillHide:(NSNotification *)notification
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 
 	// With multitasking on iPad, all visible apps are notified when the keyboard appears and disappears.
 	// The value of [UIKeyboardIsLocalUserInfoKey] is YES for the app that caused the keyboard to appear

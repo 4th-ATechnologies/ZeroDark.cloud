@@ -9,11 +9,11 @@
 #import <S4Crypto/S4Crypto.h>
 
 #if DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 @interface ZDCInputStream (Private)
 
@@ -135,7 +135,7 @@
 
 - (void)dealloc
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[self close];
 }
@@ -323,7 +323,7 @@
 
 - (void)open
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (streamStatus != NSStreamStatusNotOpen) {
 		return;
@@ -380,7 +380,7 @@
 
 - (void)close
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (streamStatus == NSStreamStatusClosed) return;
 	
@@ -467,7 +467,7 @@
 
 - (NSInteger)read:(uint8_t *)requestBuffer maxLength:(NSUInteger)requestBufferMallocSize
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (streamStatus == NSStreamStatusNotOpen ||
 	    streamStatus == NSStreamStatusError   ||
@@ -993,7 +993,7 @@ done:
 				[self notifyDelegateOfEvent:streamEvent];
 			}
 			else {
-				DDLogVerbose(@"Ignoring inputStream.NSStreamEventOpenCompleted: We handle this ourself");
+				ZDCLogVerbose(@"Ignoring inputStream.NSStreamEventOpenCompleted: We handle this ourself");
 			}
 			break;
 			
@@ -1010,7 +1010,7 @@ done:
 				[self notifyDelegateOfEvent:streamEvent];
 			}
 			else {
-				DDLogVerbose(@"Ignoring inputStream.NSStreamEventEndEncountered: We handle this ourself");
+				ZDCLogVerbose(@"Ignoring inputStream.NSStreamEventEndEncountered: We handle this ourself");
 			}
 			break;
 			

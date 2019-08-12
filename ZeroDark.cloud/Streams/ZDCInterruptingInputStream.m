@@ -15,13 +15,13 @@
 #import <S4Crypto/S4Crypto.h>
 
 #if DEBUG && robbie_hanson
-  static const int ddLogLevel = DDLogLevelInfo; // | DDLogFlagTrace;
+  static const int zdcLogLevel = ZDCLogLevelInfo; // | ZDCLogFlagTrace;
 #elif DEBUG
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-  static const int ddLogLevel = DDLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-#pragma unused(ddLogLevel)
+#pragma unused(zdcLogLevel)
 
 /* extern */ NSInteger const ZDCFileModifiedDuringRead = 1000;
 
@@ -90,7 +90,7 @@ static const NSUInteger chunk_size = 1024 * 1024; // in bytes
 
 - (void)dealloc
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	[self close];
 }
@@ -279,7 +279,7 @@ static const NSUInteger chunk_size = 1024 * 1024; // in bytes
 	
 	NSRange range = NSMakeRange(range_location, range_length);
 	
-	DDLogVerbose(@"ZDCInterruptingInputStream<%p> task<%d>: range = %@", self, task, NSStringFromRange(range));
+	ZDCLogVerbose(@"ZDCInterruptingInputStream<%p> task<%d>: range = %@", self, task, NSStringFromRange(range));
 	
 	__weak typeof(self) weakSelf = self;
 	ZDCFileChecksumCallbackBlock chunkBlock = ^(NSData *checksum, uint64_t chunkIndex, BOOL done, NSError *error) {
@@ -289,12 +289,12 @@ static const NSUInteger chunk_size = 1024 * 1024; // in bytes
 		
 		if (done)
 		{
-			DDLogVerbose(@"ZDCInterruptingInputStream<%p> task<%d>: done", strongSelf, task);
+			ZDCLogVerbose(@"ZDCInterruptingInputStream<%p> task<%d>: done", strongSelf, task);
 			[strongSelf setChecksumsCalculationFinishedWithTask:task];
 		}
 		else
 		{
-			DDLogVerbose(@"ZDCInterruptingInputStream<%p> task<%d>: [%llu] = %@",
+			ZDCLogVerbose(@"ZDCInterruptingInputStream<%p> task<%d>: [%llu] = %@",
 			      strongSelf, task, (unsigned long long)chunkIndex, checksum);
 			
 			[strongSelf setChecksum:checksum forChunkIndex:(NSUInteger)chunkIndex withTask:task];
@@ -314,8 +314,8 @@ static const NSUInteger chunk_size = 1024 * 1024; // in bytes
 
 - (void)signalFileModified
 {
-	DDLogAutoTrace();
-	DDLogInfo(@"File modified: %@", [fileURL lastPathComponent]);
+	ZDCLogAutoTrace();
+	ZDCLogInfo(@"File modified: %@", [fileURL lastPathComponent]);
 	
 	// Edge case bug (hard to reproduce too):
 	//
@@ -365,7 +365,7 @@ static const NSUInteger chunk_size = 1024 * 1024; // in bytes
 
 - (void)open
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (streamStatus != NSStreamStatusNotOpen) {
 		return;
@@ -415,7 +415,7 @@ static const NSUInteger chunk_size = 1024 * 1024; // in bytes
 
 - (void)close
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (streamStatus == NSStreamStatusClosed) return;
 	
@@ -492,7 +492,7 @@ static const NSUInteger chunk_size = 1024 * 1024; // in bytes
 
 - (NSInteger)read:(uint8_t *)requestBuffer maxLength:(NSUInteger)requestBufferMallocSize
 {
-	DDLogAutoTrace();
+	ZDCLogAutoTrace();
 	
 	if (streamStatus == NSStreamStatusNotOpen ||
 		 streamStatus == NSStreamStatusError   ||
