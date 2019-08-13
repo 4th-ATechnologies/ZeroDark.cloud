@@ -140,6 +140,18 @@ NS_ASSUME_NONNULL_BEGIN
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Returns the path to the given node.
+ *
+ * @param node
+ *   The node you're interested in.
+ *
+ * @param transaction
+ *   A database transaction - allows the method to read from the database.
+ */
+- (nullable ZDCTreesystemPath *)pathForNode:(ZDCNode *)node
+                                transaction:(YapDatabaseReadTransaction *)transaction;
+
+/**
  * Returns an array of all parent nodeID's of the given node, up to the containerNode.
  *
  * The containerNode will be at index 0,
@@ -155,18 +167,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (NSArray<NSString *> *)parentNodeIDsForNode:(ZDCNode *)node
                                   transaction:(YapDatabaseReadTransaction *)transaction;
-
-/**
- * Returns the path to the given node.
- *
- * @param node
- *   The node you're interested in.
- *
- * @param transaction
- *   A database transaction - allows the method to read from the database.
- */
-- (nullable ZDCTreesystemPath *)pathForNode:(ZDCNode *)node
-                                transaction:(YapDatabaseReadTransaction *)transaction;
 
 /**
  * Walks the tree from nodeID up to the root,

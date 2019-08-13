@@ -66,6 +66,7 @@ static ZDCNodeManager *sharedInstance = nil;
                                        transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
 	
 	NSString *nodeID =
 	  [ZDCTrunkNode uuidForLocalUserID: localUserID
@@ -84,6 +85,7 @@ static ZDCNodeManager *sharedInstance = nil;
                                 transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
 	
 	ZDCTrunkNode *trunkNode = nil;
 	do {
@@ -124,6 +126,9 @@ static ZDCNodeManager *sharedInstance = nil;
  */
 - (nullable ZDCNode *)anchorNodeForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
+	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
+	
 	ZDCNode *anchorNode = node;
 
 	ZDCNode *currentNode = node;
@@ -152,6 +157,9 @@ static ZDCNodeManager *sharedInstance = nil;
  */
 - (NSString *)ownerIDForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
+	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
+	
 	ZDCNode *anchorNode = [self anchorNodeForNode:node transaction:transaction];
 	
 	if (anchorNode.anchor)
@@ -167,6 +175,9 @@ static ZDCNodeManager *sharedInstance = nil;
  */
 - (nullable ZDCUser *)ownerForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
+	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
+	
 	NSString *ownerID = [self ownerIDForNode:node transaction:transaction];
 	
 	return [transaction objectForKey:ownerID inCollection:kZDCCollection_Users];
@@ -183,6 +194,9 @@ static ZDCNodeManager *sharedInstance = nil;
  */
 - (nullable ZDCNode *)targetNodeForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
+	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
+	
 	if (!node.isPointer) return node;
 	
 	ZDCNode *target = node;
@@ -195,52 +209,8 @@ static ZDCNodeManager *sharedInstance = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Local Path
+#pragma mark Paths
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
- */
-- (NSArray<NSString *> *)parentNodeIDsForNode:(ZDCNode *)node
-                                  transaction:(YapDatabaseReadTransaction *)transaction
-{
-	ZDCLogAutoTrace();
-	
-	NSMutableArray *parents = [NSMutableArray arrayWithCapacity:8];
-	
-	NSString *parentID = node.parentID;
-	ZDCNode *parent = nil;
-	
-	do
-	{
-		if ([parentID hasSuffix:@"|graft"])
-		{
-			NSString *localUserID = nil;
-			NSString *zAppID = nil;
-			[ZDCNode getLocalUserID:&localUserID zAppID:&zAppID fromParentID:node.parentID];
-			
-			parent = [self findNodeWithPointeeID: node.uuid
-			                         localUserID: localUserID
-			                              zAppID: zAppID
-			                         transaction: transaction];
-		}
-		else
-		{
-			parent = [transaction objectForKey:parentID inCollection:kZDCCollection_Nodes];
-		}
-		
-		parentID = parent.parentID;
-		if (parentID && ![parentID hasSuffix:@"|graft"])
-		{
-			[parents insertObject:parentID atIndex:0];
-		}
-	
-	} while (parent && parentID);
-	
-	return parents;
-}
 
 /**
  * See header file for description.
@@ -250,6 +220,7 @@ static ZDCNodeManager *sharedInstance = nil;
 - (nullable ZDCTreesystemPath *)pathForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
 	
 	if (node == nil) {
 		return nil;
@@ -307,11 +278,57 @@ static ZDCNodeManager *sharedInstance = nil;
  * Or view the reference docs online:
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
  */
+- (NSArray<NSString *> *)parentNodeIDsForNode:(ZDCNode *)node
+                                  transaction:(YapDatabaseReadTransaction *)transaction
+{
+	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
+	
+	NSMutableArray *parents = [NSMutableArray arrayWithCapacity:8];
+	
+	NSString *parentID = node.parentID;
+	ZDCNode *parent = nil;
+	
+	do
+	{
+		if ([parentID hasSuffix:@"|graft"])
+		{
+			NSString *localUserID = nil;
+			NSString *zAppID = nil;
+			[ZDCNode getLocalUserID:&localUserID zAppID:&zAppID fromParentID:node.parentID];
+			
+			parent = [self findNodeWithPointeeID: node.uuid
+			                         localUserID: localUserID
+			                              zAppID: zAppID
+			                         transaction: transaction];
+		}
+		else
+		{
+			parent = [transaction objectForKey:parentID inCollection:kZDCCollection_Nodes];
+		}
+		
+		parentID = parent.parentID;
+		if (parentID && ![parentID hasSuffix:@"|graft"])
+		{
+			[parents insertObject:parentID atIndex:0];
+		}
+	
+	} while (parent && parentID);
+	
+	return parents;
+}
+
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ */
 - (BOOL)isNode:(NSString *)inNodeID
  aDescendantOf:(NSString *)potentialParentID
    transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
 	
 	NSString *nodeID = inNodeID;
 	while (nodeID)
@@ -324,6 +341,18 @@ static ZDCNodeManager *sharedInstance = nil;
 		}
 		
 		nodeID = node.parentID;
+		if ([nodeID hasSuffix:@"|graft"])
+		{
+			NSString *localUserID = nil;
+			NSString *zAppID = nil;
+			[ZDCNode getLocalUserID:&localUserID zAppID:&zAppID fromParentID:nodeID];
+			
+			node = [self findNodeWithPointeeID: nodeID
+										  localUserID: localUserID
+												 zAppID: zAppID
+										  transaction: transaction];
+			nodeID = node.uuid;
+		}
 	}
 	
 	return NO;
@@ -343,11 +372,16 @@ static ZDCNodeManager *sharedInstance = nil;
                           usingBlock:(void (^)(NSString *nodeID, BOOL *stop))enumBlock
 {
 	ZDCLogAutoTrace();
-	
-	if (parentID == nil) return;
-	
 	NSParameterAssert(transaction != nil);
 	NSParameterAssert(enumBlock != nil);
+	
+	ZDCNode *parentNode = [transaction objectForKey:parentID inCollection:kZDCCollection_Nodes];
+	if (parentNode) {
+		parentNode = [self targetNodeForNode:parentNode transaction:transaction]; // follow pointer(s)
+		parentID = parentNode.uuid;
+	}
+	
+	if (parentID == nil) return; // this check must come after following pointer(s)
 	
 	YapDatabaseViewTransaction *treesystemViewTransaction = nil;
 	YapDatabaseViewTransaction *flatViewTransaction = nil;
@@ -373,7 +407,6 @@ static ZDCNodeManager *sharedInstance = nil;
 		//
 		// Scan all nodes belonging to the user and look for a match (slow but functional).
 		
-		ZDCNode *parentNode = [transaction objectForKey:parentID inCollection:kZDCCollection_Nodes];
 		ZDCTrunkNode *trunkNode = [self trunkNodeForNode:parentNode transaction:transaction];
 		
 		NSString *group =
@@ -427,6 +460,8 @@ static ZDCNodeManager *sharedInstance = nil;
                                                         BOOL *stop))enumBlock
 {
 	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
+	NSParameterAssert(enumBlock != nil);
 	
 	NSMutableArray<NSString*> *pathFromParent = [NSMutableArray array];
 	[self _recursiveEnumerateNodeIDsWithParentID: parentID
@@ -488,11 +523,16 @@ static ZDCNodeManager *sharedInstance = nil;
                         usingBlock:(void (^)(ZDCNode *node, BOOL *stop))enumBlock
 {
 	ZDCLogAutoTrace();
-	
-	if (parentID == nil) return;
-	
 	NSParameterAssert(transaction != nil);
 	NSParameterAssert(enumBlock != nil);
+	
+	ZDCNode *parentNode = [transaction objectForKey:parentID inCollection:kZDCCollection_Nodes];
+	if (parentNode) {
+		parentNode = [self targetNodeForNode:parentNode transaction:transaction]; // follow pointer(s)
+		parentID = parentNode.uuid;
+	}
+	
+	if (parentID == nil) return; // this check must come after following pointer(s)
 	
 	YapDatabaseViewTransaction *treesystemViewTransaction = nil;
 	YapDatabaseViewTransaction *flatViewTransaction = nil;
@@ -518,7 +558,6 @@ static ZDCNodeManager *sharedInstance = nil;
 		//
 		// Scan all nodes belonging to the user and look for a match (slow but functional).
 		
-		ZDCNode *parentNode = [transaction objectForKey:parentID inCollection:kZDCCollection_Nodes];
 		ZDCTrunkNode *trunkNode = [self trunkNodeForNode:parentNode transaction:transaction];
 		
 		NSString *group =
@@ -572,6 +611,8 @@ static ZDCNodeManager *sharedInstance = nil;
                                                       BOOL *stop))enumBlock
 {
 	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
+	NSParameterAssert(enumBlock != nil);
 	
 	NSMutableArray<ZDCNode*> *pathFromParent = [NSMutableArray array];
 	[self _recursiveEnumerateNodesWithParentID: parentID
@@ -593,12 +634,10 @@ static ZDCNodeManager *sharedInstance = nil;
                                                        BOOL *recurseInto,
                                                        BOOL *stop))enumBlock
 {
-	ZDCLogAutoTrace();
-	
 	__block BOOL stopped = NO;
 	
-	[self enumerateNodesWithParentID:parentID
-	                     transaction:transaction
+	[self enumerateNodesWithParentID: parentID
+	                     transaction: transaction
 	                      usingBlock:^(ZDCNode *node, BOOL *stop)
 	{
 		BOOL recurseInto = YES;
@@ -633,11 +672,12 @@ static ZDCNodeManager *sharedInstance = nil;
 - (BOOL)isEmptyNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
 	
 	__block BOOL isEmpty = YES;
 	
-	[self enumerateNodeIDsWithParentID:node.uuid
-	                       transaction:transaction
+	[self enumerateNodeIDsWithParentID: node.uuid
+	                       transaction: transaction
 	                        usingBlock:^(NSString *nodeID, BOOL *stop)
 	{
 		isEmpty = NO;
@@ -656,14 +696,21 @@ static ZDCNodeManager *sharedInstance = nil;
  * Or view the reference docs online:
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
  */
-- (ZDCNode *)findNodeWithName:(NSString *)nodeName
-                     parentID:(NSString *)parentID
-                  transaction:(YapDatabaseReadTransaction *)transaction
+- (nullable ZDCNode *)findNodeWithName:(NSString *)nodeName
+                              parentID:(NSString *)parentID
+                           transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
+	
+	ZDCNode *parentNode = [transaction objectForKey:parentID inCollection:kZDCCollection_Nodes];
+	if (parentNode) {
+		parentNode = [self targetNodeForNode:parentNode transaction:transaction]; // follow pointer(s)
+		parentID = parentNode.uuid;
+	}
 	
 	if (nodeName == nil) return nil;
-	if (parentID == nil) return nil;
+	if (parentID == nil) return nil; // this check must come after following pointer(s)
     
 	__block ZDCNode *matchingNode = nil;
     
@@ -722,7 +769,6 @@ static ZDCNodeManager *sharedInstance = nil;
 		//
 		// Scan all nodes belonging to the user and look for a match (slow but functional).
 		
-		ZDCNode *parentNode = [transaction objectForKey:parentID inCollection:kZDCCollection_Nodes];
 		ZDCTrunkNode *trunkNode = [self trunkNodeForNode:parentNode transaction:transaction];
 		
 		NSString *group =
@@ -792,6 +838,7 @@ static ZDCNodeManager *sharedInstance = nil;
                            transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
 	
 	ZDCNode *node = nil;
 	NSString *containerID =
@@ -810,6 +857,8 @@ static ZDCNodeManager *sharedInstance = nil;
 		for (NSString *filename in path.pathComponents)
 		{
 			node = [self findNodeWithName:filename parentID:parentID transaction:transaction];
+			// Do not follow pointer here.
+			// If path ends in pointer, then the pointer node must be returned.
 			
 			if (node == nil) break;
 			parentID = node.uuid;
@@ -829,10 +878,16 @@ static ZDCNodeManager *sharedInstance = nil;
                        transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
+	
+	ZDCNode *parentNode = [transaction objectForKey:parentID inCollection:kZDCCollection_Nodes];
+	if (parentNode) {
+		parentNode = [self targetNodeForNode:parentNode transaction:transaction]; // follow pointer(s)
+		parentID = parentNode.uuid;
+	}
 	
 	if (cloudName == nil) return nil;
-	if (parentID == nil) return nil;
-	if (transaction == nil) return nil;
+	if (parentID == nil) return nil; // this check must come after following pointer(s)
 	
 	// The given `cloudName` should NOT have a file extension.
 	// If it does, let's fix that.
@@ -900,7 +955,6 @@ static ZDCNodeManager *sharedInstance = nil;
 		//
 		// Scan all nodes belonging to the user and look for a match (slow but functional).
 		
-		ZDCNode *parentNode = [transaction objectForKey:parentID inCollection:kZDCCollection_Nodes];
 		ZDCTrunkNode *trunkNode = [self trunkNodeForNode:parentNode transaction:transaction];
 		
 		NSString *group =
@@ -972,6 +1026,7 @@ static ZDCNodeManager *sharedInstance = nil;
                      transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
 	
 	if (cloudID == nil) return nil;
 	if (localUserID == nil) return nil;
@@ -1083,12 +1138,12 @@ static ZDCNodeManager *sharedInstance = nil;
                                 transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
 	
 	if (cloudPath == nil) return nil;
 	if (bucket == nil) return nil;
 	if (region == AWSRegion_Invalid) return nil;
 	if (localUserID ==  nil) return nil;
-	if (transaction == nil) return nil;
 	
 	ZDCNode *parentNode =
 	  [self findNodeWithDirPrefix: cloudPath.dirPrefix
@@ -1120,13 +1175,13 @@ static ZDCNodeManager *sharedInstance = nil;
                                transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
 	
 	if (prefix == nil) return nil;
 	if (bucket == nil) return nil;
 	if (region == AWSRegion_Invalid) return nil;
 	if (localUserID == nil) return nil;
 	if (zAppID == nil) return nil;
-	if (transaction == nil) return nil;
 	
 	__block ZDCNode *matchingNode = nil;
 	
@@ -1233,6 +1288,7 @@ static ZDCNodeManager *sharedInstance = nil;
                                 transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
 	
 	if (pointeeID == nil) return nil;
 	if (localUserID == nil) return nil;
@@ -1345,12 +1401,9 @@ static ZDCNodeManager *sharedInstance = nil;
                                        transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
-#ifndef NS_BLOCK_ASSERTIONS
-	NSParameterAssert(localUserID != nil);
 	NSParameterAssert(transaction != nil);
-#else
-	if (!localUserID || !transaction) return [NSArray array];
-#endif
+	
+	if (localUserID == nil) return [NSArray array];
 	
 	NSMutableArray *result = [NSMutableArray array];
 	YapDatabaseViewTransaction *flatViewTransaction = nil;
@@ -1413,13 +1466,10 @@ static ZDCNodeManager *sharedInstance = nil;
                                        transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
-#ifndef NS_BLOCK_ASSERTIONS
-	NSParameterAssert(localUserID != nil);
-	NSParameterAssert(zAppID != nil);
 	NSParameterAssert(transaction != nil);
-#else
-	if (!localUserID || !zAppID || !transaction) return [NSArray array];
-#endif
+	
+	if (localUserID == nil) return [NSArray array];
+	if (zAppID == nil) return [NSArray array];
 	
 	NSMutableArray *result = [NSMutableArray array];
 	YapDatabaseViewTransaction *flatViewTransaction = nil;
@@ -1472,10 +1522,10 @@ static ZDCNodeManager *sharedInstance = nil;
                                                transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
 	
 	if (localUserID == nil) return nil;
 	if (zAppID == nil) return nil;
-	if (transaction == nil) return nil;
 	
 	NSMutableArray *uploadedNodeIDs = nil;
 	
@@ -1589,8 +1639,8 @@ static ZDCNodeManager *sharedInstance = nil;
  */
 - (BOOL)resetPermissionsForNode:(ZDCNode *)node transaction:(YapDatabaseReadWriteTransaction *)transaction
 {
-	if (node.isImmutable) return NO;
-	if (node.parentID == nil) return NO;
+	ZDCLogAutoTrace();
+	NSParameterAssert(transaction != nil);
 	
 	ZDCNode *parent = [transaction objectForKey:node.parentID inCollection:kZDCCollection_Nodes];
 	if (parent == nil) return NO;
