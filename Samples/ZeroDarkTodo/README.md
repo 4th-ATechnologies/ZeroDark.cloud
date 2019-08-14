@@ -22,19 +22,19 @@ Within the code, nearly all ZeroDarkCloud integration is done within the ZDCMana
 
 ZeroDarkTodo is a simple app, with only a few screens. First, we allow the user to create multiple Lists. Each list has a title, and simply acts as a container for a group of todo items.
 
-![ScreenShot_Lists](/Users/robbie/Programs/4thA/ZeroDark.cloud/Samples/ZeroDarkTodo/Images/ScreenShot_Lists.png)
+![ScreenShot_Lists](https://github.com/4th-ATechnologies/ZeroDark.cloud/raw/master/Samples/ZeroDarkTodo/Images/ScreenShot_Lists.png)
 
 Within each List, we allow the user to create any number of todo items, which we call Tasks:
 
-![ScreenShot_Tasks](/Users/robbie/Programs/4thA/ZeroDark.cloud/Samples/ZeroDarkTodo/Images/ScreenShot_Tasks1.png)
+![ScreenShot_Tasks](https://github.com/4th-ATechnologies/ZeroDark.cloud/raw/master/Samples/ZeroDarkTodo/Images/ScreenShot_Tasks1.png)
 
 We also allow the user to give each Task a priority (low, normal, high). And we allow them to optionally attach a photo to a Task:
 
-![ScreenShot_Tasks2](/Users/robbie/Programs/4thA/ZeroDark.cloud/Samples/ZeroDarkTodo/Images/ScreenShot_Tasks2.png)
+![ScreenShot_Tasks2](https://github.com/4th-ATechnologies/ZeroDark.cloud/raw/master/Samples/ZeroDarkTodo/Images/ScreenShot_Tasks2.png)
 
 And finally, we allow the user to share a List with other users. That is, to collaborate on a List. So, for example, Alice could share a list with Bob. Any changes that either of them make (add, modify or delete a Task) will be visible to both users.
 
-![ScreenShot_Sharing](/Users/robbie/Programs/4thA/ZeroDark.cloud/Samples/ZeroDarkTodo/Images/ScreenShot_Sharing.png)
+![ScreenShot_Sharing](https://github.com/4th-ATechnologies/ZeroDark.cloud/raw/master/Samples/ZeroDarkTodo/Images/ScreenShot_Sharing.png)
 
 ## The Basics
 
