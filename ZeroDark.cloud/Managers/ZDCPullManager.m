@@ -939,25 +939,27 @@ static NSUInteger const kMaxFailCount = 8;
 	//	NSString *avatarFilename = [change.path lastPathComponent];
 	//	NSString *eTag           = change.eTag;
 	//	
-	//	[self skipPendingChange:change
-	//	              changeIDs:changeIDs
-	//	              pullState:pullState
-	//	        finalCompletion:finalCompletionBlock
-	//	  transactionCompletion:^{
-	//
-	//		[self postAvatarUpdatedNotification:localUserID withFilename:avatarFilename eTag:eTag];
-	//	}];
+		[self skipPendingChange: change
+		              changeIDs: changeIDs
+		              pullState: pullState
+		        finalCompletion: finalCompletionBlock
+		  transactionCompletion:^{
+	
+		// Todo: Need to handle this properly
+		//	[self postAvatarUpdatedNotification:localUserID withFilename:avatarFilename eTag:eTag];
+		}];
 	}
 	else if ([command isEqualToString:@"update-auth0"])
 	{
-	//	[self skipPendingChange:change
-	//	              changeIDs:changeIDs
-	//	              pullState:pullState
-	//	        finalCompletion:finalCompletionBlock
-	//	  transactionCompletion:^{
-	//
-	//		[self postAuth0ProfileUpdatedNotification:localUserID];
-	//	}];
+		[self skipPendingChange: change
+		              changeIDs: changeIDs
+		              pullState: pullState
+		        finalCompletion: finalCompletionBlock
+		  transactionCompletion:^{
+	
+		// Todo: need to handle this properly
+		//	[self postAuth0ProfileUpdatedNotification:localUserID];
+		}];
 	}
 	else
 	{

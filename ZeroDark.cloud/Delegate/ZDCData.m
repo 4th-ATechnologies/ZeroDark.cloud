@@ -14,6 +14,11 @@
 
 #import <stdatomic.h>
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCData.html
+ */
 @implementation ZDCData
 
 @synthesize data = data;
@@ -21,8 +26,15 @@
 @synthesize cryptoFile = cryptoFile;
 @synthesize promise = promise;
 
+- (instancetype)init
+{
+	return [self initWithData:[NSData data]];
+}
+
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCData.html
  */
 - (instancetype)initWithData:(NSData *)inData
 {
@@ -35,6 +47,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCData.html
  */
 - (instancetype)initWithCleartextFileURL:(NSURL *)inCleartextFileURL
 {
@@ -47,6 +61,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCData.html
  */
 - (instancetype)initWithCryptoFile:(ZDCCryptoFile *)inCryptoFile
 {
@@ -59,12 +75,14 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCData.html
  */
-- (instancetype)initAsPromise
+- (instancetype)initWithPromise:(ZDCDataPromise *)inPromise
 {
 	if ((self = [super init]))
 	{
-		promise = [[ZDCDataPromise alloc] init];
+		promise = inPromise;
 	}
 	return self;
 }
@@ -75,6 +93,12 @@
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCData.html
+ * https://apis.zerodark.cloud/Classes/ZDCDataPromise.html
+ */
 @implementation ZDCDataPromise {
 	
 	dispatch_queue_t queue;
@@ -100,6 +124,9 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCData.html
+ * https://apis.zerodark.cloud/Classes/ZDCDataPromise.html
  */
 - (void)fulfill:(ZDCData *)inResult
 {
@@ -120,6 +147,9 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCData.html
+ * https://apis.zerodark.cloud/Classes/ZDCDataPromise.html
  */
 - (void)reject
 {

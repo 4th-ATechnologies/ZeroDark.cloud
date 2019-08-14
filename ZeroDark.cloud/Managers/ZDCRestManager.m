@@ -83,8 +83,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (NSString *)apiGatewayIDForRegion:(AWSRegion)region stage:(NSString *)stage
 {
@@ -110,8 +110,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (NSURLComponents *)apiGatewayForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path
 {
@@ -144,8 +144,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)fetchConfigWithCompletionQueue:(nullable dispatch_queue_t)inCompletionQueue
                        completionBlock:(void(^)(NSDictionary *_Nullable config,
@@ -428,16 +428,16 @@
 	
 	// Generate request
 	
-	AWSRegion requestRegion = AWSRegion_Master; // Activation always goes through Oregon
+	AWSRegion request_region = AWSRegion_Master; // Activation always goes through Oregon
 	
-	NSString *awsStage = localUser.aws_stage;
-	if (!awsStage)
+	NSString *request_stage = localUser.aws_stage;
+	if (!request_stage)
 	{
-		awsStage = DEFAULT_AWS_STAGE;
+		request_stage = DEFAULT_AWS_STAGE;
 	}
 
 	NSString *path = @"/activation/setup";
-	NSURLComponents *urlComponents = [self apiGatewayForRegion:requestRegion stage:awsStage path:path];
+	NSURLComponents *urlComponents = [self apiGatewayForRegion:request_region stage:request_stage path:path];
 	
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"POST";
@@ -446,7 +446,7 @@
 	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
 	
 	[AWSSignature signRequest: request
-	               withRegion: requestRegion
+	               withRegion: request_region
 	                  service: AWSService_APIGateway
 	              accessKeyID: auth.aws_accessKeyID
 	                   secret: auth.aws_secret
@@ -459,13 +459,12 @@
 	
 	NSURLSessionDataTask *task =
 	  [session dataTaskWithRequest:request
-	             completionHandler:^(NSData *data, NSURLResponse *response, NSError *sessionError)
+	             completionHandler:^(NSData *data, NSURLResponse *response, NSError *error)
 	{
 		NSString *bucket = nil;
 		NSString *syncedSalt = nil;
 		NSString *stage = nil;
 		NSDate   *activationDate = nil;
-		NSError *error = sessionError;
 		
 		if (!error && response && data)
 		{
@@ -508,6 +507,9 @@
 					
 					NSString *domain = [NSError domainForClass:[self class]];
 					error = [NSError errorWithDomain:domain code:statusCode userInfo:json];
+					
+					ZDCLogError(@"REST API Error (%ld): %@ %@ %@: %@",
+						(long)statusCode, [AWSRegions shortNameForRegion:request_region], request_stage, path, json);
 				}
 			}
 		}
@@ -535,8 +537,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)registerPushTokenForLocalUser:(ZDCLocalUser *)localUser
                       completionQueue:(dispatch_queue_t)completionQueue
@@ -641,8 +643,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)unregisterPushToken:(NSString *)pushToken
                   forUserID:(NSString *)userID
@@ -720,8 +722,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)fetchInfoForLocalUser:(ZDCLocalUser *)localUser
                      withAuth:(ZDCLocalUserAuth *)auth
@@ -846,8 +848,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)fetchInfoForRemoteUserID:(NSString *)remoteUserID
                      requesterID:(NSString *)localUserID
@@ -966,8 +968,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)fetchUserExists:(NSString *)userID
         completionQueue:(nullable dispatch_queue_t)completionQueue
@@ -1051,8 +1053,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)uploadPrivKey:(NSData *)privKey
                pubKey:(NSData *)pubKey
@@ -1143,8 +1145,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)updatePubKeySigs:(NSData *)pubKey
           forLocalUserID:(NSString *)localUserID
@@ -1246,8 +1248,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)updateAvatar:(NSData *)rawAvatarData
          contentType:(NSString *)contentType
@@ -1407,8 +1409,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (NSMutableURLRequest *)multipartComplete:(NSString *)key
                               withUploadID:(NSString *)uploadID
@@ -1471,8 +1473,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (NSMutableURLRequest *)listProxyWithPaths:(NSArray<NSString *> *)paths
                                   appPrefix:(NSString *)appPrefix
@@ -1547,8 +1549,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)lostAndFound:(NSString *)cloudID
               bucket:(NSString *)bucket
@@ -1721,8 +1723,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)fetchFilteredAuth0Profile:(NSString *)remoteUserID
                       requesterID:(NSString *)localUserID
@@ -3721,8 +3723,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRestManager.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)fetchMerkleTreeFile:(NSString *)root
                 requesterID:(NSString *)localUserID

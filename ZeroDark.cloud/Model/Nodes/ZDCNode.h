@@ -16,21 +16,44 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- * ZDCNode is a local representation of a node in the cloud.
- * It encapsulates the basic information needed by the ZeroDark framework to sync the node.
+ * ZDCNode encapsulates the metadata for a node.
+ * This includes the basic information needed by the framework to sync the node with the cloud.
+ *
+ * @note Do NOT subclass ZDCNode.
+ *       It's just for storing metadata.
+ *       You're free to store your objects however you prefer.
+ *
+ * Every node in the treesystem can be thought of as 2 separate parts:
+ *
+ *
+ * **Node Metadata**:
+ *
+ * The metadata is everything needed by the treesystem to store a node,
+ * but excluding the actual content of the node. This includes information such as:
+ *
+ *  - what is the name of the node
+ *  - who is the parent of this node
+ *  - who was permission to read / write this node
+ *  - when was the node last modified in the cloud
+ *  - various sync related information, such as eTag(s)
+ *  - various crypto information needed for encrypting & decrypting the content
+ *
+ * **Node Data**:
+ *
+ * The data is the actual content of the node. In other words, the content that your app generates.
+ *
+ * 
+ * ZDCNode is responsible for the metadata.
+ * And you're responsible for the data (using whatever objects, files, or formats you prefer).
+ *
  *
  * During a pull, whenever ZeroDark discovers new nodes in the cloud,
  * it will automatically create ZDCNode instances and then inform the ZeroDarkCloudDelegate about them.
  *
- * When you want upload a new node to the cloud, a ZDCNode instance will need to be created.
- * This can be done in several different ways.
- *
- * - You can link your own database object to a treesystem path,
- *   which will implicitly create the ZDCNode for you.
- * - You can link your own database object to a ZDCNode that you manually create.
- * - Or you can manually create & manage ZDCNode objects directly.
- *
- * Once the node is created, the framework can queue and perform the upload operation(s) for it.
+ * When you want upload a new node to the cloud, a ZDCNode instance will be created and added to the treesystem.
+ * You can do this the easy way, via `-[ZDCCloudTransaction createNodeWithPath:error:]`.
+ * Or you can do it the manual way, via `-[ZDCCloudTransaction createNode:error:]`.
+ * Either way, once the node is created, the framework will queue and perform the upload operation(s) for it.
  */
 @interface ZDCNode : ZDCObject <NSCoding, NSCopying>
 

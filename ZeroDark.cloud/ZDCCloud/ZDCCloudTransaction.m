@@ -74,7 +74,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)sendMessageToRecipients:(NSArray<ZDCUser*> *)recipients
@@ -2290,14 +2290,15 @@
               inPipeline:(YapDatabaseCloudCorePipeline *)pipeline
             withGraphIdx:(NSUInteger)opGraphIdx
 {
-	// Add implicit dependencies to enable FlatGraph optimizations.
+	// An operation is being ADDED.
 	//
-	// That is, we need to inject dependencies for this operation
-	// based on the queued operations from earlier commits.
+	// So the given graphIdx will be the latest.
 	//
-	// The FlatGraph optimization allows us to escape the strict per-commit operation ordering.
-	// That is, all operations from commit A must complete before starting any operations from commit B.
-	// However, to do this we must inject proper dependencies based on the treesystem hierarchy.
+	// - graphIdx  0 (FIRST)  : represents oldest commit that still has pending operations
+	// - graphIdx  1 (MIDDLE) : represents a later commit with pending operations
+	// - graphIdx 42 (LAST)   : represents the most recent commit with pending operations
+	//
+	// We need to add implicit dependencies so we can take advantage of FlatGraph optimizations.
 	
 	ZDCCloudOperation *newOp = (ZDCCloudOperation *)operation;
 	
@@ -2333,8 +2334,8 @@
 			
 			if ([self newOperation:newOp dependsOnOldOperation:oldOp])
 			{
-				NSSet<NSUUID*> *allDependencies = [self recursiveDependenciesForOperation:newOp];
-				if (![allDependencies containsObject:oldOp.uuid])
+				NSSet<NSUUID*> *oldOpDependencies = [self recursiveDependenciesForOperation:oldOp];
+				if (![oldOpDependencies containsObject:newOp.uuid])
 				{
 					[newOp addDependency:oldOp];
 				}
@@ -2354,31 +2355,26 @@
                  inPipeline:(YapDatabaseCloudCorePipeline *)pipeline
                withGraphIdx:(NSUInteger)opGraphIdx
 {
-	[self willModifyOperation:operation inPipeline:pipeline withGraphIdx:opGraphIdx];
-}
-
-/**
- * Subclass Hook
- */
-- (void)didInsertOperation:(YapDatabaseCloudCoreOperation *)operation
-                inPipeline:(YapDatabaseCloudCorePipeline *)pipeline
-              withGraphIdx:(NSUInteger)opGraphIdx
-{
-	[self didModifyOperation:operation inPipeline:pipeline withGraphIdx:opGraphIdx];
-}
-
-/**
- * Subclass Hook
- */
-- (void)willModifyOperation:(YapDatabaseCloudCoreOperation *)operation
-                 inPipeline:(YapDatabaseCloudCorePipeline *)pipeline
-               withGraphIdx:(NSUInteger)opGraphIdx
-{
+	// An operation is being INSERTED.
+	//
+	// That is, an operation is being put into the graph as if it was added in a previous commit.
+	// So the given graphIdx is NOT the latest.
+	//
+	// - graphIdx  0 (FIRST)  : represents oldest commit that still has pending operations
+	// - graphIdx  1 (MIDDLE) : represents a later commit with pending operations
+	// - graphIdx 42 (LAST)   : represents the most recent commit with pending operations
+	//
+	// Here's what we want to do:
+	// - Enumerate all the operations that were added to the graph in commits BEFORE this modifiedOp's commit
+	// - Check to see if the operation has been changed in such a way that it now depends on the oldOp
+	// - If so, add the dependency
+	
 	__unsafe_unretained ZDCCloudOperation *newOp = (ZDCCloudOperation *)operation;
 	
 	[self _enumerateOperations: YDBCloudCore_EnumOps_All
 	                inPipeline: pipeline
-	                usingBlock: ^void (YapDatabaseCloudCoreOperation *oldOperation, NSUInteger graphIdx, BOOL *stop)
+	                usingBlock:
+	^void (YapDatabaseCloudCoreOperation *oldOperation, NSUInteger graphIdx, BOOL *stop)
 	{
 		__unsafe_unretained ZDCCloudOperation *oldOp = (ZDCCloudOperation *)oldOperation;
 		
@@ -2389,9 +2385,129 @@
 			//
 			// where X < Y
 			
-			if ([self newOperation:newOp dependsOnOldOperation:oldOp])
+			if ([self newOperation:newOp dependsOnOldOperation:oldOp] &&
+			    ![newOp.uuid isEqual:oldOp.uuid])
 			{
-				[newOp addDependency:oldOperation];
+				// Make sure we don't create a circulate dependency
+				
+				NSSet<NSUUID*> *oldOpDependencies = [self recursiveDependenciesForOperation:oldOp];
+				if (![oldOpDependencies containsObject:newOp.uuid])
+				{
+					[newOp addDependency:oldOp];
+				}
+			}
+		}
+		else
+		{
+			*stop = YES;
+		}
+	}];
+}
+
+/**
+ * Subclass Hook
+ */
+- (void)didInsertOperation:(YapDatabaseCloudCoreOperation *)operation
+                inPipeline:(YapDatabaseCloudCorePipeline *)pipeline
+              withGraphIdx:(NSUInteger)opGraphIdx
+{
+	// An existing operation was INSERTED.
+	//
+	// Here's what we want to do:
+	// - Enumerate all the operations that are in LATER graph index's
+	// - Check to see if the later operation should now depend on the modifiedOp
+	// - If so, add the dependency
+	
+	__unsafe_unretained ZDCCloudOperation *oldOp = (ZDCCloudOperation *)operation;
+	__block NSMutableArray<ZDCCloudOperation*> *modifiedLaterOps = nil;
+	
+	[self _enumerateOperations: YDBCloudCore_EnumOps_All
+	                inPipeline: pipeline
+	                usingBlock:
+	^void (YapDatabaseCloudCoreOperation *newOperation, NSUInteger graphIdx, BOOL *stop)
+	{
+		if (graphIdx > opGraphIdx)
+		{
+			// oldOp : from graphA (commit #X)
+			// newOp : from graphB (commit #Y)
+			//
+			// where X < Y
+			
+			__strong ZDCCloudOperation *newOp = (ZDCCloudOperation *)newOperation;
+			
+			if ([self newOperation:newOp dependsOnOldOperation:oldOp] &&
+			    ![newOp.uuid isEqual:oldOp.uuid])
+			{
+				// Make sure we don't create a circulate dependency
+				
+				NSSet<NSUUID*> *oldOpDependencies = [self recursiveDependenciesForOperation:oldOp];
+				if (![oldOpDependencies containsObject:newOp.uuid])
+				{
+					newOp = [newOp copy];
+					[newOp addDependency:oldOp];
+				
+					if (modifiedLaterOps == nil) {
+						modifiedLaterOps = [NSMutableArray array];
+					}
+					[modifiedLaterOps addObject:newOp];
+				}
+			}
+		}
+	}];
+	
+	for (ZDCCloudOperation *modifiedOp in modifiedLaterOps)
+	{
+		[self modifyOperation:modifiedOp];
+	}
+}
+
+/**
+ * Subclass Hook
+ */
+- (void)willModifyOperation:(YapDatabaseCloudCoreOperation *)operation
+                 inPipeline:(YapDatabaseCloudCorePipeline *)pipeline
+               withGraphIdx:(NSUInteger)opGraphIdx
+{
+	// An existing operation is being MODIFIED.
+	//
+	// That is, an operation that was added in a previous commit is now being modified.
+	// So the given graphIdx is NOT the latest.
+	//
+	// - graphIdx  0 (FIRST)  : represents oldest commit that still has pending operations
+	// - graphIdx  1 (MIDDLE) : represents a later commit with pending operations
+	// - graphIdx 42 (LAST)   : represents the most recent commit with pending operations
+	//
+	// Here's what we want to do:
+	// - Enumerate all the operations that were added to the graph in commits BEFORE this modifiedOp's commit
+	// - Check to see if the operation has been changed in such a way that it now depends on the oldOp
+	// - If so, add the dependency
+	
+	__unsafe_unretained ZDCCloudOperation *newOp = (ZDCCloudOperation *)operation;
+	
+	[self _enumerateOperations: YDBCloudCore_EnumOps_All
+	                inPipeline: pipeline
+	                usingBlock:
+	^void (YapDatabaseCloudCoreOperation *oldOperation, NSUInteger graphIdx, BOOL *stop)
+	{
+		__unsafe_unretained ZDCCloudOperation *oldOp = (ZDCCloudOperation *)oldOperation;
+		
+		if (graphIdx < opGraphIdx)
+		{
+			// oldOp : from graphA (commit #X)
+			// newOp : from graphB (commit #Y)
+			//
+			// where X < Y
+			
+			if ([self newOperation:newOp dependsOnOldOperation:oldOp] &&
+			    ![newOp.uuid isEqual:oldOp.uuid])
+			{
+				// Make sure we don't create a circulate dependency
+				
+				NSSet<NSUUID*> *oldOpDependencies = [self recursiveDependenciesForOperation:oldOp];
+				if (![oldOpDependencies containsObject:newOp.uuid])
+				{
+					[newOp addDependency:oldOp];
+				}
 			}
 		}
 		else
@@ -2408,27 +2524,46 @@
                  inPipeline:(YapDatabaseCloudCorePipeline *)pipeline
                withGraphIdx:(NSUInteger)opGraphIdx
 {
-	__unsafe_unretained ZDCCloudOperation *oldOp = (ZDCCloudOperation *)operation;
+	// An existing operation was MODIFIED.
+	//
+	// Here's what we want to do:
+	// - Enumerate all the operations that are in LATER graph index's
+	// - Check to see if the later operation should now depend on the modifiedOp
+	// - If so, add the dependency
 	
+	__unsafe_unretained ZDCCloudOperation *oldOp = (ZDCCloudOperation *)operation;
 	__block NSMutableArray<ZDCCloudOperation*> *modifiedLaterOps = nil;
 	
 	[self _enumerateOperations: YDBCloudCore_EnumOps_All
 	                inPipeline: pipeline
-	                usingBlock: ^void (YapDatabaseCloudCoreOperation *newOperation, NSUInteger graphIdx, BOOL *stop)
+	                usingBlock:
+	^void (YapDatabaseCloudCoreOperation *newOperation, NSUInteger graphIdx, BOOL *stop)
 	{
 		if (graphIdx > opGraphIdx)
 		{
-			ZDCCloudOperation *newOp = (ZDCCloudOperation *)newOperation;
+			// oldOp : from graphA (commit #X)
+			// newOp : from graphB (commit #Y)
+			//
+			// where X < Y
 			
-			if ([self newOperation:newOp dependsOnOldOperation:oldOp] && ![newOp.dependencies containsObject:oldOp.uuid])
+			__strong ZDCCloudOperation *newOp = (ZDCCloudOperation *)newOperation;
+			
+			if ([self newOperation:newOp dependsOnOldOperation:oldOp] &&
+			    ![newOp.uuid isEqual:oldOp.uuid])
 			{
-				newOp = [newOp copy];
-				[newOp addDependency:oldOp];
+				// Make sure we don't create a circulate dependency
 				
-				if (modifiedLaterOps == nil) {
-					modifiedLaterOps = [NSMutableArray array];
+				NSSet<NSUUID*> *oldOpDependencies = [self recursiveDependenciesForOperation:oldOp];
+				if (![oldOpDependencies containsObject:newOp.uuid])
+				{
+					newOp = [newOp copy];
+					[newOp addDependency:oldOp];
+				
+					if (modifiedLaterOps == nil) {
+						modifiedLaterOps = [NSMutableArray array];
+					}
+					[modifiedLaterOps addObject:newOp];
 				}
-				[modifiedLaterOps addObject:newOp];
 			}
 		}
 	}];

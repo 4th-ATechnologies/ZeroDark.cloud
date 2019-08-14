@@ -64,7 +64,7 @@ NS_ASSUME_NONNULL_BEGIN
  * Creates an instance designed to deliver the data in an asynchronous fashion.
  * The PushManager will wait for you to either fullfill or reject the promise.
  */
-- (instancetype)initAsPromise;
+- (instancetype)initWithPromise:(ZDCDataPromise *)promise;
 
 
 /** Returns non-nil if the `initWithData:` constructor was used. */
