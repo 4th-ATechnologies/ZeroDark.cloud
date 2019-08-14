@@ -30,9 +30,9 @@ let kNotificationsKey = "notifications"
 let kZDC_DatabaseName = "ZeroDarkTodo"
 let kZDC_zAppID       = "com.4th-a.ZeroDarkTodo"
 
-let Ext_View_Lists         = "List View"
-let Ext_View_Tasks         = "Tasks View"
-let Ext_View_Pending_Tasks = "Pending Tasks View"
+let Ext_View_Lists         = "Lists"
+let Ext_View_Tasks         = "Tasks"
+let Ext_View_Pending_Tasks = "PendingTasks"
 let Ext_Hooks              = "Hooks"
 
 /// ZDCManager is our interface into the ZeroDarkCloud framework.
@@ -268,30 +268,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	///
 	func setupView_Lists(_ database: YapDatabase) {
 		
-		// A YapDatabaseManualView is an extension for YapDatabase.
-		// It allows us to manually store a list of {collection,key} tuples.
-		//
-		// We're going to use it to store the order of the List items in the databsae.
-		// That is, if the user drags items around to re-sort the list, we need to save that information.
-		// YapDatabaseManualView is tool that's designed to do just that.
-		//
-		let view = YapDatabaseManualView()
-		
-		let extName = Ext_View_Lists
-		database.asyncRegister(view, withName: extName) {(ready) in
-			
-			if !ready {
-				DDLogError("Error registering \(extName) !!!")
-			}
-		}
-	}
-	
-	/// In the user interface, we need to display a tableView of all the tasks in a list.
-	/// We need to sort these tasks somehow.
-	/// We use a YapDatabaseView to accomplish this, as described below.
-	///
-	func setupView_Tasks(_ database : YapDatabase) {
-		
 		// YapDatabaseAutoView is a YapDatabase extension.
 		// It allows us to store a list of {collection,key} tuples.
 		// Furthermore, the view creates this list automatically using a grouping & sorting block.
@@ -322,7 +298,69 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		// And YapDatabaseAutoView uses it to sort all the items in a group.
 		// (Just like an Array would use a similar technique to sort the items in an Array.)
 		
+		// GROUPING CLOSURE:
+		//
+		// We're only going to have 1 group in our view.
+		// So the group name will just be the empty string.
+		//
+		let grouping = YapDatabaseViewGrouping.withObjectBlock({
+			(transaction, collection, key, obj) -> String? in
+			
+			if let list = obj as? List {
+				return list.localUserID
+			}
+			return nil
+		})
 		
+		// SORTING CLOSURE:
+		//
+		// Sort the List's by title.
+		//
+		let sorting = YapDatabaseViewSorting.withObjectBlock({
+			(transaction, group, collection1, key1, obj1, collection2, key2, obj2) -> ComparisonResult in
+			
+			let list1 = obj1 as! List
+			let list2 = obj2 as! List
+			
+			return list1.title.localizedCaseInsensitiveCompare(list2.title)
+		})
+		
+		let version = "2019-18-13-B"; // <---------- change me if you modify grouping or sorting closure
+		let locale = NSLocale()
+		
+		let versionTag = "\(version)-\(locale)"
+		
+		let options = YapDatabaseViewOptions()
+		options.allowedCollections = YapWhitelistBlacklist(whitelist: Set([kZ2DCollection_List]))
+		
+		let view =
+			YapDatabaseAutoView(grouping: grouping,
+			                     sorting: sorting,
+			                  versionTag: versionTag,
+			                     options: options)
+		
+		let extName = Ext_View_Lists
+		database.asyncRegister(view, withName: extName) {(ready) in
+			
+			if !ready {
+				DDLogError("Error registering \(extName) !!!")
+			}
+		}
+	}
+	
+	/// In the user interface, we need to display a tableView of all the tasks in a list.
+	/// We need to sort these tasks somehow.
+	/// We use a YapDatabaseView to accomplish this, as described below.
+	///
+	func setupView_Tasks(_ database : YapDatabase) {
+		
+		// YapDatabaseAutoView is described above (in setupView_Lists function)
+		//
+		// YapDatabase has extensive documentation for views:
+		// https://github.com/yapstudios/YapDatabase/wiki/Views
+		
+		// GROUPING CLOSURE:
+		//
 		// Group all the Task's into groups, based on their List.
 		//
 		let grouping = YapDatabaseViewGrouping.withObjectBlock({
@@ -334,6 +372,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			return nil
 		})
 		
+		// SORTING CLOSURE:
+		//
 		// Sort all the Task's in a given List.
 		//
 		// We want to sort the Tasks like so:
@@ -364,7 +404,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			}
 		})
 		
-		let versionTag =  "2019-02-04-x"; // <---------- change me if you modify grouping or sorting
+		let versionTag =  "2019-02-04-x"; // <---------- change me if you modify grouping or sorting closure
 		
 		let options = YapDatabaseViewOptions()
 		options.allowedCollections = YapWhitelistBlacklist(whitelist: Set([kZ2DCollection_Task]))
@@ -390,6 +430,13 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	//
 	func setupView_PendingTasks(_ database: YapDatabase) {
 		
+		// YapDatabaseAutoView is described above (in setupView_Lists function)
+		//
+		// YapDatabase has extensive documentation for views:
+		// https://github.com/yapstudios/YapDatabase/wiki/Views
+		
+		// GROUPING CLOSURE:
+		//
 		// Group the Task's into groups based on their List.
 		// Only include Tasks that are NOT complete.
 		//
@@ -406,6 +453,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			return nil
 		})
 		
+		// SORTING CLOSURE:
+		//
 		// It doesn't matter how we sort these Tasks.
 		// We're only interested in the count (per List).
 		//
@@ -418,7 +467,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			return task1.uuid.compare(task2.uuid)
 		})
 		
-		let versionTag =  "2019-02-04-x"; // <---------- change me if you modify grouping or sorting
+		let versionTag =  "2019-02-04-x"; // <---------- change me if you modify grouping or sorting closure
 		
 		let options = YapDatabaseViewOptions()
 		options.allowedCollections = YapWhitelistBlacklist(whitelist: Set([kZ2DCollection_Task]))
@@ -526,22 +575,15 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			// Now we need to serialize our object for storage in the cloud.
 			// Our model classes use the `cloudEncode()` function for this task.
 			
-			if (collection == kZ2DCollection_List)
-			{
-				let listID = key
-				if let list = transaction.object(forKey: listID, inCollection: collection) as? List {
-					
-					do {
-						let data = try list.cloudEncode()
-						return ZDCData(data: data)
-						
-					} catch {
-						DDLogError("Error in list.cloudEncode(): \(error)")
-					}
-				}
+			if collection == kZ2DCollection_List {
+				
+				// We don't actually store anything in the cloud for a list.
+				// For the current codebase, the title is the only thing we currently need.
+				//
+				return ZDCData()
 			}
-			else if (collection == kZ2DCollection_Task)
-			{
+			else if collection == kZ2DCollection_Task {
+				
 				let taskID = key
 				if let task = transaction.object(forKey: taskID, inCollection: collection) as? Task {
 					
@@ -774,44 +816,41 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					
 					case 1: // This is a List object.
 						
-						// First, we need to check if this is a pointer node.
-						// That is:
-						// - is this a shared list ?
-						// - and is the list owned by another user ?
+						// For the current codebase, there's nothing to download for a List.
+						// A list is just a name,
+						// and that name is stored as node.name.
 						//
-						// For example, if Alice is sharing a list with Bob,
-						// then Bob may have a pointer node that points to Alice's list:
-						//
-						//   (Alice.home)        (Bob.home)
-						//       /   \               /   \
-						// (listA)   (listB)<===(listC)   (listD)
-						//
-						// So listC is actually just a pointer to listB.
-						// In this scenario, we want to download listC.
-						//
-						// (Because listB doesn't have any data associated with it.
-						//  It's just a pointer: nothing to download.)
-						//
-						if let node = cloudTransaction.targetNode(node) {
-							
-							// Mark the node as "needs download"
-							cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+						// So we have everything we need to immediately create the List object.
 						
-							// We can download it now.
-							downloadNode(node, at: path)
+						let title = node.name ?? "Untitled"
+						let list = List(localUserID: node.localUserID, title: title)
+						
+						// Store the downloaded List object in the database.
+						//
+						// YapDatabase is a collection/key/value store.
+						// So we store all List objects in the same collection: kZ2DCollection_List
+						// And every list has a uuid, which we use as the key in the database.
+						//
+						// Wondering how the object gets serialized / deserialized ?
+						// The List object supports the Swift Codable protocol.
+						
+						transaction.setObject(list, forKey: list.uuid, inCollection: kZ2DCollection_List)
+						
+						// Link the List to the Node
+						do {
+							try cloudTransaction.linkNodeID(node.uuid, toKey: list.uuid, inCollection: kZ2DCollection_List)
+							
+						} catch {
+							DDLogError("Error linking node to list: \(error)")
 						}
 					
 					case 2: // This is a Task object.
 						
-						
+						// Mark the node as "needs download".
 						cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
 						
-						// Download it now IFF we have the parent List already.
-						if let parentNodeID = node.parentID,
-							let _/* listID */ = cloudTransaction.linkedKey(forNodeID: parentNodeID)
-						{
-							downloadNode(node, at: path)
-						}
+						// Try to download it now
+						downloadNode(node, at: path)
 					
 					case 3: // This is a Task IMAGE.
 						
@@ -881,7 +920,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			// ZDCNodeChange.treesystem:
 			//
 			// ZeroDark noticed something about the treesystem metadata that was changed.
-			// This is usually a permissions change.
+			// This is is typically a permissions change.
 			//
 			// So to ensure that our UI updates appropriately, we'll touch the object in the database.
 			// This will ensure the object is included in the YapDatabaseModified notification.
@@ -924,26 +963,38 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					//
 					switch path.pathComponents.count {
 						
-						case 1:
-							// This is a List object.
-							cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+						case 1: // This is a List object.
 							
-							// We can download it immediately.
-							downloadNode(node, at: path)
-					
-						case 2:
-							// This is a Task object.
-							cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
-							
-							// Download it IFF we have the parent List already.
-							if let parentNodeID = node.parentID,
-								let _/* listID */ = cloudTransaction.linkedKey(forNodeID: parentNodeID)
-							{
-								downloadNode(node, at: path)
-							}
+							// For the current codebase, we don't store any data in the cloud for a List.
+							// A List is just a title, and we store that as node.name.
+							///
+							break;
 						
-						case 3:
-							// This is a Task IMAGE.
+					
+						case 2: // This is a Task object.
+							
+							// Mark the node as "needs download"
+							cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+							
+							// Try to download it now
+							downloadNode(node, at: path)
+						
+						case 3: // This is a Task IMAGE.
+							
+							// Mark the node as "needs download".
+							//
+							// Images are a little special.
+							// The data in the cloud contains both:
+							// - a full size version of the image
+							// - a small thumbnail version of the image
+							//
+							// We have the ability to download these separately.
+							// And the "needs download" interface is actually a bitmask
+							// that allows us to mark each component separately.
+							//
+							// So we mark both as needing download here.
+							// And they get unmarked individually as they're downloaded.
+							//
 							let components: ZDCNodeComponents = [.thumbnail, .data]
 							cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: components)
 						
@@ -978,18 +1029,39 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		}
 	}
 	
+	/// ZeroDark has just discovered a node that was moved or renamed in the cloud.
+	/// It's notifying us so we can react appropriately.
+	///
 	func didDiscoverMovedNode(_ node: ZDCNode, from oldPath: ZDCTreesystemPath, to newPath: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
 		
 		DDLogInfo("didDiscoverMovedNode: \(oldPath.fullPath()) => \(newPath.fullPath())")
 		
-		// We don't move nodes around in this app, so there's nothing to do.
-		//
-		// Note:
-		//   Even if we did move nodes around, it wouldn't matter in this particular app.
-		//   This is because our model objects (List & Task) don't store any
-		//   information that relates to the node's treesystem path.
+		guard let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: node.localUserID) else {
+			return
+		}
+		
+		// We only rename one type of node in this application: List's
+		
+		if let (collection, key) = cloudTransaction.linkedCollectionAndKey(forNodeID: node.uuid) {
+			
+			if collection == kZ2DCollection_List {
+				
+				// A List title was changed
+				
+				if var list = transaction.object(forKey: key, inCollection: collection) as? List {
+					
+					list = list.copy() as! List
+					list.title = newPath.nodeName
+					
+					transaction.setObject(list, forKey: list.uuid, inCollection: collection)
+				}
+			}
+		}
 	}
 	
+	/// ZeroDark has just discovered a node that deleted from the cloud.
+	/// It's notifying us so we can react appropriately.
+	///
 	func didDiscoverDeletedNode(_ node: ZDCNode, at path: ZDCTreesystemPath, timestamp: Date?, transaction: YapDatabaseReadWriteTransaction) {
 		
 		DDLogInfo("didDiscoverDeletedNode:at: \(path.fullPath())")
@@ -1084,7 +1156,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				case 1:
 					// This is a List object.
 					//
-					// We don't bother with merging List objects since they only contain a single property.
+					// We don't actually store any data in the cloud for a List.
 					// So the cloud version wins.
 				
 					cloudTransaction.skipDataUploads(forNodeID: node.uuid)
@@ -1133,13 +1205,12 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		
 		let nodeID = node.uuid
 		
-		var isListNode = false
 		var isTaskNode = false
 		var isInvitation = false
 		
 		// What kind of node is this ?
 		//
-		// If it's in the home trun, it could be:
+		// If it's in the home trunk, it could be:
 		// - List object
 		// - Task object
 		// - Task image
@@ -1160,8 +1231,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// So we can identify the type of node based on the number of path components.
 				//
 				switch path.pathComponents.count {
-					case 1:
-						isListNode = true
 					case 2:
 						isTaskNode = true
 					default:
@@ -1175,9 +1244,9 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				break
 		}
 		
-		if !isListNode && !isTaskNode && !isInvitation {
+		if !isTaskNode && !isInvitation {
 			
-			DDLogError("No clue what you're asking me to download...")
+			DDLogError("Unsupported download request: \(path)")
 			return
 		}
 		
@@ -1217,10 +1286,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					
 					// Process it
 					
-					if isListNode {
-						self.processDownloadedList(cleartext, forNodeID: nodeID, withETag: cloudDataInfo.eTag)
-					}
-					else if isTaskNode {
+					if isTaskNode {
 						self.processDownloadedTask(cleartext, forNodeID: nodeID, withETag: cloudDataInfo.eTag)
 					}
 					else {
@@ -1330,19 +1396,12 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 							// - treesystem path = /X
 							// - nodeID          = X
 							// - path array      = []
-						
-							let needsDownload = cloudTransaction.nodeIsMarkedAsNeedsDownload(nodeID, components: .all)
-							if needsDownload {
-								self.downloadNode(withNodeID: nodeID, transaction: transaction)
-							}
 							
-							let list = cloudTransaction.linkedObject(forNodeID: nodeID) as? List
-							if list == nil {
-								
-								// Don't bother recursing into the List.
-								// We need to download & process the List first, before we can download any of the children.
-								recurseInto[0] = false
-							}
+							// Nothing to download here.
+							// We don't currently store any data in the cloud for a List.
+							// It's just a title, and we store that title via node.name.
+							//
+							break
 						
 						case 1: // This is a Task object.
 							
@@ -1352,7 +1411,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 						
 							let needsDownload = cloudTransaction.nodeIsMarkedAsNeedsDownload(nodeID, components: .all)
 							if needsDownload {
-									self.downloadNode(withNodeID: nodeID, transaction: transaction)
+								self.downloadNode(withNodeID: nodeID, transaction: transaction)
 							}
 						
 						case 2: // This is a Task image.
@@ -1362,7 +1421,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 							// - path array      = [X, Y]
 							//
 							// Task images are downloaded on demand.
-							break;
+							break
 						
 						default: break
 					}
@@ -1379,41 +1438,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					}
 				})
 			}
-		}
-	}
-	
-	private func downloadMissingOrOutdatedTasks(forListID listID: String, localUserID: String) {
-		
-		DDLogInfo("downloadMissingOrOutdatedTasks()")
-		
-		guard
-			let zdc = self.zdc,
-			let databaseManager = zdc.databaseManager
-		else {
-				
-			// Don't call this method until the database has been unlocked
-			return
-		}
-		
-		databaseManager.roDatabaseConnection.asyncRead { (transaction) in
-			
-			guard
-				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-				let listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List)
-			else {
-					return
-			}
-			
-			zdc.nodeManager.enumerateNodeIDs(withParentID : listNode.uuid,
-														transaction  : transaction,
-														using:
-			{ (nodeID, stop) in
-				
-				let needsDownload = cloudTransaction.nodeIsMarkedAsNeedsDownload(nodeID, components: .all)
-				if needsDownload {
-					self.downloadNode(withNodeID: nodeID, transaction: transaction)
-				}
-			})
 		}
 	}
 	
@@ -1462,177 +1486,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// MARK: Processing Logic
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	/// Invoked after a List object has been downloaded from the cloud.
-	///
-	private func processDownloadedList(_ cleartext: Data, forNodeID nodeID: String, withETag eTag: String) {
-		
-		DDLogInfo("processDownloadedList()")
-		
-		var listID: String? = nil
-		var localUserID: String? = nil
-		
-		let zdc = self.zdc!
-		let rwConnection = zdc.databaseManager!.rwDatabaseConnection
-		rwConnection.asyncReadWrite({ (transaction) in
-			
-			// Fetch the most recent version of the node from the database.
-			// If the node no longer exists, then we don't need to worry about processing the downloaded data,
-			// and we can quietly exit.
-			//
-			guard
-				let node = transaction.object(forKey: nodeID, inCollection: kZDCCollection_Nodes) as? ZDCNode,
-				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: node.localUserID)
-			else {
-				return
-			}
-			
-			cloudTransaction.unmarkNodeAsNeedsDownload(nodeID, components: .all, ifETagMatches: eTag)
-			
-			var downloadedList: List!
-			do {
-				// Attempt to create a List instance from the downloaded data.
-				// This could fail if:
-				//
-				// - there's a bug in our List.cloudEncode() function
-				// - there's a bug in our List.init(fromCloudData:node:) function
-				//
-				downloadedList = try List(fromCloudData: cleartext, node: node)
-				
-			} catch {
-				DDLogError("Error parsing list from cloudData: \(error)")
-				return
-			}
-			
-			// If the list is a shared list, then we give it the local name.
-			//
-			// For example, if Alice is sharing a list with Bob,
-			// then Bob may have a pointer node that points to Alice's list:
-			//
-			//   (Alice.home)        (Bob.home)
-			//       /   \               /   \
-			// (listA)   (listB)<===(listC)   (listD)
-			//
-			// So listC is actually just a pointer to listB.
-			// And we just downloaded listB.
-			//
-			// For example:
-			// - listB.title == "Our first Thanksgiving!!! {Heart}{Rainbow}{Unicorn}"
-			// - listC.node.name = "Thanksgiving Shopping"
-			//
-			// We use listC.node.name on this device.
-			//
-			if node.anchor != nil {
-				
-				if let pointer = zdc.nodeManager.findNode(withPointeeID: node.uuid,
-				                                            localUserID: node.localUserID,
-				                                                 zAppID: kZDC_zAppID,
-				                                            transaction: transaction)
-				{
-					downloadedList.title = pointer.name ?? downloadedList.title
-				}
-			}
-			
-			if let existingList = cloudTransaction.linkedObject(forNodeID: nodeID) as? List {
-				
-				// We are updating an existing List.
-				
-				// We don't do fancy merges for List objects,
-				// because they really only have a single user-facing property:
-				// - title
-				//
-				// (We do fancy merges for Task objects. See function processDownloadedTask() below.)
-				//
-				// So we always just use whatever is in the cloud.
-				
-				downloadedList = List(copy: downloadedList, uuid: existingList.uuid)
-				
-				// Store the downloaded List object in the database.
-				//
-				// YapDatabase is a collection/key/value store.
-				// So we store all List objects in the same collection: kZ2DCollection_List
-				// And every list has a uuid, which we use as the key in the database.
-				//
-				// Wondering how the object gets serialized / deserialized ?
-				// The List object supports the Swift Codable protocol.
-				
-				transaction.setObject(downloadedList, forKey: downloadedList.uuid, inCollection: kZ2DCollection_List)
-				
-				// We notify the system that we've opted to use this version of the List.
-				//
-				// We do this because we may have pending changes that we wanted to push up to the cloud.
-				// But these changes were blocked, waiting for us to either merge changes, or skip the operation(s).
-				//
-				// @see self.didDiscoverConflict(...)
-				
-				cloudTransaction.skipDataUploads(forNodeID: node.uuid)
-				
-			}
-			else {
-				
-				// We are creating a NEW List.
-				
-				// Store the downloaded List object in the database.
-				//
-				// YapDatabase is a collection/key/value store.
-				// So we store all List objects in the same collection: kZ2DCollection_List
-				// And every list has a uuid, which we use as the key in the database.
-				//
-				// Wondering how the object gets serialized / deserialized ?
-				// The List object supports the Swift Codable protocol.
-				
-				transaction.setObject(downloadedList, forKey: downloadedList.uuid, inCollection: kZ2DCollection_List)
-				
-				// Where does this List object go within the context of the UI.
-				// For example, imagine the situation in which there are multiple lists:
-				//
-				// - Groceries
-				// - Weekend Chores
-				// - Stuff to get @ hardware store
-				//
-				// We're going to display these in a TableView to the user.
-				// How do we order the items ?
-				// Do we automatically sort them somehow ?
-				// Or do we allow the user to sort them manually ?
-				//
-				// For our UI we've decided to let the user sort them manually.
-				// This means we also want to store the order within the database.
-				// And to accomplish this, we're using an extension that does most of the work for us.
-				//
-				// So we just need to add the {collection,key} tuple to YapDatabaseManualView.
-				
-				if let vt = transaction.ext(Ext_View_Lists) as? YapDatabaseManualViewTransaction {
-					
-					vt.addKey(downloadedList.uuid, inCollection:kZ2DCollection_List, toGroup: node.localUserID)
-				}
-				
-				// Link the List to the Node
-				
-				do {
-					try cloudTransaction.linkNodeID(nodeID, toKey: downloadedList.uuid, inCollection: kZ2DCollection_List)
-					
-				} catch {
-					DDLogError("Error linking node to list: \(error)")
-					
-					transaction.rollback()
-					return // from block
-				}
-			}
-			
-			listID = downloadedList.uuid
-			localUserID = node.localUserID
-			
-		}, completionQueue: DispatchQueue.global()) {
-			
-			// Download any missing or outdated tasks for this list
-			
-			if let listID = listID,
-			   let localUserID = localUserID
-			{
-				self.downloadMissingOrOutdatedTasks(forListID: listID, localUserID: localUserID)
-			}
-		}
-	}
 	
 	/// Invoked after a Task object has been downloaded from the cloud.
 	///

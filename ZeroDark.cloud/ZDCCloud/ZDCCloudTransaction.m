@@ -60,13 +60,6 @@
 
 - (NSString *)signalParentID
 {
-	// Signals are not a part of the treesystem.
-	// So we store them with a special parentID.
-	//
-	// This makes them searchable via:
-	// - Ext_View_Treesystem
-	// - Ext_View_Flat
-	
 	return [ZDCNode signalParentIDForLocalUserID:[self localUserID] zAppID:[self zAppID]];
 }
 
@@ -81,8 +74,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)sendMessageToRecipients:(NSArray<ZDCUser*> *)recipients
                                         error:(NSError *_Nullable *_Nullable)outError
@@ -236,8 +229,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)sendSignalToRecipient:(ZDCUser *)recipient
                                       error:(NSError *_Nullable *_Nullable)outError
@@ -347,13 +340,13 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Node Management
+#pragma mark Node Utilities
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCTrunkNode *)trunkNode:(ZDCTreesystemTrunk)trunk
 {
@@ -365,8 +358,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)targetNode:(ZDCNode *)node
 {
@@ -375,8 +368,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)nodeWithPath:(ZDCTreesystemPath *)path
 {
@@ -393,8 +386,33 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (ZDCTreesystemPath *)conflictFreePath:(ZDCTreesystemPath *)path
+{
+	if (path.isTrunk) return path;
+	
+	ZDCNode *conflictNode = [self nodeWithPath:path];
+	if (conflictNode == nil) {
+		return path;
+	}
+	
+	NSString *newName =
+	  [[ZDCNodeManager sharedInstance] resolveNamingConflict: conflictNode
+	                                             transaction: databaseTransaction];
+	
+	return [[path parentPath] pathByAppendingComponent:newName];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Node Management
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * See header file for description.
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)createNodeWithPath:(ZDCTreesystemPath *)path
                                    error:(NSError *_Nullable *_Nullable)outError
@@ -467,8 +485,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)createNode:(ZDCNode *)node error:(NSError *_Nullable *_Nullable)outError
 {
@@ -609,8 +627,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)modifyNode:(ZDCNode *)newNode error:(NSError *_Nullable *_Nullable)outError
 {
@@ -708,8 +726,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCCloudOperation *)queueDataUploadForNodeID:(NSString *)nodeID
                                            withChangeset:(nullable NSDictionary *)changeset
@@ -765,8 +783,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCCloudOperation *)deleteNode:(ZDCNode *)node error:(NSError *_Nullable *_Nullable)outError
 {
@@ -779,8 +797,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCCloudOperation *)deleteNode:(ZDCNode *)rootNode
                                withOptions:(ZDCDeleteNodeOptions)opts
@@ -1117,8 +1135,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)graftNodeWithLocalPath:(ZDCTreesystemPath *)path
                              remoteCloudPath:(ZDCCloudPath *)remotePath
@@ -1259,8 +1277,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)linkNodeID:(NSString *)nodeID
              toKey:(NSString *)key
@@ -1368,8 +1386,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable NSString *)unlinkKey:(NSString *)key inCollection:(nullable NSString *)collection
 {
@@ -1388,8 +1406,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable NSString *)linkedNodeIDForKey:(NSString *)key inCollection:(nullable NSString *)collection
 {
@@ -1410,8 +1428,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)linkedNodeForKey:(NSString *)key inCollection:(nullable NSString *)collection
 {
@@ -1452,8 +1470,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)isNodeLinked:(NSString *)nodeID
 {
@@ -1471,8 +1489,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)getLinkedKey:(NSString **)outKey
           collection:(NSString **)outCollection
@@ -1497,8 +1515,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable id)linkedObjectForNodeID:(NSString *)nodeID
 {
@@ -1514,8 +1532,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable id)linkedObjectForPath:(ZDCTreesystemPath *)path
 {
@@ -1542,8 +1560,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable id)tagForNodeID:(NSString *)nodeID withIdentifier:(NSString *)identifier
 {
@@ -1552,8 +1570,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (void)setTag:(nullable id)tag forNodeID:(NSString *)nodeID withIdentifier:(NSString *)identifier
 {
@@ -1562,8 +1580,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (void)enumerateTagsForNodeID:(NSString *)nodeID
                      withBlock:(void (^NS_NOESCAPE)(NSString *identifier, id tag, BOOL *stop))block
@@ -1573,8 +1591,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (void)removeTagForNodeID:(NSString *)nodeID withIdentifier:(NSString *)identifier
 {
@@ -1583,8 +1601,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (void)removeAllTagsForNodeID:(NSString *)nodeID
 {
@@ -1609,8 +1627,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (void)markNodeAsNeedsDownload:(NSString *)nodeID components:(ZDCNodeComponents)components
 {
@@ -1622,8 +1640,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (void)unmarkNodeAsNeedsDownload:(NSString *)nodeID
                        components:(ZDCNodeComponents)components
@@ -1701,8 +1719,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)nodeIsMarkedAsNeedsDownload:(NSString *)nodeID components:(ZDCNodeComponents)components
 {
@@ -1733,8 +1751,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (NSArray<ZDCCloudOperation*> *)addedOperations
 {
@@ -1755,8 +1773,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (NSArray<ZDCCloudOperation*> *)addedOperationsForNodeID:(NSString *)nodeID
 {
@@ -1785,8 +1803,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)hasPendingDataUploadsForNodeID:(NSString *)nodeID
 {
@@ -1841,8 +1859,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (NSArray<NSDictionary*> *)pendingChangesetsForNodeID:(NSString *)nodeID
 {
@@ -1869,8 +1887,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (void)didMergeDataWithETag:(NSString *)eTag forNodeID:(NSString *)nodeID
 {
@@ -1917,8 +1935,8 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudTransaction.html
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (void)skipDataUploadsForNodeID:(NSString *)nodeID
 {

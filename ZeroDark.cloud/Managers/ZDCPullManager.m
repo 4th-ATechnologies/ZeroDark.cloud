@@ -3942,7 +3942,9 @@ static NSUInteger const kMaxFailCount = 8;
 				                          fileExtension: nil
 				                            transaction: transaction];
 				
-				NSString *newName = [nodeManager resolveNamingConflictForNode:node transaction:transaction];
+				NSString *newName =
+				  [nodeManager resolveNamingConflict: node
+				                         transaction: transaction];
 				
 				node = [node copy];
 				node.name = newName;

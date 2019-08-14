@@ -35,6 +35,8 @@ static ZDCCloudPathManager *sharedInstance = nil;
 
 /**
  * See header file for description.
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudPathManager.html
  */
 - (nullable ZDCCloudLocator *)cloudLocatorForNode:(ZDCNode *)node
                                       transaction:(YapDatabaseReadTransaction *)transaction
@@ -44,6 +46,8 @@ static ZDCCloudPathManager *sharedInstance = nil;
 
 /**
  * See header file for description.
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudPathManager.html
  */
 - (nullable ZDCCloudLocator *)cloudLocatorForNode:(ZDCNode *)node
                                     fileExtension:(nullable NSString *)fileExt
@@ -70,6 +74,8 @@ static ZDCCloudPathManager *sharedInstance = nil;
 
 /**
  * See header file for description.
+ * Or view the reference docs online:
+ * https://apis.zerodark.cloud/Classes/ZDCCloudPathManager.html
  */
 - (nullable ZDCCloudPath *)cloudPathForNode:(ZDCNode *)node
                                 transaction:(YapDatabaseReadTransaction *)transaction
@@ -79,6 +85,8 @@ static ZDCCloudPathManager *sharedInstance = nil;
 
 /**
  * See header file for description.
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudPathManager.html
  */
 - (ZDCCloudPath *)cloudPathForNode:(ZDCNode *)node
                      fileExtension:(NSString *)fileExt
@@ -130,6 +138,8 @@ static ZDCCloudPathManager *sharedInstance = nil;
 
 /**
  * See header file for description.
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudPathManager.html
  */
 - (NSString *)cloudNameForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
@@ -149,15 +159,27 @@ static ZDCCloudPathManager *sharedInstance = nil;
 		return nil;
 	}
 	
-	NSData *dirSalt = parent.dirSalt;
-	if (dirSalt == nil) {
+	NSData *parentDirSalt = parent.dirSalt;
+	if (parentDirSalt == nil) {
 		ZDCLogWarn(@"Cannot derive cloudName for node(%@): node.parent.dirSalt is nil", node.name);
 		return nil;
 	}
 	
-	NSString *nameToHash = [node.name lowercaseString];
+	return [self cloudNameForName:node.name withParentDirSalt:parentDirSalt];
+}
+
+/**
+ * Private method - declared in ZDCCloudPathManagerPrivate.h
+ */
+- (NSString *)cloudNameForName:(NSString *)name withParentDirSalt:(NSData *)parentDirSalt
+{
+	// The treesystem is case-insensitive.
+	// See discussion here for details & explanation:
+	// https://zerodarkcloud.readthedocs.io/en/latest/client/tree/
+	//
+	NSString *nameToHash = [name lowercaseString];
 	
-	return [nameToHash KDFWithSeedKey:dirSalt label:@"file_salt_label"];
+	return [nameToHash KDFWithSeedKey:parentDirSalt label:@"file_salt_label"];
 }
 
 @end

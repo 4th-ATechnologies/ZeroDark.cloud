@@ -1,5 +1,6 @@
 #import "ZDCNodeManager.h"
 
+#import "ZDCCloudNodeManager.h"
 #import "ZDCCloudPathManager.h"
 #import "ZDCDatabaseManager.h"
 #import "ZDCLocalUser.h"
@@ -1677,7 +1678,7 @@ static ZDCNodeManager *sharedInstance = nil;
  * Or view the reference docs online:
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
  */
-- (NSString *)resolveNamingConflictForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
+- (NSString *)resolveNamingConflict:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
 	
@@ -1731,9 +1732,6 @@ static ZDCNodeManager *sharedInstance = nil;
 	NSString *newName = nil;
 	BOOL done = NO;
 	
-//	ZDCNode *nodeCopy = nil;
-//	ZDCUser *nodeOwner = nil;
-	
 	do
 	{
 		if (name_ext)
@@ -1743,31 +1741,29 @@ static ZDCNodeManager *sharedInstance = nil;
 		
 		BOOL conflicting = NO;
 		
-		ZDCNode *conflictingNode = [self findNodeWithName:newName parentID:node.parentID transaction:transaction];
+		ZDCNode *conflictingNode =
+		  [self findNodeWithName: newName
+		                parentID: node.parentID
+		             transaction: transaction];
+		
 		if (conflictingNode)
 		{
 			conflicting = YES;
 		}
-//		else if (checkForOrphanedRcrds)
+//		else
 //		{
-//			if (nodeCopy == nil)
-//				nodeCopy = [node copy];
-//
-//			if (nodeOwner == nil)
-//				nodeOwner = [CloudPathManager ownerForNode:node transaction:transaction];
-//
+//			ZDCNode *nodeCopy = [node copy];
 //			nodeCopy.name = newName;
-//			nodeCopy.cloudName = [CloudPathManager cloudNameForNode:nodeCopy transaction:transaction];
 //
-//			ZDCCloudPath *cloudPath =
-//			  [CloudPathManager cloudPathForNode:nodeCopy fileExtension:nil transaction:transaction];
+//			ZDCCloudLocator *locator =
+//			  [[ZDCCloudPathManager sharedInstance] cloudLocatorForNode:nodeCopy transaction:transaction];
 //
 //			ZDCCloudNode *conflictingCloudNode =
-//			  [CloudNodeManager findCloudNodeWithCloudPath: cloudPath
-//			                                        bucket: nodeOwner.aws_bucket
-//			                                        region: nodeOwner.aws_region
-//			                                   localUserID: node.localUserID
-//			                                   transaction: transaction];
+//			  [[ZDCCloudNodeManager sharedInstance] findCloudNodeWithCloudPath: locator.cloudPath
+//			                                                            bucket: locator.bucket
+//			                                                            region: locator.region
+//			                                                       localUserID: nodeCopy.localUserID
+//			                                                       transaction: transaction];
 //
 //			if (conflictingCloudNode)
 //			{

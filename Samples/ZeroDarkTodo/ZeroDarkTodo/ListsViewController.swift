@@ -285,7 +285,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
         
 		databaseConnection.read { (transaction) in
 			
-			let vt = transaction.extension(Ext_View_Lists) as? YapDatabaseManualViewTransaction
+			let vt = transaction.extension(Ext_View_Lists) as? YapDatabaseViewTransaction
 			if vt != nil {
 				
 				self.mappings = YapDatabaseViewMappings.init(groups: [self.localUserID], view: Ext_View_Lists)
@@ -307,7 +307,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		var list: List? = nil
 		databaseConnection.read({ (transaction) in
 			
-			let viewTransaction = transaction.ext(Ext_View_Lists) as! YapDatabaseManualViewTransaction
+			let viewTransaction = transaction.ext(Ext_View_Lists) as! YapDatabaseViewTransaction
 			list = viewTransaction.object(at: indexPath, with: self.mappings) as? List
 		})
 		
@@ -375,9 +375,9 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		//
 		// ^^^^^^^^^^ Read this file ^^^^^^^^^^
 		
-		let list = List(localUserID: localUserID, title: title)
+		var listID: String? = nil
 		
-		// Next we perform a database transaction.
+		// Perform a database transaction.
 		//
 		// Note that we're doing this using an asynchronous ReadWrite transaction.
 		// Apple strongly encourages us to never perform synchronous disk IO on the main thread.
@@ -386,6 +386,44 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		// (YapDatabase encourages the same thing, for the same reason.)
 		
 		db.rwDatabaseConnection.asyncReadWrite({ (transaction) in
+			
+			guard let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID) else {
+				return // from transaction
+			}
+			
+			
+			// In order to create the node, we're going to have to specify where the node goes within the treesystem.
+			// We already know where we want it to go.
+			//
+			// As described in README.md:
+			//
+			//       (home)
+			//       /    \
+			// (listA)    (listB)
+			//
+			// So we need to convert this into a treesystemPath.
+			// This is similar to a filepath: ~/foo/bar/whatever
+			//
+			// For more information on treesystem paths, check out the docs here:
+			// https://zerodarkcloud.readthedocs.io/en/latest/advanced/tree/
+			
+			var path = ZDCTreesystemPath(pathComponents: [ title ])
+			
+			// Every node in the treesystem has a name.
+			// And all the children of node X need to have different names.
+			// I.e. we cannot have 2 child nodes of X both named "foobar".
+			//
+			// In a similar manner, for this sample project,
+			// we want to ensure there aren't 2 List's with the same name.
+			//
+			// So we're going to use treesystem to handle the unique-name stuff for us.
+			
+			path = cloudTransaction.conflictFreePath(path)
+			
+			// Now we can create our list.
+			
+			let list = List(localUserID: localUserID, title: path.nodeName)
+			listID = list.uuid
 			
 			// Store the List object in the database.
 			//
@@ -398,90 +436,37 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 			
 			transaction.setObject(list, forKey: list.uuid, inCollection: kZ2DCollection_List)
 			
-			// Where does this List object go within the context of the UI.
-			// For example, imagine the situation in which there are multiple lists:
-			//
-			// - Groceries
-			// - Weekend Chores
-			// - Stuff to get @ hardware store
-			//
-			// We're going to display these in a TableView to the user.
-			// How do we order the items ?
-			// Do we automatically sort them somehow ?
-			// Or do we allow the user to sort them manually ?
-			//
-			// For our UI we've decided to let the user sort them manually.
-			// This means we also want to store the order within the database.
-			// And to accomplish this, we're using an extension that does most of the work for us.
-			//
-			// So we just need to add the {collection,key} tuple to YapDatabaseManualView.
-			
-			if let vt = transaction.ext(Ext_View_Lists) as? YapDatabaseManualViewTransaction {
+			do {
 				
-				vt.addKey(list.uuid, inCollection:kZ2DCollection_List, toGroup: self.localUserID)
-			}
-			
-			// The ZeroDarkCloud framework supports multiple localUser's.
-			// In fact, this is part of the sample app.
-			// It allows you to login to multiple users, and switch back and forth between them in the UI.
-			//
-			// So let's get a reference to the cloud of the correct localUser.
-			
-			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: self.localUserID) {
+				// Create the corresponding node.
 				
-				// In order to create the node, we're going to have to specify where the node goes within the treesystem.
-				// We already know where we want it to go.
-				//
-				// As described in README.md:
-				//
-				//       (home)
-				//       /    \
-				// (listA)    (listB)
-				//
-				// So we need to convert this into a treesystemPath.
-				// This is similar to a filepath: ~/foo/bar/whatever
-				//
-				// Basically, every node has a name.
-				// And all the children of node X need to have different names.
-				// I.e. we cannot have 2 lists both named "foobar".
-				//
-				// In our case, we actually don't care what the name of the node is.
-				// It really doesn't matter to us, so we're just going to use a UUID.
-				//
-				// For more information on treesystem paths, check out the docs here:
-				// https://zerodarkcloud.readthedocs.io/en/latest/advanced/tree/
+				let node = try cloudTransaction.createNode(withPath: path)
 				
-				let treesystemPath = ZDCTreesystemPath(pathComponents: [ UUID().uuidString ])
+				// And then link our object to the node.
+				// This is optional, but it makes life easier for this particular app.
 				
-				do {
-					
-					// Create the corresponding node.
-					
-					let node = try cloudTransaction.createNode(withPath: treesystemPath)
-					
-					// And then link our object to the node.
-					// This is optional, but it makes life easier for this particular app.
-					
-					try cloudTransaction.linkNodeID(node.uuid, toKey: list.uuid, inCollection: kZ2DCollection_List)
-					
-				} catch {
-					
-					// If this happens, it's because we passed an invalid parameter.
-					// Here are some examples:
-					//
-					// - Our treesystem path was invalid.
-					//   As in, we passed "/foo/bar", but there's no existing "/foo" node.
-					//
-					// - There's already a node at that path,
-					//   and it's linked to a different List object.
-					
-					print("Error creating node for list: \(error)")
-				}
+				try cloudTransaction.linkNodeID(node.uuid, toKey: list.uuid, inCollection: kZ2DCollection_List)
+				
+			} catch {
+				
+				// If this happens, it's because we passed an invalid parameter.
+				// Here are some examples:
+				//
+				// - Our treesystem path was invalid.
+				//   As in, we passed "/foo/bar", but there's no existing "/foo" node.
+				//
+				// - There's already a node at that path,
+				//   and it's linked to a different List object.
+				
+				print("Error creating node for list: \(error)")
 			}
             
 		}, completionBlock: {
 			
-			self.pushItemsViewForListID(listID: list.uuid)
+			if let listID = listID {
+				
+				self.pushItemsViewForListID(listID: listID)
+			}
 		})
 	}
     
@@ -797,38 +782,9 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
         return true
     }
     
-    func tableView(_ tableView: UITableView, shouldIndentWhileEditingRowAt indexPath: IndexPath) -> Bool {
-        return false
-    }
-    
-    func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
-        
-        let list: List?  = self.listAtIndexPath(fromIndexPath)
-        if(list != nil)
-        {
-            
-            ZDCManager.rwDatabaseConnection().asyncReadWrite({ (transaction) in
-                
-                let vt = transaction.ext(Ext_View_Lists) as! YapDatabaseManualViewTransaction
-                
-                vt.removeItem(at: UInt(fromIndexPath.row),
-                              inGroup: self.localUserID)
-                
-                vt.insertKey((list?.uuid)!,
-                             inCollection: kZ2DCollection_List,
-                             at: UInt(to.row),
-                             inGroup: self.localUserID)
-                
-            }, completionBlock: {
-                
-            })
-        }
-    }
-    
-    func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the item to be re-orderable.
-        return true
-    }
+	func tableView(_ tableView: UITableView, shouldIndentWhileEditingRowAt indexPath: IndexPath) -> Bool {
+		return false
+	}
     
     
 	func tableView(_ tableView: UITableView,

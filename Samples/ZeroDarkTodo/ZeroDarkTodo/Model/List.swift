@@ -58,7 +58,11 @@ class List: NSCopying, Codable {
 	///
 	var title: String
 
-	init(uuid: String, localUserID: String, title: String) {
+	
+	init(uuid: String,
+	     localUserID: String,
+	     title: String)
+	{
 		self.uuid = uuid
 		self.localUserID = localUserID
 		self.title = title
@@ -73,31 +77,6 @@ class List: NSCopying, Codable {
 		
 		self.init(uuid: uuid, localUserID: source.localUserID, title: source.title)
 	}
-	
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: CloudCodable
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	init(fromCloudData cloudData: Data, node: ZDCNode) throws {
-		
-		let decoder = JSONDecoder()
-		let cloudJSON = try decoder.decode(ListCloudJSON.self, from: cloudData)
-		
-		self.uuid = UUID().uuidString
-		self.localUserID = node.localUserID
-		
-		self.title = cloudJSON.title
-	}
-	
-	func cloudEncode() throws -> Data {
-		
-		let cloudJSON = ListCloudJSON(fromList: self)
-		
-		let encoder = JSONEncoder()
-		let data = try encoder.encode(cloudJSON)
-		
-		return data
-	}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: NSCopying
@@ -109,25 +88,5 @@ class List: NSCopying, Codable {
 		                localUserID : localUserID,
 		                title       : title)
 		return copy
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: -
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/// We only store a subset of the object in the cloud.
-/// This class acts as a JSON wrapper for the information that gets encoded/decoded into JSON for cloud storage.
-///
-class ListCloudJSON: Codable {
-	
-	enum CodingKeys: String, CodingKey {
-		case title = "title"
-	}
-	
-	var title: String
-	
-	init(fromList list: List) {
-		self.title = list.title
 	}
 }

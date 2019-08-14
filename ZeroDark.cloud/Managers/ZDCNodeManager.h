@@ -480,14 +480,20 @@ NS_SWIFT_NAME(findNode(withCloudPath:bucket:region:localUserID:zAppID:transactio
 
 /**
  * This method may be used to resolve a conflict that can occur when
- * two devices attempt to create a node with the same path.
+ * two nodes are attempting to use the same name.
  *
- * When this occurs, the system starts by asking the delegate to resolve the conflict.
- * If the delegate doesn't take appropriate action, the system will automatically resolve the conflict
- * by renaming the node.
+ * This method appends a number to the end of the name until it's unique.
+ * For example, if the given node.name is "Foobar.ext", this method may return "Foobar 2.ext".
+ *
+ * @param node
+ *   The node that's in conflict with another node.
+ *
+ * @param transaction
+ *   A database transaction - allows the method to read from the database.
+ *
+ * @return A node.name that's safe to use (i.e. without it being in conflict with another known node)
  */
-- (NSString *)resolveNamingConflictForNode:(ZDCNode *)node
-                               transaction:(YapDatabaseReadTransaction *)transaction;
+- (NSString *)resolveNamingConflict:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction;
 
 @end
 

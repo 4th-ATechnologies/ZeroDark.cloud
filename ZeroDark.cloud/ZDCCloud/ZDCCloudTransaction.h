@@ -53,7 +53,7 @@ typedef NS_ENUM(NSInteger, ZDCCloudErrorCode) {
 };
 
 /**
- * Bitmask for specifiying which "meta" components to download from the cloud.
+ * Bitmask for specifiying which components that need to be downloaded from the cloud.
  */
 typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
 	
@@ -142,7 +142,7 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
                                       error:(NSError *_Nullable *_Nullable)outError;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Node Management
+#pragma mark Node Utilities
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -178,6 +178,17 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  */
 - (nullable ZDCNode *)nodeWithPath:(ZDCTreesystemPath *)path
  NS_SWIFT_NAME(nodeWithPath(_:));
+
+/**
+ * Checks to see if there's already a node occupying the given path.
+ * If so, this method will resolve the conflict by appending a number to the end of the nodeName until it's unique.
+ * For example, if the given nodeNode is "Foobar.ext", this method may return "Foobar 2.ext".
+ */
+- (ZDCTreesystemPath *)conflictFreePath:(ZDCTreesystemPath *)path;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Node Management
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Creates a new node with the given path,
