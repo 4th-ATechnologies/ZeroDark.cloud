@@ -1,4 +1,4 @@
-# ZeroDark.cloud
+# ZeroDark.cloud™
 
 A zero-knowledge sync & messaging framework for your app, built atop AWS & the Ethereum blockchain.
 
