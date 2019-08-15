@@ -470,71 +470,84 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		})
 	}
     
-    private func renameList (listID: String, newTitle: String)
-    {
+	private func renameList (listID: String, newTitle: String) {
+		
 		let zdc = ZDCManager.zdc()
-
-        ZDCManager.rwDatabaseConnection().asyncReadWrite({ (transaction) in
-            
-            let object  = transaction.object(forKey: listID, inCollection: kZ2DCollection_List)
-            if var list = object as? List {
-                
-                list = list.copy() as! List
-                list.title = newTitle
-                
-                transaction.setObject(list ,
-                                      forKey: list.uuid,
-                                      inCollection: kZ2DCollection_List)
-					
-					if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: self.localUserID),
-						let listNode = cloudTransaction.linkedNode(forKey: list.uuid, inCollection: kZ2DCollection_List)
-					{
-						cloudTransaction.queueDataUpload(forNodeID: listNode.uuid, withChangeset: nil)
-					}
-
-            }
-        }, completionBlock: {
-            // refrehes in databaseConnectionDidUpdate
-        })
-        
-    }
+		let localUserID = self.localUserID
+		
+		ZDCManager.rwDatabaseConnection().asyncReadWrite({ (transaction) in
+			
+			guard var list = transaction.object(forKey: listID, inCollection: kZ2DCollection_List) as? List else {
+				return
+			}
+			
+			list = list.copy() as! List
+			list.title = newTitle
+			
+			transaction.setObject(list, forKey: list.uuid, inCollection: kZ2DCollection_List)
+			
+			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
+				var listNode = cloudTransaction.linkedNode(forKey: list.uuid, inCollection: kZ2DCollection_List)
+			{
+				listNode = listNode.copy() as! ZDCNode
+				listNode.name = newTitle
+				
+				do {
+					try cloudTransaction.modifyNode(listNode)
+				} catch {
+					print("Error renaming node for list: \(error)")
+				}
+			}
+		})
+	}
 	
-	
-	//TODO: check is this is shared to me or I am the owner
-	
-	private func isOwnedByMe (listID: String) -> Bool
-	{
-		return true;
+	private func isOwnedByMe(listID: String) -> Bool {
+		
+		let zdc = ZDCManager.zdc()
+		let localUserID = self.localUserID
+		
+		var result = true
+		databaseConnection.read {(transaction) in
+			
+			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
+				let listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List)
+			{
+				// If our listNode is a pointer,
+				// then the owner is somebody else.
+				//
+				// In other words, the node in our treesystem is pointing to
+				// a list in another user's treesystem.
+				
+				if listNode.isPointer {
+					result = false
+				}
+			}
+		}
+		
+		return result
 	}
     
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: Actions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
-    //	override func setEditing(_ editing: Bool, animated: Bool) {
-    //		super.setEditing(editing, animated: animated)
-    //		listsTable.isEditing  = editing
-    //	}
-    
- 
-    @objc func didHitTitle(_ sender: Any)
-    {
+
+	@objc func didHitTitle(_ sender: Any) {
+		
 		ZDCManager.uiTools().pushSettings(forLocalUserID: localUserID,
-													 with: self.navigationController! )
+		                                            with: self.navigationController!)
 	}
     
-    @objc func didHitSettings(_ sender: Any)
-    {
-        AppDelegate.sharedInstance().toggleSettingsView()
-    }
-    
-    @objc func didSetEditing(_ sender: Any)
-    {
-        let willEdit = !self.isEditing
-        self.setEditing(willEdit, animated: true)
-        listsTable.isEditing  = willEdit
-    }
-    
+	@objc func didHitSettings(_ sender: Any) {
+		
+		AppDelegate.sharedInstance().toggleSettingsView()
+	}
+	
+	@objc func didSetEditing(_ sender: Any) {
+		
+		let willEdit = !self.isEditing
+		self.setEditing(willEdit, animated: true)
+		listsTable.isEditing  = willEdit
+	}
     
     @objc func didTapAddItemButton(_ sender: Any)
     {
@@ -853,4 +866,3 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 	}
 	
 }
-

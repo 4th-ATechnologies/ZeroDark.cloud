@@ -3564,6 +3564,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	// Generate ".rcrd" file content
 	
 	__block NSError *error = nil;
+	__block ZDCNode *node = nil;
 	__block NSData *rcrdData = nil;
 	
 	__block NSArray<NSString*> *missingKeys = nil;
@@ -3574,7 +3575,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	[[self roConnection] readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
-		ZDCNode *node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
+		node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
 		
 		rcrdData = [cryptoTools cloudRcrdForNode: node
 		                             transaction: transaction
@@ -3596,6 +3597,8 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		operation.ephemeralInfo.lastChangeToken = pullInfo.latestChangeID_local;
 	}];
+	
+	context.eTag = node.eTag_rcrd;
 	
 	if (error)
 	{
@@ -3692,10 +3695,10 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		NSURLComponents *urlComponents = nil;
 		NSMutableURLRequest *request =
-		  [S3Request putObject:stagingPath
-		              inBucket:operation.cloudLocator.bucket
-		                region:operation.cloudLocator.region
-		      outUrlComponents:&urlComponents];
+		  [S3Request putObject: stagingPath
+		              inBucket: operation.cloudLocator.bucket
+		                region: operation.cloudLocator.region
+		      outUrlComponents: &urlComponents];
 		
 		[AWSSignature signRequest: request
 		               withRegion: operation.cloudLocator.region
@@ -5564,8 +5567,8 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		operation.ephemeralInfo.continuation_data = nil;
 	}
 	
-	NSLog(@"continuation_rcrd: %@", operation.ephemeralInfo.continuation_rcrd);
-	NSLog(@"continuation_data: %@", operation.ephemeralInfo.continuation_data);
+	DDLogVerbose(@"continuation_rcrd: %@", operation.ephemeralInfo.continuation_rcrd);
+	DDLogVerbose(@"continuation_data: %@", operation.ephemeralInfo.continuation_data);
 	
 	operation.ephemeralInfo.pollContext = nil;
 	
@@ -6091,7 +6094,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	// Associate the pollContext with the operation.
 	// This lets us know to keep trying to the poll operation, instead of the staging operation.
 	
-	ZDCCloudOperation *operation = (ZDCCloudOperation *)[pipeline operationWithUUID:taskContext.operationUUID];
+	ZDCCloudOperation *operation = [self operationForContext:taskContext];
 	operation.ephemeralInfo.multipollContext = multipollContext;
 	
 	// Edge case check:
@@ -6462,7 +6465,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	// Associate the pollContext with the operation.
 	// This lets us know to keep trying to the poll operation, instead of the staging operation.
 	
-	ZDCCloudOperation *operation = (ZDCCloudOperation *)[pipeline operationWithUUID:context.operationUUID];
+	ZDCCloudOperation *operation = [self operationForContext:context];
 	operation.ephemeralInfo.touchContext = touchContext;
 	
 	// Edge case check:
@@ -6508,25 +6511,66 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		// Calculate staging path
 		
-		BOOL isMultipart = (operation.multipartInfo != nil);
+		NSString *stagingPath = nil;
+		NSString *bucket = nil;
+		AWSRegion region = AWSRegion_Invalid;
 		
-		NSString *stagingPath =
-		  [self stagingPathForOperation: operation
-		                    withContext: context
-		                      multipart: isMultipart
-		                          touch: YES];
+		NSString *continuation =
+		  operation.ephemeralInfo.continuation_rcrd ?:
+		  operation.ephemeralInfo.continuation_data;
+		
+		if (continuation)
+		{
+			NSMutableArray<NSString *> *components = [[continuation componentsSeparatedByString:@"/"] mutableCopy];
+			
+			// components[0] = staging
+			// components[1] = version
+			// components[2] = zAppID[:callerID]
+			// components[3] = [touch:]command[:opts]
+			
+			NSUInteger const idx = 3;
+			
+			if (components.count >= (idx+1))
+			{
+				NSString *component = components[idx];
+				NSString *prefix = @"touch:";
+				
+				if (![component hasPrefix:prefix])
+				{
+					components[idx] = [prefix stringByAppendingString:component];
+				}
+			}
+			
+			stagingPath = [components componentsJoinedByString:@"/"];
+			
+			ZDCCloudLocator *cloudLocator = operation.dstCloudLocator ?: operation.cloudLocator;
+			bucket = cloudLocator.bucket;
+			region = cloudLocator.region;
+		}
+		else
+		{
+			BOOL isMultipart = (operation.multipartInfo != nil);
+			
+			stagingPath = [self stagingPathForOperation: operation
+			                                withContext: context
+			                                  multipart: isMultipart
+			                                      touch: YES];
+			
+			bucket = operation.cloudLocator.bucket;
+			region = operation.cloudLocator.region;
+		}
 		
 		// Fire off request
 		
 		NSURLComponents *urlComponents = nil;
 		NSMutableURLRequest *request =
 		  [S3Request putObject: stagingPath
-		              inBucket: operation.cloudLocator.bucket
-		                region: operation.cloudLocator.region
+		              inBucket: bucket
+		                region: region
 		      outUrlComponents: &urlComponents];
 		
 		[AWSSignature signRequest: request
-		               withRegion: operation.cloudLocator.region
+		               withRegion: region
 		                  service: AWSService_S3
 		              accessKeyID: auth.aws_accessKeyID
 		                   secret: auth.aws_secret
