@@ -1,3 +1,12 @@
+/**
+ * ZeroDark.cloud
+ *
+ * Homepage      : https://www.zerodark.cloud
+ * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
+ * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
+ * API Reference : https://apis.zerodark.cloud
+**/
+
 #import "ZDCNodeManager.h"
 
 #import "ZDCCloudNodeManager.h"
@@ -1736,8 +1745,6 @@ static ZDCNodeManager *sharedInstance = nil;
 			newName = [NSString stringWithFormat:@"%@ %llu.%@", name_base, numberToAppend, name_ext];
 		else
 			newName = [NSString stringWithFormat:@"%@ %llu", name_base, numberToAppend];
-		
-		BOOL conflicting = NO;
 		
 		ZDCNode *conflictingNode =
 		  [self findNodeWithName: newName
