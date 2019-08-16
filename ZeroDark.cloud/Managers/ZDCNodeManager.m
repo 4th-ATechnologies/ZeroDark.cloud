@@ -59,7 +59,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCTrunkNode *)trunkNodeForLocalUserID:(NSString *)localUserID
                                             zAppID:(NSString *)zAppID
@@ -80,7 +80,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCTrunkNode *)trunkNodeForNode:(ZDCNode *)node
                                 transaction:(YapDatabaseReadTransaction *)transaction
@@ -123,7 +123,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCNode *)anchorNodeForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
@@ -154,7 +154,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (NSString *)ownerIDForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
@@ -172,7 +172,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCUser *)ownerForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
@@ -191,7 +191,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCNode *)targetNodeForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
@@ -216,7 +216,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCTreesystemPath *)pathForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
@@ -277,7 +277,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (NSArray<NSString *> *)parentNodeIDsForNode:(ZDCNode *)node
                                   transaction:(YapDatabaseReadTransaction *)transaction
@@ -322,7 +322,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (BOOL)isNode:(NSString *)inNodeID
  aDescendantOf:(NSString *)potentialParentID
@@ -366,7 +366,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)enumerateNodeIDsWithParentID:(NSString *)parentID
                          transaction:(YapDatabaseReadTransaction *)transaction
@@ -451,7 +451,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)recursiveEnumerateNodeIDsWithParentID:(NSString *)parentID
                                   transaction:(YapDatabaseReadTransaction *)transaction
@@ -517,7 +517,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)enumerateNodesWithParentID:(NSString *)parentID
                        transaction:(YapDatabaseReadTransaction *)transaction
@@ -602,7 +602,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)recursiveEnumerateNodesWithParentID:(NSString *)parentID
                                 transaction:(YapDatabaseReadTransaction *)transaction
@@ -668,7 +668,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (BOOL)isEmptyNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
@@ -695,7 +695,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCNode *)findNodeWithName:(NSString *)nodeName
                               parentID:(NSString *)parentID
@@ -831,7 +831,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCNode *)findNodeWithPath:(ZDCTreesystemPath *)path
                            localUserID:(NSString *)localUserID
@@ -872,7 +872,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (ZDCNode *)findNodeWithCloudName:(NSString *)cloudName
                           parentID:(NSString *)parentID
@@ -1019,7 +1019,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (ZDCNode *)findNodeWithCloudID:(NSString *)cloudID
                      localUserID:(NSString *)localUserID
@@ -1129,7 +1129,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCNode *)findNodeWithCloudPath:(ZDCCloudPath *)cloudPath
                                      bucket:(NSString *)bucket
@@ -1166,7 +1166,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCNode *)findNodeWithDirPrefix:(NSString *)prefix
                                     bucket:(NSString *)bucket
@@ -1281,7 +1281,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCNode *)findNodeWithPointeeID:(NSString *)pointeeID
                                 localUserID:(NSString *)localUserID
@@ -1396,7 +1396,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (NSArray<NSString *> *)allNodeIDsWithLocalUserID:(NSString *)localUserID
                                        transaction:(YapDatabaseReadTransaction *)transaction
@@ -1460,7 +1460,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (NSArray<NSString *> *)allNodeIDsWithLocalUserID:(NSString *)localUserID
                                             zAppID:(NSString *)zAppID
@@ -1516,7 +1516,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
 **/
 - (NSArray<NSString *> *)allUploadedNodeIDsWithLocalUserID:(NSString *)localUserID
                                                     zAppID:(NSString *)zAppID
@@ -1636,7 +1636,7 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (BOOL)resetPermissionsForNode:(ZDCNode *)node transaction:(YapDatabaseReadWriteTransaction *)transaction
 {
@@ -1676,16 +1676,14 @@ static ZDCNodeManager *sharedInstance = nil;
 /**
  * See header file for description.
  * Or view the reference docs online:
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCNodeManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (NSString *)resolveNamingConflict:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
 	
 	NSString *name = node.name;
-	if (name.length == 0)
-	{
-		ZDCLogWarn(@"%@: node.name.length == 0", THIS_METHOD);
+	if (name.length == 0) {
 		name = [NSString zdcUUIDString];
 	}
 	
@@ -1734,7 +1732,7 @@ static ZDCNodeManager *sharedInstance = nil;
 	
 	do
 	{
-		if (name_ext)
+		if (name_ext.length > 0)
 			newName = [NSString stringWithFormat:@"%@ %llu.%@", name_base, numberToAppend, name_ext];
 		else
 			newName = [NSString stringWithFormat:@"%@ %llu", name_base, numberToAppend];
@@ -1746,32 +1744,7 @@ static ZDCNodeManager *sharedInstance = nil;
 		                parentID: node.parentID
 		             transaction: transaction];
 		
-		if (conflictingNode)
-		{
-			conflicting = YES;
-		}
-//		else
-//		{
-//			ZDCNode *nodeCopy = [node copy];
-//			nodeCopy.name = newName;
-//
-//			ZDCCloudLocator *locator =
-//			  [[ZDCCloudPathManager sharedInstance] cloudLocatorForNode:nodeCopy transaction:transaction];
-//
-//			ZDCCloudNode *conflictingCloudNode =
-//			  [[ZDCCloudNodeManager sharedInstance] findCloudNodeWithCloudPath: locator.cloudPath
-//			                                                            bucket: locator.bucket
-//			                                                            region: locator.region
-//			                                                       localUserID: nodeCopy.localUserID
-//			                                                       transaction: transaction];
-//
-//			if (conflictingCloudNode)
-//			{
-//				conflicting = YES;
-//			}
-//		}
-		
-		if (conflicting) {
+		if (conflictingNode) {
 			numberToAppend++;
 		}
 		else {
