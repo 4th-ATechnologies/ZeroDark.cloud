@@ -41,7 +41,7 @@ class ListsViewController: UIViewController, UITableViewDelegate, UITableViewDat
 SettingsViewControllerDelegate, ListTableCellDelegate {
 	
 	var databaseConnection: YapDatabaseConnection!
-	var mappings: YapDatabaseViewMappings!
+	var mappings: YapDatabaseViewMappings?
 	var btnTitle: IconTitleButton?
     
 	var localUserID: String = ""
@@ -146,26 +146,24 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 
     }
     
-    override func viewWillAppear(_ animated: Bool) {
+	override func viewWillAppear(_ animated: Bool) {
         
-        self.setupDatabaseConnection()
+		self.setupDatabaseConnection()
         
-        var localUser: ZDCLocalUser!
-        databaseConnection .read { (transaction) in
-            localUser = transaction.object(forKey: self.localUserID, inCollection: kZDCCollection_Users) as? ZDCLocalUser
-        }
-        
-        self.setNavigationTitle(user: localUser)
-        listsTable.reloadData()
+		var localUser: ZDCLocalUser!
+		databaseConnection.read {(transaction) in
+			
+			localUser = transaction.object(forKey: self.localUserID, inCollection: kZDCCollection_Users) as? ZDCLocalUser
+		}
 		
-
-		
-    }
-    
-    override func viewDidDisappear(_ animated: Bool) {
-		
-        NotificationCenter.default.removeObserver(self)
-     }
+		self.setNavigationTitle(user: localUser)
+		listsTable.reloadData()
+	}
+	
+	override func viewDidDisappear(_ animated: Bool) {
+	
+		NotificationCenter.default.removeObserver(self)
+	}
     
 	private func setNavigationTitle(user: ZDCLocalUser) {
 		
@@ -196,11 +194,11 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 			self?.btnTitle?.setImage(image ?? defaultImage(), for: .normal)
 		}
 		
-		ZDCManager.imageManager().fetchUserAvatar(user,
-		                                          withProcessingID: "30*30",
-		                                          processingBlock: processing,
-		                                          preFetch: preFetch,
-		                                          postFetch: postFetch)
+		ZDCManager.imageManager().fetchUserAvatar( user,
+		                         withProcessingID: "30*30",
+		                          processingBlock: processing,
+		                                 preFetch: preFetch,
+		                                postFetch: postFetch)
 	}
 	
 
@@ -221,83 +219,70 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
         
     }
     
-    @objc func databaseConnectionDidUpdate(notification: Notification) {
+	@objc func databaseConnectionDidUpdate(notification: Notification) {
         
-        let notifications = notification.userInfo?[kNotificationsKey] as! [Notification]
+		let notifications = notification.userInfo?[kNotificationsKey] as! [Notification]
+		
+		guard let mappings = self.mappings else {
+			
+			initializeMappings()
+			listsTable.reloadData()
+			return;
+		}
+		
+		let ext = databaseConnection.extension(Ext_View_Lists) as! YapDatabaseViewConnection
+		
+		var rowChanges = NSArray()
+		var sectionChanges = NSArray()
         
-        if (mappings == nil)
-        {
-            initializeMappings()
-            listsTable.reloadData()
-            return;
-        }
-        
-        let ext:YapDatabaseViewConnection =  databaseConnection.extension(Ext_View_Lists) as! YapDatabaseViewConnection
-        
-        var rowChanges = NSArray()
-        var sectionChanges = NSArray()
-        
-        ext.getSectionChanges(&sectionChanges, rowChanges: &rowChanges, for: notifications, with: mappings)
-        
-        if(sectionChanges.count == 0 && rowChanges.count == 0)
-        {		// No changes for the tableView.
-            return
-        }
-        
-        listsTable .beginUpdates()
-        if let changes = rowChanges as? [YapDatabaseViewRowChange] {
-            
-            for theseChanges:YapDatabaseViewRowChange in changes {
-                switch theseChanges.type {
-                    
-                case .delete:
-                    listsTable.deleteRows(at: [theseChanges.indexPath!], with: .automatic)
-                    break
-                    
-                case .insert:
-                    listsTable.insertRows(at: [theseChanges.newIndexPath!], with: .automatic)
-                    break;
-                    
-                case .move:
-                    //  if we performed the move with tableview edit, then they already moved..
-                    // dont move them again, just reload at best
-                    //	 listsTable.moveRow(at: theseChanges.indexPath!, to: theseChanges.newIndexPath!)
-                    listsTable.reloadRows(at: [theseChanges.indexPath!], with: .automatic)
-                    listsTable.reloadRows(at: [theseChanges.newIndexPath!], with: .automatic)
-                    break
-                    
-                case .update:
-                    listsTable.reloadRows(at: [theseChanges.indexPath!], with: .automatic)
-                    break
-                    
-                default:
-                    break
-                }
+		ext.getSectionChanges(&sectionChanges, rowChanges: &rowChanges, for: notifications, with: mappings)
+		
+		if (sectionChanges.count == 0) && (rowChanges.count == 0) {
+			// No changes for the tableView
+			return
+		}
+		
+		if let changes = rowChanges as? [YapDatabaseViewRowChange] {
+			
+			listsTable.beginUpdates()
+			for change in changes {
+				switch change.type {
+					
+					case .delete:
+						listsTable.deleteRows(at: [change.indexPath!], with: .automatic)
+					
+					case .insert:
+						listsTable.insertRows(at: [change.newIndexPath!], with: .automatic)
+					
+					case .move:
+						listsTable.moveRow(at: change.indexPath!, to: change.newIndexPath!)
+						
+						// We would use this is the user manually moved the row
+					//	listsTable.reloadRows(at: [changes.indexPath!], with: .automatic)
+					//	listsTable.reloadRows(at: [changes.newIndexPath!], with: .automatic)
+					
+					case .update:
+						listsTable.reloadRows(at: [change.indexPath!], with: .automatic)
+					
+					default:
+						break
             }
         }
-        
-        listsTable .endUpdates()
-        
-    }
-    
+        listsTable.endUpdates()
+		}
+	}
     
 	private func initializeMappings() {
         
 		databaseConnection.read { (transaction) in
 			
-			let vt = transaction.extension(Ext_View_Lists) as? YapDatabaseViewTransaction
-			if vt != nil {
+			if transaction.extension(Ext_View_Lists) is YapDatabaseViewTransaction {
 				
 				self.mappings = YapDatabaseViewMappings.init(groups: [self.localUserID], view: Ext_View_Lists)
+				self.mappings!.update(with: transaction)
 			}
 			else {
-				
 				// Waiting for view to finish registering
-			}
-            
-			if self.mappings != nil {
-				
-				self.mappings.update(with: transaction)
 			}
 		}
 	}
@@ -305,12 +290,14 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 	func listAtIndexPath(_ indexPath: IndexPath) -> List? {
 		
 		var list: List? = nil
-		databaseConnection.read({ (transaction) in
-			
-			let viewTransaction = transaction.ext(Ext_View_Lists) as! YapDatabaseViewTransaction
-			list = viewTransaction.object(at: indexPath, with: self.mappings) as? List
-		})
+		if let mappings = self.mappings {
 		
+			databaseConnection.read({ (transaction) in
+	
+				let viewTransaction = transaction.ext(Ext_View_Lists) as! YapDatabaseViewTransaction
+				list = viewTransaction.object(at: indexPath, with: mappings) as? List
+			})
+		}
 		return list
 	}
 	
@@ -330,30 +317,29 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		return listNode
 	}
     
-    func numberOfPendingTasksForListID (listID: String) -> Int
-    {
-        var count: Int = 0
-        
-        databaseConnection.read {  (transaction) in
-            if  let vt = transaction.ext(Ext_View_Pending_Tasks) as? YapDatabaseViewTransaction
-            {
-                count = Int(vt.numberOfItems(inGroup: listID))
-            }
-        }
-        return count
-    }
-	
-	
-	func numberOfTotalTasksForListID (listID: String) -> Int
-	{
-		var count: Int = 0
+	func numberOfPendingTasks(listID: String) -> Int {
 		
+		var count: Int = 0
 		databaseConnection.read {  (transaction) in
-			if  let vt = transaction.ext(Ext_View_Tasks) as? YapDatabaseViewTransaction
-			{
+			
+			if let vt = transaction.ext(Ext_View_Pending_Tasks) as? YapDatabaseViewTransaction {
 				count = Int(vt.numberOfItems(inGroup: listID))
 			}
 		}
+		
+		return count
+	}
+	
+	func numberOfTotalTasks(listID: String) -> Int {
+		
+		var count: Int = 0
+		databaseConnection.read { (transaction) in
+			
+			if let vt = transaction.ext(Ext_View_Tasks) as? YapDatabaseViewTransaction {
+				count = Int(vt.numberOfItems(inGroup: listID))
+			}
+		}
+		
 		return count
 	}
 
@@ -714,43 +700,42 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 // MARK: UITableView
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        var result = 0;
-        
-        if(mappings != nil)
-        {
-            result = Int(self.mappings.numberOfItems(inGroup: localUserID))
-        }
-        
-        return result
-    }
+		var result = 0;
+		
+		if let mappings = self.mappings {
+			result = Int(mappings.numberOfItems(inGroup: localUserID))
+		}
+		
+		return result
+	}
     
 	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+		
 		let cell = tableView.dequeueReusableCell(withIdentifier: "ListTableCell", for: indexPath) as! ListTableCell
 		
-		if let list: List = self.listAtIndexPath(indexPath) {
+		if let list = self.listAtIndexPath(indexPath) {
             
 			cell.listID = list.uuid
 			cell.lblTitle?.text = list.title
 			cell.delegate = self;
 			
-			let pendingCount = self.numberOfPendingTasksForListID(listID: list.uuid)
-			let totalCount = self.numberOfTotalTasksForListID(listID: list.uuid)
-	 
+			let pendingCount = self.numberOfPendingTasks(listID: list.uuid)
+			let totalCount = self.numberOfTotalTasks(listID: list.uuid)
 			
 			let format = NSLocalizedString("number_of_tasks", comment: "")
 			let message = String.localizedStringWithFormat(format, pendingCount, totalCount)
 			cell.lblDetail?.text = message
 		
 			let sharedToCount = nodeForList(list)?.shareList.countOfUserIDs(excluding: self.localUserID) ?? 0
-			if(sharedToCount == 0)
-			{
+			if sharedToCount == 0 {
+				
 				cell.lblCount.isHidden = true;
 				cell.btnRemoteUsers.isHidden = true
 			}
-			else
-			{
+			else {
+				
 				cell.btnRemoteUsers.isHidden = false
 				cell.btnRemoteUsers .setImage(ZDCManager.imageManager().defaultMultiUserAvatar(), for: .normal)
 				
@@ -777,24 +762,21 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-        let list: List?  = self.listAtIndexPath(indexPath)
-        if(list != nil)
-        {
-            self.pushItemsViewForListID(listID: list!.uuid)
-        }
-    }
+		if let list = self.listAtIndexPath(indexPath) {
+			self.pushItemsViewForListID(listID: list.uuid)
+		}
+	}
     
-    private func pushItemsViewForListID(listID: String)
-    {
-        let itemVC = TasksViewController.initWithListID(listID)
-        self.navigationController?.pushViewController(itemVC, animated: true)
-    }
+	private func pushItemsViewForListID(listID: String) {
+		let itemVC = TasksViewController.initWithListID(listID)
+		self.navigationController?.pushViewController(itemVC, animated: true)
+	}
     
-    func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
-        return true
-    }
-    
+	func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+		// Return false if you do not want the specified item to be editable.
+		return true
+	}
+	
 	func tableView(_ tableView: UITableView, shouldIndentWhileEditingRowAt indexPath: IndexPath) -> Bool {
 		return false
 	}
