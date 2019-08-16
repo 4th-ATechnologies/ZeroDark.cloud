@@ -80,13 +80,7 @@ typedef NS_ENUM(NSUInteger, ZDCCloudOperationPutType) {
 	 *
 	 * The data is automatically encrypted before being uploaded to the cloud.
 	 */
-	ZDCCloudOperationPutType_Node_Data,
-	
-	/**
-	 * Represents a put of a special "*.rcrd" file, which contains a pointer to another node.
-	 * The pointer information gets encrypted (not readable by the server).
-	 */
-	ZDCCloudOperationPutType_Pointer
+	ZDCCloudOperationPutType_Node_Data
 };
 
 /**
@@ -307,13 +301,6 @@ NS_ASSUME_NONNULL_BEGIN
  * - putType == ZDCCloudOperationPutType_Node_Data
  */
 - (BOOL)isPutNodeDataOperation;
-
-/**
- * Convenience method: returns YES if:
- * - type == ZDCCloudOperationType_Put AND
- * - putType == ZDCCloudOperationPutType_Pointer
- */
-- (BOOL)isPutPointerOperation;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Class Utilities

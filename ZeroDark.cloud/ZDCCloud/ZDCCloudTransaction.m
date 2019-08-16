@@ -2280,11 +2280,6 @@
 					NSAssert(op.cloudLocator != nil, @"cloudLocator is nil !");
 					break;
 				}
-				case ZDCCloudOperationPutType_Pointer:
-				{
-					NSAssert(NO, @"Implement this section when you start implementing pointers...");
-					break;
-				}
 				default:
 				{
 					NSAssert(NO, @"Invalid operation putType !");

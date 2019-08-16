@@ -55,7 +55,6 @@ static NSString *const type_str_avatar     = @"avatar";
 
 static NSString *const putType_str_node_rcrd    = @"rcrd";
 static NSString *const putType_str_node_data    = @"data";
-static NSString *const putType_str_pointer      = @"ptr";
 
 
 @implementation ZDCCloudOperation
@@ -354,7 +353,6 @@ static NSString *const putType_str_pointer      = @"ptr";
 		{
 			case ZDCCloudOperationPutType_Node_Rcrd    : typeStr = @"Put:Node:Rcrd"; break;
 			case ZDCCloudOperationPutType_Node_Data    : typeStr = @"Put:Node:Data"; break;
-			case ZDCCloudOperationPutType_Pointer      : typeStr = @"Put:Ptr";       break;
 			default                                    : typeStr = @"Put:?";         break;
 		}
 	}
@@ -397,7 +395,6 @@ static NSString *const putType_str_pointer      = @"ptr";
 		{
 			case ZDCCloudOperationPutType_Node_Rcrd    : typeStr = @"Put:Rcrd"; break;
 			case ZDCCloudOperationPutType_Node_Data    : typeStr = @"Put:Data"; break;
-			case ZDCCloudOperationPutType_Pointer      : typeStr = @"Put:Ptr";  break;
 			default                                    : typeStr = @"Put:?";    break;
 		}
 	}
@@ -458,11 +455,6 @@ static NSString *const putType_str_pointer      = @"ptr";
 	return (type == ZDCCloudOperationType_Put) && (putType == ZDCCloudOperationPutType_Node_Data);
 }
 
-- (BOOL)isPutPointerOperation
-{
-	return (type == ZDCCloudOperationType_Put) && (putType == ZDCCloudOperationPutType_Pointer);
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Class Utilities
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -499,7 +491,6 @@ static NSString *const putType_str_pointer      = @"ptr";
 	{
 		case ZDCCloudOperationPutType_Node_Rcrd    : return putType_str_node_rcrd;
 		case ZDCCloudOperationPutType_Node_Data    : return putType_str_node_data;
-		case ZDCCloudOperationPutType_Pointer      : return putType_str_pointer;
 		default                                    : return @"";
 	}
 }
@@ -508,7 +499,6 @@ static NSString *const putType_str_pointer      = @"ptr";
 {
 	if ([string isEqualToString:putType_str_node_rcrd])    return ZDCCloudOperationPutType_Node_Rcrd;
 	if ([string isEqualToString:putType_str_node_data])    return ZDCCloudOperationPutType_Node_Data;
-	if ([string isEqualToString:putType_str_pointer])      return ZDCCloudOperationPutType_Pointer;
 	
 	if ([string isEqualToString:@"info"]) return ZDCCloudOperationPutType_Node_Rcrd;
 	
