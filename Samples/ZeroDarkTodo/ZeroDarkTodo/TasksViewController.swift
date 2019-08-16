@@ -435,8 +435,8 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 				// For more information on treesystem paths, check out the docs here:
 				// https://zerodarkcloud.readthedocs.io/en/latest/advanced/tree/
 				
-				if let parentNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List),
-				   let listPath = zdc.nodeManager.path(for: parentNode, transaction: transaction) {
+				if let listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List),
+				   let listPath = zdc.nodeManager.path(for: listNode, transaction: transaction) {
 					
 					let taskPath = listPath.appendingComponent(UUID().uuidString)
 					
@@ -705,28 +705,28 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 		let localUserID = AppDelegate.sharedInstance().currentLocalUserID!
 		let listID = self.listID!
 		
-		var node: ZDCNode? = nil
+		var listNode: ZDCNode? = nil
 		self.databaseConnection .read { (transaction) in
 			
 			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID) {
 				
-				node = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List)
+				listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List)
 			}
 		}
 		
-		var remoteUserIDs = node?.shareList.allUserIDs() ?? []
+		var remoteUserIDs = listNode?.shareList.allUserIDs() ?? []
 		remoteUserIDs = remoteUserIDs.filter {$0 != localUserID}
 		
 		ZDCManager.uiTools().pushSharedUsersView(forLocalUserID: localUserID,
-															  remoteUserIDs: Set(remoteUserIDs),
-															  title:"Shared To",
-															  navigationController: self.navigationController!)
+		                                          remoteUserIDs: Set(remoteUserIDs),
+		                                                  title: "Shared To",
+		                                   navigationController: self.navigationController!)
 		{ (newUsers: Set<String>?, removedUsers: Set<String>?) in
 			
-			ZDCManager.sharedInstance.modifyListSharing(listID,
-			                                            localUserID  : localUserID,
-			                                            newUsers     : newUsers ?? Set<String>(),
-			                                            removedUsers : removedUsers ?? Set<String>())
+			ZDCManager.sharedInstance.modifyListSharing( listID,
+			                                localUserID: localUserID,
+			                                   newUsers: newUsers ?? Set<String>(),
+			                               removedUsers: removedUsers ?? Set<String>())
 		}
 	}
 	
@@ -738,13 +738,13 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 		var count: UInt = 0
 		databaseConnection.read { (transaction) in
 			
-			var node: ZDCNode? = nil
+			var listNode: ZDCNode? = nil
 			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID) {
 				
-				node = cloudTransaction.linkedNode(forKey: self.listID, inCollection: kZ2DCollection_List)
+				listNode = cloudTransaction.linkedNode(forKey: self.listID, inCollection: kZ2DCollection_List)
 			}
 			
-			count = node?.shareList.countOfUserIDs(excluding: localUserID) ?? 0
+			count = listNode?.shareList.countOfUserIDs(excluding: localUserID) ?? 0
 		}
 		
 		if count > 0 {

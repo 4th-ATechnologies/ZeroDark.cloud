@@ -318,16 +318,16 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		
 		let zdc = ZDCManager.zdc()
 		
-		var node: ZDCNode? = nil
+		var listNode: ZDCNode? = nil
 		databaseConnection.read({ (transaction) in
 			
 			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: self.localUserID) {
 				
-				node = cloudTransaction.linkedNode(forKey: list.uuid, inCollection: kZ2DCollection_List)
+				listNode = cloudTransaction.linkedNode(forKey: list.uuid, inCollection: kZ2DCollection_List)
 			}
 		})
 		
-		return node
+		return listNode
 	}
     
     func numberOfPendingTasksForListID (listID: String) -> Int
@@ -656,28 +656,28 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		
 		let zdc = ZDCManager.zdc()
 		
-		var node: ZDCNode? = nil
+		var listNode: ZDCNode? = nil
 		databaseConnection.read { (transaction) in
 			
 			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: self.localUserID) {
 				
-				node = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List)
+				listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List)
 			}
 		}
 		
 		let localUserID = AppDelegate.sharedInstance().currentLocalUserID!
-		let remoteUserIDs = node?.shareList.allUserIDs() ?? []
+		let remoteUserIDs = listNode?.shareList.allUserIDs() ?? []
 		
 		ZDCManager.uiTools().pushSharedUsersView(forLocalUserID: localUserID,
-															  remoteUserIDs: Set(remoteUserIDs),
-															  title: "Shared To",
-															  navigationController: self.navigationController!)
-		{ (newUsers:Set<String>?, removedUsers:Set<String>?) in
+		                                          remoteUserIDs: Set(remoteUserIDs),
+		                                                  title: "Shared To",
+		                                   navigationController: self.navigationController!)
+		{(newUsers:Set<String>?, removedUsers:Set<String>?) in
 			
-			ZDCManager.sharedInstance.modifyListSharing(listID,
-			                                            localUserID  : self.localUserID,
-			                                            newUsers     : newUsers ?? Set<String>(),
-			                                            removedUsers : removedUsers ?? Set<String>())
+			ZDCManager.sharedInstance.modifyListSharing( listID,
+			                                localUserID: self.localUserID,
+			                                   newUsers: newUsers ?? Set<String>(),
+			                               removedUsers: removedUsers ?? Set<String>())
 		}
 	}
     
@@ -685,28 +685,28 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		
 		let zdc = ZDCManager.zdc()
 		
-		var node: ZDCNode? = nil
+		var listNode: ZDCNode? = nil
 		databaseConnection.read { (transaction) in
 			
 			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: self.localUserID) {
 				
-				node = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List)
+				listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List)
 			}
 		}
 		
 		let localUserID = AppDelegate.sharedInstance().currentLocalUserID!
-		let remoteUserIDs = node?.shareList.allUserIDs() ?? []
+		let remoteUserIDs = listNode?.shareList.allUserIDs() ?? []
 	
 		ZDCManager.uiTools().pushSharedUsersView(forLocalUserID: localUserID,
-															  remoteUserIDs: Set(remoteUserIDs),
-															  title: "Shared To",
-															  navigationController: self.navigationController!)
+		                                          remoteUserIDs: Set(remoteUserIDs),
+		                                                  title: "Shared To",
+		                                   navigationController: self.navigationController!)
 		{ (newUsers: Set<String>?, removedUsers: Set<String>?) in
 			
-			ZDCManager.sharedInstance.modifyListSharing(listID,
-			                                            localUserID  : self.localUserID,
-			                                            newUsers     : newUsers ?? Set<String>(),
-			                                            removedUsers : removedUsers ?? Set<String>())
+			ZDCManager.sharedInstance.modifyListSharing( listID,
+			                                localUserID: self.localUserID,
+			                                   newUsers: newUsers ?? Set<String>(),
+			                               removedUsers: removedUsers ?? Set<String>())
 		}
 	}
 

@@ -224,15 +224,23 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly, nullable) NSString *explicitCloudName;
 
 /**
- * If the node is located in a different bucket (not the localUserID's bucket),
- * then the ownerID property will be set to reference the owner.
-**/
+ * Pointers may point to nodes in a different treesystem.
+ * These "foreign" nodes may be in a different user's treesystem (e.g. user's are collaborating).
+ * Or they may be in the treesystem of a different zAppID (e.g. an app upgrade transition).
+ *
+ * In any case, the "root" node for the grafting operation has an anchor
+ * that points to the foreign location.
+ *
+ * @see `-[ZDCNodeManager anchorNodeForNode:transaction:]`
+ */
 @property (nonatomic, readonly, nullable) ZDCNodeAnchor *anchor;
 
 /**
  * If the node is a pointer, specifies the ZDCNode.uuid that it points to.
+ *
+ * @see `-[ZDCNode isPointer]`
  */
-@property (nonatomic, copy, readwrite) NSString * pointeeID;
+@property (nonatomic, readonly, nullable) NSString * pointeeID;
 
 /**
  * Convenience method: equivalent to (pointeeID != nil).

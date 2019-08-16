@@ -49,23 +49,23 @@ typedef NS_ENUM(NSUInteger, ZDCLogLevel){
 
 #define ZDCLogError(frmt, ...) \
     LOG_MAYBE(LOG_ASYNC_ERROR, (DDLogLevel)LOG_LEVEL_DEF, (DDLogFlag)ZDCLogFlagError, ZDCLoggingContext, nil, \
-              __PRETTY_FUNCTION__, @"%s", __PRETTY_FUNCTION__)
+              __PRETTY_FUNCTION__, frmt, ##__VA_ARGS__)
 
 #define ZDCLogWarn(frmt, ...) \
     LOG_MAYBE(LOG_ASYNC_WARN, (DDLogLevel)LOG_LEVEL_DEF, (DDLogFlag)ZDCLogFlagWarning, ZDCLoggingContext, nil, \
-              __PRETTY_FUNCTION__, @"%s", __PRETTY_FUNCTION__)
+              __PRETTY_FUNCTION__, frmt, ##__VA_ARGS__)
 
 #define ZDCLogInfo(frmt, ...) \
     LOG_MAYBE(LOG_ASYNC_INFO, (DDLogLevel)LOG_LEVEL_DEF, (DDLogFlag)ZDCLogFlagInfo, ZDCLoggingContext, nil, \
-              __PRETTY_FUNCTION__, @"%s", __PRETTY_FUNCTION__)
+              __PRETTY_FUNCTION__, frmt, ##__VA_ARGS__)
 
 #define ZDCLogDebug(frmt, ...) \
     LOG_MAYBE(LOG_ASYNC_DEBUG, (DDLogLevel)LOG_LEVEL_DEF, (DDLogFlag)ZDCLogFlagDebug, ZDCLoggingContext, nil, \
-              __PRETTY_FUNCTION__, @"%s", __PRETTY_FUNCTION__)
+              __PRETTY_FUNCTION__, frmt, ##__VA_ARGS__)
 
 #define ZDCLogVerbose(frmt, ...) \
     LOG_MAYBE(LOG_ASYNC_VERBOSE, (DDLogLevel)LOG_LEVEL_DEF, (DDLogFlag)ZDCLogFlagVerbose, ZDCLoggingContext, nil, \
-              __PRETTY_FUNCTION__, @"%s", __PRETTY_FUNCTION__)
+              __PRETTY_FUNCTION__, frmt, ##__VA_ARGS__)
 
 #define ZDCLogTrace(frmt, ...) \
     LOG_MAYBE(LOG_ASYNC_TRACE, (DDLogLevel)LOG_LEVEL_DEF, (DDLogFlag)ZDCLogFlagTrace, ZDCLoggingContext, nil, \

@@ -348,12 +348,65 @@
  * Or view the reference docs online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
-- (nullable ZDCTrunkNode *)trunkNode:(ZDCTreesystemTrunk)trunk
+- (nullable ZDCNode *)nodeWithID:(NSString *)nodeID
 {
-	return [[ZDCNodeManager sharedInstance] trunkNodeForLocalUserID: [self localUserID]
-	                                                         zAppID: [self zAppID]
-	                                                          trunk: trunk
-	                                                    transaction: databaseTransaction];
+	return [databaseTransaction objectForKey:nodeID inCollection:kZDCCollection_Nodes];
+}
+
+/**
+ * See header file for description.
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (nullable ZDCNode *)nodeWithPath:(ZDCTreesystemPath *)path
+{
+	NSString *const localUserID = [self localUserID];
+	NSString *const zAppID = [self zAppID];
+	
+	ZDCNode *node =
+	  [[ZDCNodeManager sharedInstance] findNodeWithPath: path
+	                                        localUserID: localUserID
+	                                             zAppID: zAppID
+	                                        transaction: databaseTransaction];
+	return node;
+}
+
+/**
+ * See header file for description.
+ * Or view the reference docs online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (nullable ZDCNode *)parentNode:(ZDCNode *)node
+{
+	NSString *parentID = node.parentID;
+	if (parentID == nil) {
+		return nil;
+	}
+	
+	ZDCNode *parentNode = nil;
+	if ([parentID hasSuffix:@"|graft"])
+	{
+		parentNode =
+		  [[ZDCNodeManager sharedInstance] findNodeWithPointeeID: parentID
+		                                             localUserID: [self localUserID]
+		                                                  zAppID: [self zAppID]
+		                                             transaction: databaseTransaction];
+	}
+	else
+	{
+		parentNode = [databaseTransaction objectForKey:parentID inCollection:kZDCCollection_Nodes];
+	}
+	
+	if ([parentNode.parentID hasSuffix:@"|graft"])
+	{
+		parentNode =
+		  [[ZDCNodeManager sharedInstance] findNodeWithPointeeID: parentNode.uuid
+		                                             localUserID: [self localUserID]
+		                                                  zAppID: [self zAppID]
+		                                             transaction: databaseTransaction];
+	}
+	
+	return parentNode;
 }
 
 /**
@@ -371,17 +424,12 @@
  * Or view the reference docs online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
-- (nullable ZDCNode *)nodeWithPath:(ZDCTreesystemPath *)path
+- (nullable ZDCTrunkNode *)trunkNode:(ZDCTreesystemTrunk)trunk
 {
-	NSString *localUserID = [self localUserID];
-	NSString *zAppID = [self zAppID];
-	
-	ZDCNode *node =
-	  [[ZDCNodeManager sharedInstance] findNodeWithPath: path
-	                                        localUserID: localUserID
-	                                             zAppID: zAppID
-	                                        transaction: databaseTransaction];
-	return node;
+	return [[ZDCNodeManager sharedInstance] trunkNodeForLocalUserID: [self localUserID]
+	                                                         zAppID: [self zAppID]
+	                                                          trunk: trunk
+	                                                    transaction: databaseTransaction];
 }
 
 /**

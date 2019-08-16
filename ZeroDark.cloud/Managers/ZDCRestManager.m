@@ -28,9 +28,9 @@
 #import "NSURLRequest+ZeroDark.h"
 #import "NSURLResponse+ZeroDark.h"
 
-#ifndef robbie_hanson
-  #define robbie_hanson 1
-#endif
+//#ifndef robbie_hanson
+//  #define robbie_hanson 1
+//#endif
 
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace

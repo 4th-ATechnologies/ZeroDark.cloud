@@ -44,6 +44,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy, readwrite, nullable) NSString *explicitCloudName;
 
 @property (nonatomic, copy, readwrite, nullable) ZDCNodeAnchor *anchor;
+@property (nonatomic, copy, readwrite, nullable) NSString *pointeeID;
 
 #pragma mark Special ParentID's
 

@@ -158,7 +158,9 @@ static ZDCCloudPathManager *sharedInstance = nil;
 	
 	NSString *parentID = node.parentID;
 	if (parentID == nil) {
-		ZDCLogWarn(@"Cannot derive cloudName for node(%@): node.parentID is nil", node.name);
+		if (![node isKindOfClass:[ZDCTrunkNode class]]) {
+			ZDCLogWarn(@"Cannot derive cloudName for node(%@): node.parentID is nil", node.name);
+		}
 		return nil;
 	}
 	

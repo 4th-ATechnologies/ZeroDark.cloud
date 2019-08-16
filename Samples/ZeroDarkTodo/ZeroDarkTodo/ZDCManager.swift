@@ -1489,7 +1489,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	
 	/// Invoked after a Task object has been downloaded from the cloud.
 	///
-	private func processDownloadedTask(_ cleartext: Data, forNodeID nodeID: String, withETag eTag: String) {
+	private func processDownloadedTask(_ cleartext: Data, forNodeID taskNodeID: String, withETag eTag: String) {
 		
 		DDLogInfo("processDownloadedTask()")
 		
@@ -1505,14 +1505,15 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			// processing the downloaded data, and we can quietly exit.
 			//
 			guard
-				let node = transaction.object(forKey: nodeID, inCollection: kZDCCollection_Nodes) as? ZDCNode,
-				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: node.localUserID),
-				let list = cloudTransaction.linkedObject(forNodeID: node.parentID ?? "") as? List
+				let taskNode = transaction.object(forKey: taskNodeID, inCollection: kZDCCollection_Nodes) as? ZDCNode,
+				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: taskNode.localUserID),
+				let listNode = cloudTransaction.parentNode(taskNode),
+				let list = cloudTransaction.linkedObject(forNodeID: listNode.uuid) as? List
 			else {
 				return
 			}
 			
-			cloudTransaction.unmarkNodeAsNeedsDownload(nodeID, components: .all, ifETagMatches: eTag)
+			cloudTransaction.unmarkNodeAsNeedsDownload(taskNodeID, components: .all, ifETagMatches: eTag)
 			
 			var downloadedTask: Task!
 			do {
@@ -1522,7 +1523,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// - there's a bug in our Task.cloudEncode() function
 				// - there's a bug in our Task.init(fromCloudData:node:listID:) function
 				//
-				downloadedTask = try Task(fromCloudData: cleartext, node: node, listID: list.uuid)
+				downloadedTask = try Task(fromCloudData: cleartext, node: taskNode, listID: list.uuid)
 				
 			} catch {
 				
@@ -1530,7 +1531,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				return // from block
 			}
 			
-			if var existingTask = cloudTransaction.linkedObject(forNodeID: nodeID) as? Task {
+			if var existingTask = cloudTransaction.linkedObject(forNodeID: taskNodeID) as? Task {
 				
 				// Update an existing Task.
 				
@@ -1545,7 +1546,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// Next, in order to perform the merge, we need the list of changes we've made on the local device.
 				// We can extract this from the list of queued changes.
 				//
-				let pendingChangesets = cloudTransaction.pendingChangesets(forNodeID: nodeID) as? Array<Dictionary<String, Any>> ?? []
+				let pendingChangesets =
+					cloudTransaction.pendingChangesets(forNodeID: taskNodeID) as? Array<Dictionary<String, Any>> ?? []
 				
 				do {
 					
@@ -1572,7 +1574,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					//
 					// @see self.didDiscoverConflict(...)
 					
-					cloudTransaction.didMergeData(withETag: eTag, forNodeID: node.uuid)
+					cloudTransaction.didMergeData(withETag: eTag, forNodeID: taskNode.uuid)
 					
 				} catch {
 					
@@ -1601,16 +1603,11 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// Link the Task to the Node
 				//
 				do {
-					try cloudTransaction.linkNodeID(nodeID, toKey: downloadedTask.uuid, inCollection: kZ2DCollection_Task)
+					try cloudTransaction.linkNodeID(taskNodeID, toKey: downloadedTask.uuid, inCollection: kZ2DCollection_Task)
 					
 				} catch {
 					DDLogError("Error linking node to task: \(error)")
 				}
-				
-				// Where does this Task object go within the context of the UI ?
-				//
-				// This is handled for us automatically.
-				// @see self.setupView_Tasks()
 			}
 		})
 	}
@@ -1628,8 +1625,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		rwConnection.asyncReadWrite({ (transaction) in
 			
 			guard
-				let node = transaction.object(forKey: nodeID, inCollection: kZDCCollection_Nodes) as? ZDCNode,
-				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: node.localUserID)
+				let invitationNode = transaction.object(forKey: nodeID, inCollection: kZDCCollection_Nodes) as? ZDCNode,
+				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: invitationNode.localUserID)
 			else {
 				return
 			}
@@ -1643,7 +1640,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// - there's a bug in our Invitation.cloudEncode() function
 				// - there's a bug in our Invitation.init(fromCloudData:node:) function
 				//
-				downloadedInvitation = try Invitation(fromCloudData: cleartext, node: node)
+				downloadedInvitation = try Invitation(fromCloudData: cleartext, node: invitationNode)
 				
 			} catch {
 				DDLogError("Error parsing Invitation from cloudData: \(error)")
@@ -1749,10 +1746,10 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			var nodeIDs: [String] = []
 			
-			if let nodeID = cloudTransaction.linkedNodeID(forKey: listID, inCollection: kZ2DCollection_List) {
+			if let listNodeID = cloudTransaction.linkedNodeID(forKey: listID, inCollection: kZ2DCollection_List) {
 				
-				nodeIDs.append(nodeID)
-				zdc.nodeManager.recursiveEnumerateNodeIDs(withParentID: nodeID,
+				nodeIDs.append(listNodeID)
+				zdc.nodeManager.recursiveEnumerateNodeIDs(withParentID: listNodeID,
 				                                           transaction: transaction,
 				                                                 using:
 				{ (nodeID, _, _, _) in
@@ -1763,7 +1760,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			for nodeID in nodeIDs {
 				
-				guard var node = transaction.object(forKey: nodeID, inCollection: kZDCCollection_Nodes) as? ZDCNode else {
+				guard var node = cloudTransaction.node(id: nodeID) else {
 					continue
 				}
 				

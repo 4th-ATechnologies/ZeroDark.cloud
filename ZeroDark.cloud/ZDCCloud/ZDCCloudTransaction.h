@@ -146,11 +146,35 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Returns the corresponding trunk node (top-level root node).
+ * Returns the node with the given nodeID.
  *
- * This method is short-hand for `[ZDCNodeManager trunkNodeForLocalUserID:zAppID:trunk:transaction:]`
+ * @note You can find many other utility functions for inspecting the node treesystem in the `ZDCNodeManager`.
+ *
+ * @param nodeID
+ *   The identifier of the node. (nodeID == ZDCNode.uuid)
+ *
+ * @return Returns the matching node, if it exists. Nil otherwise.
  */
-- (nullable ZDCTrunkNode *)trunkNode:(ZDCTreesystemTrunk)trunk;
+- (nullable ZDCNode *)nodeWithID:(NSString *)nodeID
+	NS_SWIFT_NAME(node(id:));
+
+/**
+ * Returns the existing node with the given path.
+ *
+ * @note You can find many other utility functions for inspecting the node treesystem in the `ZDCNodeManager`.
+ *
+ * @param path
+ *   The treesystem path of the node.
+ *
+ * @return Returns the matching node, if it exists. Nil otherwise.
+ */
+- (nullable ZDCNode *)nodeWithPath:(ZDCTreesystemPath *)path
+	NS_SWIFT_NAME(node(path:));
+
+/**
+ * Returns the parentNode for the given node.
+ */
+- (nullable ZDCNode *)parentNode:(ZDCNode *)node;
 
 /**
  * If the given node is a pointer (node.isPointer == true),
@@ -167,17 +191,11 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
 - (nullable ZDCNode *)targetNode:(ZDCNode *)node;
 
 /**
- * Returns the existing node with the given path.
+ * Returns the corresponding trunk node (top-level root node).
  *
- * @note You can find many other utility functions for inspecting the node treesystem in the `ZDCNodeManager`.
- *
- * @param path
- *   The treesystem path of the node.
- *
- * @return Returns the matching node, if it exists. Nil otherwise.
+ * This method is short-hand for `[ZDCNodeManager trunkNodeForLocalUserID:zAppID:trunk:transaction:]`
  */
-- (nullable ZDCNode *)nodeWithPath:(ZDCTreesystemPath *)path
- NS_SWIFT_NAME(nodeWithPath(_:));
+- (nullable ZDCTrunkNode *)trunkNode:(ZDCTreesystemTrunk)trunk;
 
 /**
  * Checks to see if there's already a node occupying the given path.
