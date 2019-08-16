@@ -1836,9 +1836,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					for msgOp in msgOps {
 						
 						let msgOp = msgOp.copy() as! ZDCCloudOperation
-						for permsOp in permsOps {
-							msgOp.addDependency(permsOp)
-						}
+						msgOp.addDependencies(permsOps)
 						
 						cloudTransaction.modifyOperation(msgOp)
 					}
@@ -1864,9 +1862,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 						for signalOp in signalOps {
 							
 							let signalOp = signalOp.copy() as! ZDCCloudOperation
-							for permsOp in permsOps {
-								signalOp.addDependency(permsOp)
-							}
+							signalOp.addDependcies(permsOps)
 							
 							cloudTransaction.modifyOperation(signalOp)
 						}
@@ -1978,9 +1974,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					// We just need to add a dependency to the deleteInviteOp.
 					
 					let listOps = cloudTransaction.addedOperations(forNodeID: listNode.uuid)
-					for listOp in listOps {
-						deleteInviteOp.addDependency(listOp)
-					}
+					deleteInviteOp.addDependencies(listOps)
 					
 					cloudTransaction.modifyOperation(deleteInviteOp)
 					

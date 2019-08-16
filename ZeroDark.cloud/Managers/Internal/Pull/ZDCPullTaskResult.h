@@ -22,7 +22,7 @@ typedef NS_ENUM(NSInteger, ZDCPullErrorReason) {
 	ZDCPullErrorReason_ExceededMaxRetries,
 	ZDCPullErrorReason_BadData,
 	ZDCPullErrorReason_HttpStatusCode,
-	ZDCPullErrorReason_FileIDMismatch
+	ZDCPullErrorReason_LocalTreesystemChanged
 };
 
 /**

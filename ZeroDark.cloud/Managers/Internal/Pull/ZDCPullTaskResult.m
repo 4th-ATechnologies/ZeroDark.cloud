@@ -50,13 +50,26 @@
 	
 	switch (pullErrorReason)
 	{
-		case ZDCPullErrorReason_Auth0Error          : [description appendString:@"Auth0"];              break;
-		case ZDCPullErrorReason_AwsAuthError        : [description appendString:@"AwsAuth"];            break;
-		case ZDCPullErrorReason_ExceededMaxRetries  : [description appendString:@"ExceededMaxRetries"]; break;
-		case ZDCPullErrorReason_BadData             : [description appendString:@"BadData"];            break;
-		case ZDCPullErrorReason_HttpStatusCode      : [description appendString:@"HttpStatusCode"];     break;
-		case ZDCPullErrorReason_FileIDMismatch      : [description appendString:@"FileIDMismatch"];     break;
-		default                                     : [description appendString:@"?"];                  break;
+		case ZDCPullErrorReason_Auth0Error:
+			[description appendString:@"Auth0"]; break;
+			
+		case ZDCPullErrorReason_AwsAuthError:
+			[description appendString:@"AwsAuth"]; break;
+			
+		case ZDCPullErrorReason_ExceededMaxRetries:
+			[description appendString:@"ExceededMaxRetries"]; break;
+			
+		case ZDCPullErrorReason_BadData:
+			[description appendString:@"BadData"]; break;
+			
+		case ZDCPullErrorReason_HttpStatusCode:
+			[description appendString:@"HttpStatusCode"]; break;
+			
+		case ZDCPullErrorReason_LocalTreesystemChanged:
+			[description appendString:@"LocalTreesystemChanged"]; break;
+			
+		default:
+			[description appendString:@"?"]; break;
 	}
 	
 	if (httpStatusCode != 0) {

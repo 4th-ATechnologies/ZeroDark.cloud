@@ -312,49 +312,9 @@ static NSString *const putType_str_pointer      = @"ptr";
 #pragma mark YapDatabaseCloudCoreOperation Overrides
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)setDependencies:(NSSet<NSUUID *> *)inDependencies
+- (void)didRejectDependency:(id)badDependency
 {
-	for (id dependency in inDependencies)
-	{
-		NSUUID *dependencyUUID = nil;
-		
-		if ([dependency isKindOfClass:[NSUUID class]])
-		{
-			dependencyUUID = (NSUUID *)dependency;
-		}
-		else if ([dependency isKindOfClass:[YapDatabaseCloudCoreOperation class]])
-		{
-			dependencyUUID = [(YapDatabaseCloudCoreOperation *)dependency uuid];
-		}
-		
-		if ([dependencyUUID isEqual:self.uuid])
-		{
-			NSAssert(NO, @"This is probably a typo, which is going to lead to a hard-to-reproduce bug");
-		}
-	}
-	
-	[super setDependencies:inDependencies];
-}
-
-- (void)addDependency:(id)dependency
-{
-	NSUUID *dependencyUUID = nil;
-	
-	if ([dependency isKindOfClass:[NSUUID class]])
-	{
-		dependencyUUID = (NSUUID *)dependency;
-	}
-	else if ([dependency isKindOfClass:[YapDatabaseCloudCoreOperation class]])
-	{
-		dependencyUUID = [(YapDatabaseCloudCoreOperation *)dependency uuid];
-	}
-	
-	if ([dependencyUUID isEqual:self.uuid])
-	{
-		NSAssert(NO, @"This is probably a typo, which is going to lead to a hard-to-reproduce bug");
-	}
-	
-	[super addDependency:dependency];
+	NSAssert(NO, @"This is probably a typo, which is going to lead to a hard-to-reproduce bug");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

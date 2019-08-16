@@ -2316,9 +2316,9 @@ static NSUInteger const kMaxFailCount = 8;
 	
 	NSArray<NSString *> *trunkIDs = @[
 		[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Home],
-	//	[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Prefs],
-	//	[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Inbox],
-	//	[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Outbox]
+		[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Prefs],
+		[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Inbox],
+		[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Outbox]
 	];
 	
 	NSMutableArray<ZDCTrunkNode *> *trunkNodes = [NSMutableArray arrayWithCapacity:trunkIDs.count];
@@ -2922,6 +2922,7 @@ static NSUInteger const kMaxFailCount = 8;
 						[multiCompletion incrementPendingCount:2];
 						[self syncPointeeNode: pointee
 						          pointerNode: node
+						         isNewPointer: NO
 						             pullItem: item
 						            pullState: pullState];
 					}
@@ -2961,9 +2962,15 @@ static NSUInteger const kMaxFailCount = 8;
 **/
 - (void)syncPointeeNode:(ZDCNode *)pointeeNode
             pointerNode:(ZDCNode *)pointerNode
+           isNewPointer:(BOOL)isNewPointer
                pullItem:(ZDCPullItem *)pullItem
               pullState:(ZDCPullState *)pullState
 {
+	NSParameterAssert(pointeeNode != nil);
+	NSParameterAssert(pointerNode != nil);
+	NSParameterAssert(pullItem != nil);
+	NSParameterAssert(pullState != nil);
+	
 	if (pointeeNode.isImmutable) {
 		pointeeNode = [pointeeNode copy];
 	}
@@ -3280,11 +3287,8 @@ static NSUInteger const kMaxFailCount = 8;
 			
 			NSMutableArray<ZDCNode*> *children = nil;
 			
-			BOOL isNewPointer =
-			  ![transaction hasObjectForKey:pointeeNode.uuid inCollection:kZDCCollection_Nodes] ||
-			  ![transaction hasObjectForKey:pointerNode.uuid inCollection:kZDCCollection_Nodes];
-			
-			if (isNewPointer)
+			BOOL isNewPointee = ![transaction hasObjectForKey:pointeeNode.uuid inCollection:kZDCCollection_Nodes];
+			if (isNewPointee)
 			{
 				// Process dirSalt
 				
@@ -3329,6 +3333,28 @@ static NSUInteger const kMaxFailCount = 8;
 						
 						[children addObject:child];
 					}];
+				}
+			}
+			
+			// Validate the local treesystem state
+			
+			if (isNewPointer)
+			{
+				// The pointer is new, meaning it doesn't exist in the database yet.
+				//
+				// So if another node is occupying the same treesystem path,
+				// then that node needs to be moved.
+				
+				ZDCNode *conflictingNode =
+				  [[ZDCNodeManager sharedInstance] findNodeWithName: pointerNode.name
+				                                           parentID: pointerNode.parentID
+				                                        transaction: transaction];
+				
+				if (conflictingNode && ![conflictingNode.uuid isEqual:pointerNode.uuid])
+				{
+					[self fixConflictingNode: conflictingNode
+					               pullState: pullState
+					             transaction: transaction];
 				}
 			}
 			
@@ -3635,11 +3661,11 @@ static NSUInteger const kMaxFailCount = 8;
 			NSString *parentID = [pullItem.parents lastObject];
 			
 			ZDCNode *node =
-			  [self findNodeWithRemoteCloudPath: pullItem.rcrdCloudPath
-			                          cloudRcrd: cloudRcrd
-				                        parentID: parentID
-			                          pullState: pullState
-			                        transaction: transaction];
+			  [self findNodeWithCloudPath: pullItem.rcrdCloudPath
+			                    cloudRcrd: cloudRcrd
+				                  parentID: parentID
+			                    pullState: pullState
+			                  transaction: transaction];
 			
 			if (node) {
 				[pullState removeUnprocessedNodeID:node.uuid];
@@ -3667,6 +3693,11 @@ static NSUInteger const kMaxFailCount = 8;
 	}]; // end: [self fetchRcrd:...]
 }
 
+/**
+ * Called when a downloaded RCRD cannot decrypted (e.g. we don't have read permission).
+ * So we store a ZDCCloudNode placeholder in the database,
+ * that way we don't keep downloading the same node over & over again.
+ */
 - (void)createOrUpdateCloudNode:(ZDCPullItem *)pullItem
                            eTag:(NSString *)eTag
                    lastModified:(NSDate *)lastModified
@@ -3718,17 +3749,17 @@ static NSUInteger const kMaxFailCount = 8;
 }
 
 /**
- * Helper method, used by `pullItem::`
+ * Searches the database for a matching node.
+ * If a conflicting node is found occupying the same path, then that node is moved.
  */
-- (nullable ZDCNode *)findNodeWithRemoteCloudPath:(ZDCCloudPath *)remoteCloudPath
-                                        cloudRcrd:(ZDCCloudRcrd *)cloudRcrd
-                                         parentID:(NSString *)parentID
-                                        pullState:(ZDCPullState *)pullState
-                                      transaction:(YapDatabaseReadWriteTransaction *)transaction
+- (nullable ZDCNode *)findNodeWithCloudPath:(ZDCCloudPath *)remoteCloudPath
+                                  cloudRcrd:(ZDCCloudRcrd *)cloudRcrd
+                                   parentID:(NSString *)parentID
+                                  pullState:(ZDCPullState *)pullState
+                                transaction:(YapDatabaseReadWriteTransaction *)transaction
 {
 	ZDCNodeManager *const nodeManager = [ZDCNodeManager sharedInstance];
 	ZDCCloudPathManager *const cloudPathManager = [ZDCCloudPathManager sharedInstance];
-	
 	ZDCCloudTransaction *const cloudTransaction = [self cloudTransactionForPullState:pullState transaction:transaction];
 	
 	NSString *remoteCloudName = [remoteCloudPath fileNameWithExt:nil];
@@ -3782,229 +3813,245 @@ static NSUInteger const kMaxFailCount = 8;
 		}
 	}
 	
+	if (node == nil) {
+		return nil;
+	}
+	
 	// Check to see if this node needs to be moved or marked as deleted.
 	//
 	// AKA - edge case checking
 	
-	if (node)
+	if (!cloudIDMatches && cloudPathMatches && !node.cloudID)
 	{
-		if (!cloudIDMatches && cloudPathMatches && !node.cloudID)
+		// This may actually be our uploaded rcrd.
+		// In other words:
+		// - we created the node locally
+		// - the PushManager just pushed this item to the cloud
+		// - and now the PullManager is seeing it before the PushManager
+		//   has had a chance to update the node in the database.
+		//
+		// So how can we reliably detect this ?
+		//
+		// We can compare the randomly generated encryptionKey.
+		
+		if ([node.encryptionKey isEqual:cloudRcrd.encryptionKey])
 		{
-			// This may actually be our uploaded rcrd.
-			// In other words:
-			// - we created the node locally
-			// - the PushManager just pushed this item to the cloud
-			// - and now the PullManager is seeing it before the PushManager
-			//   has had a chance to update the node in the database.
-			//
-			// So how can we reliably detect this ?
-			//
-			// We can compare the randomly generated encryptionKey.
+			// Yup, that's us.
+			// Let's set the cloudID value.
 			
-			if ([node.encryptionKey isEqualToData:cloudRcrd.encryptionKey])
-			{
-				// Yup, that's us.
-				// Let's set the cloudID value.
-				
-				cloudIDMatches = YES;
-				
-				node = [node copy];
-				node.cloudID = cloudRcrd.cloudID;
-				
-				[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
-			}
+			cloudIDMatches = YES;
+			
+			node = [node copy];
+			node.cloudID = cloudRcrd.cloudID;
+			
+			[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
 		}
+	}
 				
-		if (cloudIDMatches && !cloudPathMatches)
+	if (cloudIDMatches && !cloudPathMatches)
+	{
+		BOOL parentMatches = [node.parentID isEqualToString:parentID];
+		
+		NSString *localCloudName = [cloudPathManager cloudNameForNode:node transaction:transaction];
+		BOOL cloudNameMatches = [localCloudName isEqualToString:remoteCloudName];
+		
+		if (!parentMatches || !cloudNameMatches)
 		{
-			BOOL parentMatches = [node.parentID isEqualToString:parentID];
-			
-			NSString *localCloudName = [cloudPathManager cloudNameForNode:node transaction:transaction];
-			BOOL cloudNameMatches = [localCloudName isEqualToString:remoteCloudName];
-					
-			if (!parentMatches || !cloudNameMatches)
-			{
-				// The node has been moved and/or renamed.
-				// So we need to update it within the database.
-			
-				ZDCTreesystemPath *oldCleartextPath =
-				  [nodeManager pathForNode:node transaction:transaction];
-				
-				ZDCCloudLocator *oldCloudLocator_bare =
-				  [cloudPathManager cloudLocatorForNode: node
-				                          fileExtension: nil
-				                            transaction: transaction];
-				
-				node = [node copy];
+			// The node has been moved and/or renamed.
+			// So we need to update it within the database.
 		
-				NSString *prvParentID = nil;
-				if (!parentMatches)
-				{
-					prvParentID = node.parentID;
-					node.parentID = parentID; // parentID change -> requires cloudName change
-				}
-		
-				if (!cloudNameMatches)
-				{
-					node.name = cloudRcrd.metadata[kZDCCloudRcrd_Meta_Filename]; // name change -> requires cloudName change
-				}
-		
-				localCloudName = [cloudPathManager cloudNameForNode:node transaction:transaction];
-				if ([localCloudName isEqualToString:remoteCloudName])
-				{
-					node.explicitCloudName = nil; // clear if present
-				}
-				else
-				{
-					ZDCLogWarn(@"Hash Mismatch: calculated cloudName(%@) != remoteCloudName(%@)",
-								  localCloudName, remoteCloudName);
-		
-					node.explicitCloudName = remoteCloudName;
-				}
-		
-				[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
-			
-				ZDCTreesystemPath *newCleartextPath =
-				  [nodeManager pathForNode:node transaction:transaction];
-				
-				ZDCCloudLocator *newCloudLocator_bare =
-				  [cloudPathManager cloudLocatorForNode: node
-				                          fileExtension: nil
-				                            transaction: transaction];
-			
-				// Since the node was moved by another device, their move takes precedence over ours.
-				// So we must skip any queued move operations for the node.
-				
-				[cloudTransaction skipMoveOperationsForNodeID:node.uuid excluding:nil];
-				
-				// Modify any operations that are sitting in the queue for this file.
-				// Since the node has a new cloudPath, we need to change these operations to match.
-				
-				ZDCCloudLocator *oldCloudLocator_rcrd = nil;
-				ZDCCloudLocator *newCloudLocator_rcrd = nil;
-				
-				ZDCCloudLocator *oldCloudLocator_data = nil;
-				ZDCCloudLocator *newCloudLocator_data = nil;
-			
-				oldCloudLocator_rcrd = [oldCloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Rcrd];
-				newCloudLocator_rcrd = [newCloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Rcrd];
-				
-				oldCloudLocator_data = [oldCloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Data];
-				newCloudLocator_data = [newCloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Data];
-				
-				[cloudTransaction moveCloudLocator:oldCloudLocator_bare toCloudLocator:newCloudLocator_bare];
-				[cloudTransaction moveCloudLocator:oldCloudLocator_rcrd toCloudLocator:newCloudLocator_rcrd];
-				[cloudTransaction moveCloudLocator:oldCloudLocator_data toCloudLocator:newCloudLocator_data];
-				
-				// Notify the delegate
-				
-				[zdc.delegate didDiscoverMovedNode: node
-				                              from: oldCleartextPath
-				                                to: newCleartextPath
-				                       transaction: transaction];
-			}
-		}
-		else if (!cloudIDMatches && cloudPathMatches)
-		{
-			// There's a node on the server with name <X>,
-			// and a local node with the same name <X>. (Both in the same directory.)
-			//
-			// One of the following is true:
-			// - The local node hasn't been pushed to the server yet.
-			// - The local node currently exists on the server, but in a different directory.
-			//   That is, the local node has been moved to this directory on the local device,
-			//   but the move operation hasn't hit the server yet.
-			//
-			// So we need resolve the conflict somehow.
-			// And we start by notifying the delegate.
-			
-			ZDCTreesystemPath *cleartextPath =
+			ZDCTreesystemPath *oldCleartextPath =
 			  [nodeManager pathForNode:node transaction:transaction];
 			
-			[zdc.delegate didDiscoverConflict: ZDCNodeConflict_Path
-			                          forNode: node
-			                           atPath: cleartextPath
-			                      transaction: transaction];
+			ZDCCloudLocator *oldCloudLocator_bare =
+			  [cloudPathManager cloudLocatorForNode: node
+			                          fileExtension: nil
+			                            transaction: transaction];
 			
-			// Did the delegate take action ?
-			
-			node = [nodeManager findNodeWithCloudName: remoteCloudName
-			                                 parentID: parentID
-			                              transaction: transaction];
-			
-			if (node)
+			node = [node copy];
+	
+			NSString *prvParentID = nil;
+			if (!parentMatches)
 			{
-				// Delegate did not resolve conflict.
-				// We are going to automatically rename the node.
-				
-				ZDCTreesystemPath *oldCleartextPath = cleartextPath;
-				
-				ZDCCloudLocator *oldCloudLocator_bare =
-				  [cloudPathManager cloudLocatorForNode: node
-				                          fileExtension: nil
-				                            transaction: transaction];
-				
-				NSString *newName =
-				  [nodeManager resolveNamingConflict: node
-				                         transaction: transaction];
-				
-				node = [node copy];
-				node.name = newName;
-				node.explicitCloudName = nil;
-				
-				NSString *localCloudName = [cloudPathManager cloudNameForNode:node transaction:transaction];
-				if (![localCloudName isEqualToString:remoteCloudName])
-				{
-					ZDCLogWarn(@"Hash Mismatch: calculated cloudName(%@) != remoteCloudName(%@)",
-								 localCloudName, remoteCloudName);
-					
-					node.explicitCloudName = remoteCloudName;
-				}
-				
-				[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
-				
-				ZDCTreesystemPath *newCleartextPath =
-				  [nodeManager pathForNode:node transaction:transaction];
-				
-				ZDCCloudLocator *newCloudLocator_bare =
-				  [cloudPathManager cloudLocatorForNode: node
-				                          fileExtension: nil
-				                            transaction: transaction];
-						
-				// Modify any operations that are sitting in the queue for this file.
-				// Since the node has a new cloudPath, we need to change these operations to match.
-				
-				ZDCCloudLocator *oldCloudLocator_rcrd = nil;
-				ZDCCloudLocator *newCloudLocator_rcrd = nil;
-				
-				ZDCCloudLocator *oldCloudLocator_data = nil;
-				ZDCCloudLocator *newCloudLocator_data = nil;
-				
-				oldCloudLocator_rcrd = [oldCloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Rcrd];
-				newCloudLocator_rcrd = [newCloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Rcrd];
-				
-				oldCloudLocator_data = [oldCloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Data];
-				newCloudLocator_data = [newCloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Data];
-				
-				[cloudTransaction moveCloudLocator:oldCloudLocator_bare toCloudLocator:newCloudLocator_bare];
-				[cloudTransaction moveCloudLocator:oldCloudLocator_rcrd toCloudLocator:newCloudLocator_rcrd];
-				[cloudTransaction moveCloudLocator:oldCloudLocator_data toCloudLocator:newCloudLocator_data];
-				
-				// Notify the delegate
-				
-				[zdc.delegate didDiscoverMovedNode: node
-				                              from: oldCleartextPath
-				                                to: newCleartextPath
-				                       transaction: transaction];
-				
-				// This means we don't actually have a matching node for this file.
-				
-				node = nil;
+				prvParentID = node.parentID;
+				node.parentID = parentID; // parentID change -> requires cloudName change
 			}
+	
+			if (!cloudNameMatches)
+			{
+				node.name = cloudRcrd.metadata[kZDCCloudRcrd_Meta_Filename]; // name change -> requires cloudName change
+			}
+	
+			localCloudName = [cloudPathManager cloudNameForNode:node transaction:transaction];
+			if ([localCloudName isEqualToString:remoteCloudName])
+			{
+				node.explicitCloudName = nil; // clear if present
+			}
+			else
+			{
+				ZDCLogWarn(@"Hash Mismatch: calculated cloudName(%@) != remoteCloudName(%@)",
+							  localCloudName, remoteCloudName);
+		
+				node.explicitCloudName = remoteCloudName;
+			}
+		
+			[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
+			
+			ZDCTreesystemPath *newCleartextPath =
+			  [nodeManager pathForNode:node transaction:transaction];
+			
+			ZDCCloudLocator *newCloudLocator_bare =
+			  [cloudPathManager cloudLocatorForNode: node
+			                            transaction: transaction];
+			
+			// Since the node was moved by another device, their move takes precedence over ours.
+			// So we must skip any queued move operations for the node.
+				
+			[cloudTransaction skipMoveOperationsForNodeID:node.uuid excluding:nil];
+			
+			// Modify any operations that are sitting in the queue for this file.
+			// Since the node has a new cloudPath, we need to change these operations to match.
+			
+			ZDCCloudLocator *oldCloudLocator_rcrd = nil;
+			ZDCCloudLocator *newCloudLocator_rcrd = nil;
+			
+			ZDCCloudLocator *oldCloudLocator_data = nil;
+			ZDCCloudLocator *newCloudLocator_data = nil;
+		
+			oldCloudLocator_rcrd = [oldCloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Rcrd];
+			newCloudLocator_rcrd = [newCloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Rcrd];
+			
+			oldCloudLocator_data = [oldCloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Data];
+			newCloudLocator_data = [newCloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Data];
+			
+			[cloudTransaction moveCloudLocator:oldCloudLocator_bare toCloudLocator:newCloudLocator_bare];
+			[cloudTransaction moveCloudLocator:oldCloudLocator_rcrd toCloudLocator:newCloudLocator_rcrd];
+			[cloudTransaction moveCloudLocator:oldCloudLocator_data toCloudLocator:newCloudLocator_data];
+			
+			// Notify the delegate
+				
+			[zdc.delegate didDiscoverMovedNode: node
+			                              from: oldCleartextPath
+			                                to: newCleartextPath
+			                       transaction: transaction];
 		}
+	}
+	else if (!cloudIDMatches && cloudPathMatches)
+	{
+		// There's a node on the server with name <X>,
+		// and a local node with the same name <X>. (Both in the same directory.)
+		//
+		// One of the following is true:
+		// - The local node hasn't been pushed to the server yet.
+		// - The local node currently exists on the server, but in a different directory.
+		//   That is, the local node has been moved to this directory on the local device,
+		//   but the move operation hasn't hit the server yet.
+		//
+		// So we need resolve the conflict somehow.
+		// And we start by notifying the delegate.
+			
+		[self fixConflictingNode: node
+		               pullState: pullState
+		             transaction: transaction];
+		
+		// This means we don't actually have a matching node for this file.
+		
+		node = nil;
 	}
 	
 	return node;
+}
+
+/**
+ * Use this method when:
+ * - there's a local node is occupying a particular treepath,
+ * - there's a node in the cloud occupying the same treepath
+ *
+ * This method will follow the proper steps to resolve the conflict.
+ * Usually this means renaming the local node.
+ */
+- (void)fixConflictingNode:(ZDCNode *)node
+                 pullState:(ZDCPullState *)pullState
+               transaction:(YapDatabaseReadWriteTransaction *)transaction
+{
+	ZDCNodeManager *const nodeManager = [ZDCNodeManager sharedInstance];
+	ZDCCloudPathManager *const cloudPathManager = [ZDCCloudPathManager sharedInstance];
+	ZDCCloudTransaction *const cloudTransaction = [self cloudTransactionForPullState:pullState transaction:transaction];
+	
+	if (!node.isImmutable) {
+		node = [node immutableCopy];
+	}
+	
+	// Notify the delegate of the conflict
+	
+	ZDCTreesystemPath *treePath =
+	  [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
+	
+	[zdc.delegate didDiscoverConflict: ZDCNodeConflict_Path
+	                          forNode: node
+	                           atPath: treePath
+	                      transaction: transaction];
+	
+	// Did the delegate take action ?
+	
+	node = [nodeManager findNodeWithName: treePath.nodeName
+	                            parentID: node.parentID
+	                         transaction: transaction];
+	
+	if (node)
+	{
+		// Delegate did not resolve conflict.
+		// We are going to automatically rename the node.
+		
+		ZDCTreesystemPath *oldTreePath = treePath;
+		
+		ZDCCloudLocator *oldCloudLocator_bare =
+		  [[ZDCCloudPathManager sharedInstance] cloudLocatorForNode: node
+		                                                transaction: transaction];
+		
+		NSString *newName =
+		  [[ZDCNodeManager sharedInstance] resolveNamingConflict: node
+		                                             transaction: transaction];
+		
+		node = [node copy];
+		node.name = newName;
+		node.explicitCloudName = nil;
+		
+		[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
+		
+		ZDCTreesystemPath *newTreePath =
+		  [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
+		
+		ZDCCloudLocator *newCloudLocator_bare =
+		  [cloudPathManager cloudLocatorForNode: node
+		                            transaction: transaction];
+		
+		// Modify any operations that are sitting in the queue for this file.
+		// Since the node has a new cloudPath, we need to change these operations to match.
+		
+		ZDCCloudLocator *oldCloudLocator_rcrd = nil;
+		ZDCCloudLocator *newCloudLocator_rcrd = nil;
+		
+		ZDCCloudLocator *oldCloudLocator_data = nil;
+		ZDCCloudLocator *newCloudLocator_data = nil;
+		
+		oldCloudLocator_rcrd = [oldCloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Rcrd];
+		newCloudLocator_rcrd = [newCloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Rcrd];
+		
+		oldCloudLocator_data = [oldCloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Data];
+		newCloudLocator_data = [newCloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Data];
+		
+		[cloudTransaction moveCloudLocator:oldCloudLocator_bare toCloudLocator:newCloudLocator_bare];
+		[cloudTransaction moveCloudLocator:oldCloudLocator_rcrd toCloudLocator:newCloudLocator_rcrd];
+		[cloudTransaction moveCloudLocator:oldCloudLocator_data toCloudLocator:newCloudLocator_data];
+		
+		// Notify the delegate
+		
+		[zdc.delegate didDiscoverMovedNode: node
+		                              from: oldTreePath
+		                                to: newTreePath
+		                       transaction: transaction];
+	}
 }
 
 /**
@@ -4093,23 +4140,25 @@ static NSUInteger const kMaxFailCount = 8;
 	
 	if (node.isPointer && (ptrCompletionBlock || dirCompletionBlock))
 	{
-		ZDCNode *pointee = nil;
-		if (node.pointeeID) {
-			pointee = [transaction objectForKey:node.pointeeID inCollection:kZDCCollection_Nodes];
+		ZDCNode *pointee = [transaction objectForKey:node.pointeeID inCollection:kZDCCollection_Nodes];
+		if (pointee)
+		{
+			pullItem.rcrdCompletionBlock = pullItem.ptrCompletionBlock;
+			pullItem.ptrCompletionBlock = nil;
+	
+			[self syncPointeeNode: pointee
+			          pointerNode: node
+			         isNewPointer: NO
+			             pullItem: pullItem
+			            pullState: pullState];
+			return;
 		}
-		
-		pullItem.rcrdCompletionBlock = pullItem.ptrCompletionBlock;
-		pullItem.ptrCompletionBlock = nil;
-		
-		[self syncPointeeNode: pointee
-		          pointerNode: node
-		             pullItem: pullItem
-		            pullState: pullState];
-		return;
 	}
 	
-	if (ptrCompletionBlock) {
-		// Not a pointer
+	if (ptrCompletionBlock)
+	{
+		// Either node is not a pointer.
+		// Or the pointeeNode is missing.
 		ptrCompletionBlock(transaction, [ZDCPullTaskResult success]);
 	}
 	
@@ -4263,6 +4312,7 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		[self syncPointeeNode: pointee
 		          pointerNode: node
+		         isNewPointer: YES
 		             pullItem: pullItem
 		            pullState: pullState];
 		return;
