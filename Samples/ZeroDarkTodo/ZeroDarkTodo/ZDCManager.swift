@@ -64,6 +64,15 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				self?.downloadMissingOrOutdatedNodes()
 			}
 		}
+		
+		// The ZDCPullStopped notification is broadcast when the framework:
+		// - discovered changed nodes in the cloud
+		// - finished syncing the changed node metadata
+		//
+		NotificationCenter.default.addObserver( self,
+		                              selector: #selector(self.pullStopped(notification:)),
+		                                  name: Notification.Name.ZDCPullStopped,
+		                                object: nil)
 	}
 	
 	public static var sharedInstance: ZDCManager = {
@@ -1133,10 +1142,19 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			}
 		}
 	}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MARK: ZeroDarkCloud: Notifications
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// MARK: Download Logic
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	@objc func pullStopped(notification: Notification) {
+		
+		acceptPendingInvitations()
+	}
+	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MARK: Download Logic
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private func downloadNode(withNodeID nodeID: String, transaction: YapDatabaseReadTransaction) {
 		
@@ -1217,8 +1235,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		{ (cloudDataInfo: ZDCCloudDataInfo?, cryptoFile: ZDCCryptoFile?, error: Error?) in
 			
 			if let cloudDataInfo = cloudDataInfo,
-			   let cryptoFile = cryptoFile {
-				
+			   let cryptoFile = cryptoFile
+			{
 				do {
 					// The downloaded file is still encrypted.
 					// That is, the file is stored in the cloud in an encrypted fashion.
@@ -1250,6 +1268,11 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// File cleanup.
 				// Delete the file, unless the DiskManager is managing it.
 				self.zdc.diskManager?.deleteFileIfUnmanaged(cryptoFile.fileURL)
+			}
+			
+			if let error = error {
+				
+				DDLogError("Error downloading node: \(error)")
 			}
 		}
 	}
@@ -1391,9 +1414,9 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		}
 	}
 	
-	private func autoAcceptInvitations() {
+	private func acceptPendingInvitations() {
 		
-		DDLogInfo("autoAcceptInvitations()")
+		DDLogInfo("acceptPendingInvitations()")
 		
 		guard
 			let zdc = self.zdc,
@@ -1405,7 +1428,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		}
 		
 		var pendingInvitations: [Invitation] = []
-		databaseManager.roDatabaseConnection.asyncRead({ (transaction) in
+		databaseManager.rwDatabaseConnection.asyncReadWrite({ (transaction) in
 			
 			transaction.enumerateKeysAndObjects(inCollection: kZ2DCollection_Invitation,
 			                                           using:
@@ -1625,18 +1648,20 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			// For testing purposes, we're automatically going to accept the invitation.
 			//
-			if let invitation = downloadedInvitation {
-				
-				zdc.remoteUserManager!.fetchRemoteUser(withID: invitation.senderID,
-				                                  requesterID: invitation.receiverID,
-				                              completionQueue: DispatchQueue.global(qos: .default),
-				                              completionBlock:
-				{(user: ZDCUser?, error) in
+			if let invitation = downloadedInvitation,
+			   let syncManager = zdc.syncManager
+			{
+				if syncManager.isPullingChanges(forLocalUserID: invitation.receiverID) {
 					
-					if (user != nil) {
-						self.acceptInvitation(invitation, usingLocalListTitle: invitation.listName)
-					}
-				})
+					// We're still pulling changes for this user.
+					// So we're going to wait until that process is done.
+					
+					DDLogDebug("Waiting for pull to complete before accepting invitations...")
+					
+				} else {
+					
+					self.acceptPendingInvitations()
+				}
 			}
 		})
 	}
@@ -1836,9 +1861,12 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				return;
 			}
 			
+			let localUserID = invitation.receiverID
+			let senderUserID = invitation.senderID
+			
 			guard
-				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: invitation.receiverID),
-				let sender = transaction.object(forKey: invitation.senderID, inCollection: kZDCCollection_Users) as? ZDCUser,
+				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
+				let sender = transaction.object(forKey: senderUserID, inCollection: kZDCCollection_Users) as? ZDCUser,
 				let remoteCloudPath = ZDCCloudPath.init(fromPath: invitation.cloudPath)
 			else {
 				return
@@ -1846,59 +1874,80 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			// Step 1:
 			//
-			// We're going to "graft" the remote user's List into our treesystem.
-			// Here's a visualization:
-			//
-			// (localUser)     (remoteUser)
-			//      |                |
-			//    (home)          (home)
-			//     /  \            /  \
-			//   (A)  (B)=======>(C)  (D)
-			//                   /|\
-			//                  / | \
-			//                (1)(2)(3)
-			//
-			// So we're grafting List (C) into our own treesystem.
-			// And this will allow us to see Todo items (1), (2) & (3).
+			// Check to see if we've already accepted this invitation.
+			// That is, we may have received multiple invitations for the same list.
+			// So we should ignore duplicate invitations.
 			
-			let localPath = ZDCTreesystemPath(pathComponents: [title], trunk: .home)
+			let duplicate =
+				zdc.nodeManager.findNode(withCloudID: invitation.cloudID,
+				                         localUserID: localUserID,
+				                              zAppID: kZDC_zAppID,
+				                         transaction: transaction)
 			
-			let listNode: ZDCNode!
-			do {
-				listNode = try cloudTransaction.graftNode(withLocalPath: localPath,
-				                                        remoteCloudPath: remoteCloudPath,
-				                                          remoteCloudID: invitation.cloudID,
-				                                             remoteUser: sender)
+			var listNode: ZDCNode? = nil
+			if duplicate == nil {
+				
+				// Step 3:
+				//
+				// We're going to "graft" the remote user's List into our treesystem.
+				// Here's a visualization:
+				//
+				// (localUser)     (remoteUser)
+				//      |                |
+				//    (home)          (home)
+				//     /  \            /  \
+				//   (A)  (B)=======>(C)  (D)
+				//                   /|\
+				//                  / | \
+				//                (1)(2)(3)
+				//
+				// So we're grafting List (C) into our own treesystem.
+				// And this will allow us to see Todo items (1), (2) & (3).
+				
+				var localPath = ZDCTreesystemPath(pathComponents: [title], trunk: .home)
+				
+				// If we already have a list with the same title,
+				// then let's rename it by appending a "2" to the title name.
+				localPath = cloudTransaction.conflictFreePath(localPath)
+		
+				do {
+					listNode = try cloudTransaction.graftNode(withLocalPath: localPath,
+					                                        remoteCloudPath: remoteCloudPath,
+					                                          remoteCloudID: invitation.cloudID,
+					                                             remoteUser: sender)
+				}
+				catch {
+					DDLogError("Error grafting node: \(error)")
+				}
+		
+				if let listNode = listNode {
+					
+					// Step 4:
+					//
+					// Create the corresponding List item.
+		
+					let list = List(localUserID: invitation.receiverID, title: title)
+		
+					transaction.setObject(list, forKey: list.uuid, inCollection: kZ2DCollection_List)
+		
+					// Step 5:
+					//
+					// Link our List with the node.
+					//
+					// This is just a convenience. It provides a persistent mapping between the 2 items.
+					// And allows us to quickly lookup the List given the node. Or vice-versa.
+		
+					do {
+						try cloudTransaction.linkNodeID(listNode.uuid, toKey: list.uuid, inCollection: kZ2DCollection_List)
+					} catch {
+						DDLogError("Error linking node: \(error)")
+					}
+				}
 			}
-			catch {
-				DDLogError("Error grafting node: \(error)")
-				return
-			}
 			
-			// Step 2:
+			// Step 6:
 			//
-			// Create the corresponding List item.
-			
-			let list = List(localUserID: invitation.receiverID, title: title)
-			
-			transaction.setObject(list, forKey: list.uuid, inCollection: kZ2DCollection_List)
-			
-			// Step 3:
-			//
-			// Link our List with the node.
-			//
-			// This is just a convenience. It provides a persistent mapping between the 2 items.
-			// And allows us to quickly lookup the List given the node. Or vice-versa.
-			
-			do {
-				try cloudTransaction.linkNodeID(listNode.uuid, toKey: list.uuid, inCollection: kZ2DCollection_List)
-			} catch {
-				DDLogError("Error linking node: \(error)")
-			}
-			
-			// Step 4:
-			//
-			// We can now delete the invitation message from the cloud.
+			// Delete the invitation message from the cloud.
 			
 			if let invitationNode = cloudTransaction.linkedNode(forKey: invitation.uuid, inCollection: kZ2DCollection_Invitation) {
 				
@@ -1920,19 +1969,22 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					// We can do this with dependencies.
 					// We just need to add a dependency to the deleteInviteOp.
 					
-					let listOps = cloudTransaction.addedOperations(forNodeID: listNode.uuid)
-					deleteInviteOp.addDependencies(listOps)
+					if let listNode = listNode {
+						
+						let listOps = cloudTransaction.addedOperations(forNodeID: listNode.uuid)
+						deleteInviteOp.addDependencies(listOps)
 					
-					cloudTransaction.modifyOperation(deleteInviteOp)
+						cloudTransaction.modifyOperation(deleteInviteOp)
+					}
 					
 				} catch {
 					DDLogError("Error deleting node: \(error)")
 				}
 			}
 			
-			// Step 5:
+			// Step 7:
 			//
-			// And we can delete the parsed Invitation object from the database.
+			// Finally, we can delete the parsed Invitation object from the database.
 			
 			transaction.removeObject(forKey: invitation.uuid, inCollection: kZ2DCollection_Invitation)
 		})
