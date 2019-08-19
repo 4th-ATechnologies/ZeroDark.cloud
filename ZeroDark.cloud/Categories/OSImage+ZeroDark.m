@@ -8,7 +8,7 @@
 #import <QuartzCore/QuartzCore.h> 
 #import <AVFoundation/AVFoundation.h>
 
-@implementation OSImage (S4)
+@implementation OSImage (ZeroDark)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Shared

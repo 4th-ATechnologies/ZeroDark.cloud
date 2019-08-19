@@ -1646,7 +1646,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			
 			NSError *error = nil;
 			NSData *cryptoData =
-			  [ZDCFileConversion encryptCleartextData: nodeData.data
+			  [ZDCFileConversion encryptCleartextData: data.data
 			                       toCloudFileWithKey: node.encryptionKey
 			                                 metadata: rawMetadata
 			                                thumbnail: rawThumbnail
@@ -6188,7 +6188,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	#else // macOS
 		
 		task = [session uploadTaskWithRequest: request
-											  fromData: context.uploadData
+											  fromData: multipollContext.uploadData
 											  progress: nil
 								  completionHandler:^(NSURLResponse *response, id responseObject, NSError *error)
 		{

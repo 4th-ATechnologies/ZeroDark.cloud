@@ -119,13 +119,13 @@
 		
 		if (localUserID == nil) return;
 		
-		ZDCContainerNode *containerNode =
-		  [zdc.nodeManager containerNodeForLocalUserID: localUserID
-		                                        zAppID: zdc.zAppID
-		                                     container: ZDCTreesystemContainer_Home
-		                                   transaction: transaction];
+		ZDCTrunkNode *trunkNode =
+		  [zdc.nodeManager trunkNodeForLocalUserID: localUserID
+		                                    zAppID: zdc.zAppID
+		                                     trunk: ZDCTreesystemTrunk_Home
+		                               transaction: transaction];
 		
-		[zdc.nodeManager recursiveEnumerateNodesWithParentID: containerNode.uuid
+		[zdc.nodeManager recursiveEnumerateNodesWithParentID: trunkNode.uuid
 		                                         transaction: transaction
 		                                          usingBlock:
 		^(ZDCNode *node, NSArray<ZDCNode *> *pathFromParent, BOOL *recurseInto, BOOL *stop)

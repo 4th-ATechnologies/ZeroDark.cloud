@@ -14,7 +14,7 @@ Pod::Spec.new do |s|
 		:tag => s.version.to_s
 	}
 
-	s.osx.deployment_target = '10.10'
+	s.osx.deployment_target = '10.11'
 	s.ios.deployment_target = '9.2'
 #	s.tvos.deployment_target = '9.0'
 #	s.watchos.deployment_target = '3.0'
@@ -40,8 +40,8 @@ Pod::Spec.new do |s|
 
 	s.subspec 'Core' do |ss|
 
-		ss.ios.exclude_files = 'ZeroDark.cloud/**/macOS/**/*'
-		ss.osx.exclude_files = 'ZeroDark.cloud/**/iOS/**/*'
+		ss.ios.exclude_files = ['docs/**/*', 'ZeroDark.cloud/**/macOS/**/*']
+		ss.osx.exclude_files = ['docs/**/*', 'ZeroDark.cloud/**/iOS/**/*']
 		ss.source_files = 'ZeroDark.cloud/**/*.{h,m,mm,c,storyboard,xib}'
 		ss.private_header_files = 'ZeroDark.cloud/**/Internal/*.h'
 

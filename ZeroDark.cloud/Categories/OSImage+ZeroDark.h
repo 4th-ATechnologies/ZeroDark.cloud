@@ -9,10 +9,12 @@
 
 #import "OSPlatform.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  * OSImage is defined as either NSImage or UIImage, depending on which platform we're compiling for.
  */
-@interface OSImage (S4)
+@interface OSImage (ZeroDark)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Shared
@@ -21,7 +23,7 @@
 /**
  * Cross platform method of extracting PNG data from a NSImage/UIImage.
  */
-- (NSData *)dataWithPNG;
+- (nullable NSData *)dataWithPNG;
 
 /**
  * Cross platform method of extracting JPEG data from a NSImage/UIImage.
@@ -29,7 +31,7 @@
  * This method invokes `dataWithJPEGCompression:` and passes 1.0 as the parameter.
  * This results in the least compression (or best quality).
  */
-- (NSData *)dataWithJPEG;
+- (nullable NSData *)dataWithJPEG;
 
 /**
  * Cross platform method of extracting JPEG data from a NSImage/UIImage.
@@ -39,7 +41,7 @@
  *   The value 0.0 represents the maximum compression (or lowest quality) while the
  *   value 1.0 represents the least compression (or best quality).
  */
-- (NSData *)dataWithJPEGCompression:(float)compressionQuality;
+- (nullable NSData *)dataWithJPEGCompression:(float)compressionQuality;
 
 /**
  * Scales the image UP or DOWN (proportionally) to match given width.
@@ -136,3 +138,5 @@
 #endif
 
 @end
+
+NS_ASSUME_NONNULL_END
