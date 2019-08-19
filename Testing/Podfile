@@ -13,10 +13,12 @@ inhibit_all_warnings!
 # 
 install! 'cocoapods', :disable_input_output_paths => true
 
+$YapDatabaseCommit = 'c8d52d95f27a9f60ade08599af7dee878c3e15b7'
+
 abstract_target 'macOS' do
 	platform :osx, '10.12'
 	
-	pod 'YapDatabase/SQLCipher', :git=>'https://github.com/yapstudios/YapDatabase.git', :commit=>'493981ed85cd07c5a6af9489a6b0b035dbd3e87f'
+	pod 'YapDatabase/SQLCipher', :git=>'https://github.com/yapstudios/YapDatabase.git', :commit=>$YapDatabaseCommit
 	pod 'ZeroDarkCloud', path: '../', :inhibit_warnings => false
 	
 	target :'zdc_macOS' do
@@ -30,7 +32,7 @@ end
 abstract_target 'iOS' do
 	platform :ios, '10.0'
 	
-	pod 'YapDatabase/SQLCipher', :git=>'https://github.com/yapstudios/YapDatabase.git', :commit=>'493981ed85cd07c5a6af9489a6b0b035dbd3e87f'
+	pod 'YapDatabase/SQLCipher', :git=>'https://github.com/yapstudios/YapDatabase.git', :commit=>$YapDatabaseCommit
 	pod 'ZeroDarkCloud', path: '../', :inhibit_warnings => false
 	
 	target :'zdc_iOS' do

@@ -44,18 +44,18 @@
 #pragma mark Push - Messages
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (nullable ZDCData *)messageDataForUser:(ZDCUser *)user
-                           withMessageID:(NSString *)messageID
-                             transaction:(YapDatabaseReadTransaction *)transaction
+- (nullable ZDCData *)dataForMessage:(nonnull ZDCNode *)message
+                         transaction:(nonnull YapDatabaseReadTransaction *)transaction
 {
+	
 	return nil;
 }
 
-- (void)didSendMessageToUser:(ZDCUser *)user
-               withMessageID:(NSString *)messageID
-                 transaction:(YapDatabaseReadWriteTransaction *)transaction
+- (void)didSendMessage:(nonnull ZDCNode *)message
+           toRecipient:(nonnull ZDCUser *)recipient
+           transaction:(nonnull YapDatabaseReadWriteTransaction *)transaction
 {
-	NSLog(@"didSendMessageToUser:withMessageID::");
+	NSLog(@"didSendMessage:toRecipient:::");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -91,6 +91,14 @@
                    transaction:(YapDatabaseReadWriteTransaction *)transaction
 {
 	NSLog(@"didDiscoverDeletedNode:atPath: %@", path);
+}
+
+- (void)didDiscoverConflict:(ZDCNodeConflict)conflict
+                    forNode:(nonnull ZDCNode *)node
+                     atPath:(nonnull ZDCTreesystemPath *)path
+                transaction:(nonnull YapDatabaseReadWriteTransaction *)transaction
+{
+	NSLog(@"didDiscoverConflict:forNode::atPath:: %@", path);
 }
 
 @end
