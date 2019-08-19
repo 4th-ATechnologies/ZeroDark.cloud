@@ -152,9 +152,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, SettingsViewControllerDel
 			{
 				var allUsersIDs:Array<String> = []
 				
-				let databaseConnection = ZDCManager.uiDatabaseConnection()
-				databaseConnection.read { (transaction) in
-					allUsersIDs = ZDCManager.localUserManager().allLocalUserIDs(transaction)
+				let zdc = ZDCManager.zdc()
+				let uiDatabaseConnection = zdc.databaseManager!.uiDatabaseConnection
+				uiDatabaseConnection.read { (transaction) in
+					
+					allUsersIDs = zdc.localUserManager!.allLocalUserIDs(transaction)
 				}
 				
 				_currentLocalUserID = allUsersIDs.first
@@ -177,7 +179,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, SettingsViewControllerDel
 			var localUser: ZDCLocalUser?
 			if let luid = _currentLocalUserID {
 				
-				ZDCManager.uiDatabaseConnection().read { (transaction) in
+				let zdc = ZDCManager.zdc()
+				let uiDatabaseConnection = zdc.databaseManager!.uiDatabaseConnection
+				uiDatabaseConnection.read { (transaction) in
+					
 					localUser = transaction.object(forKey: luid, inCollection: kZDCCollection_Users) as? ZDCLocalUser
 				}
 			}
@@ -193,11 +198,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, SettingsViewControllerDel
 
 	func deleteUserID(userID:String!, completion: @escaping (Bool) -> ()) {
 
-		ZDCManager.rwDatabaseConnection().asyncReadWrite({ (transaction) in
+		let zdc = ZDCManager.zdc()
+		let rwDatabaseConnection = zdc.databaseManager!.rwDatabaseConnection
+		
+		rwDatabaseConnection.asyncReadWrite({ (transaction) in
 
 			let listsIDs = ListsViewController.allListsWithLocalUserID(userID: userID, transaction: transaction)
 
-			ZDCManager.localUserManager().deleteLocalUser(userID, transaction: transaction)
+			zdc.localUserManager?.deleteLocalUser(userID, transaction: transaction)
 
 			for listID in listsIDs {
 

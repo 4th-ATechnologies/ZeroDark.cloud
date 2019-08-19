@@ -83,8 +83,10 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 	override func viewDidLoad() {
 		super.viewDidLoad()
 
+		let zdc = ZDCManager.zdc()
+		
 		let badgeSize = CGSize(width: 22, height: 22)
-		let badgeImage = ZDCManager.imageManager().defaultMultiUserAvatar().scaled(to: badgeSize, scalingMode: .aspectFit)
+		let badgeImage = zdc.imageManager!.defaultMultiUserAvatar().scaled(to: badgeSize, scalingMode: .aspectFit)
 		
 		shareBadge = BadgedBarButtonItem(image: badgeImage, mode: .top) { [weak self] in
 			
@@ -106,7 +108,7 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 		self.vwSimulate.isHidden = false
 		self.cnstVwSimulateHeight.constant = 44
 		
-		if let simVC = ZDCManager.uiTools().simulatePushNotificationViewController() {
+		if let simVC = zdc.uiTools?.simulatePushNotificationViewController() {
 			
 			simVC.view.frame = self.vwSimulate.bounds;
 			simVC.willMove(toParent: self)
@@ -145,20 +147,20 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 	
 	private func setupDatabaseConnection() {
 		
+		let zdc = ZDCManager.zdc()
+		
 		// The UIDatabaseConnection is part of the ZeroDarkCloud framework.
 		//
 		// It's designed to be a shared YapDatabaseConnection that can be used by all the UI classes.
 		// That is, if you're on the main thread, you should use the UIDatabaseConnection.
 		//
-		databaseConnection = ZDCManager.uiDatabaseConnection()
+		databaseConnection = zdc.databaseManager!.uiDatabaseConnection
 		self.initializeMappings()
 
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(self.databaseConnectionDidUpdate(notification:)),
-			name:.UIDatabaseConnectionDidUpdateNotification ,
-			object: nil
-		)
+		NotificationCenter.default.addObserver( self,
+		                              selector: #selector(self.databaseConnectionDidUpdate(notification:)),
+		                                  name: .UIDatabaseConnectionDidUpdate,
+		                                object: nil)
 	}
 	
 	private func initializeMappings() {
@@ -365,6 +367,8 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 	private func addNewTask(title: String) {
 		
 		let zdc = ZDCManager.zdc()
+		let rwDatabaseConnection = zdc.databaseManager!.rwDatabaseConnection
+		
 		let localUserID = AppDelegate.sharedInstance().currentLocalUserID!
 		let listID = self.listID!
 		
@@ -390,7 +394,7 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 		//
 		// (YapDatabase encourages the same thing, for the same reason.)
 		
-		ZDCManager.rwDatabaseConnection().asyncReadWrite({ (transaction) in
+		rwDatabaseConnection.asyncReadWrite({ (transaction) in
 
 			// Store the Task object in the database.
 			//
@@ -482,9 +486,11 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 	private func invertTaskCompletion(taskID: String) {
 		
 		let zdc = ZDCManager.zdc()
+		let rwDatabaseConnection = zdc.databaseManager!.rwDatabaseConnection
+		
 		let localUserID = AppDelegate.sharedInstance().currentLocalUserID!
 
-		ZDCManager.rwDatabaseConnection().asyncReadWrite({ (transaction) in
+		rwDatabaseConnection.asyncReadWrite({ (transaction) in
 
 			let object  = transaction.object(forKey: taskID, inCollection: kZ2DCollection_Task)
 			if var task = object as? Task {
@@ -522,6 +528,7 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 
 	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		
+		let zdc = ZDCManager.zdc()
 		let cell = tableView.dequeueReusableCell(withIdentifier: "TaskCell", for: indexPath) as! TaskTableCell
 
 		if let task: Task = self.taskAtIndexPath(indexPath: indexPath) {
@@ -598,7 +605,7 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 				let options = ZDCFetchOptions()
 				options.downloadIfMarkedAsNeedsDownload = true
 				
-				ZDCManager.imageManager().fetchNodeThumbnail(imageNode, with: options, preFetch: preFetch, postFetch: postFetch)
+				zdc.imageManager!.fetchNodeThumbnail(imageNode, with: options, preFetch: preFetch, postFetch: postFetch)
 				
 			} else {
 				
@@ -645,54 +652,36 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 	}
 
 	func tableView(_ tableView: UITableView,
-				   trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
-		->   UISwipeActionsConfiguration? {
-
-
-
-			let actions = [
-
-				UIContextualAction(style: .destructive, title: "Delete",
-								   handler: { (action, view, completionHandler) in
-
-									if let task: Task = self.taskAtIndexPath(indexPath: indexPath)
-									{
-										ZDCManager.rwDatabaseConnection().asyncReadWrite({ (transaction) in
-
-											transaction.removeObject(forKey: task.uuid,
-																	 inCollection: kZ2DCollection_Task)
-
-										}, completionBlock: {
-
-											// UI update  is handled by  databaseConnectionDidUpdate
-											completionHandler(true)
-										})
-
-									}
-									else
-									{
-										completionHandler(false)
-									}
-				})
-
-				/*  // Swift doesnt have a preprocessor?
+	               trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration?
+	{
+		guard let task = self.taskAtIndexPath(indexPath: indexPath) else {
+			return nil
+		}
+		
+		let delete_handler: UIContextualAction.Handler = {(action, view, completionHandler) in
+			
+			let zdc = ZDCManager.zdc()
+			let rwDatabaseConnection = zdc.databaseManager!.rwDatabaseConnection
+			
+			rwDatabaseConnection.asyncReadWrite({ (transaction) in
 				
-				, UIContextualAction(style: .normal, title: "More…",
-				handler: { (action, view, completionHandler) in
-
-				if let task: Task = self.taskAtIndexPath(indexPath: indexPath)
-				{
-				}
+				transaction.removeObject(forKey: task.uuid, inCollection: kZ2DCollection_Task)
+			
+			}, completionBlock: {
+				
+				// UI update  is handled by  databaseConnectionDidUpdate
 				completionHandler(true)
-				})
-				*/
-			]
-
-
-
-
-			let configuration = UISwipeActionsConfiguration(actions: actions)
-			return configuration
+			})
+		}
+		
+		let delete_action = UIContextualAction(style: .destructive,
+		                                       title: "Delete",
+		                                     handler: delete_handler)
+		
+		let actions = [delete_action]
+		
+		let configuration = UISwipeActionsConfiguration(actions: actions)
+		return configuration
 	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -717,10 +706,10 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 		var remoteUserIDs = listNode?.shareList.allUserIDs() ?? []
 		remoteUserIDs = remoteUserIDs.filter {$0 != localUserID}
 		
-		ZDCManager.uiTools().pushSharedUsersView(forLocalUserID: localUserID,
-		                                          remoteUserIDs: Set(remoteUserIDs),
-		                                                  title: "Shared To",
-		                                   navigationController: self.navigationController!)
+		zdc.uiTools?.pushSharedUsersView(forLocalUserID: localUserID,
+		                                  remoteUserIDs: Set(remoteUserIDs),
+		                                          title: "Shared To",
+		                           navigationController: self.navigationController!)
 		{ (newUsers: Set<String>?, removedUsers: Set<String>?) in
 			
 			ZDCManager.sharedInstance.modifyListSharing( listID,

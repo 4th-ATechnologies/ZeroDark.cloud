@@ -266,14 +266,13 @@ class TaskPhotoViewController: UIViewController, UINavigationControllerDelegate,
 	
 	private func setupDatabaseConnection() {
 		
-		databaseConnection = ZDCManager.uiDatabaseConnection()
+		let zdc = ZDCManager.zdc()
+		databaseConnection = zdc.databaseManager!.uiDatabaseConnection
 
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(self.databaseConnectionDidUpdate(notification:)),
-			name:.UIDatabaseConnectionDidUpdateNotification ,
-			object: nil
-		)
+		NotificationCenter.default.addObserver( self,
+		                              selector: #selector(self.databaseConnectionDidUpdate(notification:)),
+		                                  name: .UIDatabaseConnectionDidUpdate,
+		                                object: nil)
 	}
 
 	@objc func databaseConnectionDidUpdate(notification: Notification) {
@@ -296,7 +295,7 @@ class TaskPhotoViewController: UIViewController, UINavigationControllerDelegate,
 	private func unmarkNodeAsNeedsDownload(_ node: ZDCNode, eTag: String) {
 		
 		let zdc = ZDCManager.zdc()
-		let rwConnection = ZDCManager.rwDatabaseConnection()
+		let rwConnection = zdc.databaseManager!.rwDatabaseConnection
 		
 		rwConnection.asyncReadWrite { (transaction) in
 			

@@ -46,8 +46,12 @@ class RootContainerViewController: UIViewController {
 	/// Displays the MapViewController
 	func showMainView(localUserID: String) {
 
+		let zdc = ZDCManager.zdc()
+		let uiDatabaseConnection = zdc.databaseManager!.uiDatabaseConnection
+		
 		var localUser: ZDCLocalUser?
-		ZDCManager.uiDatabaseConnection() .read { (transaction) in
+		uiDatabaseConnection.read { (transaction) in
+			
 			localUser = transaction.object(forKey: localUserID, inCollection: kZDCCollection_Users) as? ZDCLocalUser
 		}
 
@@ -111,11 +115,11 @@ class RootContainerViewController: UIViewController {
 		// create a user controlled initial view
 		if let initialVC = InitialViewController.createViewContoller() {
 			
-			let setupVC = ZDCManager.uiTools().accountSetupViewController(withInitialViewController:initialVC,
-																							  canDismissWithoutNewAccount:canDismissWithoutNewAccount)
-			{ (localUserID:String?,
-				completedActivation:Bool,
-				shouldBackupAccessKey:Bool) in
+			let uiTools = ZDCManager.zdc().uiTools!
+			
+			let setupVC = uiTools.accountSetupViewController(withInitialViewController: initialVC,
+			                                               canDismissWithoutNewAccount: canDismissWithoutNewAccount)
+			{ (localUserID: String?, completedActivation: Bool, shouldBackupAccessKey: Bool) in
 				
 				AppDelegate.sharedInstance().currentLocalUserID = localUserID;
 			}
@@ -141,10 +145,10 @@ class RootContainerViewController: UIViewController {
 //		guard !(rootViewController is AccountSetupViewController_IOS)
 //			else { return }
 //
-		let setupVC = ZDCManager.uiTools().accountResumeSetup(forLocalUserID: localUserID)
-		{ (localUserID:String?,
-			completedActivation:Bool,
-			shouldBackupAccessKey:Bool) in
+		let uiTools = ZDCManager.zdc().uiTools!
+		
+		let setupVC = uiTools.accountResumeSetup(forLocalUserID: localUserID)
+		{ (localUserID: String?, completedActivation: Bool, shouldBackupAccessKey: Bool) in
 			
 			AppDelegate.sharedInstance().currentLocalUserID = localUserID;
 		}
@@ -160,5 +164,4 @@ class RootContainerViewController: UIViewController {
 		setupVC.didMove(toParent: self)
 		rootViewController = setupVC
 	}
-
 }

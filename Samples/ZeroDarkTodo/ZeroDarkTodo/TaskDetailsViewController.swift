@@ -81,11 +81,14 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		
-		#if DEBUG
+	#if DEBUG
+		
 		self.vwSimulate.isHidden = false
 		self.cnstVwSimulateHeight.constant = 44
 		
-		if let simVC = ZDCManager.uiTools().simulatePushNotificationViewController() {
+		let zdc = ZDCManager.zdc()
+		
+		if let simVC = zdc.uiTools?.simulatePushNotificationViewController() {
 			
 			simVC.view.frame = self.vwSimulate.bounds;
 			simVC.willMove(toParent: self)
@@ -94,11 +97,12 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 			simVC.didMove(toParent: self)
 		}
 		
-		#else
+	#else
+		
 		self.vwSimulate.isHidden = true
 		self.cnstVwSimulateHeight.constant = 0
-		#endif
-
+		
+	#endif
 	}
 
 	override func viewWillAppear(_ animated: Bool) {
@@ -144,6 +148,8 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 	
 	private func refreshView() {
 
+		let zdc = ZDCManager.zdc()
+		
 		databaseConnection.read { (transaction) in
 			
 			guard
@@ -168,13 +174,19 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 			
 			self.seg.selectedSegmentIndex = task.priority.rawValue
 			
-			if(imageWasUpdated) {
+			if imageWasUpdated {
 				self.btnIcon.setImage((updatedImage ?? self.defaultImage), for: .normal)
 			}
-			else
+			else // if !imageWasUpdated
 			{
 				if let imageNode = self.imageNode(forTask: task, transaction: transaction) {
 					
+					// We're going to use the ZDCImageManager to fetch the thumbnail for us.
+					// The API uses 2 closures:
+					//
+					// - preFetch closure
+					// - postFetch closure
+					//
 					// The preFetch closure is invoked BEFORE the `fetchNodeThumbnail` function returns.
 					//
 					// If preFetch.willInvoke is false, the postFetch closure will NOT be called.
@@ -197,15 +209,15 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 					let options = ZDCFetchOptions()
 					options.downloadIfMarkedAsNeedsDownload = true
 					
-					ZDCManager.imageManager().fetchNodeThumbnail(imageNode, with: options, preFetch: preFetch, postFetch: postFetch)
+					zdc.imageManager?.fetchNodeThumbnail(imageNode, with: options, preFetch: preFetch, postFetch: postFetch)
 				}
 				else {
 					
 					self.btnIcon.setImage(defaultImage, for: .normal)
 				}
 			}
-	
-		}
+			
+		} // end: databaseConnection.read
 	}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -214,12 +226,13 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 	
 	private func setupDatabaseConnection() {
 		
-		databaseConnection = ZDCManager.uiDatabaseConnection()
+		let zdc = ZDCManager.zdc()
+		databaseConnection = zdc.databaseManager!.uiDatabaseConnection
 
-		NotificationCenter.default.addObserver(self,
-											   selector: #selector(self.databaseConnectionDidUpdate(notification:)),
-											   name:.UIDatabaseConnectionDidUpdateNotification ,
-											   object: nil)
+		NotificationCenter.default.addObserver( self,
+		                              selector: #selector(self.databaseConnectionDidUpdate(notification:)),
+		                                  name: .UIDatabaseConnectionDidUpdate,
+		                                object: nil)
 	}
 
 	@objc func databaseConnectionDidUpdate(notification: Notification) {
@@ -284,10 +297,12 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 		let newPriorty = TaskPriority(rawValue: ((self.seg?.selectedSegmentIndex)!))!
 		let newCompleted = self.checkMark.checked
 		
-		let zdc = ZDCManager.zdc()
 		let localUserID = AppDelegate.sharedInstance().currentLocalUserID!
+		
+		let zdc = ZDCManager.zdc()
+		let rwDatabaseConnection = zdc.databaseManager!.rwDatabaseConnection
 
-		ZDCManager.rwDatabaseConnection().asyncReadWrite { (transaction) in
+		rwDatabaseConnection.asyncReadWrite { (transaction) in
 			
 			guard
 				var task = transaction.object(forKey: self.taskID, inCollection: kZ2DCollection_Task) as? Task

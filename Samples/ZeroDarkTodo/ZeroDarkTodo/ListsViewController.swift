@@ -85,39 +85,40 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 // MARK: View Lifecycle
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        let settingButton = UIButton()
-        settingButton.setImage(UIImage(named: "threebars")!
-            .withRenderingMode(UIImage.RenderingMode.alwaysTemplate),
-                               for: .normal)
-        
-        settingButton.addTarget(self,
-                                action: #selector(self.didHitSettings(_:)),
-                                for: .touchUpInside)
-        let settingButtonItem = UIBarButtonItem(customView: settingButton)
-        let width1 = settingButtonItem.customView?.widthAnchor.constraint(equalToConstant: 22)
-        width1?.isActive = true
-        let height1 = settingButtonItem.customView?.heightAnchor.constraint(equalToConstant: 22)
-        height1?.isActive = true
-        
-        self.navigationItem.leftBarButtonItems = [
-            settingButtonItem	]
-        
-        let sortButton = UIButton()
-        sortButton.setImage(UIImage(named: "hamburger")!
-            .withRenderingMode(UIImage.RenderingMode.alwaysTemplate),
-                            for: .normal)
-        
-        sortButton.addTarget(self,
-                             action: #selector(self.didSetEditing(_:)),
-                             for: .touchUpInside)
-        let sortButtonItem = UIBarButtonItem(customView: sortButton)
-        let width = sortButtonItem.customView?.widthAnchor.constraint(equalToConstant: 22)
-        width?.isActive = true
-        let height = sortButtonItem.customView?.heightAnchor.constraint(equalToConstant: 22)
-        height?.isActive = true
+	override func viewDidLoad() {
+		super.viewDidLoad()
+		
+		let settingsImage = UIImage(named: "threebars")!.withRenderingMode(.alwaysTemplate)
+		
+		let settingButton = UIButton()
+		settingButton.setImage(settingsImage, for: .normal)
+		settingButton.addTarget( self,
+		                 action: #selector(self.didHitSettings(_:)),
+		                    for: .touchUpInside)
+		
+		let settingButtonItem = UIBarButtonItem(customView: settingButton)
+		let width1 = settingButtonItem.customView?.widthAnchor.constraint(equalToConstant: 22)
+		width1?.isActive = true
+		let height1 = settingButtonItem.customView?.heightAnchor.constraint(equalToConstant: 22)
+		height1?.isActive = true
+		
+		self.navigationItem.leftBarButtonItems = [
+			settingButtonItem
+		]
+		
+		let sortImage = UIImage(named: "hamburger")!.withRenderingMode(.alwaysTemplate)
+		
+		let sortButton = UIButton()
+		sortButton.setImage(sortImage, for: .normal)
+		sortButton.addTarget( self,
+		              action: #selector(self.didSetEditing(_:)),
+		                 for: .touchUpInside)
+		
+		let sortButtonItem = UIBarButtonItem(customView: sortButton)
+		let width = sortButtonItem.customView?.widthAnchor.constraint(equalToConstant: 22)
+		width?.isActive = true
+		let height = sortButtonItem.customView?.heightAnchor.constraint(equalToConstant: 22)
+		height?.isActive = true
         
         self.navigationItem.rightBarButtonItems = [
             
@@ -130,7 +131,8 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		self.vwSimulate.isHidden = false
 		self.cnstVwSimulateHeight.constant = 44
 		
-		if let simVC = ZDCManager.uiTools().simulatePushNotificationViewController() {
+		let zdc = ZDCManager.zdc()
+		if let simVC = zdc.uiTools?.simulatePushNotificationViewController() {
 			
 			simVC.view.frame = self.vwSimulate.bounds;
 			simVC.willMove(toParent: self)
@@ -180,9 +182,11 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		btnTitle?.isEnabled = true
 		self.navigationItem.titleView = btnTitle
 		
+		let zdc = ZDCManager.zdc()
+		
 		let size = CGSize(width: 30, height: 30)
-		let defaultImage = {
-			return ZDCManager.imageManager().defaultUserAvatar().scaled(to: size, scalingMode: .aspectFit)
+		let defaultImage = { () -> UIImage in
+			return zdc.imageManager!.defaultUserAvatar().scaled(to: size, scalingMode: .aspectFit)
 		}
 		let processing = {(image: UIImage) in
 			return image.scaled(to: size, scalingMode: .aspectFit)
@@ -194,30 +198,29 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 			self?.btnTitle?.setImage(image ?? defaultImage(), for: .normal)
 		}
 		
-		ZDCManager.imageManager().fetchUserAvatar( user,
-		                         withProcessingID: "30*30",
-		                          processingBlock: processing,
-		                                 preFetch: preFetch,
-		                                postFetch: postFetch)
+		zdc.imageManager!.fetchUserAvatar( user,
+		                 withProcessingID: "30*30",
+		                  processingBlock: processing,
+		                         preFetch: preFetch,
+		                        postFetch: postFetch)
 	}
-	
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: Database
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-    private func setupDatabaseConnection()
-    {
-        databaseConnection = ZDCManager.uiDatabaseConnection()
+	private func setupDatabaseConnection() {
+		
+		let zdc = ZDCManager.zdc()
+		
+		databaseConnection = zdc.databaseManager!.uiDatabaseConnection
+		self.initializeMappings()
         
-        self.initializeMappings()
-        
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(self.databaseConnectionDidUpdate(notification:)),
-                                               name:.UIDatabaseConnectionDidUpdateNotification ,
-                                               object: nil)
-        
-    }
+		NotificationCenter.default.addObserver( self,
+		                              selector: #selector(self.databaseConnectionDidUpdate(notification:)),
+		                                  name: .UIDatabaseConnectionDidUpdate,
+		                                object: nil)
+	}
     
 	@objc func databaseConnectionDidUpdate(notification: Notification) {
         
@@ -459,9 +462,11 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 	private func renameList (listID: String, newTitle: String) {
 		
 		let zdc = ZDCManager.zdc()
+		let rwDatabaseConnection = zdc.databaseManager!.rwDatabaseConnection
+		
 		let localUserID = self.localUserID
 		
-		ZDCManager.rwDatabaseConnection().asyncReadWrite({ (transaction) in
+		rwDatabaseConnection.asyncReadWrite({ (transaction) in
 			
 			guard var list = transaction.object(forKey: listID, inCollection: kZ2DCollection_List) as? List else {
 				return
@@ -519,8 +524,8 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 
 	@objc func didHitTitle(_ sender: Any) {
 		
-		ZDCManager.uiTools().pushSettings(forLocalUserID: localUserID,
-		                                            with: self.navigationController!)
+		let zdc = ZDCManager.zdc()
+		zdc.uiTools?.pushSettings(forLocalUserID: localUserID, with: self.navigationController!)
 	}
     
 	@objc func didHitSettings(_ sender: Any) {
@@ -654,7 +659,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		let localUserID = AppDelegate.sharedInstance().currentLocalUserID!
 		let remoteUserIDs = listNode?.shareList.allUserIDs() ?? []
 		
-		ZDCManager.uiTools().pushSharedUsersView(forLocalUserID: localUserID,
+		zdc.uiTools!.pushSharedUsersView(forLocalUserID: localUserID,
 		                                          remoteUserIDs: Set(remoteUserIDs),
 		                                                  title: "Shared To",
 		                                   navigationController: self.navigationController!)
@@ -683,10 +688,10 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		let localUserID = AppDelegate.sharedInstance().currentLocalUserID!
 		let remoteUserIDs = listNode?.shareList.allUserIDs() ?? []
 	
-		ZDCManager.uiTools().pushSharedUsersView(forLocalUserID: localUserID,
-		                                          remoteUserIDs: Set(remoteUserIDs),
-		                                                  title: "Shared To",
-		                                   navigationController: self.navigationController!)
+		zdc.uiTools?.pushSharedUsersView(forLocalUserID: localUserID,
+		                                  remoteUserIDs: Set(remoteUserIDs),
+		                                          title: "Shared To",
+		                           navigationController: self.navigationController!)
 		{ (newUsers: Set<String>?, removedUsers: Set<String>?) in
 			
 			ZDCManager.sharedInstance.modifyListSharing( listID,
@@ -713,6 +718,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
     
 	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		
+		let zdc = ZDCManager.zdc()
 		let cell = tableView.dequeueReusableCell(withIdentifier: "ListTableCell", for: indexPath) as! ListTableCell
 		
 		if let list = self.listAtIndexPath(indexPath) {
@@ -737,7 +743,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 			else {
 				
 				cell.btnRemoteUsers.isHidden = false
-				cell.btnRemoteUsers .setImage(ZDCManager.imageManager().defaultMultiUserAvatar(), for: .normal)
+				cell.btnRemoteUsers.setImage(zdc.imageManager!.defaultMultiUserAvatar(), for: .normal)
 				
 				// a lot of work to make the badge look pretty
 				cell.lblCount.isHidden = false;
@@ -786,65 +792,84 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 	               trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
 	) -> UISwipeActionsConfiguration?
 	{
-		let list: List! = self.listAtIndexPath(indexPath)
+		guard let list = self.listAtIndexPath(indexPath) else {
+			return nil
+		}
 		
-		let deleteAction =
-			UIContextualAction(style: .destructive,
-			                   title: "Delete",
-			                   handler: {(action, view, completionHandler) in
+		let zdc = ZDCManager.zdc()
+		let rwDatabaseConnection = zdc.databaseManager!.rwDatabaseConnection
+		
+		//
+		// Delete
+		//
+		
+		let delete_handler: UIContextualAction.Handler = {(action, view, completionHandler) in
+			
+			rwDatabaseConnection.asyncReadWrite({ (transaction) in
 				
-				ZDCManager.rwDatabaseConnection().asyncReadWrite({(transaction) in
-					
-					transaction.removeObject(forKey: list.uuid, inCollection: kZ2DCollection_List)
-					
-				}, completionBlock: {
-					
-					// UI update is handled by databaseConnectionDidUpdate
-					completionHandler(true)
-				})
-			})
-		
-		let moreAction =
-			UIContextualAction(style: .normal,
-			                   title: "More…",
-			                   handler: {(action, view, completionHandler) in
-										
-				self.moreAlertForListID(listID: list.uuid)
+				transaction.removeObject(forKey: list.uuid, inCollection: kZ2DCollection_List)
+				
+			}, completionBlock: {
+				
+				// UI update is handled by databaseConnectionDidUpdate
 				completionHandler(true)
 			})
+		}
 		
-		let removeAction =
-			UIContextualAction(style: .normal,
-			                   title: "Remove",
-			                   handler: {(action, view, completionHandler) in
-										
-				ZDCManager.rwDatabaseConnection().asyncReadWrite({(transaction) in
-					
-					// FIXME: add code to remove me from shared list
-					transaction.removeObject(forKey: list.uuid, inCollection: kZ2DCollection_List)
-					
-				}, completionBlock: {
-					
-					// UI update is handled by databaseConnectionDidUpdate
-					completionHandler(true)
-				})
+		let delete_action = UIContextualAction(style: .destructive,
+		                                       title: "Delete",
+		                                     handler: delete_handler)
+		
+		//
+		// More
+		//
+		
+		let more_handler: UIContextualAction.Handler = {(action, view, completionHandler) in
+			
+			self.moreAlertForListID(listID: list.uuid)
+			completionHandler(true)
+		}
+		
+		let more_action = UIContextualAction(style: .normal,
+		                                     title: "More…",
+		                                   handler: more_handler)
+		
+		//
+		// Remove
+		//
+		
+		let remove_handler: UIContextualAction.Handler = {(action, view, completionHandler) in
+			
+			rwDatabaseConnection.asyncReadWrite({ (transaction) in
+				
+				transaction.removeObject(forKey: list.uuid, inCollection: kZ2DCollection_List)
+				
+			}, completionBlock: {
+				
+				// UI update is handled by databaseConnectionDidUpdate
+				completionHandler(true)
 			})
-		removeAction.backgroundColor = UIColor.orange
-		
-		var actions:Array<UIContextualAction> = Array()
-		
-		if (self.isOwnedByMe(listID: list.uuid))
-		{
-			actions.append(contentsOf: [deleteAction, moreAction])
-		}
-		else
-		{
- 			actions.append( removeAction)
 		}
 		
+		let remove_action = UIContextualAction(style: .normal,
+		                                       title: "Remove",
+		                                     handler: remove_handler)
+		remove_action.backgroundColor = UIColor.orange
+		
+		//
+		// Configuration
+		//
+		
+		var actions: Array<UIContextualAction> = []
+		
+		if self.isOwnedByMe(listID: list.uuid) {
+			actions.append(contentsOf: [delete_action, more_action])
+		}
+		else {
+ 			actions.append(remove_action)
+		}
 		
 		let configuration = UISwipeActionsConfiguration(actions:actions)
 		return configuration
 	}
-	
 }

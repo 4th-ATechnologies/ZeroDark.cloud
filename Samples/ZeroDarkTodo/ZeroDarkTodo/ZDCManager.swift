@@ -11,22 +11,6 @@ import UIKit
 import CocoaLumberjack
 import ZeroDarkCloud
 
-extension Notification.Name {
-	static let UIDatabaseConnectionWillUpdateNotification = Notification.Name("UIDatabaseConnectionWillUpdateNotification")
-	static let UIDatabaseConnectionDidUpdateNotification = Notification.Name("UIDatabaseConnectionDidUpdateNotification")
-
-	static let ZDCPullStartedNotification =
-		Notification.Name("ZDCPullStartedNotification")
-	static let ZDCPullStoppedNotification =
-		Notification.Name("ZDCPullStoppedNotification")
-	static let ZDCPushStartedNotification =
-		Notification.Name("ZDCPushStartedNotification")
-	static let ZDCPushStoppedNotification =
-		Notification.Name("ZDCPushStoppedNotification")
-}
-
-let kNotificationsKey = "notifications"
-
 let kZDC_DatabaseName = "ZeroDarkTodo"
 let kZDC_zAppID       = "com.4th-a.ZeroDarkTodo"
 
@@ -69,17 +53,15 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			DDLogError("Ooops! Something went wrong: \(error)")
 		}
 		
-		if zdc.isDatabaseUnlocked {
-			self.downloadMissingOrOutdatedNodes()
-			self.autoAcceptInvitations()
+		// If the user gets disconnected from the Internet,
+		// then we may need to restart some downloads after they get reconnected.
+		//
+		// We setup a closure to do that here.
+		zdc.reachability.setReachabilityStatusChange {[weak self] (status: AFNetworkReachabilityStatus) in
 			
-			zdc.reachability.setReachabilityStatusChange {[weak self] (status: AFNetworkReachabilityStatus) in
+			if status == .reachableViaWiFi || status == .reachableViaWWAN {
 				
-				if status == .reachableViaWiFi || status == .reachableViaWWAN {
-					
-					self?.downloadMissingOrOutdatedNodes()
-					self?.autoAcceptInvitations()
-				}
+				self?.downloadMissingOrOutdatedNodes()
 			}
 		}
 	}
@@ -93,38 +75,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	///
 	class func zdc() -> ZeroDarkCloud {
 		return sharedInstance.zdc
-	}
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// MARK: Convenience functions
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	class func uiDatabaseConnection() -> YapDatabaseConnection {
-		return sharedInstance.zdc.databaseManager!.uiDatabaseConnection
-	}
-	
-	class func rwDatabaseConnection() -> YapDatabaseConnection {
-		return sharedInstance.zdc.databaseManager!.rwDatabaseConnection
-	}
-	
-	class func databaseManager() -> ZDCDatabaseManager {
-		return sharedInstance.zdc.databaseManager!
-	}
-	
-	class func localUserManager() -> ZDCLocalUserManager {
-		return sharedInstance.zdc.localUserManager!
-	}
-	
-	class func searchManager() -> ZDCSearchUserManager {
-		return sharedInstance.zdc.searchManager!
-	}
-	
-	class func uiTools() -> ZDCUITools {
-		return sharedInstance.zdc.uiTools!
-	}
-	
-	class func imageManager() -> ZDCImageManager {
-		return sharedInstance.zdc.imageManager!
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

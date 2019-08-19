@@ -119,14 +119,18 @@ SettingsTableHeaderViewDelegate {
 
 	private func refreshView() {
 		
-		var users: [[String: Any]] = []
+		let zdc = ZDCManager.zdc()
 		
-		databaseConnection .read { (transaction) in
+		var users: [[String: Any]] = []
+		databaseConnection.read { (transaction) in
 			
-			ZDCManager.localUserManager().enumerateLocalUsers(with: transaction,
-									using: { (localUser, stop) in
-										users.append(["uuid": localUser.uuid,
-													  "displayName": localUser.displayName ])
+			zdc.localUserManager?.enumerateLocalUsers(with: transaction, using:
+			{ (localUser, stop) in
+				
+				users.append([
+					"uuid"        :  localUser.uuid,
+					"displayName" : localUser.displayName
+				])
 			})
 		}
 		
@@ -140,13 +144,13 @@ SettingsTableHeaderViewDelegate {
 
 	private func setupDatabaseConnection()
 	{
-		databaseConnection = ZDCManager.uiDatabaseConnection()
+		let zdc = ZDCManager.zdc()
+		databaseConnection = zdc.databaseManager!.uiDatabaseConnection
 
-		NotificationCenter.default.addObserver(self,
-											   selector: #selector(self.databaseConnectionDidUpdate(notification:)),
-											   name:.UIDatabaseConnectionDidUpdateNotification ,
-											   object: nil)
-
+		NotificationCenter.default.addObserver( self,
+		                              selector: #selector(self.databaseConnectionDidUpdate(notification:)),
+		                                  name: .UIDatabaseConnectionDidUpdate,
+		                                object: nil)
 	}
 
 	@objc func databaseConnectionDidUpdate(notification: Notification) {
@@ -203,8 +207,10 @@ SettingsTableHeaderViewDelegate {
 
 	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 
+		let zdc = ZDCManager.zdc()
+		
 		var cell: UITableViewCell? = nil
-
+		
 		switch indexPath.section {
 		case kSection_Accounts:
 
@@ -241,8 +247,8 @@ SettingsTableHeaderViewDelegate {
 					accountCell.userAvatar.layer.cornerRadius = accountCell.userAvatar.frame.width / 2
 					accountCell.userAvatar.layer.masksToBounds = true
 					
-					let defaultImage = {
-						return ZDCManager.imageManager().defaultUserAvatar()
+					let defaultImage = {() -> UIImage in
+						return zdc.imageManager!.defaultUserAvatar()
 					}
 					
 					let preFetch = {(image: UIImage?, willFetch: Bool) in
@@ -254,7 +260,7 @@ SettingsTableHeaderViewDelegate {
 						accountCell.userAvatar.image = image ?? defaultImage()
 					}
 					
-					ZDCManager.imageManager().fetchUserAvatar(localUser, preFetch: preFetch, postFetch: postFetch)
+					zdc.imageManager!.fetchUserAvatar(localUser, preFetch: preFetch, postFetch: postFetch)
 
 					accountCell.userName.textColor = localUser.hasCompletedSetup ? UIColor.black : UIColor.lightGray ;
 
@@ -424,7 +430,7 @@ SettingsTableHeaderViewDelegate {
 	func maybeDeleteUserID(localUserID:String!, completion: @escaping (Bool) -> ()) {
 		
 		var localUser: ZDCLocalUser? = nil
-		ZDCManager.uiDatabaseConnection() .read { (transaction) in
+		databaseConnection.read { (transaction) in
 			
 			localUser = transaction.object(forKey: localUserID!,
 													 inCollection: kZDCCollection_Users) as? ZDCLocalUser
@@ -463,8 +469,7 @@ SettingsTableHeaderViewDelegate {
 					
 					let nav = rvc.frontViewController as! UINavigationController
 					
-					ZDCManager.uiTools().pushSettings(forLocalUserID: localUserID,
-																 with: nav  )
+					ZDCManager.zdc().uiTools!.pushSettings(forLocalUserID: localUserID, with: nav)
 				}
 				
 				completion(false)
@@ -508,14 +513,10 @@ SettingsTableHeaderViewDelegate {
 
 			let nav = rvc.frontViewController as! UINavigationController
 			
-			ZDCManager.uiTools().pushActivityView(forLocalUserID:nil,
-														 with: nav  )
-
-     }
+			ZDCManager.zdc().uiTools?.pushActivityView(forLocalUserID:nil, with: nav)
+		}
 	}
 	
-    func test2() {
-        
-    }
-
+	func test2() {
+	}
 }
