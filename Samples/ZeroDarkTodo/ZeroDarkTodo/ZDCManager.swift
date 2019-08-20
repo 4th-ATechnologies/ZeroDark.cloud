@@ -1926,7 +1926,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					//
 					// Create the corresponding List item.
 		
-					let list = List(localUserID: invitation.receiverID, title: title)
+					let list = List(localUserID: invitation.receiverID, title: localPath.nodeName)
 		
 					transaction.setObject(list, forKey: list.uuid, inCollection: kZ2DCollection_List)
 		
@@ -2045,7 +2045,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		
 		guard
 			let imageData = image.dataWithJPEG(),
-			let thumbnailData = image.withMaxSize(CGSize(width: 256, height: 256))?.dataWithPNG()
+			let thumbnailData = image.withMaxSize(CGSize(width: 256, height: 256)).dataWithPNG()
 		else {
 			DDLogError("Unable to convert image to JPEG !")
 			return

@@ -2337,6 +2337,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	void (^completeBlock)(void) = ^{ @autoreleasepool {
 		
 		__block ZDCNode *node = nil;
+		__block BOOL needsTriggerPull = NO;
 	
 		[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 			
@@ -2389,7 +2390,11 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				
 				[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
 				
-				if (operation.putType == ZDCCloudOperationPutType_Node_Data)
+				if (node.isPointer && operation.putType == ZDCCloudOperationPutType_Node_Rcrd)
+				{
+					needsTriggerPull = YES;
+				}
+				else if (operation.putType == ZDCCloudOperationPutType_Node_Data)
 				{
 					BOOL isSignal = [node.parentID hasSuffix:@"|signal"];
 					
@@ -2430,7 +2435,11 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			
 		} completionQueue:concurrentQueue completionBlock:^{
 			
-			[zdc.progressManager removeUploadProgressForOperationUUID:context.operationUUID withSuccess:YES];
+			[zdc.progressManager removeUploadProgressForOperationUUID:operation.uuid withSuccess:YES];
+			
+			if (needsTriggerPull) {
+				[zdc.pullManager pullRemoteChangesForLocalUserID:operation.localUserID zAppID:operation.zAppID];
+			}
 			
 		}]; // end: readWriteTransaction.completionBlock
 		

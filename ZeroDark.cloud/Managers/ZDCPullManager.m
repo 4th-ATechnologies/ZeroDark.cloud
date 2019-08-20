@@ -1442,6 +1442,28 @@ static NSUInteger const kMaxFailCount = 8;
 				if (eTag && [node.eTag_rcrd isEqualToString:eTag])
 				{
 					// The node is already up-to-date
+					
+					ZDCNode *pointee = nil;
+					if (node.isPointer) {
+						pointee = [transaction objectForKey:node.pointeeID inCollection:kZDCCollection_Nodes];
+					}
+					if (pointee && (pointee.anchor != nil) && (pointee.eTag_rcrd == nil))
+					{
+						// Looks like we just added a pointer,
+						// and we haven't synced the pointee yet.
+						
+						ZDCPullItem *item = [[ZDCPullItem alloc] init];
+						
+						item.rcrdCompletionBlock = multiCompletion.wrapper;
+						item.ptrCompletionBlock = nil;
+						item.dirCompletionBlock = multiCompletion.wrapper; // if node has children
+						
+						[multiCompletion incrementPendingCount:2];
+						[self syncPointeeNode: pointee
+						          pointerNode: node
+						             pullItem: item
+						            pullState: pullState];
+					}
 				}
 				else
 				{
@@ -2922,7 +2944,6 @@ static NSUInteger const kMaxFailCount = 8;
 						[multiCompletion incrementPendingCount:2];
 						[self syncPointeeNode: pointee
 						          pointerNode: node
-						         isNewPointer: NO
 						             pullItem: item
 						            pullState: pullState];
 					}
@@ -2962,7 +2983,6 @@ static NSUInteger const kMaxFailCount = 8;
 **/
 - (void)syncPointeeNode:(ZDCNode *)pointeeNode
             pointerNode:(ZDCNode *)pointerNode
-           isNewPointer:(BOOL)isNewPointer
                pullItem:(ZDCPullItem *)pullItem
               pullState:(ZDCPullState *)pullState
 {
@@ -2974,7 +2994,13 @@ static NSUInteger const kMaxFailCount = 8;
 	if (pointeeNode.isImmutable) {
 		pointeeNode = [pointeeNode copy];
 	}
-	[pointerNode makeImmutable];
+	pointerNode = pointerNode.isImmutable ? pointerNode : [pointerNode immutableCopy];
+	
+	ZDCPullTaskCompletion const rcrdCompletionBlock = pullItem.rcrdCompletionBlock;
+	ZDCPullTaskCompletion const ptrCompletionBlock  = pullItem.ptrCompletionBlock;
+	ZDCPullTaskCompletion const dirCompletionBlock  = pullItem.dirCompletionBlock;
+	
+	NSParameterAssert(rcrdCompletionBlock != nil);
 	
 	__block ZDCUser *owner = nil;
 	
@@ -3202,6 +3228,10 @@ static NSUInteger const kMaxFailCount = 8;
 			ZDCCloudTransaction *const cloudTransaction =
 			  [self cloudTransactionForPullState:pullState transaction:transaction];
 			
+			BOOL isNewPointee =
+				![transaction hasObjectForKey:pointeeNode.uuid inCollection:kZDCCollection_Nodes]
+				|| pointeeNode.eTag_rcrd == nil;
+			
 			// Check for cloudPath changes.
 			//
 			// This happens when the pointee node was moved or renamed,
@@ -3287,7 +3317,6 @@ static NSUInteger const kMaxFailCount = 8;
 			
 			NSMutableArray<ZDCNode*> *children = nil;
 			
-			BOOL isNewPointee = ![transaction hasObjectForKey:pointeeNode.uuid inCollection:kZDCCollection_Nodes];
 			if (isNewPointee)
 			{
 				// Process dirSalt
@@ -3338,6 +3367,7 @@ static NSUInteger const kMaxFailCount = 8;
 			
 			// Validate the local treesystem state
 			
+			BOOL isNewPointer = ![transaction hasObjectForKey:pointerNode.uuid inCollection:kZDCCollection_Nodes];
 			if (isNewPointer)
 			{
 				// The pointer is new, meaning it doesn't exist in the database yet.
@@ -3394,10 +3424,6 @@ static NSUInteger const kMaxFailCount = 8;
 			
 			// Handle completionBlocks
 			
-			ZDCPullTaskCompletion rcrdCompletionBlock = pullItem.rcrdCompletionBlock;
-			ZDCPullTaskCompletion ptrCompletionBlock = pullItem.ptrCompletionBlock;
-			ZDCPullTaskCompletion dirCompletionBlock = pullItem.dirCompletionBlock;
-			
 			rcrdCompletionBlock(transaction, [ZDCPullTaskResult success]);
 			
 			if (ptrCompletionBlock || dirCompletionBlock)
@@ -3415,9 +3441,6 @@ static NSUInteger const kMaxFailCount = 8;
 	Step4 = ^(ZDCCloudPath *cloudPath){ @autoreleasepool {
 		
 		NSAssert(owner != nil, @"Bad state");
-		
-		ZDCPullTaskCompletion ptrCompletionBlock = pullItem.ptrCompletionBlock;
-		ZDCPullTaskCompletion dirCompletionBlock = pullItem.dirCompletionBlock;
 		
 		NSAssert(( ptrCompletionBlock && !dirCompletionBlock) ||
 		         (!ptrCompletionBlock &&  dirCompletionBlock), @"Unexpected state: XOR required");
@@ -3454,10 +3477,6 @@ static NSUInteger const kMaxFailCount = 8;
 	}};
 	
 	Fail = ^(ZDCPullTaskResult *result){ @autoreleasepool {
-		
-		ZDCPullTaskCompletion rcrdCompletionBlock = pullItem.rcrdCompletionBlock;
-		ZDCPullTaskCompletion ptrCompletionBlock = pullItem.ptrCompletionBlock;
-		ZDCPullTaskCompletion dirCompletionBlock = pullItem.dirCompletionBlock;
 		
 		rcrdCompletionBlock(nil, result);
 		
@@ -4148,7 +4167,6 @@ static NSUInteger const kMaxFailCount = 8;
 	
 			[self syncPointeeNode: pointee
 			          pointerNode: node
-			         isNewPointer: NO
 			             pullItem: pullItem
 			            pullState: pullState];
 			return;
@@ -4312,7 +4330,6 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		[self syncPointeeNode: pointee
 		          pointerNode: node
-		         isNewPointer: YES
 		             pullItem: pullItem
 		            pullState: pullState];
 		return;
