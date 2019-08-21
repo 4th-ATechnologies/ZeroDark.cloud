@@ -2655,14 +2655,22 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else if (nodeData.cryptoFile && (nodeData.cryptoFile.fileFormat == ZDCCryptoFileFormat_CacheFile))
 		{
-			ZDCInterruptingInputStream *inputStream =
-			  [[ZDCInterruptingInputStream alloc] initWithFileURL:nodeData.cryptoFile.fileURL];
+			NSURL *fileURL = nodeData.cryptoFile.fileURL;
 			
+			ZDCInterruptingInputStream *inputStream = nil;
+			CacheFile2CleartextInputStream *clearStream = nil;
+			Cleartext2CloudFileInputStream *cloudStream = nil;
+			
+			inputStream = [[ZDCInterruptingInputStream alloc] initWithFileURL:fileURL];
 			inputStream.retainToken = nodeData.cryptoFile.retainToken;
 			
-			Cleartext2CloudFileInputStream *cloudStream =
-			[[Cleartext2CloudFileInputStream alloc] initWithCleartextFileStream: inputStream
-																					encryptionKey: node.encryptionKey];
+			clearStream =
+			  [[CacheFile2CleartextInputStream alloc] initWithCacheFileStream: inputStream
+			                                                    encryptionKey: nodeData.cryptoFile.encryptionKey];
+			
+			cloudStream =
+			  [[Cleartext2CloudFileInputStream alloc] initWithCleartextFileStream: clearStream
+			                                                        encryptionKey: node.encryptionKey];
 			
 			cloudStream.rawMetadata = operation.multipartInfo.rawMetadata;
 			cloudStream.rawThumbnail = operation.multipartInfo.rawThumbnail;
@@ -2674,18 +2682,24 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else if (nodeData.cryptoFile && (nodeData.cryptoFile.fileFormat == ZDCCryptoFileFormat_CloudFile))
 		{
+			NSURL *fileURL = nodeData.cryptoFile.fileURL;
+			
 			ZDCInterruptingInputStream *inputStream = nil;
-			CacheFile2CleartextInputStream *clearStream = nil;
+			CloudFile2CleartextInputStream *clearStream = nil;
 			Cleartext2CloudFileInputStream *cloudStream = nil;
 			
-			inputStream = [[ZDCInterruptingInputStream alloc] initWithFileURL:nodeData.cryptoFile.fileURL];
+			inputStream = [[ZDCInterruptingInputStream alloc] initWithFileURL:fileURL];
 			inputStream.retainToken = nodeData.cryptoFile.retainToken;
 			
-			clearStream = [[CacheFile2CleartextInputStream alloc] initWithCacheFileStream: inputStream
-																								 encryptionKey: node.encryptionKey];
+			clearStream =
+			  [[CloudFile2CleartextInputStream alloc] initWithCloudFileStream: inputStream
+			                                                    encryptionKey: nodeData.cryptoFile.encryptionKey];
 			
-			cloudStream = [[Cleartext2CloudFileInputStream alloc] initWithCleartextFileStream: clearStream
-			                                                                    encryptionKey: node.encryptionKey];
+			[clearStream setProperty:@(ZDCCloudFileSection_Data) forKey:ZDCStreamCloudFileSection];
+			
+			cloudStream =
+			  [[Cleartext2CloudFileInputStream alloc] initWithCleartextFileStream: clearStream
+			                                                        encryptionKey: node.encryptionKey];
 			
 			cloudStream.rawMetadata = operation.multipartInfo.rawMetadata;
 			cloudStream.rawThumbnail = operation.multipartInfo.rawThumbnail;
