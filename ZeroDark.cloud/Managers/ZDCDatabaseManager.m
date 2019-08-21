@@ -910,7 +910,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		// If you need filtering, you may NOT do it here.
 		// You MUST do it in a child extension.
 		
-		if (node.parentID == nil) return nil; // exclude container nodes
+		if (node.parentID == nil) return nil; // exclude trunk nodes
 		
 		ZDCTrunkNode *trunkNode =
 		  [[ZDCNodeManager sharedInstance] trunkNodeForNode:node transaction:transaction];

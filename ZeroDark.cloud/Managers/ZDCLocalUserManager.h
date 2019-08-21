@@ -95,7 +95,15 @@ NS_ASSUME_NONNULL_BEGIN
                                outLocalUserID:(NSString *_Nullable *_Nullable)outLocalUserID;
 
 /**
- * Delete the Local User
+ * Fully deletes the local user and all associated items.
+ *
+ * The following items will be deleted from the database:
+ * - ZDCLocalUser
+ * - Local user's private key
+ * - Local user's access key
+ * - Local user's cached authentication
+ * - All treesystem ZDCNode's
+ * - All queued ZDCCloudOperation's
  */
 - (void)deleteLocalUser:(NSString *)localUserID
             transaction:(YapDatabaseReadWriteTransaction *)transaction;

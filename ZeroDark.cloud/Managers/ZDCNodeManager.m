@@ -1456,7 +1456,7 @@ static ZDCNodeManager *sharedInstance = nil;
 		{
 			__unsafe_unretained ZDCNode *node = (ZDCNode *)object;
 			
-			if ([node.localUserID isEqualToString:localUserID])
+			if ([node.localUserID isEqualToString:localUserID] && ![node isKindOfClass:[ZDCTrunkNode class]])
 			{
 				[result addObject:key];
 			}
@@ -1508,7 +1508,7 @@ static ZDCNodeManager *sharedInstance = nil;
 		{
 			__unsafe_unretained ZDCNode *node = (ZDCNode *)object;
 			
-			if ([node.localUserID isEqualToString:localUserID])
+			if ([node.localUserID isEqualToString:localUserID] && ![node isKindOfClass:[ZDCTrunkNode class]])
 			{
 				ZDCTrunkNode *trunkNode = [self trunkNodeForNode:node transaction:transaction];
 				if ([trunkNode.zAppID isEqualToString:zAppID])
@@ -1539,11 +1539,10 @@ static ZDCNodeManager *sharedInstance = nil;
 	
 	NSMutableArray *uploadedNodeIDs = nil;
 	
-	YapDatabaseViewTransaction *flatViewTransaction = nil;
-	YapDatabaseSecondaryIndexTransaction *secondaryIndexTransaction = nil;
+	YapDatabaseViewTransaction *flatViewTransaction = [transaction ext:Ext_View_Flat];
+	YapDatabaseSecondaryIndexTransaction *secondaryIndexTransaction = [transaction ext:Ext_Index_Nodes];
 	
-	if ((flatViewTransaction = [transaction ext:Ext_View_Flat]) &&
-	    (secondaryIndexTransaction = [transaction ext:Ext_Index_Nodes]))
+	if (flatViewTransaction && secondaryIndexTransaction)
 	{
 		// Combine multiple extensions for best performance (uses sqlite indexes)
 		//
@@ -1581,7 +1580,7 @@ static ZDCNodeManager *sharedInstance = nil;
 			}
 		}];
 	}
-	else if ((flatViewTransaction = [transaction ext:Ext_View_Flat]))
+	else if (flatViewTransaction)
 	{
 		// Backup Plan (defensive programming)
 		//
@@ -1625,11 +1624,14 @@ static ZDCNodeManager *sharedInstance = nil;
 			
 			if ([node.localUserID isEqualToString:localUserID] && node.cloudID)
 			{
-				ZDCTrunkNode *trunkNode = [self trunkNodeForNode:node transaction:transaction];
-				
-				if ([trunkNode.zAppID isEqualToString:zAppID])
+				if (![node isKindOfClass:[ZDCTrunkNode class]]) // Defensive programming (shouldn't be needed)
 				{
-					[uploadedNodeIDs addObject:nodeID];
+					ZDCTrunkNode *trunkNode = [self trunkNodeForNode:node transaction:transaction];
+				
+					if ([trunkNode.zAppID isEqualToString:zAppID])
+					{
+						[uploadedNodeIDs addObject:nodeID];
+					}
 				}
 			}
 		}];

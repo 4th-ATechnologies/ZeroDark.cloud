@@ -15,6 +15,7 @@
 #import "BIP39Mnemonic.h"
 #import "ZDCLogging.h"
 #import "ZDCCloudNodeManager.h"
+#import "ZDCDatabaseManagerPrivate.h"
 #import "ZDCLocalUserPrivate.h"
 #import "ZDCTrunkNodePrivate.h"
 #import "ZeroDarkCloudPrivate.h"
@@ -527,7 +528,11 @@
 	
 	ZDCLocalUser *localUser = (ZDCLocalUser *)user;
 	
-	// Convert localUser to remote user
+	// Step 1 of 6:
+	//
+	// Convert the localUser to a remote user.
+	//
+	// Note: This is no longer required, and we may wish to remove this step.
         
 	ZDCUser *remoteUser = [[ZDCUser alloc] initWithUUID:localUser.uuid];
 	[localUser copyTo:remoteUser];
@@ -541,39 +546,60 @@
 	
 	remoteUser.publicKeyID = pubKey.uuid;
 	
-	// Delete the user's private key
+	[transaction setObject: pubKey
+	                forKey: pubKey.uuid
+	          inCollection: kZDCCollection_PublicKeys];
+	
+	[transaction setObject: remoteUser
+	                forKey: remoteUser.uuid
+	          inCollection: kZDCCollection_Users];
+	
+	// Step 2 of 6:
+	//
+	// Migrate user's avatar from persistent to cached.
+	
+	[zdc.diskManager makeUserAvatarPersistent:NO forUserID:localUserID];
+	
+	// Step 3 of 6:
+	//
+	// Delete the localUser & associated:
+	// - privateKey
+	// - accessKey
+	// - authentication
+	
 	[transaction removeObjectForKey:privateKey.uuid inCollection:kZDCCollection_PublicKeys];
 
-	//Delete any Splitkeys for this user
-	NSMutableArray* splitsToDelete = NSMutableArray.array;
-	YapDatabaseViewTransaction *vtSplitKey = [transaction ext:Ext_View_SplitKeys];
-	if (vtSplitKey)
-	{
-		[vtSplitKey enumerateKeysInGroup:localUserID
-									 usingBlock:^(NSString *collection, NSString *key, NSUInteger index, BOOL * stop)
-		 {
-			 if([collection isEqualToString:kZDCCollection_SplitKeys])
-			 {
-				 [splitsToDelete addObject:key];
-			 }
-		 }] ;
-		
-		if(splitsToDelete.count)
-		{
-			[transaction removeObjectsForKeys:splitsToDelete inCollection:kZDCCollection_SplitKeys];
-		}
-	}
-	
-	// Delete the user's access key
 	[transaction removeObjectForKey:localUser.accessKeyID inCollection:kZDCCollection_SymmetricKeys];
 	
-	// Delete the user's stored credentials
 	[transaction removeObjectForKey:localUser.uuid inCollection:kZDCCollection_UserAuth];
 	
-	// Delete the localUser
 	[transaction removeObjectForKey:localUser.uuid inCollection:kZDCCollection_Users];
+	
+	// Step 4 of 6:
+	//
+	// Delete any splitKeys for this user.
+	
+	NSMutableArray *splitsToDelete = [NSMutableArray array];
+	YapDatabaseViewTransaction *vtSplitKey = [transaction ext:Ext_View_SplitKeys];
+	
+	[vtSplitKey enumerateKeysInGroup: localUserID
+	                      usingBlock:^(NSString *collection, NSString *key, NSUInteger index, BOOL * stop)
+	{
+		if ([collection isEqualToString:kZDCCollection_SplitKeys])
+		{
+			[splitsToDelete addObject:key];
+		}
+	}];
+		
+	if (splitsToDelete.count > 0)
+	{
+		[transaction removeObjectsForKeys:splitsToDelete inCollection:kZDCCollection_SplitKeys];
+	}
 
-	// Delete all the nodes
+	// Step 5 of 6:
+	//
+	// Delete all treesystem nodes.
+	
 	NSArray<NSString *> *allNodeIDs =
      [zdc.nodeManager allNodeIDsWithLocalUserID: localUserID
 	                                 transaction: transaction];
@@ -586,19 +612,30 @@
 	
 	[transaction removeObjectsForKeys:allCloudNodeIDs inCollection:kZDCCollection_CloudNodes];
 	
-	// Migrate user avatar's from persistent to cached.
+	// Step 6 of 6:
+	//
+	// Delete all trunk nodes.
 	
-	[zdc.diskManager makeUserAvatarPersistent:NO forUserID:localUserID];
+	NSArray<NSString*> *zAppIDs = [zdc.databaseManager currentlyRegisteredAppIDsForUser:localUserID];
+	NSMutableArray<NSString*> *trunkNodeIDs = [NSMutableArray arrayWithCapacity:(4 * zAppIDs.count)];
+	
+	for (NSString *zAppID in zAppIDs)
+	{
+		[trunkNodeIDs addObject:
+			[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Home]];
+		[trunkNodeIDs addObject:
+			[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Prefs]];
+		[trunkNodeIDs addObject:
+			[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Inbox]];
+		[trunkNodeIDs addObject:
+			[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Outbox]];
+	}
 
-	// Write the remote user & public key (private key info has been removed)
+	[transaction removeObjectsForKeys:trunkNodeIDs inCollection:kZDCCollection_Nodes];
 	
-	[transaction setObject: pubKey
-	                forKey: pubKey.uuid
-	          inCollection: kZDCCollection_PublicKeys];
-	
-	[transaction setObject: remoteUser
-	                forKey: remoteUser.uuid
-	          inCollection: kZDCCollection_Users];
+	// NOTES:
+	//
+	// - the SyncManager unregisters the ZDCCloud extension for us
 }
 
 - (void)refreshAuth0ProfilesForLocalUserID:(NSString *)localUserID

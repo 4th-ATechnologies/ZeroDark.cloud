@@ -34,7 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)sharedInstance;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Containers
+#pragma mark Trunks & Anchors
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -107,13 +107,18 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Returns the owner of a given node.
  *
- * This is done by traversing the node hierarchy, up to the root,
- * searching for a node with an explicit ownerID property. If not found, the localUserID is returned.
+ * This is done by traversing the node hierarchy up (towards the trunk/root).
+ * The search completes when either:
+ * - the trunk node is encountered
+ * - an anchor node (with an explicit ownerID) is encountered
+ *
+ * If all else fails (e.g. because the node.parentID is invalid),
+ * then node.localUserID is returned.
  *
  * @param node
  *   Find the ownerID for this node.
  *   (The node doesn't need to be stored in the database for this method to work.
- *    But it will need to have a proper `-[ZDCNode parentID]` property set.)
+ *    But it should have a proper `-[ZDCNode parentID]` set.)
  *
  * @param transaction
  *   A database transaction - allows the method to read from the database.
@@ -123,8 +128,9 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Invokes `ownerIDForNode:transaction:`, and then uses the result to fetch the corresponding ZDCUser.
  *
- * The ZDCUser instance may be nil if the system hasn't been able to download the user yet.
- * If the ownerID is a non-local user, you can use the `ZDCRemoteUserManager` to download the user.
+ * The ZDCUser instance may be nil if the the owner is a non-local-user and
+ * the system hasn't downloaded the remote user yet.
+ * You can always use the `ZDCRemoteUserManager` to download the user.
  */
 - (nullable ZDCUser *)ownerForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction;
 
@@ -443,12 +449,16 @@ NS_SWIFT_NAME(findNode(withCloudPath:bucket:region:localUserID:zAppID:transactio
 
 /**
  * Returns a list of all nodeID's belonging to the given user (regardless of zAppID).
+ *
+ * @note This list doesn't include trunk nodes.
  */
 - (NSArray<NSString *> *)allNodeIDsWithLocalUserID:(NSString *)localUserID
                                        transaction:(YapDatabaseReadTransaction *)transaction;
 
 /**
  * Returns a list of all nodeID's belonging to the given user.
+ *
+ * @note This list doesn't include trunk nodes.
  */
 - (NSArray<NSString *> *)allNodeIDsWithLocalUserID:(NSString *)localUserID
                                             zAppID:(NSString *)zAppID
