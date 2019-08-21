@@ -1274,7 +1274,8 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	// Create context with boilerplate values
 	
-	ZDCTaskContext *context = [[ZDCTaskContext alloc] initWithOperation:operation];
+	ZDCTaskContext *const context = [[ZDCTaskContext alloc] initWithOperation:operation];
+	NSString *const extName = [self extNameForOperation:operation];
 	
 	// Sanity checks
 	
@@ -1455,6 +1456,8 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		[[self roConnection] readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 			
+			// Get node RCRD
+			
 			node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
 			if (node)
 			{
@@ -1465,6 +1468,29 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				                        missingServerIDs: &missingServerIDs
 				                                   error: &error];
 			}
+			
+			// Look for duplicate operations.
+			
+			__block NSMutableSet<NSUUID *> *duplicateOpUUIDs = nil;
+			
+			ZDCCloudTransaction *ext = [transaction ext:extName];
+			[ext enumerateOperationsInPipeline: operation.pipeline
+			                        usingBlock:
+			^(YapDatabaseCloudCoreOperation *_genOp, NSUInteger graphIdx, BOOL *stop)
+			{
+				__unsafe_unretained ZDCCloudOperation *_op = (ZDCCloudOperation *)_genOp;
+				
+				if (![_op.uuid isEqual:operation.uuid] && // Ignore our own operation
+					 [_op hasSameTarget:operation])
+				{
+					if (duplicateOpUUIDs == nil) {
+						duplicateOpUUIDs = [NSMutableSet set];
+					}
+					[duplicateOpUUIDs addObject:_op.uuid];
+				}
+			}];
+			
+			context.duplicateOpUUIDs = duplicateOpUUIDs;
 			
 			// Snapshot current pullState.
 			// We use this during conflict resolution to determine if a pull had any effect.
@@ -1512,6 +1538,8 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			
 			if (asyncData)
 			{
+				// Use node DATA from previous iteration.
+				
 				node = asyncData.node;
 				
 				data = asyncData.data;
@@ -1520,6 +1548,8 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			}
 			else
 			{
+				// Get node DATA (from delegate)
+				
 				node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
 				if (node)
 				{
@@ -1544,6 +1574,37 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 						}
 					}
 				}
+				
+				// Look for duplicate operations.
+				
+				__block NSMutableSet<NSUUID *> *duplicateOpUUIDs = nil;
+				
+				BOOL canSkipDuplicateOps =
+				    data.isLatestVersion
+				 && (!metadata || metadata.isLatestVersion)
+				 && (!thumbnail || thumbnail.isLatestVersion);
+				
+				if (canSkipDuplicateOps)
+				{
+					ZDCCloudTransaction *ext = [transaction ext:extName];
+					[ext enumerateOperationsInPipeline: operation.pipeline
+													usingBlock:
+					^(YapDatabaseCloudCoreOperation *_genOp, NSUInteger graphIdx, BOOL *stop)
+					{
+						__unsafe_unretained ZDCCloudOperation *_op = (ZDCCloudOperation *)_genOp;
+				
+						if (![_op.uuid isEqual:operation.uuid] && // Ignore our own operation
+						    [_op hasSameTarget:operation])
+						{
+							if (duplicateOpUUIDs == nil) {
+								duplicateOpUUIDs = [NSMutableSet set];
+							}
+							[duplicateOpUUIDs addObject:_op.uuid];
+						}
+					}];
+				}
+				
+				context.duplicateOpUUIDs = duplicateOpUUIDs;
 			}
 			
 			// Snapshot current pullState.
@@ -2334,241 +2395,103 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		eTag = pollContext.eTag;
 	}
 	
-	void (^completeBlock)(void) = ^{ @autoreleasepool {
+	__block ZDCNode *node = nil;
+	__block BOOL needsTriggerPull = NO;
+	
+	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
-		__block ZDCNode *node = nil;
-		__block BOOL needsTriggerPull = NO;
-	
-		[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
-			
-			// Mark operation as complete
-			
-			NSString *extName = [self extNameForContext:context];
-			
-			[[transaction ext:extName] completeOperationWithUUID:context.operationUUID];
-			
-			// Update node (if operation was node related)
-			
-			node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
-			if (node)
-			{
-				// Update node
-				//
-				// - cloudID
-				// - eTag_X
-				// - lastModified_X
-				
-				node = [node copy];
-				
-				if (cloudID && ![node.cloudID isEqualToString:cloudID])
-				{
-					node.cloudID = cloudID;
-				}
-				
-				if (operation.putType == ZDCCloudOperationPutType_Node_Rcrd)
-				{
-					if (eTag && ![node.eTag_rcrd isEqualToString:eTag])
-					{
-						node.eTag_rcrd = eTag;
-					}
-					if (lastModified && ![node.lastModified_rcrd isEqualToDate:lastModified])
-					{
-						node.lastModified_rcrd = lastModified;
-					}
-				}
-				else if (operation.putType == ZDCCloudOperationPutType_Node_Data)
-				{
-					if (eTag && ![node.eTag_data isEqualToString:eTag])
-					{
-						node.eTag_data = eTag;
-					}
-					if (lastModified && ![node.lastModified_data isEqualToDate:lastModified])
-					{
-						node.lastModified_data = lastModified;
-					}
-				}
-				
-				[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
-				
-				if (node.isPointer && operation.putType == ZDCCloudOperationPutType_Node_Rcrd)
-				{
-					needsTriggerPull = YES;
-				}
-				else if (operation.putType == ZDCCloudOperationPutType_Node_Data)
-				{
-					BOOL isSignal = [node.parentID hasSuffix:@"|signal"];
-					
-					if (isSignal)
-					{
-						NSString *recipientID = node.anchor.userID;
-						ZDCUser *recipient = [transaction objectForKey:recipientID inCollection:kZDCCollection_Users];
-						if (recipient)
-						{
-							[zdc.delegate didSendMessage:node toRecipient:recipient transaction:transaction];
-						}
-					}
-					else
-					{
-						ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
-						
-						[zdc.delegate didPushNodeData:node atPath:path transaction:transaction];
-					}
-				}
-			}
-			
-			// Remove redundant operations (if needed)
-			
-			if (context.matchingOpUUIDs)
-			{
-				[[transaction ext:extName] skipOperationsPassingTest:
-				 ^BOOL (YapDatabaseCloudCorePipeline *pipeline,
-						  YapDatabaseCloudCoreOperation *op, NSUInteger graphIdx, BOOL *stop)
-				{
-					if ([context.matchingOpUUIDs containsObject:op.uuid])
-					{
-						return YES;
-					}
-					
-					return NO;
-				}];
-			}
-			
-		} completionQueue:concurrentQueue completionBlock:^{
-			
-			[zdc.progressManager removeUploadProgressForOperationUUID:operation.uuid withSuccess:YES];
-			
-			if (needsTriggerPull) {
-				[zdc.pullManager pullRemoteChangesForLocalUserID:operation.localUserID zAppID:operation.zAppID];
-			}
-			
-		}]; // end: readWriteTransaction.completionBlock
+		// Mark operation as complete
 		
-	}}; // end: completeBlock
-	
-	
-#if TARGET_OS_OSX
-	
-	BOOL waitingForChecksum = NO;
-	
-	if (context.uploadStream || operation.multipartInfo)
-	{
-		// Uploading a file is a little different than uploading a RCRD or XATTR.
-		//
-		// We use ZDCInterruptingInputStream as part of the uploadStream.
-		// So if the file is modified while it's being uploaded,
-		// then we abort the upload, and restart.
-		//
-		// Long story short:
-		//   If the file currently on disk matches what we just uploaded,
-		//   then we can skip all matching operations in the queue.
+		NSString *extName = [self extNameForContext:context];
+		ZDCCloudTransaction *cloudTransaction = [transaction ext:extName];
 		
-		__block NSMutableSet<NSUUID *> *matchingOpUUIDs = nil;
+		[cloudTransaction completeOperationWithUUID:context.operationUUID];
 		
-		[[self pipelineForContext:context] enumerateOperationsUsingBlock:
-			^(YapDatabaseCloudCoreOperation *opGeneric, NSUInteger graphIdx, BOOL *stop)
+		// Update node (if operation was node related)
+		
+		node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
+		if (node)
 		{
-			if ([opGeneric isKindOfClass:[ZDCCloudOperation class]])
+			// Update node
+			//
+			// - cloudID
+			// - eTag_X
+			// - lastModified_X
+			
+			node = [node copy];
+			
+			if (cloudID && ![node.cloudID isEqualToString:cloudID])
 			{
-				__unsafe_unretained ZDCCloudOperation *op = (ZDCCloudOperation *)opGeneric;
-				
-				if (![op.uuid isEqual:operation.uuid] && // Ignore our own operation
-				    [op hasSameTarget:operation])
-				{
-					if (matchingOpUUIDs == nil)
-						matchingOpUUIDs = [NSMutableSet set];
-	
-					[matchingOpUUIDs addObject:op.uuid];
-				}
-			}
-		}];
-		/*
-		if (matchingOpUUIDs.count > 0)
-		{
-			NSString *preChecksum = nil;
-			NSInputStream *iStream = nil;
-		 
-			if (operation.multipartInfo)
-			{
-				preChecksum = operation.multipartInfo.sha256Hash; // over entire cloudFile
-		 
-				S4FileFormat format = S4FileFormat_CloudFile;
-				id retainToken = nil;
-				NSURL *fileURL = nil;
-		 
-				fileURL = [S4CacheManager cachedURLForFileID:operation.nodeID format:&format retainToken:&retainToken];
-		 
-				if (fileURL && (format == S4FileFormat_CloudFile))
-				{
-					iStream = [NSInputStream inputStreamWithURL:fileURL];
-				}
-				else if (fileURL && (format == S4FileFormat_CacheFile))
-				{
-					__block S4File *file = nil;
-					[S4DatabaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-		 
-						S4Node *node = [transaction objectForKey:operation.nodeID inCollection:kS4Collection_Nodes];
-						if ([node isKindOfClass:[S4File class]]) {
-							file = (S4File *)node;
-						}
-					}];
-		 
-					CacheFile2CleartextInputStream *clearStream = nil;
-					Cleartext2CloudFileInputStream *cloudStream = nil;
-		 
-					clearStream = [[CacheFile2CleartextInputStream alloc] initWithCacheFileURL: fileURL
-					                                                             encryptionKey: file.encryptionKey];
-		 
-					cloudStream = [[Cleartext2CloudFileInputStream alloc] initWithCleartextFileStream: clearStream
-					                                                                    encryptionKey: file.encryptionKey];
-		 
-					cloudStream.rawMetadata = [S4CloudFileUtilities rawMetadataForNode:file];
-					cloudStream.rawThumbnail = [S4CloudFileUtilities rawThumbnailForNode:file];
-		 
-					iStream = cloudStream;
-				}
-			}
-			else // NOT multipart
-			{
-				preChecksum = context.sha256Hash;
-				iStream = [context.uploadStream copy];
-			}
-		 
-			if (preChecksum && iStream)
-			{
-				[S4FileChecksum checksumFileStream: iStream
-				                    withStreamSize: 0
-				                         algorithm: kHASH_Algorithm_SHA256
-				                   completionQueue: concurrentQueue
-				                   completionBlock:^(NSData *hash, NSError *error)
-				{
-					if (hash)
-					{
-						NSString *postChecksum = [hash lowercaseHexString];
-						if ([preChecksum isEqualToString:postChecksum])
-						{
-							context.matchingOpUUIDs = matchingOpUUIDs;
-						}
-					}
-		 
-					completeBlock();
-				}];
-		 
-				waitingForChecksum = YES;
+				node.cloudID = cloudID;
 			}
 		
-		} // end: if (matchingOpUUIDs.count > 0)
-		*/
-	} // end: if (context.uploadStream)
-	
-	if (!waitingForChecksum) {
-		completeBlock();
-	}
-	
-#else // iOS
-	
-	completeBlock();
-	
-#endif
+			if (operation.putType == ZDCCloudOperationPutType_Node_Rcrd)
+			{
+				if (eTag && ![node.eTag_rcrd isEqualToString:eTag])
+				{
+					node.eTag_rcrd = eTag;
+				}
+				if (lastModified && ![node.lastModified_rcrd isEqualToDate:lastModified])
+				{
+					node.lastModified_rcrd = lastModified;
+				}
+			}
+			else if (operation.putType == ZDCCloudOperationPutType_Node_Data)
+			{
+				if (eTag && ![node.eTag_data isEqualToString:eTag])
+				{
+					node.eTag_data = eTag;
+				}
+				if (lastModified && ![node.lastModified_data isEqualToDate:lastModified])
+				{
+					node.lastModified_data = lastModified;
+				}
+			}
+			
+			[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
+			
+			if (node.isPointer && operation.putType == ZDCCloudOperationPutType_Node_Rcrd)
+			{
+				needsTriggerPull = YES;
+			}
+			else if (operation.putType == ZDCCloudOperationPutType_Node_Data)
+			{
+				BOOL isSignal = [node.parentID hasSuffix:@"|signal"];
+				
+				if (isSignal)
+				{
+					NSString *recipientID = node.anchor.userID;
+					ZDCUser *recipient = [transaction objectForKey:recipientID inCollection:kZDCCollection_Users];
+					if (recipient)
+					{
+						[zdc.delegate didSendMessage:node toRecipient:recipient transaction:transaction];
+					}
+				}
+				else
+				{
+					ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
+					
+					[zdc.delegate didPushNodeData:node atPath:path transaction:transaction];
+				}
+			}
+		}
+		
+		// Remove redundant operations (if needed)
+		
+		for (NSUUID *uuid in context.duplicateOpUUIDs)
+		{
+			[cloudTransaction skipOperationWithUUID:uuid];
+		}
+			
+	} completionQueue:concurrentQueue completionBlock:^{
+		
+		[zdc.progressManager removeUploadProgressForOperationUUID:operation.uuid withSuccess:YES];
+		
+		if (needsTriggerPull) {
+			[zdc.pullManager pullRemoteChangesForLocalUserID:operation.localUserID zAppID:operation.zAppID];
+		}
+		
+	}]; // end: readWriteTransaction.completionBlock
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -6818,7 +6741,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 	}];
 	
-	context.matchingOpUUIDs = matchingOpUUIDs;
+	context.duplicateOpUUIDs = matchingOpUUIDs;
 	context.eTag = eTag_cloud;
 	
 	void (^continueWithAvatarData)(NSData *_Nullable) =
@@ -7161,13 +7084,13 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		// Remove redundant operations (if needed)
 		
-		if (context.matchingOpUUIDs)
+		if (context.duplicateOpUUIDs)
 		{
 			[[transaction ext:extName] skipOperationsPassingTest:
 			 ^BOOL (YapDatabaseCloudCorePipeline *pipeline,
 					  YapDatabaseCloudCoreOperation *op, NSUInteger graphIdx, BOOL *stop)
 			{
-				if ([context.matchingOpUUIDs containsObject:op.uuid])
+				if ([context.duplicateOpUUIDs containsObject:op.uuid])
 				{
 					return YES;
 				}
@@ -7694,7 +7617,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			// Calculate the exact cloudFileSize.
 			
 			CloudFile2CleartextInputStream *clearStream =
-			  [[CloudFile2CleartextInputStream alloc] initWithCloudFileURL: nodeData.cryptoFile.fileURL
+			  [[CloudFile2CleartextInputStream alloc] initWithCloudFileURL: fileURL
 			                                                 encryptionKey: nodeData.cryptoFile.encryptionKey];
 			
 			[clearStream setProperty:@(ZDCCloudFileSection_Data) forKey:ZDCStreamCloudFileSection];

@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
  * Since the framework supports everything from small objects to multi-gigabyte files,
  * the ZDCData class is used to encapsulate the response.
  *
- * For small items, you can create a ZDCData container with the raw data.
+ * For small items, you can create a ZDCData container with the raw in-memory data.
  * For example, if you're uploading a serialized object, you can simply serialize the object,
  * and then wrap the serialized bytes within a ZDCData container.
  *
@@ -32,7 +32,8 @@ NS_ASSUME_NONNULL_BEGIN
  * @note For file uploads, the framework will automatically monitor the file during upload.
  *       If the file is modified, the framework will abort the upload & restart it.
  *       This ensures the file doesn't get corrupted during upload.
- *       (Monitoring is done via ZDCDiskMonitor, and uses both hashing & filesystem notifications to detect changes.)
+ *       (Monitoring is done via ZDCDiskMonitor, and uses both hashing & filesystem notifications
+ *       to detect changes.)
  */
 @interface ZDCData : NSObject
 
@@ -78,6 +79,26 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** Returns non-nil if the `initAsPromise` constructor was used. */
 @property (nullable, nonatomic, strong, readonly) ZDCDataPromise *promise;
+
+/**
+ * ZeroDark uses a persistent queue to track which nodes need to be uploaded.
+ * Sometimes this means that the same node gets enqueued multiple times.
+ * However, this doesn't mean the upload needs to occur multiple times.
+ * If you're uploading the latest version of the data,
+ * then a single upload will suffice, and the framework can skip the duplicate queued operations.
+ *
+ * This flag acts as a signal to the framework.
+ * When set to true, the framework will automatically skip duplicated queued operations.
+ * In other words, it will automatically consolidate upload requests for you.
+ *
+ * However, there are some apps which require server-side version logging,
+ * and need to upload each individual version of a node.
+ * In this case, set this value to false to ensure the framework won't consolidate requests,
+ * but rather execute each queued upload operation in turn.
+ *
+ * The default value is YES / true.
+ */
+@property (nonatomic, readwrite) BOOL isLatestVersion;
 
 @end
 

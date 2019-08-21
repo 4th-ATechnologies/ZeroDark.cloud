@@ -50,7 +50,7 @@
 
 #endif
 
-@property (nonatomic, copy, readwrite) NSSet<NSUUID *> *matchingOpUUIDs;
+@property (nonatomic, copy, readwrite) NSSet<NSUUID *> *duplicateOpUUIDs;
 @property (nonatomic, copy, readwrite) NSString *sha256Hash;
 
 // Ephemeral properties

@@ -27,7 +27,7 @@ static NSString *const k_multipart_abort      = @"multipart_abort";
 static NSString *const k_multipart_index      = @"multipart_index";
 static NSString *const k_uploadFileURL        = @"uploadFileURL";
 static NSString *const k_deleteUploadFileURL  = @"deleteUploadFileURL";
-static NSString *const k_matchingOpUUIDs      = @"matchingOpUUIDs";
+static NSString *const k_duplicateOpUUIDs     = @"matchingOpUUIDs";
 static NSString *const k_sha256Hash           = @"sha256Hash";
 
 
@@ -56,7 +56,7 @@ static NSString *const k_sha256Hash           = @"sha256Hash";
 
 #endif
 
-@synthesize matchingOpUUIDs = matchingOpUUIDs;
+@synthesize duplicateOpUUIDs = duplicateOpUUIDs;
 @synthesize sha256Hash = sha256Hash;
 @synthesize progress = progress;
 
@@ -99,7 +99,7 @@ static NSString *const k_sha256Hash           = @"sha256Hash";
 		deleteUploadFileURL  = [decoder decodeBoolForKey:k_deleteUploadFileURL];
 	#endif
 		
-		matchingOpUUIDs = [decoder decodeObjectForKey:k_matchingOpUUIDs];
+		duplicateOpUUIDs = [decoder decodeObjectForKey:k_duplicateOpUUIDs];
 		sha256Hash = [decoder decodeObjectForKey:k_sha256Hash];
 	}
 	return self;
@@ -129,7 +129,7 @@ static NSString *const k_sha256Hash           = @"sha256Hash";
 	[coder encodeBool:deleteUploadFileURL forKey:k_deleteUploadFileURL];
 #endif
 	
-	[coder encodeObject:matchingOpUUIDs forKey:k_matchingOpUUIDs];
+	[coder encodeObject:duplicateOpUUIDs forKey:k_duplicateOpUUIDs];
 	[coder encodeObject:sha256Hash forKey:k_sha256Hash];
 }
 
@@ -162,7 +162,7 @@ static NSString *const k_sha256Hash           = @"sha256Hash";
 	copy->uploadStream = uploadStream;
 #endif
 	
-	copy->matchingOpUUIDs = matchingOpUUIDs;
+	copy->duplicateOpUUIDs = duplicateOpUUIDs;
 	copy->sha256Hash = sha256Hash;
 	copy->progress = progress;
 	

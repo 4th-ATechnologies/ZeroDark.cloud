@@ -25,6 +25,7 @@
 @synthesize cleartextFileURL = cleartextFileURL;
 @synthesize cryptoFile = cryptoFile;
 @synthesize promise = promise;
+@synthesize isLatestVersion = isLatestVersion;
 
 - (instancetype)init
 {
@@ -41,6 +42,7 @@
 	if ((self = [super init]))
 	{
 		data = [inData copy];
+		isLatestVersion = YES;
 	}
 	return self;
 }
@@ -55,6 +57,7 @@
 	if ((self = [super init]))
 	{
 		cleartextFileURL = inCleartextFileURL;
+		isLatestVersion = YES;
 	}
 	return self;
 }
@@ -69,6 +72,7 @@
 	if ((self = [super init]))
 	{
 		cryptoFile = inCryptoFile;
+		isLatestVersion = YES;
 	}
 	return self;
 }
@@ -83,6 +87,7 @@
 	if ((self = [super init]))
 	{
 		promise = inPromise;
+		isLatestVersion = YES;
 	}
 	return self;
 }
