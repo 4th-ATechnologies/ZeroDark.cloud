@@ -111,8 +111,8 @@ static NSUInteger const kMaxFailCount = 8;
 	return [zdc.databaseManager internal_decryptConnection];
 }
 
-- (ZDCCloudTransaction *)cloudTransactionForPullState:(ZDCPullState *)pullState
-                                          transaction:(YapDatabaseReadTransaction *)transaction
+- (ZDCCloudTransaction *)cloudTransaction:(YapDatabaseReadTransaction *)transaction
+                             forPullState:(ZDCPullState *)pullState
 {
 	NSString *const extName =
 	  [zdc.databaseManager cloudExtNameForUser: pullState.localUserID
@@ -3225,8 +3225,7 @@ static NSUInteger const kMaxFailCount = 8;
 			}
 			
 			ZDCNodeManager *const nodeManager = [ZDCNodeManager sharedInstance];
-			ZDCCloudTransaction *const cloudTransaction =
-			  [self cloudTransactionForPullState:pullState transaction:transaction];
+			ZDCCloudTransaction *const cloudTransaction = [self cloudTransaction:transaction forPullState:pullState];
 			
 			BOOL isNewPointee =
 				![transaction hasObjectForKey:pointeeNode.uuid inCollection:kZDCCollection_Nodes]
@@ -3496,8 +3495,7 @@ static NSUInteger const kMaxFailCount = 8;
 		[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 			
 			ZDCNodeManager *nodeManager = [ZDCNodeManager sharedInstance];
-			ZDCCloudTransaction *const cloudTransaction =
-			  [self cloudTransactionForPullState:pullState transaction:transaction];
+			ZDCCloudTransaction *const cloudTransaction = [self cloudTransaction:transaction forPullState:pullState];
 			
 			ZDCNode *pointerNode = nil;
 			while ((pointerNode = [nodeManager findNodeWithPointeeID: pointeeNode.uuid
@@ -3779,7 +3777,7 @@ static NSUInteger const kMaxFailCount = 8;
 {
 	ZDCNodeManager *const nodeManager = [ZDCNodeManager sharedInstance];
 	ZDCCloudPathManager *const cloudPathManager = [ZDCCloudPathManager sharedInstance];
-	ZDCCloudTransaction *const cloudTransaction = [self cloudTransactionForPullState:pullState transaction:transaction];
+	ZDCCloudTransaction *const cloudTransaction = [self cloudTransaction:transaction forPullState:pullState];
 	
 	NSString *remoteCloudName = [remoteCloudPath fileNameWithExt:nil];
 	
@@ -3995,7 +3993,7 @@ static NSUInteger const kMaxFailCount = 8;
 {
 	ZDCNodeManager *const nodeManager = [ZDCNodeManager sharedInstance];
 	ZDCCloudPathManager *const cloudPathManager = [ZDCCloudPathManager sharedInstance];
-	ZDCCloudTransaction *const cloudTransaction = [self cloudTransactionForPullState:pullState transaction:transaction];
+	ZDCCloudTransaction *const cloudTransaction = [self cloudTransaction:transaction forPullState:pullState];
 	
 	if (!node.isImmutable) {
 		node = [node immutableCopy];
@@ -4084,7 +4082,7 @@ static NSUInteger const kMaxFailCount = 8;
 {
 	ZDCNodeManager *const nodeManager = [ZDCNodeManager sharedInstance];
 	
-	ZDCCloudTransaction *const cloudTransaction = [self cloudTransactionForPullState:pullState transaction:transaction];
+	ZDCCloudTransaction *const cloudTransaction = [self cloudTransaction:transaction forPullState:pullState];
 	
 	// Update node's info (if needed).
 	
@@ -4500,18 +4498,20 @@ static NSUInteger const kMaxFailCount = 8;
 }
 
 /**
- * Use this method when it's discovered that a file/directory was deleted remotely.
+ * Use this method when it's discovered that node was deleted remotely.
  * That is, the delete was performed by another device/user.
  *
  * This method will determine if its safe to delete the node and any descendents.
  * It will then only delete what it can safely,
  * and update the appropriate ZDCCloudNode entries.
-**/
+ */
 - (void)remoteDeleteNode:(ZDCNode *)rootDeletedNode
                timestamp:(nullable NSDate *)timestamp
                pullState:(ZDCPullState *)pullState
              transaction:(YapDatabaseReadWriteTransaction *)transaction
 {
+	ZDCCloudTransaction *const cloudTransaction = [self cloudTransaction:transaction forPullState:pullState];
+	
 	NSString *const rootDeletedNodeID = rootDeletedNode.uuid;
 	ZDCTreesystemPath *rootDeletedPath =
 	  [[ZDCNodeManager sharedInstance] pathForNode:rootDeletedNode transaction:transaction];
@@ -4538,9 +4538,7 @@ static NSUInteger const kMaxFailCount = 8;
 	
 	NSMutableSet<NSString *> *dirtyNodeIDs = [NSMutableSet set];
 	
-	NSString *extName = [zdc.databaseManager cloudExtNameForUser:pullState.localUserID app:pullState.zAppID];
-	
-	[[transaction ext:extName] enumerateOperationsUsingBlock:
+	[cloudTransaction enumerateOperationsUsingBlock:
 	  ^(YapDatabaseCloudCorePipeline *pipeline,
 		 YapDatabaseCloudCoreOperation *operation, NSUInteger graphIdx, BOOL *stop)
 	{
@@ -5115,25 +5113,47 @@ static NSUInteger const kMaxFailCount = 8;
 	// expected to see on the server. And during processing, we removed those items that we encountered.
 	// So whatever is left in the list represents nodes that have been deleted from the server.
 	
-	// - ZDCNode
+	NSSet<NSString *> *deletedNodeIDs = pullState.unprocessedNodeIDs;
+	if (deletedNodeIDs.count > 0)
 	{
-		NSSet<NSString *> *deletedNodeIDs = pullState.unprocessedNodeIDs;
+		NSMutableSet<NSString*> *topLevelDeletedNodeIDs = [NSMutableSet set];
 		
 		for (NSString *nodeID in deletedNodeIDs)
 		{
 			ZDCNode *node = [transaction objectForKey:nodeID inCollection:kZDCCollection_Nodes];
 			if (node)
 			{
-				// Todo: Implement this (and call [delegate didDeleteNode::::]
+				BOOL parentDeleted = NO;
 				
-			//	ZDCCloudLocator *cloudLocator =
-			//	  [CloudPathManager cloudLocatorForNode:node fileExtension:nil transaction:transaction];
-			//
-			//	[ZDCNodeManager remoteDeleteNode: nodeID
-			//	                  withCloudPath: cloudLocator.cloudPath
-			//	                         bucket: cloudLocator.bucket
-			//	                         region: cloudLocator.region
-			//	                    transaction: transaction];
+				NSArray<NSString*> *parentNodeIDs =
+				  [[ZDCNodeManager sharedInstance] parentNodeIDsForNode:node transaction:transaction];
+				
+				for (NSString *parentNodeID in parentNodeIDs)
+				{
+					if ([deletedNodeIDs containsObject:parentNodeID])
+					{
+						[topLevelDeletedNodeIDs addObject:parentNodeID];
+						parentDeleted = YES;
+						break;
+					}
+				}
+				
+				if (!parentDeleted)
+				{
+					[topLevelDeletedNodeIDs addObject:nodeID];
+				}
+			}
+		}
+		
+		for (NSString *nodeID in topLevelDeletedNodeIDs)
+		{
+			ZDCNode *node = [transaction objectForKey:nodeID inCollection:kZDCCollection_Nodes];
+			if (node)
+			{
+				[self remoteDeleteNode: node
+				             timestamp: nil
+				             pullState: pullState
+				           transaction: transaction];
 			}
 		}
 	}

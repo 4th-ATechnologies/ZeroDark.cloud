@@ -298,7 +298,6 @@ static ZDCNodeManager *sharedInstance = nil;
 	
 	NSString *parentID = node.parentID;
 	ZDCNode *parent = nil;
-	
 	do
 	{
 		if ([parentID hasSuffix:@"|graft"])
@@ -317,13 +316,14 @@ static ZDCNodeManager *sharedInstance = nil;
 			parent = [transaction objectForKey:parentID inCollection:kZDCCollection_Nodes];
 		}
 		
-		parentID = parent.parentID;
-		if (parentID && ![parentID hasSuffix:@"|graft"])
+		if (parent && ![parent.uuid hasSuffix:@"|graft"])
 		{
-			[parents insertObject:parentID atIndex:0];
+			[parents insertObject:parent.uuid atIndex:0];
 		}
+		
+		parentID = parent.parentID;
 	
-	} while (parent && parentID);
+	} while (parentID);
 	
 	return parents;
 }
@@ -1566,7 +1566,7 @@ static ZDCNodeManager *sharedInstance = nil;
 			[nodeIDs addObject:nodeID];
 		}];
 		
-		NSMutableArray<NSString *> *uploadedNodeIDs = [NSMutableArray arrayWithCapacity:nodeIDs.count];
+		uploadedNodeIDs = [NSMutableArray arrayWithCapacity:nodeIDs.count];
 		
 		NSString *queryString = [NSString stringWithFormat:@"WHERE %@ IS NOT NULL", Index_Nodes_Column_CloudID];
 		YapDatabaseQuery *query = [YapDatabaseQuery queryWithFormat:queryString];
