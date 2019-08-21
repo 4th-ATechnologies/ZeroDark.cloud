@@ -528,7 +528,7 @@
 	
 	ZDCLocalUser *localUser = (ZDCLocalUser *)user;
 	
-	// Step 1 of 6:
+	// Step 1 of 7:
 	//
 	// Convert the localUser to a remote user.
 	//
@@ -554,13 +554,13 @@
 	                forKey: remoteUser.uuid
 	          inCollection: kZDCCollection_Users];
 	
-	// Step 2 of 6:
+	// Step 2 of 7:
 	//
 	// Migrate user's avatar from persistent to cached.
 	
 	[zdc.diskManager makeUserAvatarPersistent:NO forUserID:localUserID];
 	
-	// Step 3 of 6:
+	// Step 3 of 7:
 	//
 	// Delete the localUser & associated:
 	// - privateKey
@@ -575,7 +575,7 @@
 	
 	[transaction removeObjectForKey:localUser.uuid inCollection:kZDCCollection_Users];
 	
-	// Step 4 of 6:
+	// Step 4 of 7:
 	//
 	// Delete any splitKeys for this user.
 	
@@ -596,7 +596,7 @@
 		[transaction removeObjectsForKeys:splitsToDelete inCollection:kZDCCollection_SplitKeys];
 	}
 
-	// Step 5 of 6:
+	// Step 5 of 7:
 	//
 	// Delete all treesystem nodes.
 	
@@ -612,7 +612,7 @@
 	
 	[transaction removeObjectsForKeys:allCloudNodeIDs inCollection:kZDCCollection_CloudNodes];
 	
-	// Step 6 of 6:
+	// Step 6 of 7:
 	//
 	// Delete all trunk nodes.
 	
@@ -632,6 +632,12 @@
 	}
 
 	[transaction removeObjectsForKeys:trunkNodeIDs inCollection:kZDCCollection_Nodes];
+	
+	// Step 7 of 7:
+	//
+	// Delete the user's pullState.
+	
+	[transaction removeObjectForKey:localUserID inCollection:kZDCCollection_PullState];
 	
 	// NOTES:
 	//
