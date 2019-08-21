@@ -5,7 +5,7 @@
  * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
  * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
  * API Reference : https://apis.zerodark.cloud
- **/
+**/
 
 #import "ActivityMonitor_IOS.h"
 
@@ -858,44 +858,58 @@ static NSString *const kActionStatus   = @"action";
 	{
 		if (uploadsPaused)
 		{
+			void (^resumeUploadsHandler)(UIAlertAction*) = ^(UIAlertAction *action){
+				[self resumeUploads];
+			};
+			
 			UIAlertAction *resumeUploadsAction =
-			[UIAlertAction actionWithTitle:NSLocalizedString(@"Resume Uploads", L10nComment)
-											 style:UIAlertActionStyleDefault
-										  handler:^(UIAlertAction * _Nonnull action) {
-											  [self pauseUploads:NO andAbortUploads:NO];
-										  }];
+			  [UIAlertAction actionWithTitle: NSLocalizedString(@"Resume Uploads", L10nComment)
+			                           style: UIAlertActionStyleDefault
+			                         handler: resumeUploadsHandler];
 
 			[alertController addAction:resumeUploadsAction];
 		}
 		else
 		{
+			void (^pauseUploadsHandler)(UIAlertAction*) = ^(UIAlertAction *action){
+				[self pauseUploadsAndAbortUploads:YES];
+			};
+			
 			UIAlertAction *pauseUploadsAction =
-			[UIAlertAction actionWithTitle:NSLocalizedString(@"Pause Uploads", L10nComment)
-											 style:UIAlertActionStyleDefault
-										  handler:^(UIAlertAction * _Nonnull action) {
-											  [self pauseUploads:NO andAbortUploads:YES];
-								  }];
+			  [UIAlertAction actionWithTitle: NSLocalizedString(@"Pause Uploads", L10nComment)
+			                           style: UIAlertActionStyleDefault
+			                         handler: pauseUploadsHandler];
 			
 			[alertController addAction:pauseUploadsAction];
 		}
 		
-		UIAlertAction *pauseSyncingAction =
-		[UIAlertAction actionWithTitle:NSLocalizedString(@"Pause Syncing", L10nComment)
-										 style:UIAlertActionStyleDefault
-									  handler:^(UIAlertAction * _Nonnull action) {
-										  [self pauseSyncing:TRUE];
-									  }];
-		
-		[alertController addAction:pauseSyncingAction];
+		{ // Scoping
+			
+			void (^pauseSyncingHandler)(UIAlertAction*) = ^(UIAlertAction *action){
+				[self pauseSyncing:TRUE];
+			};
+			
+			UIAlertAction *pauseSyncingAction =
+			  [UIAlertAction actionWithTitle: NSLocalizedString(@"Pause Syncing", L10nComment)
+			                           style: UIAlertActionStyleDefault
+			                         handler: pauseSyncingHandler];
+			
+			[alertController addAction:pauseSyncingAction];
+		}
 
-		UIAlertAction *pauseFutureUploadsAction =
-		[UIAlertAction actionWithTitle:NSLocalizedString(@"Pause Uploads (continue in-progress)", L10nComment)
-										 style:UIAlertActionStyleDefault
-									  handler:^(UIAlertAction * _Nonnull action) {
-										  [self pauseUploads:YES andAbortUploads:NO];
-										  }];
-		
-		[alertController addAction:pauseFutureUploadsAction];
+		{ // Scoping
+			
+			void (^pauseFutureUploadsHandler)(UIAlertAction*) = ^(UIAlertAction *action){
+				[self pauseUploadsAndAbortUploads:NO];
+			};
+			
+			UIAlertAction *pauseFutureUploadsAction =
+			  [UIAlertAction actionWithTitle: NSLocalizedString(@"Pause Uploads (continue in-progress)", L10nComment)
+			                           style: UIAlertActionStyleDefault
+			                         handler: pauseFutureUploadsHandler];
+			
+			[alertController addAction:pauseFutureUploadsAction];
+		}
 	}
 	
 	
@@ -989,36 +1003,34 @@ static NSString *const kActionStatus   = @"action";
 	}];
 }
 
--(void)pauseUploads:(BOOL)pause andAbortUploads:(BOOL)shouldAbortUploads;
+- (void)pauseUploadsAndAbortUploads:(BOOL)shouldAbortUploads;
 {
-	BOOL allUsersSelected = selectedLocalUserID == nil;
-	
+	BOOL allUsersSelected = (selectedLocalUserID == nil);
 	if (allUsersSelected)
 	{
-		if(pause)
-		{
-			[syncManager pausePushForAllLocalUsersAndAbortUploads:shouldAbortUploads];
-		}
-		else
-		{
-			[syncManager resumePushForAllLocalUsers];
-		}
+		[syncManager pausePushForAllLocalUsersAndAbortUploads:shouldAbortUploads];
 	}
 	else
 	{
-		if(pause)
-		{
-			[syncManager pausePushForLocalUserID:selectedLocalUserID andAbortUploads: shouldAbortUploads];
-		}
-		else
-		{
-			[syncManager resumePushForLocalUserID:selectedLocalUserID];
-		}
-		
+		[syncManager pausePushForLocalUserID:selectedLocalUserID andAbortUploads:shouldAbortUploads];
 	}
 	
 	[self refreshActionStatus];
+}
 
+- (void)resumeUploads
+{
+	BOOL allUsersSelected = (selectedLocalUserID == nil);
+	if (allUsersSelected)
+	{
+		[syncManager resumePushForAllLocalUsers];
+	}
+	else
+	{
+		[syncManager resumePushForLocalUserID:selectedLocalUserID];
+	}
+	
+	[self refreshActionStatus];
 }
 
 
