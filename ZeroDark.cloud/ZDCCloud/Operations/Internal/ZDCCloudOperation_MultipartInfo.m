@@ -16,18 +16,19 @@
 **/
 static int const kCurrentVersion = 0;
 
-static NSString *const k_version        = @"version";
-static NSString *const k_stagingPath    = @"stagingPath";
-static NSString *const k_sha256Hash     = @"sha256Hash";
-static NSString *const k_uploadID       = @"uploadID";
-static NSString *const k_rawMetadata    = @"rawMetadata";
-static NSString *const k_rawThumbnail   = @"rawThumbnail";
-static NSString *const k_cloudFileSize  = @"cloudFileSize";
-static NSString *const k_chunkSize      = @"chunkSize";
-static NSString *const k_checksums      = @"checksums";
-static NSString *const k_eTags          = @"eTags";
-static NSString *const k_needsAbort     = @"needsAbort";
-static NSString *const k_needsSkip      = @"needsSkip";
+static NSString *const k_version          = @"version";
+static NSString *const k_stagingPath      = @"stagingPath";
+static NSString *const k_sha256Hash       = @"sha256Hash";
+static NSString *const k_uploadID         = @"uploadID";
+static NSString *const k_rawMetadata      = @"rawMetadata";
+static NSString *const k_rawThumbnail     = @"rawThumbnail";
+static NSString *const k_cloudFileSize    = @"cloudFileSize";
+static NSString *const k_chunkSize        = @"chunkSize";
+static NSString *const k_checksums        = @"checksums";
+static NSString *const k_eTags            = @"eTags";
+static NSString *const k_duplicateOpUUIDs = @"duplicateOpUUIDs";
+static NSString *const k_needsAbort       = @"needsAbort";
+static NSString *const k_needsSkip        = @"needsSkip";
 
 
 @implementation ZDCCloudOperation_MultipartInfo
@@ -44,6 +45,8 @@ static NSString *const k_needsSkip      = @"needsSkip";
 
 @synthesize checksums = checksums;
 @synthesize eTags = eTags;
+
+@synthesize duplicateOpUUIDs = duplicateOpUUIDs;
 
 @synthesize needsAbort = needsAbort;
 @synthesize needsSkip = needsSkip;
@@ -66,6 +69,8 @@ static NSString *const k_needsSkip      = @"needsSkip";
 		
 		checksums = [decoder decodeObjectForKey:k_checksums];
 		eTags = [decoder decodeObjectForKey:k_eTags];
+		
+		duplicateOpUUIDs= [decoder decodeObjectForKey:k_duplicateOpUUIDs];
 		
 		needsAbort = [decoder decodeBoolForKey:k_needsAbort];
 		needsSkip = [decoder decodeBoolForKey:k_needsSkip];
@@ -92,6 +97,8 @@ static NSString *const k_needsSkip      = @"needsSkip";
 	[coder encodeObject:checksums forKey:k_checksums];
 	[coder encodeObject:eTags forKey:k_eTags];
 	
+	[coder encodeObject:duplicateOpUUIDs forKey:k_duplicateOpUUIDs];
+	
 	[coder encodeBool:needsAbort forKey:k_needsAbort];
 	[coder encodeBool:needsSkip forKey:k_needsSkip];
 }
@@ -112,6 +119,8 @@ static NSString *const k_needsSkip      = @"needsSkip";
 	
 	copy->checksums = checksums;
 	copy->eTags = eTags;
+	
+	copy->duplicateOpUUIDs = duplicateOpUUIDs;
 	
 	copy->needsAbort = needsAbort;
 	copy->needsSkip = needsSkip;
@@ -142,6 +151,8 @@ static NSString *const k_needsSkip      = @"needsSkip";
 	
 	if (!YDB_IsEqualOrBothNil(checksums, another->checksums)) return NO;
 	if (!YDB_IsEqualOrBothNil(eTags, another->eTags)) return NO;
+	
+	if (!YDB_IsEqualOrBothNil(duplicateOpUUIDs, another->duplicateOpUUIDs)) return NO;
 	
 	if (needsAbort != another->needsAbort) return NO;
 	if (needsSkip != another->needsSkip) return NO;

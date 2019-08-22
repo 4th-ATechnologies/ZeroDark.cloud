@@ -1534,6 +1534,8 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		__block ZDCData *metadata = nil;
 		__block ZDCData *thumbnail = nil;
 		
+		__block NSSet<NSUUID *> *duplicateOpUUIDs = nil;
+		
 		[[self roConnection] readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 			
 			if (asyncData)
@@ -1545,6 +1547,8 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				data = asyncData.data;
 				metadata = asyncData.metadata;
 				thumbnail = asyncData.thumbnail;
+				
+				duplicateOpUUIDs = operation.ephemeralInfo.duplicateOpUUIDs;
 			}
 			else
 			{
@@ -1577,8 +1581,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				
 				// Look for duplicate operations.
 				
-				__block NSMutableSet<NSUUID *> *duplicateOpUUIDs = nil;
-				
 				BOOL canSkipDuplicateOps =
 				    data.isLatestVersion
 				 && (!metadata || metadata.isLatestVersion)
@@ -1586,6 +1588,8 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				
 				if (canSkipDuplicateOps)
 				{
+					__block NSMutableSet<NSUUID*> *duplicateOps = nil;
+					
 					ZDCCloudTransaction *ext = [transaction ext:extName];
 					[ext enumerateOperationsInPipeline: operation.pipeline
 													usingBlock:
@@ -1596,15 +1600,15 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 						if (![_op.uuid isEqual:operation.uuid] && // Ignore our own operation
 						    [_op hasSameTarget:operation])
 						{
-							if (duplicateOpUUIDs == nil) {
-								duplicateOpUUIDs = [NSMutableSet set];
+							if (duplicateOps == nil) {
+								duplicateOps = [NSMutableSet set];
 							}
-							[duplicateOpUUIDs addObject:_op.uuid];
+							[duplicateOps addObject:_op.uuid];
 						}
 					}];
+					
+					duplicateOpUUIDs = [duplicateOps copy];
 				}
-				
-				context.duplicateOpUUIDs = duplicateOpUUIDs;
 			}
 			
 			// Snapshot current pullState.
@@ -1621,6 +1625,8 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		} else if (node) {
 			context.eTag = node.eTag_data;
 		}
+		
+		context.duplicateOpUUIDs = duplicateOpUUIDs;
 		
 		if (!asyncData && !data)
 		{
@@ -1649,9 +1655,10 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				asyncData.node = node;
 				
 				operation.ephemeralInfo.asyncData = asyncData;
+				operation.ephemeralInfo.duplicateOpUUIDs = duplicateOpUUIDs;
 			}
 			
-			[self resolveAsyncNodeDataForOperation:operation];
+			[self resolveAsyncDataForOperation:operation];
 			[[self pipelineForContext:context] setStatusAsPendingForOperationWithUUID:context.operationUUID];
 			return;
 		}
@@ -1659,6 +1666,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		NSData *rawMetadata = metadata.data ?: asyncData.rawMetadata;
 		NSData *rawThumbnail = thumbnail.data ?: asyncData.rawThumbnail;
 		operation.ephemeralInfo.asyncData = nil;
+		operation.ephemeralInfo.duplicateOpUUIDs = nil;
 		
 		BOOL needsMultipart =
 		  [self checkNeedsMultipart: context
@@ -2478,7 +2486,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		// Remove redundant operations (if needed)
 		
-		for (NSUUID *uuid in context.duplicateOpUUIDs)
+		NSSet<NSUUID*> *duplicateOpUUIDs = operation.multipartInfo.duplicateOpUUIDs ?: context.duplicateOpUUIDs;
+		
+		for (NSUUID *uuid in duplicateOpUUIDs)
 		{
 			[cloudTransaction skipOperationWithUUID:uuid];
 		}
@@ -7170,7 +7180,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 #pragma mark Stream Tools
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)resolveAsyncNodeDataForOperation:(ZDCCloudOperation *)op
+- (void)resolveAsyncDataForOperation:(ZDCCloudOperation *)op
 {
 	ZDCCloudOperation_AsyncData *asyncData = op.ephemeralInfo.asyncData;
 	NSParameterAssert(asyncData != nil);
@@ -7769,6 +7779,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		multipartInfo.chunkSize = chunkSize;
 		
 		multipartInfo.checksums = chunkChecksums;
+		multipartInfo.duplicateOpUUIDs = context.duplicateOpUUIDs;
 		
 		[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 			

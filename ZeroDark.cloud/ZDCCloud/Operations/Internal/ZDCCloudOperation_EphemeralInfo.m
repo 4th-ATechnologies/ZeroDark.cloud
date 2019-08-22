@@ -28,6 +28,9 @@
 }
 
 @synthesize asyncData;
+@synthesize duplicateOpUUIDs;
+
+@synthesize multipartData;
 
 @synthesize pollContext;
 @synthesize multipollContext;

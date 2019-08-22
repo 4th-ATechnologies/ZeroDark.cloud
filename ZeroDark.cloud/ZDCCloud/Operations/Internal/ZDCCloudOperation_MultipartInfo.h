@@ -32,8 +32,9 @@
 @property (nonatomic, assign, readwrite) uint64_t chunkSize;
 
 @property (nonatomic, copy, readwrite) NSDictionary<NSNumber*, NSString*> *checksums;
-
 @property (nonatomic, copy, readwrite) NSDictionary<NSNumber*, NSString*> *eTags;
+
+@property (nonatomic, copy, readwrite) NSSet<NSUUID *> *duplicateOpUUIDs;
 
 @property (nonatomic, assign, readwrite) BOOL needsAbort;
 @property (nonatomic, assign, readwrite) BOOL needsSkip;

@@ -26,7 +26,18 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface ZDCCloudOperation_EphemeralInfo : NSObject
 
+/**
+ * Stored temporarily, while preparing the operation for upload.
+ * This occurs when the delegate gives us ZDCData that we need to pre-process before we can use.
+ */
 @property (atomic, strong, readwrite, nullable) ZDCCloudOperation_AsyncData *asyncData;
+
+/**
+ * Stored temporarily, while preparing the operation for upload.
+ * This occurs when the delegate gives us ZDCData that we need to pre-process before we can use.
+ * Meaning the ZDCTaskContext gets destroyed, and recreated again later.
+ */
+@property (atomic, copy, readwrite, nullable) NSSet<NSUUID*> *duplicateOpUUIDs;
 
 @property (atomic, strong, readwrite, nullable) ZDCData *multipartData;
 
@@ -43,7 +54,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (atomic, copy, readwrite, nullable) NSString *continuation_rcrd;
 @property (atomic, copy, readwrite, nullable) NSString *continuation_data;
 
-// Why is the infinite-loop-protections stuff separated ?
+// Why is the infinite-loop-protection stuff separated ?
 //
 // Because a common infinite loop is:
 // - the S4 server (our serverless code) rejects a request (for whatever reason)
