@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           ZeroDarkCloud Docs
         </a>
-         (92% documented)
+         (94% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -278,9 +278,6 @@
                 <a class="nav-group-task-link" href="../Classes/ZDCAccountSetupViewControllerProxy.html">ZDCAccountSetupViewControllerProxy</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Classes.html#/c:objc(cs)ZDCConstants">ZDCConstants</a>
-              </li>
-              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/ZDCDataPromise.html">ZDCDataPromise</a>
               </li>
               <li class="nav-group-task">
@@ -446,27 +443,6 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0DBConnection_UserAuth">kAuth0DBConnection_UserAuth</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0ErrorDescription_Blocked">kAuth0ErrorDescription_Blocked</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_InvalidGrant">kAuth0Error_InvalidGrant</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_InvalidRefreshToken">kAuth0Error_InvalidRefreshToken</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_RateLimit">kAuth0Error_RateLimit</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_Unauthorized">kAuth0Error_Unauthorized</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_UserExists">kAuth0Error_UserExists</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_UserNameExists">kAuth0Error_UserNameExists</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Other Constants.html#/c:@kLocalUserIDKey">kLocalUserIDKey</a>
@@ -772,7 +748,7 @@
  Since the framework supports everything from small objects to multi-gigabyte files,
  the ZDCData class is used to encapsulate the response.</p>
 
-<p>For small items, you can create a ZDCData container with the raw data.
+<p>For small items, you can create a ZDCData container with the raw in-memory data.
  For example, if you&rsquo;re uploading a serialized object, you can simply serialize the object,
  and then wrap the serialized bytes within a ZDCData container.</p>
 
@@ -783,7 +759,8 @@
     For file uploads, the framework will automatically monitor the file during upload.
    If the file is modified, the framework will abort the upload &amp; restart it.
    This ensures the file doesn&rsquo;t get corrupted during upload.
-   (Monitoring is done via ZDCDiskMonitor, and uses both hashing &amp; filesystem notifications to detect changes.)
+   (Monitoring is done via ZDCDiskMonitor, and uses both hashing &amp; filesystem notifications
+   to detect changes.)
 
 </div>
 
@@ -909,9 +886,9 @@ Use this when the data you&rsquo;re uploading is small, and can easily fit in me
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCData(im)initAsPromise"></a>
-                    <a name="//apple_ref/objc/Method/-initAsPromise" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCData(im)initAsPromise">-initAsPromise</a>
+                    <a name="/c:objc(cs)ZDCData(im)initWithPromise:"></a>
+                    <a name="//apple_ref/objc/Method/-initWithPromise:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCData(im)initWithPromise:">-initWithPromise:</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -927,12 +904,12 @@ The PushManager will wait for you to either fullfill or reject the promise.</p>
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="n">initAsPromise</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithPromise</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCDataPromise.html">ZDCDataPromise</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">promise</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="nf">init</span><span class="p">(</span><span class="nv">asPromise</span><span class="p">:</span> <span class="p">())</span></code></pre>
+                          <pre class="highlight swift"><code><span class="nf">init</span><span class="p">(</span><span class="nv">promise</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCDataPromise.html">ZDCDataPromise</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -1067,6 +1044,53 @@ The PushManager will wait for you to either fullfill or reject the promise.</p>
                     </section>
                   </div>
                 </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCData(py)isLatestVersion"></a>
+                    <a name="//apple_ref/objc/Property/isLatestVersion" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCData(py)isLatestVersion">isLatestVersion</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>ZeroDark uses a persistent queue to track which nodes need to be uploaded.
+ Sometimes this means that the same node gets enqueued multiple times.
+ However, this doesn&rsquo;t mean the upload needs to occur multiple times.
+ If you&rsquo;re uploading the latest version of the data,
+ then a single upload will suffice, and the framework can skip the duplicate queued operations.</p>
+
+<p>This flag acts as a signal to the framework.
+ When set to true, the framework will automatically skip duplicated queued operations.
+ In other words, it will automatically consolidate upload requests for you.</p>
+
+<p>However, there are some apps which require server-side version logging,
+ and need to upload each individual version of a node.
+ In this case, set this value to false to ensure the framework won&rsquo;t consolidate requests,
+ but rather execute each queued upload operation in turn.</p>
+
+<p>The default value is YES / true.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">assign</span><span class="p">,</span> <span class="n">readwrite</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">isLatestVersion</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isLatestVersion</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
               </ul>
             </div>
           </div>
@@ -1075,7 +1099,7 @@ The PushManager will wait for you to either fullfill or reject the promise.</p>
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-08-08)</p>
+      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-08-24)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

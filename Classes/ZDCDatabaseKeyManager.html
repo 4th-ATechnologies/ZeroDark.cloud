@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           ZeroDarkCloud Docs
         </a>
-         (92% documented)
+         (94% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -278,9 +278,6 @@
                 <a class="nav-group-task-link" href="../Classes/ZDCAccountSetupViewControllerProxy.html">ZDCAccountSetupViewControllerProxy</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Classes.html#/c:objc(cs)ZDCConstants">ZDCConstants</a>
-              </li>
-              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/ZDCDataPromise.html">ZDCDataPromise</a>
               </li>
               <li class="nav-group-task">
@@ -446,27 +443,6 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0DBConnection_UserAuth">kAuth0DBConnection_UserAuth</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0ErrorDescription_Blocked">kAuth0ErrorDescription_Blocked</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_InvalidGrant">kAuth0Error_InvalidGrant</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_InvalidRefreshToken">kAuth0Error_InvalidRefreshToken</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_RateLimit">kAuth0Error_RateLimit</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_Unauthorized">kAuth0Error_Unauthorized</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_UserExists">kAuth0Error_UserExists</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_UserNameExists">kAuth0Error_UserNameExists</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Other Constants.html#/c:@kLocalUserIDKey">kLocalUserIDKey</a>
@@ -765,50 +741,56 @@
 
                 </div>
               </div>
-            <p>The DatabaseKeyManager class provides tools for securely storing &amp; retrieving the database key.</p>
+            <p>This class provides optional tools for securely storing &amp; retrieving the key
+ used to encrypt the sqlite database file.</p>
 
-<p>That is, the local sqlite database (stored on the user&rsquo;s device) is encrypted using SQLCipher.
- In order to start using the framework, this database file must be unlocked first.</p>
+<p>The local sqlite database (stored on the user&rsquo;s device) is encrypted using SQLCipher.
+ In order to start using the framework, this database file must first be unlocked.</p>
 <div class="aside aside-note">
     <p class="aside-title">Note</p>
     Encryption of the local database is required in order to protect the user&rsquo;s data.
-   The database stores all the file encryption keys, and other sensitive content.
-   And it&rsquo;s quite easy for the database file to get leaked (for example: backed up to iCloud).
+   The database stores all the node encryption keys, and other sensitive content.
+   And it&rsquo;s rather common for this database file to get backed up to various locations,
+   such as iCloud.
 
 </div>
 
-<p>The DatabaseKeyManager provides flexibility for your app, while maintaining security.
- For example, if you want to add password protection or TouchID to your app, this class can help.
- Furthermore, if you use this class to assist in adding features like password protection to your app,
- the protection that you offer will be backed by solid crypto.</p>
+<p>The DatabaseKeyManager provides flexibility for your app.
+ For example, you may want to add password protection or TouchID to your app.
+ This class can help, while maintaining strong security backed by solid crypto.</p>
 
 <p>Here&rsquo;s how it works:</p>
 
 <ul>
 <li>A random key is generated for encrypting the database file.</li>
-<li>This key is then encrypted using PBKDF2 and then stored to disk.</li>
-<li>The key to unlock the PBKDF2 is then stored. For example, it could be stored in the OS keychain.</li>
+<li>This key is then wrapped (encrypted) using PBKDF2, and the resulting PBKDF2 file is stored to disk.</li>
+<li>The key to unlock the PBKDF2 is stored separately, and is configurable to fit the needs of your application.</li>
 </ul>
 
-<p>&lt; Why the heck do we do ^this^ ? &gt;
- &lt; Add explanation in terms of how this protects the user. &gt;</p>
+<p>By protecting access to this key, you protect access to the database, and thus all user data stored locally.
+ This even includes files stored via the DiskManager (which are also encrypted with keys stored in the database).</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    Use of this class is optional. If your app already has a custom solution for encrypting &amp; storing
+   the database key, then you&rsquo;re welcome to use it.
+
+</div>
+
+<p>This class gives your app 3 different options for storing the database key:</p>
 
 <ol>
-<li>Keychain
-The easiest option is simply to store the database key in the OS keychain.
-This is the option that&hellip;</li>
+<li><p>Keychain
+The easiest option is simply to store the database key in the OS keychain.</p></li>
+<li><p>Passphrase
+You can allow users to protect the data with a passphrase.</p></li>
+<li><p>Biometric
+You can allow users to use the biometrics available on their device.</p></li>
 </ol>
 
-<p>Vinnie - fill this out.
- The style of documentation should assume:</p>
+<p>Long story short: This class provides the security options you&rsquo;d expect, backed by the crypto you&rsquo;d hope for.</p>
 
-<ul>
-<li>the reader is unfamiliar with crypto</li>
-<li>the reader&rsquo;s reaction after reading the docs should be, <q>this is really cool, and easy to use!</q></li>
-<li>in other words, the focus should be less on what the code does (although that&rsquo;s obviously required),
-and more on how it helps the developer make his/her app really really cool.</li>
-<li>think 1/3 high level overview, 1/3 documentation, and 1/3 subtle marketing</li>
-</ul>
+<p>Additional documentation can be found in the docs:
+ <a href="https://zerodarkcloud.readthedocs.io/en/latest/client/databaseKeyManager/">https://zerodarkcloud.readthedocs.io/en/latest/client/databaseKeyManager/</a></p>
 
           </div>
         </section>
@@ -830,14 +812,18 @@ and more on how it helps the developer make his/her app really really cool.</li>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Returns NO/false if the database hasn&rsquo;t been setup yet.
+ This should only be the case if the framework is being run for the first time.
+ (e.g. first run after app install / re-install)</p>
+
+<p>In particular, this method checks to see if the a PBKDF2 file exists.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">atomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">isConfigured</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">atomic</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">isConfigured</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
@@ -862,14 +848,19 @@ and more on how it helps the developer make his/her app really really cool.</li>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Returns YES/true if the PBKDF2 file exists, and can be decrypted using a key stored in the OS keychain.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    The PBKDF2 file contains the key used to encrypt the database.
+
+</div>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">atomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">usesKeychainKey</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">atomic</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">usesKeychainKey</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
@@ -894,14 +885,19 @@ and more on how it helps the developer make his/her app really really cool.</li>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Returns YES/true if the PBKDF2 file exists, and can be decrypted using a passphrase.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    The PBKDF2 file contains the key used to encrypt the database.
+
+</div>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">atomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">usesPassphrase</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">atomic</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">usesPassphrase</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
@@ -926,14 +922,19 @@ and more on how it helps the developer make his/her app really really cool.</li>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Returns YES/true if the PBKDF2 file exists, and can be decrypted using biometrics.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    The PBKDF2 file contains the key used to encrypt the database.
+
+</div>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">atomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">usesBioMetrics</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">atomic</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">usesBioMetrics</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
@@ -958,14 +959,14 @@ and more on how it helps the developer make his/her app really really cool.</li>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Returns YES/true if biometrics are available on the current device.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">atomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">canUseBioMetrics</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">atomic</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">canUseBioMetrics</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
@@ -977,12 +978,23 @@ and more on how it helps the developer make his/her app really really cool.</li>
                     </section>
                   </div>
                 </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Keychain"></a>
+                <a name="//apple_ref/objc/Section/Keychain" class="dashAnchor"></a>
+                <a href="#/Keychain">
+                  <h3 class="section-name">Keychain</h3>
+                </a>
+              </div>
+              <ul class="item-container">
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCDatabaseKeyManager(im)configureStorageKey:error:"></a>
-                    <a name="//apple_ref/objc/Method/-configureStorageKey:error:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCDatabaseKeyManager(im)configureStorageKey:error:">-configureStorageKey:error:</a>
+                    <a name="/c:objc(cs)ZDCDatabaseKeyManager(im)createKeychainEntry:"></a>
+                    <a name="//apple_ref/objc/Method/-createKeychainEntry:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDatabaseKeyManager(im)createKeychainEntry:">-createKeychainEntry:</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -990,20 +1002,26 @@ and more on how it helps the developer make his/her app really really cool.</li>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Creates an entry in the PBKDF2 file, and a corresponding entry in the OS keychain.</p>
+
+<p>In other words, the OS keychain entry can be used to unlock the PBKDF2 file.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    Locked inside the PBKDF2 file is the databsae encryption key.
+
+</div>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">-</span><span class="p">(</span><span class="n">BOOL</span><span class="p">)</span> <span class="nf">configureStorageKey</span><span class="p">:(</span><span class="n">Cipher_Algorithm</span><span class="p">)</span><span class="nv">algorithm</span>
-					  <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span> <span class="n">outError</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">createKeychainEntry</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">outError</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">configureStorageKey</span><span class="p">(</span><span class="n">_</span> <span class="nv">algorithm</span><span class="p">:</span> <span class="kt">Any</span><span class="o">!</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">createKeychainEntry</span><span class="p">()</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1013,9 +1031,9 @@ and more on how it helps the developer make his/her app really really cool.</li>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCDatabaseKeyManager(im)createKeychainEntryKeyWithError:"></a>
-                    <a name="//apple_ref/objc/Method/-createKeychainEntryKeyWithError:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCDatabaseKeyManager(im)createKeychainEntryKeyWithError:">-createKeychainEntryKeyWithError:</a>
+                    <a name="/c:objc(cs)ZDCDatabaseKeyManager(im)unlockUsingKeychain:"></a>
+                    <a name="//apple_ref/objc/Method/-unlockUsingKeychain:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDatabaseKeyManager(im)unlockUsingKeychain:">-unlockUsingKeychain:</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1023,19 +1041,84 @@ and more on how it helps the developer make his/her app really really cool.</li>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Attempts to unlock the PBKDF2 file using the passcode stored in the keychain.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    Locked inside the PBKDF2 file is the databsae encryption key.
+
+</div>
+
+<p>On success, the database encryption key is returned.
+ You can then use the returned key to unlock the database via <code><a href="../Classes/ZeroDarkCloud.html#/c:objc(cs)ZeroDarkCloud(im)unlockOrCreateDatabase:">-[ZeroDarkCloud unlockOrCreateDatabase:]</a></code>.</p>
+
+<p>If the system isn&rsquo;t configured yet (isConfigured == NO),
+ this method automatically configures the system using the default configuration.
+ That is, it automatically creates a PBKDF2 file, backed by a keychain entry.
+ Meaning this method will <q>do the right thing</q>, and return a non-nil result.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">-</span><span class="p">(</span><span class="n">BOOL</span><span class="p">)</span> <span class="nf">createKeychainEntryKeyWithError</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span> <span class="n">outError</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">NSData</span> <span class="o">*</span><span class="p">)</span><span class="nf">unlockUsingKeychain</span><span class="p">:</span>
+    <span class="p">(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">outError</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">createKeychainEntryKey</span><span class="p">()</span> <span class="k">throws</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">unlockUsingKeychain</span><span class="p">()</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Data</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Passphrase"></a>
+                <a name="//apple_ref/objc/Section/Passphrase" class="dashAnchor"></a>
+                <a href="#/Passphrase">
+                  <h3 class="section-name">Passphrase</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDatabaseKeyManager(im)createPassphraseEntry:withHint:error:"></a>
+                    <a name="//apple_ref/objc/Method/-createPassphraseEntry:withHint:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDatabaseKeyManager(im)createPassphraseEntry:withHint:error:">-createPassphraseEntry:withHint:error:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates an entry in the PBKDF2 file using the given passphrase.</p>
+
+<p>If there&rsquo;s an existing keychain entry, that keychain entry will be deleted.
+ Because it does NOT make sense to have both a keychain entry and password protection.</p>
+
+<p>If there&rsquo;s an existing biometric entry, it is NOT deleted.
+ Because it makes perfect sense to have both a biometric entry and password protection.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">createPassphraseEntry</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">passphrase</span>
+                     <span class="nf">withHint</span><span class="p">:(</span><span class="n">NSString</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">hint</span>
+                        <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">outError</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">createPassphraseEntry</span><span class="p">(</span><span class="n">_</span> <span class="nv">passphrase</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="n">withHint</span> <span class="nv">hint</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1045,9 +1128,9 @@ and more on how it helps the developer make his/her app really really cool.</li>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCDatabaseKeyManager(im)unlockUsingKeychainKeyWithError:"></a>
-                    <a name="//apple_ref/objc/Method/-unlockUsingKeychainKeyWithError:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCDatabaseKeyManager(im)unlockUsingKeychainKeyWithError:">-unlockUsingKeychainKeyWithError:</a>
+                    <a name="/c:objc(cs)ZDCDatabaseKeyManager(im)unlockUsingPassphase:error:"></a>
+                    <a name="//apple_ref/objc/Method/-unlockUsingPassphase:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDatabaseKeyManager(im)unlockUsingPassphase:error:">-unlockUsingPassphase:error:</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1055,19 +1138,93 @@ and more on how it helps the developer make his/her app really really cool.</li>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Attempts to unlock the PBKDF2 file using the given passphrase.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    Locked inside the PBKDF2 file is the databsae encryption key.
+
+</div>
+
+<p>On success, the database encryption key is returned.
+ You can then use the returned key to unlock the database via <code><a href="../Classes/ZeroDarkCloud.html#/c:objc(cs)ZeroDarkCloud(im)unlockOrCreateDatabase:">-[ZeroDarkCloud unlockOrCreateDatabase:]</a></code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">-</span><span class="p">(</span><span class="n">nullable</span> <span class="n">NSData</span><span class="o">*</span><span class="p">)</span> <span class="nf">unlockUsingKeychainKeyWithError</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span> <span class="n">outError</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">NSData</span> <span class="o">*</span><span class="p">)</span><span class="nf">unlockUsingPassphase</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">passphrase</span>
+                                    <span class="nf">error</span><span class="p">:</span>
+                                        <span class="p">(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">outError</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">unlockUsingKeychainKey</span><span class="p">()</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Data</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">unlock</span><span class="p">(</span><span class="n">usingPassphase</span> <span class="nv">passphrase</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Data</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>passphrase</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A passphrase gathered from the user.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>outError</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>If an error occurs, this value will be set with information about the error.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDatabaseKeyManager(im)passphraseHint"></a>
+                    <a name="//apple_ref/objc/Method/-passphraseHint" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDatabaseKeyManager(im)passphraseHint">-passphraseHint</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the passphrase hint.
+The hint was set when the passphrase was created.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="n">passphraseHint</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">passphraseHint</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">String</span><span class="p">?</span></code></pre>
 
                         </div>
                       </div>
@@ -1077,9 +1234,9 @@ and more on how it helps the developer make his/her app really really cool.</li>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCDatabaseKeyManager(im)createPassPhraseKey:passPhraseHint:error:"></a>
-                    <a name="//apple_ref/objc/Method/-createPassPhraseKey:passPhraseHint:error:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCDatabaseKeyManager(im)createPassPhraseKey:passPhraseHint:error:">-createPassPhraseKey:passPhraseHint:error:</a>
+                    <a name="/c:objc(cs)ZDCDatabaseKeyManager(im)removePassphraseEntry:"></a>
+                    <a name="//apple_ref/objc/Method/-removePassphraseEntry:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDatabaseKeyManager(im)removePassphraseEntry:">-removePassphraseEntry:</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1087,21 +1244,65 @@ and more on how it helps the developer make his/her app really really cool.</li>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Removes the passphrase entry from the PBKDF2 file.</p>
+
+<p>If there aren&rsquo;t any biometric entries remaining in the PBKDF2 file,
+ this method will automatically create a keychain entry. This ensures you&rsquo;re not accidentally locked out.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">-</span><span class="p">(</span><span class="n">BOOL</span><span class="p">)</span> <span class="nf">createPassPhraseKey</span><span class="p">:(</span><span class="n">NSString</span><span class="o">*</span><span class="p">)</span><span class="nv">passPhrase</span>
-			 <span class="nf">passPhraseHint</span><span class="p">:(</span><span class="n">NSString</span><span class="o">*</span> <span class="n">_Nullable</span><span class="p">)</span><span class="nv">passPhraseHint</span>
-					  <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span> <span class="n">outError</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">removePassphraseEntry</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">outError</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">createPassPhraseKey</span><span class="p">(</span><span class="n">_</span> <span class="nv">passPhrase</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">passPhraseHint</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span> <span class="k">throws</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">removePassphraseEntry</span><span class="p">()</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Biometric"></a>
+                <a name="//apple_ref/objc/Section/Biometric" class="dashAnchor"></a>
+                <a href="#/Biometric">
+                  <h3 class="section-name">Biometric</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDatabaseKeyManager(im)createBiometricEntry:"></a>
+                    <a name="//apple_ref/objc/Method/-createBiometricEntry:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDatabaseKeyManager(im)createBiometricEntry:">-createBiometricEntry:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates an entry in the PBKDF2 file that can be unlocked using biometric techniques provided by the device.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">createBiometricEntry</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">outError</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">createBiometricEntry</span><span class="p">()</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1111,9 +1312,9 @@ and more on how it helps the developer make his/her app really really cool.</li>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCDatabaseKeyManager(im)unlockUsingPassphaseKey:error:"></a>
-                    <a name="//apple_ref/objc/Method/-unlockUsingPassphaseKey:error:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCDatabaseKeyManager(im)unlockUsingPassphaseKey:error:">-unlockUsingPassphaseKey:error:</a>
+                    <a name="/c:objc(cs)ZDCDatabaseKeyManager(im)unlockUsingBiometricWithPrompt:error:"></a>
+                    <a name="//apple_ref/objc/Method/-unlockUsingBiometricWithPrompt:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDatabaseKeyManager(im)unlockUsingBiometricWithPrompt:error:">-unlockUsingBiometricWithPrompt:error:</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1121,20 +1322,29 @@ and more on how it helps the developer make his/her app really really cool.</li>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Attempts to unlock the PBKDF2 file using biometric techniques provided by the device.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    Locked inside the PBKDF2 file is the databsae encryption key.
+
+</div>
+
+<p>On success, the database encryption key is returned.
+ You can then use the returned key to unlock the database via <code><a href="../Classes/ZeroDarkCloud.html#/c:objc(cs)ZeroDarkCloud(im)unlockOrCreateDatabase:">-[ZeroDarkCloud unlockOrCreateDatabase:]</a></code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">-</span><span class="p">(</span><span class="n">nullable</span> <span class="n">NSData</span><span class="o">*</span><span class="p">)</span> <span class="nf">unlockUsingPassphaseKey</span><span class="p">:(</span><span class="n">NSString</span><span class="o">*</span><span class="p">)</span><span class="nv">passPhrase</span>
-						  <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span><span class="o">**</span><span class="p">)</span><span class="nv">outError</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">NSData</span> <span class="o">*</span><span class="p">)</span>
+    <span class="nf">unlockUsingBiometricWithPrompt</span><span class="p">:(</span><span class="n">NSString</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">prompt</span>
+                             <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">outError</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">unlock</span><span class="p">(</span><span class="n">usingPassphaseKey</span> <span class="nv">passPhrase</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Data</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">unlockUsingBiometric</span><span class="p">(</span><span class="n">withPrompt</span> <span class="nv">prompt</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Data</span></code></pre>
 
                         </div>
                       </div>
@@ -1144,9 +1354,9 @@ and more on how it helps the developer make his/her app really really cool.</li>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCDatabaseKeyManager(im)hintStringForPassphraseKey"></a>
-                    <a name="//apple_ref/objc/Method/-hintStringForPassphraseKey" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCDatabaseKeyManager(im)hintStringForPassphraseKey">-hintStringForPassphraseKey</a>
+                    <a name="/c:objc(cs)ZDCDatabaseKeyManager(im)removeBiometricEntry:"></a>
+                    <a name="//apple_ref/objc/Method/-removeBiometricEntry:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDatabaseKeyManager(im)removeBiometricEntry:">-removeBiometricEntry:</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1154,154 +1364,39 @@ and more on how it helps the developer make his/her app really really cool.</li>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Removes the passphrase entry from the PBKDF2 file.</p>
+
+<p>If there aren&rsquo;t any passphrase entries remaining in the PBKDF2 file,
+ this method will automatically create a keychain entry. This ensures you&rsquo;re not accidentally locked out.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">-</span><span class="p">(</span><span class="n">nullable</span> <span class="n">NSString</span><span class="o">*</span><span class="p">)</span> <span class="n">hintStringForPassphraseKey</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">removeBiometricEntry</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">outError</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">hintStringForPassphraseKey</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">removeBiometricEntry</span><span class="p">()</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
                     </section>
                   </div>
                 </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:objc(cs)ZDCDatabaseKeyManager(im)removePassphraseKeyWithError:"></a>
-                    <a name="//apple_ref/objc/Method/-removePassphraseKeyWithError:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCDatabaseKeyManager(im)removePassphraseKeyWithError:">-removePassphraseKeyWithError:</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">-</span><span class="p">(</span><span class="n">BOOL</span><span class="p">)</span> <span class="nf">removePassphraseKeyWithError</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span> <span class="n">outError</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">removePassphraseKey</span><span class="p">()</span> <span class="k">throws</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:objc(cs)ZDCDatabaseKeyManager(im)createBiometricKeyWithError:"></a>
-                    <a name="//apple_ref/objc/Method/-createBiometricKeyWithError:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCDatabaseKeyManager(im)createBiometricKeyWithError:">-createBiometricKeyWithError:</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">-</span><span class="p">(</span><span class="n">BOOL</span><span class="p">)</span> <span class="nf">createBiometricKeyWithError</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span> <span class="n">outError</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">createBiometricKey</span><span class="p">()</span> <span class="k">throws</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:objc(cs)ZDCDatabaseKeyManager(im)unlockUsingBiometricKeyWithPrompt:error:"></a>
-                    <a name="//apple_ref/objc/Method/-unlockUsingBiometricKeyWithPrompt:error:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCDatabaseKeyManager(im)unlockUsingBiometricKeyWithPrompt:error:">-unlockUsingBiometricKeyWithPrompt:error:</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">-</span><span class="p">(</span><span class="n">nullable</span> <span class="n">NSData</span><span class="o">*</span><span class="p">)</span> <span class="nf">unlockUsingBiometricKeyWithPrompt</span><span class="p">:(</span><span class="n">NSString</span><span class="o">*</span> <span class="n">_Nullable</span><span class="p">)</span><span class="nv">prompt</span>
-												 <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span> <span class="n">outError</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">unlockUsingBiometricKey</span><span class="p">(</span><span class="n">withPrompt</span> <span class="nv">prompt</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Data</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:objc(cs)ZDCDatabaseKeyManager(im)removeBioMetricKeyWithError:"></a>
-                    <a name="//apple_ref/objc/Method/-removeBioMetricKeyWithError:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCDatabaseKeyManager(im)removeBioMetricKeyWithError:">-removeBioMetricKeyWithError:</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">-</span><span class="p">(</span><span class="n">BOOL</span><span class="p">)</span> <span class="nf">removeBioMetricKeyWithError</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span> <span class="n">outError</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">removeBioMetricKey</span><span class="p">()</span> <span class="k">throws</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Danger"></a>
+                <a name="//apple_ref/objc/Section/Danger" class="dashAnchor"></a>
+                <a href="#/Danger">
+                  <h3 class="section-name">Danger</h3>
+                </a>
+              </div>
+              <ul class="item-container">
                 <li class="item">
                   <div>
                     <code>
@@ -1315,14 +1410,15 @@ and more on how it helps the developer make his/her app really really cool.</li>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>DANGER!!! This method deletes the PBKDF2 file.
+You could easily be locked out of the database if you don&rsquo;t understand what you&rsquo;re doing.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="n">deleteAllPasscodeData</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">deleteAllPasscodeData</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
@@ -1342,7 +1438,7 @@ and more on how it helps the developer make his/her app really really cool.</li>
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-08-08)</p>
+      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-08-24)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

@@ -58,177 +58,9 @@
     },
     {
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Constants/ZDCConstants.h",
-      "line": 313,
-      "symbol": "kAuth0Error_RateLimit",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.constant",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Constants/ZDCConstants.h",
-      "line": 314,
-      "symbol": "kAuth0Error_Unauthorized",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.constant",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Constants/ZDCConstants.h",
-      "line": 315,
-      "symbol": "kAuth0Error_InvalidRefreshToken",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.constant",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Constants/ZDCConstants.h",
-      "line": 316,
-      "symbol": "kAuth0Error_InvalidGrant",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.constant",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Constants/ZDCConstants.h",
-      "line": 317,
-      "symbol": "kAuth0Error_UserExists",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.constant",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Constants/ZDCConstants.h",
-      "line": 318,
-      "symbol": "kAuth0Error_UserNameExists",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.constant",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Constants/ZDCConstants.h",
-      "line": 320,
-      "symbol": "kAuth0ErrorDescription_Blocked",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.constant",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Constants/ZDCConstants.h",
-      "line": 323,
+      "line": 312,
       "symbol": "kZDCFileExtension_ActivationCode",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.constant",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Constants/ZDCConstants.h",
-      "line": 326,
-      "symbol": "ZDCConstants",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.class",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCDatabaseKeyManager.h",
-      "line": 52,
-      "symbol": "ZDCDatabaseKeyManager.isConfigured",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCDatabaseKeyManager.h",
-      "line": 54,
-      "symbol": "ZDCDatabaseKeyManager.usesKeychainKey",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCDatabaseKeyManager.h",
-      "line": 55,
-      "symbol": "ZDCDatabaseKeyManager.usesPassphrase",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCDatabaseKeyManager.h",
-      "line": 56,
-      "symbol": "ZDCDatabaseKeyManager.usesBioMetrics",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCDatabaseKeyManager.h",
-      "line": 57,
-      "symbol": "ZDCDatabaseKeyManager.canUseBioMetrics",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCDatabaseKeyManager.h",
-      "line": 61,
-      "symbol": "ZDCDatabaseKeyManager.-configureStorageKey:error:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCDatabaseKeyManager.h",
-      "line": 65,
-      "symbol": "ZDCDatabaseKeyManager.-createKeychainEntryKeyWithError:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCDatabaseKeyManager.h",
-      "line": 67,
-      "symbol": "ZDCDatabaseKeyManager.-unlockUsingKeychainKeyWithError:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCDatabaseKeyManager.h",
-      "line": 70,
-      "symbol": "ZDCDatabaseKeyManager.-createPassPhraseKey:passPhraseHint:error:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCDatabaseKeyManager.h",
-      "line": 74,
-      "symbol": "ZDCDatabaseKeyManager.-unlockUsingPassphaseKey:error:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCDatabaseKeyManager.h",
-      "line": 77,
-      "symbol": "ZDCDatabaseKeyManager.-hintStringForPassphraseKey",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCDatabaseKeyManager.h",
-      "line": 79,
-      "symbol": "ZDCDatabaseKeyManager.-removePassphraseKeyWithError:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCDatabaseKeyManager.h",
-      "line": 82,
-      "symbol": "ZDCDatabaseKeyManager.-createBiometricKeyWithError:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCDatabaseKeyManager.h",
-      "line": 84,
-      "symbol": "ZDCDatabaseKeyManager.-unlockUsingBiometricKeyWithPrompt:error:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCDatabaseKeyManager.h",
-      "line": 87,
-      "symbol": "ZDCDatabaseKeyManager.-removeBioMetricKeyWithError:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCDatabaseKeyManager.h",
-      "line": 90,
-      "symbol": "ZDCDatabaseKeyManager.-deleteAllPasscodeData",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
     },
     {
@@ -240,14 +72,14 @@
     },
     {
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCRestManager.h",
-      "line": 458,
+      "line": 507,
       "symbol": "ZDCRestManager.-fetchPreviousBilling:withYear:month:completionQueue:completionBlock:",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCRestManager.h",
-      "line": 465,
+      "line": 514,
       "symbol": "ZDCRestManager.-productPurchasedByUser:productIdentifier:transactionIdentifier:appStoreReceipt:completionQueue:completionBlock:",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"

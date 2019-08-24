@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           ZeroDarkCloud Docs
         </a>
-         (92% documented)
+         (94% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -278,9 +278,6 @@
                 <a class="nav-group-task-link" href="../Classes/ZDCAccountSetupViewControllerProxy.html">ZDCAccountSetupViewControllerProxy</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Classes.html#/c:objc(cs)ZDCConstants">ZDCConstants</a>
-              </li>
-              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/ZDCDataPromise.html">ZDCDataPromise</a>
               </li>
               <li class="nav-group-task">
@@ -446,27 +443,6 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0DBConnection_UserAuth">kAuth0DBConnection_UserAuth</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0ErrorDescription_Blocked">kAuth0ErrorDescription_Blocked</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_InvalidGrant">kAuth0Error_InvalidGrant</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_InvalidRefreshToken">kAuth0Error_InvalidRefreshToken</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_RateLimit">kAuth0Error_RateLimit</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_Unauthorized">kAuth0Error_Unauthorized</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_UserExists">kAuth0Error_UserExists</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_UserNameExists">kAuth0Error_UserNameExists</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Other Constants.html#/c:@kLocalUserIDKey">kLocalUserIDKey</a>
@@ -765,23 +741,46 @@
 
                 </div>
               </div>
-            <p>ZDCNode is a local representation of a node in the cloud.
- It encapsulates the basic information needed by the ZeroDark framework to sync the node.</p>
+            <p>ZDCNode encapsulates the metadata for a node.
+ This includes the basic information needed by the framework to sync the node with the cloud.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    Do NOT subclass ZDCNode.
+   It&rsquo;s just for storing metadata.
+   You&rsquo;re free to store your objects however you prefer.
+
+</div>
+
+<p>Every node in the treesystem can be thought of as 2 separate parts:</p>
+
+<p><strong>Node Metadata</strong>:</p>
+
+<p>The metadata is everything needed by the treesystem to store a node,
+ but excluding the actual content of the node. This includes information such as:</p>
+
+<ul>
+<li>what is the name of the node</li>
+<li>who is the parent of this node</li>
+<li>who was permission to read / write this node</li>
+<li>when was the node last modified in the cloud</li>
+<li>various sync related information, such as eTag(s)</li>
+<li>various crypto information needed for encrypting &amp; decrypting the content</li>
+</ul>
+
+<p><strong>Node Data</strong>:</p>
+
+<p>The data is the actual content of the node. In other words, the content that your app generates.</p>
+
+<p>ZDCNode is responsible for the metadata.
+ And you&rsquo;re responsible for the data (using whatever objects, files, or formats you prefer).</p>
 
 <p>During a pull, whenever ZeroDark discovers new nodes in the cloud,
  it will automatically create ZDCNode instances and then inform the ZeroDarkCloudDelegate about them.</p>
 
-<p>When you want upload a new node to the cloud, a ZDCNode instance will need to be created.
- This can be done in several different ways.</p>
-
-<ul>
-<li>You can link your own database object to a treesystem path,
-which will implicitly create the ZDCNode for you.</li>
-<li>You can link your own database object to a ZDCNode that you manually create.</li>
-<li>Or you can manually create &amp; manage ZDCNode objects directly.</li>
-</ul>
-
-<p>Once the node is created, the framework can queue and perform the upload operation(s) for it.</p>
+<p>When you want upload a new node to the cloud, a ZDCNode instance will be created and added to the treesystem.
+ You can do this the easy way, via <code><a href="../Classes/ZDCCloudTransaction.html#/c:objc(cs)ZDCCloudTransaction(im)createNodeWithPath:error:">-[ZDCCloudTransaction createNodeWithPath:error:]</a></code>.
+ Or you can do it the manual way, via <code><a href="../Classes/ZDCCloudTransaction.html#/c:objc(cs)ZDCCloudTransaction(im)createNode:error:">-[ZDCCloudTransaction createNode:error:]</a></code>.
+ Either way, once the node is created, the framework will queue and perform the upload operation(s) for it.</p>
 
           </div>
         </section>
@@ -1554,11 +1553,17 @@ This relates to the last time the node&rsquo;s content was changed.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        
-<ul>
-<li>If the node is located in a different bucket (not the localUserID&rsquo;s bucket),</li>
-<li>then the ownerID property will be set to reference the owner.</li>
-</ul>
+                        <p>Pointers may point to nodes in a different treesystem.
+ These <q>foreign</q> nodes may be in a different user&rsquo;s treesystem (e.g. user&rsquo;s are collaborating).
+ Or they may be in the treesystem of a different zAppID (e.g. an app upgrade transition).</p>
+
+<p>In any case, the <q>root</q> node for the grafting operation has an anchor
+ that points to the foreign location.</p>
+<div class="aside aside-see">
+    <p class="aside-title">See</p>
+    <code><a href="../Classes/ZDCNodeManager.html#/c:objc(cs)ZDCNodeManager(im)anchorNodeForNode:transaction:">-[ZDCNodeManager anchorNodeForNode:transaction:]</a></code>
+
+</div>
 
                       </div>
                       <div class="declaration">
@@ -1591,18 +1596,23 @@ This relates to the last time the node&rsquo;s content was changed.</p>
                       <div class="pointer"></div>
                       <div class="abstract">
                         <p>If the node is a pointer, specifies the ZDCNode.uuid that it points to.</p>
+<div class="aside aside-see">
+    <p class="aside-title">See</p>
+    <code>-[ZDCNode isPointer]</code>
+
+</div>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readwrite</span><span class="p">,</span> <span class="n">copy</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">pointeeID</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">pointeeID</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">pointeeID</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">pointeeID</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -1790,7 +1800,7 @@ These are 160 bits, encoded in zBase32 as 32 characters.</p>
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-08-08)</p>
+      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-08-24)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

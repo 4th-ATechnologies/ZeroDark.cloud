@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           ZeroDarkCloud Docs
         </a>
-         (92% documented)
+         (94% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -278,9 +278,6 @@
                 <a class="nav-group-task-link" href="../Classes/ZDCAccountSetupViewControllerProxy.html">ZDCAccountSetupViewControllerProxy</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Classes.html#/c:objc(cs)ZDCConstants">ZDCConstants</a>
-              </li>
-              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/ZDCDataPromise.html">ZDCDataPromise</a>
               </li>
               <li class="nav-group-task">
@@ -446,27 +443,6 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0DBConnection_UserAuth">kAuth0DBConnection_UserAuth</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0ErrorDescription_Blocked">kAuth0ErrorDescription_Blocked</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_InvalidGrant">kAuth0Error_InvalidGrant</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_InvalidRefreshToken">kAuth0Error_InvalidRefreshToken</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_RateLimit">kAuth0Error_RateLimit</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_Unauthorized">kAuth0Error_Unauthorized</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_UserExists">kAuth0Error_UserExists</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kAuth0Error_UserNameExists">kAuth0Error_UserNameExists</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Other Constants.html#/c:@kLocalUserIDKey">kLocalUserIDKey</a>
@@ -1753,6 +1729,137 @@ If unspecified, the main thread is used.</p>
                     </section>
                   </div>
                 </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCRestManager(im)lostAndFound:bucket:region:requesterID:completionQueue:completionBlock:"></a>
+                    <a name="//apple_ref/objc/Method/-lostAndFound:bucket:region:requesterID:completionQueue:completionBlock:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCRestManager(im)lostAndFound:bucket:region:requesterID:completionQueue:completionBlock:">-lostAndFound:bucket:region:requesterID:completionQueue:completionBlock:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Used during grafting if the target node cannot be located.</p>
+
+<p>In some cases, a node may get renamed or moved, which results in its cloudPath changing as well.
+ When this happens, previously issued collaboration requests would contain an out-of-date cloudPath.
+ However, the server keeps an partial index that maps from cloudID to cloudPath.
+ So the client can ask the server to lookup the correct cloudPath.</p>
+
+<p>The server will return a result if:</p>
+
+<ul>
+<li>the node still exists in the given bucket</li>
+<li><p>the requester has read-permission for the node</p></li>
+</ul>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">lostAndFound</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">cloudID</span>
+              <span class="nf">bucket</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">bucket</span>
+              <span class="nf">region</span><span class="p">:(</span><span class="n"><a href="../Enums/AWSRegion.html">AWSRegion</a></span><span class="p">)</span><span class="nv">region</span>
+         <span class="nf">requesterID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">localUserID</span>
+     <span class="nf">completionQueue</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">dispatch_queue_t</span><span class="p">)</span><span class="nv">completionQueue</span>
+     <span class="nf">completionBlock</span><span class="p">:(</span><span class="n">nonnull</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSURLResponse</span> <span class="o">*</span><span class="n">_Nonnull</span><span class="p">,</span> <span class="n">id</span> <span class="n">_Nullable</span><span class="p">,</span>
+                                       <span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">))</span><span class="n">completionBlock</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">lostAndFound</span><span class="p">(</span><span class="n">_</span> <span class="nv">cloudID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">bucket</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">region</span><span class="p">:</span> <span class="kt"><a href="../Enums/AWSRegion.html">AWSRegion</a></span><span class="p">,</span> <span class="n">requesterID</span> <span class="nv">localUserID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">completionQueue</span><span class="p">:</span> <span class="kt">DispatchQueue</span><span class="p">?,</span> <span class="nv">completionBlock</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">URLResponse</span><span class="p">,</span> <span class="kt">Any</span><span class="p">?,</span> <span class="kt">Error</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>cloudID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The correct cloudID for the target node.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>bucket</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The correct bucket that contains the target node.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>region</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The correct region for the bucket.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>localUserID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The localUserID that will be used to send the request.
+The request will be authenticated with this user&rsquo;s information.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completionQueue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The dispatch queue on which to invoke the completion block.
+If unspecified, the main thread is used.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completionBlock</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Invoked with the raw response from the server.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
               </ul>
             </div>
             <div class="task-group">
@@ -2162,13 +2269,10 @@ Either the primary or secondary auth_id doesn&rsquo;t exist.</li>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        
-<ul>
-<li>Queries the server for the user&rsquo;s billing info.
-*</li>
-<li>The result will include billing &amp; usage information for the user&rsquo;s account,</li>
-<li>as well as detailed information on a per-app basis.</li>
-</ul>
+                        <p>Queries the server for the user&rsquo;s billing info.</p>
+
+<p>The result will include billing &amp; usage information for the user&rsquo;s account,
+ as well as detailed information on a per-app basis.</p>
 
                       </div>
                       <div class="declaration">
@@ -2332,7 +2436,7 @@ Either the primary or secondary auth_id doesn&rsquo;t exist.</li>
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-08-08)</p>
+      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-08-24)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

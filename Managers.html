@@ -23,7 +23,7 @@
         <a class="header-link" href="index.html">
           ZeroDarkCloud Docs
         </a>
-         (92% documented)
+         (94% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -278,9 +278,6 @@
                 <a class="nav-group-task-link" href="Classes/ZDCAccountSetupViewControllerProxy.html">ZDCAccountSetupViewControllerProxy</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other Classes.html#/c:objc(cs)ZDCConstants">ZDCConstants</a>
-              </li>
-              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Classes/ZDCDataPromise.html">ZDCDataPromise</a>
               </li>
               <li class="nav-group-task">
@@ -446,27 +443,6 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Other Constants.html#/c:@kAuth0DBConnection_UserAuth">kAuth0DBConnection_UserAuth</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other Constants.html#/c:@kAuth0ErrorDescription_Blocked">kAuth0ErrorDescription_Blocked</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other Constants.html#/c:@kAuth0Error_InvalidGrant">kAuth0Error_InvalidGrant</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other Constants.html#/c:@kAuth0Error_InvalidRefreshToken">kAuth0Error_InvalidRefreshToken</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other Constants.html#/c:@kAuth0Error_RateLimit">kAuth0Error_RateLimit</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other Constants.html#/c:@kAuth0Error_Unauthorized">kAuth0Error_Unauthorized</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other Constants.html#/c:@kAuth0Error_UserExists">kAuth0Error_UserExists</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other Constants.html#/c:@kAuth0Error_UserNameExists">kAuth0Error_UserNameExists</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Other Constants.html#/c:@kLocalUserIDKey">kLocalUserIDKey</a>
@@ -900,50 +876,56 @@ Thus 2 nodes with the same name, but different parents, will have a different ha
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The DatabaseKeyManager class provides tools for securely storing &amp; retrieving the database key.</p>
+                        <p>This class provides optional tools for securely storing &amp; retrieving the key
+ used to encrypt the sqlite database file.</p>
 
-<p>That is, the local sqlite database (stored on the user&rsquo;s device) is encrypted using SQLCipher.
- In order to start using the framework, this database file must be unlocked first.</p>
+<p>The local sqlite database (stored on the user&rsquo;s device) is encrypted using SQLCipher.
+ In order to start using the framework, this database file must first be unlocked.</p>
 <div class="aside aside-note">
     <p class="aside-title">Note</p>
     Encryption of the local database is required in order to protect the user&rsquo;s data.
-   The database stores all the file encryption keys, and other sensitive content.
-   And it&rsquo;s quite easy for the database file to get leaked (for example: backed up to iCloud).
+   The database stores all the node encryption keys, and other sensitive content.
+   And it&rsquo;s rather common for this database file to get backed up to various locations,
+   such as iCloud.
 
 </div>
 
-<p>The DatabaseKeyManager provides flexibility for your app, while maintaining security.
- For example, if you want to add password protection or TouchID to your app, this class can help.
- Furthermore, if you use this class to assist in adding features like password protection to your app,
- the protection that you offer will be backed by solid crypto.</p>
+<p>The DatabaseKeyManager provides flexibility for your app.
+ For example, you may want to add password protection or TouchID to your app.
+ This class can help, while maintaining strong security backed by solid crypto.</p>
 
 <p>Here&rsquo;s how it works:</p>
 
 <ul>
 <li>A random key is generated for encrypting the database file.</li>
-<li>This key is then encrypted using PBKDF2 and then stored to disk.</li>
-<li>The key to unlock the PBKDF2 is then stored. For example, it could be stored in the OS keychain.</li>
+<li>This key is then wrapped (encrypted) using PBKDF2, and the resulting PBKDF2 file is stored to disk.</li>
+<li>The key to unlock the PBKDF2 is stored separately, and is configurable to fit the needs of your application.</li>
 </ul>
 
-<p>&lt; Why the heck do we do ^this^ ? &gt;
- &lt; Add explanation in terms of how this protects the user. &gt;</p>
+<p>By protecting access to this key, you protect access to the database, and thus all user data stored locally.
+ This even includes files stored via the DiskManager (which are also encrypted with keys stored in the database).</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    Use of this class is optional. If your app already has a custom solution for encrypting &amp; storing
+   the database key, then you&rsquo;re welcome to use it.
+
+</div>
+
+<p>This class gives your app 3 different options for storing the database key:</p>
 
 <ol>
-<li>Keychain
-The easiest option is simply to store the database key in the OS keychain.
-This is the option that&hellip;</li>
+<li><p>Keychain
+The easiest option is simply to store the database key in the OS keychain.</p></li>
+<li><p>Passphrase
+You can allow users to protect the data with a passphrase.</p></li>
+<li><p>Biometric
+You can allow users to use the biometrics available on their device.</p></li>
 </ol>
 
-<p>Vinnie - fill this out.
- The style of documentation should assume:</p>
+<p>Long story short: This class provides the security options you&rsquo;d expect, backed by the crypto you&rsquo;d hope for.</p>
 
-<ul>
-<li>the reader is unfamiliar with crypto</li>
-<li>the reader&rsquo;s reaction after reading the docs should be, <q>this is really cool, and easy to use!</q></li>
-<li>in other words, the focus should be less on what the code does (although that&rsquo;s obviously required),
-and more on how it helps the developer make his/her app really really cool.</li>
-<li>think 1/3 high level overview, 1/3 documentation, and 1/3 subtle marketing</li>
-</ul>
+<p>Additional documentation can be found in the docs:
+ <a href="https://zerodarkcloud.readthedocs.io/en/latest/client/databaseKeyManager/">https://zerodarkcloud.readthedocs.io/en/latest/client/databaseKeyManager/</a></p>
 
                         <a href="Classes/ZDCDatabaseKeyManager.html" class="slightly-smaller">See more</a>
                       </div>
@@ -1619,7 +1601,7 @@ creating, signing-in and managing ZDCLocalUsers</p>
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-08-08)</p>
+      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-08-24)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

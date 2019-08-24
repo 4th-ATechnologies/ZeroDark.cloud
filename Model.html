@@ -23,7 +23,7 @@
         <a class="header-link" href="index.html">
           ZeroDarkCloud Docs
         </a>
-         (92% documented)
+         (94% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -278,9 +278,6 @@
                 <a class="nav-group-task-link" href="Classes/ZDCAccountSetupViewControllerProxy.html">ZDCAccountSetupViewControllerProxy</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other Classes.html#/c:objc(cs)ZDCConstants">ZDCConstants</a>
-              </li>
-              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Classes/ZDCDataPromise.html">ZDCDataPromise</a>
               </li>
               <li class="nav-group-task">
@@ -446,27 +443,6 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Other Constants.html#/c:@kAuth0DBConnection_UserAuth">kAuth0DBConnection_UserAuth</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other Constants.html#/c:@kAuth0ErrorDescription_Blocked">kAuth0ErrorDescription_Blocked</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other Constants.html#/c:@kAuth0Error_InvalidGrant">kAuth0Error_InvalidGrant</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other Constants.html#/c:@kAuth0Error_InvalidRefreshToken">kAuth0Error_InvalidRefreshToken</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other Constants.html#/c:@kAuth0Error_RateLimit">kAuth0Error_RateLimit</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other Constants.html#/c:@kAuth0Error_Unauthorized">kAuth0Error_Unauthorized</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other Constants.html#/c:@kAuth0Error_UserExists">kAuth0Error_UserExists</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other Constants.html#/c:@kAuth0Error_UserNameExists">kAuth0Error_UserNameExists</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Other Constants.html#/c:@kLocalUserIDKey">kLocalUserIDKey</a>
@@ -898,23 +874,46 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>ZDCNode is a local representation of a node in the cloud.
- It encapsulates the basic information needed by the ZeroDark framework to sync the node.</p>
+                        <p>ZDCNode encapsulates the metadata for a node.
+ This includes the basic information needed by the framework to sync the node with the cloud.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    Do NOT subclass ZDCNode.
+   It&rsquo;s just for storing metadata.
+   You&rsquo;re free to store your objects however you prefer.
+
+</div>
+
+<p>Every node in the treesystem can be thought of as 2 separate parts:</p>
+
+<p><strong>Node Metadata</strong>:</p>
+
+<p>The metadata is everything needed by the treesystem to store a node,
+ but excluding the actual content of the node. This includes information such as:</p>
+
+<ul>
+<li>what is the name of the node</li>
+<li>who is the parent of this node</li>
+<li>who was permission to read / write this node</li>
+<li>when was the node last modified in the cloud</li>
+<li>various sync related information, such as eTag(s)</li>
+<li>various crypto information needed for encrypting &amp; decrypting the content</li>
+</ul>
+
+<p><strong>Node Data</strong>:</p>
+
+<p>The data is the actual content of the node. In other words, the content that your app generates.</p>
+
+<p>ZDCNode is responsible for the metadata.
+ And you&rsquo;re responsible for the data (using whatever objects, files, or formats you prefer).</p>
 
 <p>During a pull, whenever ZeroDark discovers new nodes in the cloud,
  it will automatically create ZDCNode instances and then inform the ZeroDarkCloudDelegate about them.</p>
 
-<p>When you want upload a new node to the cloud, a ZDCNode instance will need to be created.
- This can be done in several different ways.</p>
-
-<ul>
-<li>You can link your own database object to a treesystem path,
-which will implicitly create the ZDCNode for you.</li>
-<li>You can link your own database object to a ZDCNode that you manually create.</li>
-<li>Or you can manually create &amp; manage ZDCNode objects directly.</li>
-</ul>
-
-<p>Once the node is created, the framework can queue and perform the upload operation(s) for it.</p>
+<p>When you want upload a new node to the cloud, a ZDCNode instance will be created and added to the treesystem.
+ You can do this the easy way, via <code><a href="Classes/ZDCCloudTransaction.html#/c:objc(cs)ZDCCloudTransaction(im)createNodeWithPath:error:">-[ZDCCloudTransaction createNodeWithPath:error:]</a></code>.
+ Or you can do it the manual way, via <code><a href="Classes/ZDCCloudTransaction.html#/c:objc(cs)ZDCCloudTransaction(im)createNode:error:">-[ZDCCloudTransaction createNode:error:]</a></code>.
+ Either way, once the node is created, the framework will queue and perform the upload operation(s) for it.</p>
 
                         <a href="Classes/ZDCNode.html" class="slightly-smaller">See more</a>
                       </div>
@@ -1264,7 +1263,7 @@ the current set of registered endpoints.</li>
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-08-08)</p>
+      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-08-24)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>
