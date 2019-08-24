@@ -10,6 +10,7 @@ import UIKit
 import ZeroDarkCloud
 
 class ViewController: UIViewController, UITabBarDelegate, UITextFieldDelegate, ZeroDarkCloudDelegate {
+	
 
 	@IBOutlet public var _lblKeySize : UILabel!
 	@IBOutlet public var _btnGenKey : UIButton!
@@ -390,5 +391,20 @@ class ViewController: UIViewController, UITabBarDelegate, UITextFieldDelegate, Z
 		// not used
 	}
 	
+	func data(forMessage message: ZDCNode, transaction: YapDatabaseReadTransaction) -> ZDCData? {
+		// not used
+	return nil;
+	}
+	
+	func didSendMessage(_ message: ZDCNode, toRecipient recipient: ZDCUser, transaction: YapDatabaseReadWriteTransaction) {
+		// not used
+
+	}
+	
+	func didDiscoverConflict(_ conflict: ZDCNodeConflict, forNode node: ZDCNode, atPath path: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
+		// not used
+
+	}
+
 }
 
