@@ -15,6 +15,7 @@
 #import "PasswordStrengthUIView.h"
 #import "SCLAlertView.h"
 #import "UISecureTextField.h"
+#import "ZDCConstantsPrivate.h"
 #import "ZDCLogging.h"
 #import "ZDCPasswordStrengthCalculator.h"
 #import "ZeroDarkCloudPrivate.h"

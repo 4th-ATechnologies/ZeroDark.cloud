@@ -17,6 +17,8 @@
 #import "NSString+ZeroDark.h"
 #import "OSImage+ZeroDark.h"
 
+static NSString *const k_userID      = @"userID";
+static NSString *const k_displayName = @"displayName";
 
 @interface LocalUserListUITableViewCell : UITableViewCell
 
@@ -193,8 +195,10 @@
 	
 	if(_localUsers.count > 1)
 	{
-		[_sortedLocalUserInfo addObject:@{kZDCCloudRcrd_UserID :@"",
-													 @"displayName": NSLocalizedString( @"All Users", @"All Users") }];
+		[_sortedLocalUserInfo addObject:@{
+			k_userID      : @"",
+			k_displayName : NSLocalizedString( @"All Users", @"All Users")
+		}];
 	}
 	
 	[_sortedLocalUserInfo addObjectsFromArray:
@@ -215,10 +219,10 @@
 		if (strongSelf == nil) return;
 
 		__block NSUInteger foundIdx = NSNotFound;
-		[strongSelf->sortedLocalUserInfo enumerateObjectsUsingBlock:^(NSDictionary *dict, NSUInteger idx, BOOL * _Nonnull stop) {
+		[strongSelf->sortedLocalUserInfo enumerateObjectsUsingBlock:^(NSDictionary *dict, NSUInteger idx, BOOL *stop) {
 		
- 			NSString* uuid = dict[kZDCCloudRcrd_UserID];
-			if([uuid isEqualToString:strongSelf->currentUserID])
+ 			NSString *userID = dict[k_userID];
+			if ([userID isEqualToString:strongSelf->currentUserID])
 			{
 				foundIdx = idx;
 				*stop = YES;
@@ -228,14 +232,12 @@
 		if(foundIdx != NSNotFound)
 		{
 			NSIndexPath* indexPath = [NSIndexPath indexPathForRow:foundIdx inSection:0];
-			[strongSelf->_tblButtons selectRowAtIndexPath:indexPath
-																animated:NO
-														scrollPosition:UITableViewScrollPositionMiddle];
+			[strongSelf->_tblButtons selectRowAtIndexPath: indexPath
+			                                     animated: NO
+			                               scrollPosition: UITableViewScrollPositionMiddle];
 		}
-		
 	}];
 	[CATransaction commit];
-	
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
@@ -256,10 +258,10 @@
 
 	NSDictionary<NSString *, NSString *> *localUserInfo = [sortedLocalUserInfo objectAtIndex:indexPath.row];
 	
-	NSString* displayName = localUserInfo[@"displayName"];
-	NSString* uuid = localUserInfo[kZDCCloudRcrd_UserID];
+	NSString* displayName = localUserInfo[k_displayName];
+	NSString* uuid = localUserInfo[k_userID];
 	
-	if([uuid isEqualToString:@""])
+	if ([uuid isEqualToString:@""])
 	{
 		cell.lblTitle.text = displayName;
 		cell.lblTitle.textColor = self.view.tintColor;
@@ -268,14 +270,15 @@
 	}
 	else
 	{
-		__block ZDCLocalUser *user = NULL;
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		__block ZDCLocalUser *user = nil;
 		[databaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+			
 			user = [transaction objectForKey:uuid inCollection:kZDCCollection_Users];
+			
+		#pragma clang diagnostic pop
 		}];
-#pragma clang diagnostic pop
 		
 		cell.lblTitle.text = displayName;
 		cell.lblTitle.textColor = UIColor.blackColor;
@@ -300,8 +303,6 @@
 		[imageManager fetchUserAvatar: user
 							 preFetchBlock: preFetchBlock
 							postFetchBlock: postFetchBlock];
-		
-		
 	}
 
 	return cell;
@@ -322,9 +323,9 @@
 //	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 	
 	NSDictionary<NSString *, NSString *> *localUserInfo = [sortedLocalUserInfo objectAtIndex:indexPathIn.row];
-	NSString* uuid = localUserInfo[kZDCCloudRcrd_UserID];
+	NSString *userID = localUserInfo[k_userID];
 
-	currentUserID = uuid;
+	currentUserID = userID;
 	
 	NSArray<NSIndexPath *>* indexPaths = tableView.indexPathsForSelectedRows;
 	[indexPaths enumerateObjectsUsingBlock:^(NSIndexPath * iPath, NSUInteger idx, BOOL * _Nonnull stop) {
@@ -332,11 +333,10 @@
 		if(![iPath isEqual:indexPathIn])
 			[tableView deselectRowAtIndexPath:iPath animated:NO];
 	}];
-	
 
 	if ([self.delegate  respondsToSelector:@selector(localUserListViewController:didSelectUserID:)])
 	{
-		[self.delegate localUserListViewController:self didSelectUserID:uuid ];
+		[self.delegate localUserListViewController:self didSelectUserID:userID];
 	}
 }
 

@@ -2,6 +2,7 @@
 
 #import "AWSDate.h"
 #import "ZDCConstants.h"
+#import "ZDCConstantsPrivate.h"
 #import "ZDCDatabaseManager.h"
 #import "ZDCAsyncCompletionDispatch.h"
 #import "ZDCLocalUser.h"

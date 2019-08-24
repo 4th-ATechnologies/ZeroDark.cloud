@@ -127,7 +127,7 @@ extern NSString *const kZDCCloudFileExtension_Data;
  * It corresponds with the parent node.
  * Treesystem trunks have a hard-coded dirPrefix, and regular nodes have a randomly generated dirPrefix.
  *
- * For more information about ZeroDark.cloud encrypts node-names to maintain zero-knowledge in the cloud,
+ * For more information about how ZeroDark.cloud encrypts node-names to maintain zero-knowledge in the cloud,
  * see the [docs](https://zerodarkcloud.readthedocs.io/en/latest/overview/encryption/)
  */
 extern NSString *const kZDCDirPrefix_Home;
@@ -137,7 +137,7 @@ extern NSString *const kZDCDirPrefix_Home;
  * It corresponds with the parent node.
  * Treesystem trunks have a hard-coded dirPrefix, and regular nodes have a randomly generated dirPrefix.
  *
- * For more information about ZeroDark.cloud encrypts node-names to maintain zero-knowledge in the cloud,
+ * For more information about how ZeroDark.cloud encrypts node-names to maintain zero-knowledge in the cloud,
  * see the [docs](https://zerodarkcloud.readthedocs.io/en/latest/overview/encryption/)
  */
 extern NSString *const kZDCDirPrefix_Prefs;
@@ -147,7 +147,7 @@ extern NSString *const kZDCDirPrefix_Prefs;
  * It corresponds with the parent node.
  * Treesystem trunks have a hard-coded dirPrefix, and regular nodes have a randomly generated dirPrefix.
  *
- * For more information about ZeroDark.cloud encrypts node-names to maintain zero-knowledge in the cloud,
+ * For more information about how ZeroDark.cloud encrypts node-names to maintain zero-knowledge in the cloud,
  * see the [docs](https://zerodarkcloud.readthedocs.io/en/latest/overview/encryption/)
  */
 extern NSString *const kZDCDirPrefix_MsgsIn;
@@ -157,7 +157,7 @@ extern NSString *const kZDCDirPrefix_MsgsIn;
  * It corresponds with the parent node.
  * Treesystem trunks have a hard-coded dirPrefix, and regular nodes have a randomly generated dirPrefix.
  *
- * For more information about ZeroDark.cloud encrypts node-names to maintain zero-knowledge in the cloud,
+ * For more information about how ZeroDark.cloud encrypts node-names to maintain zero-knowledge in the cloud,
  * see the [docs](https://zerodarkcloud.readthedocs.io/en/latest/overview/encryption/)
  */
 extern NSString *const kZDCDirPrefix_MsgsOut;
@@ -167,7 +167,7 @@ extern NSString *const kZDCDirPrefix_MsgsOut;
  * It corresponds with the parent node.
  * Treesystem trunks have a hard-coded dirPrefix, and regular nodes have a randomly generated dirPrefix.
  *
- * For more information about ZeroDark.cloud encrypts node-names to maintain zero-knowledge in the cloud,
+ * For more information about how ZeroDark.cloud encrypts node-names to maintain zero-knowledge in the cloud,
  * see the [docs](https://zerodarkcloud.readthedocs.io/en/latest/overview/encryption/)
  */
 extern NSString *const kZDCDirPrefix_Avatar;
@@ -201,91 +201,91 @@ extern NSString *const kZDCDirPrefix_Deprecated_Outbox;
 //
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Version;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_FileID;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Sender;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Keys;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Children;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Meta;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Data;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_BurnDate;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Keys_Perms;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Keys_Burn;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Keys_Key;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Keys_Deprecated_Perms;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Keys_Deprecated_Burn;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Keys_Deprecated_PubKeyID;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Keys_Deprecated_SymKey;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Children_Prefix;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Meta_Filename;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Meta_DirSalt;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Data_Pointer;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Data_Pointer_Owner;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Data_Pointer_Path;
 
 /** Key name used within RCRD file stored in the cloud.
-    This is a JSON file that contains node metadata (encrypted name, permissions, etc). */
+    This is a JSON file that contains treesystem metadata (encrypted name, permissions, etc). */
 extern NSString *const kZDCCloudRcrd_Data_Pointer_CloudID;
 
 //
@@ -308,23 +308,7 @@ extern NSString *const kAuth04thARecoveryDomain;
 extern NSString *const kAuth0DBConnection_UserAuth;
 extern NSString *const kAuth0DBConnection_Recovery;
 
-// Auth0 Error codes
-
-extern NSString *const kAuth0Error_RateLimit;
-extern NSString *const kAuth0Error_Unauthorized;
-extern NSString *const kAuth0Error_InvalidRefreshToken;
-extern NSString *const kAuth0Error_InvalidGrant;
-extern NSString *const kAuth0Error_UserExists;
-extern NSString *const kAuth0Error_UserNameExists;
-
-extern NSString *const kAuth0ErrorDescription_Blocked; // extra qualifier for unauthorized
-
 // ZDC activation code file extension
 extern NSString *const kZDCFileExtension_ActivationCode;
-
-
-@interface ZDCConstants : NSObject
-
-@end
 
 NS_ASSUME_NONNULL_END

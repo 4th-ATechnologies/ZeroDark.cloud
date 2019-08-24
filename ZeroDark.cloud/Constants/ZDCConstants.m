@@ -11,40 +11,40 @@
 
 // YapDatabase collection constants
 
-NSString *const kZDCCollection_CachedResponse  = @"ZDCCachedResponse";
-NSString *const kZDCCollection_CloudNodes      = @"ZDCCloudNodes";
-NSString *const kZDCCollection_Nodes           = @"ZDCNodes";
-NSString *const kZDCCollection_Prefs           = @"ZDCPrefs";
-NSString *const kZDCCollection_PublicKeys      = @"ZDCPublicKeys";
-NSString *const kZDCCollection_PullState       = @"ZDCSyncState";
-NSString *const kZDCCollection_Reminders       = @"ZDCReminders";
-NSString *const kZDCCollection_SessionStorage  = @"ZDCSessionStorage";
-NSString *const kZDCCollection_SymmetricKeys   = @"ZDCSymmetricKeys";
-NSString *const kZDCCollection_Tasks           = @"ZDCTasks";
-NSString *const kZDCCollection_Users           = @"ZDCUsers";
-NSString *const kZDCCollection_UserAuth        = @"ZDCUserAuth";
-NSString *const kZDCCollection_SplitKeys       = @"ZDCSplitKeys";
-NSString *const kZDCCollection_SplitKeyShares  = @"ZDCSplitKeyShare";
+/* extern */ NSString *const kZDCCollection_CachedResponse  = @"ZDCCachedResponse";
+/* extern */ NSString *const kZDCCollection_CloudNodes      = @"ZDCCloudNodes";
+/* extern */ NSString *const kZDCCollection_Nodes           = @"ZDCNodes";
+/* extern */ NSString *const kZDCCollection_Prefs           = @"ZDCPrefs";
+/* extern */ NSString *const kZDCCollection_PublicKeys      = @"ZDCPublicKeys";
+/* extern */ NSString *const kZDCCollection_PullState       = @"ZDCSyncState";
+/* extern */ NSString *const kZDCCollection_Reminders       = @"ZDCReminders";
+/* extern */ NSString *const kZDCCollection_SessionStorage  = @"ZDCSessionStorage";
+/* extern */ NSString *const kZDCCollection_SymmetricKeys   = @"ZDCSymmetricKeys";
+/* extern */ NSString *const kZDCCollection_Tasks           = @"ZDCTasks";
+/* extern */ NSString *const kZDCCollection_Users           = @"ZDCUsers";
+/* extern */ NSString *const kZDCCollection_UserAuth        = @"ZDCUserAuth";
+/* extern */ NSString *const kZDCCollection_SplitKeys       = @"ZDCSplitKeys";
+/* extern */ NSString *const kZDCCollection_SplitKeyShares  = @"ZDCSplitKeyShare";
 
 // Names of special cloud files & file extensions
 
-NSString *const kZDCCloudFileName_PrivateKey = @".privKey";
-NSString *const kZDCCloudFileName_PublicKey  = @".pubKey";
+/* extern */ NSString *const kZDCCloudFileName_PrivateKey = @".privKey";
+/* extern */ NSString *const kZDCCloudFileName_PublicKey  = @".pubKey";
 
-NSString *const kZDCCloudFileExtension_Rcrd  = @"rcrd";
-NSString *const kZDCCloudFileExtension_Data  = @"data";
+/* extern */ NSString *const kZDCCloudFileExtension_Rcrd  = @"rcrd";
+/* extern */ NSString *const kZDCCloudFileExtension_Data  = @"data";
 
 // Names of special local files & file extensions
 
-NSString *const kZDCDirPrefix_Home    = @"00000000000000000000000000000000";
-NSString *const kZDCDirPrefix_Prefs   = @"prefs";
-NSString *const kZDCDirPrefix_MsgsIn  = @"msgsIn";
-NSString *const kZDCDirPrefix_MsgsOut = @"msgsOut";
-NSString *const kZDCDirPrefix_Avatar  = @"avatar";
+/* extern */ NSString *const kZDCDirPrefix_Home    = @"00000000000000000000000000000000";
+/* extern */ NSString *const kZDCDirPrefix_Prefs   = @"prefs";
+/* extern */ NSString *const kZDCDirPrefix_MsgsIn  = @"msgsIn";
+/* extern */ NSString *const kZDCDirPrefix_MsgsOut = @"msgsOut";
+/* extern */ NSString *const kZDCDirPrefix_Avatar  = @"avatar";
 
-NSString *const kZDCDirPrefix_Deprecated_Msgs   = @"msgs";
-NSString *const kZDCDirPrefix_Deprecated_Inbox  = @"inbox";
-NSString *const kZDCDirPrefix_Deprecated_Outbox = @"outbox";
+/* extern */ NSString *const kZDCDirPrefix_Deprecated_Msgs   = @"msgs";
+/* extern */ NSString *const kZDCDirPrefix_Deprecated_Inbox  = @"inbox";
+/* extern */ NSString *const kZDCDirPrefix_Deprecated_Outbox = @"outbox";
 
 // Dictionary keys used in .rcrd files
 
@@ -96,107 +96,6 @@ NSString *const kAuth04thARecoveryDomain      = @"recovery.4th-a.com";
 NSString *const kAuth0DBConnection_UserAuth   = @"Username-Password-Authentication";
 NSString *const kAuth0DBConnection_Recovery   = @"Storm4-Recovery";
 
-// Auth0 Error codes
-
-NSString *const kAuth0Error_RateLimit           = @"too_many_requests";
-NSString *const kAuth0Error_Unauthorized        = @"unauthorized";
-NSString *const kAuth0Error_InvalidRefreshToken = @"invalid_refresh_token";
-NSString *const kAuth0Error_InvalidGrant 		= @"invalid_grant";
-NSString *const kAuth0Error_UserExists 			= @"user_exists";
-NSString *const kAuth0Error_UserNameExists 		= @"username_exists";
-
-NSString *const kAuth0ErrorDescription_Blocked  = @"user is blocked";
-
 
 // ZDC activation code file extension
 NSString *const kZDCFileExtension_ActivationCode = @"zdcactivationcode";
-
-
-@implementation ZDCConstants
-
-static BOOL isIPhone;
-static BOOL isIPad;
-static BOOL isOSX;
-static BOOL appHasPhotosPermission;
-static BOOL appHasCameraPermission;
-
-
-+ (void)initialize
-{
-	static BOOL initialized = NO;
-	if (!initialized)
-	{
-		initialized = YES;
-
-#if TARGET_OS_IPHONE
-
-		UIUserInterfaceIdiom userInterfaceIdiom = [[UIDevice currentDevice] userInterfaceIdiom];
-
-		isIPhone = (userInterfaceIdiom == UIUserInterfaceIdiomPhone);
-		isIPad   = (userInterfaceIdiom == UIUserInterfaceIdiomPad);
-
-#else
-
-		isIPhone = NO;
-		isIPad = NO;
-		isOSX = YES;
-
-#endif
-
-		appHasPhotosPermission  = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"NSPhotoLibraryUsageDescription"] != nil;
-		appHasCameraPermission  = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"NSCameraUsageDescription"] != nil;
-
-	}
-}
-
-+ (BOOL)isSimulator
-{
-    BOOL result = NO;
-
-#if  TARGET_OS_SIMULATOR
-    result = YES;
-#endif
-        return result;
-}
-
-
-+ (BOOL)isIPhone
-{
-	return isIPhone;
-}
-
-+ (BOOL)isIPad
-{
-	return isIPad;
-
-}
-
-+ (BOOL)isOSX
-{
-	return isOSX;
-}
-
-+ (BOOL)appHasPhotosPermission
-{
-	return appHasPhotosPermission;
-}
-
-+ (BOOL)appHasCameraPermission
-{
-	return appHasCameraPermission;
-}
-
-// imnportant URLS - we might calculate
-+ (NSURL *)ZDCsplitKeyBlogPostURL
-{
-	return [NSURL URLWithString:@"https://zerodarkcloud.readthedocs.io/en/latest/"];
-
-}
-
-+ (NSURL *)ZDCaccessKeyBlogPostURL
-{
-	return [NSURL URLWithString:@"https://zerodarkcloud.readthedocs.io/en/latest/"];
-	
-}
-
-@end

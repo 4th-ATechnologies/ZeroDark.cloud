@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 /**
- * Given an array of ZDCLocalUser this will produce an array of unambiguous names
+ * Given an array of ZDCLocalUser's this will produce an array of unambiguous names
  and uuids  in the form  - useful for filling an NSMenu
  
  <__NSArrayM 0x60000084d410>(
@@ -77,24 +77,6 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark User Management
 
 /**
- * Creates a local user from a JSON file.
- *
- * @param json
- *   A dictionary that contains all the information necessary to create a localUser.
- *
- * @param transaction
- *   The database transaction in which to create the necessary objects
- *
- * @param outLocalUserID
- *   Returns the ZDCLocalUser.uuid that was created.
- *
- * @return If an error occurs, this will describe what went wrong
- */
-- (nullable NSError *)createLocalUserFromJSON:(NSDictionary *)json
-                                  transaction:(YapDatabaseReadWriteTransaction *)transaction
-                               outLocalUserID:(NSString *_Nullable *_Nullable)outLocalUserID;
-
-/**
  * Fully deletes the local user and all associated items.
  *
  * The following items will be deleted from the database:
@@ -107,6 +89,24 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)deleteLocalUser:(NSString *)localUserID
             transaction:(YapDatabaseReadWriteTransaction *)transaction;
+
+#pragma mark Debugging & Development
+
+/**
+ * Creates a local user from a JSON file.
+ *
+ * @param json
+ *   A dictionary that contains all the information necessary to create a localUser.
+ *
+ * @param transaction
+ *   The database transaction in which to create the necessary objects
+ *
+ * @param outError
+ *   If an error occurs, this will describe what went wrong
+ */
+- (nullable ZDCLocalUser *)createLocalUserFromJSON:(NSDictionary *)json
+                                       transaction:(YapDatabaseReadWriteTransaction *)transaction
+                                             error:(NSError *_Nullable *_Nullable)outError;
 
 @end
 

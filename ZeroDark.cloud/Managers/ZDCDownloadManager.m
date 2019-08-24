@@ -12,6 +12,7 @@
 #import "Auth0Utilities.h"
 #import "S3Request.h"
 #import "ZDCAsyncCompletionDispatch.h"
+#import "ZDCConstantsPrivate.h"
 #import "ZDCDownloadContext.h"
 #import "ZDCLogging.h"
 #import "ZDCProgress.h"

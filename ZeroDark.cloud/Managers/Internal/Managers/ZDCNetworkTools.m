@@ -10,6 +10,7 @@
 #import "ZDCNetworkTools.h"
 
 #import "S3Request.h"
+#import "ZDCConstantsPrivate.h"
 #import "ZDCDatabaseManagerPrivate.h"
 #import "ZDCLocalUserPrivate.h"
 #import "ZeroDarkCloudPrivate.h"

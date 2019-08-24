@@ -38,12 +38,14 @@
 #endif
 #pragma unused(zdcLogLevel)
 
+static NSString *const k_userID      = @"userID";
+static NSString *const k_displayName = @"displayName";
 
 @implementation ZDCLocalUserManager
 {
 	__weak ZeroDarkCloud *zdc;
 	
-	Auth0ProviderManager* 		providerManager;
+	Auth0ProviderManager *providerManager;
 
 	dispatch_queue_t queue;
 	void *IsOnQueueKey;
@@ -181,33 +183,6 @@
 }
 
 
-/**
- * Given an array of S4LocalUsers this will produce an array of unambiguous names
- and uuids  in the form  - useful for filling an NSMenu
- 
- <__NSArrayM 0x60000084d410>(
- {
- displayName = "Vinnie Moscaritolo (Amazon)";
- userID = 641ihdfw7qf5pj78pfxbunwkkwonu5rg;
- },
- {
- displayName = "Vinnie Moscaritolo (Facebook)";
- userID = 7gzeud1d9iam5b1d31j8sk6pnnktosut;
- },
- {
- displayName = "Vinnie Moscaritolo (GitHub)";
- userID = euf9kcc4sfqmwc6h5u66zguhxx78bmen;
- },
- {
- displayName = vinthewrench;
- userID = j1bhup8yts5wi81q4pdkdj9owzs1w5kh;
- },
- {
- displayName = xxx;
- userID = b3o8qh8gy4fzfiwrrho3wd9dtjypryue;
- }
- )
- **/
 
 -(NSArray <NSDictionary*> *) sortedUnambiguousUserInfoWithLocalUsers:(NSArray <ZDCLocalUser *> *)usersIn
 {
@@ -280,239 +255,9 @@
 	return result;
 }
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Errors
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-- (NSError *)invalidServiceIDError:(NSString *)serviceID
-{
-	NSString *description =
-	  [NSString stringWithFormat:@"The given serviceID(%@) is invalid.", serviceID];
-	
-	return [NSError errorWithClass:[self class] code:1000 description:description];
-}
-
-- (NSError *)invalidUserError
-{
-	NSString *description =
-	  @"Invalid user (not in database || not local user)";
-	
-	return [NSError errorWithClass:[self class] code:1001 description:description];
-}
-
-
-- (NSError *)errorWithDescription:(NSString *)description
-{
-	return [NSError errorWithClass:[self class] code:0 description:description];
-}
-
-
-- (NSError *)errorWithDescription:(NSString *)description statusCode:(NSUInteger)statusCode
-{
-	return [NSError errorWithClass:[self class] code:statusCode description:description];
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark User Management
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * See header file for description.
- */
-- (nullable NSError *)createLocalUserFromJSON:(NSDictionary *)json
-                                  transaction:(YapDatabaseReadWriteTransaction *)transaction
-                               outLocalUserID:(NSString **)outLocalUserID
-{
-	if (outLocalUserID) *outLocalUserID = nil;
-	
-	NSError* (^ErrorWithDescription)(NSString*) = ^(NSString *description) {
-		
-		return [NSError errorWithDomain: NSStringFromClass([self class])
-		                           code: 400
-		                       userInfo: @{ NSLocalizedDescriptionKey: description }];
-	};
-	NSError* (^ErrorWithInvalidKey)(NSString*) = ^(NSString *key){
-		
-		NSString *description = [NSString stringWithFormat:@"json has missing/invalid key: %@", key];
-		return ErrorWithDescription(description);
-	};
-	
-	
-	NSString *localUserID = json[@"localUserID"];
-	if (![localUserID isKindOfClass:[NSString class]]) {
-		return ErrorWithInvalidKey(@"localUserID");
-	}
-	
-	ZDCLocalUser *localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
-	if (localUser) {
-		return ErrorWithDescription(@"localUser already exists in database");
-	}
-	
-	localUser = [[ZDCLocalUser alloc] initWithUUID:localUserID];
-	
-	NSString *regionStr = json[@"region"];
-	if (![regionStr isKindOfClass:[NSString class]]) {
-		return ErrorWithInvalidKey(@"region");
-	}
-	
-	AWSRegion region = [AWSRegions regionForName:regionStr];
-	if (region == AWSRegion_Invalid) {
-		return ErrorWithInvalidKey(@"region");
-	}
-	localUser.aws_region = region;
-	
-	NSString *bucket = json[@"bucket"];
-	if (![bucket isKindOfClass:[NSString class]]) {
-		return ErrorWithInvalidKey(@"bucket");
-	}
-	localUser.aws_bucket = bucket;
-	
-	NSString *stage = json[@"stage"];
-	if (![stage isKindOfClass:[NSString class]]) {
-		return ErrorWithInvalidKey(@"stage");
-	}
-	localUser.aws_stage = stage;
-	
-	NSDictionary *auth0_profiles = json[@"auth0"];
-	if (![auth0_profiles isKindOfClass:[NSDictionary class]]) {
-		return ErrorWithInvalidKey(@"auth0");
-	}
-	localUser.auth0_profiles = auth0_profiles;
-	
-	NSString *refreshToken = json[@"refreshToken"];
-	if (![refreshToken isKindOfClass:[NSString class]]) {
-		return ErrorWithInvalidKey(@"refreshToken");
-	}
-	
-	ZDCLocalUserAuth *localUserAuth = [[ZDCLocalUserAuth alloc] init];
-	localUserAuth.auth0_refreshToken = refreshToken;
-	
-	NSString *syncedSalt = json[@"syncedSalt"];
-	if (![syncedSalt isKindOfClass:[NSString class]]) {
-		return ErrorWithInvalidKey(@"syncedSalt");
-	}
-	
-	NSString *privKeyWords = json[@"privKeyWords"];
-	if (![syncedSalt isKindOfClass:[NSString class]]) {
-		return ErrorWithInvalidKey(@"privKeyWords");
-	}
-	
-	NSArray<NSString*> *mnemonicWords =
-	  [privKeyWords componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-
-	const Cipher_Algorithm encryptionAlgorithm = kCipher_Algorithm_2FISH256;
-	NSError *error = nil;
-	
-	NSData *accessKeyData =
-	  [BIP39Mnemonic keyFromMnemonic: mnemonicWords
-	                      passphrase: syncedSalt
-	                      languageID: @"en_US"
-	                       algorithm: Mnemonic_Storm4
-	                           error: &error];
-	
-	if (error) {
-		ZDCLogError(@"BIP39Mnemonic: keyFromMnemonic failed: %@", error);
-		return error;
-	}
-	
-	NSString *privKeyJSON = json[@"privKey"];
-	if ([privKeyJSON isKindOfClass:[NSDictionary class]])
-	{
-		NSData *privKeyData = [NSJSONSerialization dataWithJSONObject:privKeyJSON options:0 error:nil];
-		privKeyJSON = [[NSString alloc] initWithData:privKeyData encoding:NSUTF8StringEncoding];
-	}
-	
-	if (![privKeyJSON isKindOfClass:[NSString class]]) {
-		return ErrorWithInvalidKey(@"privKey");
-	}
-	
-	ZDCPublicKey *privKey =
-	  [zdc.cryptoTools createPrivateKeyFromJSON: privKeyJSON
-	                                  accessKey: accessKeyData
-	                        encryptionAlgorithm: encryptionAlgorithm
-	                                localUserID: localUser.uuid
-	                                      error: &error];
-	
-	if (error) {
-		ZDCLogError(@"CryptoTools: createPrivateKeyFromJSON failed: %@", error);
-		return error;
-	}
-	
-	ZDCSymmetricKey *accessKey =
-	  [zdc.cryptoTools createSymmetricKey: accessKeyData
-	                  encryptionAlgorithm: encryptionAlgorithm
-	                                error: &error];
-	
-	if (error) {
-		ZDCLogError(@"CryptoTools: createSymmetricKey failed: %@", error);
-		return error;
-	}
-	
-	localUser.publicKeyID = privKey.uuid;
-	localUser.accessKeyID = accessKey.uuid;
-	
-	[transaction setObject:localUser forKey:localUser.uuid inCollection:kZDCCollection_Users];
-	[transaction setObject:localUserAuth forKey:localUser.uuid inCollection:kZDCCollection_UserAuth];
-	[transaction setObject:privKey forKey:privKey.uuid inCollection:kZDCCollection_PublicKeys];
-	[transaction setObject:accessKey forKey:accessKey.uuid inCollection:kZDCCollection_SymmetricKeys];
-	
-	[self createTrunkNodesForLocalUser: localUser
-	                     withAccessKey: accessKey
-	                       transaction: transaction];
-	
-	if (outLocalUserID) *outLocalUserID = localUser.uuid;
-	return nil;
-}
-
-/**
- * Standardized routine for creating all the trunk nodes.
- * Get access via: #import "ZDCLocalUserManagerPrivate.h"
- */
-- (void)createTrunkNodesForLocalUser:(ZDCLocalUser *)localUser
-                       withAccessKey:(ZDCSymmetricKey *)accessKey
-                         transaction:(YapDatabaseReadWriteTransaction *)transaction
-{
-	NSArray<NSNumber*> *trunks = @[
-		@(ZDCTreesystemTrunk_Home),
-		@(ZDCTreesystemTrunk_Prefs),
-		@(ZDCTreesystemTrunk_Inbox),
-		@(ZDCTreesystemTrunk_Outbox)
-	];
-	
-	NSString *const zAppID = zdc.zAppID;
-	
-	for (NSNumber *trunkNum in trunks)
-	{
-		ZDCTreesystemTrunk trunk = (ZDCTreesystemTrunk)[trunkNum integerValue];
-		NSString *key = [ZDCTrunkNode uuidForLocalUserID:localUser.uuid zAppID:zAppID trunk:trunk];
-		
-		if (![transaction hasObjectForKey:key inCollection:kZDCCollection_Nodes])
-		{
-			ZDCTrunkNode *trunkNode =
-			  [[ZDCTrunkNode alloc] initWithLocalUserID: localUser.uuid
-			                                     zAppID: zAppID
-			                                      trunk: trunk];
-	
-			[zdc.cryptoTools setDirSaltForTrunkNode: trunkNode
-			                          withLocalUser: localUser
-			                              accessKey: accessKey];
-	
-			ZDCShareList *shareList =
-			  [ZDCShareList defaultShareListForTrunk: trunk
-			                         withLocalUserID: localUser.uuid];
-	
-			[shareList enumerateListWithBlock:^(NSString *key, ZDCShareItem *shareItem, BOOL *stop) {
-	
-				[trunkNode.shareList addShareItem:shareItem forKey:key];
-			}];
-	
-			[transaction setObject: trunkNode
-			                forKey: trunkNode.uuid
-			          inCollection: kZDCCollection_Nodes];
-		}
-	}
-}
 
 /**
  * See header file for description.
@@ -642,6 +387,224 @@
 	// NOTES:
 	//
 	// - the SyncManager unregisters the ZDCCloud extension for us
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Debugging & Development
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * See header file for description.
+ */
+- (ZDCLocalUser *)createLocalUserFromJSON:(NSDictionary *)json
+                              transaction:(YapDatabaseReadWriteTransaction *)transaction
+                                    error:(NSError **)outError
+{
+	NSError* (^ErrorWithDescription)(NSString*) = ^(NSString *description) {
+		
+		return [NSError errorWithDomain: NSStringFromClass([self class])
+		                           code: 400
+		                       userInfo: @{ NSLocalizedDescriptionKey: description }];
+	};
+	NSError* (^ErrorWithInvalidKey)(NSString*) = ^(NSString *key){
+		
+		NSString *description = [NSString stringWithFormat:@"json has missing/invalid key: %@", key];
+		return ErrorWithDescription(description);
+	};
+	
+	NSString *localUserID = json[@"localUserID"];
+	if (![localUserID isKindOfClass:[NSString class]]) {
+		if (outError) *outError = ErrorWithInvalidKey(@"localUserID");
+		return nil;
+	}
+	
+	ZDCLocalUser *localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
+	if (localUser) {
+		if (outError) *outError =  ErrorWithDescription(@"localUser already exists in database");
+		return nil;
+	}
+	
+	localUser = [[ZDCLocalUser alloc] initWithUUID:localUserID];
+	
+	NSString *regionStr = json[@"region"];
+	if (![regionStr isKindOfClass:[NSString class]]) {
+		if (outError) *outError = ErrorWithInvalidKey(@"region");
+		return nil;
+	}
+	
+	AWSRegion region = [AWSRegions regionForName:regionStr];
+	if (region == AWSRegion_Invalid) {
+		if (outError) *outError = ErrorWithInvalidKey(@"region");
+		return nil;
+	}
+	localUser.aws_region = region;
+	
+	NSString *bucket = json[@"bucket"];
+	if (![bucket isKindOfClass:[NSString class]]) {
+		if (outError) *outError = ErrorWithInvalidKey(@"bucket");
+		return nil;
+	}
+	localUser.aws_bucket = bucket;
+	
+	NSString *stage = json[@"stage"];
+	if (![stage isKindOfClass:[NSString class]]) {
+		if (outError) *outError =  ErrorWithInvalidKey(@"stage");
+		return nil;
+	}
+	localUser.aws_stage = stage;
+	
+	NSDictionary *auth0_profiles = json[@"auth0"];
+	if (![auth0_profiles isKindOfClass:[NSDictionary class]]) {
+		if (outError) *outError = ErrorWithInvalidKey(@"auth0");
+		return nil;
+	}
+	localUser.auth0_profiles = auth0_profiles;
+	
+	NSString *refreshToken = json[@"refreshToken"];
+	if (![refreshToken isKindOfClass:[NSString class]]) {
+		if (outError) *outError = ErrorWithInvalidKey(@"refreshToken");
+		return nil;
+	}
+	
+	ZDCLocalUserAuth *localUserAuth = [[ZDCLocalUserAuth alloc] init];
+	localUserAuth.auth0_refreshToken = refreshToken;
+	
+	NSString *syncedSalt = json[@"syncedSalt"];
+	if (![syncedSalt isKindOfClass:[NSString class]]) {
+		if (outError) *outError = ErrorWithInvalidKey(@"syncedSalt");
+		return nil;
+	}
+	
+	NSString *privKeyWords = json[@"privKeyWords"];
+	if (![syncedSalt isKindOfClass:[NSString class]]) {
+		if (outError) *outError = ErrorWithInvalidKey(@"privKeyWords");
+		return nil;
+	}
+	
+	NSArray<NSString*> *mnemonicWords =
+	  [privKeyWords componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+
+	const Cipher_Algorithm encryptionAlgorithm = kCipher_Algorithm_2FISH256;
+	NSError *error = nil;
+	
+	NSData *accessKeyData =
+	  [BIP39Mnemonic keyFromMnemonic: mnemonicWords
+	                      passphrase: syncedSalt
+	                      languageID: @"en_US"
+	                       algorithm: Mnemonic_Storm4
+	                           error: &error];
+	
+	if (error) {
+		ZDCLogError(@"BIP39Mnemonic: keyFromMnemonic failed: %@", error);
+		if (outError) *outError = error;
+		return nil;
+	}
+	
+	NSString *privKeyJSON = json[@"privKey"];
+	if ([privKeyJSON isKindOfClass:[NSDictionary class]])
+	{
+		NSData *privKeyData = [NSJSONSerialization dataWithJSONObject:privKeyJSON options:0 error:nil];
+		privKeyJSON = [[NSString alloc] initWithData:privKeyData encoding:NSUTF8StringEncoding];
+	}
+	
+	if (![privKeyJSON isKindOfClass:[NSString class]]) {
+		if (outError) *outError = ErrorWithInvalidKey(@"privKey");
+		return nil;
+	}
+	
+	ZDCPublicKey *privKey =
+	  [zdc.cryptoTools createPrivateKeyFromJSON: privKeyJSON
+	                                  accessKey: accessKeyData
+	                        encryptionAlgorithm: encryptionAlgorithm
+	                                localUserID: localUser.uuid
+	                                      error: &error];
+	
+	if (error) {
+		ZDCLogError(@"CryptoTools: createPrivateKeyFromJSON failed: %@", error);
+		if (outError) *outError = error;
+		return nil;
+	}
+	
+	ZDCSymmetricKey *accessKey =
+	  [zdc.cryptoTools createSymmetricKey: accessKeyData
+	                  encryptionAlgorithm: encryptionAlgorithm
+	                                error: &error];
+	
+	if (error) {
+		ZDCLogError(@"CryptoTools: createSymmetricKey failed: %@", error);
+		if (outError) *outError = error;
+		return nil;
+	}
+	
+	localUser.publicKeyID = privKey.uuid;
+	localUser.accessKeyID = accessKey.uuid;
+	
+	[transaction setObject:localUser forKey:localUser.uuid inCollection:kZDCCollection_Users];
+	[transaction setObject:localUserAuth forKey:localUser.uuid inCollection:kZDCCollection_UserAuth];
+	[transaction setObject:privKey forKey:privKey.uuid inCollection:kZDCCollection_PublicKeys];
+	[transaction setObject:accessKey forKey:accessKey.uuid inCollection:kZDCCollection_SymmetricKeys];
+	
+	[self createTrunkNodesForLocalUser: localUser
+	                     withAccessKey: accessKey
+	                       transaction: transaction];
+	
+done:
+	
+	if (outError) *outError = nil;
+	return localUser;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Private User Management
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Standardized routine for creating all the trunk nodes.
+ * Get access via: #import "ZDCLocalUserManagerPrivate.h"
+ */
+- (void)createTrunkNodesForLocalUser:(ZDCLocalUser *)localUser
+                       withAccessKey:(ZDCSymmetricKey *)accessKey
+                         transaction:(YapDatabaseReadWriteTransaction *)transaction
+{
+	NSArray<NSNumber*> *trunks = @[
+		@(ZDCTreesystemTrunk_Home),
+		@(ZDCTreesystemTrunk_Prefs),
+		@(ZDCTreesystemTrunk_Inbox),
+		@(ZDCTreesystemTrunk_Outbox)
+	];
+	
+	NSString *const zAppID = zdc.zAppID;
+	
+	for (NSNumber *trunkNum in trunks)
+	{
+		ZDCTreesystemTrunk trunk = (ZDCTreesystemTrunk)[trunkNum integerValue];
+		NSString *key = [ZDCTrunkNode uuidForLocalUserID:localUser.uuid zAppID:zAppID trunk:trunk];
+		
+		if (![transaction hasObjectForKey:key inCollection:kZDCCollection_Nodes])
+		{
+			ZDCTrunkNode *trunkNode =
+			  [[ZDCTrunkNode alloc] initWithLocalUserID: localUser.uuid
+			                                     zAppID: zAppID
+			                                      trunk: trunk];
+	
+			[zdc.cryptoTools setDirSaltForTrunkNode: trunkNode
+			                          withLocalUser: localUser
+			                              accessKey: accessKey];
+	
+			ZDCShareList *shareList =
+			  [ZDCShareList defaultShareListForTrunk: trunk
+			                         withLocalUserID: localUser.uuid];
+	
+			[shareList enumerateListWithBlock:^(NSString *key, ZDCShareItem *shareItem, BOOL *stop) {
+	
+				[trunkNode.shareList addShareItem:shareItem forKey:key];
+			}];
+	
+			[transaction setObject: trunkNode
+			                forKey: trunkNode.uuid
+			          inCollection: kZDCCollection_Nodes];
+		}
+	}
 }
 
 - (void)refreshAuth0ProfilesForLocalUserID:(NSString *)localUserID
@@ -1610,6 +1573,21 @@
 		ZDCCloudTransaction *ext = [transaction ext:extName];
 		[ext addOperation:op];
 	}];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Errors
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (NSError *)errorWithDescription:(NSString *)description
+{
+	return [NSError errorWithClass:[self class] code:0 description:description];
+}
+
+
+- (NSError *)errorWithDescription:(NSString *)description statusCode:(NSUInteger)statusCode
+{
+	return [NSError errorWithClass:[self class] code:statusCode description:description];
 }
 
 @end
