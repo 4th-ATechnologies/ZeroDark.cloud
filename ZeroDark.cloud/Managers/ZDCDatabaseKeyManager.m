@@ -24,11 +24,11 @@
 
 
 #if DEBUG && robbie_hanson
-static const int zdcLogLevel = ZDCLogLevelVerbose | ZDCLogFlagTrace;
+  static const int zdcLogLevel = ZDCLogLevelVerbose | ZDCLogFlagTrace;
 #elif DEBUG
-static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 #pragma unused(zdcLogLevel)
 
@@ -43,24 +43,23 @@ static Cipher_Algorithm  defaultKeyCipherAlgorithm	=	 kCipher_Algorithm_2FISH256
 static P2K_Algorithm  	defaultP2KAlgorithm			=	 kP2K_Algorithm_Argon2i;
 
 #ifdef ZDCLogError
-#define CKERROR                                                                     \
-if(error) {                                                                       \
-ZDCLogError(@"ERROR %@ %@:%d", error.localizedDescription, THIS_FILE, __LINE__); \
-goto done;                                                                      \
-}
+  #define CKERROR                                                                       \
+    if(error) {                                                                         \
+      ZDCLogError(@"ERROR %@ %@:%d", error.localizedDescription, THIS_FILE, __LINE__);  \
+      goto done;                                                                        \
+    }
 #else
-#define CKERROR \
-if (error) {  \
-goto done;  \
-}
+  #define CKERROR  \
+    if (error) {   \
+    goto done;     \
+  }
 #endif
 
-@implementation ZDCDatabaseKeyManager
-{
+@implementation ZDCDatabaseKeyManager {
+	
 	__weak ZeroDarkCloud *zdc;
 
 	S4KeyContextRef sKeyCtx;
-
 }
 
 - (instancetype)init
@@ -76,7 +75,6 @@ goto done;  \
 	}
 	return self;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Errors
@@ -97,6 +95,11 @@ goto done;  \
 #pragma mark Properties
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
+ */
 - (BOOL)isConfigured
 {
 	BOOL result = NO;
@@ -113,58 +116,71 @@ goto done;  \
  	return result;
 }
 
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
+ */
 - (BOOL)isUnlocked
 {
 	return S4KeyContextRefIsValid(sKeyCtx);
 }
 
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
+ */
 - (BOOL)usesKeychainKey
 {
-	__block BOOL result = NO;
-
-	[self configureStorageKey:(defaultKeyCipherAlgorithm) error:nil];
+	BOOL result = NO;
 
 	// test for keychain
 	NSDictionary* dictIn = [self keysDictWithError:NULL];
 	NSDictionary* kcDict = [dictIn objectForKey:kPassPhraseSourceKey_keychain];
 
-	result  = kcDict && [self  hasKeychainPassphrase];
-
+	result = kcDict && [self hasKeychainPassphrase];
 	return result;
 }
 
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
+ */
 - (BOOL)usesPassphrase
 {
-	__block BOOL result = NO;
-	[self configureStorageKey:(defaultKeyCipherAlgorithm) error:nil];
+	BOOL result = NO;
 
 	// test for keychain
 	NSDictionary* dictIn = [self keysDictWithError:NULL];
 	NSDictionary* kcDict = [dictIn objectForKey:kPassPhraseSourceKey_keyboard];
 
-	result  = kcDict != nil;
-
+	result = (kcDict != nil);
 	return result;
 }
 
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
+ */
 - (BOOL)usesBioMetrics
 {
-	__block BOOL result = NO;
-	[self configureStorageKey:(defaultKeyCipherAlgorithm) error:nil];
+	BOOL result = NO;
 
 	// test for keychain
 	NSDictionary* dictIn = [self keysDictWithError:NULL];
 	NSDictionary* kcDict = [dictIn objectForKey:kPassPhraseSourceKey_biometric];
 
-	result  = (kcDict != NULL)  && [self  hasBioPassphrase];
-
+	result = (kcDict != NULL) && [self hasBioPassphrase];
 	return result;
 }
 
 
--(NSData*) storageKey
+- (NSData *)storageKey
 {
-	NSData* data = NULL;
+	NSData *data = nil;
 
 	if (S4KeyContextRefIsValid(sKeyCtx)) {
 
@@ -175,46 +191,66 @@ goto done;  \
 	return data;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Setup
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-// initial setup storageKey and create temporary keychain password.
--(BOOL) configureStorageKey:(Cipher_Algorithm)algorithm
-					  error:(NSError *_Nullable *_Nullable) outError
+- (BOOL)initializeStorageKey:(NSError *_Nullable *_Nullable)outError
 {
-	BOOL            sucess = NO;
-	S4Err           err = kS4Err_NoErr;
-	NSError         *error  = NULL;
-	const int       keyBytesLen =  32;
-	uint8_t         keyBytes[keyBytesLen];
-
-	if(self.isConfigured)
+	if (S4KeyContextRefIsValid(sKeyCtx))
 	{
+		if (outError) *outError = nil;
 		return YES;
 	}
-	// create the new storage key
+	
+	S4Err       err = kS4Err_NoErr;
+	NSError   * error  = nil;
+	
+	const int   keyBytesLen = 32;
+	uint8_t     keyBytes[keyBytesLen];
+	
+	const Cipher_Algorithm algorithm = defaultKeyCipherAlgorithm;
+	
 	size_t keySizeInBits = 0;
-
 	err = Cipher_GetKeySize(algorithm, &keySizeInBits); CKERR;
-
+	
 	NSAssert((keySizeInBits > 0) && ((keySizeInBits / 8) <= keyBytesLen), @"Mismatch: algorithm vs keySize");
-
+	
 	err = RNG_GetBytes(keyBytes, (keySizeInBits / 8)); CKERR;
 	err = S4Key_NewSymmetric(algorithm, keyBytes, &sKeyCtx); CKERR;
+	
+done:
+	
+	ZERO(keyBytes, sizeof(keyBytes));
+	
+	if (outError) *outError = error;
+	return (error == nil);
+}
 
-	sucess = [self createKeychainEntryKeyWithError:&error];
+/**
+ * Initializes the system with default configuration.
+ */
+- (BOOL)configureIfNeeded:(NSError *_Nullable *_Nullable)outError
+{
+	if (self.isConfigured)
+	{
+		if (outError) *outError = nil;
+		return YES;
+	}
+	
+	BOOL success = NO;
+	NSError *error = nil;
+	
+	if ([self initializeStorageKey:&error])
+	{
+		success = [self createKeychainEntry:&error];
+	}
 
 done:
 
-	ZERO(keyBytes, sizeof(keyBytes));
-
 	if (outError) *outError = error;
-	return sucess;
- }
-
+	return success;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Keychain
@@ -232,36 +268,44 @@ done:
 	return [NSString stringWithFormat:@"%@|%@.keyChainPassphrase", appOwner, dbFilename];
 }
 
-
--(BOOL) createKeychainEntryKeyWithError:(NSError *_Nullable *_Nullable) outError
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
+ */
+- (BOOL)createKeychainEntry:(NSError *_Nullable *_Nullable)outError
 {
-	NSError     *error = NULL;
-	BOOL       success    = NO;
-	Cipher_Algorithm algorithm = defaultKeyCipherAlgorithm;
-	NSDictionary* blob  = NULL;
+	NSError          * error = NULL;
+	BOOL               success    = NO;
+	Cipher_Algorithm   algorithm = defaultKeyCipherAlgorithm;
+	NSDictionary     * blob  = NULL;
+	NSData *kcPassphraseData  = nil;
 
-	NSData* kcPassphraseData  = [self makeKeyChainPassphraseWithAlgorithm:algorithm error:&error];
-
-	if(kcPassphraseData)
+	[self initializeStorageKey:&error]; CKERROR;
+	
+	kcPassphraseData  = [self makeKeychainPassphraseWithAlgorithm:algorithm error:&error];
+	if (kcPassphraseData)
 	{
-		blob = [self blobWithPassKey:kcPassphraseData
-					passKeyAlgorithm:algorithm
-							   error:&error]; CKERROR;
+		blob = [self blobWithPassKey: kcPassphraseData
+		            passKeyAlgorithm: algorithm
+		                       error: &error]; CKERROR;
 
-		success = [self addKeyStorageBlob:blob
-						 passPhraseSource:kPassPhraseSourceKey_keychain
-								 outError:&error]; CKERROR;
+		success = [self addKeyStorageBlob: blob
+		                 passPhraseSource: kPassPhraseSourceKey_keychain
+		                         outError: &error]; CKERROR;
 	}
 
 done:
-	if(error && outError)
-	{
-		*outError = error.copy;
-	}
-
+	
+	if (outError) *outError = error;
 	return success;
 }
 
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
+ */
 - (BOOL)hasKeychainPassphrase
 {
 	BOOL sucess = NO;
@@ -289,24 +333,29 @@ done:
 	return sucess;
 }
 
-
-- (nullable NSData *)unlockUsingKeychainKeyWithError:(NSError *_Nullable *_Nullable) outError
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
+ */
+- (nullable NSData *)unlockUsingKeychain:(NSError *_Nullable *_Nullable) outError
 {
-	BOOL sucess     = NO;
-	NSError     *error = NULL;
+	BOOL success = NO;
+	NSError *error = nil;
 	Cipher_Algorithm algorithm = defaultKeyCipherAlgorithm;
 
-	if([self usesKeychainKey])
+	[self configureIfNeeded:&error]; CKERROR;
+	
+	if (self.usesKeychainKey)
 	{
-		NSData* kcPassphraseData = [self keychainPassphraseDataWithError:&error];
-
-		if(kcPassphraseData && !error)
+		NSData *kcPassphraseData = [self keychainPassphraseDataWithError:&error];
+		if (kcPassphraseData && !error)
 		{
-			sucess = [self unlockStorageBlobWithPassKey:kcPassphraseData
-									   passKeyAlgorithm:algorithm
-									   passPhraseSource: kPassPhraseSourceKey_keychain
-												  error: &error]
-			&& !error;
+			success =
+			  [self unlockStorageBlobWithPassKey: kcPassphraseData
+			                    passKeyAlgorithm: algorithm
+			                    passPhraseSource: kPassPhraseSourceKey_keychain
+			                               error: &error];
 		}
  	}
 	else
@@ -314,16 +363,13 @@ done:
 		error = [self errorWithDescription:@"Not encrypted to keychain"];
 	}
 
-	if(error && outError)
-	{
-		*outError = error.copy;
-	}
+done:
+	
+	if (outError) *outError = error;
+	return success ? [self storageKey] : nil;
+}
 
-	return sucess? [self storageKey]:nil;
- }
-
-- (NSData*) keychainPassphraseDataWithError:(NSError**)errorOut
-
+- (NSData *)keychainPassphraseDataWithError:(NSError**)errorOut
 {
 	NSData* kcData = nil;
 
@@ -349,7 +395,7 @@ done:
 	{
 		if(errorOut)
 		{
-			*errorOut = [self errorWithKeyOSStatus:status];
+			*errorOut = [self errorWithOSStatus:status];
 		}
 	}
 
@@ -357,8 +403,8 @@ done:
 }
 
 
-- (NSData *)makeKeyChainPassphraseWithAlgorithm:(Cipher_Algorithm)passKeyAlgorithm
-										  error:(NSError **)outError
+- (NSData *)makeKeychainPassphraseWithAlgorithm:(Cipher_Algorithm)passKeyAlgorithm
+                                          error:(NSError **)outError
 {
 	NSError*        error = NULL;
 	S4Err        	err = kS4Err_NoErr;
@@ -381,18 +427,18 @@ done:
 	[self deleteKeychainPassphraseWithError:NULL];
 
 	query = @{
-			  (__bridge NSString *)kSecAttrService          : [self keychainPassphraseIdentifier],
-			  (__bridge NSString *)kSecAttrAccount          : @"",
-			  (__bridge NSString *)kSecValueData            : kcPassphraseData,
-			  (__bridge NSString *)kSecClass                :(__bridge NSString *)kSecClassGenericPassword,
-			  (__bridge NSString *)kSecAttrSynchronizable   :(__bridge NSString *)kSecAttrSynchronizableAny,
-			  (__bridge NSString *)kSecAttrAccessible       :(__bridge NSString *)kSecAttrAccessibleAfterFirstUnlock,
-			  };
+		(__bridge NSString *)kSecAttrService          : [self keychainPassphraseIdentifier],
+		(__bridge NSString *)kSecAttrAccount          : @"",
+		(__bridge NSString *)kSecValueData            : kcPassphraseData,
+		(__bridge NSString *)kSecClass                :(__bridge NSString *)kSecClassGenericPassword,
+		(__bridge NSString *)kSecAttrSynchronizable   :(__bridge NSString *)kSecAttrSynchronizableAny,
+		(__bridge NSString *)kSecAttrAccessible       :(__bridge NSString *)kSecAttrAccessibleAfterFirstUnlock,
+	};
 
 	status = SecItemAdd((__bridge CFDictionaryRef)query, NULL);
 	if (status != errSecSuccess)
 	{
-		error = [self errorWithKeyOSStatus:status];
+		error = [self errorWithOSStatus:status];
 	}
 
 done:
@@ -406,101 +452,44 @@ done:
 }
 
 
--(BOOL)  deleteKeychainPassphraseWithError:(NSError**)errorOut
+- (BOOL)deleteKeychainPassphraseWithError:(NSError **)outError
 {
  	BOOL success = NO;
+	NSError *error = nil;
 
-	NSDictionary *query = @{ (__bridge id)kSecAttrService            : [self keychainPassphraseIdentifier],
-							 (__bridge id)kSecAttrAccount            : @"",
-							 (__bridge id)(kSecClass)                :(__bridge id) kSecClassGenericPassword,
-							 (__bridge id)(kSecAttrSynchronizable)   :(__bridge id) kSecAttrSynchronizableAny
-							 };
+	NSDictionary *query = @{
+		(__bridge id)kSecAttrService          : [self keychainPassphraseIdentifier],
+		(__bridge id)kSecAttrAccount          : @"",
+		(__bridge id)(kSecClass)              : (__bridge id)kSecClassGenericPassword,
+		(__bridge id)(kSecAttrSynchronizable) : (__bridge id)kSecAttrSynchronizableAny
+	};
 
 	OSStatus status = SecItemDelete((__bridge CFDictionaryRef)query);
 
-	if( status == errSecSuccess )
-	{
+	if (status == errSecSuccess) {
 		success = YES;
 	}
-	else
-	{
-		if(errorOut)
-		{
-			*errorOut = [self errorWithKeyOSStatus:status];
-		}
+	else {
+		error = [self errorWithOSStatus:status];
 	}
 
+	if (outError) *outError = error;
 	return success;
 }
 
-
-- (NSError *)errorWithKeyOSStatus:(OSStatus) code
-{
-	NSString *message = nil;
-	switch (code) {
-		case errSecSuccess: return nil;
-
-		case errSecUnimplemented: {
-			message = @"errSecUnimplemented";
-			break;
-		}
-		case errSecParam: {
-			message = @"errSecParam";
-			break;
-		}
-		case errSecAllocate: {
-			message = @"errSecAllocate";
-			break;
-		}
-		case errSecNotAvailable: {
-			message = @"errSecNotAvailable";
-			break;
-		}
-		case errSecDuplicateItem: {
-			message = @"errSecDuplicateItem";
-			break;
-		}
-		case errSecItemNotFound: {
-			message = @"errSecItemNotFound";
-			break;
-		}
-		case errSecInteractionNotAllowed: {
-			message = @"errSecInteractionNotAllowed";
-			break;
-		}
-		case errSecDecode: {
-			message = @"errSecDecode";
-			break;
-		}
-		case errSecAuthFailed: {
-			message = @"errSecAuthFailed";
-			break;
-		}
-		case errSecUserCanceled: {
-			message = @"errSecUserCanceled";
-			break;
-		}
-		default: {
-			message = [NSString stringWithFormat: @"errSec Code %d", (int)code];
-		}
-	}
-
-	NSDictionary *userInfo = nil;
-	if (message) {
-		userInfo = @{ NSLocalizedDescriptionKey : message };
-	}
-	return [NSError errorWithDomain:NSOSStatusErrorDomain code:code userInfo:userInfo];
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark passphrase
+#pragma mark Passphrase
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
--(BOOL) createPassPhraseKey:(NSString*)passPhrase
-			 passPhraseHint:(NSString*)passPhraseHint
-					  error:(NSError *_Nullable *_Nullable) outError
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
+ */
+- (BOOL)createPassphraseEntry:(NSString *)passphrase
+                     withHint:(NSString *_Nullable)hint
+                        error:(NSError *_Nullable *_Nullable) outError
 {
-
 	NSError*	error = NULL;
 	S4Err   	err = kS4Err_NoErr;
 	BOOL       	success    = NO;
@@ -511,9 +500,12 @@ done:
 	uint8_t     *data = NULL;
 	size_t      dataLen = 0;
 
-	err = HASH_NormalizePassPhrase((uint8_t*) passPhrase.UTF8String, passPhrase.UTF8LengthInBytes,
-								   (uint8_t*) zdc.zAppID.UTF8String, zdc.zAppID.UTF8LengthInBytes,
-								   &passCode, &passCodeLen); CKERR;
+	[self configureIfNeeded:&error]; CKERROR;
+	
+	err = HASH_NormalizePassPhrase(
+	            (uint8_t *)passphrase.UTF8String, passphrase.UTF8LengthInBytes,
+	            (uint8_t *)zdc.zAppID.UTF8String, zdc.zAppID.UTF8LengthInBytes,
+	                       &passCode, &passCodeLen); CKERR;
 
 	err = S4Key_SerializeToPassCode(sKeyCtx,
 									passCode,  passCodeLen, defaultP2KAlgorithm,
@@ -528,8 +520,9 @@ done:
 			NSMutableDictionary* blobDict =
 					[NSMutableDictionary dictionaryWithDictionary:(NSDictionary *)blobData];
 
-			if(passPhraseHint.length > 0)
- 				[blobDict setObject:passPhraseHint forKey:kPassPhraseHintKey];
+			if (hint.length > 0) {
+ 				blobDict[kPassPhraseHintKey] = hint;
+			}
  
 			success = [self addKeyStorageBlob:blobDict
 							 passPhraseSource:kPassPhraseSourceKey_keyboard
@@ -561,31 +554,38 @@ done:
 	return success;
 }
 
-
--(nullable NSData*) unlockUsingPassphaseKey:(NSString*)passPhrase
-						  error:(NSError**)outError
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
+ */
+- (nullable NSData *)unlockUsingPassphase:(NSString *)passphrase
+                                    error:(NSError *_Nullable *_Nullable)outError
 {
+	BOOL success = NO;
 	NSError*	error = NULL;
 	S4Err   	err = kS4Err_NoErr;
-	BOOL       	success    = NO;
 
-	S4KeyContextRef     unlockingKey = kInvalidS4KeyContextRef;
+	S4KeyContextRef unlockingKey = kInvalidS4KeyContextRef;
 
-	uint8_t    *passCode = NULL;
-	size_t     passCodeLen = 0;
+	uint8_t * passCode = NULL;
+	size_t    passCodeLen = 0;
+	
+	[self configureIfNeeded:&error]; CKERROR;
 
-	if ([self getKeyForPassPhraseSource:kPassPhraseSourceKey_keyboard
-							 keyContext:&unlockingKey
-								  error:&error ])
+	if ([self getKeyForPassPhraseSource: kPassPhraseSourceKey_keyboard
+	                         keyContext: &unlockingKey
+	                              error: &error ])
 	{
-		err = HASH_NormalizePassPhrase((uint8_t*) passPhrase.UTF8String, passPhrase.UTF8LengthInBytes,
-									   (uint8_t*) zdc.zAppID.UTF8String, zdc.zAppID.UTF8LengthInBytes,
-									   &passCode, &passCodeLen); CKERR;
+		err = HASH_NormalizePassPhrase(
+		          (uint8_t *)passphrase.UTF8String, passphrase.UTF8LengthInBytes,
+		          (uint8_t *)zdc.zAppID.UTF8String, zdc.zAppID.UTF8LengthInBytes,
+		                     &passCode, &passCodeLen); CKERR;
 
 		err = S4Key_DecryptFromPassCode(unlockingKey,
 										passCode, passCodeLen,
 										&sKeyCtx); CKERR;
-
+		
 		success = YES;
 	}
 	else
@@ -593,34 +593,38 @@ done:
 		error = [self errorWithDescription:@"Not encrypted to password"];
  	}
 
-
 done:
 
-	if(passCode)
+	if (passCode) {
 		XFREE(passCode);
+	}
 
-	if (S4KeyContextRefIsValid(unlockingKey))
+	if (S4KeyContextRefIsValid(unlockingKey)) {
 		S4Key_Free(unlockingKey);
-
+	}
 
 	if (IsS4Err(err)) {
 		error = [NSError errorWithS4Error:err];
 	}
 
-	if (outError)
-		*outError = error;
-
-	return success? [self storageKey]:NULL;
+	if (outError) *outError = error;
+	return success? [self storageKey] : nil;
 }
 
--(nullable NSString*) hintStringForPassphraseKey
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
+ */
+- (nullable NSString *)passphraseHint
 {
  	NSString* 			result = NULL;
+	
 	// test for keychain
 	NSDictionary* dictIn = [self keysDictWithError:NULL];
 	NSDictionary* p2kDict = [dictIn objectForKey:kPassPhraseSourceKey_keyboard];
 
-	if(p2kDict)
+	if (p2kDict)
 	{
 		result = [p2kDict objectForKey:kPassPhraseHintKey];
 	}
@@ -628,13 +632,18 @@ done:
 	return result;
 }
 
--(BOOL) removePassphraseKeyWithError:(NSError *_Nullable *_Nullable) outError
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
+ */
+- (BOOL)removePassphraseEntry:(NSError *_Nullable *_Nullable) outError
 {
-	BOOL success    = YES;
+	BOOL success = YES;
 
-	if(self.usesPassphrase)
+	if (self.usesPassphrase)
 	{
- 		success = [self createKeychainEntryKeyWithError:outError];
+ 		success = [self createKeychainEntry:outError];
  	}
 
 	return success;
@@ -656,6 +665,11 @@ done:
 	return [NSString stringWithFormat:@"%@|%@.biometricPassphrase", appOwner, dbFilename];
 }
 
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
+ */
 - (BOOL)canUseBioMetrics
 {
 	BOOL    result = NO;
@@ -666,11 +680,11 @@ done:
 	// test if we can evaluate the policy, this test will tell us if Touch ID is available and enrolled
 	if (context)
 	{
-#if TARGET_OS_IPHONE
+	#if TARGET_OS_IPHONE
 		result = [context canEvaluatePolicy: LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&error];
-#else
+	#else
 		result = [context canEvaluatePolicy: LAPolicyDeviceOwnerAuthentication error:&error];
-#endif
+	#endif
 
 		if (result && error) result = NO;
 	}
@@ -678,34 +692,36 @@ done:
 	return result;
 }
 
- -(BOOL) createBiometricKeyWithError:(NSError *_Nullable *_Nullable) outError
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
+ */
+- (BOOL)createBiometricEntry:(NSError *_Nullable *_Nullable) outError
 {
-
-	NSError     *error = NULL;
-	BOOL       success    = NO;
+	NSError *error = nil;
+	BOOL success = NO;
 	Cipher_Algorithm algorithm = defaultKeyCipherAlgorithm;
-	NSDictionary* blob  = NULL;
-
-
-	NSData* bioPassphraseData  = [self makeBioPassphraseWithAlgorithm:algorithm error:&error];
-
-	if(bioPassphraseData)
+	NSDictionary *blob = nil;
+	NSData *bioPassphraseData = nil;
+	
+	[self configureIfNeeded:&error]; CKERROR;
+	
+	bioPassphraseData = [self makeBioPassphraseWithAlgorithm:algorithm error:&error];
+	if (bioPassphraseData)
 	{
-		blob = [self blobWithPassKey:bioPassphraseData
-					passKeyAlgorithm:algorithm
-							   error:&error]; CKERROR;
+		blob = [self blobWithPassKey: bioPassphraseData
+		            passKeyAlgorithm: algorithm
+		                       error: &error]; CKERROR;
 
-		success = [self addKeyStorageBlob:blob
-						 passPhraseSource:kPassPhraseSourceKey_biometric
-								 outError:&error]; CKERROR;
+		success = [self addKeyStorageBlob: blob
+		                 passPhraseSource: kPassPhraseSourceKey_biometric
+		                         outError: &error]; CKERROR;
 	}
 
 done:
-	if(error && outError)
-	{
-		*outError = error.copy;
-	}
-
+	
+	if (outError) *outError = error;
 	return success;
 }
 
@@ -733,16 +749,23 @@ done:
 	return sucess;
 }
 
--(nullable NSData*) unlockUsingBiometricKeyWithPrompt:(NSString*)prompt
-								   error:(NSError *_Nullable *_Nullable) outError
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
+ */
+- (nullable NSData *)unlockUsingBiometricWithPrompt:(NSString *)prompt
+                                              error:(NSError *_Nullable *_Nullable) outError
 {
-	BOOL sucess     = NO;
-	NSError     *error = NULL;
+	BOOL sucess = NO;
+	NSError *error = NULL;
 	Cipher_Algorithm algorithm = defaultKeyCipherAlgorithm;
-
-	NSData* bioPassphraseData = [self authenticateBioPassPhraseWithPrompt:prompt
-																	error:&error];
-	if(bioPassphraseData && !error)
+	NSData *bioPassphraseData = nil;
+	
+	[self configureIfNeeded:&error]; CKERROR;
+	
+	bioPassphraseData = [self authenticateBioPassPhraseWithPrompt:prompt error:&error];
+	if (bioPassphraseData && !error)
 	{
 		sucess = [self unlockStorageBlobWithPassKey:bioPassphraseData
 								   passKeyAlgorithm:algorithm
@@ -751,15 +774,18 @@ done:
 		&& !error;
 	}
 
-	if(error && outError)
-	{
-		*outError = error.copy;
-	}
-
-	return sucess? [self storageKey]:NULL;
+done:
+	
+	if (outError) *outError = error;
+	return sucess ? [self storageKey] : nil;
 }
 
--(BOOL) removeBioMetricKeyWithError:(NSError *_Nullable *_Nullable) outError
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
+ */
+- (BOOL)removeBiometricEntry:(NSError *_Nullable *_Nullable) outError
 {
  	BOOL                success = NO;
 	NSError*            error = NULL;
@@ -863,7 +889,7 @@ done:
 		OSStatus status = SecItemAdd((__bridge CFDictionaryRef)query, NULL);
 		if (status != errSecSuccess)
 		{
-			error = [self errorWithKeyOSStatus:status];
+			error = [self errorWithOSStatus:status];
 		}
 	}
 
@@ -880,51 +906,49 @@ done:
 }
 
 
--(BOOL)  deleteBioPassphraseWithError:(NSError**)outError
+- (BOOL)deleteBioPassphraseWithError:(NSError**)outError
 {
 	BOOL success = NO;
+	NSError *error = nil;
 
-	NSDictionary *query = @{ (__bridge id)kSecAttrService            : [self bioPassphraseIdentifier],
-							 //                             (__bridge id)kSecAttrAccount            : @"",
-							 (__bridge id)(kSecClass)                :(__bridge id) kSecClassGenericPassword,
-							 (__bridge id)(kSecAttrSynchronizable)   :(__bridge id) kSecAttrSynchronizableAny
-							 };
+	NSDictionary *query = @{
+		(__bridge id)kSecAttrService        : [self bioPassphraseIdentifier],
+	//	(__bridge id)kSecAttrAccount        : @"",
+		(__bridge id)kSecClass              : (__bridge id) kSecClassGenericPassword,
+		(__bridge id)kSecAttrSynchronizable : (__bridge id) kSecAttrSynchronizableAny
+	};
 
 	OSStatus status = SecItemDelete((__bridge CFDictionaryRef)query);
 
-	if( status == errSecSuccess )
-	{
+	if (status == errSecSuccess) {
 		success = YES;
 	}
-	else
-	{
-		if(outError)
-		{
-			*outError = [self errorWithKeyOSStatus:status];
-		}
+	else {
+		error = [self errorWithOSStatus:status];
 	}
 
+	if (outError) *outError = error;
 	return success;
 }
 
-- (NSData*) authenticateBioPassPhraseWithPrompt:(NSString*)prompt
-										  error:(NSError**)outError
-
+- (NSData *)authenticateBioPassPhraseWithPrompt:(NSString *)prompt
+                                          error:(NSError **)outError
 {
-	NSData* bioData = nil;
+	NSData *bioData = nil;
+	NSError *error = nil;
 
 	// Read the guidPassphrase from the keychain.
-	NSMutableDictionary *query = @{ (__bridge id)kSecAttrService     : [self bioPassphraseIdentifier],
-									//                                    (__bridge id)kSecAttrAccount            : @"",
-									(__bridge id)kSecReturnData             : @YES,
-									//                                   (__bridge id)(kSecMatchLimit)           :(__bridge id) kSecMatchLimitOne,
-									(__bridge id)(kSecClass)                :(__bridge id) kSecClassGenericPassword,
-									(__bridge id)(kSecAttrSynchronizable)   :(__bridge id) kSecAttrSynchronizableAny
-									}.mutableCopy;
+	NSMutableDictionary *query = [NSMutableDictionary dictionaryWithCapacity:7];
+	
+	query[(__bridge id)kSecAttrService]        = [self bioPassphraseIdentifier];
+//	query[(__bridge id)kSecAttrAccount]        = @"";
+	query[(__bridge id)kSecReturnData]         = @(YES);
+//	query[(__bridge id)kSecMatchLimit]         = (__bridge id)kSecMatchLimitOne;
+	query[(__bridge id)kSecClass]              = (__bridge id)kSecClassGenericPassword;
+	query[(__bridge id)kSecAttrSynchronizable] = (__bridge id)kSecAttrSynchronizableAny;
 
-	if(prompt)
-	{
-		[query setObject:prompt forKey: (__bridge id)kSecUseOperationPrompt];
+	if (prompt) {
+		query[(__bridge id)kSecUseOperationPrompt] = prompt;
 	}
 
 	CFTypeRef passwordData = NULL;
@@ -935,18 +959,14 @@ done:
 		bioData = (__bridge_transfer NSData *)passwordData;
 	}
 
-	if(!bioData && (status != errSecItemNotFound))
+	if (!bioData && (status != errSecItemNotFound))
 	{
-		if(outError)
-		{
-			*outError = [self errorWithKeyOSStatus:status];
-		}
+		error = [self errorWithOSStatus:status];
 	}
-
+	
+	if (outError) *outError = error;
 	return bioData;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark p2kFile data
@@ -1049,17 +1069,18 @@ done:
 	return blob;
 }
 
-
-// add or replace the key storage blob,
--(BOOL) addKeyStorageBlob:(NSDictionary*)newKeyBlob
-		passPhraseSource:(NSString *)passPhraseSource
-				 outError:(NSError *_Nullable *_Nullable) outError
+/**
+ * Add or replace the key storage blob
+ */
+- (BOOL)addKeyStorageBlob:(NSDictionary *)newKeyBlob
+         passPhraseSource:(NSString *)passPhraseSource
+                 outError:(NSError *_Nullable *_Nullable) outError
 {
 	BOOL                success = NO;
 	NSError*            error = NULL;
 
 	NSDictionary* dictIn = [self keysDictWithError:NULL];
-	NSMutableDictionary* dict = NSMutableDictionary.dictionary;
+	NSMutableDictionary* dict = [NSMutableDictionary dictionary];
 
 	if(dictIn)
 		[dict addEntriesFromDictionary:dictIn];
@@ -1078,20 +1099,19 @@ done:
 
 	NSData *data = [NSJSONSerialization dataWithJSONObject:dict options:NSJSONWritingPrettyPrinted error:NULL];
 
-	success = [data writeToURL:self.storageBlobURL
-			 options:NSDataWritingAtomic
-			   error:&error];
+	success = [data writeToURL: self.storageBlobURL
+	                   options: NSDataWritingAtomic
+	                     error: &error];
 
 	if (outError) *outError = error;
-
 	return success;
 }
 
 
 - (BOOL)unlockStorageBlobWithPassKey:(NSData *)passKey
-					passKeyAlgorithm:(Cipher_Algorithm)passKeyAlgorithm
-					passPhraseSource:(NSString *)passPhraseSource
-							   error:(NSError **)errorOut
+                    passKeyAlgorithm:(Cipher_Algorithm)passKeyAlgorithm
+                    passPhraseSource:(NSString *)passPhraseSource
+                               error:(NSError **)errorOut
 {
 	BOOL                success = FALSE;
 	S4Err               err = kS4Err_NoErr;
@@ -1195,8 +1215,15 @@ done:
 	return success;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Danger
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+/**
+ * See header file for description.
+ * Or view the reference docs online:
+ * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
+ */
 - (void)deleteAllPasscodeData
 {
 	[self deleteKeychainPassphraseWithError:NULL];
@@ -1212,37 +1239,66 @@ done:
 	[[NSFileManager defaultManager] removeItemAtURL:storageBlobURL error:NULL];
 }
 
-//
-//	// create fake key
-//	uint8_t*  key = XMALLOC(32);
-//
-//	NSData* keyData =  [[NSData alloc] initWithBytesNoCopy:key
-//													length:32
-//											   deallocator:^(void * _Nonnull bytes,
-//															 NSUInteger length) {
-//
-//												   ZERO(bytes, length);
-//												   XFREE(bytes);
-//											   }];
-//
-//	if(keyFoundBlockIn)
-//		(keyFoundBlockIn)(keyData,NULL);
-//}
-//
-//- (NSData *)retrieveKeyFromKeychain
-//{
-//	uint8_t*  key = XMALLOC(32);
-//
-//	NSData* keyData =  [[NSData alloc] initWithBytesNoCopy:key
-//													length:32
-//											   deallocator:^(void * _Nonnull bytes,
-//															 NSUInteger length) {
-//
-//												   ZERO(bytes, length);
-//												   XFREE(bytes);
-//											   }];
-//
-//	return keyData;
-//}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Utilities
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (NSError *)errorWithOSStatus:(OSStatus) code
+{
+	NSString *message = nil;
+	switch (code) {
+		case errSecSuccess: return nil;
+			
+		case errSecUnimplemented: {
+			message = @"errSecUnimplemented";
+			break;
+		}
+		case errSecParam: {
+			message = @"errSecParam";
+			break;
+		}
+		case errSecAllocate: {
+			message = @"errSecAllocate";
+			break;
+		}
+		case errSecNotAvailable: {
+			message = @"errSecNotAvailable";
+			break;
+		}
+		case errSecDuplicateItem: {
+			message = @"errSecDuplicateItem";
+			break;
+		}
+		case errSecItemNotFound: {
+			message = @"errSecItemNotFound";
+			break;
+		}
+		case errSecInteractionNotAllowed: {
+			message = @"errSecInteractionNotAllowed";
+			break;
+		}
+		case errSecDecode: {
+			message = @"errSecDecode";
+			break;
+		}
+		case errSecAuthFailed: {
+			message = @"errSecAuthFailed";
+			break;
+		}
+		case errSecUserCanceled: {
+			message = @"errSecUserCanceled";
+			break;
+		}
+		default: {
+			message = [NSString stringWithFormat: @"errSec Code %d", (int)code];
+		}
+	}
+	
+	NSDictionary *userInfo = nil;
+	if (message) {
+		userInfo = @{ NSLocalizedDescriptionKey : message };
+	}
+	return [NSError errorWithDomain:NSOSStatusErrorDomain code:code userInfo:userInfo];
+}
 
 @end

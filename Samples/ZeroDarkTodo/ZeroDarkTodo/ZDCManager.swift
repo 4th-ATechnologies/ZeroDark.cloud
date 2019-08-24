@@ -45,7 +45,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		                      zAppID: zAppID)
 
 		do {
-			let dbEncryptionKey = try zdc.databaseKeyManager.unlockUsingKeychainKey()
+			let dbEncryptionKey = try zdc.databaseKeyManager.unlockUsingKeychain()
 			let config = databaseConfig(encryptionKey: dbEncryptionKey)
 			zdc.unlockOrCreateDatabase(config)			
 		} catch {
