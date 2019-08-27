@@ -32,7 +32,6 @@ let kZDC_zAppID       = "com.4th-a.ZeroDarkMessages"
 class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	
 	
-	
 	var zdc: ZeroDarkCloud!
 	
 	private init(databaseName: String, zAppID: String) {
@@ -43,7 +42,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		                      zAppID: zAppID)
 
 		do {
-			let dbEncryptionKey = try zdc.databaseKeyManager.unlockUsingKeychainKey()
+			let dbEncryptionKey = try zdc.databaseKeyManager.unlockUsingKeychain()
 			let config = databaseConfig(encryptionKey: dbEncryptionKey)
 			zdc.unlockOrCreateDatabase(config)			
 		} catch {
@@ -219,6 +218,26 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		
 		// Nothing to do here for this app
 	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// MARK: ZeroDarkCloudDelegate: Pull (Messages)
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	func data(forMessage message: ZDCNode, transaction: YapDatabaseReadTransaction) -> ZDCData? {
+		
+		return nil
+	}
+	
+	func didSendMessage(_ message: ZDCNode, toRecipient recipient: ZDCUser, transaction: YapDatabaseReadWriteTransaction) {
+		
+	}
+	
+	func didDiscoverConflict(_ conflict: ZDCNodeConflict, forNode node: ZDCNode, atPath path: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
+		
+	}
+	
+	
+
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// MARK: ZeroDarkCloudDelegate: Push (Messages)

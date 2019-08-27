@@ -27,12 +27,11 @@
 		2EB64BFC2298940E0023DF11 /* Conversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB64BFB2298940E0023DF11 /* Conversation.swift */; };
 		2EB64BFE2298942F0023DF11 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB64BFD2298942F0023DF11 /* Message.swift */; };
 		2EB64C002298992A0023DF11 /* CloudCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB64BFF2298992A0023DF11 /* CloudCodable.swift */; };
-		FC5E14A7701DB2A77DAB327C /* Pods_ios_ZeroDarkMessages.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1657D46F01E521620E543D9A /* Pods_ios_ZeroDarkMessages.framework */; };
+		E84DBC78D7ECD62F4AE1DBA2 /* Pods_ios_ZeroDarkMessages.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4BF05282180E1CDAB6D61744 /* Pods_ios_ZeroDarkMessages.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1657D46F01E521620E543D9A /* Pods_ios_ZeroDarkMessages.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ios_ZeroDarkMessages.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		1766EF4F4A92172C10CDF8F9 /* Pods-ios-ZeroDarkMessages.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ios-ZeroDarkMessages.debug.xcconfig"; path = "Target Support Files/Pods-ios-ZeroDarkMessages/Pods-ios-ZeroDarkMessages.debug.xcconfig"; sourceTree = "<group>"; };
+		18FF0C934220ADFAE1AC7646 /* Pods-ios-ZeroDarkMessages.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ios-ZeroDarkMessages.debug.xcconfig"; path = "Target Support Files/Pods-ios-ZeroDarkMessages/Pods-ios-ZeroDarkMessages.debug.xcconfig"; sourceTree = "<group>"; };
 		2EB64BC4229854630023DF11 /* ZeroDarkMessages.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ZeroDarkMessages.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2EB64BC7229854630023DF11 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		2EB64BC9229854630023DF11 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
@@ -58,7 +57,8 @@
 		2EB64BFB2298940E0023DF11 /* Conversation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conversation.swift; sourceTree = "<group>"; };
 		2EB64BFD2298942F0023DF11 /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
 		2EB64BFF2298992A0023DF11 /* CloudCodable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CloudCodable.swift; sourceTree = "<group>"; };
-		8967A1E46E2F79BCD60D7BB7 /* Pods-ios-ZeroDarkMessages.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ios-ZeroDarkMessages.release.xcconfig"; path = "Target Support Files/Pods-ios-ZeroDarkMessages/Pods-ios-ZeroDarkMessages.release.xcconfig"; sourceTree = "<group>"; };
+		4BF05282180E1CDAB6D61744 /* Pods_ios_ZeroDarkMessages.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ios_ZeroDarkMessages.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		58F36B549EDF76F9D248AFCB /* Pods-ios-ZeroDarkMessages.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ios-ZeroDarkMessages.release.xcconfig"; path = "Target Support Files/Pods-ios-ZeroDarkMessages/Pods-ios-ZeroDarkMessages.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,20 +66,28 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FC5E14A7701DB2A77DAB327C /* Pods_ios_ZeroDarkMessages.framework in Frameworks */,
+				E84DBC78D7ECD62F4AE1DBA2 /* Pods_ios_ZeroDarkMessages.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		021FA50E7AF18CF0C22A9899 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				4BF05282180E1CDAB6D61744 /* Pods_ios_ZeroDarkMessages.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		2EB64BBB229854630023DF11 = {
 			isa = PBXGroup;
 			children = (
 				2EB64BC6229854630023DF11 /* ZeroDarkMessages */,
 				2EB64BC5229854630023DF11 /* Products */,
 				CB676B91533F8C85A9E1963D /* Pods */,
-				61806ED198E1D8D276C6F60B /* Frameworks */,
+				021FA50E7AF18CF0C22A9899 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -139,19 +147,11 @@
 			path = Model;
 			sourceTree = "<group>";
 		};
-		61806ED198E1D8D276C6F60B /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				1657D46F01E521620E543D9A /* Pods_ios_ZeroDarkMessages.framework */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		CB676B91533F8C85A9E1963D /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				1766EF4F4A92172C10CDF8F9 /* Pods-ios-ZeroDarkMessages.debug.xcconfig */,
-				8967A1E46E2F79BCD60D7BB7 /* Pods-ios-ZeroDarkMessages.release.xcconfig */,
+				18FF0C934220ADFAE1AC7646 /* Pods-ios-ZeroDarkMessages.debug.xcconfig */,
+				58F36B549EDF76F9D248AFCB /* Pods-ios-ZeroDarkMessages.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -163,11 +163,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2EB64BD6229854650023DF11 /* Build configuration list for PBXNativeTarget "ZeroDarkMessages" */;
 			buildPhases = (
-				3B7F5EFC117391E3802DA572 /* [CP] Check Pods Manifest.lock */,
+				577797720C8FB7308ED17C69 /* [CP] Check Pods Manifest.lock */,
 				2EB64BC0229854630023DF11 /* Sources */,
 				2EB64BC1229854630023DF11 /* Frameworks */,
 				2EB64BC2229854630023DF11 /* Resources */,
-				773E492BA5E1A5BFC1DB2B34 /* [CP] Embed Pods Frameworks */,
+				4539FF87F8FA97D40DEEE900 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -227,7 +227,22 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		3B7F5EFC117391E3802DA572 /* [CP] Check Pods Manifest.lock */ = {
+		4539FF87F8FA97D40DEEE900 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ios-ZeroDarkMessages/Pods-ios-ZeroDarkMessages-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		577797720C8FB7308ED17C69 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -247,21 +262,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		773E492BA5E1A5BFC1DB2B34 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ios-ZeroDarkMessages/Pods-ios-ZeroDarkMessages-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -429,7 +429,7 @@
 		};
 		2EB64BD7229854650023DF11 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1766EF4F4A92172C10CDF8F9 /* Pods-ios-ZeroDarkMessages.debug.xcconfig */;
+			baseConfigurationReference = 18FF0C934220ADFAE1AC7646 /* Pods-ios-ZeroDarkMessages.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
@@ -449,7 +449,7 @@
 		};
 		2EB64BD8229854650023DF11 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 8967A1E46E2F79BCD60D7BB7 /* Pods-ios-ZeroDarkMessages.release.xcconfig */;
+			baseConfigurationReference = 58F36B549EDF76F9D248AFCB /* Pods-ios-ZeroDarkMessages.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
