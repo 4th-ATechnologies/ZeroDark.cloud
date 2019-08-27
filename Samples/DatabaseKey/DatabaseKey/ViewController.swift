@@ -51,7 +51,7 @@ class ViewController: UIViewController, UITabBarDelegate, UITextFieldDelegate, Z
 		if(!zdc.databaseKeyManager.isConfigured || zdc.databaseKeyManager.usesKeychainKey)
 		{
 			do {
-				dbEncryptionKey = try zdc.databaseKeyManager.unlockUsingKeychainKey()
+				dbEncryptionKey = try zdc.databaseKeyManager.unlockUsingKeychain()
 				
 			} catch {
 				print("Ooops! Something went wrong: \(error)")
@@ -206,7 +206,7 @@ class ViewController: UIViewController, UITabBarDelegate, UITextFieldDelegate, Z
 		do {
 		 	zdc.databaseKeyManager.deleteAllPasscodeData()
 //			try zdc.databaseKeyManager.configureStorageKey(kCipher_Algorithm_2FISH256)
-			dbEncryptionKey = try zdc.databaseKeyManager.unlockUsingKeychainKey()
+			dbEncryptionKey = try zdc.databaseKeyManager.unlockUsingKeychain()
 			_txtPasscode.text = "";
 			_imgCheck.isHidden = true;
 
@@ -238,7 +238,7 @@ class ViewController: UIViewController, UITabBarDelegate, UITextFieldDelegate, Z
 		
 		if(dbEncryptionKey != nil) {
 			do {
-				try zdc.databaseKeyManager.createBiometricKey()
+				try zdc.databaseKeyManager.createBiometricEntry()
 				
 			} catch {
 				
@@ -249,7 +249,7 @@ class ViewController: UIViewController, UITabBarDelegate, UITextFieldDelegate, Z
 		else
 		{
 			do {
-				dbEncryptionKey = try zdc.databaseKeyManager.unlockUsingBiometricKey(withPrompt: "unlock this app")
+				dbEncryptionKey = try zdc.databaseKeyManager.unlockUsingBiometric(withPrompt: "unlock this app")
 				
 			} catch {
 				
@@ -265,7 +265,7 @@ class ViewController: UIViewController, UITabBarDelegate, UITextFieldDelegate, Z
 	@IBAction func btnRemoveTouchID(_ sender: Any) {
 		
 		do {
-			try zdc.databaseKeyManager.removeBioMetricKey()
+			try zdc.databaseKeyManager.removeBiometricEntry()
 
 		} catch {
 			
@@ -284,7 +284,7 @@ class ViewController: UIViewController, UITabBarDelegate, UITextFieldDelegate, Z
 			if(dbEncryptionKey == nil) {
 				
 				do {
-					dbEncryptionKey = try zdc.databaseKeyManager.unlock(usingPassphaseKey: _txtPasscode.text!)
+					dbEncryptionKey = try zdc.databaseKeyManager.unlock(usingPassphase: _txtPasscode.text!)
 					
 					_txtPasscode.text = "";
 					_btnLock.isEnabled = false;
@@ -303,8 +303,8 @@ class ViewController: UIViewController, UITabBarDelegate, UITextFieldDelegate, Z
 			else
 			{
 				do {
-					try zdc.databaseKeyManager.createPassPhraseKey(_txtPasscode.text!,
-																				  passPhraseHint: nil)
+					try zdc.databaseKeyManager.createPassphraseEntry(_txtPasscode.text!,
+																					 withHint: nil)
 					
 					_txtPasscode.text = "";
 					_imgCheck.isHidden = true;
@@ -328,7 +328,7 @@ class ViewController: UIViewController, UITabBarDelegate, UITextFieldDelegate, Z
 		if(dbEncryptionKey != nil) {
 		
 			do {
-	 			try zdc.databaseKeyManager.removePassphraseKey()
+				try zdc.databaseKeyManager.removePassphraseEntry()
 				
 			} catch {
 				
