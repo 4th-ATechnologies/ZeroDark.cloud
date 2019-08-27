@@ -16,7 +16,7 @@ install! 'cocoapods', :disable_input_output_paths => true
 
 abstract_target 'ios' do
 platform :ios, '10.1'
-pod 'YapDatabase/SQLCipher', :git=>'https://github.com/yapstudios/YapDatabase.git', :commit=>'4d42e250597387af7eb96b2d2fdba4a4f7a3741f'
+pod 'YapDatabase/SQLCipher', :git =>'https://github.com/yapstudios/YapDatabase.git', :commit=>'5a7e70a2101ba78b1f92bc992b78dc2e06adb941'
 pod 'ZeroDarkCloud/Swift', path: '../../', :inhibit_warnings => false
 
 pod 'KGHitTestingViews'
