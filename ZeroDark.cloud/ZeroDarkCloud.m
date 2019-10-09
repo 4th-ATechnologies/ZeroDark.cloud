@@ -32,6 +32,7 @@
 #import "ZDCRestManagerPrivate.h"
 
 // Categories
+#import "NSData+AWSUtilities.h"
 #import "NSDate+ZeroDark.h"
 #import "NSError+S4.h"
 
@@ -469,9 +470,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
  */
 - (void)didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
 {
-	NSString *pushToken = [deviceToken description];
-	pushToken = [pushToken stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"<>"]];
-	pushToken = [pushToken stringByReplacingOccurrencesOfString:@" " withString:@""];
+	NSString *pushToken = [deviceToken lowercaseHexString];
 	
 	self.pushToken = pushToken;
 	[self registerPushTokenForLocalUsersIfNeeded];
