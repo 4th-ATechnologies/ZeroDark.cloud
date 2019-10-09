@@ -384,8 +384,8 @@ replacementString:(NSString *)string
 				__strong typeof(self) strongSelf = weakSelf;
 				if (!strongSelf) return;
 
-				[strongSelf tryDatabaseLoginWithUserName:username
-												password:password];
+				[strongSelf tryDatabaseLoginWithUsername: username
+				                                password: password];
 			}];
 		}
 
@@ -448,8 +448,8 @@ replacementString:(NSString *)string
 }
 
 
-- (void)tryDatabaseLoginWithUserName:(NSString *)userName
-							password:(NSString *)password
+- (void)tryDatabaseLoginWithUsername:(NSString *)username
+                            password:(NSString *)password
 {
 	ZDCLogAutoTrace();
 
@@ -457,14 +457,16 @@ replacementString:(NSString *)string
 	[self.view endEditing:YES];
 
 	[self showWait:YES];
+	
+	NSString *email = [Auth0Utilities create4thAEmailForUsername:username];
 
 	__weak typeof(self) weakSelf = self;
-	[accountSetupVC databaseAccountLoginWithUserName: [Auth0Utilities create4thAEmailForUsername: userName]
-									password: password
-							 completionBlock:^(AccountState accountState, NSError *error)
-	 {
-		 __strong typeof(self) strongSelf = weakSelf;
-		 if (!strongSelf) return;
+	[accountSetupVC databaseAccountLoginWithUsername: email
+	                                        password: password
+	                                 completionBlock:^(AccountState accountState, NSError *error)
+	{
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
 
 		 [strongSelf showWait:NO];
 

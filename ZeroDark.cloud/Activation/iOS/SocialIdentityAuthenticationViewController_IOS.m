@@ -713,25 +713,26 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	__weak typeof(self) weakSelf = self;
 
 	NSDictionary  *app_metadata = profile.extraInfo[kZDCUser_metadataKey];
-	NSString    	*preferedAuth0ID = app_metadata[kZDCUser_metadata_preferedAuth0ID];
+	NSString    	*preferredAuth0ID = app_metadata[kZDCUser_metadata_preferredAuth0ID];
 
-	if(!preferedAuth0ID)
+	if (!preferredAuth0ID)
 	{
-		preferedAuth0ID = [accountSetupVC closestMatchingAuth0IDFromProfile:profile
-																   provider:provider
-																   userName:NULL ];
+		preferredAuth0ID =
+		  [accountSetupVC closestMatchingAuth0IDFromProfile: profile
+		                                           provider: provider
+		                                           username: nil];
 	}
 
-	[accountSetupVC socialAccountLoginWithAuth:auth
-									  profile:profile
-							  preferedAuth0ID:preferedAuth0ID
-							  completionBlock:^(AccountState accountState, NSError * _Nonnull error)
-	 {
-		 __strong typeof(self) strongSelf = weakSelf;
-		 if (!strongSelf) return;
+	[accountSetupVC socialAccountLoginWithAuth: auth
+	                                   profile: profile
+	                          preferredAuth0ID: preferredAuth0ID
+	                           completionBlock:^(AccountState accountState, NSError * _Nonnull error)
+	{
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
 
-		 if(error)
-		 {
+		if (error)
+		{
 			 NSString* errorString = error.localizedDescription;
 
 			 [strongSelf.accountSetupVC showError:@"Could not Authenticate"

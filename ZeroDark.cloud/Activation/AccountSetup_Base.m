@@ -64,6 +64,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 
 
 @implementation AccountSetup_Base
+
 @synthesize owner =  owner;
 @synthesize setupMode = setupMode;
 @synthesize identityMode = identityMode;
@@ -536,12 +537,11 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	return user;
 }
 
--(nullable NSString*) closestMatchingAuth0IDFromProfile:(A0UserProfile *)profile
-															  provider:(NSString*)provider
-															  userName:(nullable NSString*)userName
-
+- (nullable NSString *)closestMatchingAuth0IDFromProfile:(A0UserProfile *)profile
+                                                provider:(NSString *)provider
+                                                username:(nullable NSString *)username
 {
-	NSString* auth0ID = nil;
+	NSString *auth0ID = nil;
 	
 	// walk the list of identities and find closest match
 	for (id item in profile.identities)
@@ -560,7 +560,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 				
 				// if storm4 account and username matches - stop looking, you found it.
 				if( [ident.connection isEqualToString:kAuth0DBConnection_UserAuth]
-					&& [userName isEqualToString:profileData[@"username"]])
+					&& [username isEqualToString:profileData[@"username"]])
 					break;
 			}
 		}
@@ -573,320 +573,326 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 // MARK: database login
 // for an existing account - attempt to login to database account
 
--(void) databaseAccountCreateWithUserName:(NSString*)username
-											password:(NSString*)password
-								  completionBlock:(void (^)(AccountState accountState, NSError *_Nullable error))completionBlock
+- (void)databaseAccountCreateWithUserName:(NSString *)username
+                                 password:(NSString *)password
+                          completionBlock:(void (^)(AccountState accountState, NSError *_Nullable error))completionBlock
 {
-	void (^invokeCompletionBlock)(AccountState accountState, NSError * error) = ^(AccountState accountState, NSError * error){
-		
-		if (completionBlock == nil) return;
+#ifndef NS_BLOCK_ASSERTIONS
+	NSParameterAssert(username != nil);
+	NSParameterAssert(password != nil);
+	NSParameterAssert(completionBlock != nil);
+#else
+	if (completionBlock == nil) return;
+#endif
+	
+	void (^InvokeCompletionBlock)(AccountState, NSError*) = ^(AccountState accountState, NSError *error){
 		
 		if ([NSThread isMainThread])
 		{
-			completionBlock(accountState,error);
+			completionBlock(accountState, error);
 		}
 		else
 		{
 			dispatch_async(dispatch_get_main_queue(), ^{
-				completionBlock(accountState,error);
+				completionBlock(accountState, error);
 			});
 		}
 	};
 	
-	NSParameterAssert(completionBlock);
+	Auth0APIManager *auth0APIManager = [Auth0APIManager sharedInstance];
+	AWSCredentialsManager *awsCredentialsManager = owner.awsCredentialsManager;
 	
 	__weak typeof(self) weakSelf = self;
-	
-	
-	[[Auth0APIManager sharedInstance] createUserWithEmail:[Auth0Utilities create4thAEmailForUsername:username]
-																username:username
-																password:password
-													  auth0Connection: kAuth0DBConnection_UserAuth
-													  completionQueue:nil
-													  completionBlock:^(NSString * _Nullable auth0ID,
-																			  NSError * _Nullable error)
-	 {
-		 if(error)
-		 {
-			 
-			 if(self.identityMode == IdenititySelectionMode_ExistingAccount)
-				 invokeCompletionBlock(AccountState_LinkingID,error);
-			 else
-				 invokeCompletionBlock(AccountState_CreationFail,error);
-			 
-			 return;
-		 }
-		 [[Auth0APIManager sharedInstance] loginAndGetProfileWithUserName:username
-																					password:password
-																		  auth0Connection:kAuth0DBConnection_UserAuth
-																		  completionQueue:nil
-																		  completionBlock:^(NSString * _Nullable auth0_refreshToken,
-																								  A0UserProfile * _Nullable profile,
-																								  NSError * _Nullable error)
-		  {
-			  __strong typeof(self) strongSelf = weakSelf;
+	[auth0APIManager createUserWithEmail: [Auth0Utilities create4thAEmailForUsername:username]
+	                            username: username
+	                            password: password
+	                     auth0Connection: kAuth0DBConnection_UserAuth
+	                      completionQueue: nil
+	                      completionBlock:
+	^(NSString *auth0ID, NSError *error)
+	{
+		__strong typeof(self) strongSelf = weakSelf;
+		if (strongSelf == nil) return;
+		
+		if (error)
+		{
+			if (strongSelf.identityMode == IdenititySelectionMode_ExistingAccount)
+				InvokeCompletionBlock(AccountState_LinkingID, error);
+			else
+				InvokeCompletionBlock(AccountState_CreationFail, error);
+			
+			return;
+		}
+		
+		[auth0APIManager loginAndGetProfileWithUsername: username
+		                                       password: password
+		                                auth0Connection: kAuth0DBConnection_UserAuth
+		                                completionQueue: nil
+		                                completionBlock:
+		^(NSString *auth0_refreshToken, NSString *auth0_accessToken, A0UserProfile *profile, NSError *error)
+		{
+			__strong typeof(self) strongSelf = weakSelf;
+			if (strongSelf == nil) return;
 			  
-			  if(error)
-			  {
-				  
-				  if(strongSelf.identityMode == IdenititySelectionMode_ExistingAccount)
-					  invokeCompletionBlock(AccountState_LinkingID,error);
-				  else
-					  invokeCompletionBlock(AccountState_CreationFail,error);
-				  
-				  return;
-			  }
+			if (error)
+			{
+				if (strongSelf.identityMode == IdenititySelectionMode_ExistingAccount)
+					InvokeCompletionBlock(AccountState_LinkingID,error);
+				else
+					InvokeCompletionBlock(AccountState_CreationFail,error);
+				
+				return;
+			}
 			  
-			  [[Auth0APIManager sharedInstance] getAWSCredentialsWithRefreshToken:auth0_refreshToken
-																					completionQueue:nil
-																					completionBlock:^(NSDictionary *awsToken,
-																											NSError * _Nullable error)
+			[auth0APIManager getAWSCredentialsWithRefreshToken: auth0_refreshToken
+			                                   completionQueue: nil
+			                                   completionBlock:
+			^(NSDictionary *awsToken, NSError *error)
+			{
+				__strong typeof(self) strongSelf = weakSelf;
+				if (strongSelf == nil) return;
+				
+				if (error)
 				{
+					// The account signup succeeded, but the request to fetch AWS credentials failed.
+					// This is an odd edge case.
 					
-					ZDCLocalUserAuth* localUserAuth = nil;
-					NSString* localUserID = nil;
-					
-					__strong typeof(self) strongSelf = weakSelf;
-					
-					if (error)
-					{
-						// The account signup succeeded, but the request to fetch AWS credentials failed.
-						// This is an odd edge case.
-						
-						if(self.identityMode == IdenititySelectionMode_ExistingAccount)
-							invokeCompletionBlock(AccountState_LinkingID,error);
-						else
-							invokeCompletionBlock(AccountState_CreationFail,error);
-						
-						return;
-					}
-					
-					else if( [strongSelf.owner.awsCredentialsManager parseLocalUserAuth:&localUserAuth
-																										uuid:&localUserID
-																					fromDelegationToken:awsToken
-																						withRefreshToken:auth0_refreshToken] )
-					{
-						
-						if (strongSelf->identityMode == IdenititySelectionMode_NewAccount)
-						{
-							// acccount was created.
-							
-							// save what we know so far
-							strongSelf->userProfile = profile;
-							strongSelf->auth        = localUserAuth;
-							strongSelf->user        = [self createLocalUserFromProfile:profile];
-							
-							[self saveLocalUserAndAuthWithCompletion:^{
-								
-								invokeCompletionBlock(AccountState_NeedsRegionSelection, NULL);
-							}];
-						}
-						else if (strongSelf->identityMode == IdenititySelectionMode_ExistingAccount)
-						{
-							// add this profile
-							[strongSelf linkProfile: profile
-										 toLocalUserID: strongSelf->user.uuid
-									  completionQueue: dispatch_get_main_queue()
-									  completionBlock:^(NSError * _Nonnull error)
-							 {
-								 
-								 invokeCompletionBlock(AccountState_LinkingID, error);
-							 }];
-						}
-						else
-						{
-							invokeCompletionBlock(AccountState_CreationFail,
-														 [self errorWithDescription:@"Internal state error" statusCode:500] );
-							
-						}
-						
-					}
+					if (strongSelf.identityMode == IdenititySelectionMode_ExistingAccount)
+						InvokeCompletionBlock(AccountState_LinkingID,error);
 					else
-					{
-						// The account signup succeeded, but the the  AWS credentials didnt parse.
-						// This is an odd edge case.
-						
-						error = [self errorWithDescription:@"AWSCredentialsManager file" statusCode:0];
-						
-						if(self.identityMode == IdenititySelectionMode_ExistingAccount)
-							invokeCompletionBlock(AccountState_LinkingID,error);
-						else
-							invokeCompletionBlock(AccountState_CreationFail,error);
-						
-					}
+						InvokeCompletionBlock(AccountState_CreationFail,error);
 					
-				}];
-		  }];
-		 
-	 }];
-	
+					return;
+				}
+				
+				ZDCLocalUserAuth* localUserAuth = nil;
+				
+				BOOL parseSuccess =
+				  [awsCredentialsManager parseLocalUserAuth: &localUserAuth
+				                                       uuid: NULL // not needed
+				                        fromDelegationToken: awsToken
+				                           withRefreshToken: auth0_refreshToken];
+				
+				if (!parseSuccess)
+				{
+					// The account signup succeeded, but the the  AWS credentials didnt parse.
+					// This is an odd edge case.
+					
+					error = [self errorWithDescription:@"AWSCredentialsManager file" statusCode:0];
+					
+					if(self.identityMode == IdenititySelectionMode_ExistingAccount)
+						InvokeCompletionBlock(AccountState_LinkingID,error);
+					else
+						InvokeCompletionBlock(AccountState_CreationFail,error);
+					
+					return;
+				}
+				
+				if (strongSelf->identityMode == IdenititySelectionMode_NewAccount)
+				{
+					// acccount was created.
+					
+					// Save what we know so far
+					strongSelf->userProfile = profile;
+					strongSelf->auth        = localUserAuth;
+					strongSelf->user        = [self createLocalUserFromProfile:profile];
+					
+					[strongSelf saveLocalUserAndAuthWithCompletion:^{
+						InvokeCompletionBlock(AccountState_NeedsRegionSelection, nil);
+					}];
+				}
+				else if (strongSelf->identityMode == IdenititySelectionMode_ExistingAccount)
+				{
+					// add this profile
+					[strongSelf linkProfile: profile
+					          toLocalUserID: strongSelf->user.uuid
+					        completionQueue: dispatch_get_main_queue()
+					        completionBlock:^(NSError * _Nonnull error)
+					{
+						InvokeCompletionBlock(AccountState_LinkingID, error);
+					}];
+				}
+				else
+				{
+					error = [self errorWithDescription:@"Internal state error" statusCode:500];
+					InvokeCompletionBlock(AccountState_CreationFail, error);
+				}
+					
+			}];
+		}];
+	}];
 }
 
 // for an existing account - attempt to login to database account
 
--(void) databaseAccountLoginWithUserName:(NSString*)userNameIn
-										  password:(NSString*)password
-								 completionBlock:(void (^)(AccountState accountState, NSError * error))completionBlock
+- (void)databaseAccountLoginWithUsername:(NSString *)username
+                                password:(NSString *)password
+                         completionBlock:(void (^)(AccountState accountState, NSError *error))completionBlock
 {
+#ifndef NS_BLOCK_ASSERTIONS
+	NSParameterAssert(username != nil);
+	NSParameterAssert(password != nil);
+	NSParameterAssert(completionBlock != nil);
+#else
+	if (completionBlock == nil) return;
+#endif
 	
-	void (^invokeCompletionBlock)(AccountState accountState, NSError * error) = ^(AccountState accountState, NSError * error){
-		
-		if (completionBlock == nil) return;
+	void (^InvokeCompletionBlock)(AccountState, NSError*) = ^(AccountState accountState, NSError *error){
 		
 		if ([NSThread isMainThread])
 		{
-			completionBlock(accountState,error);
+			completionBlock(accountState, error);
 		}
 		else
 		{
 			dispatch_async(dispatch_get_main_queue(), ^{
-				completionBlock(accountState,error);
+				completionBlock(accountState, error);
 			});
 		}
 	};
 	
-	NSParameterAssert(completionBlock);
+	Auth0APIManager *auth0APIManager = [Auth0APIManager sharedInstance];
+	AWSCredentialsManager *awsCredentialsManager = owner.awsCredentialsManager;
+	
+	dispatch_queue_t backgroundQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
 	__weak typeof(self) weakSelf = self;
-	
-	[[Auth0APIManager sharedInstance] loginAndGetProfileWithUserName:userNameIn
-																			  password:password
-																	 auth0Connection:kAuth0DBConnection_UserAuth
-																	 completionQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-																	 completionBlock:^(NSString * _Nullable auth0_refreshToken,
-																							 A0UserProfile * _Nullable profile,
-																							 NSError * _Nullable error)
-	 {
-		 __strong typeof(self) strongSelf = weakSelf;
-		 if(!strongSelf) return;
+	[auth0APIManager loginAndGetProfileWithUsername: username
+	                                       password: password
+	                                auth0Connection: kAuth0DBConnection_UserAuth
+	                                completionQueue: backgroundQueue
+	                                completionBlock:
+	^(NSString *refreshToken, NSString *accessToken, A0UserProfile *profile, NSError *error)
+	{
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
 		 
-		 if(error)
-		 {
-			 
-			 if(strongSelf.identityMode == IdenititySelectionMode_ExistingAccount)
-				 invokeCompletionBlock(AccountState_LinkingID,error);
-			 else
-				 invokeCompletionBlock(AccountState_CreationFail,error);
-		 }
+		if (error)
+		{
+			if (strongSelf.identityMode == IdenititySelectionMode_ExistingAccount)
+				InvokeCompletionBlock(AccountState_LinkingID, error);
+			else
+				InvokeCompletionBlock(AccountState_CreationFail, error);
+			
+			return;
+		}
 		 
-		 // did the user attempt to reauthoize with an account that wasnt linked.
-		 
-		 else if(strongSelf.identityMode == IdenititySelectionMode_ReauthorizeAccount
-					&& ![strongSelf.user.uuid isEqualToString:profile.appMetadata[@"aws_id"]])
-		 {
-			 
-			 invokeCompletionBlock(AccountState_Reauthorized,
-										  [self errorWithDescription:@"This identity is not linked to your account."
-																statusCode:0]);
-			 return;
-		 }
-		 else
-		 {
-			 [[Auth0APIManager sharedInstance] getAWSCredentialsWithRefreshToken:auth0_refreshToken
-																				  completionQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-																				  completionBlock:^(NSDictionary *awsToken, NSError * _Nullable error)
-			  {
-				  __strong typeof(self) strongSelf = weakSelf;
-				  if(!strongSelf) return;
+		// Did the user attempt to reauthoize with an account that isn't linked ?
+		//
+		if (strongSelf.identityMode == IdenititySelectionMode_ReauthorizeAccount
+		 && ![strongSelf.user.uuid isEqual:profile.appMetadata[@"aws_id"]])
+		{
+			NSString *msg = @"This identity is not linked to your account.";
+			error = [self errorWithDescription:msg statusCode:0];
+			
+			InvokeCompletionBlock(AccountState_Reauthorized, error);
+			return;
+		}
+		
+		[auth0APIManager getAWSCredentialsWithRefreshToken: refreshToken
+		                                   completionQueue: backgroundQueue
+		                                   completionBlock:
+		^(NSDictionary *awsToken, NSError *error)
+		{
+			__strong typeof(self) strongSelf = weakSelf;
+			if (!strongSelf) return;
 				  
-				  if(error)
-				  {
-					  
-					  if(strongSelf.identityMode == IdenititySelectionMode_ExistingAccount)
-						  invokeCompletionBlock(AccountState_LinkingID,error);
-					  else
-						  invokeCompletionBlock(AccountState_CreationFail,error);
-				  }
-				  else
-				  {
-					  
-					  ZDCLocalUserAuth* newAuth = nil;
-					  NSString* localUserID = nil;
-					  
-					  if( [strongSelf->owner.awsCredentialsManager parseLocalUserAuth:&newAuth
-																									 uuid:&localUserID
-																				 fromDelegationToken:awsToken
-																					 withRefreshToken:auth0_refreshToken] )
-					  {
-						  __strong typeof(self) strongSelf = weakSelf;
-						  if (!strongSelf) return;
-						  
-						  NSDictionary  *app_metadata = profile.extraInfo[kZDCUser_metadataKey];
-						  NSString    	*preferedAuth0ID = app_metadata[kZDCUser_metadata_preferedAuth0ID];
-						  
-						  if(!preferedAuth0ID)
-						  {
-							  preferedAuth0ID = [strongSelf  closestMatchingAuth0IDFromProfile:profile
-																										 provider:A0StrategyNameAuth0
-																										 userName:userNameIn ];
-						  }
-						  
-						  if(strongSelf.identityMode == IdenititySelectionMode_NewAccount)
-						  {
-							  [strongSelf startUserCreationWithAuth:newAuth
-																	  profile:profile
-															preferedAuth0ID:preferedAuth0ID
-															completionBlock:completionBlock ];
-							  
-						  }
-						  else if(strongSelf.identityMode == IdenititySelectionMode_ExistingAccount)
-						  {
-							  [strongSelf linkProfile: profile
-											toLocalUserID: self->user.uuid
-										 completionQueue: dispatch_get_main_queue()
-										 completionBlock:^(NSError *error) {
-											 invokeCompletionBlock(AccountState_LinkingID,error);
-										 }];
-						  }
-						  else if(strongSelf.identityMode == IdenititySelectionMode_ReauthorizeAccount)
-						  {
-							  [strongSelf reauthorizeUserID:self->user.uuid
-												withRefreshToken:newAuth.auth0_refreshToken
-												 completionBlock:^(NSError *error) {
+			if (error)
+			{
+				if (strongSelf.identityMode == IdenititySelectionMode_ExistingAccount)
+					InvokeCompletionBlock(AccountState_LinkingID,error);
+				else
+					InvokeCompletionBlock(AccountState_CreationFail,error);
+				
+				return;
+			}
+			
+			ZDCLocalUserAuth *newAuth = nil;
+			NSString *localUserID = nil;
+			
+			BOOL parseSuccess =
+			  [awsCredentialsManager parseLocalUserAuth: &newAuth
+			                                       uuid: &localUserID
+			                        fromDelegationToken: awsToken
+			                           withRefreshToken: refreshToken];
+			
+			if (!parseSuccess)
+			{
+				// The login succeeded, but the the AWS credentials didn't parse.
+				// This is an odd edge case.
+				
+				error = [self errorWithDescription:@"AWSCredentialsManager file" statusCode:0];
+				
+				if (self.identityMode == IdenititySelectionMode_ExistingAccount)
+					InvokeCompletionBlock(AccountState_LinkingID, error);
+				else
+					InvokeCompletionBlock(AccountState_CreationFail, error);
+				
+				return;
+			}
+			
+			NSDictionary *app_metadata = profile.extraInfo[kZDCUser_metadataKey];
+			NSString *preferredAuth0ID = app_metadata[kZDCUser_metadata_preferredAuth0ID];
+			
+			if (!preferredAuth0ID)
+			{
+				preferredAuth0ID =
+				  [strongSelf closestMatchingAuth0IDFromProfile: profile
+				                                       provider: A0StrategyNameAuth0
+				                                       username: username];
+			}
+			
+			if (strongSelf.identityMode == IdenititySelectionMode_NewAccount)
+			{
+				[strongSelf startUserCreationWithAuth: newAuth
+				                              profile: profile
+				                     preferredAuth0ID: preferredAuth0ID
+				                      completionBlock: completionBlock];
+			}
+			else if (strongSelf.identityMode == IdenititySelectionMode_ExistingAccount)
+			{
+				[strongSelf linkProfile: profile
+				          toLocalUserID: strongSelf->user.uuid
+				        completionQueue: dispatch_get_main_queue()
+				        completionBlock:^(NSError *error)
+				{
+					
+					InvokeCompletionBlock(AccountState_LinkingID,error);
+				}];
+			}
+			else if (strongSelf.identityMode == IdenititySelectionMode_ReauthorizeAccount)
+			{
+				[strongSelf reauthorizeUserID: strongSelf->user.uuid
+				             withRefreshToken: newAuth.auth0_refreshToken
+				              completionBlock:^(NSError *error)
+				{
 													 
-													 invokeCompletionBlock(AccountState_Reauthorized,error);
-													 
-												 }];
-						  }
-						  else
-						  {
-							  invokeCompletionBlock(AccountState_CreationFail,
-															[self errorWithDescription:@"Internal state error" statusCode:500] );
-						  }
-					  }
-					  else
-					  {
-						  error = [self errorWithDescription:@"AWSCredentialsManager file" statusCode:0];
-						  
-						  if(self.identityMode == IdenititySelectionMode_ExistingAccount)
-							  invokeCompletionBlock(AccountState_LinkingID,error);
-						  else
-							  invokeCompletionBlock(AccountState_CreationFail,error);
-						  
-					  }
-					  
-				  }
-			  }];
-		 }
-		 
-	 }];
+					InvokeCompletionBlock(AccountState_Reauthorized,error);
+				}];
+			}
+			else
+			{
+				error = [self errorWithDescription:@"Internal state error" statusCode:500];
+				InvokeCompletionBlock(AccountState_CreationFail, error);
+			}
+		}];
+	
+	}];
 }
 
 
 
 // MARK: social account login
 // entrypoint for 
--(void) socialAccountLoginWithAuth:(ZDCLocalUserAuth *)localUserAuth
-									profile:(A0UserProfile *)profile
-						 preferedAuth0ID:(NSString* __nonnull)preferedAuth0ID
-						 completionBlock:(void (^)(AccountState accountState, NSError * error))completionBlock
+- (void)socialAccountLoginWithAuth:(ZDCLocalUserAuth *)localUserAuth
+                           profile:(A0UserProfile *)profile
+                  preferredAuth0ID:(NSString *)preferredAuth0ID
+                   completionBlock:(void (^)(AccountState accountState, NSError * error))completionBlock
 {
-	
-	[self startUserCreationWithAuth:localUserAuth
-									profile:profile
-						 preferedAuth0ID:preferedAuth0ID
-						 completionBlock:completionBlock ];
-	
+	[self startUserCreationWithAuth: localUserAuth
+	                        profile: profile
+	               preferredAuth0ID: preferredAuth0ID
+	                completionBlock: completionBlock];
 }
 
 
@@ -1181,10 +1187,10 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	
 }
 
--(void) startUserCreationWithAuth:(ZDCLocalUserAuth *)localUserAuth
-								  profile:(A0UserProfile *)profile
-						preferedAuth0ID:(NSString* __nonnull)preferedAuth0ID
-						completionBlock:(void (^)(AccountState accountState, NSError * error))completionBlock
+- (void)startUserCreationWithAuth:(ZDCLocalUserAuth *)localUserAuth
+                          profile:(A0UserProfile *)profile
+                 preferredAuth0ID:(NSString *)preferredAuth0ID
+                  completionBlock:(void (^)(AccountState accountState, NSError *error))completionBlock
 {
 	
 	void (^InvokeCompletionBlock)(AccountState, NSError*) =
@@ -1236,10 +1242,10 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	auth        = localUserAuth;
 	user        = existingAccount ?existingAccount :[self createLocalUserFromProfile:profile];
 	
-	if(preferedAuth0ID)
+	if (preferredAuth0ID)
 	{
-		user = user.copy;
-		user.auth0_preferredID = preferedAuth0ID;
+		user = [user copy];
+		user.auth0_preferredID = preferredAuth0ID;
 	}
 	
 	[self saveLocalUserAndAuthWithCompletion:^{

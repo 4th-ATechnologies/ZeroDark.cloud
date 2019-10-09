@@ -28,7 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 extern NSString *const kZDCAnonymousUserID;
 
 extern NSString *const kZDCUser_metadataKey;
-extern NSString *const kZDCUser_metadata_preferedAuth0ID;
+extern NSString *const kZDCUser_metadata_preferredAuth0ID;
 
 /**
  * Represents a user in the system.

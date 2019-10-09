@@ -236,26 +236,26 @@ replacementString:(NSString *)string
 - (void)tryDatabaseLoginWithEmail:(NSString *)email
                          password:(NSString *)password
 {
-    ZDCLogAutoTrace();
-    _lblFail.hidden = YES;
-    _btnSignIn.enabled = NO;
+	ZDCLogAutoTrace();
+	
+	_lblFail.hidden = YES;
+	_btnSignIn.enabled = NO;
 
-    __weak typeof(self) weakSelf = self;
-    
-    [self showWait:YES];
-   
-	[accountSetupVC databaseAccountLoginWithUserName: email
-	                                password: password
-	                         completionBlock:^(AccountState accountState, NSError *error)
-	 {
-		 __strong typeof(self) strongSelf = weakSelf;
-		 if (!strongSelf) return;
+	[self showWait:YES];
+	
+	__weak typeof(self) weakSelf = self;
+	[accountSetupVC databaseAccountLoginWithUsername: email
+	                                        password: password
+	                                 completionBlock:^(AccountState accountState, NSError *error)
+	{
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
 
-		 [strongSelf showWait:NO];
-		 [strongSelf.accountSetupVC cancelWait];
+		[strongSelf showWait:NO];
+		[strongSelf.accountSetupVC cancelWait];
 
-		 if(error)
-		 {
+		if (error)
+		{
 			 NSString* errorString = error.localizedDescription;
 
 			 if([strongSelf->accountSetupVC isAlreadyLinkedError:error])

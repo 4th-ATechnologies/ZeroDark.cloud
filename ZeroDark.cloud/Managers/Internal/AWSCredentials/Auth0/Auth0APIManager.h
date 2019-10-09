@@ -20,33 +20,50 @@ extern NSString *const Auth0APIManagerErrorDomain;
 
 + (Auth0APIManager *)sharedInstance;
 
+/**
+ * Uses the '/dbconnections/signup' API to create a new traditional user,
+ * using a username & password.
+ */
 - (void)createUserWithEmail:(NSString *)email
                    username:(NSString *)username
                    password:(NSString *)password
-            auth0Connection:(nullable NSString *)auth0Connection  // defaults to kAuth0DBConnection_UserAuth
+            auth0Connection:(NSString *)auth0Connection
             completionQueue:(nullable dispatch_queue_t)completionQueue
-            completionBlock:(void (^)(NSString *_Nullable auth0ID, NSError *_Nullable error))completionBlock;
+            completionBlock:(void (^)(NSString *_Nullable auth0ID,
+                                      NSError *_Nullable error))completionBlock;
 
-- (void)loginWithUserName:(NSString *)userName
+/**
+ * Attempts to login using the given credentials.
+ *
+ * On success, a refreshToken is returned (via the completionBlock).
+ * Otherwise an error returned.
+ */
+- (void)loginWithUsername:(NSString *)username
                  password:(NSString *)password
           auth0Connection:(NSString *)auth0Connection
           completionQueue:(nullable dispatch_queue_t)completionQueue
           completionBlock:(void (^)(NSString *_Nullable auth0_refreshToken,
-                                     NSError *_Nullable error))completionBlock;
+                                    NSError *_Nullable error))completionBlock;
 
-- (void)loginAndGetProfileWithUserName:(NSString *)userName
+- (void)loginAndGetProfileWithUsername:(NSString *)username
                               password:(NSString *)password
                        auth0Connection:(NSString *)auth0Connection
                        completionQueue:(nullable dispatch_queue_t)completionQueue
                        completionBlock:(void (^)(NSString *_Nullable auth0_refreshToken,
+                                                 NSString *_Nullable auth0_accessToken,
                                                  A0UserProfile *_Nullable profile,
                                                  NSError *_Nullable error))completionBlock;
 
--(void) getAccessTokenWithRefreshToken:(NSString *)auth0_refreshToken
-					   completionQueue:(nullable dispatch_queue_t)inCompletionQueue
-					   completionBlock:(void (^)(NSString * _Nullable auth0_accessToken,
-												 NSDate*	_Nullable 	auth0_expiration,
-												 NSError *_Nullable error))completionBlock;
+/**
+ * Trades a refreshToken for an accessToken.
+ *
+ * A refreshToken is an opaque token that doesn't expire (although it can be revoked).
+ * An accessToken is a JWT the expires after a set amount of time.
+ */
+- (void)getAccessTokenWithRefreshToken:(NSString *)auth0_refreshToken
+                       completionQueue:(nullable dispatch_queue_t)completionQueue
+                       completionBlock:(void (^)(NSString * _Nullable auth0_accessToken,
+                                                 NSError *_Nullable error))completionBlock;
 
 -(void) getUserProfileWithAccessToken:(NSString*)auth0_accessToken
 					  completionQueue:(nullable dispatch_queue_t)inCompletionQueue

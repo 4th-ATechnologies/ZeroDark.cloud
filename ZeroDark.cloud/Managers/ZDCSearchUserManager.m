@@ -716,7 +716,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
                     
                      if(user_metadata)
                      {
-                         NSString* auth0_preferredID = [user_metadata objectForKey:kZDCUser_metadata_preferedAuth0ID];
+                         NSString* auth0_preferredID = [user_metadata objectForKey:kZDCUser_metadata_preferredAuth0ID];
                          if(auth0_preferredID.length)
                          {
                              result.auth0_preferredID = auth0_preferredID;

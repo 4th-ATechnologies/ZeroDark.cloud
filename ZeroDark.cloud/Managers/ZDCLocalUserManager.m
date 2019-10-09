@@ -744,7 +744,7 @@ done:
 			}
 		}
 		
-		NSString *preferedAuth0ID 	= user_metadata[kZDCUser_metadata_preferedAuth0ID];
+		NSString *preferedAuth0ID 	= user_metadata[kZDCUser_metadata_preferredAuth0ID];
 		if (!preferedAuth0ID)
 		{
 			preferedAuth0ID = [Auth0Utilities firstAvailableAuth0IDFromProfiles:auth0_profiles];
@@ -1387,12 +1387,12 @@ done:
 
 	loginToAccount = ^{ @autoreleasepool {
 
-		[[Auth0APIManager sharedInstance] loginAndGetProfileWithUserName: recoveryUsername
+		[[Auth0APIManager sharedInstance] loginAndGetProfileWithUsername: recoveryUsername
 		                                                        password: recoveryPassword
 		                                                 auth0Connection: kAuth0DBConnection_Recovery
 		                                                 completionQueue: queue
 		                                                 completionBlock:
-		  ^(NSString *auth0_refreshToken, A0UserProfile *profile, NSError *error)
+		^(NSString *auth0_refreshToken, NSString *auth0_accessToken, A0UserProfile *profile, NSError *error)
 		{
 			if (error)
 			{

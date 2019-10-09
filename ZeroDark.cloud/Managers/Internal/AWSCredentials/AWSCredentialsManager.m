@@ -379,10 +379,13 @@
 
 			// arn:aws:sts::823589531544:assumed-role/auth0-role/b3o8qh8gy4fzfiwrrho3wd9dtjypryue
 
-			NSArray *array = [value componentsSeparatedByCharactersInSet:
-							  [NSCharacterSet characterSetWithCharactersInString:@":/"]];
-			if(array.count)
+			NSCharacterSet *seperators = [NSCharacterSet characterSetWithCharactersInString:@":/"];
+			NSArray *array = [value componentsSeparatedByCharactersInSet:seperators];
+		
+			if (array.count) {
 				uuid = [array lastObject];
+			}
+				
 		}
 	}
 

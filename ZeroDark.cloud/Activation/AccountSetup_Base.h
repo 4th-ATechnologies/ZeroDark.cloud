@@ -141,25 +141,27 @@ NS_ASSUME_NONNULL_BEGIN
 
 -(void) handleInternalError:(NSError*)error;
 
--(nullable NSString*) closestMatchingAuth0IDFromProfile:(A0UserProfile *)profile
-                                               provider:(NSString*)provider
-                                               userName:(nullable NSString*)userName;
+- (nullable NSString *)closestMatchingAuth0IDFromProfile:(A0UserProfile *)profile
+                                                provider:(NSString *)provider
+                                                username:(nullable NSString *)username;
 
 // for an existing account - attempt to login to database account
--(void) databaseAccountLoginWithUserName:(NSString*)userName
-						password:(NSString*)password
-				 completionBlock:(void (^)(AccountState accountState, NSError *_Nullable error))completionBlock;
+- (void)databaseAccountLoginWithUsername:(NSString *)username
+                                password:(NSString *)password
+                         completionBlock:(void (^)(AccountState accountState, NSError *_Nullable error))completionBlock;
 
 // for an new account - attempt to create a database account
 -(void) databaseAccountCreateWithUserName:(NSString*)userName
 						   password:(NSString*)password
 				 completionBlock:(void (^)(AccountState accountState, NSError *_Nullable error))completionBlock;
 
-// for login using social accounts (facebook, google etc..)
--(void) socialAccountLoginWithAuth:(ZDCLocalUserAuth *)localUserAuth
-                          profile:(A0UserProfile *)profile
-                  preferedAuth0ID:(NSString* __nonnull)preferedAuth0ID
-                  completionBlock:(void (^)(AccountState accountState, NSError *_Nullable error))completionBlock;
+/**
+ * For login using social accounts (facebook, google etc..)
+ */
+- (void) socialAccountLoginWithAuth:(ZDCLocalUserAuth *)localUserAuth
+                           profile:(A0UserProfile *)profile
+                  preferredAuth0ID:(NSString *)preferedAuth0ID
+                   completionBlock:(void (^)(AccountState accountState, NSError *_Nullable error))completionBlock;
 
 // resume activation given any state
 -(void) resumeActivationForUserID:(NSString*)userID

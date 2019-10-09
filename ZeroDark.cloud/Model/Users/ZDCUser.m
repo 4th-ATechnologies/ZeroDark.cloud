@@ -36,7 +36,7 @@ static NSString *const k_auth0_lastUpdated     = @"auth0_updated_at"; // histori
 
 /* extern */ NSString *const kZDCAnonymousUserID = @"anonymoususerid1"; // must 16 characters & zBase32
 /* extern */ NSString *const kZDCUser_metadataKey =  @"user_metadata";
-/* extern */ NSString *const kZDCUser_metadata_preferedAuth0ID =  @"preferredAuth0ID";
+/* extern */ NSString *const kZDCUser_metadata_preferredAuth0ID =  @"preferredAuth0ID";
 
 
 @implementation ZDCUser
