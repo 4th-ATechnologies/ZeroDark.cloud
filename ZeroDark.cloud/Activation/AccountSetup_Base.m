@@ -608,8 +608,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	                            password: password
 	                     auth0Connection: kAuth0DBConnection_UserAuth
 	                      completionQueue: nil
-	                      completionBlock:
-	^(NSString *auth0ID, NSError *error)
+	                      completionBlock:^(NSString *auth0ID, NSError *error)
 	{
 		__strong typeof(self) strongSelf = weakSelf;
 		if (strongSelf == nil) return;
@@ -628,8 +627,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 		                                       password: password
 		                                auth0Connection: kAuth0DBConnection_UserAuth
 		                                completionQueue: nil
-		                                completionBlock:
-		^(NSString *auth0_refreshToken, NSString *auth0_accessToken, A0UserProfile *profile, NSError *error)
+		                                completionBlock:^(Auth0LoginProfileResult *result, NSError *error)
 		{
 			__strong typeof(self) strongSelf = weakSelf;
 			if (strongSelf == nil) return;
@@ -644,10 +642,9 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 				return;
 			}
 			  
-			[auth0APIManager getAWSCredentialsWithRefreshToken: auth0_refreshToken
+			[auth0APIManager getAWSCredentialsWithRefreshToken: result.refreshToken
 			                                   completionQueue: nil
-			                                   completionBlock:
-			^(NSDictionary *awsToken, NSError *error)
+			                                   completionBlock:^(NSDictionary *delegation, NSError *error)
 			{
 				__strong typeof(self) strongSelf = weakSelf;
 				if (strongSelf == nil) return;
@@ -669,9 +666,9 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 				
 				BOOL parseSuccess =
 				  [awsCredentialsManager parseLocalUserAuth: &localUserAuth
-				                                       uuid: NULL // not needed
-				                        fromDelegationToken: awsToken
-				                           withRefreshToken: auth0_refreshToken];
+				                             fromDelegation: delegation
+				                               refreshToken: result.refreshToken
+				                                    idToken: result.idToken];
 				
 				if (!parseSuccess)
 				{
@@ -693,9 +690,9 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 					// acccount was created.
 					
 					// Save what we know so far
-					strongSelf->userProfile = profile;
+					strongSelf->userProfile = result.profile;
 					strongSelf->auth        = localUserAuth;
-					strongSelf->user        = [self createLocalUserFromProfile:profile];
+					strongSelf->user        = [self createLocalUserFromProfile:result.profile];
 					
 					[strongSelf saveLocalUserAndAuthWithCompletion:^{
 						InvokeCompletionBlock(AccountState_NeedsRegionSelection, nil);
@@ -704,7 +701,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 				else if (strongSelf->identityMode == IdenititySelectionMode_ExistingAccount)
 				{
 					// add this profile
-					[strongSelf linkProfile: profile
+					[strongSelf linkProfile: result.profile
 					          toLocalUserID: strongSelf->user.uuid
 					        completionQueue: dispatch_get_main_queue()
 					        completionBlock:^(NSError * _Nonnull error)
@@ -761,8 +758,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	                                       password: password
 	                                auth0Connection: kAuth0DBConnection_UserAuth
 	                                completionQueue: backgroundQueue
-	                                completionBlock:
-	^(NSString *refreshToken, NSString *accessToken, A0UserProfile *profile, NSError *error)
+	                                completionBlock:^(Auth0LoginProfileResult *result, NSError *error)
 	{
 		__strong typeof(self) strongSelf = weakSelf;
 		if (!strongSelf) return;
@@ -780,7 +776,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 		// Did the user attempt to reauthoize with an account that isn't linked ?
 		//
 		if (strongSelf.identityMode == IdenititySelectionMode_ReauthorizeAccount
-		 && ![strongSelf.user.uuid isEqual:profile.appMetadata[@"aws_id"]])
+		 && ![strongSelf.user.uuid isEqual:result.profile.appMetadata[@"aws_id"]])
 		{
 			NSString *msg = @"This identity is not linked to your account.";
 			error = [self errorWithDescription:msg statusCode:0];
@@ -789,10 +785,9 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 			return;
 		}
 		
-		[auth0APIManager getAWSCredentialsWithRefreshToken: refreshToken
+		[auth0APIManager getAWSCredentialsWithRefreshToken: result.refreshToken
 		                                   completionQueue: backgroundQueue
-		                                   completionBlock:
-		^(NSDictionary *awsToken, NSError *error)
+		                                   completionBlock:^(NSDictionary *delegation, NSError *error)
 		{
 			__strong typeof(self) strongSelf = weakSelf;
 			if (!strongSelf) return;
@@ -808,13 +803,12 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 			}
 			
 			ZDCLocalUserAuth *newAuth = nil;
-			NSString *localUserID = nil;
 			
 			BOOL parseSuccess =
 			  [awsCredentialsManager parseLocalUserAuth: &newAuth
-			                                       uuid: &localUserID
-			                        fromDelegationToken: awsToken
-			                           withRefreshToken: refreshToken];
+			                             fromDelegation: delegation
+			                               refreshToken: result.refreshToken
+			                                    idToken: result.idToken];
 			
 			if (!parseSuccess)
 			{
@@ -831,13 +825,13 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 				return;
 			}
 			
-			NSDictionary *app_metadata = profile.extraInfo[kZDCUser_metadataKey];
+			NSDictionary *app_metadata = result.profile.extraInfo[kZDCUser_metadataKey];
 			NSString *preferredAuth0ID = app_metadata[kZDCUser_metadata_preferredAuth0ID];
 			
 			if (!preferredAuth0ID)
 			{
 				preferredAuth0ID =
-				  [strongSelf closestMatchingAuth0IDFromProfile: profile
+				  [strongSelf closestMatchingAuth0IDFromProfile: result.profile
 				                                       provider: A0StrategyNameAuth0
 				                                       username: username];
 			}
@@ -845,13 +839,13 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 			if (strongSelf.identityMode == IdenititySelectionMode_NewAccount)
 			{
 				[strongSelf startUserCreationWithAuth: newAuth
-				                              profile: profile
+				                              profile: result.profile
 				                     preferredAuth0ID: preferredAuth0ID
 				                      completionBlock: completionBlock];
 			}
 			else if (strongSelf.identityMode == IdenititySelectionMode_ExistingAccount)
 			{
-				[strongSelf linkProfile: profile
+				[strongSelf linkProfile: result.profile
 				          toLocalUserID: strongSelf->user.uuid
 				        completionQueue: dispatch_get_main_queue()
 				        completionBlock:^(NSError *error)

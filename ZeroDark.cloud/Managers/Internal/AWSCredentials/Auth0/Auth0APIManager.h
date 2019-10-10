@@ -12,9 +12,10 @@
 #import "A0UserProfile.h"
 #import "Auth0API.h"
 
-NS_ASSUME_NONNULL_BEGIN
+@class Auth0LoginResult;
+@class Auth0LoginProfileResult;
 
-extern NSString *const Auth0APIManagerErrorDomain;
+NS_ASSUME_NONNULL_BEGIN
 
 @interface Auth0APIManager : NSObject
 
@@ -42,16 +43,17 @@ extern NSString *const Auth0APIManagerErrorDomain;
                  password:(NSString *)password
           auth0Connection:(NSString *)auth0Connection
           completionQueue:(nullable dispatch_queue_t)completionQueue
-          completionBlock:(void (^)(NSString *_Nullable auth0_refreshToken,
+          completionBlock:(void (^)(Auth0LoginResult *_Nullable result,
                                     NSError *_Nullable error))completionBlock;
 
+/**
+ * Combines login with the standard flow of fetching the user's profile.
+ */
 - (void)loginAndGetProfileWithUsername:(NSString *)username
                               password:(NSString *)password
                        auth0Connection:(NSString *)auth0Connection
                        completionQueue:(nullable dispatch_queue_t)completionQueue
-                       completionBlock:(void (^)(NSString *_Nullable auth0_refreshToken,
-                                                 NSString *_Nullable auth0_accessToken,
-                                                 A0UserProfile *_Nullable profile,
+                       completionBlock:(void (^)(Auth0LoginProfileResult *_Nullable result,
                                                  NSError *_Nullable error))completionBlock;
 
 /**
@@ -65,15 +67,18 @@ extern NSString *const Auth0APIManagerErrorDomain;
                        completionBlock:(void (^)(NSString * _Nullable auth0_accessToken,
                                                  NSError *_Nullable error))completionBlock;
 
--(void) getUserProfileWithAccessToken:(NSString*)auth0_accessToken
-					  completionQueue:(nullable dispatch_queue_t)inCompletionQueue
-					  completionBlock:(void (^)(A0UserProfile * _Nullable a0Profile ,
-												NSError *_Nullable error))completionBlock;
+/**
+ * Fetches the user's profile (which requires a valid accessToken).
+ */
+- (void)getUserProfileWithAccessToken:(NSString *)auth0_accessToken
+                      completionQueue:(nullable dispatch_queue_t)completionQueue
+                      completionBlock:(void (^)(A0UserProfile *_Nullable profile,
+                                                NSError *_Nullable error))completionBlock;
 
--(void) getAWSCredentialsWithRefreshToken:(NSString *)auth0_refreshToken
-						  completionQueue:(nullable dispatch_queue_t)inCompletionQueue
-						  completionBlock:(void (^)(NSDictionary * _Nullable delegationToken,
-													NSError *_Nullable error))completionBlock;
+- (void)getAWSCredentialsWithRefreshToken:(NSString *)auth0_refreshToken
+                          completionQueue:(nullable dispatch_queue_t)inCompletionQueue
+                          completionBlock:(void (^)(NSDictionary *_Nullable delegationToken,
+                                                    NSError *_Nullable error))completionBlock;
 
 -(NSURL*) socialQueryURLforStrategyName:(NSString*)strategyName
 					  callBackURLScheme:(NSString*)callBackURLScheme
@@ -85,6 +90,39 @@ extern NSString *const Auth0APIManagerErrorDomain;
 						a0Token:(A0Token * _Nullable*_Nullable) a0TokenOut
 					  CSRFState:(NSString * _Nullable*_Nullable) CSRFStateOut
 						  error:(NSError ** _Nullable)errorOut;
+@end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+@interface Auth0LoginResult: NSObject
+
+/**
+ * The refreshToken is a persistent token that never expires (although it can be manually revoked).
+ * It can be used in the future to fetch either an idToken (JWT) or an accessToken.
+ */
+@property (nonatomic, copy, readonly) NSString *refreshToken;
+
+/**
+ * An idToken is a JWT with an expiration.
+ * This can be used to fetch AWS credentials.
+ */
+@property (nonatomic, copy, readonly) NSString *idToken;
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+@interface Auth0LoginProfileResult : Auth0LoginResult
+
+/**
+ * The Auth0 user profile, including all linked identities.
+ */
+@property (nonatomic, strong, readonly) A0UserProfile *profile;
+
 @end
 
 NS_ASSUME_NONNULL_END

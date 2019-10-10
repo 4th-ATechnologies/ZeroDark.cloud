@@ -42,17 +42,30 @@ typedef NS_ENUM(NSInteger, AWSCredentialsErrorCode) {
  * Fetches the AWS credentials for the given ZDCLocalUser.uuid.
  *
  * If cached credentials are available (and not expired), they'll be used.
- * Otherwise the manager will attempt to refresh the AWS credentials using the refreshToken.
+ * Otherwise the manager will attempt to refresh the AWS credentials using the user's refreshToken.
  */
 - (void)getAWSCredentialsForUser:(NSString *)userID
                  completionQueue:(dispatch_queue_t)completionQueue
                  completionBlock:(void (^)(ZDCLocalUserAuth *auth, NSError *error))completionBlock;
 
+/**
+ * Deletes the user's AWS credentials, by deleting the corresponding properties in ZDCLocalUserAuth.
+ *
+ * If the `deleteRefreshToken` parameter is TRUE, then:
+ * - ZDCLocalUserAuth.auth0_refreshToken will be deleted
+ * - ZDCLocalUser.accountNeedsA0Token will be set to TRUE
+ *
+ * Use this as a way to force-logout the user, without actually deleting the localUser account.
+ * This might be done, for example, if the user's account is blocked due to non-payment.
+ */
 - (void)flushAWSCredentialsForUserID:(NSString *)userID
                   deleteRefreshToken:(BOOL)deleteRefreshToken
                      completionQueue:(dispatch_queue_t)completionQueue
                      completionBlock:(dispatch_block_t)completionBlock;
 
+/**
+ * After the user logs back into the system, this can be used to reset & restart the authentication flow.
+ */
 - (void)reauthorizeAWSCredentialsForUserID:(NSString *)userID
                           withRefreshToken:(NSString *)refreshToken
                            completionQueue:(dispatch_queue_t)completionQueue
@@ -64,8 +77,8 @@ typedef NS_ENUM(NSInteger, AWSCredentialsErrorCode) {
  * Utility method for parsing the delegation dictionary returned from the server.
  */
 - (BOOL)parseLocalUserAuth:(ZDCLocalUserAuth **)localUserAuth
-                      uuid:(NSString **)uuid
-       fromDelegationToken:(NSDictionary *)delegationToken
-          withRefreshToken:(NSString *)refreshToken;
+            fromDelegation:(NSDictionary *)delegationToken
+              refreshToken:(NSString *)refreshToken
+                   idToken:(NSString *)idToken;
 
 @end

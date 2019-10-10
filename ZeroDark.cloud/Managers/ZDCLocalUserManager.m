@@ -1392,7 +1392,7 @@ done:
 		                                                 auth0Connection: kAuth0DBConnection_Recovery
 		                                                 completionQueue: queue
 		                                                 completionBlock:
-		^(NSString *auth0_refreshToken, NSString *auth0_accessToken, A0UserProfile *profile, NSError *error)
+		^(Auth0LoginProfileResult *result, NSError *error)
 		{
 			if (error)
 			{
@@ -1400,8 +1400,8 @@ done:
 				return;
 			}
 
-			recovery_auth0ID = profile.userId;
-			recovery_refreshToken = auth0_refreshToken;
+			recovery_auth0ID = result.profile.userId;
+			recovery_refreshToken = result.refreshToken;
 
 			// Next step
 			linkRecoveryID();

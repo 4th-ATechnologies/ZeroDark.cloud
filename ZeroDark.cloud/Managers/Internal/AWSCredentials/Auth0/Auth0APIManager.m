@@ -20,36 +20,78 @@
 #import <UIKit/UIKit.h> // For [[UIDevice currentDevice] name]
 #endif
 
-#pragma mark - Auth0APIManager
+// Auth0 parameters
+NSString * const A0ParameterClientID     = @"client_id";
+NSString * const A0ParameterEmail        = @"email";
+NSString * const A0ParameterUsername     = @"username";
+NSString * const A0ParameterPassword     = @"password";
+NSString * const A0ParameterScope        = @"scope";
+NSString * const A0ParameterDevice       = @"device";
+NSString * const A0ParameterGrantType    = @"grant_type";
+NSString * const A0ParameterAPIType      = @"api_type";
+NSString * const A0ParameterRefreshToken = @"refresh_token";
+NSString * const A0ParameterIdToken      = @"id_token";
+NSString * const A0ParameterRealm        = @"realm";
+NSString * const A0ParameterState        = @"state";
+NSString * const A0ParameterRedirectURI  = @"redirect_uri";
+NSString * const A0ParameterResponseType = @"response_type";
+NSString * const A0ParameterConnection   = @"connection";
 
 #define TRACK_DEVICE 1
 
-@implementation Auth0APIManager
 
-static ZDCAsyncCompletionDispatch *pendingRequests;
+@implementation Auth0LoginResult
 
-/// Auth0 values
-static NSString * const A0ParameterClientID = @"client_id";
-static NSString * const A0ParameterEmail = @"email";
-static NSString * const A0ParameterUsername = @"username";
-static NSString * const A0ParameterPassword = @"password";
-static NSString * const A0ParameterScope = @"scope";
-static NSString * const A0ParameterDevice = @"device";
-static NSString * const A0ParameterGrantType = @"grant_type";
-static NSString * const A0ParameterAPIType = @"api_type";
-static NSString * const A0ParameterRefreshToken = @"refresh_token";
-static NSString * const A0ParameterIdToken = @"id_token";
-static NSString * const A0ParameterRealm = @"realm";
+@synthesize refreshToken = _refreshToken;
+@synthesize idToken = _idToken;
 
-// for social login
-static NSString * const A0ParameterState = @"state";
-static NSString * const A0ParameterRedirectURI = @"redirect_uri";
-static NSString * const A0ParameterResponseType = @"response_type";
+- (instancetype)initWithRefreshToken:(NSString *)refreshToken idToken:(NSString *)idToken
+{
+	NSParameterAssert(refreshToken != nil);
+	NSParameterAssert(idToken != nil);
+	
+	if ((self = [super init]))
+	{
+		_refreshToken = [refreshToken copy];
+		_idToken = [idToken copy];
+	}
+	return self;
+}
 
-static NSString * const A0ParameterConnection = @"connection";
+@end
 
-/* extern */ NSString *const Auth0APIManagerErrorDomain = @"Auth0APIManager";
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+@implementation Auth0LoginProfileResult
+
+@synthesize profile = _profile;
+
+- (instancetype)initWithRefreshToken:(NSString *)refreshToken
+                             idToken:(NSString *)idToken
+                             profile:(A0UserProfile *)profile
+{
+	NSParameterAssert(refreshToken != nil);
+	NSParameterAssert(idToken != nil);
+	
+	if ((self = [super initWithRefreshToken:refreshToken idToken:idToken]))
+	{
+		_profile = profile;
+	}
+	return self;
+}
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+@implementation Auth0APIManager {
+	
+	ZDCAsyncCompletionDispatch *pendingRequests;
+}
 
 static Auth0APIManager *sharedInstance = nil;
 
@@ -59,8 +101,6 @@ static Auth0APIManager *sharedInstance = nil;
 	dispatch_once(&onceToken, ^{
 
 		sharedInstance = [[Auth0APIManager alloc] init];
-
-		pendingRequests = [[ZDCAsyncCompletionDispatch alloc] init];
 	});
 }
 
@@ -73,7 +113,10 @@ static Auth0APIManager *sharedInstance = nil;
 {
 	NSAssert(sharedInstance == nil, @"You MUST use the sharedInstance - class is a singleton");
 
-	if ((self = [super init])) {}
+	if ((self = [super init]))
+	{
+		pendingRequests = [[ZDCAsyncCompletionDispatch alloc] init];
+	}
 	return self;
 }
 
@@ -127,7 +170,6 @@ static Auth0APIManager *sharedInstance = nil;
 	}
 
 	NSString *domain = NSStringFromClass([self class]);
-
 	return [NSError errorWithDomain:domain code:statusCode userInfo:details];
 }
 
@@ -141,7 +183,6 @@ static Auth0APIManager *sharedInstance = nil;
 	}
 
 	NSString *domain = NSStringFromClass([self class]);
-
 	return [NSError errorWithDomain:domain code:statusCode userInfo:details];
 }
 
@@ -166,91 +207,13 @@ static Auth0APIManager *sharedInstance = nil;
                               password:(NSString *)password
                        auth0Connection:(NSString *)auth0Connection
                        completionQueue:(nullable dispatch_queue_t)inCompletionQueue
-                       completionBlock:(void (^)(NSString *_Nullable auth0_refreshToken,
-                                                 NSString *_Nullable auth0_accessToken,
-                                                 A0UserProfile *_Nullable profile,
+                       completionBlock:(void (^)(Auth0LoginProfileResult *_Nullable result,
                                                  NSError *_Nullable error))completionBlock
-{
-#ifndef NS_BLOCK_ASSERTIONS
-	NSParameterAssert(completionBlock != nil);
-#else
-	if (completionBlock == nil) return;
-#endif
-	
-	dispatch_queue_t completionQueue = inCompletionQueue ?: dispatch_get_main_queue();
-
-	void (^Fail)(NSError*) = ^(NSError *error){
-		
-		NSParameterAssert(error != nil);
-		
-		dispatch_async(completionQueue, ^{ @autoreleasepool {
-			completionBlock(nil, nil, nil, error);
-		}});
-	};
-	
-	void (^Succeed)(NSString*, NSString*, A0UserProfile*) =
-	^(NSString *refreshToken, NSString *accessToken, A0UserProfile *profile){
-		
-		NSParameterAssert(refreshToken != nil);
-		NSParameterAssert(accessToken != nil);
-		NSParameterAssert(profile != nil);
-		
-		dispatch_async(completionQueue, ^{ @autoreleasepool {
-			completionBlock(refreshToken, accessToken, profile, nil);
-		}});
-	};
-	
-	dispatch_queue_t backgroundQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-
-	[self loginWithUsername: username
-	               password: password
-	        auth0Connection: auth0Connection
-	        completionQueue: backgroundQueue
-	        completionBlock:^(NSString *refreshToken, NSError *error)
-	{
-		if (error)
-		{
-			Fail(error);
-			return;
-		}
-
-		[self getAccessTokenWithRefreshToken: refreshToken
-		                     completionQueue: backgroundQueue
-		                     completionBlock:^(NSString *accessToken, NSError *error)
-		{
-			if (error)
-			{
-				Fail(error);
-				return;
-			}
-			
-			[self getUserProfileWithAccessToken: accessToken
-			                    completionQueue: backgroundQueue
-			                    completionBlock:^(A0UserProfile *profile, NSError *error)
-			{
-				if (error)
-					Fail(error);
-				else
-					Succeed(refreshToken, accessToken, profile);
-				
-			}];
-		}];
-	}];
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark  - Auth0 Login (low level)
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-- (void)loginWithUsername:(NSString *)username
-                 password:(NSString *)password
-          auth0Connection:(NSString *)auth0Connection
-          completionQueue:(nullable dispatch_queue_t)inCompletionQueue
-          completionBlock:(void (^)(NSString *refreshToken, NSError *error))completionBlock
 {
 #ifndef NS_BLOCK_ASSERTIONS
 	NSParameterAssert(username != nil);
 	NSParameterAssert(password != nil);
+	NSParameterAssert(auth0Connection != nil);
 	NSParameterAssert(completionBlock != nil);
 #else
 	if (completionBlock == nil) return;
@@ -267,12 +230,101 @@ static Auth0APIManager *sharedInstance = nil;
 		}});
 	};
 	
-	void (^Succeed)(NSString*) = ^(NSString *refreshToken){
+	void (^Succeed)(Auth0LoginProfileResult*) = ^(Auth0LoginProfileResult *result){
 		
-		NSParameterAssert(refreshToken != nil);
+		NSParameterAssert(result != nil);
+		NSParameterAssert(result.refreshToken != nil);
+		NSParameterAssert(result.idToken != nil);
+		NSParameterAssert(result.profile != nil);
 		
 		dispatch_async(completionQueue, ^{ @autoreleasepool {
-			completionBlock(refreshToken, nil);
+			completionBlock(result, nil);
+		}});
+	};
+	
+	dispatch_queue_t backgroundQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+
+	[self loginWithUsername: username
+	               password: password
+	        auth0Connection: auth0Connection
+	        completionQueue: backgroundQueue
+	        completionBlock:^(Auth0LoginResult *loginResult, NSError *error)
+	{
+		if (error)
+		{
+			Fail(error);
+			return;
+		}
+
+		[self getAccessTokenWithRefreshToken: loginResult.refreshToken
+		                     completionQueue: backgroundQueue
+		                     completionBlock:^(NSString *accessToken, NSError *error)
+		{
+			if (error)
+			{
+				Fail(error);
+				return;
+			}
+			
+			[self getUserProfileWithAccessToken: accessToken
+			                    completionQueue: backgroundQueue
+			                    completionBlock:^(A0UserProfile *profile, NSError *error)
+			{
+				if (error)
+				{
+					Fail(error);
+					return;
+				}
+				
+				Auth0LoginProfileResult *profileResult =
+				  [[Auth0LoginProfileResult alloc] initWithRefreshToken: loginResult.refreshToken
+				                                                idToken: loginResult.idToken
+				                                                profile: profile];
+				
+				Succeed(profileResult);
+			}];
+		}];
+	}];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark  - Auth0 Login (low level)
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)loginWithUsername:(NSString *)username
+                 password:(NSString *)password
+          auth0Connection:(NSString *)auth0Connection
+          completionQueue:(nullable dispatch_queue_t)inCompletionQueue
+          completionBlock:(void (^)(Auth0LoginResult *result, NSError *error))completionBlock
+{
+#ifndef NS_BLOCK_ASSERTIONS
+	NSParameterAssert(username != nil);
+	NSParameterAssert(password != nil);
+	NSParameterAssert(auth0Connection != nil);
+	NSParameterAssert(completionBlock != nil);
+#else
+	if (completionBlock == nil) return;
+#endif
+	
+	dispatch_queue_t completionQueue = inCompletionQueue ?: dispatch_get_main_queue();
+
+	void (^Fail)(NSError*) = ^(NSError *error){
+		
+		NSParameterAssert(error != nil);
+		
+		dispatch_async(completionQueue, ^{ @autoreleasepool {
+			completionBlock(nil, error);
+		}});
+	};
+	
+	void (^Succeed)(Auth0LoginResult*) = ^(Auth0LoginResult *result){
+		
+		NSParameterAssert(result != nil);
+		NSParameterAssert(result.refreshToken != nil);
+		NSParameterAssert(result.idToken != nil);
+		
+		dispatch_async(completionQueue, ^{ @autoreleasepool {
+			completionBlock(result, nil);
 		}});
 	};
 
@@ -290,11 +342,46 @@ static Auth0APIManager *sharedInstance = nil;
 	jsonDict[A0ParameterPassword]  = password;
 	jsonDict[A0ParameterGrantType] = @"http://auth0.com/oauth/grant-type/password-realm";
 	jsonDict[A0ParameterRealm]     = auth0Connection;
-	jsonDict[A0ParameterScope]     = @"openid offline_access";
+	jsonDict[A0ParameterScope]     = @"openid offline_access"; // see discussion below
 #if TRACK_DEVICE
 	jsonDict[A0ParameterDevice]    = [self deviceName];
 #endif
 
+	// DISCUSSION:
+	//
+	// There are 3 different tokens we need from Auth0:
+	//
+	// - refresh_token
+	//
+	//   This is the token that doesn't expire.
+	//   It can be used to fetch fresh versions of the access_token and the id_token.
+	//   In other words, the other tokens expire.
+	//   And this token can be used to refresh them.
+	//
+	// - id_token
+	//
+	//   This is a JWT - a signed document with an expiration.
+	//   We can exchange this for AWS credentials.
+	//
+	// - access_token
+	//
+	//   We only need the access_token for one reason:
+	//   It's required in order to fetch the user's profile from auth0.
+	//
+	// No here's the crazy part:
+	//
+	// When we login here, we'll receive all 3 tokens.
+	// But the access_token we get back is garbage.
+	// If we try to use it to fetch the user's profile, auth0 will give us back a truncated profile.
+	//
+	// If we add 'profile' to the scope above, it still doesn't work.
+	// The ONLY way we're able to get the user's full profile is if we:
+	//
+	// - use the refresh_token to obtain an access_token, and set the scope to include ONLY 'profile'
+	// - then use the returned access_token to request the user's profile
+	//
+	// So we basically need to ignore the access_token we receive here.
+	
 	NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:nil];
 
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
@@ -313,11 +400,10 @@ static Auth0APIManager *sharedInstance = nil;
 			return;
 		}
 		
-		NSDictionary * jsonDict = nil;
-		NSString     * refreshToken = nil;
+		NSDictionary *jsonDict = nil;
+		Auth0LoginResult *result = nil;
 		
-		if ([responseObject isKindOfClass:[NSData class]]
-		 && (responseObject.length > 0))
+		if ([responseObject isKindOfClass:[NSData class]] && (responseObject.length > 0))
 		{
 			jsonDict = [NSJSONSerialization JSONObjectWithData:(NSData *)responseObject options:0 error:&error];
 			
@@ -338,27 +424,30 @@ static Auth0APIManager *sharedInstance = nil;
 			}
 			else
 			{
-				refreshToken = jsonDict[@"refresh_token"];
+				NSString *refreshToken = jsonDict[@"refresh_token"];
+				NSString *idToken      = jsonDict[@"id_token"];
 				
-				if (![refreshToken isKindOfClass:[NSString class]]) {
-					refreshToken = nil;
+				if ([refreshToken isKindOfClass:[NSString class]] && [idToken isKindOfClass:[NSString class]])
+				{
+					result = [[Auth0LoginResult alloc] initWithRefreshToken:refreshToken idToken:idToken];
 				}
 			}
 		}
 
-		if (!error && !refreshToken)
+		if (result)
 		{
-			NSInteger statusCode = response.httpStatusCode;
-			error = [self errorWithStatusCode:statusCode description:@"Invalid response from server"];
+			Succeed(result);
 		}
-
-		if (error)
+		else if (error)
 		{
 			Fail(error);
 		}
 		else
 		{
-			Succeed(refreshToken);
+			NSInteger statusCode = response.httpStatusCode;
+			error = [self errorWithStatusCode:statusCode description:@"Invalid response from server"];
+			
+			Fail(error);
 		}
 	}];
 
@@ -511,31 +600,60 @@ static Auth0APIManager *sharedInstance = nil;
 #pragma mark  - Auth0 Get User Profile
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
--(void) getUserProfileWithAccessToken:(NSString*)auth0_accessToken
-							  withKey:(NSString *)requestKey
+- (void)getUserProfileWithAccessToken:(NSString *)accessToken
+                           requestKey:(NSString *)requestKey
 {
-	void (^InvokePendingCompletions)(A0UserProfile * _Nullable a0Profile,
-									 NSError *_Nullable error);
-	InvokePendingCompletions = ^(A0UserProfile * _Nullable a0Profile, NSError *error){
-
+	__weak typeof(self) weakSelf = self;
+	
+	void (^Fail)(NSError*) = ^(NSError *error){
+		
+		NSParameterAssert(error != nil);
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
 		NSArray<dispatch_queue_t> * completionQueues = nil;
 		NSArray<id>               * completionBlocks = nil;
-		[pendingRequests popCompletionQueues:&completionQueues
-							completionBlocks:&completionBlocks
-									  forKey:requestKey];
+		[strongSelf->pendingRequests popCompletionQueues: &completionQueues
+		                                completionBlocks: &completionBlocks
+		                                          forKey: requestKey];
 
 		for (NSUInteger i = 0; i < completionBlocks.count; i++)
 		{
 			dispatch_queue_t completionQueue = completionQueues[i];
-			void (^completionBlock)(A0UserProfile * _Nullable a0Profile, NSError *error) = completionBlocks[i];
+			void (^completionBlock)(A0UserProfile *a0Profile, NSError *error) = completionBlocks[i];
 
 			dispatch_async(completionQueue, ^{ @autoreleasepool {
 
-				completionBlock(a0Profile, error);
+				completionBlock(nil, error);
 			}});
 		}
 	};
+	
+	void (^Succeed)(A0UserProfile*) = ^(A0UserProfile *profile){
+		
+		NSParameterAssert(profile != nil);
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
+		NSArray<dispatch_queue_t> * completionQueues = nil;
+		NSArray<id>               * completionBlocks = nil;
+		[strongSelf->pendingRequests popCompletionQueues: &completionQueues
+		                                completionBlocks: &completionBlocks
+		                                          forKey: requestKey];
 
+		for (NSUInteger i = 0; i < completionBlocks.count; i++)
+		{
+			dispatch_queue_t completionQueue = completionQueues[i];
+			void (^completionBlock)(A0UserProfile *a0Profile, NSError *error) = completionBlocks[i];
+
+			dispatch_async(completionQueue, ^{ @autoreleasepool {
+
+				completionBlock(profile, nil);
+			}});
+		}
+	};
 
 	NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
 	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
@@ -546,7 +664,7 @@ static Auth0APIManager *sharedInstance = nil;
 	urlComponents.path = @"/userinfo";
 	
 	NSMutableArray<NSURLQueryItem *> *queryItems = [NSMutableArray arrayWithCapacity:1];
-	[queryItems addObject:[NSURLQueryItem queryItemWithName:@"access_token" value:auth0_accessToken]];
+	[queryItems addObject:[NSURLQueryItem queryItemWithName:@"access_token" value:accessToken]];
 
 	urlComponents.queryItems = queryItems;
 
@@ -556,71 +674,77 @@ static Auth0APIManager *sharedInstance = nil;
 	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
 
 	NSURLSessionDataTask *task =
-	[session dataTaskWithRequest:request
-			   completionHandler:^(NSData *responseObject, NSURLResponse *response, NSError *error)
-	 {
-		 NSError *jsonError = nil;
-		 NSDictionary *jsonDict = nil;
-		 A0UserProfile* profile = nil;
-
-		 NSInteger statusCode = response.httpStatusCode;
-
-		 if ([responseObject isKindOfClass:[NSData class]])
-		 {
-			 jsonDict = [NSJSONSerialization JSONObjectWithData:(NSData *)responseObject options:0 error:&jsonError];
-		 }
-
-		 if (jsonDict && !error)
-		 {
-			 if(jsonDict[@"error"])
-			 {
-				 NSString* errorDescription  = jsonDict[@"error_description"];
-				 error = [self errorWithDescription:errorDescription];
-			 }
-			 else
-			 {
-				 profile = [[A0UserProfile alloc] initWithDictionary:jsonDict];
-			 }
-		 }
-
-		 if (!jsonDict && !error && !jsonError)
-		 {
-			 error = [self errorWithStatusCode:statusCode
-								   description:@"Invalid response from server"];
-		 }
-
-		 if (error || jsonError)
-		 {
-			 InvokePendingCompletions(nil, (error ?: jsonError));
-		 }
-		 else
-		 {
-			 InvokePendingCompletions(profile,nil);
-		 }
-	 }];
+	  [session dataTaskWithRequest: request
+	             completionHandler:^(NSData *responseObject, NSURLResponse *response, NSError *error)
+	{
+		if (error)
+		{
+			Fail(error);
+			return;
+		}
+		  
+		NSDictionary *jsonDict = nil;
+		A0UserProfile* profile = nil;
+		
+		if ([responseObject isKindOfClass:[NSData class]])
+		{
+			jsonDict = [NSJSONSerialization JSONObjectWithData:(NSData *)responseObject options:0 error:&error];
+			
+			if (![jsonDict isKindOfClass:[NSDictionary class]]) {
+				jsonDict = nil;
+			}
+		}
+		  
+		if (jsonDict)
+		{
+			if (jsonDict[@"error"])
+			{
+				NSString *description  = jsonDict[@"error_description"];
+				error = [self errorWithDescription:description];
+			}
+			else
+			{
+				profile = [[A0UserProfile alloc] initWithDictionary:jsonDict];
+			}
+		}
+		  
+		if (profile)
+		{
+			Succeed(profile);
+		}
+		else if (error)
+		{
+			Fail(error);
+		}
+		else
+		{
+			error = [self errorWithStatusCode: response.httpStatusCode
+			                      description: @"Invalid response from server"];
+			Fail(error);
+		}
+	}];
 
 	[task resume];
 }
 
--(void) getUserProfileWithAccessToken:(NSString*)auth0_accessToken
-				   completionQueue:(nullable dispatch_queue_t)inCompletionQueue
-				   completionBlock:(void (^)(A0UserProfile * _Nullable  a0Profile ,
-											 NSError *_Nullable error))inCompletionBlock
+- (void)getUserProfileWithAccessToken:(NSString *)accessToken
+                      completionQueue:(nullable dispatch_queue_t)completionQueue
+                      completionBlock:(void (^)(A0UserProfile *_Nullable a0Profile,
+                                                NSError *_Nullable error))completionBlock
 {
-	__block dispatch_queue_t completionQueue = inCompletionQueue;
-	if (!completionQueue)
-		completionQueue = dispatch_get_main_queue();
+#ifndef NS_BLOCK_ASSERTIONS
+	NSParameterAssert(accessToken);
+	NSParameterAssert(completionBlock);
+#else
+	if (completionBlock == nil) return;
+#endif
 
-	NSParameterAssert(inCompletionBlock);
-	NSParameterAssert(auth0_accessToken);
-
-
-	NSString *requestKey = [NSString stringWithFormat:@"%@-%@", NSStringFromSelector(_cmd), auth0_accessToken];
+	NSString *requestKey = [NSString stringWithFormat:@"%@-%@", NSStringFromSelector(_cmd), accessToken];
 
 	NSUInteger requestCount =
-	[pendingRequests pushCompletionQueue:inCompletionQueue
-						 completionBlock:inCompletionBlock
-								  forKey:requestKey];
+	  [pendingRequests pushCompletionQueue: completionQueue
+	                       completionBlock: completionBlock
+	                                forKey: requestKey];
 
 	if (requestCount > 1)
 	{
@@ -629,42 +753,65 @@ static Auth0APIManager *sharedInstance = nil;
 		return;
 	}
 
-	[self getUserProfileWithAccessToken:auth0_accessToken
-								 withKey:requestKey];
-
+	[self getUserProfileWithAccessToken: accessToken
+	                         requestKey: requestKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark  - Auth0 Get Access Token
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)getAccessTokenWithRefreshToken:(NSString *)auth0_refreshToken
-                               withKey:(NSString *)requestKey
+- (void)getAccessTokenWithRefreshToken:(NSString *)refreshToken
+                            requestKey:(NSString *)requestKey
 {
-	void (^InvokePendingCompletions)(NSString *_Nullable auth0_accessToken,
-	                                 NSDate   *_Nullable auth0_expiration,
-	                                 NSError  *_Nullable error);
+	__weak typeof(self) weakSelf = self;
 	
-	InvokePendingCompletions = ^(NSString * _Nullable auth0_accessToken,
-								 NSDate* _Nullable auth0_expiration,
-								 NSError * _Nullable error){
-
+	void (^Fail)(NSError*) = ^(NSError *error){
+		
+		NSParameterAssert(error != nil);
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
 		NSArray<dispatch_queue_t> * completionQueues = nil;
 		NSArray<id>               * completionBlocks = nil;
-		[pendingRequests popCompletionQueues:&completionQueues
-							completionBlocks:&completionBlocks
-									  forKey:requestKey];
+		[strongSelf->pendingRequests popCompletionQueues: &completionQueues
+		                                completionBlocks: &completionBlocks
+		                                          forKey: requestKey];
 
 		for (NSUInteger i = 0; i < completionBlocks.count; i++)
 		{
 			dispatch_queue_t completionQueue = completionQueues[i];
-			void (^completionBlock)(NSString * _Nullable auth0_accessToken,
-									NSDate* _Nullable auth0_expiration,
-									NSError *error) = completionBlocks[i];
+			void (^completionBlock)(NSString *accessToken, NSError *error) = completionBlocks[i];
 
 			dispatch_async(completionQueue, ^{ @autoreleasepool {
 
-				completionBlock(auth0_accessToken, auth0_expiration, error);
+				completionBlock(nil, error);
+			}});
+		}
+	};
+	
+	void (^Succeed)(NSString*) = ^(NSString *accessToken){
+		
+		NSParameterAssert(accessToken != nil);
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
+		NSArray<dispatch_queue_t> * completionQueues = nil;
+		NSArray<id>               * completionBlocks = nil;
+		[strongSelf->pendingRequests popCompletionQueues: &completionQueues
+		                                completionBlocks: &completionBlocks
+		                                          forKey: requestKey];
+
+		for (NSUInteger i = 0; i < completionBlocks.count; i++)
+		{
+			dispatch_queue_t completionQueue = completionQueues[i];
+			void (^completionBlock)(NSString *accessToken, NSError *error) = completionBlocks[i];
+
+			dispatch_async(completionQueue, ^{ @autoreleasepool {
+
+				completionBlock(accessToken, nil);
 			}});
 		}
 	};
@@ -677,15 +824,13 @@ static Auth0APIManager *sharedInstance = nil;
 	urlComponents.host = kAuth04thADomain;
 	urlComponents.path = @"/oauth/token";
 
-	NSDictionary *jsonDict = @{
-		A0ParameterClientID     : kAuth04thA_AppClientID,
-		A0ParameterGrantType    : @"refresh_token",
-		A0ParameterRefreshToken : auth0_refreshToken,
-		A0ParameterScope        : @"profile"
-	};
+	NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:4];
+	jsonDict[A0ParameterClientID]     = kAuth04thA_AppClientID;
+	jsonDict[A0ParameterGrantType]    = @"refresh_token";
+	jsonDict[A0ParameterRefreshToken] = refreshToken;
+	jsonDict[A0ParameterScope]        = @"profile";
 
 	NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:nil];
-
 
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"POST";
@@ -694,85 +839,88 @@ static Auth0APIManager *sharedInstance = nil;
 	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
 
 	NSURLSessionDataTask *task =
-	[session dataTaskWithRequest:request
-			   completionHandler:^(NSData *responseObject, NSURLResponse *response, NSError *error)
-	 {
-		 NSError *jsonError = nil;
-		 NSDictionary *jsonDict = nil;
-		 NSString*  accessToken = nil;
-		 NSDate* auth0_expiration = nil;
+	  [session dataTaskWithRequest: request
+	             completionHandler:^(NSData *responseObject, NSURLResponse *response, NSError *error)
+	{
+		if (error)
+		{
+			Fail(error);
+			return;
+		}
 
-		 NSInteger statusCode = response.httpStatusCode;
-		 if(!error
-			&& (statusCode != 200)
-			&& (statusCode != 401)
-			&& (statusCode != 403))
-		 {
-			 error = [self errorWithStatusCode:statusCode description:@"Bad Status response"];
-		 }
+		NSInteger statusCode = response.httpStatusCode;
+		if ((statusCode != 200) &&
+		    (statusCode != 401) &&
+		    (statusCode != 403))
+		{
+			error = [self errorWithStatusCode:statusCode description:@"Bad Status response"];
+			
+			Fail(error);
+			return;
+		}
+		  
+		NSDictionary *jsonDict = nil;
+		NSString *accessToken = nil;
 
-		 if (!error
-			 && [responseObject isKindOfClass:[NSData class]]
-			 && (responseObject.length > 0))
-		 {
-			 jsonDict = [NSJSONSerialization JSONObjectWithData:(NSData *)responseObject options:0 error:&jsonError];
-		 }
+		if ([responseObject isKindOfClass:[NSData class]] && (responseObject.length > 0))
+		{
+			jsonDict = [NSJSONSerialization JSONObjectWithData:(NSData *)responseObject options:0 error:&error];
+			
+			if (![jsonDict isKindOfClass:[NSDictionary class]]) {
+				jsonDict = nil;
+			}
+		}
 
-		 if (jsonDict && !error)
-		 {
-			 if(jsonDict[@"error"])
-			 {
-				 NSString* errorDescription  = jsonDict[@"error_description"];
-				 
-				 error = [self errorWithDescription:errorDescription
-											 a0Code:jsonDict[@"error"] ];
-			 }
-			 else
-			 {
-				 NSNumber* expires_in = jsonDict[@"expires_in"];
-				 if(expires_in)
-					 auth0_expiration = [NSDate dateWithTimeIntervalSinceNow:expires_in.doubleValue];
-				 accessToken = jsonDict[@"access_token"];
-			 }
-		 }
-
-		 if (!jsonDict && !error && !jsonError)
-		 {
-			 error = [self errorWithStatusCode:500 description:@"Invalid response from server"];
-		 }
-
-		 if (error || jsonError)
-		 {
-			 InvokePendingCompletions(nil, nil, (error ?: jsonError));
-		 }
-		 else
-		 {
-			 InvokePendingCompletions(accessToken,auth0_expiration,nil);
-		 }
+		if (jsonDict)
+		{
+			NSString *error_code = jsonDict[@"error"];
+			if (error_code)
+			{
+				NSString *error_description = jsonDict[@"error_description"];
+				
+				error = [self errorWithDescription:error_description a0Code:error_code];
+			}
+			else
+			{
+				accessToken = jsonDict[@"access_token"];
+				
+				if (![accessToken isKindOfClass:[NSString class]]) {
+					accessToken = nil;
+				}
+			}
+		}
+		  
+		if (accessToken)
+		{
+			Succeed(accessToken);
+		}
+		else
+		{
+			Fail(error ?: [self errorWithStatusCode:500 description:@"Invalid response from server"]);
+		}
 	 }];
 
 	[task resume];
-
 }
 
 - (void)getAccessTokenWithRefreshToken:(NSString *)auth0_refreshToken
-                       completionQueue:(nullable dispatch_queue_t)inCompletionQueue
+                       completionQueue:(nullable dispatch_queue_t)completionQueue
                        completionBlock:(void (^)(NSString *_Nullable auth0_accessToken,
-                                                 NSError *_Nullable error))inCompletionBlock
+                                                 NSError *_Nullable error))completionBlock
 {
-	NSParameterAssert(inCompletionBlock);
+#ifndef NS_BLOCK_ASSERTIONS
 	NSParameterAssert(auth0_refreshToken);
-
-	__block dispatch_queue_t completionQueue = inCompletionQueue;
-	if (!completionQueue)
-		completionQueue = dispatch_get_main_queue();
+	NSParameterAssert(completionBlock);
+#else
+	if (completionBlock == nil) return;
+#endif
 
 	NSString *requestKey = [NSString stringWithFormat:@"%@-%@", NSStringFromSelector(_cmd), auth0_refreshToken];
 
 	NSUInteger requestCount =
-	[pendingRequests pushCompletionQueue:inCompletionQueue
-						 completionBlock:inCompletionBlock
-								  forKey:requestKey];
+	  [pendingRequests pushCompletionQueue: completionQueue
+	                       completionBlock: completionBlock
+	                                forKey: requestKey];
 
 	if (requestCount > 1)
 	{
@@ -781,40 +929,69 @@ static Auth0APIManager *sharedInstance = nil;
 		return;
 	}
 
-	[self getAccessTokenWithRefreshToken:auth0_refreshToken
-									withKey:requestKey];
-
+	[self getAccessTokenWithRefreshToken: auth0_refreshToken
+	                          requestKey: requestKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark  - Auth0 Get AWSCredentials
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
--(void) getAWSCredentialsWithRefreshToken:(NSString *)auth0_refreshToken
-								  withKey:(NSString *)requestKey
+- (void)getAWSCredentialsWithRefreshToken:(NSString *)refreshToken
+                               requestKey:(NSString *)requestKey
 {
-	void (^InvokePendingCompletions)(NSDictionary * _Nullable delegationToken,
-									 NSError *_Nullable error);
-	InvokePendingCompletions = ^(NSDictionary * _Nullable delegationToken, NSError *error){
-
+	__weak typeof(self) weakSelf = self;
+	
+	void (^Fail)(NSError*) = ^(NSError *error){
+		
+		NSParameterAssert(error != nil);
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
 		NSArray<dispatch_queue_t> * completionQueues = nil;
 		NSArray<id>               * completionBlocks = nil;
-		[pendingRequests popCompletionQueues:&completionQueues
-							completionBlocks:&completionBlocks
-									  forKey:requestKey];
+		[strongSelf->pendingRequests popCompletionQueues: &completionQueues
+		                                completionBlocks: &completionBlocks
+		                                          forKey: requestKey];
 
 		for (NSUInteger i = 0; i < completionBlocks.count; i++)
 		{
 			dispatch_queue_t completionQueue = completionQueues[i];
-			void (^completionBlock)(NSDictionary * _Nullable delegationToken, NSError *error) = completionBlocks[i];
+			void (^completionBlock)(NSDictionary *delegationToken, NSError *error) = completionBlocks[i];
 
 			dispatch_async(completionQueue, ^{ @autoreleasepool {
 
-				completionBlock(delegationToken, error);
+				completionBlock(nil, error);
 			}});
 		}
 	};
+	
+	void (^Succeed)(NSDictionary*) = ^(NSDictionary *delegation){
+		
+		NSParameterAssert(delegation != nil);
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
+		NSArray<dispatch_queue_t> * completionQueues = nil;
+		NSArray<id>               * completionBlocks = nil;
+		[strongSelf->pendingRequests popCompletionQueues: &completionQueues
+		                                completionBlocks: &completionBlocks
+		                                          forKey: requestKey];
 
+		for (NSUInteger i = 0; i < completionBlocks.count; i++)
+		{
+			dispatch_queue_t completionQueue = completionQueues[i];
+			void (^completionBlock)(NSDictionary *delegationToken, NSError *error) = completionBlocks[i];
+
+			dispatch_async(completionQueue, ^{ @autoreleasepool {
+
+				completionBlock(delegation, nil);
+			}});
+		}
+	};
+	
 	NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
 	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
 
@@ -823,15 +1000,14 @@ static Auth0APIManager *sharedInstance = nil;
 	urlComponents.host = kAuth04thADomain;
 	urlComponents.path = @"/delegation";
 
-	NSDictionary *jsonDict = @{ A0ParameterClientID		:kAuth04thA_AppClientID,
-								A0ParameterGrantType	:@"urn:ietf:params:oauth:grant-type:jwt-bearer",
-								A0ParameterScope		:@"openid offline_access",
-								A0ParameterAPIType		:@"aws" ,
-								A0ParameterRefreshToken	:auth0_refreshToken
-								};
+	NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:5];
+	jsonDict[A0ParameterClientID]     = kAuth04thA_AppClientID;
+	jsonDict[A0ParameterGrantType]    = @"urn:ietf:params:oauth:grant-type:jwt-bearer";
+	jsonDict[A0ParameterScope]        = @"openid offline_access";
+	jsonDict[A0ParameterAPIType]      = @"aws";
+	jsonDict[A0ParameterRefreshToken] = refreshToken;
 
 	NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:nil];
-
 
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"POST";
@@ -840,82 +1016,89 @@ static Auth0APIManager *sharedInstance = nil;
 	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
 
 	NSURLSessionDataTask *task =
-	[session dataTaskWithRequest:request
-			   completionHandler:^(NSData *responseObject, NSURLResponse *response, NSError *error)
-	 {
-		 NSError *jsonError = nil;
-		 NSDictionary *jsonDict = nil;
-		 NSDictionary* delegationToken = nil;
+	  [session dataTaskWithRequest: request
+	             completionHandler:^(NSData *responseObject, NSURLResponse *response, NSError *error)
+	{
+		if (error)
+		{
+			Fail(error);
+			return;
+		}
 
-		 NSInteger statusCode = response.httpStatusCode;
-		 if(!error
-			&& (statusCode != 200)
-			&& (statusCode != 401)
-			&& (statusCode != 403)
-			&& (statusCode != 429))
-		 {
-			 error = [self errorWithStatusCode:statusCode description:@"Bad Status response"];
-		 }
+		NSInteger statusCode = response.httpStatusCode;
+		if ((statusCode != 200) &&
+		    (statusCode != 401) &&
+		    (statusCode != 403) &&
+		    (statusCode != 429))
+		{
+			error = [self errorWithStatusCode:statusCode description:@"Bad Status response"];
+			
+			Fail(error);
+			return;
+		}
+		  
+		NSDictionary *jsonDict = nil;
+		NSDictionary *delegation = nil;
+		
+		if ([responseObject isKindOfClass:[NSData class]] && (responseObject.length > 0))
+		{
+			jsonDict = [NSJSONSerialization JSONObjectWithData:(NSData *)responseObject options:0 error:&error];
+			
+			if (![jsonDict isKindOfClass:[NSDictionary class]]) {
+				jsonDict = nil;
+			}
+		}
 
-		 if (!error
-			 && [responseObject isKindOfClass:[NSData class]]
-			 && (responseObject.length > 0))
-		 {
-			 jsonDict = [NSJSONSerialization JSONObjectWithData:(NSData *)responseObject options:0 error:&jsonError];
-		 }
+		if (jsonDict)
+		{
+			NSString *error_code = jsonDict[@"error"];
+			if (error_code)
+			{
+				NSString *error_description = jsonDict[@"error_description"];
+				error = [self errorWithDescription:error_description a0Code:error_code];
+			}
+			else
+			{
+				delegation = jsonDict;
+			}
+		}
 
-		 if (jsonDict && !error)
-		 {
-			 if(jsonDict[@"error"])
-			 {
-				 NSString* errorDescription  = jsonDict[@"error_description"];
-				 error = [self errorWithDescription:errorDescription
-											 a0Code:jsonDict[@"error"] ];
-			 }
-			 else
-			 {
-				 delegationToken = jsonDict;
-			 }
-		 }
-
-		 if (!jsonDict && !error && !jsonError)
-		 {
-			 error = [self errorWithStatusCode:500 description:@"Invalid response from server"];
-		 }
-
-		 if (error || jsonError)
-		 {
-			 InvokePendingCompletions(nil, (error ?: jsonError));
-		 }
-		 else
-		 {
-			 InvokePendingCompletions(delegationToken,nil);
-		 }
-	 }];
+		if (delegation)
+		{
+			Succeed(delegation);
+		}
+		else if (error)
+		{
+			Fail(error);
+		}
+		else
+		{
+			error = [self errorWithStatusCode:statusCode description:@"Invalid response from server"];
+			Fail(error);
+		}
+	}];
 
 	[task resume];
-
 }
 
--(void) getAWSCredentialsWithRefreshToken:(NSString *)auth0_refreshToken
-						  completionQueue:(nullable dispatch_queue_t)inCompletionQueue
-						  completionBlock:(void (^)(NSDictionary * _Nullable delegationToken,
-													NSError *_Nullable error))inCompletionBlock
+- (void)getAWSCredentialsWithRefreshToken:(NSString *)refreshToken
+                          completionQueue:(nullable dispatch_queue_t)completionQueue
+                          completionBlock:(void (^)(NSDictionary * _Nullable delegationToken,
+                                                    NSError *_Nullable error))completionBlock
 {
+#ifndef NS_BLOCK_ASSERTIONS
+	NSParameterAssert(refreshToken);
+	NSParameterAssert(completionBlock);
+#else
+	if (completionBlock == nil) return;
+#endif
 
-	NSParameterAssert(inCompletionBlock);
-	NSParameterAssert(auth0_refreshToken);
-
-	__block dispatch_queue_t completionQueue = inCompletionQueue;
-	if (!completionQueue)
-		completionQueue = dispatch_get_main_queue();
-
-	NSString *requestKey = [NSString stringWithFormat:@"%@-%@", NSStringFromSelector(_cmd), auth0_refreshToken];
+	NSString *requestKey = [NSString stringWithFormat:@"%@-%@", NSStringFromSelector(_cmd), refreshToken];
 
 	NSUInteger requestCount =
-	[pendingRequests pushCompletionQueue:inCompletionQueue
-						 completionBlock:inCompletionBlock
-								  forKey:requestKey];
+	  [pendingRequests pushCompletionQueue: completionQueue
+	                       completionBlock: completionBlock
+	                                forKey: requestKey];
 
 	if (requestCount > 1)
 	{
@@ -924,9 +1107,8 @@ static Auth0APIManager *sharedInstance = nil;
 		return;
 	}
 
-	[self getAWSCredentialsWithRefreshToken:auth0_refreshToken
-						withKey:requestKey];
-
+	[self getAWSCredentialsWithRefreshToken: refreshToken
+	                             requestKey: requestKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1039,6 +1221,5 @@ static Auth0APIManager *sharedInstance = nil;
 	
 	return success;
 }
-
 
 @end

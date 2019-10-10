@@ -9,12 +9,7 @@
 /**
  * Matches ZDDLocalUser.uuid, which is the global userID for the user throughout the ZeroDark ecosystem.
  */
-@property (nonatomic, copy, readwrite) NSString * aws_userID;
-
-/**
- * The user's unique ID within the AWS system.
- */
-@property (nonatomic, copy, readwrite) NSString * aws_userARN;
+@property (nonatomic, copy, readwrite) NSString * userID;
 
 /**
  * Part of the credentials used by AWS.
@@ -38,9 +33,18 @@
 @property (nonatomic, copy, readwrite) NSDate * aws_expiration;
 
 /**
- * Used for Auth0 stuff.
- * (Auth0 acts as our identity broker - for now).
+ * Used for Auth0, which is our identity broker (for now).
+ *
+ * This property can be exchanged for a fresh idToken from Auth0.
+ * And idToken is a JWT, that can itself be exchanged for AWS credentials.
  */
 @property (nonatomic, copy, readwrite) NSString	* auth0_refreshToken;
+
+/**
+ * An idToken is a JWT that can be exchanged for AWS credentials.
+ * 
+ * These tokens have an expiration date, and therefore need to be regularly refreshed.
+ */
+@property (nonatomic, copy, readwrite) NSString * auth0_idToken;
 
 @end

@@ -116,7 +116,7 @@
 		[zdc.auth0APIManager
 			getAWSCredentialsWithRefreshToken: localUserAuth.auth0_refreshToken
 			                  completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-			                  completionBlock:^(NSDictionary *awsToken, NSError *error)
+			                  completionBlock:^(NSDictionary *delegation, NSError *error)
 		{
 			if (error)
 			{
@@ -151,8 +151,7 @@
 			               session: &aws_session
 			            expiration: &aws_expiration
 			                userID: &aws_userID
-			               userARN: nil
-			   fromDelegationToken: awsToken];
+			        fromDelegation: delegation];
 			
 			__block ZDCLocalUserAuth *refreshedLocalUserAuth = nil;
 			
@@ -168,13 +167,12 @@
 				
 				// Security Check
 				//
-				// The aws_userID is expected to be of the form: aws_id:user:id
-				// So the string should have a suffix that matches userID.
+				// The aws_userID should match our userID.
 				//
 				// If this isn't true, then we just fetched AWS credentials for a different account.
 				// This would happen if we put a refreshToken into the wrong account.
 				//
-				if (![aws_userID hasSuffix:userID])
+				if (![aws_userID isEqual:userID])
 				{
 					// Remove the auth0_id entry to ensure we don't ever use it again.
 					
@@ -208,25 +206,6 @@
 #pragma clang diagnostic pop
 }
 
-- (void)setNeedsRefreshTokenForUser:(NSString *)userID
-                    completionQueue:(dispatch_queue_t)completionQueue
-                    completionBlock:(dispatch_block_t)completionBlock
-{
-	ZDCDatabaseManager *databaseManager = zdc.databaseManager;
-	[databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
-
-		ZDCLocalUser *refreshedLocalUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
-		if (refreshedLocalUser)
-		{
-			refreshedLocalUser = [refreshedLocalUser copy];
-			refreshedLocalUser.accountNeedsA0Token = YES;
-
-			[transaction setObject:refreshedLocalUser forKey:userID inCollection:kZDCCollection_Users];
-		}
-		
-	} completionQueue:completionQueue completionBlock:completionBlock];
-}
-
 - (void)flushAWSCredentialsForUserID:(NSString *)userID
                   deleteRefreshToken:(BOOL)deleteRefreshToken
                      completionQueue:(dispatch_queue_t)completionQueue
@@ -243,7 +222,7 @@
 
 		if (localUser && localUserAuth )
 		{
-			localUserAuth = localUserAuth.copy;
+			localUserAuth = [localUserAuth copy];
 
 			localUserAuth.aws_accessKeyID = nil;
 			localUserAuth.aws_secret      = nil;
@@ -252,9 +231,11 @@
 
 			if (deleteRefreshToken)
 			{
-				localUser = [localUser copy];
 				localUserAuth.auth0_refreshToken = nil;
+				
+				localUser = [localUser copy];
 				localUser.accountNeedsA0Token = YES;
+				
 				[transaction setObject:localUser forKey:userID inCollection:kZDCCollection_Users];
 			}
 
@@ -279,7 +260,7 @@
 		localUserAuth = [transaction objectForKey:userID inCollection:kZDCCollection_UserAuth];
 		localUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
 
-		if (localUser && localUserAuth )
+		if (localUser && localUserAuth)
 		{
 			localUserAuth = [localUserAuth copy];
 			localUser = [localUser copy];
@@ -314,112 +295,39 @@
 #pragma mark Utilities
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (BOOL)parseLocalUserAuth:(ZDCLocalUserAuth **)authOut
-                      uuid:(NSString **)uuidOut
-       fromDelegationToken:(NSDictionary *)delegationToken
-          withRefreshToken:(NSString *)refreshToken
+- (void)setNeedsRefreshTokenForUser:(NSString *)userID
+                    completionQueue:(dispatch_queue_t)completionQueue
+                    completionBlock:(dispatch_block_t)completionBlock
 {
-	BOOL success = NO;
+	ZDCDatabaseManager *databaseManager = zdc.databaseManager;
+	[databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 
-	ZDCLocalUserAuth* auth = [[ZDCLocalUserAuth alloc] init];
-	NSString* uuid = nil;
-
-	auth.auth0_refreshToken = refreshToken;
-
-	id value = delegationToken[@"Credentials"];
-	if ([value isKindOfClass:[NSDictionary class]])
-	{
-		NSDictionary *credentials = (NSDictionary *)value;
-
-		value = credentials[@"AccessKeyId"];
-		if ([value isKindOfClass:[NSString class]])
+		ZDCLocalUser *refreshedLocalUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+		if (refreshedLocalUser)
 		{
-			auth.aws_accessKeyID = (NSString *)value;
+			refreshedLocalUser = [refreshedLocalUser copy];
+			refreshedLocalUser.accountNeedsA0Token = YES;
+
+			[transaction setObject:refreshedLocalUser forKey:userID inCollection:kZDCCollection_Users];
 		}
-
-		value = credentials[@"SecretAccessKey"];
-		if ([value isKindOfClass:[NSString class]])
-		{
-			auth.aws_secret = (NSString *)value;
-		}
-
-		value = credentials[@"SessionToken"];
-		if ([value isKindOfClass:[NSString class]])
-		{
-			auth.aws_session = (NSString *)value;
-		}
-
-		value = credentials[@"Expiration"];
-		if ([value isKindOfClass:[NSString class]])
-		{
-			NSString *expirationString = (NSString *)value;
-
-			if (expirationString)
-			{
-				auth.aws_expiration = [AWSDate parseISO8601Timestamp:expirationString];
-			}
-		}
-	}
-
-	value = delegationToken[@"AssumedRoleUser"];
-	if ([value isKindOfClass:[NSDictionary class]])
-	{
-		NSDictionary *role = (NSDictionary *)value;
-
-		value = role[@"AssumedRoleId"];
-		if ([value isKindOfClass:[NSString class]])
-		{
-			auth.aws_userID = value;
-		}
-
-		value = role[@"Arn"];
-		if ([value isKindOfClass:[NSString class]])
-		{
-			auth.aws_userARN = value;
-
-			// arn:aws:sts::823589531544:assumed-role/auth0-role/b3o8qh8gy4fzfiwrrho3wd9dtjypryue
-
-			NSCharacterSet *seperators = [NSCharacterSet characterSetWithCharactersInString:@":/"];
-			NSArray *array = [value componentsSeparatedByCharactersInSet:seperators];
 		
-			if (array.count) {
-				uuid = [array lastObject];
-			}
-				
-		}
-	}
-
-	success = uuid.length
-	&& auth.auth0_refreshToken.length
-	&& auth.aws_userID.length
-	&& auth.aws_userARN.length
-	&& auth.aws_accessKeyID.length
-	&& auth.aws_secret.length
-	&& auth.aws_session.length
-	&& auth.aws_expiration;
-
-	if (authOut) *authOut = auth;
-	if (uuidOut) *uuidOut = uuid;
-	return success;
+	} completionQueue:completionQueue completionBlock:completionBlock];
 }
 
-
-- (void)parseAccessKeyID:(NSString **)outAccessKeyID
+- (BOOL)parseAccessKeyID:(NSString **)outAccessKeyID
                   secret:(NSString **)outSecret
                  session:(NSString **)outSession
               expiration:(NSDate **)outExpiration
                   userID:(NSString **)outUserID
-                 userARN:(NSString **)outUserARN
-     fromDelegationToken:(NSDictionary *)delegationToken
+          fromDelegation:(NSDictionary *)delegationDict
 {
 	NSString *accessKeyID = nil;
 	NSString *secret = nil;
 	NSString *session = nil;
 	NSString *expirationString = nil;
 	NSString *userID = nil;
-	NSString *userARN = nil;
 	
-	id value = delegationToken[@"Credentials"];
+	id value = delegationDict[@"Credentials"];
 	if ([value isKindOfClass:[NSDictionary class]])
 	{
 		NSDictionary *credentials = (NSDictionary *)value;
@@ -449,21 +357,24 @@
 		}
 	}
 	
-	value = delegationToken[@"AssumedRoleUser"];
+	value = delegationDict[@"AssumedRoleUser"];
 	if ([value isKindOfClass:[NSDictionary class]])
 	{
 		NSDictionary *role = (NSDictionary *)value;
 		
-		value = role[@"AssumedRoleId"];
-		if ([value isKindOfClass:[NSString class]])
-		{
-			userID = value;
-		}
-		
 		value = role[@"Arn"];
 		if ([value isKindOfClass:[NSString class]])
 		{
-			userARN = value;
+			NSString *userARN = value;
+			
+			// arn:aws:sts::823589531544:assumed-role/auth0-role/b3o8qh8gy4fzfiwrrho3wd9dtjypryue
+
+			NSCharacterSet *seperators = [NSCharacterSet characterSetWithCharactersInString:@":/"];
+			NSArray *array = [userARN componentsSeparatedByCharactersInSet:seperators];
+			
+			if (array.count) {
+				userID = [array lastObject];
+			}
 		}
 	}
 
@@ -478,7 +389,51 @@
 	if (outSession) *outSession = session;
 	if (outExpiration) *outExpiration = expirationDate;
 	if (outUserID) *outUserID = userID;
-	if (outUserARN) *outUserARN = userARN;
+	
+	return (accessKeyID.length > 0) &&
+	       (secret.length > 0) &&
+	       (session.length > 0) &&
+	       (expirationDate != nil) &&
+	       (userID.length > 0);
+}
+
+- (BOOL)parseLocalUserAuth:(ZDCLocalUserAuth **)authOut
+            fromDelegation:(NSDictionary *)delegationDict
+              refreshToken:(NSString *)refreshToken
+                   idToken:(NSString *)idToken
+{
+	NSString *accessKeyID = nil;
+	NSString *secret = nil;
+	NSString *session = nil;
+	NSDate *expiration = nil;
+	NSString *userID = nil;
+	
+	BOOL success =
+	  [self parseAccessKeyID: &accessKeyID
+	                  secret: &secret
+	                 session: &session
+	              expiration: &expiration
+	                  userID: &userID
+	          fromDelegation: delegationDict];
+	
+	ZDCLocalUserAuth *auth = nil;
+	if (success)
+	{
+		auth = [[ZDCLocalUserAuth alloc] init];
+		
+		auth.userID = userID;
+		
+		auth.aws_accessKeyID = accessKeyID;
+		auth.aws_secret = secret;
+		auth.aws_session = session;
+		auth.aws_expiration = expiration;
+		
+		auth.auth0_refreshToken = refreshToken;
+		auth.auth0_idToken = idToken;
+	}
+	
+	if (authOut) *authOut = auth;
+	return success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
