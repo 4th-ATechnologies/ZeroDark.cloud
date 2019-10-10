@@ -37,7 +37,7 @@
     
 }
 
-+(NSDate*)  expireDateFromJWTString:(NSString*)token withError:(NSError**)errorOut;
++ (NSDate *)expireDateFromJWTString:(NSString *)token withError:(NSError **)errorOut
 {
     NSDate* result = NULL;
     

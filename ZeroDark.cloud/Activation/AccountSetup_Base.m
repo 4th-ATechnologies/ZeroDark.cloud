@@ -602,12 +602,14 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	Auth0APIManager *auth0APIManager = [Auth0APIManager sharedInstance];
 	AWSCredentialsManager *awsCredentialsManager = owner.awsCredentialsManager;
 	
+	dispatch_queue_t backgroundQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	
 	__weak typeof(self) weakSelf = self;
 	[auth0APIManager createUserWithEmail: [Auth0Utilities create4thAEmailForUsername:username]
 	                            username: username
 	                            password: password
 	                     auth0Connection: kAuth0DBConnection_UserAuth
-	                      completionQueue: nil
+	                      completionQueue: backgroundQueue
 	                      completionBlock:^(NSString *auth0ID, NSError *error)
 	{
 		__strong typeof(self) strongSelf = weakSelf;
@@ -626,7 +628,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 		[auth0APIManager loginAndGetProfileWithUsername: username
 		                                       password: password
 		                                auth0Connection: kAuth0DBConnection_UserAuth
-		                                completionQueue: nil
+		                                completionQueue: backgroundQueue
 		                                completionBlock:^(Auth0LoginProfileResult *result, NSError *error)
 		{
 			__strong typeof(self) strongSelf = weakSelf;
@@ -641,10 +643,11 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 				
 				return;
 			}
-			  
-			[auth0APIManager getAWSCredentialsWithRefreshToken: result.refreshToken
-			                                   completionQueue: nil
-			                                   completionBlock:^(NSDictionary *delegation, NSError *error)
+			
+			[awsCredentialsManager getAWSCredentialsWithIDToken: result.idToken
+			                                              stage: @"dev"
+			                                    completionQueue: backgroundQueue
+			                                    completionBlock:^(NSDictionary *delegation, NSError *error)
 			{
 				__strong typeof(self) strongSelf = weakSelf;
 				if (strongSelf == nil) return;
@@ -785,9 +788,10 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 			return;
 		}
 		
-		[auth0APIManager getAWSCredentialsWithRefreshToken: result.refreshToken
-		                                   completionQueue: backgroundQueue
-		                                   completionBlock:^(NSDictionary *delegation, NSError *error)
+		[awsCredentialsManager getAWSCredentialsWithIDToken: result.idToken
+		                                              stage: @"dev"
+		                                    completionQueue: backgroundQueue
+		                                    completionBlock:^(NSDictionary *delegation, NSError *error)
 		{
 			__strong typeof(self) strongSelf = weakSelf;
 			if (!strongSelf) return;

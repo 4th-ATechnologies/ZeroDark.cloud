@@ -57,10 +57,23 @@ NS_ASSUME_NONNULL_BEGIN
                                                  NSError *_Nullable error))completionBlock;
 
 /**
+ * Trades a refreshToken for an idToken.
+ *
+ * A refreshToken is an opaque token that doesn't expire (although it can be revoked).
+ * An idToken is a JWT - signed by auth0, and has an expiration date.
+ * The idToken is only used for one think: it can be exchanged for AWS credentials.
+ */
+- (void)getIDTokenWithRefreshToken:(NSString *)auth0_refreshToken
+                   completionQueue:(nullable dispatch_queue_t)completionQueue
+                   completionBlock:(void (^)(NSString * _Nullable auth0_idToken,
+                                             NSError *_Nullable error))completionBlock;
+
+/**
  * Trades a refreshToken for an accessToken.
  *
  * A refreshToken is an opaque token that doesn't expire (although it can be revoked).
- * An accessToken is a JWT the expires after a set amount of time.
+ * An accessToken is another opaque token, but does expire.
+ * The accessToken is only used for one thing: it's required to fetch the user profile.
  */
 - (void)getAccessTokenWithRefreshToken:(NSString *)auth0_refreshToken
                        completionQueue:(nullable dispatch_queue_t)completionQueue

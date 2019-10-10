@@ -17,7 +17,9 @@
  */
 typedef NS_ENUM(NSInteger, AWSCredentialsErrorCode) {
 	AWSCredentialsErrorCode_MissingInvalidUser,
-	AWSCredentialsErrorCode_NoRefreshTokens
+	AWSCredentialsErrorCode_NoRefreshTokens,
+	AWSCredentialsErrorCode_InvalidIDToken,
+	AWSCredentialsErrorCode_InvalidServerResponse
 };
 
 /**
@@ -37,6 +39,10 @@ typedef NS_ENUM(NSInteger, AWSCredentialsErrorCode) {
  * Standard initialization from ZeroDarkCloud, called during database unlock.
  */
 - (instancetype)initWithOwner:(ZeroDarkCloud *)owner;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark User API
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Fetches the AWS credentials for the given ZDCLocalUser.uuid.
@@ -71,7 +77,23 @@ typedef NS_ENUM(NSInteger, AWSCredentialsErrorCode) {
                            completionQueue:(dispatch_queue_t)completionQueue
                            completionBlock:(void (^)(ZDCLocalUserAuth *auth, NSError *error))completionBlock;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Low-Level API
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Low-level API.
+ *
+ * Fetches the AWS credentials using the non-expired idToken (JWT).
+ */
+- (void)getAWSCredentialsWithIDToken:(NSString *)idToken
+                               stage:(NSString *)stage
+                     completionQueue:(dispatch_queue_t)completionQueue
+                     completionBlock:(void (^)(NSDictionary *delegation, NSError *error))completionBlock;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Utilities
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Utility method for parsing the delegation dictionary returned from the server.

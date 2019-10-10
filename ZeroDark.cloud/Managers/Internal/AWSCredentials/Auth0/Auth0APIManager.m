@@ -200,7 +200,7 @@ static Auth0APIManager *sharedInstance = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark - Auth0 Login (traditional)
+#pragma mark - Login & Profile
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)loginAndGetProfileWithUsername:(NSString *)username
@@ -288,7 +288,7 @@ static Auth0APIManager *sharedInstance = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark  - Auth0 Login (low level)
+#pragma mark - Login
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)loginWithUsername:(NSString *)username
@@ -456,7 +456,7 @@ static Auth0APIManager *sharedInstance = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark  - Auth0 Create User
+#pragma mark - Create User
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)createUserWithEmail:(NSString *)email
@@ -597,7 +597,7 @@ static Auth0APIManager *sharedInstance = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark  - Auth0 Get User Profile
+#pragma mark - Get User Profile
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)getUserProfileWithAccessToken:(NSString *)accessToken
@@ -758,7 +758,7 @@ static Auth0APIManager *sharedInstance = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark  - Auth0 Get Access Token
+#pragma mark - Get Access Token
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)getAccessTokenWithRefreshToken:(NSString *)refreshToken
@@ -898,7 +898,7 @@ static Auth0APIManager *sharedInstance = nil;
 		{
 			Fail(error ?: [self errorWithStatusCode:500 description:@"Invalid response from server"]);
 		}
-	 }];
+	}];
 
 	[task resume];
 }
@@ -934,7 +934,183 @@ static Auth0APIManager *sharedInstance = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark  - Auth0 Get AWSCredentials
+#pragma mark - Get Access Token
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)getIDTokenWithRefreshToken:(NSString *)refreshToken
+                        requestKey:(NSString *)requestKey
+{
+	__weak typeof(self) weakSelf = self;
+	
+	void (^Fail)(NSError*) = ^(NSError *error){
+		
+		NSParameterAssert(error != nil);
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
+		NSArray<dispatch_queue_t> * completionQueues = nil;
+		NSArray<id>               * completionBlocks = nil;
+		[strongSelf->pendingRequests popCompletionQueues: &completionQueues
+		                                completionBlocks: &completionBlocks
+		                                          forKey: requestKey];
+
+		for (NSUInteger i = 0; i < completionBlocks.count; i++)
+		{
+			dispatch_queue_t completionQueue = completionQueues[i];
+			void (^completionBlock)(NSString *accessToken, NSError *error) = completionBlocks[i];
+
+			dispatch_async(completionQueue, ^{ @autoreleasepool {
+
+				completionBlock(nil, error);
+			}});
+		}
+	};
+	
+	void (^Succeed)(NSString*) = ^(NSString *idToken){
+		
+		NSParameterAssert(idToken != nil);
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
+		NSArray<dispatch_queue_t> * completionQueues = nil;
+		NSArray<id>               * completionBlocks = nil;
+		[strongSelf->pendingRequests popCompletionQueues: &completionQueues
+		                                completionBlocks: &completionBlocks
+		                                          forKey: requestKey];
+
+		for (NSUInteger i = 0; i < completionBlocks.count; i++)
+		{
+			dispatch_queue_t completionQueue = completionQueues[i];
+			void (^completionBlock)(NSString *accessToken, NSError *error) = completionBlocks[i];
+
+			dispatch_async(completionQueue, ^{ @autoreleasepool {
+
+				completionBlock(idToken, nil);
+			}});
+		}
+	};
+	
+	NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
+	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
+
+	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
+	urlComponents.scheme = @"https";
+	urlComponents.host = kAuth04thADomain;
+	urlComponents.path = @"/oauth/token";
+
+	NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:4];
+	jsonDict[A0ParameterClientID]     = kAuth04thA_AppClientID;
+	jsonDict[A0ParameterGrantType]    = @"refresh_token";
+	jsonDict[A0ParameterRefreshToken] = refreshToken;
+	jsonDict[A0ParameterScope]        = @"openid";
+
+	NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:nil];
+
+	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
+	request.HTTPMethod = @"POST";
+	request.HTTPBody = jsonData;
+
+	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+	
+	NSURLSessionDataTask *task =
+	  [session dataTaskWithRequest: request
+	             completionHandler:^(NSData *responseObject, NSURLResponse *response, NSError *error)
+	{
+		if (error)
+		{
+			Fail(error);
+			return;
+		}
+
+		NSInteger statusCode = response.httpStatusCode;
+		if ((statusCode != 200) &&
+		    (statusCode != 401) &&
+		    (statusCode != 403))
+		{
+			error = [self errorWithStatusCode:statusCode description:@"Bad Status response"];
+			
+			Fail(error);
+			return;
+		}
+		  
+		NSDictionary *jsonDict = nil;
+		NSString *idToken = nil;
+
+		if ([responseObject isKindOfClass:[NSData class]] && (responseObject.length > 0))
+		{
+			jsonDict = [NSJSONSerialization JSONObjectWithData:(NSData *)responseObject options:0 error:&error];
+			
+			if (![jsonDict isKindOfClass:[NSDictionary class]]) {
+				jsonDict = nil;
+			}
+		}
+
+		if (jsonDict)
+		{
+			NSString *error_code = jsonDict[@"error"];
+			if (error_code)
+			{
+				NSString *error_description = jsonDict[@"error_description"];
+				
+				error = [self errorWithDescription:error_description a0Code:error_code];
+			}
+			else
+			{
+				idToken = jsonDict[@"id_token"];
+				
+				if (![idToken isKindOfClass:[NSString class]]) {
+					idToken = nil;
+				}
+			}
+		}
+		  
+		if (idToken)
+		{
+			Succeed(idToken);
+		}
+		else
+		{
+			Fail(error ?: [self errorWithStatusCode:500 description:@"Invalid response from server"]);
+		}
+	}];
+
+	[task resume];
+}
+
+- (void)getIDTokenWithRefreshToken:(NSString *)auth0_refreshToken
+                   completionQueue:(nullable dispatch_queue_t)completionQueue
+                   completionBlock:(void (^)(NSString * _Nullable auth0_idToken,
+                                             NSError *_Nullable error))completionBlock
+{
+	#ifndef NS_BLOCK_ASSERTIONS
+	NSParameterAssert(auth0_refreshToken);
+	NSParameterAssert(completionBlock);
+#else
+	if (completionBlock == nil) return;
+#endif
+
+	NSString *requestKey = [NSString stringWithFormat:@"%@-%@", NSStringFromSelector(_cmd), auth0_refreshToken];
+
+	NSUInteger requestCount =
+	  [pendingRequests pushCompletionQueue: completionQueue
+	                       completionBlock: completionBlock
+	                                forKey: requestKey];
+
+	if (requestCount > 1)
+	{
+		// There's a previous request currently in-flight.
+		// The <completionQueue, completionBlock> have been added to the existing request's list.
+		return;
+	}
+
+	[self getIDTokenWithRefreshToken: auth0_refreshToken
+	                      requestKey: requestKey];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark - Get AWS Credentials
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)getAWSCredentialsWithRefreshToken:(NSString *)refreshToken

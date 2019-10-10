@@ -39,28 +39,96 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Credentials
+#pragma mark User API
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)getAWSCredentialsForUser:(NSString *)userID
                  completionQueue:(dispatch_queue_t)completionQueue
                  completionBlock:(void (^)(ZDCLocalUserAuth *auth, NSError *error))completionBlock
 {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+	NSParameterAssert(userID != nil);
 	
-	if (completionQueue == NULL && completionBlock) {
-		completionQueue = dispatch_get_main_queue();
-	}
-	
-	void (^InvokeCompletionBlock)(ZDCLocalUserAuth *auth, NSError *error);
-	InvokeCompletionBlock = ^(ZDCLocalUserAuth *auth, NSError *error) {
-	
+	if (userID == nil)
+	{
 		if (completionBlock)
 		{
-			dispatch_async(completionQueue, ^{ @autoreleasepool {
+			NSError *error = [self missingInvalidUserError];
+			dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
 				
-				completionBlock(auth, error);
+				completionBlock(nil, error);
+			}});
+		}
+		return;
+	}
+	
+	NSString *requestKey = [NSString stringWithFormat:@"%@-%@", NSStringFromSelector(_cmd), userID];
+	
+	NSUInteger requestCount =
+	  [pendingRequests pushCompletionQueue: completionQueue
+	                       completionBlock: completionBlock
+	                                forKey: requestKey];
+
+	if (requestCount > 1)
+	{
+		// There's a previous request currently in-flight.
+		// The <completionQueue, completionBlock> have been added to the existing request's list.
+		return;
+	}
+	
+	[self getAWSCredentialsForUserID:userID requestKey:requestKey];
+}
+
+- (void)getAWSCredentialsForUserID:(NSString *)userID
+                        requestKey:(NSString *)requestKey
+{
+	__weak typeof(self) weakSelf = self;
+	
+	void (^Fail)(NSError*) = ^(NSError *error) {
+	
+		NSParameterAssert(error != nil);
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
+		NSArray<dispatch_queue_t> * completionQueues = nil;
+		NSArray<id>               * completionBlocks = nil;
+		[strongSelf->pendingRequests popCompletionQueues: &completionQueues
+		                                completionBlocks: &completionBlocks
+		                                          forKey: requestKey];
+
+		for (NSUInteger i = 0; i < completionBlocks.count; i++)
+		{
+			dispatch_queue_t completionQueue = completionQueues[i];
+			void (^completionBlock)(ZDCLocalUserAuth *auth, NSError *error) = completionBlocks[i];
+
+			dispatch_async(completionQueue, ^{ @autoreleasepool {
+
+				completionBlock(nil, error);
+			}});
+		}
+	};
+	
+	void (^Succeed)(ZDCLocalUserAuth*) = ^(ZDCLocalUserAuth *auth) {
+	
+		NSParameterAssert(auth != nil);
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
+		NSArray<dispatch_queue_t> * completionQueues = nil;
+		NSArray<id>               * completionBlocks = nil;
+		[strongSelf->pendingRequests popCompletionQueues: &completionQueues
+		                                completionBlocks: &completionBlocks
+		                                          forKey: requestKey];
+
+		for (NSUInteger i = 0; i < completionBlocks.count; i++)
+		{
+			dispatch_queue_t completionQueue = completionQueues[i];
+			void (^completionBlock)(ZDCLocalUserAuth *auth, NSError *error) = completionBlocks[i];
+
+			dispatch_async(completionQueue, ^{ @autoreleasepool {
+
+				completionBlock(auth, nil);
 			}});
 		}
 	};
@@ -76,134 +144,104 @@
 		
 	} completionQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) completionBlock:^{
 
-		// check for db objects
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
+		// Sanity check: localUserAuth is non-nil
 		if (!localUserAuth || ![localUserAuth isKindOfClass:[ZDCLocalUserAuth class]])
 		{
-			InvokeCompletionBlock(nil, [self missingInvalidUserError]);
+			Fail([strongSelf missingInvalidUserError]);
 			return;
 		}
 
-		// check for refresh token
+		// Sanity check: localUserAuth has non-nil refresh_token
 		if (!localUserAuth.auth0_refreshToken)
 		{
-			NSError *noRefreshTokensError = [self noRefreshTokensError];
+			NSError *noRefreshTokensError = [strongSelf noRefreshTokensError];
 			
 			if (!localUser.accountNeedsA0Token)
 			{
-				[self setNeedsRefreshTokenForUser: userID
-				                  completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-				                  completionBlock:^
+				[strongSelf setNeedsRefreshTokenForUser: userID
+				                        completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+				                        completionBlock:^
 				{
-					InvokeCompletionBlock(nil, noRefreshTokensError);
+					Fail(noRefreshTokensError);
 				}];
 			}
 			else
 			{
-				InvokeCompletionBlock(nil, noRefreshTokensError);
+				Fail(noRefreshTokensError);
 			}
+			
 			return;
 		}
 
-		// check for unexpired token
 		NSDate *nowPlusBuffer = [[NSDate date] dateByAddingTimeInterval:15.0];
+		
+		// Check for unexpired credentials
+		//
 		if (localUserAuth.aws_expiration && [localUserAuth.aws_expiration isAfter:nowPlusBuffer])
 		{
-			InvokeCompletionBlock(localUserAuth, nil);
+			Succeed(localUserAuth);
 			return;
 		}
-
-		// fetch new token
-		[zdc.auth0APIManager
-			getAWSCredentialsWithRefreshToken: localUserAuth.auth0_refreshToken
-			                  completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-			                  completionBlock:^(NSDictionary *delegation, NSError *error)
+		
+		BOOL needsRefreshIDToken = YES;
+		
+		// Check for unexpired idToken
+		//
+		if (localUserAuth.auth0_idToken)
 		{
-			if (error)
+			NSDate *expiration = [NSString expireDateFromJWTString:localUserAuth.auth0_idToken withError:nil];
+			if (expiration && [expiration isAfter:nowPlusBuffer])
 			{
-				NSString* auth0Code = error.auth0API_error;
-				if ([auth0Code isEqualToString:kAuth0Error_InvalidRefreshToken])
-				{
-					// account needs login
-					NSError *noRefreshTokensError = [self noRefreshTokensError];
-					[self setNeedsRefreshTokenForUser: userID
-					                  completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-					                  completionBlock:^
-					{
-						InvokeCompletionBlock(nil, noRefreshTokensError);
-					}];
-				}
-				else
-				{
-					InvokeCompletionBlock(nil, error);
-				}
-				
-				return;
+				needsRefreshIDToken = NO;
 			}
-			
-			NSString *aws_accessKeyID = nil;
-			NSString *aws_secret = nil;
-			NSString *aws_session = nil;
-			NSDate *aws_expiration = nil;
-			NSString *aws_userID = nil;
-			
-			[self parseAccessKeyID: &aws_accessKeyID
-			                secret: &aws_secret
-			               session: &aws_session
-			            expiration: &aws_expiration
-			                userID: &aws_userID
-			        fromDelegation: delegation];
-			
-			__block ZDCLocalUserAuth *refreshedLocalUserAuth = nil;
-			
-			ZDCDatabaseManager *databaseManager = zdc.databaseManager;
-			[databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
-				
-				refreshedLocalUserAuth = [transaction objectForKey:userID inCollection:kZDCCollection_UserAuth];
-				if (refreshedLocalUserAuth == nil) {
-					return; // from transactionBlock - goto completionBlock
-				}
-				
-				refreshedLocalUserAuth = [refreshedLocalUserAuth copy];
-				
-				// Security Check
-				//
-				// The aws_userID should match our userID.
-				//
-				// If this isn't true, then we just fetched AWS credentials for a different account.
-				// This would happen if we put a refreshToken into the wrong account.
-				//
-				if (![aws_userID isEqual:userID])
+		}
+		
+		dispatch_queue_t backgroundQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+		
+		if (needsRefreshIDToken)
+		{
+			[strongSelf refreshIDTokenForUserID: userID
+			                   withRefreshToken: localUserAuth.auth0_refreshToken
+			                    completionQueue: backgroundQueue
+			                    completionBlock:^(ZDCLocalUserAuth *localUserAuth, NSError *error)
+			{
+				if (error)
 				{
-					// Remove the auth0_id entry to ensure we don't ever use it again.
-					
-					refreshedLocalUserAuth.aws_accessKeyID = nil;
-					refreshedLocalUserAuth.aws_secret      = nil;
-					refreshedLocalUserAuth.aws_session     = nil;
-					refreshedLocalUserAuth.aws_expiration  = nil;
-					
-					[transaction setObject:refreshedLocalUserAuth forKey:userID inCollection:kZDCCollection_UserAuth];
-					refreshedLocalUserAuth = nil; // <- force caller to restart
+					Fail(error);
+					return;
 				}
-				else
-				{
-					// Update the auth information normally
-
-					refreshedLocalUserAuth.aws_accessKeyID = aws_accessKeyID;
-					refreshedLocalUserAuth.aws_secret      = aws_secret;
-					refreshedLocalUserAuth.aws_session     = aws_session;
-					refreshedLocalUserAuth.aws_expiration  = aws_expiration;
-
-					[transaction setObject:refreshedLocalUserAuth forKey:userID inCollection:kZDCCollection_UserAuth];
-				}
-			
-			} completionQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) completionBlock:^{
 				
-				InvokeCompletionBlock(refreshedLocalUserAuth, nil);
+				[weakSelf refreshAWSCredentialsForUserID: userID
+				                                 idToken: localUserAuth.auth0_idToken
+				                                   stage: localUser.aws_stage
+				                         completionQueue: backgroundQueue
+				                         completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+				{
+					if (error)
+						Fail(error);
+					else
+						Succeed(localUserAuth);
+				}];
 			}];
-		}];
+		}
+		else
+		{
+			[strongSelf refreshAWSCredentialsForUserID: userID
+			                                   idToken: localUserAuth.auth0_idToken
+			                                     stage: localUser.aws_stage
+			                           completionQueue: backgroundQueue
+			                           completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+			{
+				if (error)
+					Fail(error);
+				else
+					Succeed(localUserAuth);
+			}];
+		}
 	}];
-	
-#pragma clang diagnostic pop
 }
 
 - (void)flushAWSCredentialsForUserID:(NSString *)userID
@@ -289,6 +327,290 @@
 		               completionQueue: completionQueue
 		               completionBlock: completionBlock];
 	}];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Refresh
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Performs the following:
+ *
+ * - fetches new idToken from auth0 servers
+ * - updates the ZDCLocalUserAuth object in the database
+ */
+- (void)refreshIDTokenForUserID:(NSString *)userID
+               withRefreshToken:(NSString *)refreshToken
+                completionQueue:(dispatch_queue_t)completionQueue
+                completionBlock:(void (^)(ZDCLocalUserAuth *auth, NSError *error))completionBlock
+{
+	NSParameterAssert(userID != nil);
+	NSParameterAssert(refreshToken != nil);
+	NSParameterAssert(completionQueue != nil);
+	NSParameterAssert(completionBlock != nil);
+	
+	__weak typeof(self) weakSelf = self;
+	dispatch_queue_t backgroundQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	
+	[zdc.auth0APIManager getIDTokenWithRefreshToken: refreshToken
+	                                completionQueue: backgroundQueue
+	                                completionBlock:^(NSString *idToken, NSError *error)
+	{
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
+		if (error)
+		{
+			NSString *auth0Code = error.auth0API_error;
+			if ([auth0Code isEqualToString:kAuth0Error_InvalidRefreshToken])
+			{
+				// The refreshToken has been revoked.
+				// So the user will need to re-login to their account.
+				//
+				NSError *noRefreshTokensError = [strongSelf noRefreshTokensError];
+				[strongSelf setNeedsRefreshTokenForUser: userID
+				                        completionQueue: completionQueue
+				                        completionBlock:^
+				{
+					completionBlock(nil, noRefreshTokensError);
+				}];
+			}
+			else
+			{
+				dispatch_async(completionQueue, ^{ @autoreleasepool {
+					completionBlock(nil, error);
+				}});
+			}
+			
+			return;
+		}
+		
+		__block ZDCLocalUserAuth *auth = nil;
+		
+		YapDatabaseConnection *rwConnection = [strongSelf->zdc.databaseManager rwDatabaseConnection];
+		[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+			
+			auth = [transaction objectForKey:userID inCollection:kZDCCollection_UserAuth];
+			auth = [auth copy];
+			
+			auth.auth0_idToken = idToken;
+			
+			[transaction setObject:auth forKey:userID inCollection:kZDCCollection_UserAuth];
+			
+		} completionQueue:completionQueue completionBlock:^{
+			
+			if (auth)
+				completionBlock(auth, nil);
+			else
+				completionBlock(nil, [weakSelf missingInvalidUserError]);
+		}];
+		
+	}];
+}
+
+/**
+ * Performs the following:
+ *
+ * - fetches new aws credentials from the server
+ * - updates the ZDCLocalUserAuth object in the database
+ */
+- (void)refreshAWSCredentialsForUserID:(NSString *)userID
+                               idToken:(NSString *)idToken
+                                 stage:(NSString *)stage
+                       completionQueue:(dispatch_queue_t)completionQueue
+                       completionBlock:(void (^)(ZDCLocalUserAuth *auth, NSError *error))completionBlock
+{
+	NSParameterAssert(userID != nil);
+	NSParameterAssert(idToken != nil);
+	NSParameterAssert(stage != nil);
+	NSParameterAssert(completionQueue != nil);
+	NSParameterAssert(completionBlock != nil);
+	
+	__weak typeof(self) weakSelf = self;
+	dispatch_queue_t backgroundQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	
+	[self getAWSCredentialsWithIDToken: idToken
+	                             stage: stage
+	                   completionQueue: backgroundQueue
+	                   completionBlock:^(NSDictionary *delegation, NSError *error)
+	{
+		if (error)
+		{
+			dispatch_async(completionQueue, ^{ @autoreleasepool {
+				completionBlock(nil, error);
+			}});
+			return;
+		}
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
+		NSString *aws_accessKeyID = nil;
+		NSString *aws_secret = nil;
+		NSString *aws_session = nil;
+		NSDate *aws_expiration = nil;
+		NSString *aws_userID = nil;
+		
+		[strongSelf parseAccessKeyID: &aws_accessKeyID
+		                      secret: &aws_secret
+		                     session: &aws_session
+		                  expiration: &aws_expiration
+		                      userID: &aws_userID
+		              fromDelegation: delegation];
+		
+		__block ZDCLocalUserAuth *auth = nil;
+		
+		YapDatabaseConnection *rwConnection = [strongSelf->zdc.databaseManager rwDatabaseConnection];
+		[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+			
+			auth = [transaction objectForKey:userID inCollection:kZDCCollection_UserAuth];
+			auth = [auth copy];
+			
+			auth.aws_accessKeyID = aws_accessKeyID;
+			auth.aws_secret      = aws_secret;
+			auth.aws_session     = aws_session;
+			auth.aws_expiration  = aws_expiration;
+
+			[transaction setObject:auth forKey:userID inCollection:kZDCCollection_UserAuth];
+			
+		} completionQueue:completionQueue completionBlock:^{
+			
+			if (auth)
+				completionBlock(auth, nil);
+			else
+				completionBlock(nil, [weakSelf missingInvalidUserError]);
+		}];
+	}];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Low Level
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)getAWSCredentialsWithIDToken:(NSString *)idToken
+                               stage:(NSString *)stage
+                     completionQueue:(dispatch_queue_t)completionQueue
+                     completionBlock:(void (^)(NSDictionary *delegation, NSError *error))completionBlock
+{
+#ifndef NS_BLOCK_ASSERTIONS
+	NSParameterAssert(idToken != nil);
+	NSParameterAssert(stage != nil);
+	NSParameterAssert(completionBlock != nil);
+#else
+	if (completionBlock == nil) return;
+#endif
+	
+	if (idToken == nil)
+	{
+		NSError *error = [self invalidIDTokenError];
+		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+			
+			completionBlock(nil, error);
+		}});
+		return;
+	}
+	
+	NSString *requestKey = [NSString stringWithFormat:@"%@-%@", NSStringFromSelector(_cmd), idToken];
+
+	NSUInteger requestCount =
+	  [pendingRequests pushCompletionQueue: completionQueue
+	                       completionBlock: completionBlock
+	                                forKey: requestKey];
+
+	if (requestCount > 1)
+	{
+		// There's a previous request currently in-flight.
+		// The <completionQueue, completionBlock> have been added to the existing request's list.
+		return;
+	}
+	
+	[self getAWSCredentialsWithIDToken:idToken stage:stage requestKey:requestKey];
+}
+
+- (void)getAWSCredentialsWithIDToken:(NSString *)idToken
+                               stage:(NSString *)stage
+                          requestKey:(NSString *)requestKey
+{
+	__weak typeof(self) weakSelf = self;
+	
+	void (^InvokeCompletionBlocks)(NSDictionary*, NSError*) = ^(NSDictionary *delegation, NSError *error){
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
+		NSArray<dispatch_queue_t> * completionQueues = nil;
+		NSArray<id>               * completionBlocks = nil;
+		[strongSelf->pendingRequests popCompletionQueues: &completionQueues
+		                                completionBlocks: &completionBlocks
+		                                          forKey: requestKey];
+
+		for (NSUInteger i = 0; i < completionBlocks.count; i++)
+		{
+			dispatch_queue_t completionQueue = completionQueues[i];
+			void (^completionBlock)(NSDictionary *delegationToken, NSError *error) = completionBlocks[i];
+
+			dispatch_async(completionQueue, ^{ @autoreleasepool {
+
+				completionBlock(delegation, error);
+			}});
+		}
+	};
+	
+	NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
+	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
+	
+	NSURLComponents *urlComponents =
+	  [zdc.restManager apiGatewayForRegion: AWSRegion_US_West_2
+	                                 stage: @"dev" // stage ?: @"prod"
+	                                  path: @"/delegation"];
+
+	NSDictionary *jsonDict = @{
+		@"token" : idToken
+	};
+
+	NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:nil];
+
+	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
+	request.HTTPMethod = @"POST";
+	request.HTTPBody = jsonData;
+
+	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+	
+	NSURLSessionDataTask *task =
+	  [session dataTaskWithRequest: request
+	             completionHandler:^(NSData *responseObject, NSURLResponse *response, NSError *error)
+	{
+		if (error)
+		{
+			InvokeCompletionBlocks(nil, error);
+			return;
+		}
+		  
+		NSDictionary *delegation = nil;
+		
+		if ([responseObject isKindOfClass:[NSDictionary class]])
+		{
+			delegation = (NSDictionary *)responseObject;
+		}
+		else if ([responseObject isKindOfClass:[NSData class]])
+		{
+			id jsonDict = [NSJSONSerialization JSONObjectWithData:(NSData *)responseObject options:0 error:&error];
+			
+			if ([jsonDict isKindOfClass:[NSDictionary class]])
+			{
+				delegation = (NSDictionary *)jsonDict;
+			}
+		}
+		  
+		if (delegation) {
+			InvokeCompletionBlocks(delegation, nil);
+		}
+		else {
+			InvokeCompletionBlocks(nil, error ?: [weakSelf invalidServerResponseError]);
+		}
+	}];
+	
+	[task resume];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -453,6 +775,22 @@
 	NSString *description = @"ZDCLocalUserAuth has no valid auth0_refreshToken.";
 	return [NSError errorWithClass: [self class]
 	                          code: AWSCredentialsErrorCode_NoRefreshTokens
+	                   description: description];
+}
+
+- (NSError *)invalidIDTokenError
+{
+	NSString *description = @"The given idToken parameter is invalid.";
+	return [NSError errorWithClass: [self class]
+	                          code: AWSCredentialsErrorCode_InvalidIDToken
+	                   description: description];
+}
+
+- (NSError *)invalidServerResponseError
+{
+	NSString *description = @"The server returned an invalid response.";
+	return [NSError errorWithClass: [self class]
+	                          code: AWSCredentialsErrorCode_InvalidServerResponse
 	                   description: description];
 }
 
