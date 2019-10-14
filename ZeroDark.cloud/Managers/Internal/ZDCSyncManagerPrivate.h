@@ -16,6 +16,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithOwner:(ZeroDarkCloud *)owner;
 
+- (void)enqueuePullCompletionQueue:(nullable dispatch_queue_t)completionQueue
+                   completionBlock:(void (^)(ZDCPullResult))completionBlock
+                    forLocalUserID:(NSString *)localUserID;
+
 /**
  * The PullManager invokes these methods directly.
  */

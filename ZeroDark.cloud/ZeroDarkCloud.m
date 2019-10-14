@@ -664,6 +664,8 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 		return;
 	}
 	
+	dispatch_queue_t backgroundQueue = dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0);
+	
 	__block ZDCLocalUser *localUser = nil;
 	[self.databaseManager.roDatabaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
@@ -672,11 +674,11 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 			localUser = (ZDCLocalUser *)user;
 		}
 		
-	} completionQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) completionBlock:^{
+	} completionQueue:backgroundQueue completionBlock:^{
 		
 		if (!localUser)
 		{
-			// We received a push notification for a user that no longer exists on this device.
+			// We received a push notification for a user that's no longer logged-in on this device.
 			// We need to unregister for pushes for this unknown user.
 		
 			YapDatabaseConnection *rwConnection = self.databaseManager.rwDatabaseConnection;
@@ -708,7 +710,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 					          inCollection: kZDCCollection_Tasks];
 				}
 				
-			} completionQueue:dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0) completionBlock:^{
+			} completionQueue:backgroundQueue completionBlock:^{
 				
 				InvokeCompletionBlock(NO, NO);
 			}];
@@ -737,12 +739,28 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 			[self.pushManager processPushNotification:pushInfo];
 			
 			[self.pullManager processPushNotification: pushInfo
-			                          completionQueue: dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0)
+			                          completionQueue: backgroundQueue
 			                          completionBlock:^(BOOL needsPull)
 			{
-				// Todo...
-				
-				NSAssert(NO, @"not implemented yet - where i leftoff coding...");
+				if (needsPull)
+				{
+					void (^pullCompletionBlock)(ZDCPullResult) = ^(ZDCPullResult result){
+						
+						BOOL failed = (result != ZDCPullResult_Success);
+						
+						InvokeCompletionBlock(/* newData:*/YES, failed);
+					};
+					
+					[self.syncManager enqueuePullCompletionQueue: backgroundQueue
+					                             completionBlock: pullCompletionBlock
+					                              forLocalUserID: localUserID];
+					
+					[self.syncManager pullChangesForLocalUserID:localUserID];
+				}
+				else
+				{
+					InvokeCompletionBlock(/* newData:*/NO, /* failed:*/NO);
+				}
 			}];
 		}
 	}];

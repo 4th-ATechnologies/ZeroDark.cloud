@@ -306,35 +306,6 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 	
 	BOOL isRegisteredTreeID = [treeID isEqualToString:zdc.primaryTreeID];
 	
-	// Handle pending completionBlocks (from processPushNotification:::)
-	
-	NSArray *completionQueues = nil;
-	NSArray *completionBlocks = nil;
-	
-	if (isRegisteredTreeID)
-	{
-		[pendingPulls popCompletionQueues: &completionQueues
-		                 completionBlocks: &completionBlocks
-		                           forKey: localUserID];
-	}
-	
-	if (completionBlocks.count > 0)
-	{
-		BOOL failed = (result != ZDCPullResult_Success);
-		BOOL newData = !failed;
-		
-		for (NSUInteger i = 0; i < completionBlocks.count; i++)
-		{
-			dispatch_queue_t completionQueue = completionQueues[i];
-			void (^completionBlock)(BOOL failed, BOOL newData) = completionBlocks[i];
-			
-			dispatch_async(completionQueue, ^{ @autoreleasepool {
-				
-				completionBlock(newData, failed);
-			}});
-		}
-	}
-	
 	// Update ZDCLocalUserSyncState accordingly
 	
 	__block BOOL wasPullingWithChanges = NO;
@@ -408,6 +379,29 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 			block();
 		else
 			dispatch_sync(queue, block);
+	}
+	
+	// Handle pending completionBlocks (from processPushNotification:::)
+	
+	if (isRegisteredTreeID)
+	{
+		NSArray *completionQueues = nil;
+		NSArray *completionBlocks = nil;
+		
+		[pendingPulls popCompletionQueues: &completionQueues
+		                 completionBlocks: &completionBlocks
+		                           forKey: localUserID];
+		
+		for (NSUInteger i = 0; i < completionBlocks.count; i++)
+		{
+			dispatch_queue_t completionQueue = completionQueues[i];
+			void (^completionBlock)(ZDCPullResult) = completionBlocks[i];
+			
+			dispatch_async(completionQueue, ^{ @autoreleasepool {
+				
+				completionBlock(result);
+			}});
+		}
 	}
 	
 	// Now that we've updated our internal state,
@@ -1155,6 +1149,15 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 			syncState.isPulling = YES;
 		}
 	}
+}
+
+- (void)enqueuePullCompletionQueue:(nullable dispatch_queue_t)completionQueue
+                   completionBlock:(void (^)(ZDCPullResult))completionBlock
+                    forLocalUserID:(NSString *)localUserID
+{
+	[pendingPulls pushCompletionQueue: completionQueue
+	                  completionBlock: completionBlock
+	                           forKey: localUserID];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

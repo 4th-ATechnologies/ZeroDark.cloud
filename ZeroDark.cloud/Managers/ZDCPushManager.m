@@ -993,7 +993,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		YapDatabaseCloudCorePipeline *pipeline = [cloudExt defaultPipeline];
 		if (pipeline)
 		{
-			ZDCCloudOperation *operation = (ZDCCloudOperation *)[pipeline operationWithUUID:uuid];
+			operation = (ZDCCloudOperation *)[pipeline operationWithUUID:uuid];
 			if (operation)
 			{
 				pollContext = operation.ephemeralInfo.pollContext;
@@ -1019,8 +1019,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		case ZDCCloudOperationType_Move:
 		{
-			NSAssert(NO, @"Code in transition - not implemented yet");
-		//	[self movePollDidComplete:pollContext withStatus:requestInfo.status];
+			[self movePollDidComplete:pollContext withStatus:requestInfo.status];
 			break;
 		}
 		case ZDCCloudOperationType_DeleteLeaf:

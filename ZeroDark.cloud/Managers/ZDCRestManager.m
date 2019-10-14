@@ -616,6 +616,7 @@
 		
 		NSDictionary* bodyDict = @{
 			@"app_id"     : treeID,
+			@"tree_ids"   : @[treeID],
 			@"platform"   : platform,
 			@"push_token" : localUser.pushToken
 		};
