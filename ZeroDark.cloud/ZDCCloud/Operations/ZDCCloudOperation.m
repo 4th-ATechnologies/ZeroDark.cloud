@@ -22,7 +22,7 @@ static int const kCurrentVersion = 1;
 
 static NSString *const k_version         = @"version(ZDCCloudOperation)"; // this is a subclass
 static NSString *const k_localUserID     = @"localUserID";
-static NSString *const k_zAppID          = @"zAppID";
+static NSString *const k_treeID          = @"treeID";
 static NSString *const k_type_str        = @"type_str";
 static NSString *const k_putType_str     = @"putType_str";
 static NSString *const k_nodeID          = @"nodeID";
@@ -60,7 +60,7 @@ static NSString *const putType_str_node_data    = @"data";
 @implementation ZDCCloudOperation
 
 @synthesize localUserID = localUserID;
-@synthesize zAppID = zAppID;
+@synthesize treeID = treeID;
 @synthesize type = type;
 @synthesize putType = putType;
 @synthesize nodeID = nodeID;
@@ -91,13 +91,13 @@ static NSString *const putType_str_node_data    = @"data";
 }
 
 - (instancetype)initWithLocalUserID:(NSString *)inLocalUserID
-                             zAppID:(NSString *)inZAppID
+                             treeID:(NSString *)inTreeID
                                type:(ZDCCloudOperationType)inType;
 {
 	if ((self = [super init]))
 	{
 		localUserID = [inLocalUserID copy];
-		zAppID = [inZAppID copy];
+		treeID = [inTreeID copy];
 		type = inType;
 		
 		ephemeralInfo = [[ZDCCloudOperation_EphemeralInfo alloc] init];
@@ -106,13 +106,13 @@ static NSString *const putType_str_node_data    = @"data";
 }
 
 - (instancetype)initWithLocalUserID:(NSString *)inLocalUserID
-                             zAppID:(NSString *)inZAppID
+                             treeID:(NSString *)inTreeID
                             putType:(ZDCCloudOperationPutType)inPutType
 {
 	if ((self = [super init]))
 	{
 		localUserID = [inLocalUserID copy];
-		zAppID = [inZAppID copy];
+		treeID = [inTreeID copy];
 		type = ZDCCloudOperationType_Put;
 		putType = inPutType;
 		
@@ -138,7 +138,7 @@ static NSString *const putType_str_node_data    = @"data";
 		int version = [decoder decodeIntForKey:k_version];
 		
 		localUserID = [decoder decodeObjectForKey:k_localUserID];
-		zAppID      = [decoder decodeObjectForKey:k_zAppID];
+		treeID      = [decoder decodeObjectForKey:k_treeID];
 		
 		// A note on encoding/decoding enums:
 		//
@@ -186,9 +186,9 @@ static NSString *const putType_str_node_data    = @"data";
 			}
 			
 			if (dstCloudPath) {
-				dstCloudLocator = [[ZDCCloudLocator alloc] initWithRegion:cloudLocator.region
-				                                                  bucket:cloudLocator.bucket
-				                                               cloudPath:dstCloudPath];
+				dstCloudLocator = [[ZDCCloudLocator alloc] initWithRegion: cloudLocator.region
+				                                                   bucket: cloudLocator.bucket
+				                                                cloudPath: dstCloudPath];
 			}
 		}
 		
@@ -230,7 +230,7 @@ static NSString *const putType_str_node_data    = @"data";
 	}
 	
 	[coder encodeObject:localUserID forKey:k_localUserID];
-	[coder encodeObject:zAppID      forKey:k_zAppID];
+	[coder encodeObject:treeID      forKey:k_treeID];
 	
 	if (type != ZDCCloudOperationType_Invalid)
 	{
@@ -276,7 +276,7 @@ static NSString *const putType_str_node_data    = @"data";
 	ZDCCloudOperation *copy = [super copyWithZone:zone]; // YapDatabaseCloudCoreOperation
 	
 	copy->localUserID = localUserID;
-	copy->zAppID = zAppID;
+	copy->treeID = treeID;
 	
 	copy->type = type;
 	copy->putType = putType;
@@ -323,7 +323,7 @@ static NSString *const putType_str_node_data    = @"data";
 - (BOOL)hasSameTarget:(ZDCCloudOperation *)op
 {
 	if (!YDB_IsEqualOrBothNil(localUserID, op->localUserID)) return NO;
-	if (!YDB_IsEqualOrBothNil(zAppID, op->zAppID)) return NO;
+	if (!YDB_IsEqualOrBothNil(treeID, op->treeID)) return NO;
 	
 	if (type != op->type) return NO;
 	if (putType != op->putType) return NO;

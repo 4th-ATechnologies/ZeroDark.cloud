@@ -193,7 +193,7 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
 /**
  * Returns the corresponding trunk node (top-level root node).
  *
- * This method is short-hand for `[ZDCNodeManager trunkNodeForLocalUserID:zAppID:trunk:transaction:]`
+ * This method is short-hand for `[ZDCNodeManager trunkNodeForLocalUserID:treeID:trunk:transaction:]`
  */
 - (nullable ZDCTrunkNode *)trunkNode:(ZDCTreesystemTrunk)trunk;
 
@@ -480,7 +480,7 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
 /**
  * Combines several methods to return the linked object for a given treesystem path.
  *
- * In particular, this method invokes `-[ZDCNodeManager findNodeWithPath:localUserID:zAppID:transaction:]` first.
+ * In particular, this method invokes `-[ZDCNodeManager findNodeWithPath:localUserID:treeID:transaction:]` first.
  * And if that method returns a node, then the `linkedObjectForNodeID:` method is utilized.
  *
  * @param path

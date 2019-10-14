@@ -17,7 +17,7 @@ static NSString *const k_operationUUID        = @"operationUUID";
 static NSString *const k_pipeline             = @"pipeline";
 static NSString *const k_localUserID          = @"localUserID";
 static NSString *const k_nodeID               = @"nodeID";
-static NSString *const k_zAppID               = @"zAppID";
+static NSString *const k_treeID               = @"treeID";
 static NSString *const k_cloudLocator         = @"cloudLocator";
 static NSString *const k_dstCloudPath         = @"dstCloudPath";
 static NSString *const k_eTag                 = @"eTag";
@@ -36,7 +36,7 @@ static NSString *const k_sha256Hash           = @"sha256Hash";
 @synthesize operationUUID = operationUUID;
 @synthesize pipeline = pipeline;
 @synthesize localUserID = localUserID;
-@synthesize zAppID = zAppID;
+@synthesize treeID = treeID;
 
 @synthesize eTag = eTag;
 
@@ -68,7 +68,7 @@ static NSString *const k_sha256Hash           = @"sha256Hash";
 		operationUUID = [operation.uuid copy];
 		pipeline      = [operation.pipeline copy];
 		localUserID   = [operation.localUserID copy];
-		zAppID        = [operation.zAppID copy];
+		treeID        = [operation.treeID copy];
 	}
 	return self;
 }
@@ -84,7 +84,7 @@ static NSString *const k_sha256Hash           = @"sha256Hash";
 		operationUUID = [decoder decodeObjectForKey:k_operationUUID];
 		pipeline      = [decoder decodeObjectForKey:k_pipeline];
 		localUserID   = [decoder decodeObjectForKey:k_localUserID];
-		zAppID        = [decoder decodeObjectForKey:k_zAppID];
+		treeID        = [decoder decodeObjectForKey:k_treeID];
 		
 		eTag = [decoder decodeObjectForKey:k_eTag];
 		
@@ -114,7 +114,7 @@ static NSString *const k_sha256Hash           = @"sha256Hash";
 	[coder encodeObject:operationUUID forKey:k_operationUUID];
 	[coder encodeObject:pipeline      forKey:k_pipeline];
 	[coder encodeObject:localUserID   forKey:k_localUserID];
-	[coder encodeObject:zAppID        forKey:k_zAppID];
+	[coder encodeObject:treeID        forKey:k_treeID];
 	
 	[coder encodeObject:eTag forKey:k_eTag];
 	
@@ -144,7 +144,7 @@ static NSString *const k_sha256Hash           = @"sha256Hash";
 	copy->operationUUID = operationUUID;
 	copy->pipeline      = pipeline;
 	copy->localUserID   = localUserID;
-	copy->zAppID        = zAppID;
+	copy->treeID        = treeID;
 	
 	copy->eTag = eTag;
 	

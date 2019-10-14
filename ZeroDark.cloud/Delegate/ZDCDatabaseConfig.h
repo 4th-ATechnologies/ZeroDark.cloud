@@ -18,7 +18,7 @@ typedef void (^YapDatabaseExtensionsRegistration)(YapDatabase *database);
 
 /**
  * Container class for configuring the database.
- * And instance of this class is passed to `-[ZeroDarkCloud unlockOrCreateDatabase:]`.
+ * An instance of this class is passed to `-[ZeroDarkCloud unlockOrCreateDatabase:]`.
  */
 @interface ZDCDatabaseConfig : NSObject
 

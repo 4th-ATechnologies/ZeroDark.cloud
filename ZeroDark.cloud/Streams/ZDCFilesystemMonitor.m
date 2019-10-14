@@ -24,7 +24,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCFilesystemMonitor.html
  */
 - (instancetype)initWithFileURL:(NSURL *)fileURL
@@ -40,7 +40,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCFilesystemMonitor.html
  */
 - (instancetype)initWithDirectoryURL:(NSURL *)directoryURL
@@ -63,7 +63,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCFilesystemMonitor.html
  */
 - (BOOL)monitorWithMask:(dispatch_source_vnode_flags_t)mask
@@ -122,7 +122,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCFilesystemMonitor.html
  */
 + (dispatch_source_vnode_flags_t)vnode_flags_all
@@ -136,7 +136,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCFilesystemMonitor.html
  */
 + (dispatch_source_vnode_flags_t)vnode_flags_data_changed
@@ -149,7 +149,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCFilesystemMonitor.html
  */
 + (NSString *)vnode_flags_description:(dispatch_source_vnode_flags_t)mask

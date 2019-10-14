@@ -97,7 +97,7 @@ static P2K_Algorithm  	defaultP2KAlgorithm			=	 kP2K_Algorithm_Argon2i;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
  */
 - (BOOL)isConfigured
@@ -118,7 +118,7 @@ static P2K_Algorithm  	defaultP2KAlgorithm			=	 kP2K_Algorithm_Argon2i;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
  */
 - (BOOL)isUnlocked
@@ -128,7 +128,7 @@ static P2K_Algorithm  	defaultP2KAlgorithm			=	 kP2K_Algorithm_Argon2i;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
  */
 - (BOOL)usesKeychainKey
@@ -145,7 +145,7 @@ static P2K_Algorithm  	defaultP2KAlgorithm			=	 kP2K_Algorithm_Argon2i;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
  */
 - (BOOL)usesPassphrase
@@ -162,7 +162,7 @@ static P2K_Algorithm  	defaultP2KAlgorithm			=	 kP2K_Algorithm_Argon2i;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
  */
 - (BOOL)usesBioMetrics
@@ -263,14 +263,14 @@ done:
 	// - the database file it's associated with
 	//
 	NSString *appOwner = [ZDCDirectoryManager bundleIdentifier];
-	NSString *dbFilename = zdc.databasePath.lastPathComponent;
+	NSString *dbFilename = [zdc.databasePath lastPathComponent];
 	
 	return [NSString stringWithFormat:@"%@|%@.keyChainPassphrase", appOwner, dbFilename];
 }
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
  */
 - (BOOL)createKeychainEntry:(NSError *_Nullable *_Nullable)outError
@@ -303,7 +303,7 @@ done:
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
  */
 - (BOOL)hasKeychainPassphrase
@@ -335,7 +335,7 @@ done:
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
  */
 - (nullable NSData *)unlockUsingKeychain:(NSError *_Nullable *_Nullable) outError
@@ -483,7 +483,7 @@ done:
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
  */
 - (BOOL)createPassphraseEntry:(NSString *)passphrase
@@ -500,11 +500,13 @@ done:
 	uint8_t     *data = NULL;
 	size_t      dataLen = 0;
 
+	NSString *dbFilename = [zdc.databasePath lastPathComponent];
+	
 	[self configureIfNeeded:&error]; CKERROR;
 	
 	err = HASH_NormalizePassPhrase(
 	            (uint8_t *)passphrase.UTF8String, passphrase.UTF8LengthInBytes,
-	            (uint8_t *)zdc.zAppID.UTF8String, zdc.zAppID.UTF8LengthInBytes,
+	            (uint8_t *)dbFilename.UTF8String, dbFilename.UTF8LengthInBytes,
 	                       &passCode, &passCodeLen); CKERR;
 
 	err = S4Key_SerializeToPassCode(sKeyCtx,
@@ -556,7 +558,7 @@ done:
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
  */
 - (nullable NSData *)unlockUsingPassphase:(NSString *)passphrase
@@ -571,6 +573,8 @@ done:
 	uint8_t * passCode = NULL;
 	size_t    passCodeLen = 0;
 	
+	NSString *dbFilename = [zdc.databasePath lastPathComponent];
+	
 	[self configureIfNeeded:&error]; CKERROR;
 
 	if ([self getKeyForPassPhraseSource: kPassPhraseSourceKey_keyboard
@@ -579,7 +583,7 @@ done:
 	{
 		err = HASH_NormalizePassPhrase(
 		          (uint8_t *)passphrase.UTF8String, passphrase.UTF8LengthInBytes,
-		          (uint8_t *)zdc.zAppID.UTF8String, zdc.zAppID.UTF8LengthInBytes,
+		          (uint8_t *)dbFilename.UTF8String, dbFilename.UTF8LengthInBytes,
 		                     &passCode, &passCodeLen); CKERR;
 
 		err = S4Key_DecryptFromPassCode(unlockingKey,
@@ -613,7 +617,7 @@ done:
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
  */
 - (nullable NSString *)passphraseHint
@@ -634,7 +638,7 @@ done:
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
  */
 - (BOOL)removePassphraseEntry:(NSError *_Nullable *_Nullable) outError
@@ -660,14 +664,14 @@ done:
 	// - the database file it's associated with
 	//
 	NSString *appOwner = [ZDCDirectoryManager bundleIdentifier];
-	NSString *dbFilename = zdc.databasePath.lastPathComponent;
+	NSString *dbFilename = [zdc.databasePath lastPathComponent];
 	
 	return [NSString stringWithFormat:@"%@|%@.biometricPassphrase", appOwner, dbFilename];
 }
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
  */
 - (BOOL)canUseBioMetrics
@@ -694,7 +698,7 @@ done:
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
  */
 - (BOOL)createBiometricEntry:(NSError *_Nullable *_Nullable) outError
@@ -730,14 +734,14 @@ done:
 	BOOL sucess = NO;
 
 	// Read the guidPassphrase from the keychain.
-	NSDictionary *query = @{ (__bridge id)kSecAttrService            : [self bioPassphraseIdentifier],
-							 (__bridge id)kSecAttrAccount            : @"",
-							 (__bridge id)kSecReturnData             : @NO,
-							 (__bridge id)(kSecMatchLimit)           :(__bridge id) kSecMatchLimitOne,
-							 (__bridge id)(kSecClass)                :(__bridge id) kSecClassGenericPassword,
-							 (__bridge id)(kSecAttrSynchronizable)   :(__bridge id) kSecAttrSynchronizableAny,
-							 (__bridge id)kSecUseAuthenticationUI    :(__bridge id) kSecUseAuthenticationUIFail,
-							 };
+	NSMutableDictionary *query = [NSMutableDictionary dictionaryWithCapacity:8];
+	query[(__bridge id)kSecAttrService]         = [self bioPassphraseIdentifier];
+	query[(__bridge id)kSecAttrAccount]         = @"";
+	query[(__bridge id)kSecReturnData]          = @(NO);
+	query[(__bridge id)kSecMatchLimit]          = (__bridge id)kSecMatchLimitOne;
+	query[(__bridge id)kSecClass]               = (__bridge id)kSecClassGenericPassword;
+	query[(__bridge id)kSecAttrSynchronizable]  = (__bridge id)kSecAttrSynchronizableAny;
+	query[(__bridge id)kSecUseAuthenticationUI] = (__bridge id)kSecUseAuthenticationUIFail;
 
 	OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)query, NULL);
 
@@ -751,7 +755,7 @@ done:
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
  */
 - (nullable NSData *)unlockUsingBiometricWithPrompt:(NSString *)prompt
@@ -782,7 +786,7 @@ done:
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
  */
 - (BOOL)removeBiometricEntry:(NSError *_Nullable *_Nullable) outError
@@ -972,7 +976,7 @@ done:
 #pragma mark p2kFile data
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (NSURL*) storageBlobURL
+- (NSURL *)storageBlobURL
 {
 	NSURL *url = [zdc.databasePath URLByAppendingPathExtension:@"p2k"];
 	return url;
@@ -1221,7 +1225,7 @@ done:
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
  */
 - (void)deleteAllPasscodeData

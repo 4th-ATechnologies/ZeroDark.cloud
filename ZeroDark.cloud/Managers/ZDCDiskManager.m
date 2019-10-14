@@ -397,8 +397,8 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		fileManager.delegate = self;
 		
 		NSString *databaseName = [zdc.databasePath lastPathComponent];
-		persistentContainerURL = [ZDCDirectoryManager zdcPersistentDirectoryForDatabaseName:databaseName];
-		cacheContainerURL      = [ZDCDirectoryManager zdcCacheDirectoryForDatabaseName:databaseName];
+		persistentContainerURL = [ZDCDirectoryManager zdcPersistentDataDirectoryForDatabaseName:databaseName];
+		cacheContainerURL      = [ZDCDirectoryManager zdcCacheDataDirectoryForDatabaseName:databaseName];
 		
 		dict_nodeData       = [[NSMutableDictionary alloc] init];
 		dict_nodeThumbnails = [[NSMutableDictionary alloc] init];

@@ -35,7 +35,7 @@
 /** The localUserID provided during init */
 @property (nonatomic, copy, readonly) NSString *localUserID;
 
-/** The zAppID provided during init */
-@property (nonatomic, copy, readonly) NSString *zAppID;
+/** The treeID provided during init */
+@property (nonatomic, copy, readonly) NSString *treeID;
 
 @end

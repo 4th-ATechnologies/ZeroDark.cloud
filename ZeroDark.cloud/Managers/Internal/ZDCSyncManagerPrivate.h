@@ -20,10 +20,10 @@ NS_ASSUME_NONNULL_BEGIN
  * The PullManager invokes these methods directly.
  */
 
-- (void)notifyPullStartedForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID;
-- (void)notifyPullFoundChangesForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID;
+- (void)notifyPullStartedForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID;
+- (void)notifyPullFoundChangesForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID;
 - (void)notifyPullStoppedForLocalUserID:(NSString *)localUserID
-                                 zAppID:(NSString *)zAppID
+                                 treeID:(NSString *)treeID
                              withResult:(ZDCPullResult)result;
 
 @end

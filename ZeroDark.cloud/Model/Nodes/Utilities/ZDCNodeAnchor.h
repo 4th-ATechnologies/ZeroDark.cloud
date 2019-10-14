@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Creates a new anchor instance using the given properties.
  */
-- (instancetype)initWithUserID:(NSString *)userID zAppID:(NSString *)zAppID dirPrefix:(NSString *)dirPrefix;
+- (instancetype)initWithUserID:(NSString *)userID treeID:(NSString *)treeID dirPrefix:(NSString *)dirPrefix;
 
 /**
  * The userID who owns the bucket in which the node resides. (userID == ZDCUser.uuid)
@@ -32,9 +32,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy, readonly) NSString *userID;
 
 /**
- * Corresponds to `[ZDCCloudPath zAppID]`.
+ * Corresponds to `[ZDCCloudPath treeID]`.
  */
-@property (nonatomic, copy, readonly) NSString *zAppID;
+@property (nonatomic, copy, readonly) NSString *treeID;
 
 /**
  * Corresponds to `[ZDCCloudPath dirPrefix]`.

@@ -71,8 +71,8 @@ NS_ASSUME_NONNULL_BEGIN
  * @param auth
  *   Valid authentication for the localUser.
  *
- * @param zAppIDs
- *   A list of zAppID's that we're activating for the user.
+ * @param treeIDs
+ *   A list of treeID's that we're activating for the user.
  *
  * @param completionQueue
  *   The dispatch queue on which to invoke the completionBlock.
@@ -83,7 +83,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)setupAccountForLocalUser:(ZDCLocalUser *)localUser
                         withAuth:(ZDCLocalUserAuth *)auth
-                         zAppIDs:(NSArray<NSString*> *)zAppIDs
+                         treeIDs:(NSArray<NSString*> *)treeIDs
                  completionQueue:(nullable dispatch_queue_t)completionQueue
                  completionBlock:(void (^)(NSString *_Nullable bucket,
 														 NSString *_Nullable stage,
@@ -321,7 +321,7 @@ NS_ASSUME_NONNULL_BEGIN
  * And the server will then recursively enumerate the sub-nodes for which Bob has read access.
  */
 - (NSMutableURLRequest *)listProxyWithPaths:(NSArray<NSString *> *)paths
-                                  appPrefix:(NSString *)appPrefix
+                                     treeID:(NSString *)treeID
                                      pullID:(NSString *)pullID
                              continuationID:(nullable NSString *)continuationID
                          continuationOffset:(nullable NSNumber *)continuationOffset
@@ -412,7 +412,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)searchUserMatch:(NSString *)queryString
                provider:(nullable NSString *)provider
-                 zAppID:(NSString *)zAppID
+                 treeID:(NSString *)treeID
             requesterID:(NSString *)localUserID
         completionQueue:(nullable dispatch_queue_t)completionQueue
         completionBlock:(nullable void (^)(NSURLResponse *response, id _Nullable responseObject, NSError *_Nullable error))completionBlock;

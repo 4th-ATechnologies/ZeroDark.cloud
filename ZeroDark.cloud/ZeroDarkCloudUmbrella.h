@@ -10,6 +10,7 @@
 #import "ZeroDarkCloud.h"
 #import "ZeroDarkCloudDelegate.h"
 
+#import "ZDCConfig.h"
 #import "ZDCCryptoFile.h"
 #import "ZDCDatabaseConfig.h"
 #import "ZDCNodeLink.h"

@@ -486,7 +486,25 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 - (void)processQueryString:(NSString *)queryString
                   provider:(NSString *)provider
 {
+	[accountSetupVC showWait: @"Please Wait…"
+	                 message: @"Downloading user info"
+	         completionBlock: nil];
+	
 	__weak typeof(self) weakSelf = self;
+	
+	void (^Fail)(NSString*, NSString*) = ^(NSString *title, NSString *msg){
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
+		[strongSelf.accountSetupVC cancelWait];
+		[strongSelf.accountSetupVC showError: title
+											  message: msg
+									completionBlock:
+		^{
+			[strongSelf.accountSetupVC popFromCurrentView];
+		}];
+	};
 	
 	Auth0APIManager *auth0APIManager = [Auth0APIManager sharedInstance];
 	AWSCredentialsManager *awsCredentialsManager = accountSetupVC.owner.awsCredentialsManager;
@@ -506,16 +524,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 		NSString *err_title = @"Social Login Failed";
 		NSString *err_msg = error.localizedDescription;
 		
-		[accountSetupVC showError: err_title
-		                  message: err_msg
-		           viewController: self
-		          completionBlock:^
-		{
-			__strong typeof(self) strongSelf = weakSelf;
-			if (!strongSelf)return;
-			
-			[strongSelf->accountSetupVC popFromCurrentView   ];
-		}];
+		Fail(err_title, err_msg);
 		return;
 	}
 	
@@ -524,21 +533,9 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 		NSString *err_title = @"Social Login Failed";
 		NSString *err_msg = error ? error.localizedDescription : @"Possible cross-site request forgery attack";
 		
-		[accountSetupVC showError: err_title
-		                  message: err_msg
-		          completionBlock:^
-		{
-			__strong typeof(self) strongSelf = weakSelf;
-			if (!strongSelf)return;
-			
-			[strongSelf->accountSetupVC popFromCurrentView];
-		}];
+		Fail(err_title, err_msg);
 		return;
 	}
-	
-	[accountSetupVC showWait: @"Please Wait…"
-	                 message: @"Downloading user info"
-	         completionBlock: nil];
 	
 	NSString *userID = accountSetupVC.user.uuid;
 	IdenititySelectionMode identityMode = accountSetupVC.identityMode;
@@ -548,32 +545,18 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	                               completionBlock:
 	^(A0UserProfile *profile, NSError *error)
 	{
-		__strong typeof(self) strongSelf = weakSelf;
-		if (!strongSelf)return;
-		
 		if (error)
 		{
-			[strongSelf.accountSetupVC cancelWait];
-			
 			NSString *err_title = @"Could not Authenticate";
 			NSString *err_msg = error.localizedDescription;
 			
-			[strongSelf.accountSetupVC showError: err_title
-			                             message: err_msg
-			                     completionBlock:
-			^{
-				__strong typeof(self) strongSelf = weakSelf;
-				if (!strongSelf)return;
-				
-				[strongSelf->accountSetupVC popFromCurrentView];
-			}];
-			
+			Fail(err_title, err_msg);
 			return;
 		}
 		
 		if (identityMode == IdenititySelectionMode_ExistingAccount)
 		{
-			[strongSelf linkUserWithProfile:profile];
+			[weakSelf linkUserWithProfile:profile];
 			return;
 		}
 		
@@ -584,46 +567,31 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 			// Check if this is a linked account first
 			if (![userID isEqualToString:profile.appMetadata[@"aws_id"]])
 			{
-				[strongSelf.accountSetupVC cancelWait];
-				
 				NSString *err_title = @"This identity is not linked to your account.";
 				NSString *err_msg = @"To reauthorize your account, please login with the proper identity";
 				
-				[strongSelf.accountSetupVC showError: err_title
-				                             message: err_msg
-				                     completionBlock:
-				^{
-					__strong typeof(self) strongSelf = weakSelf;
-					if (!strongSelf)return;
-					
-					[strongSelf->accountSetupVC popFromCurrentView];
-				}];
-				
+				Fail(err_title, err_msg);
 				return;
 			}
 			
 			[awsCredentialsManager reauthorizeAWSCredentialsForUserID: userID
 			                                         withRefreshToken: a0Token.refreshToken
 			                                          completionQueue: nil
-			                                          completionBlock:
-			^(ZDCLocalUserAuth *auth, NSError *error)
+			                                          completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 			{
-				[strongSelf.accountSetupVC cancelWait];
-				
 				if (error)
 				{
 					NSString *err_title = @"Could not Authenticate";
 					NSString *err_msg = error.localizedDescription;
 					
-					[strongSelf.accountSetupVC showError: err_title
-					                             message: err_msg
-					                     completionBlock:
-					^{
-						[self.accountSetupVC popFromCurrentView];
-					}];
-					
+					Fail(err_title, err_msg);
 					return;
 				}
+				
+				__strong typeof(self) strongSelf = weakSelf;
+				if (!strongSelf) return;
+				
+				[strongSelf.accountSetupVC cancelWait];
 				
 				strongSelf->reauthAlert = [[SCLAlertView alloc] init];
 				
@@ -645,60 +613,53 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 		}
 		else // if (identityMode == IdenititySelectionMode_NewAccount)
 		{
-			[auth0APIManager getAWSCredentialsWithRefreshToken: a0Token.refreshToken
-			                                   completionQueue: nil
-			                                   completionBlock:^(NSDictionary *delegation, NSError *error)
+			[auth0APIManager getIDTokenWithRefreshToken: a0Token.refreshToken
+			                            completionQueue: nil
+			                            completionBlock:^(NSString *auth0_idToken, NSError *error)
 			{
-				__strong typeof(self) strongSelf = weakSelf;
-				if (!strongSelf)return;
-				
 				if (error)
 				{
-					[strongSelf.accountSetupVC cancelWait];
-					
 					NSString *err_title = @"Could not Authenticate";
 					NSString *err_msg = error.localizedDescription;
 					
-					[strongSelf.accountSetupVC showError: err_title
-					                             message: err_msg
-					                     completionBlock:
-					^{
-						[strongSelf->accountSetupVC popFromCurrentView];
-					}];
-					
+					Fail(err_title, err_msg);
 					return;
 				}
 				
-				ZDCLocalUserAuth *auth = nil;
-				
-				BOOL parseSuccess =
-				  [awsCredentialsManager parseLocalUserAuth: &auth
-				                             fromDelegation: delegation
-				                               refreshToken: a0Token.refreshToken
-				                                    idToken: a0Token.idToken];
-				if (!parseSuccess)
+				[awsCredentialsManager getAWSCredentialsWithIDToken: auth0_idToken
+				                                              stage: @"dev"
+				                                    completionQueue: nil
+				                                    completionBlock:^(NSDictionary *delegation, NSError *error)
 				{
-					[strongSelf.accountSetupVC cancelWait];
-					
-					NSString *err_title = @"Could not Authenticate";
-					NSString *err_msg = error.localizedDescription;
-					
-					[strongSelf.accountSetupVC showError: err_title
-					                             message: err_msg
-					                     completionBlock:
-					^{
-						__strong typeof(self) strongSelf = weakSelf;
-						if (!strongSelf)return;
-						
-						[strongSelf->accountSetupVC popFromCurrentView];
-					}];
-					
-					return;
-				}
+					if (error)
+					{
+						NSString *err_title = @"Could not Authenticate";
+						NSString *err_msg = error.localizedDescription;
+			
+						Fail(err_title, err_msg);
+						return;
+					}
+			
+					ZDCLocalUserAuth *auth = nil;
+			
+					BOOL parseSuccess =
+					  [awsCredentialsManager parseLocalUserAuth: &auth
+					                             fromDelegation: delegation
+					                               refreshToken: a0Token.refreshToken
+					                                    idToken: auth0_idToken];
+					if (!parseSuccess)
+					{
+						NSString *err_title = @"Could not Authenticate";
+						NSString *err_msg = error.localizedDescription;
 				
-				[strongSelf authenticateUserWithAuth: auth
-				                             profile: profile
-				                            provider: provider];
+						Fail(err_title, err_msg);
+						return;
+					}
+				
+					[weakSelf authenticateUserWithAuth: auth
+					                           profile: profile
+					                          provider: provider];
+				}];
 			}];
 		}
 	}];

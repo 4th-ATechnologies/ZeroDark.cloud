@@ -145,7 +145,7 @@ NS_ASSUME_NONNULL_BEGIN
  * You'll need to fill out the remaining information based on the requirements for the particular type.
  */
 - (instancetype)initWithLocalUserID:(NSString *)localUserID
-                             zAppID:(NSString *)zAppID
+                             treeID:(NSString *)treeID
                                type:(ZDCCloudOperationType)type;
 
 /**
@@ -153,14 +153,14 @@ NS_ASSUME_NONNULL_BEGIN
  * You'll need to fill out the remaining information based on the requirements for the particular putType.
  */
 - (instancetype)initWithLocalUserID:(NSString *)localUserID
-                             zAppID:(NSString *)zAppID
+                             treeID:(NSString *)treeID
                             putType:(ZDCCloudOperationPutType)putType;
 
 /** The value specified during init. */
 @property (nonatomic, copy, readonly) NSString *localUserID;
 
 /** The value specified during init. */
-@property (nonatomic, copy, readonly) NSString *zAppID;
+@property (nonatomic, copy, readonly) NSString *treeID;
 
 /** Corresponds to the operation to be performed on the server. */
 @property (nonatomic, assign, readwrite) ZDCCloudOperationType type;

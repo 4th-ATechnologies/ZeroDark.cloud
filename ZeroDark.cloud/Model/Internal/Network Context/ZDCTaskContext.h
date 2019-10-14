@@ -26,7 +26,7 @@
 @property (nonatomic, copy, readonly) NSUUID   * operationUUID;
 @property (nonatomic, copy, readonly) NSString * pipeline;
 @property (nonatomic, copy, readonly) NSString * localUserID;
-@property (nonatomic, copy, readonly) NSString * zAppID;
+@property (nonatomic, copy, readonly) NSString * treeID;
 
 // Context properties
 

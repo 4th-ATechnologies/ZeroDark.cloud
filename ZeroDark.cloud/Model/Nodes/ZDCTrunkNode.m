@@ -16,33 +16,33 @@
 
 // Encoding/Decoding Keys
 //
-static NSString *const k_zAppID   = @"appID";
+static NSString *const k_treeID   = @"appID";
 static NSString *const k_trunkStr = @"container";
 
 
 @implementation ZDCTrunkNode
 
 + (NSString *)uuidForLocalUserID:(NSString *)localUserID
-                          zAppID:(NSString *)zAppID
+                          treeID:(NSString *)treeID
                            trunk:(ZDCTreesystemTrunk)trunk
 {
 	NSString *trunkID = NSStringFromTreesystemTrunk(trunk);
 	
-	return [NSString stringWithFormat:@"%@|%@|%@", localUserID, zAppID, trunkID];
+	return [NSString stringWithFormat:@"%@|%@|%@", localUserID, treeID, trunkID];
 }
 
-@synthesize zAppID = zAppID;
+@synthesize treeID = treeID;
 @synthesize trunk = trunk;
 
 - (instancetype)initWithLocalUserID:(NSString *)inLocalUserID
-                             zAppID:(NSString *)inZAppID
+                             treeID:(NSString *)inTreeID
                               trunk:(ZDCTreesystemTrunk)inTrunk
 {
-	NSString *_uuid = [ZDCTrunkNode uuidForLocalUserID:inLocalUserID zAppID:inZAppID trunk:inTrunk];
+	NSString *_uuid = [ZDCTrunkNode uuidForLocalUserID:inLocalUserID treeID:inTreeID trunk:inTrunk];
 	
 	if ((self = [super initWithLocalUserID:inLocalUserID uuid:_uuid]))
 	{
-		zAppID = [inZAppID copy];
+		treeID = [inTreeID copy];
 		trunk = inTrunk;
 		
 		switch (trunk)
@@ -61,7 +61,7 @@ static NSString *const k_trunkStr = @"container";
 {
 	if ((self = [super initWithCoder:decoder])) // [ZDCNode initWithCoder:]
 	{
-		zAppID = [decoder decodeObjectForKey:k_zAppID];
+		treeID = [decoder decodeObjectForKey:k_treeID];
 		trunk = TreesystemTrunkFromString([decoder decodeObjectForKey:k_trunkStr]);
 	}
 	return self;
@@ -71,7 +71,7 @@ static NSString *const k_trunkStr = @"container";
 {
 	[super encodeWithCoder:coder]; // [ZDCNode encodeWithCoder:]
 	
-	[coder encodeObject:zAppID forKey:k_zAppID];
+	[coder encodeObject:treeID forKey:k_treeID];
 	[coder encodeObject:NSStringFromTreesystemTrunk(trunk) forKey:k_trunkStr];
 }
 
@@ -79,7 +79,7 @@ static NSString *const k_trunkStr = @"container";
 {
 	ZDCTrunkNode *copy = [super copyWithZone:zone]; // [ZDCNode copyWithZone:]
 	
-	copy->zAppID = zAppID;
+	copy->treeID = treeID;
 	copy->trunk = trunk;
 	
 	return copy;

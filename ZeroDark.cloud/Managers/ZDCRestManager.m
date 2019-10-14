@@ -92,7 +92,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (NSString *)apiGatewayIDForRegion:(AWSRegion)region stage:(NSString *)stage
@@ -119,7 +119,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (NSURLComponents *)apiGatewayForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path
@@ -153,7 +153,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)fetchConfigWithCompletionQueue:(nullable dispatch_queue_t)inCompletionQueue
@@ -404,7 +404,7 @@
  */
 - (void)setupAccountForLocalUser:(ZDCLocalUser *)localUser
 								withAuth:(ZDCLocalUserAuth *)auth
-								 zAppIDs:(NSArray<NSString*> *)zAppIDs
+								 treeIDs:(NSArray<NSString*> *)treeIDs
 					  completionQueue:(nullable dispatch_queue_t)completionQueue
 					  completionBlock:(void (^)(NSString *_Nullable bucket,
 														 NSString *_Nullable stage,
@@ -416,7 +416,7 @@
 	
 	NSParameterAssert(localUser != nil);
 	NSParameterAssert(auth != nil);
-	NSParameterAssert(zAppIDs.count > 0);
+	NSParameterAssert(treeIDs.count > 0);
 	
 	NSParameterAssert(localUser.auth0_primary != nil);            // User not configured properly
 	NSParameterAssert(localUser.aws_region != AWSRegion_Invalid); // User not configured properly
@@ -429,7 +429,7 @@
 	
 	NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:4];
 	
-	jsonDict[@"app_id"] = zAppIDs[0];
+	jsonDict[@"app_id"] = treeIDs[0];
 	jsonDict[@"auth0_id"] = localUser.auth0_primary;
 	jsonDict[@"region"] = [AWSRegions shortNameForRegion:localUser.aws_region];
 	
@@ -546,7 +546,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)registerPushTokenForLocalUser:(ZDCLocalUser *)localUser
@@ -588,16 +588,17 @@
 		
 		AWSRegion region = userInfo.region;
 		NSString *stage = userInfo.stage;
-		if (!stage)
+	//	if (!stage)
 		{
 			stage = DEFAULT_AWS_STAGE;
 		}
+		stage = @"dev";
 		
 		NSString *path = @"/registerPushToken";
 		
 		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
 		
-		NSString *zAppID = zdc.zAppID;
+		NSString *treeID = zdc.primaryTreeID;
 		NSString *platform;
 		#if TARGET_OS_IPHONE
 		  #if DEBUG
@@ -614,7 +615,7 @@
 		#endif
 		
 		NSDictionary* bodyDict = @{
-			@"app_id"     : zAppID,
+			@"app_id"     : treeID,
 			@"platform"   : platform,
 			@"push_token" : localUser.pushToken
 		};
@@ -652,7 +653,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)unregisterPushToken:(NSString *)pushToken
@@ -731,7 +732,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)fetchInfoForLocalUser:(ZDCLocalUser *)localUser
@@ -857,7 +858,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)fetchInfoForRemoteUserID:(NSString *)remoteUserID
@@ -977,7 +978,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)fetchUserExists:(NSString *)userID
@@ -1062,7 +1063,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)uploadPrivKey:(NSData *)privKey
@@ -1154,7 +1155,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)updatePubKeySigs:(NSData *)pubKey
@@ -1257,7 +1258,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)updateAvatar:(NSData *)rawAvatarData
@@ -1418,7 +1419,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (NSMutableURLRequest *)multipartComplete:(NSString *)key
@@ -1482,11 +1483,11 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (NSMutableURLRequest *)listProxyWithPaths:(NSArray<NSString *> *)paths
-                                  appPrefix:(NSString *)appPrefix
+                                     treeID:(NSString *)treeID
                                      pullID:(NSString *)pullID
                              continuationID:(NSString *)continuationID
                          continuationOffset:(NSNumber *)continuationOffset
@@ -1521,7 +1522,7 @@
 	NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:16];
 	
 	jsonDict[@"file_paths"] = paths;
-	jsonDict[@"app_prefix"] = appPrefix;
+	jsonDict[@"app_prefix"] = treeID;
 	jsonDict[@"device_key"] = pullID;
 	jsonDict[@"bucket"]     = bucket;
 	
@@ -1558,7 +1559,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)lostAndFound:(NSString *)cloudID
@@ -1732,7 +1733,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)fetchFilteredAuth0Profile:(NSString *)remoteUserID
@@ -1824,7 +1825,7 @@
 
 - (void)searchUserMatch:(NSString *)queryString
                provider:(nullable NSString *)providerString
-                 zAppID:(NSString *)zAppID
+                 treeID:(NSString *)treeID
             requesterID:(NSString *)localUserID
         completionQueue:(dispatch_queue_t)completionQueue
         completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
@@ -1833,7 +1834,7 @@
 	
 	queryString = [queryString copy];
 	localUserID = [localUserID copy];
-	zAppID      = [zAppID copy];
+	treeID      = [treeID copy];
 	
 	void (^InvokeCompletionBlock)(NSURLResponse*, id, NSError*) =
 	^(NSURLResponse *response, id responseObject, NSError *error)
@@ -1898,7 +1899,7 @@
 
 		jsonDict[@"query"]    = queryString;
 		jsonDict[@"provider"] = providerString.length ? providerString : @"*";
-		jsonDict[@"app_id"]   = zAppID;
+		jsonDict[@"app_id"]   = treeID;
 
 		NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:nil];
 
@@ -3732,7 +3733,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)fetchMerkleTreeFile:(NSString *)root

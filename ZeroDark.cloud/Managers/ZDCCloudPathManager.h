@@ -38,7 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
  *    - Treepath: /foo/bar
  *    - S3 key: com.company.app/F8622C33B26C43C7B7DB3A6B26C60057/58fidhxeyyfzgp73hgefpr956jaxa6xs.rcrd
  *
- *    The S3 key components are: **{zAppID}/{dirPrefix}/{hasedNodeName}.ext**
+ *    The S3 key components are: **{treeID}/{dirPrefix}/{hasedNodeName}.ext**
  *
  * 3. The first path component is the app container.<br/>
  *    Your company may create multiple applications.
@@ -103,7 +103,7 @@ NS_ASSUME_NONNULL_BEGIN
  * Returns the cloudPath for the node.
  * The cloudPath is the AWS S3 keyPath, which is the encrypted version of the cleartext treepath.
  *
- * A cloudPath has the general format: "{zAppID}/{dirPrefix}/{hashedNodeName}.{ext}"
+ * A cloudPath has the general format: "{treeID}/{dirPrefix}/{hashedNodeName}.{ext}"
  *
  * @param node
  *   The node for which to calculate the cloudLocator.
@@ -118,7 +118,7 @@ NS_ASSUME_NONNULL_BEGIN
  * Returns the cloud path for the node.
  * The cloudPath is the AWS S3 keyPath, which is the encrypted version of the cleartext treepath.
  *
- * A cloudPath has the general format: "{zAppID}/{dirPrefix}/{hashedNodeName}.{ext}"
+ * A cloudPath has the general format: "{treeID}/{dirPrefix}/{hashedNodeName}.{ext}"
  *
  * @param node
  *   The node for which to calculate the cloudLocator.

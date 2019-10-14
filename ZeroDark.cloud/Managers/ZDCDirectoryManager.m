@@ -48,6 +48,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDirectoryManager.html
  */
 + (NSURL *)appSupportDirectoryURL
 {
@@ -87,6 +89,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDirectoryManager.html
  */
 + (NSURL *)appCacheDirectoryURL
 {
@@ -126,6 +130,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDirectoryManager.html
  */
 + (NSURL *)tempDirectoryURL
 {
@@ -158,6 +164,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDirectoryManager.html
  */
 + (NSURL *)zdcPersistentDirectoryURL
 {
@@ -186,6 +194,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDirectoryManager.html
  */
 + (NSURL *)zdcCacheDirectoryURL
 {
@@ -214,12 +224,13 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDirectoryManager.html
  */
-+ (NSURL *)zdcPersistentDirectoryForDatabaseName:(NSString *)databaseName
++ (NSURL *)zdcDatabaseDirectoryURL
 {
 	NSURL *zdc = [self zdcPersistentDirectoryURL];
-	NSURL *dbs = [zdc URLByAppendingPathComponent:@"db" isDirectory:YES];
-	NSURL *url = [dbs URLByAppendingPathComponent:databaseName isDirectory:YES];
+	NSURL *url = [zdc URLByAppendingPathComponent:@"db" isDirectory:YES];
 	
 	NSError *error = nil;
 	[[NSFileManager defaultManager] createDirectoryAtURL: url
@@ -235,12 +246,37 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDirectoryManager.html
  */
-+ (NSURL *)zdcCacheDirectoryForDatabaseName:(NSString *)databaseName
++ (NSURL *)zdcPersistentDataDirectoryForDatabaseName:(NSString *)databaseName
+{
+	NSURL *zdc = [self zdcPersistentDirectoryURL];
+	NSURL *dat = [zdc URLByAppendingPathComponent:@"data" isDirectory:YES];
+	NSURL *url = [dat URLByAppendingPathComponent:databaseName isDirectory:YES];
+	
+	NSError *error = nil;
+	[[NSFileManager defaultManager] createDirectoryAtURL: url
+									 withIntermediateDirectories: YES
+															attributes: nil
+																  error: &error];
+	if (error) {
+		ZDCLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
+	}
+	
+	return url;
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDirectoryManager.html
+ */
++ (NSURL *)zdcCacheDataDirectoryForDatabaseName:(NSString *)databaseName
 {
 	NSURL *zdc = [self zdcCacheDirectoryURL];
-	NSURL *dbs = [zdc URLByAppendingPathComponent:@"db" isDirectory:YES];
-	NSURL *url = [dbs URLByAppendingPathComponent:databaseName isDirectory:YES];
+	NSURL *dat = [zdc URLByAppendingPathComponent:@"data" isDirectory:YES];
+	NSURL *url = [dat URLByAppendingPathComponent:databaseName isDirectory:YES];
 	
 	NSError *error = nil;
 	[[NSFileManager defaultManager] createDirectoryAtURL: url
@@ -260,10 +296,12 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDirectoryManager.html
  */
 + (NSArray<NSURL*> *)fileURLsForDatabaseName:(NSString *)databaseName
 {
-	NSURL *dir = [self zdcPersistentDirectoryURL];
+	NSURL *dir = [self zdcDatabaseDirectoryURL];
 	
 	NSString *walName = [databaseName stringByAppendingString:@"-wal"];
 	NSString *shmName = [databaseName stringByAppendingString:@"-shm"];
@@ -281,6 +319,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDirectoryManager.html
  */
 + (NSURL *)smiCacheDirectoryURL
 {
@@ -310,6 +350,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDirectoryManager.html
  */
 + (NSURL *)emptyUploadFileURL
 {
@@ -340,6 +382,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDirectoryManager.html
  */
 + (NSURL *)generateTempURL
 {
@@ -359,6 +403,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDirectoryManager.html
  */
 - (NSURL *)downloadDirectoryURL
 {
@@ -368,8 +414,8 @@
 		NSURL *databasePath = zdc.databasePath;
 		NSString *databaseName = [databasePath lastPathComponent];
 		
-		NSURL *dbs = [[self class] zdcCacheDirectoryForDatabaseName:databaseName];
-		url = [dbs URLByAppendingPathComponent:@"downloads" isDirectory:YES];
+		NSURL *dat = [[self class] zdcCacheDataDirectoryForDatabaseName:databaseName];
+		url = [dat URLByAppendingPathComponent:@"downloads" isDirectory:YES];
 		
 		NSError *error = nil;
 		[[NSFileManager defaultManager] createDirectoryAtURL: url
@@ -390,6 +436,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDirectoryManager.html
  */
 - (NSURL *)generateDownloadURL
 {
@@ -407,6 +455,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDirectoryManager.html
  */
 + (NSString *)bundleIdentifier
 {
@@ -429,6 +479,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDirectoryManager.html
  */
 + (NSString *)bundleName
 {

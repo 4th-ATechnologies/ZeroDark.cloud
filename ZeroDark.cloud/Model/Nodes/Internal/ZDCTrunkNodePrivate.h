@@ -17,7 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
  * ZDCTrunkNode instances get created for you automatically.
  */
 - (instancetype)initWithLocalUserID:(NSString *)localUserID
-                             zAppID:(NSString *)zAppID
+                             treeID:(NSString *)treeID
                               trunk:(ZDCTreesystemTrunk)trunk;
 
 @end

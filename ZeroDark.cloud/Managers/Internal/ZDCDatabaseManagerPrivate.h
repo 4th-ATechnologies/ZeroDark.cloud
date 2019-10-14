@@ -49,17 +49,17 @@
 - (YapDatabaseConnection *)internal_decryptConnection;
 
 /**
- * The list of {localUserID, zAppID} tuples that currently have a ZDCCloud extension registered.
+ * The list of {localUserID, treeID} tuples that currently have a ZDCCloud extension registered.
  */
 - (NSArray<YapCollectionKey *> *)currentlyRegisteredTuples;
 
 /**
- * The list of zAppIDs (for the given user) that currently have a ZDCCloud extension.
+ * The list of treeIDs (for the given user) that currently have a ZDCCloud extension.
  */
-- (NSArray<NSString *> *)currentlyRegisteredAppIDsForUser:(NSString *)localUserID;
+- (NSArray<NSString *> *)currentlyRegisteredTreeIDsForUser:(NSString *)localUserID;
 
 /**
- * The list of {localUserID, zAppID} tuples that had a ZDCCloud extension re-registered during database setup.
+ * The list of {localUserID, treeID} tuples that had a ZDCCloud extension re-registered during database setup.
  */
 - (NSArray<YapCollectionKey *> *)previouslyRegisteredTuples;
 
@@ -69,8 +69,8 @@
 - (NSSet<NSString *> *)previouslyRegisteredLocalUserIDs;
 
 /**
- * The list of appIDs (for the given user) that had a ZDCCloud extension re-registered during database setup.
+ * The list of treeIDs (for the given user) that had a ZDCCloud extension re-registered during database setup.
  */
-- (NSArray<NSString *> *)previouslyRegisteredAppIDsForUser:(NSString *)localUserID;
+- (NSArray<NSString *> *)previouslyRegisteredTreeIDsForUser:(NSString *)localUserID;
 
 @end

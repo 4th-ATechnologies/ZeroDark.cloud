@@ -58,6 +58,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, SettingsViewControllerDel
 	func application(_ application: UIApplication,
 	                 didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data)
 	{
+		print("didRegisterForRemoteNotifications")
+		
 		// Forward the token to ZeroDarkCloud framework,
 		// which will automatically register it with the server.
 		ZDCManager.zdc().didRegisterForRemoteNotifications(withDeviceToken: deviceToken)
@@ -74,6 +76,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, SettingsViewControllerDel
 	                 didReceiveRemoteNotification userInfo: [AnyHashable : Any],
 	                 fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void)
 	{
+		print("Remote notification: \(userInfo)")
+		
 		// Forward to ZeroDarkCloud framework
 		ZDCManager.zdc().didReceiveRemoteNotification(userInfo, fetchCompletionHandler: completionHandler)
 	}

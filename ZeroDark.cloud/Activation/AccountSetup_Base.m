@@ -317,12 +317,11 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 
 
 /*
- tell the server that we are using this owner.zAppID, and to do whatever
+ tell the server that we are using this owner.treeID, and to do whatever
  activation is needed.. if this is a new user we will care about things like
  synced salt and bucket creation
  */
-
--(void)setupUserOnServerWithCompletion:(void (^)(NSError *error))completionBlock
+- (void)setupUserOnServerWithCompletion:(void (^)(NSError *error))completionBlock
 {
 	NSParameterAssert(user != nil);
 	NSParameterAssert(auth != nil);
@@ -347,9 +346,9 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	
 	// in case this user has never registered this app.
 	[owner.restManager setupAccountForLocalUser:self.user
-												 withAuth:self.auth
-												  zAppIDs:@[owner.zAppID]
-										completionQueue:nil
+	                                   withAuth: self.auth
+	                                    treeIDs: @[owner.primaryTreeID]
+	                            completionQueue: nil
 										completionBlock:^(NSString * _Nullable bucket,
 																NSString *_Nullable stage,
 																NSString *_Nullable syncedSalt,
@@ -391,10 +390,8 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 		 } completionBlock:^{
 			 
 			 invokeCompletionBlock(nil);
-			 
-		 }];
-		 
-	 }];
+		}];
+	}];
 }
 
 - (ZDCLocalUser *)createLocalUserFromProfile:(A0UserProfile *)profile

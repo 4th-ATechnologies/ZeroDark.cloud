@@ -40,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** Forwarded from ZDCPullManager */
 - (void)resumeOperationsPendingPullCompletion:(NSString *)latestChangeToken
                                forLocalUserID:(NSString *)localUserID
-                                       zAppID:(NSString *)zAppID;
+                                       treeID:(NSString *)treeID;
 
 @end
 

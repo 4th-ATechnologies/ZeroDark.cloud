@@ -45,10 +45,10 @@
 	NSString *const bucket = [inBucket copy];
 	
 	NSString *const localUserID = pullState.localUserID;
-	NSString *const zAppID      = pullState.zAppID;
+	NSString *const treeID      = pullState.treeID;
 	NSString *const pullID      = pullState.pullID;
 	
-	NSString *rootAppPrefix = inRootCloudPath.zAppID;
+	NSString *rootAppPrefix = inRootCloudPath.treeID;
 	
 	NSMutableArray<NSString *> *pendingCloudPaths = [[NSMutableArray alloc] init];
 	NSMutableDictionary<NSString*, S3ObjectInfo*> *results = [[NSMutableDictionary alloc] init];
@@ -184,8 +184,8 @@
 		{
 			NSString *cp = pendingCloudPaths[i];
 			
-			if ([cp hasPrefix:zAppID])
-				cp = [cp substringFromIndex:zAppID.length];
+			if ([cp hasPrefix:treeID])
+				cp = [cp substringFromIndex:treeID.length];
 			if ([cp hasPrefix:@"/"])
 				cp = [cp substringFromIndex:1];
 			
@@ -214,7 +214,7 @@
 			
 			NSMutableURLRequest *request =
 				[zdc.restManager listProxyWithPaths: requestCloudPaths
-				                          appPrefix: rootAppPrefix
+				                             treeID: rootAppPrefix
 				                             pullID: pullID
 				                     continuationID: continuation_id
 				                 continuationOffset: continuation_offset

@@ -49,13 +49,13 @@ NS_ASSUME_NONNULL_BEGIN
  *       That is, hard-coded "root" nodes that don't actually exist on the server.
  */
 + (NSString *)uuidForLocalUserID:(NSString *)localUserID
-                          zAppID:(NSString *)zAppID
+                          treeID:(NSString *)treeID
                            trunk:(ZDCTreesystemTrunk)trunk;
 
 /**
- * The zAppID container for the treesystem.
+ * The container for the treesystem.
  */
-@property (nonatomic, copy, readonly) NSString *zAppID;
+@property (nonatomic, copy, readonly) NSString *treeID;
 
 /**
  * The trunk (top-level root node). E.g. "home", "prefs", "inbox", "outbox".

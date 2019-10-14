@@ -601,7 +601,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
     
   	[zdc.restManager searchUserMatch: queryString
 	                        provider: providers.count ? providers.firstObject : nil
-	                          zAppID: zdc.zAppID
+	                          treeID: zdc.primaryTreeID
 	                     requesterID: userID
 	                 completionQueue: dispatch_get_main_queue()
 	                 completionBlock:^(NSURLResponse *response, id responseObject, NSError *error)

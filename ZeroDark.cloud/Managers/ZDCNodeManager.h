@@ -45,9 +45,9 @@ NS_ASSUME_NONNULL_BEGIN
  * @param localUserID
  *   The localUser for which you're interested (localUserID == ZDCLocalUser.uuid)
  *
- * @param zAppID
- *   The zAppID you registered in the ZeroDark.cloud dashboard.
- *   This is the same zAppID you passed when you created a ZeroDarkCloud instance.
+ * @param treeID
+ *   The treeID you registered in the ZeroDark.cloud dashboard.
+ *   This is the same treeID you passed when you created a ZeroDarkCloud instance.
  *
  * @param trunk
  *   The trunk you're looking for.
@@ -56,7 +56,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   A database transaction - allows the method to read from the database.
  */
 - (nullable ZDCTrunkNode *)trunkNodeForLocalUserID:(NSString *)localUserID
-                                            zAppID:(NSString *)zAppID
+                                            treeID:(NSString *)treeID
                                              trunk:(ZDCTreesystemTrunk)trunk
                                        transaction:(YapDatabaseReadTransaction *)transaction;
 
@@ -337,9 +337,9 @@ NS_ASSUME_NONNULL_BEGIN
  * @param localUserID
  *   This is the associated user account identifier. (localUserID == ZDCLocalUser.uuid)
  *
- * @param zAppID
- *   The zerodark.cloud app identifier.
- *   All nodes are segregated by zAppID, and then into their respective containers.
+ * @param treeID
+ *   The treesystem identifier.
+ *   All nodes are segregated by treeID.
  *
  * @param transaction
  *   A database transaction - allows the method to read from the database.
@@ -348,9 +348,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (nullable ZDCNode *)findNodeWithPath:(ZDCTreesystemPath *)path
                            localUserID:(NSString *)localUserID
-                                zAppID:(NSString *)zAppID
+                                treeID:(NSString *)treeID
                            transaction:(YapDatabaseReadTransaction *)transaction
-NS_SWIFT_NAME(findNode(withPath:localUserID:zAppID:transaction:));
+NS_SWIFT_NAME(findNode(withPath:localUserID:treeID:transaction:));
 
 /**
  * Finds the node with the given cloudName.
@@ -395,9 +395,9 @@ NS_SWIFT_NAME(findNode(withPath:localUserID:zAppID:transaction:));
  * @param localUserID
  *   This is the associated user account identifier. (localUserID == ZDCLocalUser.uuid)
  *
- * @param zAppID
- *   The zerodark.cloud app identifier.
- *   All nodes are segregated by zAppID, and then into their respective containers.
+ * @param treeID
+ *   The treesystem identifier, as registered in the [dashboard](https://dashboard.zerodark.cloud).
+ *   All nodes are segregated by treeID.
  *
  * @param transaction
  *   A database transaction - allows the method to read from the database.
@@ -406,7 +406,7 @@ NS_SWIFT_NAME(findNode(withPath:localUserID:zAppID:transaction:));
  */
 - (nullable ZDCNode *)findNodeWithCloudID:(NSString *)cloudID
                               localUserID:(NSString *)localUserID
-                                   zAppID:(NSString *)zAppID
+                                   treeID:(NSString *)treeID
                               transaction:(YapDatabaseReadTransaction *)transaction;
 
 /**
@@ -419,9 +419,9 @@ NS_SWIFT_NAME(findNode(withPath:localUserID:zAppID:transaction:));
                                      bucket:(NSString *)bucket
                                      region:(AWSRegion)region
                                 localUserID:(NSString *)localUserID
-                                     zAppID:(NSString *)zAppID
+                                     treeID:(NSString *)treeID
                                 transaction:(YapDatabaseReadTransaction *)transaction
-NS_SWIFT_NAME(findNode(withCloudPath:bucket:region:localUserID:zAppID:transaction:));
+NS_SWIFT_NAME(findNode(withCloudPath:bucket:region:localUserID:treeID:transaction:));
 
 /**
  * Finds the node with a matching dirPrefix.
@@ -432,7 +432,7 @@ NS_SWIFT_NAME(findNode(withCloudPath:bucket:region:localUserID:zAppID:transactio
                                      bucket:(NSString *)bucket
                                      region:(AWSRegion)region
                                 localUserID:(NSString *)localUserID
-                                     zAppID:(NSString *)zAppID
+                                     treeID:(NSString *)treeID
                                 transaction:(YapDatabaseReadTransaction *)transaction;
 
 /**
@@ -440,7 +440,7 @@ NS_SWIFT_NAME(findNode(withCloudPath:bucket:region:localUserID:zAppID:transactio
  */
 - (nullable ZDCNode *)findNodeWithPointeeID:(NSString *)pointeeID
                                 localUserID:(NSString *)localUserID
-                                     zAppID:(NSString *)zAppID
+                                     treeID:(NSString *)treeID
                                 transaction:(YapDatabaseReadTransaction *)transaction;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -448,7 +448,7 @@ NS_SWIFT_NAME(findNode(withCloudPath:bucket:region:localUserID:zAppID:transactio
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Returns a list of all nodeID's belonging to the given user (regardless of zAppID).
+ * Returns a list of all nodeID's belonging to the given user (regardless of treeID).
  *
  * @note This list doesn't include trunk nodes.
  */
@@ -461,7 +461,7 @@ NS_SWIFT_NAME(findNode(withCloudPath:bucket:region:localUserID:zAppID:transactio
  * @note This list doesn't include trunk nodes.
  */
 - (NSArray<NSString *> *)allNodeIDsWithLocalUserID:(NSString *)localUserID
-                                            zAppID:(NSString *)zAppID
+                                            treeID:(NSString *)treeID
                                        transaction:(YapDatabaseReadTransaction *)transaction;
 
 /**
@@ -474,7 +474,7 @@ NS_SWIFT_NAME(findNode(withCloudPath:bucket:region:localUserID:zAppID:transactio
  * Note: This method has been optimized for performance, and is the recommended approach.
  */
 - (NSArray<NSString *> *)allUploadedNodeIDsWithLocalUserID:(NSString *)localUserID
-                                                    zAppID:(NSString *)zAppID
+                                                    treeID:(NSString *)treeID
                                                transaction:(YapDatabaseReadTransaction *)transaction;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

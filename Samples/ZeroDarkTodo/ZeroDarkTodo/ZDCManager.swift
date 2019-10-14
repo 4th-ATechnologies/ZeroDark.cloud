@@ -11,8 +11,11 @@ import UIKit
 import CocoaLumberjack
 import ZeroDarkCloud
 
-let kZDC_DatabaseName = "ZeroDarkTodo"
-let kZDC_zAppID       = "com.4th-a.ZeroDarkTodo"
+/// The treeID must first be registered in the [dashboard](https://dashboard.zerodark.cloud).
+/// More instructions about this can be found via
+/// the [docs](https://zerodarkcloud.readthedocs.io/en/latest/client/setup_1/).
+///
+let kZDC_TreeID = "com.4th-a.ZeroDarkTodo"
 
 let Ext_View_Lists         = "Lists"
 let Ext_View_Tasks         = "Tasks"
@@ -31,7 +34,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	
 	var zdc: ZeroDarkCloud!
 	
-	private init(databaseName: String, zAppID: String) {
+	private override init() {
 		super.init()
 		
 	#if DEBUG
@@ -40,14 +43,14 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		dynamicLogLevel = .warning
 	#endif
 
-		zdc = ZeroDarkCloud(delegate: self,
-		                databaseName: databaseName,
-		                      zAppID: zAppID)
+		let zdcConfig = ZDCConfig(primaryTreeID: kZDC_TreeID)
+		
+		zdc = ZeroDarkCloud(delegate: self, config: zdcConfig)
 
 		do {
 			let dbEncryptionKey = try zdc.databaseKeyManager.unlockUsingKeychain()
-			let config = databaseConfig(encryptionKey: dbEncryptionKey)
-			zdc.unlockOrCreateDatabase(config)			
+			let dbConfig = databaseConfig(encryptionKey: dbEncryptionKey)
+			zdc.unlockOrCreateDatabase(dbConfig)
 		} catch {
 			
 			DDLogError("Ooops! Something went wrong: \(error)")
@@ -76,7 +79,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	}
 	
 	public static var sharedInstance: ZDCManager = {
-		let zdcManager = ZDCManager(databaseName: kZDC_DatabaseName, zAppID: kZDC_zAppID)
+		let zdcManager = ZDCManager()
 		return zdcManager
 	}()
 	
@@ -1881,7 +1884,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			let duplicate =
 				zdc.nodeManager.findNode(withCloudID: invitation.cloudID,
 				                         localUserID: localUserID,
-				                              zAppID: kZDC_zAppID,
+				                              treeID: kZDC_TreeID,
 				                         transaction: transaction)
 			
 			var listNode: ZDCNode? = nil

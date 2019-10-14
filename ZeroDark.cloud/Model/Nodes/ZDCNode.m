@@ -299,33 +299,33 @@ static NSString *const k_pointeeID             = @"pointeeID";
 #pragma mark Special ParentID's
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-+ (NSString *)signalParentIDForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
++ (NSString *)signalParentIDForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID
 {
-	return [NSString stringWithFormat:@"%@|%@|signal", localUserID, zAppID];
+	return [NSString stringWithFormat:@"%@|%@|signal", localUserID, treeID];
 }
 
-+ (NSString *)graftParentIDForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
++ (NSString *)graftParentIDForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID
 {
-	return [NSString stringWithFormat:@"%@|%@|graft", localUserID, zAppID];
+	return [NSString stringWithFormat:@"%@|%@|graft", localUserID, treeID];
 }
 
 + (BOOL)getLocalUserID:(NSString **)outLocalUserID
-                zAppID:(NSString **)outZAppID
+                treeID:(NSString **)outTreeID
           fromParentID:(NSString *)parentID
 {
 	NSArray<NSString *> *components = [parentID componentsSeparatedByString:@"|"];
 	if (components.count != 3)
 	{
 		if (outLocalUserID) *outLocalUserID = nil;
-		if (outZAppID) *outZAppID = nil;
+		if (outTreeID) *outTreeID = nil;
 		return NO;
 	}
 	
 	NSString *localUserID = components[0];
-	NSString *zAppID = components[1];
+	NSString *treeID = components[1];
 	
 	if (outLocalUserID) *outLocalUserID = localUserID;
-	if (outZAppID) *outZAppID = zAppID;
+	if (outTreeID) *outTreeID = treeID;
 	return YES;
 }
 

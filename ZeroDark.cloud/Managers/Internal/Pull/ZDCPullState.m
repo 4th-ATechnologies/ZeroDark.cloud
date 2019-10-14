@@ -31,7 +31,7 @@
 }
 
 @synthesize localUserID = localUserID;
-@synthesize zAppID = zAppID;
+@synthesize treeID = treeID;
 @synthesize pullID = pullID;
 
 @synthesize hasProcessedChanges;
@@ -44,14 +44,14 @@
 @dynamic unprocessedAvatarFilenames;
 @dynamic unknownUserIDs;
 
-- (instancetype)initWithLocalUserID:(NSString *)inLocalUserID zAppID:(NSString *)inZAppID
+- (instancetype)initWithLocalUserID:(NSString *)inLocalUserID treeID:(NSString *)inTreeID
 {
 	if ((self = [super init]))
 	{
 		queue = dispatch_queue_create("ZDCPullState", DISPATCH_QUEUE_SERIAL);
 		
 		localUserID = [inLocalUserID copy];
-		zAppID = [inZAppID copy];
+		treeID = [inTreeID copy];
 		
 		pullID = [NSString zdcUUIDString];
 		

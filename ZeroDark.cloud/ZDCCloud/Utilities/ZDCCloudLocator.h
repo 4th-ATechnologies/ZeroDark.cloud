@@ -82,7 +82,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Performs a detailed comparison between two cloudLocator's.
- * For example, you could check to see if they belong to the same zAppID, or the same dirPrefix (same "folder").
+ * For example, you could check to see if they belong to the same treeID, or the same dirPrefix (same "folder").
  */
 - (BOOL)isEqualToCloudLocator:(ZDCCloudLocator *)another components:(ZDCCloudPathComponents)components;
 

@@ -47,10 +47,10 @@
 	return ext.localUserID;
 }
 
-- (NSString *)zAppID
+- (NSString *)treeID
 {
 	ZDCCloud *ext = (ZDCCloud *)parentConnection->parent;
-	return ext.zAppID;
+	return ext.treeID;
 }
 
 - (YapDatabaseCloudCorePipeline *)defaultPipeline
@@ -60,12 +60,12 @@
 
 - (NSString *)signalParentID
 {
-	return [ZDCNode signalParentIDForLocalUserID:[self localUserID] zAppID:[self zAppID]];
+	return [ZDCNode signalParentIDForLocalUserID:[self localUserID] treeID:[self treeID]];
 }
 
 - (NSString *)graftParentID
 {
-	return [ZDCNode graftParentIDForLocalUserID:[self localUserID] zAppID:[self zAppID]];
+	return [ZDCNode graftParentIDForLocalUserID:[self localUserID] treeID:[self treeID]];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,7 +95,7 @@
 	// Create message node
 	
 	NSString *localUserID = [self localUserID];
-	NSString *zAppID = [self zAppID];
+	NSString *treeID = [self treeID];
 	
 	ZDCNode *message = [[ZDCNode alloc] initWithLocalUserID:localUserID];
 	
@@ -138,12 +138,12 @@
 	
 	ZDCCloudOperation *op_rcrd =
 	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
-	                                          zAppID: zAppID
+	                                          treeID: treeID
 	                                         putType: ZDCCloudOperationPutType_Node_Rcrd];
 	
 	ZDCCloudOperation *op_data =
 	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
-	                                          zAppID: zAppID
+	                                          treeID: treeID
 	                                         putType: ZDCCloudOperationPutType_Node_Data];
 	
 	op_rcrd.nodeID = message.uuid;
@@ -173,7 +173,7 @@
 		
 		dstNode.anchor =
 		  [[ZDCNodeAnchor alloc] initWithUserID: recipient.uuid
-		                                 zAppID: zAppID
+		                                 treeID: treeID
 		                              dirPrefix: kZDCDirPrefix_MsgsIn];
 		
 		{ // Add recipient permissions
@@ -203,11 +203,11 @@
 		
 		ZDCCloudOperation *op_copy =
 		  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
-		                                          zAppID: zAppID
+		                                          treeID: treeID
 		                                            type: ZDCCloudOperationType_CopyLeaf];
 		
 		ZDCCloudPath *dstCloudPath =
-		  [[ZDCCloudPath alloc] initWithZAppID: zAppID
+		  [[ZDCCloudPath alloc] initWithTreeID: treeID
 		                             dirPrefix: kZDCDirPrefix_MsgsIn
 		                              fileName: cloudName];
 		
@@ -229,7 +229,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)sendSignalToRecipient:(ZDCUser *)recipient
@@ -262,7 +262,7 @@
 	// Create signal node
 	
 	NSString *localUserID = [self localUserID];
-	NSString *zAppID = [self zAppID];
+	NSString *treeID = [self treeID];
 	
 	ZDCNode *signal = [[ZDCNode alloc] initWithLocalUserID:localUserID];
 	signal.parentID = [self signalParentID];
@@ -275,7 +275,7 @@
 	
 	signal.anchor =
 	  [[ZDCNodeAnchor alloc] initWithUserID: recipient.uuid
-	                                 zAppID: zAppID
+	                                 treeID: treeID
 	                              dirPrefix: kZDCDirPrefix_MsgsIn];
 	
 	{ // Add recipient permissions
@@ -306,7 +306,7 @@
 	// Create & queue operation
 	
 	ZDCCloudPath *cloudPath =
-	  [[ZDCCloudPath alloc] initWithZAppID: zAppID
+	  [[ZDCCloudPath alloc] initWithTreeID: treeID
 	                             dirPrefix: kZDCDirPrefix_MsgsIn
 	                              fileName: cloudName];
 	
@@ -317,12 +317,12 @@
 	
 	ZDCCloudOperation *op_rcrd =
 	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
-	                                          zAppID: zAppID
+	                                          treeID: treeID
 	                                         putType: ZDCCloudOperationPutType_Node_Rcrd];
 	
 	ZDCCloudOperation *op_data =
 	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
-	                                          zAppID: zAppID
+	                                          treeID: treeID
 	                                         putType: ZDCCloudOperationPutType_Node_Data];
 	
 	op_rcrd.nodeID = signal.uuid;
@@ -345,7 +345,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)nodeWithID:(NSString *)nodeID
@@ -355,25 +355,25 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)nodeWithPath:(ZDCTreesystemPath *)path
 {
 	NSString *const localUserID = [self localUserID];
-	NSString *const zAppID = [self zAppID];
+	NSString *const treeID = [self treeID];
 	
 	ZDCNode *node =
 	  [[ZDCNodeManager sharedInstance] findNodeWithPath: path
 	                                        localUserID: localUserID
-	                                             zAppID: zAppID
+	                                             treeID: treeID
 	                                        transaction: databaseTransaction];
 	return node;
 }
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)parentNode:(ZDCNode *)node
@@ -389,7 +389,7 @@
 		parentNode =
 		  [[ZDCNodeManager sharedInstance] findNodeWithPointeeID: parentID
 		                                             localUserID: [self localUserID]
-		                                                  zAppID: [self zAppID]
+		                                                  treeID: [self treeID]
 		                                             transaction: databaseTransaction];
 	}
 	else
@@ -402,7 +402,7 @@
 		parentNode =
 		  [[ZDCNodeManager sharedInstance] findNodeWithPointeeID: parentNode.uuid
 		                                             localUserID: [self localUserID]
-		                                                  zAppID: [self zAppID]
+		                                                  treeID: [self treeID]
 		                                             transaction: databaseTransaction];
 	}
 	
@@ -411,7 +411,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)targetNode:(ZDCNode *)node
@@ -421,20 +421,20 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCTrunkNode *)trunkNode:(ZDCTreesystemTrunk)trunk
 {
 	return [[ZDCNodeManager sharedInstance] trunkNodeForLocalUserID: [self localUserID]
-	                                                         zAppID: [self zAppID]
+	                                                         treeID: [self treeID]
 	                                                          trunk: trunk
 	                                                    transaction: databaseTransaction];
 }
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (ZDCTreesystemPath *)conflictFreePath:(ZDCTreesystemPath *)path
@@ -459,7 +459,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)createNodeWithPath:(ZDCTreesystemPath *)path
@@ -533,7 +533,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)createNode:(ZDCNode *)node error:(NSError *_Nullable *_Nullable)outError
@@ -623,7 +623,7 @@
 - (nullable ZDCCloudOperation *)queuePutOperationForNodeRcrd:(ZDCNode *)node
 {
 	NSString *localUserID = [self localUserID];
-	NSString *zAppID = [self zAppID];
+	NSString *treeID = [self treeID];
 	
 	ZDCCloudLocator *cloudLocator_rcrd =
 	  [[ZDCCloudPathManager sharedInstance] cloudLocatorForNode: node
@@ -636,7 +636,7 @@
 	
 	ZDCCloudOperation *op_rcrd =
 	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
-	                                          zAppID: zAppID
+	                                          treeID: treeID
 	                                         putType: ZDCCloudOperationPutType_Node_Rcrd];
 	
 	op_rcrd.nodeID = node.uuid;
@@ -649,7 +649,7 @@
 - (nullable ZDCCloudOperation *)queuePutOperationForNodeData:(ZDCNode *)node
 {
 	NSString *localUserID = [self localUserID];
-	NSString *zAppID = [self zAppID];
+	NSString *treeID = [self treeID];
 	
 	if (node.isPointer) {
 		return nil;
@@ -662,7 +662,7 @@
 	
 	ZDCCloudOperation *op_data =
 	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
-	                                          zAppID: zAppID
+	                                          treeID: treeID
 	                                         putType: ZDCCloudOperationPutType_Node_Data];
 	
 	op_data.nodeID = node.uuid;
@@ -675,7 +675,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)modifyNode:(ZDCNode *)newNode error:(NSError *_Nullable *_Nullable)outError
@@ -736,7 +736,7 @@
 	[rwTransaction setObject:newNode forKey:newNode.uuid inCollection:kZDCCollection_Nodes];
 	
 	NSString *localUserID = [self localUserID];
-	NSString *zAppID = [self zAppID];
+	NSString *treeID = [self treeID];
 	
 	ZDCCloudOperation *op = nil;
 	
@@ -749,7 +749,7 @@
 		                                                transaction: databaseTransaction];
 		
 		op = [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
-		                                             zAppID: zAppID
+		                                             treeID: treeID
 		                                               type: ZDCCloudOperationType_Move];
 		
 		op.cloudLocator = srcCloudLocator;
@@ -758,7 +758,7 @@
 	else
 	{
 		op = [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
-		                                             zAppID: zAppID
+		                                             treeID: treeID
 		                                            putType: ZDCCloudOperationPutType_Node_Rcrd];
 		op.cloudLocator = cloudLocator;
 	}
@@ -774,7 +774,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCCloudOperation *)queueDataUploadForNodeID:(NSString *)nodeID
@@ -790,7 +790,7 @@
 	}
 	
 	NSString *const localUserID = [self localUserID];
-	NSString *const zAppID = [self zAppID];
+	NSString *const treeID = [self treeID];
 	
 	ZDCNode *node = [databaseTransaction objectForKey:nodeID inCollection:kZDCCollection_Nodes];
 	if (node == nil) {
@@ -816,7 +816,7 @@
 	
 	ZDCCloudOperation *operation =
 	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
-	                                          zAppID: zAppID
+	                                          treeID: treeID
 	                                         putType: ZDCCloudOperationPutType_Node_Data];
 	
 	operation.nodeID = node.uuid;
@@ -831,7 +831,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCCloudOperation *)deleteNode:(ZDCNode *)node error:(NSError *_Nullable *_Nullable)outError
@@ -845,7 +845,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCCloudOperation *)deleteNode:(ZDCNode *)rootNode
@@ -875,7 +875,7 @@
 	}
 	
 	NSString *localUserID = [self localUserID];
-	NSString *zAppID = [self zAppID];
+	NSString *treeID = [self treeID];
 	
 	ZDCNodeManager *nodeManager = [ZDCNodeManager sharedInstance];
 	ZDCCloudPathManager *cloudPathManager = [ZDCCloudPathManager sharedInstance];
@@ -1034,7 +1034,7 @@
 		
 		operation =
 		  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
-		                                          zAppID: zAppID
+		                                          treeID: treeID
 		                                            type: ZDCCloudOperationType_DeleteLeaf];
 	}
 	else
@@ -1043,7 +1043,7 @@
 		
 		operation =
 		  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
-		                                          zAppID: zAppID
+		                                          treeID: treeID
 		                                            type: ZDCCloudOperationType_DeleteNode];
 		
 		NSError *jsonError = nil;
@@ -1125,7 +1125,7 @@
 			ZDCNode *retainerNode =
 			  [[ZDCNodeManager sharedInstance] findNodeWithPointeeID: rootNode.pointeeID
 			                                             localUserID: localUserID
-			                                                  zAppID: zAppID
+			                                                  treeID: treeID
 			                                             transaction: rwTransaction];
 			if (retainerNode) {
 				pointeeIsRetained = YES;
@@ -1183,7 +1183,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)graftNodeWithLocalPath:(ZDCTreesystemPath *)path
@@ -1261,8 +1261,8 @@
 		return nil;
 	}
 	
-	NSString *localUserID = [self localUserID];
-	NSString *zAppID = [self zAppID];
+	NSString *const localUserID = [self localUserID];
+	NSString *const treeID = [self treeID];
 	
 	if ([remoteUser.uuid isEqualToString:localUserID])
 	{
@@ -1279,7 +1279,7 @@
 	                                                  bucket: remoteUser.aws_bucket
 	                                                  region: remoteUser.aws_region
 	                                             localUserID: localUserID
-	                                                  zAppID: zAppID
+	                                                  treeID: treeID
 	                                             transaction: rwTransaction];
 	
 	if (pointeeNode == nil)
@@ -1294,7 +1294,7 @@
 		
 		pointeeNode.anchor =
 		  [[ZDCNodeAnchor alloc] initWithUserID: remoteUser.uuid
-		                                 zAppID: remotePath.zAppID
+		                                 treeID: remotePath.treeID
 		                              dirPrefix: remotePath.dirPrefix];
 		
 		[rwTransaction setObject: pointeeNode
@@ -1325,7 +1325,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)linkNodeID:(NSString *)nodeID
@@ -1434,7 +1434,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable NSString *)unlinkKey:(NSString *)key inCollection:(nullable NSString *)collection
@@ -1454,7 +1454,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable NSString *)linkedNodeIDForKey:(NSString *)key inCollection:(nullable NSString *)collection
@@ -1476,7 +1476,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)linkedNodeForKey:(NSString *)key inCollection:(nullable NSString *)collection
@@ -1518,7 +1518,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)isNodeLinked:(NSString *)nodeID
@@ -1537,7 +1537,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)getLinkedKey:(NSString **)outKey
@@ -1563,7 +1563,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable id)linkedObjectForNodeID:(NSString *)nodeID
@@ -1580,18 +1580,18 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable id)linkedObjectForPath:(ZDCTreesystemPath *)path
 {
-	NSString *localUserID = [self localUserID];
-	NSString *zAppID = [self zAppID];
+	NSString *const localUserID = [self localUserID];
+	NSString *const treeID = [self treeID];
 	
 	ZDCNode *node =
 	  [[ZDCNodeManager sharedInstance] findNodeWithPath: path
 	                                        localUserID: localUserID
-	                                             zAppID: zAppID
+	                                             treeID: treeID
 	                                        transaction: databaseTransaction];
 	
 	if (node) {
@@ -1608,7 +1608,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable id)tagForNodeID:(NSString *)nodeID withIdentifier:(NSString *)identifier
@@ -1618,7 +1618,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (void)setTag:(nullable id)tag forNodeID:(NSString *)nodeID withIdentifier:(NSString *)identifier
@@ -1628,7 +1628,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (void)enumerateTagsForNodeID:(NSString *)nodeID
@@ -1639,7 +1639,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (void)removeTagForNodeID:(NSString *)nodeID withIdentifier:(NSString *)identifier
@@ -1649,7 +1649,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (void)removeAllTagsForNodeID:(NSString *)nodeID
@@ -1675,7 +1675,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (void)markNodeAsNeedsDownload:(NSString *)nodeID components:(ZDCNodeComponents)components
@@ -1688,7 +1688,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (void)unmarkNodeAsNeedsDownload:(NSString *)nodeID
@@ -1767,7 +1767,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)nodeIsMarkedAsNeedsDownload:(NSString *)nodeID components:(ZDCNodeComponents)components
@@ -1799,7 +1799,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (NSArray<ZDCCloudOperation*> *)addedOperations
@@ -1821,7 +1821,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (NSArray<ZDCCloudOperation*> *)addedOperationsForNodeID:(NSString *)nodeID
@@ -1851,7 +1851,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (BOOL)hasPendingDataUploadsForNodeID:(NSString *)nodeID
@@ -1907,7 +1907,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (NSArray<NSDictionary*> *)pendingChangesetsForNodeID:(NSString *)nodeID
@@ -1935,7 +1935,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (void)didMergeDataWithETag:(NSString *)eTag forNodeID:(NSString *)nodeID
@@ -1983,7 +1983,7 @@
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (void)skipDataUploadsForNodeID:(NSString *)nodeID

@@ -24,7 +24,7 @@
 @interface ZDCPushManager : NSObject <YapDatabaseCloudCorePipelineDelegate>
 
 /**
- * Stops all in-flight uploads for the given {localUserID, zAppID} tuple.
+ * Stops all in-flight uploads for the given {localUserID, treeID} tuple.
  *
  * The active uploads are cancelled, but they're not removed from the push queue.
  * That is, the active network tasks that are pushing data up to the cloud are stopped.
@@ -36,7 +36,7 @@
  * You're encouraged to use the SyncManager instead of calling this method directly.
  * @see `[ZDCSyncManager pausePushForLocalUserID:andAbortUploads:]`
  */
-- (void)abortOperationsForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID;
+- (void)abortOperationsForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID;
 
 /**
  * Stops in-flight uploads for the given list of operations.

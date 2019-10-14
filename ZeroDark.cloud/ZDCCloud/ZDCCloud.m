@@ -14,13 +14,13 @@
 @implementation ZDCCloud
 
 @synthesize localUserID = localUserID;
-@synthesize zAppID = zAppID;
+@synthesize treeID = treeID;
 
 - (instancetype)initWithLocalUserID:(NSString *)inLocalUserID
-                             zAppID:(NSString *)inZAppID
+                             treeID:(NSString *)inTreeID
 {
 	NSParameterAssert(inLocalUserID != nil);
-	NSParameterAssert(inZAppID != nil);
+	NSParameterAssert(inTreeID != nil);
 	
 	YapDatabaseCloudCoreOptions *super_options = [[YapDatabaseCloudCoreOptions alloc] init];
 	super_options.allowedOperationClasses = [NSSet setWithObject:[ZDCCloudOperation class]];
@@ -30,7 +30,7 @@
 	if ((self = [super initWithVersionTag:nil options:super_options]))
 	{
 		localUserID = [inLocalUserID copy];
-		zAppID = [inZAppID copy];
+		treeID = [inTreeID copy];
 	}
 	return self;
 }

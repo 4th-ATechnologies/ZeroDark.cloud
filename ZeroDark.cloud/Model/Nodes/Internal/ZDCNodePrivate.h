@@ -48,12 +48,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark Special ParentID's
 
-+ (NSString *)signalParentIDForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID;
++ (NSString *)signalParentIDForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID;
 
-+ (NSString *)graftParentIDForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID;
++ (NSString *)graftParentIDForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID;
 
 + (BOOL)getLocalUserID:(NSString *_Nullable *_Nullable)outLocalUserID
-                zAppID:(NSString *_Nullable *_Nullable)outZAppID
+                treeID:(NSString *_Nullable *_Nullable)outTreeID
           fromParentID:(NSString *)parentID;
 
 @end

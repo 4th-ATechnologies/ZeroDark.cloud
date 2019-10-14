@@ -185,7 +185,7 @@ static NSString *const kActionStatus   = @"action";
 	for (NSString *localUserID in localUserIDs)
 	{
 		
-		ZDCCloud *ext = [owner.databaseManager cloudExtForUser:localUserID app:owner.zAppID];
+		ZDCCloud *ext = [owner.databaseManager cloudExtForUserID:localUserID treeID:owner.primaryTreeID];
 		YapDatabaseCloudCorePipeline *pipeline = [ext  defaultPipeline];
 		[pipeline enumerateOperationsUsingBlock:^(YapDatabaseCloudCoreOperation *op, NSUInteger graphIdx, BOOL *stop){
 #pragma clang diagnostic push

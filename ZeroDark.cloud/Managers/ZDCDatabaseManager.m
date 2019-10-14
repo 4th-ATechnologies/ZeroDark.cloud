@@ -30,7 +30,7 @@
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
 #if DEBUG
-  static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelDebug;
 #else
   static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
@@ -723,8 +723,8 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		}
 		
 		// Regular nodes have a parentID.
-		// Graft nodes have a special parentID: "<localUserID>|<zAppID>|graft".
-		// Signal nodes have a special parentID: "<localUserID>|<zAppID>|signal".
+		// Graft nodes have a special parentID: "<localUserID>|<treeID>|graft".
+		// Signal nodes have a special parentID: "<localUserID>|<treeID>|signal".
 		// Container nodes don't have a parentID.
 		//
 		return node.parentID;
@@ -815,8 +815,8 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		}
 		
 		// Regular nodes have a parentID.
-		// Graft nodes have a special parentID: "<localUserID>|<zAppID>|graft".
-		// Signal nodes have a special parentID: "<localUserID>|<zAppID>|signal".
+		// Graft nodes have a special parentID: "<localUserID>|<treeID>|graft".
+		// Signal nodes have a special parentID: "<localUserID>|<treeID>|signal".
 		// Container nodes don't have a parentID.
 		//
 		return node.parentID;
@@ -883,7 +883,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	//
 	// Sorts all files & directories into a flat system.
 	//
-	// group(localUserID, zAppID) -> values(every single node)
+	// group(localUserID, treeID) -> values(every single node)
 	//
 	// Note:
 	// This view is the parent view for other filteredViews.
@@ -917,7 +917,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		
 		if (trunkNode == nil) return nil;
 		
-		return [ZDCDatabaseManager groupForLocalUserID:node.localUserID zAppID:trunkNode.zAppID];
+		return [ZDCDatabaseManager groupForLocalUserID:node.localUserID treeID:trunkNode.treeID];
 	}];
 	
 	YapDatabaseViewSorting *sorting = [YapDatabaseViewSorting withObjectBlock:
@@ -983,7 +983,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		return [ZDCDatabaseManager groupForLocalUserID: cloudNode.localUserID
 		                                        region: cloudLocator.region
 		                                        bucket: cloudLocator.bucket
-		                                        zAppID: cloudPath.zAppID
+		                                        treeID: cloudPath.treeID
 		                                     dirPrefix: cloudPath.dirPrefix];
 		
 		//
@@ -1174,16 +1174,16 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 			if ((components.count == 2) && (components[0].length == 32)) // sanity checks
 			{
 				NSString *localUserID = components[0];
-				NSString *appID = components[1];
+				NSString *treeID = components[1];
 				
-				YapDatabaseCloudCore* ext = [self registerCloudExtensionForUser:localUserID app:appID];
+				YapDatabaseCloudCore* ext = [self registerCloudExtensionForUserID:localUserID treeID:treeID];
 				if(ext)
 				{
 					if (tuples == nil) {
 						tuples = [NSMutableArray arrayWithCapacity:4];
 					}
 					
-					YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, appID);
+					YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, treeID);
 					[tuples addObject:tuple];
 				}
 			}
@@ -1271,9 +1271,9 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
  * For use within:
  * - Ext_View_Flat
  */
-+ (NSString *)groupForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
++ (NSString *)groupForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID
 {
-	return [NSString stringWithFormat:@"%@|%@", localUserID, zAppID];
+	return [NSString stringWithFormat:@"%@|%@", localUserID, treeID];
 }
 
 /**
@@ -1283,14 +1283,14 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 + (NSString *)groupForLocalUserID:(NSString *)localUserID
                            region:(AWSRegion)region
                            bucket:(NSString *)bucket
-                           zAppID:(NSString *)zAppID
+                           treeID:(NSString *)treeID
                         dirPrefix:(NSString *)dirPrefix
 {
 	return [NSString stringWithFormat:@"%@|%@|%@|%@/%@",
 		localUserID,
 		[AWSRegions shortNameForRegion:region],
 		bucket,
-		zAppID,
+		treeID,
 		dirPrefix];
 }
 
@@ -1582,15 +1582,15 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 #pragma mark Cloud Utilities
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (NSString *)cloudExtNameForUser:(NSString *)localUserID
+- (NSString *)cloudExtNameForUserID:(NSString *)localUserID
 {
-	return [self cloudExtNameForUser:localUserID app:zdc.zAppID];
+	return [self cloudExtNameForUserID:localUserID treeID:zdc.primaryTreeID];
 }
 
 /**
  * A separate ZDCCloud instance must be registered for every <localUserID, appID> tuple.
 **/
-- (NSString *)cloudExtNameForUser:(NSString *)localUserID app:(NSString *)appID
+- (NSString *)cloudExtNameForUserID:(NSString *)localUserID treeID:(NSString *)appID
 {
 	// Example: "ZeroDark:cloud_z55tqmfr9kix1p1gntotqpwkacpuoyno_com.4th-a.storm4"
 	// 
@@ -1601,7 +1601,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 /**
  * See header file for description.
  */
-- (NSArray<ZDCCloud *> *)cloudExtsForUser:(NSString *)inLocalUserID
+- (NSArray<ZDCCloud *> *)cloudExtsForUserID:(NSString *)inLocalUserID
 {
 	NSMutableArray<ZDCCloud *> *cloudExts = [NSMutableArray array];
 	
@@ -1627,15 +1627,15 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 /**
  * See header file for description.
  */
-- (nullable ZDCCloud *)cloudExtForUser:(NSString *)localUserID
+- (nullable ZDCCloud *)cloudExtForUserID:(NSString *)localUserID
 {
-	return [self cloudExtForUser:localUserID app:zdc.zAppID];
+	return [self cloudExtForUserID:localUserID treeID:zdc.primaryTreeID];
 }
 
 /**
  * See header file for description.
  */
-- (nullable ZDCCloud *)cloudExtForUser:(NSString *)localUserID app:(NSString *)appID
+- (nullable ZDCCloud *)cloudExtForUserID:(NSString *)localUserID treeID:(NSString *)appID
 {
 	ZDCCloud *result = nil;
 	if (localUserID && appID)
@@ -1674,12 +1674,12 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
  * When the app launches, YapDatabaseCloudCore instances are automatically registered for all existing accounts.
  * If a new account is created during runtime, then this method MUST be invoked to create the proper instance.
 **/
-- (ZDCCloud *)registerCloudExtensionForUser:(NSString *)inLocalUserID app:(NSString *)inAppID
+- (ZDCCloud *)registerCloudExtensionForUserID:(NSString *)inLocalUserID treeID:(NSString *)inTreeID
 {
 	ZDCLogAutoTrace();
 	
 	NSString *localUserID = [inLocalUserID copy]; // mutable string protection
-	NSString *appID = [inAppID copy];             // mutable string protection
+	NSString *treeID = [inTreeID copy];           // mutable string protection
 	
 	__block ZDCLocalUser *localUser = nil;
 	[self.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
@@ -1696,7 +1696,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	
 	ZDCCloud *ext =
 	  [[ZDCCloud alloc] initWithLocalUserID: localUserID
-	                                 zAppID: appID];
+	                                 treeID: treeID];
 	
 	id <YapDatabaseCloudCorePipelineDelegate> pipelineDelegate =
 	  (id <YapDatabaseCloudCorePipelineDelegate>)zdc;
@@ -1749,7 +1749,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 //		[ext resume];
 //	});
 	
-	NSString *extName = [self cloudExtNameForUser:localUserID app:appID];
+	NSString *extName = [self cloudExtNameForUserID:localUserID treeID:treeID];
 	[database asyncRegisterExtension: ext
 	                        withName: extName
 	                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
@@ -1762,7 +1762,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	}];
 	
 	ZDCCloud *result = nil;
-	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, appID);
+	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, treeID);
 	YAPUnfairLockLock(&spinlock);
 	@try {
 		
@@ -1786,16 +1786,16 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
  * If an account is deleted (not suspended) during runtime,
  * then this method MUST be invoked to delete the instance.
  */
-- (void)unregisterCloudExtensionForUser:(NSString *)localUserID app:(NSString *)appID
+- (void)unregisterCloudExtensionForUserID:(NSString *)localUserID treeID:(NSString *)treeID
 {
-	NSString *extName = [self cloudExtNameForUser:localUserID app:appID];
+	NSString *extName = [self cloudExtNameForUserID:localUserID treeID:treeID];
 	
 	[database asyncUnregisterExtensionWithName:extName completionBlock:^{
 		
 		ZDCLogVerbose(@"Unregistered extension: %@", extName);
 	}];
 	
-	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, appID);
+	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, treeID);
 	YAPUnfairLockLock(&spinlock);
 	@try {
 		
@@ -1830,9 +1830,9 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
  * Exposes the `registeredCloudDict` snapshot.
  * Exported via: "ZDCDatabaseManagerPrivate.h"
  */
-- (NSArray<NSString *> *)currentlyRegisteredAppIDsForUser:(NSString *)inLocalUserID
+- (NSArray<NSString *> *)currentlyRegisteredTreeIDsForUser:(NSString *)inLocalUserID
 {
-	NSMutableArray<NSString*> *appIDs = [NSMutableArray array];
+	NSMutableArray<NSString*> *treeIDs = [NSMutableArray array];
 	
 	YAPUnfairLockLock(&spinlock);
 	@try {
@@ -1840,11 +1840,11 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		for (YapCollectionKey *tuple in registeredCloudDict)
 		{
 			NSString *localUserID = tuple.collection;
-			NSString *appID       = tuple.key;
+			NSString *treeID      = tuple.key;
 			
 			if ([inLocalUserID isEqualToString:localUserID])
 			{
-				[appIDs addObject:appID];
+				[treeIDs addObject:treeID];
 			}
 		}
 	}
@@ -1852,7 +1852,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		YAPUnfairLockUnlock(&spinlock);
 	}
 	
-	return appIDs;
+	return treeIDs;
 }
 
 /**
@@ -1887,19 +1887,19 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
  * Exposes the `previouslyRegisteredCloudExtTuples` snapshot.
  * Exported via: "ZDCDatabaseManagerPrivate.h"
  */
-- (NSArray<NSString *> *)previouslyRegisteredAppIDsForUser:(NSString *)localUserID
+- (NSArray<NSString *> *)previouslyRegisteredTreeIDsForUser:(NSString *)localUserID
 {
-	NSMutableArray<NSString *> *appIDs = [NSMutableArray arrayWithCapacity:1];
+	NSMutableArray<NSString *> *treeIDs = [NSMutableArray arrayWithCapacity:1];
 	
 	for (YapCollectionKey *tuple in previouslyRegisteredCloudExtTuples)
 	{
 		if ([localUserID isEqualToString:tuple.collection])
 		{
-			[appIDs addObject:tuple.key];
+			[treeIDs addObject:tuple.key];
 		}
 	}
 	
-	return appIDs;
+	return treeIDs;
 }
 
 @end

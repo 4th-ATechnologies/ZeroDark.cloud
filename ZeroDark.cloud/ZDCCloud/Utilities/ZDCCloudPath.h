@@ -12,15 +12,15 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- * A cloudPath has the form: {zAppID}/{dirPrefix}/{filename}
+ * A cloudPath has the form: {treeID}/{dirPrefix}/{filename}
  */
 typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
 	
 	/**
 	 * The first component of a cloudPath.
-	 * Also called the app container.
+	 * Also called the treesystem container.
 	 */
-	ZDCCloudPathComponents_ZAppID              = 1 << 0, // 00001
+	ZDCCloudPathComponents_TreeID              = 1 << 0, // 00001
 	
 	/**
 	 * The second component of a cloudPath.
@@ -35,37 +35,37 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
 	ZDCCloudPathComponents_FileName_WithoutExt = 1 << 3, // 01000
 	
 	/**
-	 * zAppID + dirPrefix + filename (including extension)
+	 * treeID + dirPrefix + filename (including extension)
 	 */
-	ZDCCloudPathComponents_All_WithExt     = (ZDCCloudPathComponents_ZAppID |
+	ZDCCloudPathComponents_All_WithExt     = (ZDCCloudPathComponents_TreeID |
 	                                          ZDCCloudPathComponents_DirPrefix |
 	                                          ZDCCloudPathComponents_FileName_WithExt),   // 00111
 	
 	/**
-	 * zAppID + dirPrefix + filename (excluding extension)
+	 * treeID + dirPrefix + filename (excluding extension)
 	 */
-	ZDCCloudPathComponents_All_WithoutExt  = (ZDCCloudPathComponents_ZAppID |
+	ZDCCloudPathComponents_All_WithoutExt  = (ZDCCloudPathComponents_TreeID |
 	                                          ZDCCloudPathComponents_DirPrefix |
 	                                          ZDCCloudPathComponents_FileName_WithoutExt), // 01011
 };
 
 /**
- * Encapsultes a standardized & parsed cloudPath, which takes the form of: {zAppID}/{dirPrefix}/{filename}
+ * Encapsultes a standardized & parsed cloudPath, which takes the form of: {treeID}/{dirPrefix}/{filename}
  */
 @interface ZDCCloudPath : NSObject <NSCoding, NSCopying>
 
 #pragma mark Validation
 
 /**
- * Returns YES if the given value is a valid zAppID.
+ * Returns YES if the given value is a valid treeID.
  *
- * A zAppID has the following requirements:
+ * A treeID has the following requirements:
  * - minimum of 8 characters
  * - maximum of 64 characters
  * - cannot start with a period
  * - all characters are in set: 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-_
  */
-+ (BOOL)isValidZAppID:(NSString *)zAppID;
++ (BOOL)isValidTreeID:(NSString *)treeID;
 
 /**
  * Returns YES if the given value is a valid dirPrefix.
@@ -90,7 +90,7 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
  * Returns YES if the given value is a valid cloudPath.
  *
  * A cloudPath is of the form "X/Y/Z", where:
- * - X is a valid zAppID
+ * - X is a valid treeID
  * - Y is a valid dirPrefix
  * - Z is a valid filename
  */
@@ -106,8 +106,8 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
 /**
  * Creates a new instance with the given components.
  *
- * @param zAppID
- *   The app container name.
+ * @param treeID
+ *   The treesystem container name.
  *   This is the name you registered via dashboard.zerodark.cloud.
  *
  * @param dirPrefix
@@ -118,17 +118,17 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
  *   The (hashed) name of the file. This is also referred to as the cloudName.
  *   The fileName does not require a fileExtension.
  */
-- (instancetype)initWithZAppID:(NSString *)zAppID
+- (instancetype)initWithTreeID:(NSString *)treeID
                      dirPrefix:(NSString *)dirPrefix
                       fileName:(NSString *)fileName;
 
 #pragma mark Properties
 
 /**
- * The app container name.
+ * The treesystem container name.
  * This is the name you registered via dashboard.zerodark.cloud.
  */
-@property (nonatomic, copy, readonly) NSString * zAppID;
+@property (nonatomic, copy, readonly) NSString * treeID;
 
 /**
  * Represents the parentNode.dirPrefix value.

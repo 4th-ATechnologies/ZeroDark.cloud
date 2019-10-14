@@ -67,11 +67,11 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCTrunkNode *)trunkNodeForLocalUserID:(NSString *)localUserID
-                                            zAppID:(NSString *)zAppID
+                                            treeID:(NSString *)treeID
                                              trunk:(ZDCTreesystemTrunk)trunk
                                        transaction:(YapDatabaseReadTransaction *)transaction
 {
@@ -80,7 +80,7 @@ static ZDCNodeManager *sharedInstance = nil;
 	
 	NSString *nodeID =
 	  [ZDCTrunkNode uuidForLocalUserID: localUserID
-	                            zAppID: zAppID
+	                            treeID: treeID
 	                             trunk: trunk];
 	
 	return [transaction objectForKey:nodeID inCollection:kZDCCollection_Nodes];
@@ -88,7 +88,7 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCTrunkNode *)trunkNodeForNode:(ZDCNode *)node
@@ -110,12 +110,12 @@ static ZDCNodeManager *sharedInstance = nil;
 			if ([node.parentID hasSuffix:@"|graft"])
 			{
 				NSString *localUserID = nil;
-				NSString *zAppID = nil;
-				[ZDCNode getLocalUserID:&localUserID zAppID:&zAppID fromParentID:node.parentID];
+				NSString *treeID = nil;
+				[ZDCNode getLocalUserID:&localUserID treeID:&treeID fromParentID:node.parentID];
 				
 				node = [self findNodeWithPointeeID: node.uuid
 				                       localUserID: localUserID
-				                            zAppID: zAppID
+				                            treeID: treeID
 				                       transaction: transaction];
 			}
 			else
@@ -131,7 +131,7 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCNode *)anchorNodeForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
@@ -162,7 +162,7 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (NSString *)ownerIDForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
@@ -180,7 +180,7 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCUser *)ownerForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
@@ -199,7 +199,7 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCNode *)targetNodeForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
@@ -224,7 +224,7 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCTreesystemPath *)pathForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
@@ -261,12 +261,12 @@ static ZDCNodeManager *sharedInstance = nil;
 		if ([node.parentID hasSuffix:@"|graft"])
 		{
 			NSString *localUserID = nil;
-			NSString *zAppID = nil;
-			[ZDCNode getLocalUserID:&localUserID zAppID:&zAppID fromParentID:node.parentID];
+			NSString *treeID = nil;
+			[ZDCNode getLocalUserID:&localUserID treeID:&treeID fromParentID:node.parentID];
 			
 			node = [self findNodeWithPointeeID: node.uuid
 			                       localUserID: localUserID
-			                            zAppID: zAppID
+			                            treeID: treeID
 			                       transaction: transaction];
 		}
 		else
@@ -285,7 +285,7 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (NSArray<NSString *> *)parentNodeIDsForNode:(ZDCNode *)node
@@ -303,12 +303,12 @@ static ZDCNodeManager *sharedInstance = nil;
 		if ([parentID hasSuffix:@"|graft"])
 		{
 			NSString *localUserID = nil;
-			NSString *zAppID = nil;
-			[ZDCNode getLocalUserID:&localUserID zAppID:&zAppID fromParentID:node.parentID];
+			NSString *treeID = nil;
+			[ZDCNode getLocalUserID:&localUserID treeID:&treeID fromParentID:node.parentID];
 			
 			parent = [self findNodeWithPointeeID: node.uuid
 			                         localUserID: localUserID
-			                              zAppID: zAppID
+			                              treeID: treeID
 			                         transaction: transaction];
 		}
 		else
@@ -330,7 +330,7 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (BOOL)isNode:(NSString *)inNodeID
@@ -354,12 +354,12 @@ static ZDCNodeManager *sharedInstance = nil;
 		if ([nodeID hasSuffix:@"|graft"])
 		{
 			NSString *localUserID = nil;
-			NSString *zAppID = nil;
-			[ZDCNode getLocalUserID:&localUserID zAppID:&zAppID fromParentID:nodeID];
+			NSString *treeID = nil;
+			[ZDCNode getLocalUserID:&localUserID treeID:&treeID fromParentID:nodeID];
 			
 			node = [self findNodeWithPointeeID: nodeID
 										  localUserID: localUserID
-												 zAppID: zAppID
+												 treeID: treeID
 										  transaction: transaction];
 			nodeID = node.uuid;
 		}
@@ -374,7 +374,7 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)enumerateNodeIDsWithParentID:(NSString *)parentID
@@ -421,7 +421,7 @@ static ZDCNodeManager *sharedInstance = nil;
 		
 		NSString *group =
 		  [ZDCDatabaseManager groupForLocalUserID: trunkNode.localUserID
-		                                   zAppID: trunkNode.zAppID];
+		                                   treeID: trunkNode.treeID];
 		
 		[flatViewTransaction enumerateKeysAndObjectsInGroup:group
 		                                         usingBlock:
@@ -459,7 +459,7 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)recursiveEnumerateNodeIDsWithParentID:(NSString *)parentID
@@ -525,7 +525,7 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)enumerateNodesWithParentID:(NSString *)parentID
@@ -572,7 +572,7 @@ static ZDCNodeManager *sharedInstance = nil;
 		
 		NSString *group =
 		  [ZDCDatabaseManager groupForLocalUserID: trunkNode.localUserID
-		                                   zAppID: trunkNode.zAppID];
+		                                   treeID: trunkNode.treeID];
 		
 		[flatViewTransaction enumerateKeysAndObjectsInGroup:group
 		                                         usingBlock:
@@ -610,7 +610,7 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)recursiveEnumerateNodesWithParentID:(NSString *)parentID
@@ -676,7 +676,7 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (BOOL)isEmptyNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
@@ -703,7 +703,7 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCNode *)findNodeWithName:(NSString *)nodeName
@@ -783,7 +783,7 @@ static ZDCNodeManager *sharedInstance = nil;
 		
 		NSString *group =
 		  [ZDCDatabaseManager groupForLocalUserID: trunkNode.localUserID
-		                                   zAppID: trunkNode.zAppID];
+		                                   treeID: trunkNode.treeID];
 		
 		[flatViewTransaction enumerateKeysAndObjectsInGroup:group
 		                                         usingBlock:
@@ -839,12 +839,12 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCNode *)findNodeWithPath:(ZDCTreesystemPath *)path
                            localUserID:(NSString *)localUserID
-                                zAppID:(NSString *)zAppID
+                                treeID:(NSString *)treeID
                            transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
@@ -853,7 +853,7 @@ static ZDCNodeManager *sharedInstance = nil;
 	ZDCNode *node = nil;
 	NSString *containerID =
 	  [ZDCTrunkNode uuidForLocalUserID: localUserID
-	                            zAppID: zAppID
+	                            treeID: treeID
 	                             trunk: path.trunk];
 	
 	if (path.isTrunk)
@@ -880,7 +880,7 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (ZDCNode *)findNodeWithCloudName:(NSString *)cloudName
@@ -969,7 +969,7 @@ static ZDCNodeManager *sharedInstance = nil;
 		
 		NSString *group =
 		  [ZDCDatabaseManager groupForLocalUserID: trunkNode.localUserID
-		                                   zAppID: trunkNode.zAppID];
+		                                   treeID: trunkNode.treeID];
 		
 		[flatViewTransaction enumerateKeysAndObjectsInGroup: group
 		                                         usingBlock:
@@ -1027,12 +1027,12 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (ZDCNode *)findNodeWithCloudID:(NSString *)cloudID
                      localUserID:(NSString *)localUserID
-                          zAppID:(NSString *)zAppID
+                          treeID:(NSString *)treeID
                      transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
@@ -1040,7 +1040,7 @@ static ZDCNodeManager *sharedInstance = nil;
 	
 	if (cloudID == nil) return nil;
 	if (localUserID == nil) return nil;
-	if (zAppID == nil) return nil;
+	if (treeID == nil) return nil;
 	
 	__block ZDCNode *matchingNode = nil;
 	
@@ -1065,7 +1065,7 @@ static ZDCNodeManager *sharedInstance = nil;
 			{
 				ZDCTrunkNode *trunkNode = [self trunkNodeForNode:node transaction:transaction];
 				
-				if ([trunkNode.zAppID isEqualToString:zAppID])
+				if ([trunkNode.treeID isEqualToString:treeID])
 				{
 					matchingNode = node;
 					*stop = YES;
@@ -1082,7 +1082,7 @@ static ZDCNodeManager *sharedInstance = nil;
 		//
 		// Scan all nodes belonging to the user and look for a match (slow but functional).
 		
-		NSString *group = [ZDCDatabaseManager groupForLocalUserID:localUserID zAppID:zAppID];
+		NSString *group = [ZDCDatabaseManager groupForLocalUserID:localUserID treeID:treeID];
 		
 		[flatViewTransaction enumerateKeysAndObjectsInGroup: group
 		                                         usingBlock:
@@ -1094,7 +1094,7 @@ static ZDCNodeManager *sharedInstance = nil;
 			{
 				ZDCTrunkNode *trunkNode = [self trunkNodeForNode:node transaction:transaction];
 				
-				if ([trunkNode.zAppID isEqualToString:zAppID])
+				if ([trunkNode.treeID isEqualToString:treeID])
 				{
 					matchingNode = node;
 					*stop = YES;
@@ -1122,7 +1122,7 @@ static ZDCNodeManager *sharedInstance = nil;
 				{
 					ZDCTrunkNode *trunkNode = [self trunkNodeForNode:node transaction:transaction];
 					
-					if ([trunkNode.zAppID isEqualToString:zAppID])
+					if ([trunkNode.treeID isEqualToString:treeID])
 					{
 						matchingNode = node;
 						*stop = YES;
@@ -1137,14 +1137,14 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCNode *)findNodeWithCloudPath:(ZDCCloudPath *)cloudPath
                                      bucket:(NSString *)bucket
                                      region:(AWSRegion)region
                                 localUserID:(NSString *)localUserID
-                                     zAppID:(NSString *)zAppID
+                                     treeID:(NSString *)treeID
                                 transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
@@ -1160,7 +1160,7 @@ static ZDCNodeManager *sharedInstance = nil;
 	                       bucket: bucket
 	                       region: region
 	                  localUserID: localUserID
-	                       zAppID: zAppID
+	                       treeID: treeID
 	                  transaction: transaction];
 	
 	if (parentNode == nil) {
@@ -1174,14 +1174,14 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCNode *)findNodeWithDirPrefix:(NSString *)prefix
                                     bucket:(NSString *)bucket
                                     region:(AWSRegion)region
                                localUserID:(NSString *)localUserID
-                                    zAppID:(NSString *)zAppID
+                                    treeID:(NSString *)treeID
                                transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
@@ -1191,7 +1191,7 @@ static ZDCNodeManager *sharedInstance = nil;
 	if (bucket == nil) return nil;
 	if (region == AWSRegion_Invalid) return nil;
 	if (localUserID == nil) return nil;
-	if (zAppID == nil) return nil;
+	if (treeID == nil) return nil;
 	
 	__block ZDCNode *matchingNode = nil;
 	
@@ -1234,7 +1234,7 @@ static ZDCNodeManager *sharedInstance = nil;
 		//
 		// Scan all nodes belonging to the user and look for a match (slow but functional).
 		
-		NSString *group = [ZDCDatabaseManager groupForLocalUserID:localUserID zAppID:zAppID];
+		NSString *group = [ZDCDatabaseManager groupForLocalUserID:localUserID treeID:treeID];
 		
 		[flatViewTransaction enumerateKeysAndObjectsInGroup: group
 		                                         usingBlock:
@@ -1289,12 +1289,12 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (nullable ZDCNode *)findNodeWithPointeeID:(NSString *)pointeeID
                                 localUserID:(NSString *)localUserID
-                                     zAppID:(NSString *)zAppID
+                                     treeID:(NSString *)treeID
                                 transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
@@ -1302,7 +1302,7 @@ static ZDCNodeManager *sharedInstance = nil;
 	
 	if (pointeeID == nil) return nil;
 	if (localUserID == nil) return nil;
-	if (zAppID == nil) return nil;
+	if (treeID == nil) return nil;
 	
 	__block ZDCNode *matchingNode = nil;
 	
@@ -1328,7 +1328,7 @@ static ZDCNodeManager *sharedInstance = nil;
 			{
 				ZDCTrunkNode *trunkNode = [self trunkNodeForNode:node transaction:transaction];
 				
-				if ([trunkNode.zAppID isEqualToString:zAppID])
+				if ([trunkNode.treeID isEqualToString:treeID])
 				{
 					matchingNode = node;
 					*stop = YES;
@@ -1345,7 +1345,7 @@ static ZDCNodeManager *sharedInstance = nil;
 		//
 		// Scan all nodes belonging to the user and look for a match (slow but functional).
 		
-		NSString *group = [ZDCDatabaseManager groupForLocalUserID:localUserID zAppID:zAppID];
+		NSString *group = [ZDCDatabaseManager groupForLocalUserID:localUserID treeID:treeID];
 		
 		[flatViewTransaction enumerateKeysAndObjectsInGroup: group
 		                                         usingBlock:
@@ -1357,7 +1357,7 @@ static ZDCNodeManager *sharedInstance = nil;
 			{
 				ZDCTrunkNode *trunkNode = [self trunkNodeForNode:node transaction:transaction];
 				
-				if ([trunkNode.zAppID isEqualToString:zAppID])
+				if ([trunkNode.treeID isEqualToString:treeID])
 				{
 					matchingNode = node;
 					*stop = YES;
@@ -1385,7 +1385,7 @@ static ZDCNodeManager *sharedInstance = nil;
 				{
 					ZDCTrunkNode *trunkNode = [self trunkNodeForNode:node transaction:transaction];
 					
-					if ([trunkNode.zAppID isEqualToString:zAppID])
+					if ([trunkNode.treeID isEqualToString:treeID])
 					{
 						matchingNode = node;
 						*stop = YES;
@@ -1404,7 +1404,7 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (NSArray<NSString *> *)allNodeIDsWithLocalUserID:(NSString *)localUserID
@@ -1422,20 +1422,20 @@ static ZDCNodeManager *sharedInstance = nil;
 	{
 		// Use Flat View for best performance.
 		
-		NSMutableArray<NSString*> *zAppIDs = [NSMutableArray array];
+		NSMutableArray<NSString*> *treeIDs = [NSMutableArray array];
 		NSString *prefix = [localUserID stringByAppendingString:@"|"];
 		
 		[flatViewTransaction enumerateGroupsUsingBlock:^(NSString *group, BOOL *stop) {
 			
 			if ([group hasPrefix:prefix]) {
-				NSString *zAppID = [group substringFromIndex:prefix.length];
-				[zAppIDs addObject:zAppID];
+				NSString *treeID = [group substringFromIndex:prefix.length];
+				[treeIDs addObject:treeID];
 			}
 		}];
 		
-		for (NSString *zAppID in zAppIDs)
+		for (NSString *treeID in treeIDs)
 		{
-			NSString *group = [ZDCDatabaseManager groupForLocalUserID:localUserID zAppID:zAppID];
+			NSString *group = [ZDCDatabaseManager groupForLocalUserID:localUserID treeID:treeID];
 		
 			[flatViewTransaction enumerateKeysInGroup: group
 			                               usingBlock:
@@ -1468,18 +1468,18 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (NSArray<NSString *> *)allNodeIDsWithLocalUserID:(NSString *)localUserID
-                                            zAppID:(NSString *)zAppID
+                                            treeID:(NSString *)treeID
                                        transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
 	NSParameterAssert(transaction != nil);
 	
 	if (localUserID == nil) return [NSArray array];
-	if (zAppID == nil) return [NSArray array];
+	if (treeID == nil) return [NSArray array];
 	
 	NSMutableArray *result = [NSMutableArray array];
 	YapDatabaseViewTransaction *flatViewTransaction = nil;
@@ -1488,7 +1488,7 @@ static ZDCNodeManager *sharedInstance = nil;
 	{
 		// Use Flat View for best performance.
 		
-		NSString *group = [ZDCDatabaseManager groupForLocalUserID:localUserID zAppID:zAppID];
+		NSString *group = [ZDCDatabaseManager groupForLocalUserID:localUserID treeID:treeID];
 		
 		[flatViewTransaction enumerateKeysInGroup: group
 		                               usingBlock:
@@ -1511,7 +1511,7 @@ static ZDCNodeManager *sharedInstance = nil;
 			if ([node.localUserID isEqualToString:localUserID] && ![node isKindOfClass:[ZDCTrunkNode class]])
 			{
 				ZDCTrunkNode *trunkNode = [self trunkNodeForNode:node transaction:transaction];
-				if ([trunkNode.zAppID isEqualToString:zAppID])
+				if ([trunkNode.treeID isEqualToString:treeID])
 				{
 					[result addObject:key];
 				}
@@ -1524,18 +1524,18 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
 **/
 - (NSArray<NSString *> *)allUploadedNodeIDsWithLocalUserID:(NSString *)localUserID
-                                                    zAppID:(NSString *)zAppID
+                                                    treeID:(NSString *)treeID
                                                transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
 	NSParameterAssert(transaction != nil);
 	
 	if (localUserID == nil) return nil;
-	if (zAppID == nil) return nil;
+	if (treeID == nil) return nil;
 	
 	NSMutableArray *uploadedNodeIDs = nil;
 	
@@ -1546,15 +1546,15 @@ static ZDCNodeManager *sharedInstance = nil;
 	{
 		// Combine multiple extensions for best performance (uses sqlite indexes)
 		//
-		// - The flatViewTransaction can quickly give us a list of nodeIDs for the <localUserID, zAppID>,
+		// - The flatViewTransaction can quickly give us a list of nodeIDs for the <localUserID, treeID>,
 		//   but doesn't tell us which are uploaded.
 		//
 		// - The secondaryIndexTransaction can quickly tell us which nodes are uploaded,
-		//   but doesn't tell us which <localUserID, zAppID> they belong to.
+		//   but doesn't tell us which <localUserID, treeID> they belong to.
 		//
 		// So we can combine the 2.
 		
-		NSString *group = [ZDCDatabaseManager groupForLocalUserID:localUserID zAppID:zAppID];
+		NSString *group = [ZDCDatabaseManager groupForLocalUserID:localUserID treeID:treeID];
 		
 		NSUInteger capacity = [flatViewTransaction numberOfItemsInGroup:group];
 		NSMutableSet<NSString *> *nodeIDs = [NSMutableSet setWithCapacity:capacity];
@@ -1589,7 +1589,7 @@ static ZDCNodeManager *sharedInstance = nil;
 		//
 		// Scan the users collection and look for a match (slow but functional).
 		
-		NSString *group = [ZDCDatabaseManager groupForLocalUserID:localUserID zAppID:zAppID];
+		NSString *group = [ZDCDatabaseManager groupForLocalUserID:localUserID treeID:treeID];
 		
 		NSUInteger capacity = [flatViewTransaction numberOfItemsInGroup:group];
 		uploadedNodeIDs = [NSMutableArray arrayWithCapacity:capacity];
@@ -1628,7 +1628,7 @@ static ZDCNodeManager *sharedInstance = nil;
 				{
 					ZDCTrunkNode *trunkNode = [self trunkNodeForNode:node transaction:transaction];
 				
-					if ([trunkNode.zAppID isEqualToString:zAppID])
+					if ([trunkNode.treeID isEqualToString:treeID])
 					{
 						[uploadedNodeIDs addObject:nodeID];
 					}
@@ -1646,7 +1646,7 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (BOOL)resetPermissionsForNode:(ZDCNode *)node transaction:(YapDatabaseReadWriteTransaction *)transaction
@@ -1686,7 +1686,7 @@ static ZDCNodeManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (NSString *)resolveNamingConflict:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction

@@ -141,7 +141,7 @@ extern NSString *const Ext_View_Treesystem_CloudName;
  * YapDatabase extension of type: YapDatabaseAutoView <br/>
  * Access via: [transaction ext:Ext_View_Flat]
  *
- * Organizes ZDCNode's into a "flat" view, grouped by {localUserID/zAppID} tuple & sorted by uuid.
+ * Organizes ZDCNode's into a "flat" view, grouped by {localUserID, treeID} tuple & sorted by uuid.
  */
 extern NSString *const Ext_View_Flat;
 
@@ -157,7 +157,7 @@ extern NSString *const Ext_View_CloudNode_DirPrefix;
  * YapDatabase extension of type: YapDatabaseAutoView <br/>
  * Access via: [transaction ext:Ext_View_Cloud_Flat]
  *
- * Organizes ZDCCloudNode's into a flat view, grouped by {localUserID/zAppID} tuple & sorted by uuid.
+ * Organizes ZDCCloudNode's into a flat view, grouped by {localUserID, treeID} tuple & sorted by uuid.
  */
 extern NSString *const Ext_View_Cloud_Flat;
 
@@ -251,7 +251,7 @@ extern NSString *const Index_Users_Column_RandomUUID;
  * For use within:
  * - Ext_View_Flat
  */
-+ (NSString *)groupForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID;
++ (NSString *)groupForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID;
 
 /**
  * For use within:
@@ -260,7 +260,7 @@ extern NSString *const Index_Users_Column_RandomUUID;
 + (NSString *)groupForLocalUserID:(NSString *)localUserID
                            region:(AWSRegion)region
                            bucket:(NSString *)bucket
-                           zAppID:(NSString *)zAppID
+                           treeID:(NSString *)treeID
                         dirPrefix:(NSString *)dirPrefix;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -280,54 +280,54 @@ extern NSString *const Index_Users_Column_RandomUUID;
  *    // ... do something with ext ...
  * }];
  */
-- (NSString *)cloudExtNameForUser:(NSString *)localUserID;
+- (NSString *)cloudExtNameForUserID:(NSString *)localUserID;
 
 /**
- * Returns the registered name of the ZDCCloud extension for the given <localUserID, zAppID> tuple.
+ * Returns the registered name of the ZDCCloud extension for the given <localUserID, treeID> tuple.
  * This is typically used to access the ZDCCloudTransaction.
  * For example:
  *
  * [zdc.rwDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction){
  *
- *    NSString *extName = [zdc.databaseManager cloudExtNameForUser:localUserID app:MyAppID];
+ *    NSString *extName = [zdc.databaseManager cloudExtNameForUserID:localUserID treeID:myTreeID];
  *    ZDCCloudTransaction *ext = [transaction ext:extName];
  *
  *    // ... do something with ext ...
  * }];
  */
-- (NSString *)cloudExtNameForUser:(NSString *)localUserID app:(NSString *)appID;
+- (NSString *)cloudExtNameForUserID:(NSString *)localUserID treeID:(NSString *)treeID;
 
 /**
  * Returns all registered ZDCCloud instances for the given account.
  */
-- (NSArray<ZDCCloud *> *)cloudExtsForUser:(NSString *)localUserID;
+- (NSArray<ZDCCloud *> *)cloudExtsForUserID:(NSString *)localUserID;
 
 /**
  * Returns the registered ZDCCloud instance for the given account.
  *
- * This method invokes `-cloudExtForUser:app:` and passes the default zAppID (ZeroDarkCloud.zAppID).
+ * This method invokes `-cloudExtForUserID:treeID:` and passes the primary treeID (ZeroDarkCloud.primaryTreeID).
  */
-- (nullable ZDCCloud *)cloudExtForUser:(NSString *)localUserID;
+- (nullable ZDCCloud *)cloudExtForUserID:(NSString *)localUserID;
 
 /**
  * Returns the registered ZDCCloud instance for the given account.
  */
-- (nullable ZDCCloud *)cloudExtForUser:(NSString *)localUserID app:(NSString *)appID;
+- (nullable ZDCCloud *)cloudExtForUserID:(NSString *)localUserID treeID:(NSString *)treeID;
 
 /**
  * A separate ZDCCloud instance is registered for every account.
  *
  * When the database is unlocked, ZDCCloudCore instances are automatically
  * registered for all pre-existing accounts in the database.
- * During runtime, ZDCCloud instances are created for you when you activate an appID for a localUser.
+ * During runtime, ZDCCloud instances are created for you when you activate a treeID for a localUser.
  */
-- (ZDCCloud *)registerCloudExtensionForUser:(NSString *)localUserID app:(NSString *)appID;
+- (ZDCCloud *)registerCloudExtensionForUserID:(NSString *)localUserID treeID:(NSString *)treeID;
 
 /**
  * A separate ZDCCloud instance MUST be registered for every account.
  * If an account is deleted (not suspended) during runtime, then this method MUST be invoked to delete the instance.
  */
-- (void)unregisterCloudExtensionForUser:(NSString *)localUserID app:(NSString *)appID;
+- (void)unregisterCloudExtensionForUserID:(NSString *)localUserID treeID:(NSString *)treeID;
 
 @end
 

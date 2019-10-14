@@ -361,19 +361,19 @@ static NSString *const k_displayName = @"displayName";
 	//
 	// Delete all trunk nodes.
 	
-	NSArray<NSString*> *zAppIDs = [zdc.databaseManager currentlyRegisteredAppIDsForUser:localUserID];
-	NSMutableArray<NSString*> *trunkNodeIDs = [NSMutableArray arrayWithCapacity:(4 * zAppIDs.count)];
+	NSArray<NSString*> *treeIDs = [zdc.databaseManager currentlyRegisteredTreeIDsForUser:localUserID];
+	NSMutableArray<NSString*> *trunkNodeIDs = [NSMutableArray arrayWithCapacity:(4 * treeIDs.count)];
 	
-	for (NSString *zAppID in zAppIDs)
+	for (NSString *treeID in treeIDs)
 	{
 		[trunkNodeIDs addObject:
-			[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Home]];
+			[ZDCTrunkNode uuidForLocalUserID:localUserID treeID:treeID trunk:ZDCTreesystemTrunk_Home]];
 		[trunkNodeIDs addObject:
-			[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Prefs]];
+			[ZDCTrunkNode uuidForLocalUserID:localUserID treeID:treeID trunk:ZDCTreesystemTrunk_Prefs]];
 		[trunkNodeIDs addObject:
-			[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Inbox]];
+			[ZDCTrunkNode uuidForLocalUserID:localUserID treeID:treeID trunk:ZDCTreesystemTrunk_Inbox]];
 		[trunkNodeIDs addObject:
-			[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Outbox]];
+			[ZDCTrunkNode uuidForLocalUserID:localUserID treeID:treeID trunk:ZDCTreesystemTrunk_Outbox]];
 	}
 
 	[transaction removeObjectsForKeys:trunkNodeIDs inCollection:kZDCCollection_Nodes];
@@ -573,18 +573,18 @@ done:
 		@(ZDCTreesystemTrunk_Outbox)
 	];
 	
-	NSString *const zAppID = zdc.zAppID;
+	NSString *const treeID = zdc.primaryTreeID;
 	
 	for (NSNumber *trunkNum in trunks)
 	{
 		ZDCTreesystemTrunk trunk = (ZDCTreesystemTrunk)[trunkNum integerValue];
-		NSString *key = [ZDCTrunkNode uuidForLocalUserID:localUser.uuid zAppID:zAppID trunk:trunk];
+		NSString *key = [ZDCTrunkNode uuidForLocalUserID:localUser.uuid treeID:treeID trunk:trunk];
 		
 		if (![transaction hasObjectForKey:key inCollection:kZDCCollection_Nodes])
 		{
 			ZDCTrunkNode *trunkNode =
 			  [[ZDCTrunkNode alloc] initWithLocalUserID: localUser.uuid
-			                                     zAppID: zAppID
+			                                     treeID: treeID
 			                                      trunk: trunk];
 	
 			[zdc.cryptoTools setDirSaltForTrunkNode: trunkNode
@@ -1558,14 +1558,14 @@ done:
 	
 	ZDCCloudOperation *op =
 	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUser.uuid
-	                                          zAppID: zdc.zAppID
+	                                          treeID: zdc.primaryTreeID
 	                                            type: ZDCCloudOperationType_Avatar];
 	
 	op.avatar_auth0ID = auth0ID;
 	op.avatar_oldETag = oldAvatarData ? [[AWSPayload rawMD5HashForPayload:oldAvatarData] lowercaseHexString] : nil;
 	op.avatar_newETag = newAvatarData ? [[AWSPayload rawMD5HashForPayload:newAvatarData] lowercaseHexString] : nil;
 	
-	NSString *extName = [zdc.databaseManager cloudExtNameForUser:localUser.uuid app:zdc.zAppID];
+	NSString *extName = [zdc.databaseManager cloudExtNameForUserID:localUser.uuid treeID:zdc.primaryTreeID];
 	
 	YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
 	[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {

@@ -15,7 +15,7 @@
 @interface ZDCPullState : NSObject
 
 @property (nonatomic, copy, readonly) NSString *localUserID;
-@property (nonatomic, copy, readonly) NSString *zAppID;
+@property (nonatomic, copy, readonly) NSString *treeID;
 @property (nonatomic, copy, readonly) NSString *pullID;
 
 @property (atomic, assign, readwrite) BOOL hasProcessedChanges;

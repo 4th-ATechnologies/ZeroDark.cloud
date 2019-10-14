@@ -44,7 +44,7 @@ static ZDCCloudPathManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudPathManager.html
  */
 - (nullable ZDCCloudLocator *)cloudLocatorForNode:(ZDCNode *)node
@@ -55,7 +55,7 @@ static ZDCCloudPathManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudPathManager.html
  */
 - (nullable ZDCCloudLocator *)cloudLocatorForNode:(ZDCNode *)node
@@ -83,7 +83,7 @@ static ZDCCloudPathManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online:
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudPathManager.html
  */
 - (nullable ZDCCloudPath *)cloudPathForNode:(ZDCNode *)node
@@ -94,7 +94,7 @@ static ZDCCloudPathManager *sharedInstance = nil;
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudPathManager.html
  */
 - (ZDCCloudPath *)cloudPathForNode:(ZDCNode *)node
@@ -103,12 +103,12 @@ static ZDCCloudPathManager *sharedInstance = nil;
 {
 	ZDCNode *anchorNode = [[ZDCNodeManager sharedInstance] anchorNodeForNode:node transaction:transaction];
 	
-	NSString *appID = anchorNode.anchor.zAppID;
-	if (!appID && [anchorNode isKindOfClass:[ZDCTrunkNode class]]) {
-		appID = [(ZDCTrunkNode *)anchorNode zAppID];
+	NSString *treeID = anchorNode.anchor.treeID;
+	if (!treeID && [anchorNode isKindOfClass:[ZDCTrunkNode class]]) {
+		treeID = [(ZDCTrunkNode *)anchorNode treeID];
 	}
 	
-	if (appID == nil) {
+	if (treeID == nil) {
 		return nil;
 	}
 	
@@ -140,14 +140,14 @@ static ZDCCloudPathManager *sharedInstance = nil;
 	else
 		fileName = cloudName;
 	
-	return [[ZDCCloudPath alloc] initWithZAppID: appID
+	return [[ZDCCloudPath alloc] initWithTreeID: treeID
 	                                  dirPrefix: dirPrefix
 	                                   fileName: fileName];
 }
 
 /**
  * See header file for description.
- * Or view the reference docs online (for both Swift & Objective-C):
+ * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudPathManager.html
  */
 - (NSString *)cloudNameForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction

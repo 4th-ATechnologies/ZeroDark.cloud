@@ -16,22 +16,22 @@ static int const kCurrentVersion = 0;
 
 static NSString *const k_version   = @"version";
 static NSString *const k_userID    = @"userID";
-static NSString *const k_zAppID    = @"zAppID";
+static NSString *const k_treeID    = @"treeID";
 static NSString *const k_dirPrefix = @"dirPrefix";
 
 
 @implementation ZDCNodeAnchor
 
 @synthesize userID = userID;
-@synthesize zAppID = zAppID;
+@synthesize treeID = treeID;
 @synthesize dirPrefix = dirPrefix;
 
-- (instancetype)initWithUserID:(NSString *)inUserID zAppID:(NSString *)inZAppID dirPrefix:(NSString *)inDirPrefix
+- (instancetype)initWithUserID:(NSString *)inUserID treeID:(NSString *)inTreeID dirPrefix:(NSString *)inDirPrefix
 {
 	if ((self = [super init]))
 	{
 		userID = [inUserID copy];
-		zAppID = [inZAppID copy];
+		treeID = [inTreeID copy];
 		dirPrefix = [inDirPrefix copy];
 	}
 	return self;
@@ -44,7 +44,7 @@ static NSString *const k_dirPrefix = @"dirPrefix";
 	if ((self = [super init]))
 	{
 		userID = [decoder decodeObjectForKey:k_userID];
-		zAppID = [decoder decodeObjectForKey:k_zAppID];
+		treeID = [decoder decodeObjectForKey:k_treeID];
 		dirPrefix = [decoder decodeObjectForKey:k_dirPrefix];
 	}
 	return self;
@@ -57,7 +57,7 @@ static NSString *const k_dirPrefix = @"dirPrefix";
 	}
 	
 	[coder encodeObject:userID forKey:k_userID];
-	[coder encodeObject:zAppID forKey:k_zAppID];
+	[coder encodeObject:treeID forKey:k_treeID];
 	[coder encodeObject:dirPrefix forKey:k_dirPrefix];
 }
 

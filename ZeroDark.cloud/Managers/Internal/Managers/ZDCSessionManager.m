@@ -858,10 +858,10 @@ done:
 		
 		dispatch_async(sessionInfo.queue, ^{ @autoreleasepool {
 			
-			NSArray<NSString *> *appIDs = [zdc.databaseManager previouslyRegisteredAppIDsForUser:localUserID];
-			for (NSString *appID in appIDs)
+			NSArray<NSString *> *treeIDs = [zdc.databaseManager previouslyRegisteredTreeIDsForUser:localUserID];
+			for (NSString *treeID in treeIDs)
 			{
-				[[zdc.databaseManager cloudExtForUser:localUserID app:appID] resume];
+				[[zdc.databaseManager cloudExtForUserID:localUserID treeID:treeID] resume];
 			}
 		}});
 		

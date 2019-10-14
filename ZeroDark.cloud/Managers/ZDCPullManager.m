@@ -115,8 +115,8 @@ static NSUInteger const kMaxFailCount = 8;
                              forPullState:(ZDCPullState *)pullState
 {
 	NSString *const extName =
-	  [zdc.databaseManager cloudExtNameForUser: pullState.localUserID
-	                                       app: pullState.zAppID];
+	  [zdc.databaseManager cloudExtNameForUserID: pullState.localUserID
+	                                      treeID: pullState.treeID];
 	
 	return (ZDCCloudTransaction *)[transaction ext:extName];
 }
@@ -194,14 +194,14 @@ static NSUInteger const kMaxFailCount = 8;
 /**
  * See header file for description.
  */
-- (void)pullRemoteChangesForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
+- (void)pullRemoteChangesForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID
 {
 	ZDCPullState *newPullState =
 	  [pullStateManager maybeCreatePullStateForLocalUserID: localUserID
-	                                                zAppID: zAppID];
+	                                                treeID: treeID];
 	
 	// The 'maybeCreatePullStateForUser' method returns nil if
-	// there's already a pull in progress for the <localUserID, zAppID> tuple.
+	// there's already a pull in progress for the <localUserID, treeID> tuple.
 	
 	if (newPullState)
 	{
@@ -212,11 +212,11 @@ static NSUInteger const kMaxFailCount = 8;
 /**
  * See header file for description.
  */
-- (void)abortPullForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
+- (void)abortPullForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID
 {
 	ZDCPullState *deletedState =
 	  [pullStateManager deletePullStateForLocalUserID: localUserID
-	                                           zAppID: zAppID];
+	                                           treeID: treeID];
 	if (deletedState)
 	{
 		for (NSURLSessionTask *task in deletedState.tasks)
@@ -225,7 +225,7 @@ static NSUInteger const kMaxFailCount = 8;
 		}
 		
 		[zdc.syncManager notifyPullStoppedForLocalUserID: localUserID
-		                                          zAppID: zAppID
+		                                          treeID: treeID
 		                                      withResult: ZDCPullResult_ManuallyAborted];
 	}
 }
@@ -353,7 +353,7 @@ static NSUInteger const kMaxFailCount = 8;
 	ZDCLogTrace(@"[%@] StartPull", pullState.localUserID);
 	
 	[zdc.syncManager notifyPullStartedForLocalUserID: pullState.localUserID
-	                                          zAppID: pullState.zAppID];
+	                                          treeID: pullState.treeID];
 	
 #if ZDCPullManager_Fake_Pull
 	
@@ -361,7 +361,7 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		[self->pullStateManager deletePullState:pullState];
 		[self->owner.syncManager notifyPullStoppedForLocalUserID: pullState.localUserID
-			                                               zAppID: pullState.zAppID
+			                                               treeID: pullState.treeID
 			                                           withResult: ZDCPullResult_Success];
 	});
 	return;
@@ -407,12 +407,12 @@ static NSUInteger const kMaxFailCount = 8;
 			[transaction addCompletionQueue:self->concurrentQueue completionBlock:^{
 			
 				[self->zdc.syncManager notifyPullStoppedForLocalUserID: pullState.localUserID
-				                                                zAppID: pullState.zAppID
+				                                                treeID: pullState.treeID
 				                                            withResult: result.pullResult];
 	
 				[self->zdc.pushManager resumeOperationsPendingPullCompletion: latestChangeToken
 				                                              forLocalUserID: pullState.localUserID
-				                                                      zAppID: pullState.zAppID];
+				                                                      treeID: pullState.treeID];
 			}];
 			
 			[self->pullStateManager deletePullState:pullState];
@@ -421,7 +421,7 @@ static NSUInteger const kMaxFailCount = 8;
 		{
 			[self->pullStateManager deletePullState:pullState];
 			[self->zdc.syncManager notifyPullStoppedForLocalUserID: pullState.localUserID
-			                                                zAppID: pullState.zAppID
+			                                                treeID: pullState.treeID
 			                                            withResult: result.pullResult];
 		}
 	}};
@@ -1107,7 +1107,7 @@ static NSUInteger const kMaxFailCount = 8;
 		//
 		node = [[ZDCNodeManager sharedInstance] findNodeWithCloudID: cloudID
 		                                                localUserID: pullState.localUserID
-		                                                     zAppID: pullState.zAppID
+		                                                     treeID: pullState.treeID
 		                                                transaction: transaction];
 		
 		if (!node)
@@ -1121,7 +1121,7 @@ static NSUInteger const kMaxFailCount = 8;
 			                                                  bucket: bucket
 			                                                  region: region
 			                                             localUserID: pullState.localUserID
-			                                                  zAppID: pullState.zAppID
+			                                                  treeID: pullState.treeID
 			                                             transaction: transaction];
 			if (altNode.cloudID == nil) {
 				node = altNode;
@@ -1397,7 +1397,7 @@ static NSUInteger const kMaxFailCount = 8;
 		//
 		node = [[ZDCNodeManager sharedInstance] findNodeWithCloudID: cloudID
 		                                                localUserID: pullState.localUserID
-		                                                     zAppID: pullState.zAppID
+		                                                     treeID: pullState.treeID
 		                                                transaction: transaction];
 		
 		if (!node)
@@ -1411,7 +1411,7 @@ static NSUInteger const kMaxFailCount = 8;
 			                                                  bucket: bucket
 			                                                  region: region
 			                                             localUserID: pullState.localUserID
-			                                                  zAppID: pullState.zAppID
+			                                                  treeID: pullState.treeID
 			                                             transaction: transaction];
 			
 			if (altNode.cloudID == nil) {
@@ -1551,7 +1551,7 @@ static NSUInteger const kMaxFailCount = 8;
 				                                                  bucket: bucket
 				                                                  region: region
 				                                             localUserID: pullState.localUserID
-				                                                  zAppID: pullState.zAppID
+				                                                  treeID: pullState.treeID
 				                                             transaction: transaction];
 			
 			if (parentNode == nil)
@@ -1725,7 +1725,7 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		node = [[ZDCNodeManager sharedInstance] findNodeWithCloudID: cloudID
 		                                                localUserID: pullState.localUserID
-		                                                     zAppID: pullState.zAppID
+		                                                     treeID: pullState.treeID
 		                                                transaction: transaction];
 		
 		if (!node)
@@ -1739,7 +1739,7 @@ static NSUInteger const kMaxFailCount = 8;
 			                                                  bucket: bucket
 			                                                  region: region
 			                                             localUserID: pullState.localUserID
-			                                                  zAppID: pullState.zAppID
+			                                                  treeID: pullState.treeID
 			                                             transaction: transaction];
 			
 			if (altNode.cloudID == nil) {
@@ -1763,7 +1763,7 @@ static NSUInteger const kMaxFailCount = 8;
 			                                                  bucket: bucket
 			                                                  region: region
 			                                             localUserID: pullState.localUserID
-			                                                  zAppID: pullState.zAppID
+			                                                  treeID: pullState.treeID
 			                                             transaction: transaction];
 		}
 		
@@ -1919,7 +1919,7 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		node = [[ZDCNodeManager sharedInstance] findNodeWithCloudID: cloudID
 		                                                localUserID: pullState.localUserID
-		                                                     zAppID: pullState.zAppID
+		                                                     treeID: pullState.treeID
 		                                                transaction: transaction];
 		
 		if (!node)
@@ -2334,13 +2334,13 @@ static NSUInteger const kMaxFailCount = 8;
 	__block AWSRegion region = AWSRegion_Invalid;
 	
 	NSString *const localUserID = pullState.localUserID;
-	NSString *const zAppID = pullState.zAppID;
+	NSString *const treeID = pullState.treeID;
 	
 	NSArray<NSString *> *trunkIDs = @[
-		[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Home],
-		[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Prefs],
-		[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Inbox],
-		[ZDCTrunkNode uuidForLocalUserID:localUserID zAppID:zAppID trunk:ZDCTreesystemTrunk_Outbox]
+		[ZDCTrunkNode uuidForLocalUserID:localUserID treeID:treeID trunk:ZDCTreesystemTrunk_Home],
+		[ZDCTrunkNode uuidForLocalUserID:localUserID treeID:treeID trunk:ZDCTreesystemTrunk_Prefs],
+		[ZDCTrunkNode uuidForLocalUserID:localUserID treeID:treeID trunk:ZDCTreesystemTrunk_Inbox],
+		[ZDCTrunkNode uuidForLocalUserID:localUserID treeID:treeID trunk:ZDCTreesystemTrunk_Outbox]
 	];
 	
 	NSMutableArray<ZDCTrunkNode *> *trunkNodes = [NSMutableArray arrayWithCapacity:trunkIDs.count];
@@ -2369,7 +2369,7 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		NSArray<NSString *> *expectedNodeIDs =
 		  [[ZDCNodeManager sharedInstance] allUploadedNodeIDsWithLocalUserID: localUserID
-		                                                              zAppID: zAppID
+		                                                              treeID: treeID
 		                                                         transaction: transaction];
 		
 		[pullState addUnprocessedNodeIDs:expectedNodeIDs];
@@ -2601,7 +2601,7 @@ static NSUInteger const kMaxFailCount = 8;
 			AFURLSessionManager *session = sessionInfo.session;
 		#endif
 			
-			NSString *prefix = [NSString stringWithFormat:@"%@/", pullState.zAppID];
+			NSString *prefix = [NSString stringWithFormat:@"%@/", pullState.treeID];
 			
 			NSMutableArray<NSURLQueryItem *> *queryItems = [NSMutableArray arrayWithCapacity:4];
 			
@@ -2703,9 +2703,9 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		ZDCNode *anchorNode = [[ZDCNodeManager sharedInstance] anchorNodeForNode:node transaction:transaction];
 		
-		NSString *zAppID = anchorNode.anchor.zAppID;
-		if (!zAppID && [anchorNode isKindOfClass:[ZDCTrunkNode class]]) {
-			zAppID = [(ZDCTrunkNode *)anchorNode zAppID];
+		NSString *treeID = anchorNode.anchor.treeID;
+		if (!treeID && [anchorNode isKindOfClass:[ZDCTrunkNode class]]) {
+			treeID = [(ZDCTrunkNode *)anchorNode treeID];
 		}
 		
 		NSString *rootNodeID = nil;
@@ -2716,7 +2716,7 @@ static NSUInteger const kMaxFailCount = 8;
 			rootNodeID = anchorNode.uuid;
 		}
 		
-		NSString *prefix = [NSString stringWithFormat:@"%@/%@/", zAppID, node.dirPrefix];
+		NSString *prefix = [NSString stringWithFormat:@"%@/%@/", treeID, node.dirPrefix];
 		NSArray<S3ObjectInfo *> *dirList = [pullState popListWithPrefix:prefix rootNodeID:rootNodeID];
 		
 		// Step 2 of 4
@@ -2846,7 +2846,7 @@ static NSUInteger const kMaxFailCount = 8;
 			                                                  bucket: bucket
 			                                                  region: region
 			                                             localUserID: pullState.localUserID
-			                                                  zAppID: pullState.zAppID
+			                                                  treeID: pullState.treeID
 			                                             transaction: transaction];
 			
 			if (node == nil)
@@ -3058,7 +3058,7 @@ static NSUInteger const kMaxFailCount = 8;
 		NSAssert(owner != nil, @"Bad state");
 		
 		ZDCCloudPath *cloudPath =
-		  [[ZDCCloudPath alloc] initWithZAppID: pointeeNode.anchor.zAppID
+		  [[ZDCCloudPath alloc] initWithTreeID: pointeeNode.anchor.treeID
 		                             dirPrefix: pointeeNode.anchor.dirPrefix
 		                              fileName: pointeeNode.explicitCloudName];
 		
@@ -3243,12 +3243,12 @@ static NSUInteger const kMaxFailCount = 8;
 				pointeeNode.explicitCloudName = cloudName;
 			}
 			
-			if (![pointeeNode.anchor.zAppID isEqualToString:cloudPath.zAppID] ||
+			if (![pointeeNode.anchor.treeID isEqualToString:cloudPath.treeID] ||
 			    ![pointeeNode.anchor.dirPrefix isEqualToString:cloudPath.dirPrefix])
 			{
 				pointeeNode.anchor =
 				  [[ZDCNodeAnchor alloc] initWithUserID: owner.uuid
-				                                 zAppID: cloudPath.zAppID
+				                                 treeID: cloudPath.treeID
 				                              dirPrefix: cloudPath.dirPrefix];
 			}
 			
@@ -3500,7 +3500,7 @@ static NSUInteger const kMaxFailCount = 8;
 			ZDCNode *pointerNode = nil;
 			while ((pointerNode = [nodeManager findNodeWithPointeeID: pointeeNode.uuid
 			                                             localUserID: pullState.localUserID
-			                                                  zAppID: pullState.zAppID
+			                                                  treeID: pullState.treeID
 			                                             transaction: transaction]))
 			{
 				ZDCTreesystemPath *pointerPath =
@@ -3616,7 +3616,7 @@ static NSUInteger const kMaxFailCount = 8;
 		// This allows it to update its internal state, and also post a NSNotification for the user.
 		
 		[zdc.syncManager notifyPullFoundChangesForLocalUserID: pullState.localUserID
-		                                               zAppID: pullState.zAppID];
+		                                               treeID: pullState.treeID];
 	}
 	
 	[self fetchRcrd: [pullItem.rcrdCloudPath path]
@@ -3793,7 +3793,7 @@ static NSUInteger const kMaxFailCount = 8;
 	ZDCNode *node =
 	  [nodeManager findNodeWithCloudID: cloudRcrd.cloudID
 	                       localUserID: pullState.localUserID
-	                            zAppID: pullState.zAppID
+	                            treeID: pullState.treeID
 	                       transaction: transaction];
 	if (node)
 	{
@@ -4467,7 +4467,7 @@ static NSUInteger const kMaxFailCount = 8;
 	ZDCNode *pointee =
 	  [nodeManager findNodeWithCloudID: pointer_cloudID
 	                       localUserID: pullState.localUserID
-	                            zAppID: pullState.zAppID
+	                            treeID: pullState.treeID
 	                       transaction: transaction];
 	if (pointee)
 	{
@@ -4482,7 +4482,7 @@ static NSUInteger const kMaxFailCount = 8;
 	if (pointee == nil)
 	{
 		pointee = [[ZDCNode alloc] initWithLocalUserID:pullState.localUserID];
-		pointee.parentID = [NSString stringWithFormat:@"%@|%@|graft", pullState.localUserID, pullState.zAppID];
+		pointee.parentID = [NSString stringWithFormat:@"%@|%@|graft", pullState.localUserID, pullState.treeID];
 		
 		pointee.name = @"unknown";
 		pointee.explicitCloudName = [pointer_cloudPath fileNameWithExt:nil];
@@ -4490,7 +4490,7 @@ static NSUInteger const kMaxFailCount = 8;
 		pointee.cloudID = pointer_cloudID;
 		pointee.anchor =
 		  [[ZDCNodeAnchor alloc] initWithUserID: pointer_ownerID
-		                                 zAppID: pointer_cloudPath.zAppID
+		                                 treeID: pointer_cloudPath.treeID
 		                              dirPrefix: pointer_cloudPath.dirPrefix];
 	}
 	

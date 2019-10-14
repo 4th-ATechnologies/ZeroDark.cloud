@@ -515,7 +515,7 @@ done:
 				  [[ZDCCloudPathManager sharedInstance] cloudNameForNode:pointee transaction:transaction];
 				
 				NSString *path =
-				  [NSString stringWithFormat:@"%@/%@/%@", anchor.zAppID, anchor.dirPrefix, cloudName];
+				  [NSString stringWithFormat:@"%@/%@/%@", anchor.treeID, anchor.dirPrefix, cloudName];
 				
 				NSMutableDictionary *pointer = [NSMutableDictionary dictionaryWithCapacity:3];
 				

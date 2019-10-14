@@ -52,7 +52,7 @@
 @interface ZeroDarkCloud () <YapDatabaseCloudCorePipelineDelegate>
 
 @property (nonatomic, readwrite, strong) NSURL *databasePath;
-@property (nonatomic, readwrite, copy) NSString *zAppID;
+@property (nonatomic, readwrite, copy) NSString *primaryTreeID;
 
 @property (nonatomic, readwrite, strong) AFNetworkReachabilityManager *reachability;
 
@@ -97,7 +97,7 @@
 
 @synthesize delegate;
 @synthesize databasePath;
-@synthesize zAppID;
+@synthesize primaryTreeID;
 
 @dynamic isDatabaseUnlocked;
 
@@ -139,7 +139,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 	if (!initialized)
 	{
 		initialized = YES;
-		registeredDatabaseNames = [[NSMutableSet alloc ] initWithCapacity:1];
+		registeredDatabaseNames = [[NSMutableSet alloc] initWithCapacity:1];
 		[self loadFontWithName:@"Exo2-Regular"];
 	}
 }
@@ -238,26 +238,15 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 }
 
 - (instancetype)initWithDelegate:(id<ZeroDarkCloudDelegate>)inDelegate
-                    databaseName:(NSString *)inDatabaseName
-                          zAppID:(NSString *)inZAppID
-{
-	if (inDatabaseName == nil) return nil;
-	
-	NSURL *dirURL = [ZDCDirectoryManager zdcPersistentDirectoryURL];
-	NSURL *dbPath = [dirURL URLByAppendingPathComponent:inDatabaseName isDirectory:NO];
-	
-	return [self initWithDelegate:inDelegate databasePath:dbPath zAppID:inZAppID];
-}
-
-- (instancetype)initWithDelegate:(id<ZeroDarkCloudDelegate>)inDelegate
-                    databasePath:(NSURL *)inDatabasePath
-                          zAppID:(NSString *)inZAppID
+                          config:(ZDCConfig *)config
 {
 	if (inDelegate == nil) return nil;
-	if (inDatabasePath == nil) return nil;
-	if (inZAppID == nil) return nil;
+	if (config == nil) return nil;
+	if (config.databaseName.length == 0) return nil;
 	
-	if (![ZeroDarkCloud registerDatabaseName:[inDatabasePath lastPathComponent]])
+	NSURL *dbPath = [ZDCDirectoryManager fileURLsForDatabaseName:config.databaseName][0];
+	
+	if (![ZeroDarkCloud registerDatabaseName:[dbPath lastPathComponent]])
 	{
 		NSString *reason =
 		  @"You cannot create multiple ZeroDarkCloud instances with the same database filename."
@@ -275,8 +264,8 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 		serialQueue = dispatch_queue_create("ZeroDarkCloud", DISPATCH_QUEUE_SERIAL);
 		
 		self.delegate = inDelegate;
-		self.databasePath = inDatabasePath;
-		self.zAppID = inZAppID;
+		self.databasePath = dbPath;
+		self.primaryTreeID = config.primaryTreeID;
 		
 		self->databaseKeyCtx = kInvalidS4KeyContextRef;
 		
@@ -444,7 +433,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 - (nullable ZDCCloudTransaction *)cloudTransaction:(YapDatabaseReadTransaction *)transaction
                                     forLocalUserID:(NSString *)localUserID
 {
-	return [self cloudTransaction:transaction forLocalUserID:localUserID zAppID:self.zAppID];
+	return [self cloudTransaction:transaction forLocalUserID:localUserID treeID:self.primaryTreeID];
 }
 
 /**
@@ -452,12 +441,12 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
  */
 - (nullable ZDCCloudTransaction *)cloudTransaction:(YapDatabaseReadTransaction *)transaction
                                     forLocalUserID:(NSString *)localUserID
-                                            zAppID:(nullable NSString *)zAppID
+                                            treeID:(nullable NSString *)treeID
 {
 	ZDCDatabaseManager *databaseManager = self.databaseManager;
 	if (databaseManager == nil) return nil;
 	
-	NSString *extName = [databaseManager cloudExtNameForUser:localUserID app:zAppID];
+	NSString *extName = [databaseManager cloudExtNameForUserID:localUserID treeID:treeID];
 	return [transaction ext:extName];
 }
 
@@ -854,9 +843,9 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 	for (YapCollectionKey *tuple in tuples)
 	{
 		NSString *localUserID = tuple.collection;
-		NSString *zAppID = tuple.key;
+		NSString *treeID = tuple.key;
 		
-		[[self.databaseManager cloudExtForUser:localUserID app:zAppID] resume];
+		[[self.databaseManager cloudExtForUserID:localUserID treeID:treeID] resume];
 	}
 }
 

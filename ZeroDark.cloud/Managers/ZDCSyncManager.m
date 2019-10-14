@@ -211,12 +211,12 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 /**
  * Invoked (directly) by PullManager.
  */
-- (void)notifyPullStartedForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
+- (void)notifyPullStartedForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID
 {
 	ZDCLogAutoTrace();
 	
 	NSParameterAssert(localUserID != nil);
-	NSParameterAssert(zAppID != nil);
+	NSParameterAssert(treeID != nil);
 	
 	// Update ZDCLocalUserSyncState accordingly
 	//
@@ -224,7 +224,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 	//   We need this in case the PullManager gets started by a process other than ourselves.
 	//   For example, the PushManager forces it to run.
 	
-	if ([zAppID isEqualToString:zdc.zAppID])
+	if ([treeID isEqualToString:zdc.primaryTreeID])
 	{
 		dispatch_block_t block = ^{ @autoreleasepool {
 		#pragma clang diagnostic push
@@ -252,12 +252,12 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 /**
  * Invoked (directly) by PullManager.
  */
-- (void)notifyPullFoundChangesForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
+- (void)notifyPullFoundChangesForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID
 {
 	ZDCLogAutoTrace();
 	
 	NSParameterAssert(localUserID != nil);
-	NSParameterAssert(zAppID != nil);
+	NSParameterAssert(treeID != nil);
 	
 	// Update ZDCLocalUserSyncState accordingly
 	//
@@ -265,7 +265,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 	//   We need this in case the PullManager gets started by a process other than ourselves.
 	//   For example, the PushManager forces it to run.
 	
-	if ([zAppID isEqualToString:zdc.zAppID])
+	if ([treeID isEqualToString:zdc.primaryTreeID])
 	{
 		dispatch_block_t block = ^{ @autoreleasepool {
 		#pragma clang diagnostic push
@@ -289,29 +289,29 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 	// Now that we've updated our internal state,
 	// we're safe to rebroadcast the notification to the UI.
 	//
-	[self postPullStartedNotificationForLocalUserID:localUserID zAppID:zAppID];
+	[self postPullStartedNotificationForLocalUserID:localUserID treeID:treeID];
 }
 
 /**
  * Invoked (directly) by PullManager.
  */
 - (void)notifyPullStoppedForLocalUserID:(NSString *)localUserID
-                                 zAppID:(NSString *)zAppID
+                                 treeID:(NSString *)treeID
                              withResult:(ZDCPullResult)result
 {
 	ZDCLogAutoTrace();
 	
 	NSParameterAssert(localUserID != nil);
-	NSParameterAssert(zAppID != nil);
+	NSParameterAssert(treeID != nil);
 	
-	BOOL isRegisteredZAppID = [zAppID isEqualToString:zdc.zAppID];
+	BOOL isRegisteredTreeID = [treeID isEqualToString:zdc.primaryTreeID];
 	
 	// Handle pending completionBlocks (from processPushNotification:::)
 	
 	NSArray *completionQueues = nil;
 	NSArray *completionBlocks = nil;
 	
-	if (isRegisteredZAppID)
+	if (isRegisteredTreeID)
 	{
 		[pendingPulls popCompletionQueues: &completionQueues
 		                 completionBlocks: &completionBlocks
@@ -402,7 +402,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 	#pragma clang diagnostic pop
 	}};
 	
-	if (isRegisteredZAppID)
+	if (isRegisteredTreeID)
 	{
 		if (dispatch_get_specific(IsOnQueueKey))
 			block();
@@ -414,11 +414,11 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 	// we're safe to rebroadcast the notification to the UI.
 	//
 	BOOL shouldPostNotification = YES;
-	if (isRegisteredZAppID) {
+	if (isRegisteredTreeID) {
 		shouldPostNotification = wasPullingWithChanges;
 	}
 	if (shouldPostNotification) {
-		[self postPullStoppedNotificationForLocalUserID:localUserID appID:zAppID result:result];
+		[self postPullStoppedNotificationForLocalUserID:localUserID treeID:treeID result:result];
 	}
 }
 
@@ -499,7 +499,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 	
 	ZDCCloud *sender_cloudExt = (ZDCCloud *)sender_cloudCore;
 	
-	if (![sender_cloudExt.zAppID isEqualToString:zdc.zAppID])
+	if (![sender_cloudExt.treeID isEqualToString:zdc.primaryTreeID])
 	{
 		return;
 	}
@@ -555,7 +555,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 	
 	ZDCCloud *sender_cloudExt = (ZDCCloud *)sender_cloudCore;
 	
-	if (![sender_cloudExt.zAppID isEqualToString:zdc.zAppID])
+	if (![sender_cloudExt.treeID isEqualToString:zdc.primaryTreeID])
 	{
 		return;
 	}
@@ -606,17 +606,17 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 #pragma mark Notifications - Outgoing
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)postPullStartedNotificationForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
+- (void)postPullStartedNotificationForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID
 {
 	ZDCLogAutoTrace();
 	NSParameterAssert(localUserID != nil);
-	NSParameterAssert(zAppID != nil);
+	NSParameterAssert(treeID != nil);
 	
 	dispatch_block_t block = ^{
 		
 		NSDictionary *userInfo = @{
 			kLocalUserIDKey : localUserID,
-			kAppIDKey       : zAppID
+			kAppIDKey       : treeID
 		};
 		
 		[[NSNotificationCenter defaultCenter] postNotificationName: ZDCPullStartedNotification
@@ -631,18 +631,18 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 }
 
 - (void)postPullStoppedNotificationForLocalUserID:(NSString *)localUserID
-                                            appID:(NSString *)appID
+                                           treeID:(NSString *)treeID
                                            result:(ZDCPullResult)pullResult
 {
 	ZDCLogAutoTrace();
 	NSParameterAssert(localUserID != nil);
-	NSParameterAssert(appID != nil);
+	NSParameterAssert(treeID != nil);
 	
 	dispatch_block_t block = ^{
 		
 		NSDictionary *userInfo = @{
 			kLocalUserIDKey : localUserID,
-			kAppIDKey       : appID,
+			kAppIDKey       : treeID,
 			kPullResultKey  : @(pullResult)
 		};
 		
@@ -662,12 +662,12 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 	ZDCLogAutoTrace();
 	NSParameterAssert(localUserID != nil);
 	
-	NSString *const appID = zdc.zAppID;
+	NSString *const treeID = zdc.primaryTreeID;
 	dispatch_block_t block = ^{
 		
 		NSDictionary *userInfo = @{
 			kLocalUserIDKey : localUserID,
-			kAppIDKey       : appID
+			kAppIDKey       : treeID
 		};
 		
 		[[NSNotificationCenter defaultCenter] postNotificationName: ZDCPushStartedNotification
@@ -686,12 +686,12 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 	ZDCLogAutoTrace();
 	NSParameterAssert(localUserID != nil);
 	
-	NSString *const appID = zdc.zAppID;
+	NSString *const treeID = zdc.primaryTreeID;
 	dispatch_block_t block = ^{
 		
 		NSDictionary *userInfo = @{
 			kLocalUserIDKey : localUserID,
-			kAppIDKey       : appID
+			kAppIDKey       : treeID
 		};
 		
 		[[NSNotificationCenter defaultCenter] postNotificationName: ZDCPushStoppedNotification
@@ -710,12 +710,12 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 	ZDCLogAutoTrace();
 	NSParameterAssert(localUserID != nil);
 	
-	NSString *const appID = zdc.zAppID;
+	NSString *const treeID = zdc.primaryTreeID;
 	dispatch_block_t block = ^{
 		
 		NSDictionary *userInfo = @{
 			kLocalUserIDKey : localUserID,
-			kAppIDKey       : appID
+			kAppIDKey       : treeID
 		};
 		
 		[[NSNotificationCenter defaultCenter] postNotificationName: ZDCSyncingNodeIDsChangedNotification
@@ -787,7 +787,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 	ZDCLogAutoTrace();
 	NSAssert(dispatch_get_specific(IsOnQueueKey), @"Must be executed within queue");
 	
-	NSString *zAppID = zdc.zAppID;
+	NSString *treeID = zdc.primaryTreeID;
 	
 	for (ZDCLocalUser *localUser in [inLocalUsers objectEnumerator])
 	{
@@ -799,10 +799,10 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 		{
 			syncState = [[ZDCLocalUserSyncState alloc] initWithLocalUserID:localUserID];
 			
-			syncState.cloudExt = [zdc.databaseManager cloudExtForUser:localUserID app:zAppID];
+			syncState.cloudExt = [zdc.databaseManager cloudExtForUserID:localUserID treeID:treeID];
 			if (syncState.cloudExt == nil)
 			{
-				syncState.cloudExt = [zdc.databaseManager registerCloudExtensionForUser:localUserID app:zAppID];
+				syncState.cloudExt = [zdc.databaseManager registerCloudExtensionForUserID:localUserID treeID:treeID];
 			}
 			
 		//	YapDatabaseCloudCorePipeline *pipeline = [syncState.cloudExt defaultPipeline];
@@ -855,7 +855,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 			{
 				if (!syncState.isPulling)
 				{
-					[zdc.pullManager pullRemoteChangesForLocalUserID:localUserID zAppID:zAppID];
+					[zdc.pullManager pullRemoteChangesForLocalUserID:localUserID treeID:treeID];
 					[self updateTimerForSyncState:syncState withNextPull:nil];
 					syncState.isPulling = YES;
 				}
@@ -868,7 +868,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 				syncState.isPulling = NO;
 				syncState.isPullingWithChanges = NO;
 				
-				[zdc.pullManager abortPullForLocalUserID:syncState.localUserID zAppID:zAppID];
+				[zdc.pullManager abortPullForLocalUserID:syncState.localUserID treeID:treeID];
 			}
 			
 			if (!syncState.isPushingSuspended)
@@ -876,7 +876,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 				[syncState.cloudExt suspend];
 				syncState.isPushingSuspended = YES;
 				
-				[zdc.pushManager abortOperationsForLocalUserID:localUserID zAppID:zAppID];
+				[zdc.pushManager abortOperationsForLocalUserID:localUserID treeID:treeID];
 			}
 		}
 	}
@@ -898,7 +898,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 				syncState.isPulling = NO;
 				syncState.isPullingWithChanges = NO;
 				
-				[zdc.pullManager abortPullForLocalUserID:localUserID zAppID:zdc.zAppID];
+				[zdc.pullManager abortPullForLocalUserID:localUserID treeID:zdc.primaryTreeID];
 			}
 
 			if (!syncState.isPushingSuspended)
@@ -906,10 +906,10 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 				[syncState.cloudExt suspend];
 				syncState.isPushingSuspended = YES;
 				
-				[zdc.pushManager abortOperationsForLocalUserID:localUserID zAppID:zAppID];
+				[zdc.pushManager abortOperationsForLocalUserID:localUserID treeID:treeID];
 			}
 			
-			[zdc.databaseManager unregisterCloudExtensionForUser:localUserID app:zAppID];
+			[zdc.databaseManager unregisterCloudExtensionForUserID:localUserID treeID:treeID];
 			
 			if (localUserIDsToDelete == nil)
 				localUserIDsToDelete = [NSMutableArray arrayWithCapacity:1];
@@ -963,7 +963,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 			
 			if (needsPull)
 			{
-				[zdc.pullManager pullRemoteChangesForLocalUserID:localUserID zAppID:zdc.zAppID];
+				[zdc.pullManager pullRemoteChangesForLocalUserID:localUserID treeID:zdc.primaryTreeID];
 				[self updateTimerForSyncState:syncState withNextPull:nil];
 				syncState.isPulling = YES;
 			}
@@ -990,7 +990,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 	ZDCLogAutoTrace();
 	NSAssert(dispatch_get_specific(IsOnQueueKey), @"Must be executed within queue");
 	
-	NSString *const appID = zdc.zAppID;
+	NSString *const treeID = zdc.primaryTreeID;
 	
 	[syncStates enumerateKeysAndObjectsUsingBlock:
 	^(NSString *localUserID, ZDCLocalUserSyncState *syncState, BOOL *stop) {
@@ -1002,7 +1002,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 			syncState.isPulling = NO;
 			syncState.isPullingWithChanges = NO;
 			
-			[zdc.pullManager abortPullForLocalUserID:localUserID zAppID:appID];
+			[zdc.pullManager abortPullForLocalUserID:localUserID treeID:treeID];
 		}
 		
 		if (!syncState.isPushingSuspended)
@@ -1150,7 +1150,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 	{
 		if (!syncState.isPulling)
 		{
-			[zdc.pullManager pullRemoteChangesForLocalUserID:syncState.localUserID zAppID:zdc.zAppID];
+			[zdc.pullManager pullRemoteChangesForLocalUserID:syncState.localUserID treeID:zdc.primaryTreeID];
 			[self updateTimerForSyncState:syncState withNextPull:nil];
 			syncState.isPulling = YES;
 		}
@@ -1245,7 +1245,8 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 	
 	if (shouldAbortUploads)
 	{
-		[zdc.pushManager abortOperationsForLocalUserID:syncState.localUserID zAppID:zdc.zAppID];
+		[zdc.pushManager abortOperationsForLocalUserID: syncState.localUserID
+		                                        treeID: zdc.primaryTreeID];
 	}
 }
 
@@ -1602,7 +1603,7 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 	
 	// Grab all nodeIDs being pushed (or scheduled to be pushed)
 	
-	YapDatabaseCloudCore *ext = [zdc.databaseManager cloudExtForUser:localUserID];
+	YapDatabaseCloudCore *ext = [zdc.databaseManager cloudExtForUserID:localUserID];
 	YapDatabaseCloudCorePipeline *pipeline = [ext defaultPipeline];
 	
 	[pipeline enumerateOperationsUsingBlock:

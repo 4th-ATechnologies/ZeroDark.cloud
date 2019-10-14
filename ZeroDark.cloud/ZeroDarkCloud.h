@@ -23,59 +23,17 @@ NS_ASSUME_NONNULL_BEGIN
  * Initializes an instance for use within your app.
  *
  * Typically you only need a single instance per app.
- * Once instance is capable of supporting multiple users, and even multiple zAppIDs.
- *
- * The databaseName is used to create an instance of [YapDatabase](https://github.com/yapstudios/YapDatabase).
- * ZeroDarkCloud needs a database for a ton of different things.
- * You're welcome to use the same YapDatabase instance to store your own objects. (YapDatabase is awesome.)
- * If you do, the ZeroDarkCloudDelegate protocol provides hooks you can use during
- * YapDatabase initialization to register your own app-specific database extensions (views, indexes, etc).
+ * Once instance is capable of supporting multiple users.
  *
  * @param delegate
  *   A delegate is required to support push & pull operations.
  *
- * @param databaseName
- *   The filename to use for the database file. For example: "database.sqlite".
- *   The database will not be touched until you call `unlockOrCreateDatabaseWithKey:`.
- *
- * @param zAppID
- *   The primary ZeroDark.cloud zAppID for this application.
- *   This is the name you registered within the ZeroDark.cloud developer dashboard.
- *   It's usually something along the lines of "com.YourCompany.YourAppName".
+ * @param config
+ *   The configuration to use when setting up ZDC.
+ *   A typical configuration consists of a single treeID (e.g. "com.myCompany.myApp").
  */
 - (instancetype)initWithDelegate:(id<ZeroDarkCloudDelegate>)delegate
-                    databaseName:(NSString *)databaseName
-                          zAppID:(NSString *)zAppID;
-
-/**
- * Initializes an instance for use within your app.
- *
- * Typically, you only need a single instance per app.
- * Once instance is capable of supporting multiple users, and even multiple zAppIDs.
- *
- * The databasePath is used to create an instance of [YapDatabase](https://github.com/yapstudios/YapDatabase).
- * ZeroDarkCloud needs a database for a ton of different things.
- * You're welcome to use the same YapDatabase instance to store your own objects. (YapDatabase is awesome.)
- * If you do, the ZeroDarkCloudDelegate protocol provides hooks you can use during
- * YapDatabase initialization to register your own app-specific database extensions (views, indexes, etc).
- *
- * @note You can only create a single ZeroDarkCloud instance per database filename.
- *
- * @param delegate
- *   A delegate is required to support push & pull operations.
- *
- * @param databasePath
- *   The full path to the database file, including the database name.
- *   The database will not be touched until you call `unlockOrCreateDatabaseWithKey:`.
- *
- * @param zAppID
- *   The primary ZeroDark.cloud zAppID for this application.
- *   This is the name you registered within the ZeroDark.cloud developer dashboard.
- *   It's usually something along the lines of "com.YourCompany.YourAppName".
- */
-- (instancetype)initWithDelegate:(id<ZeroDarkCloudDelegate>)delegate
-                    databasePath:(NSURL *)databasePath
-                          zAppID:(NSString *)zAppID;
+                          config:(ZDCConfig *)config;
 
 /** The delegate specified during initialization */
 @property (nonatomic, strong, readwrite) id<ZeroDarkCloudDelegate> delegate;
@@ -88,11 +46,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, readonly) NSURL *databasePath;
 
 /**
- * The primary ZeroDark.cloud zAppID for this application.
- * This is the name you registered within the ZeroDark.cloud developer dashboard.
- * It's usually something along the lines of "com.YourCompany.YourAppName".
+ * The primary treeID for this application.
+ * This is the name you registered within the ZeroDark.cloud developer [dashboard](https://dashboard.zerodark.cloud).
+ * It's generally of the form "com.companyName.appName".
  */
-@property (nonatomic, copy, readonly) NSString *zAppID;
+@property (nonatomic, copy, readonly) NSString *primaryTreeID;
 
 /**
  * A reference to AFNetworkReachabilityManager.sharedManager.
@@ -212,13 +170,13 @@ NS_ASSUME_NONNULL_BEGIN
                                     forLocalUserID:(NSString *)localUserID;
 
 /**
- * Convenient way to get a reference to the ZDCCloudTransaction for the given {localUserID, zAppID} tuple.
+ * Convenient way to get a reference to the ZDCCloudTransaction for the given {localUserID, treeID} tuple.
  *
  * @note localUserID == ZDCLocalUser.uuid
  */
 - (nullable ZDCCloudTransaction *)cloudTransaction:(YapDatabaseReadTransaction *)transaction
                                     forLocalUserID:(NSString *)localUserID
-                                            zAppID:(nullable NSString *)zAppID;
+                                            treeID:(nullable NSString *)treeID;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Push Notifications

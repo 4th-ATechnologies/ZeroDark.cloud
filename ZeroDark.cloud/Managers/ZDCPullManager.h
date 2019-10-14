@@ -75,24 +75,24 @@ typedef NS_ENUM(NSInteger, ZDCPullResult) {
 @interface ZDCPullManager : NSObject
 
 /**
- * Performs a "pull" for the given {localUserID, zAppID} tuple.
+ * Performs a "pull" for the given {localUserID, treeID} tuple.
  *
- * Only one recursive pull per {localUserID, zAppID} tuple is allowed at a time.
+ * Only one recursive pull per {localUserID, treeID} tuple is allowed at a time.
  * So if this method is invoked multiple times for the same tuple,
  * each spurious request (after the first) is ignored.
  *
  * @note You generally don't ever have to invoke this method manually.
  *       The SyncManager takes care of this for each ZDCLocalUser in the database,
- *       paired with the registered ZeroDarkCloud.zAppID.
+ *       paired with the registered ZeroDarkCloud.primaryTreeID.
  */
-- (void)pullRemoteChangesForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID;
+- (void)pullRemoteChangesForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID;
 
 /**
- * Aborts an in-progress pull (if exists) for the given {localUserID, zAppID} tuple.
+ * Aborts an in-progress pull (if exists) for the given {localUserID, treeID} tuple.
  *
  * You may wish to do this when certain events occur.
  * For example, if you're deleting a localUser.
  */
-- (void)abortPullForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID;
+- (void)abortPullForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID;
 
 @end

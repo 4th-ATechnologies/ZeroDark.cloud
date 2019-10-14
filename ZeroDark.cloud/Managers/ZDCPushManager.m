@@ -120,7 +120,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	dispatch_queue_t concurrentQueue;
 	
 	// Tracks all in-flight tasks:
-	// - key   : YapCollectionKey<localUserID, zAppID>
+	// - key   : YapCollectionKey(localUserID, treeID)
 	// - value : list of associated in-flight context objects
 	//
 	// The in-flight tasks could be any valid task type:
@@ -143,7 +143,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	NSMutableDictionary<NSUUID*, NSMutableDictionary<id, ZDCTaskContext *> *> *multipartTasks;
 	
 	// Tracks requests to suspend the push queue:
-	// - key   : YapCollectionKey<localUserID, zAppID>
+	// - key   : YapCollectionKey(localUserID, treeID)
 	// - value : number (of suspensions)
 	//
 	// NSMutableDictionary is NOT thread-safe,
@@ -282,9 +282,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	[stagingPath appendFormat:@"staging/%d/", kStagingVersion];
 	
 	if (isMultipart)
-		[stagingPath appendFormat:@"%@:%@/", operation.cloudLocator.cloudPath.zAppID, operation.localUserID];
+		[stagingPath appendFormat:@"%@:%@/", operation.cloudLocator.cloudPath.treeID, operation.localUserID];
 	else
-		[stagingPath appendFormat:@"%@/", operation.cloudLocator.cloudPath.zAppID];
+		[stagingPath appendFormat:@"%@/", operation.cloudLocator.cloudPath.treeID];
 	
 	if (isTouch) {
 		[stagingPath appendString:@"touch:"];
@@ -464,12 +464,12 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (NSString *)extNameForContext:(ZDCTaskContext *)context
 {
-	return [zdc.databaseManager cloudExtNameForUser:context.localUserID app:context.zAppID];
+	return [zdc.databaseManager cloudExtNameForUserID:context.localUserID treeID:context.treeID];
 }
 
 - (NSString *)extNameForOperation:(ZDCCloudOperation *)operation
 {
-	return [zdc.databaseManager cloudExtNameForUser:operation.localUserID app:operation.zAppID];
+	return [zdc.databaseManager cloudExtNameForUserID:operation.localUserID treeID:operation.treeID];
 }
 
 - (ZDCCloudOperation *)operationForContext:(ZDCTaskContext *)context
@@ -479,14 +479,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (YapDatabaseCloudCorePipeline *)pipelineForContext:(ZDCTaskContext *)context
 {
-	ZDCCloud *ext = [zdc.databaseManager cloudExtForUser:context.localUserID app:context.zAppID];
+	ZDCCloud *ext = [zdc.databaseManager cloudExtForUserID:context.localUserID treeID:context.treeID];
 	
 	return [ext pipelineWithName:context.pipeline];
 }
 
 - (YapDatabaseCloudCorePipeline *)pipelineForOperation:(ZDCCloudOperation *)operation
 {
-	ZDCCloud *ext = [zdc.databaseManager cloudExtForUser:operation.localUserID app:operation.zAppID];
+	ZDCCloud *ext = [zdc.databaseManager cloudExtForUserID:operation.localUserID treeID:operation.treeID];
 	
 	return [ext pipelineWithName:operation.pipeline];
 }
@@ -496,34 +496,34 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	NSParameterAssert(context != nil);
 	
 	NSString *localUserID = nil;
-	NSString *zAppID = nil;
+	NSString *treeID = nil;
 	
 	if ([context isKindOfClass:[ZDCTaskContext class]])
 	{
 		ZDCTaskContext *ctx = (ZDCTaskContext *)context;
 		
 		localUserID = ctx.localUserID;
-		zAppID      = ctx.zAppID;
+		treeID      = ctx.treeID;
 	}
 	else if ([context isKindOfClass:[ZDCPollContext class]])
 	{
 		ZDCTaskContext *ctx = [(ZDCPollContext *)context taskContext];
 		
 		localUserID = ctx.localUserID;
-		zAppID      = ctx.zAppID;
+		treeID      = ctx.treeID;
 	}
 	else if ([context isKindOfClass:[ZDCTouchContext class]])
 	{
 		ZDCTaskContext *ctx = [[(ZDCTouchContext *)context pollContext] taskContext];
 		
 		localUserID = ctx.localUserID;
-		zAppID      = ctx.zAppID;
+		treeID      = ctx.treeID;
 	}
 	
 	NSAssert(localUserID != nil, @"Invalid context");
-	NSAssert(zAppID      != nil, @"Invalid context");
+	NSAssert(treeID      != nil, @"Invalid context");
 	
-	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, zAppID);
+	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, treeID);
 	
 	dispatch_sync(serialQueue, ^{ @autoreleasepool {
 		
@@ -545,34 +545,34 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	NSParameterAssert(context != nil);
 	
 	NSString *localUserID = nil;
-	NSString *zAppID = nil;
+	NSString *treeID = nil;
 	
 	if ([context isKindOfClass:[ZDCTaskContext class]])
 	{
 		ZDCTaskContext *ctx = (ZDCTaskContext *)context;
 		
 		localUserID = ctx.localUserID;
-		zAppID      = ctx.zAppID;
+		treeID      = ctx.treeID;
 	}
 	else if ([context isKindOfClass:[ZDCPollContext class]])
 	{
 		ZDCTaskContext *ctx = [(ZDCPollContext *)context taskContext];
 		
 		localUserID = ctx.localUserID;
-		zAppID      = ctx.zAppID;
+		treeID      = ctx.treeID;
 	}
 	else if ([context isKindOfClass:[ZDCTouchContext class]])
 	{
 		ZDCTaskContext *ctx = [[(ZDCTouchContext *)context pollContext] taskContext];
 		
 		localUserID = ctx.localUserID;
-		zAppID      = ctx.zAppID;
+		treeID      = ctx.treeID;
 	}
 	
 	NSAssert(localUserID != nil, @"Invalid context");
-	NSAssert(zAppID      != nil, @"Invalid context");
+	NSAssert(treeID      != nil, @"Invalid context");
 	
-	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, zAppID);
+	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, treeID);
 	
 	dispatch_sync(serialQueue, ^{ @autoreleasepool {
 		
@@ -588,12 +588,12 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	}});
 }
 
-- (void)incrementSuspendCountForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
+- (void)incrementSuspendCountForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID
 {
 	NSParameterAssert(localUserID != nil);
-	NSParameterAssert(zAppID != nil);
+	NSParameterAssert(treeID != nil);
 	
-	YapCollectionKey *const tuple = YapCollectionKeyCreate(localUserID, zAppID);
+	YapCollectionKey *const tuple = YapCollectionKeyCreate(localUserID, treeID);
 	
 	dispatch_sync(serialQueue, ^{ @autoreleasepool {
 	#pragma clang diagnostic push
@@ -615,12 +615,12 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	}});
 }
 
-- (NSUInteger)drainSuspendCountForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
+- (NSUInteger)drainSuspendCountForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID
 {
 	NSParameterAssert(localUserID != nil);
-	NSParameterAssert(zAppID != nil);
+	NSParameterAssert(treeID != nil);
 	
-	YapCollectionKey *const tuple = YapCollectionKeyCreate(localUserID, zAppID);
+	YapCollectionKey *const tuple = YapCollectionKeyCreate(localUserID, treeID);
 	
 	__block NSUInteger suspendCount = 0;
 	
@@ -737,16 +737,16 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 /**
  * See header file for description.
  */
-- (void)abortOperationsForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
+- (void)abortOperationsForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID
 {
 	ZDCLogAutoTrace();
 	
 	if (localUserID == nil) return;
-	if (zAppID == nil) return;
+	if (treeID == nil) return;
 	
-	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, zAppID);
+	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, treeID);
 	
-	ZDCCloud *ext = [zdc.databaseManager cloudExtForUser:localUserID app:zAppID];
+	ZDCCloud *ext = [zdc.databaseManager cloudExtForUserID:localUserID treeID:treeID];
 	YapDatabaseCloudCorePipeline *pipeline = [ext defaultPipeline];
 	NSArray<ZDCCloudOperation *> *operations = (NSArray<ZDCCloudOperation *> *)[pipeline activeOperations];
 	
@@ -987,7 +987,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	ZDCCloudOperation *operation = nil;
 	ZDCPollContext *pollContext = nil;
 	
-	NSArray<ZDCCloud*> *cloudExts = [zdc.databaseManager cloudExtsForUser:request_userID];
+	NSArray<ZDCCloud*> *cloudExts = [zdc.databaseManager cloudExtsForUserID:request_userID];
 	for (ZDCCloud *cloudExt in cloudExts)
 	{
 		YapDatabaseCloudCorePipeline *pipeline = [cloudExt defaultPipeline];
@@ -1192,9 +1192,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (void)resumeOperationsPendingPullCompletion:(NSString *)latestChangeToken
                                forLocalUserID:(NSString *)localUserID
-                                       zAppID:(NSString *)zAppID
+                                       treeID:(NSString *)treeID
 {
-	ZDCCloud *cloudExt = [zdc.databaseManager cloudExtForUser:localUserID app:zAppID];
+	ZDCCloud *cloudExt = [zdc.databaseManager cloudExtForUserID:localUserID treeID:treeID];
 	
 	__block BOOL detectedInfiniteLoop = NO;
 	__block NSMutableArray<ZDCCloudOperation *> *blockedOps = [NSMutableArray array];
@@ -1236,9 +1236,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	if (detectedInfiniteLoop)
 	{
 		[cloudExt suspend];
-		[self incrementSuspendCountForLocalUserID:localUserID zAppID:zAppID];
+		[self incrementSuspendCountForLocalUserID:localUserID treeID:treeID];
 		
-		[self forceFullPullForLocalUserID:localUserID zAppID:zAppID];
+		[self forceFullPullForLocalUserID:localUserID treeID:treeID];
 	}
 	else
 	{
@@ -1254,7 +1254,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			[[self pipelineForOperation:op] setHoldDate:nil forOperationWithUUID:op.uuid context:ctx];
 		}
 		
-		NSUInteger suspendCount = [self drainSuspendCountForLocalUserID:localUserID zAppID:zAppID];
+		NSUInteger suspendCount = [self drainSuspendCountForLocalUserID:localUserID treeID:treeID];
 		for (NSUInteger i = 0; i < suspendCount; i++)
 		{
 			[cloudExt resume];
@@ -2332,7 +2332,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			[pipeline setHoldDate:holdDate forOperationWithUUID:operation.uuid context:ctx];
 			[pipeline setStatusAsPendingForOperationWithUUID:operation.uuid];
 		
-			[zdc.pullManager pullRemoteChangesForLocalUserID:operation.localUserID zAppID:operation.zAppID];
+			[zdc.pullManager pullRemoteChangesForLocalUserID:operation.localUserID treeID:operation.treeID];
 			
 			if (shouldNotifyDelegateOfConflict)
 			{
@@ -2498,7 +2498,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		[zdc.progressManager removeUploadProgressForOperationUUID:operation.uuid withSuccess:YES];
 		
 		if (needsTriggerPull) {
-			[zdc.pullManager pullRemoteChangesForLocalUserID:operation.localUserID zAppID:operation.zAppID];
+			[zdc.pullManager pullRemoteChangesForLocalUserID:operation.localUserID treeID:operation.treeID];
 		}
 		
 	}]; // end: readWriteTransaction.completionBlock
@@ -4004,7 +4004,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			[pipeline setHoldDate:holdDate forOperationWithUUID:operation.uuid context:ctx];
 			[pipeline setStatusAsPendingForOperationWithUUID:operation.uuid];
 			
-			[zdc.pullManager pullRemoteChangesForLocalUserID:operation.localUserID zAppID:operation.zAppID];
+			[zdc.pullManager pullRemoteChangesForLocalUserID:operation.localUserID treeID:operation.treeID];
 			return;
 		}
 	}
@@ -4886,10 +4886,10 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		//
 		// PartialDelete: Step 1 of 2:
 		
-		ZDCCloud *ext = [zdc.databaseManager cloudExtForUser:context.localUserID app:context.zAppID];
+		ZDCCloud *ext = [zdc.databaseManager cloudExtForUserID:context.localUserID treeID:context.treeID];
 		
 		[ext suspend];
-		[self incrementSuspendCountForLocalUserID:context.localUserID zAppID:context.zAppID];
+		[self incrementSuspendCountForLocalUserID:context.localUserID treeID:context.treeID];
 	}
 	
 	NSDate *lastModified = nil;
@@ -4952,7 +4952,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			// So we need to do a full pull, and grab the new content.
 			
 			// PartialDelete: Step 2 of 2:
-			[self forceFullPullForLocalUserID:context.localUserID zAppID:context.zAppID];
+			[self forceFullPullForLocalUserID:context.localUserID treeID:context.treeID];
 		}
 	}];
 }
@@ -5504,7 +5504,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			[pipeline setHoldDate:holdDate forOperationWithUUID:operation.uuid context:ctx];
 			[pipeline setStatusAsPendingForOperationWithUUID:operation.uuid];
 		
-			[zdc.pullManager pullRemoteChangesForLocalUserID:operation.localUserID zAppID:operation.zAppID];
+			[zdc.pullManager pullRemoteChangesForLocalUserID:operation.localUserID treeID:operation.treeID];
 			return;
 		}
 	}
@@ -6481,7 +6481,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			
 			// components[0] = staging
 			// components[1] = version
-			// components[2] = zAppID[:callerID]
+			// components[2] = treeID[:callerID]
 			// components[3] = [touch:]command[:opts]
 			
 			NSUInteger const idx = 3;
@@ -8426,7 +8426,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	}];
 }
 
-- (void)forceFullPullForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
+- (void)forceFullPullForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID
 {
 	ZDCLogAutoTrace();
 	
@@ -8436,7 +8436,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 	} completionQueue:concurrentQueue completionBlock:^{
 		
-		[zdc.pullManager pullRemoteChangesForLocalUserID:localUserID zAppID:zAppID];
+		[zdc.pullManager pullRemoteChangesForLocalUserID:localUserID treeID:treeID];
 	}];
 }
 

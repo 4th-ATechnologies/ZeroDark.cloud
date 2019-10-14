@@ -12,7 +12,7 @@
 #import <YapDatabase/YapCollectionKey.h>
 
 @interface ZDCPullState ()
-- (instancetype)initWithLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID;
+- (instancetype)initWithLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID;
 @end
 
 
@@ -36,15 +36,15 @@
 #pragma mark Creating & Deleting SyncState
 
 /**
- * If a syncState already exists for this userID, return nil.
+ * If a syncState already exists for this tuple, return nil.
  * Otherwise, a new syncState is created and returned.
 **/
-- (ZDCPullState *)maybeCreatePullStateForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
+- (ZDCPullState *)maybeCreatePullStateForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID
 {
 	NSParameterAssert(localUserID != nil);
-	NSParameterAssert(zAppID != nil);
+	NSParameterAssert(treeID != nil);
 	
-	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, zAppID);
+	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, treeID);
 	
 	__block ZDCPullState *newPullState = nil;
 	
@@ -55,7 +55,7 @@
 		ZDCPullState *existingPullState = pullStates[tuple];
 		if (existingPullState == nil)
 		{
-			newPullState = [[ZDCPullState alloc] initWithLocalUserID:localUserID zAppID:zAppID];
+			newPullState = [[ZDCPullState alloc] initWithLocalUserID:localUserID treeID:treeID];
 			pullStates[tuple] = newPullState;
 		}
 		
@@ -71,9 +71,9 @@
 - (void)deletePullState:(ZDCPullState *)pullStateToDelete
 {
 	NSString *localUserID = pullStateToDelete.localUserID;
-	NSString *zAppID = pullStateToDelete.zAppID;
+	NSString *treeID = pullStateToDelete.treeID;
 	
-	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, zAppID);
+	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, treeID);
 	
 	dispatch_sync(queue, ^{ @autoreleasepool {
 	#pragma clang diagnostic push
@@ -90,12 +90,12 @@
 	}});
 }
 
-- (ZDCPullState *)deletePullStateForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID
+- (ZDCPullState *)deletePullStateForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID
 {
 	NSParameterAssert(localUserID != nil);
-	NSParameterAssert(zAppID != nil);
+	NSParameterAssert(treeID != nil);
 	
-	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, zAppID);
+	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, treeID);
 	
 	__block ZDCPullState *deletedPullState = nil;
 	
@@ -124,9 +124,9 @@
 - (BOOL)isPullCancelled:(ZDCPullState *)pullState
 {
 	NSString *localUserID = pullState.localUserID;
-	NSString *zAppID = pullState.zAppID;
+	NSString *treeID = pullState.treeID;
 	
-	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, zAppID);
+	YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, treeID);
 	
 	__block BOOL cancelled = NO;
 	

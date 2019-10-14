@@ -19,10 +19,10 @@
 #pragma mark Creating & Deleting SyncState
 
 /**
- * If a syncState already exists for this localUserID, returns nil.
+ * If a syncState already exists for this tuple, returns nil.
  * Otherwise, a new syncState is created and returned.
  */
-- (ZDCPullState *)maybeCreatePullStateForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID;
+- (ZDCPullState *)maybeCreatePullStateForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID;
 
 /**
  * Deletes the associated sync state, if it exists.
@@ -32,7 +32,7 @@
 /**
  * Deletes the associated sync state, if it exists.
  */
-- (ZDCPullState *)deletePullStateForLocalUserID:(NSString *)localUserID zAppID:(NSString *)zAppID;
+- (ZDCPullState *)deletePullStateForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID;
 
 #pragma mark Checking PullState
 

@@ -147,7 +147,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * This value represents the dirPrefix to be used by all the children.
  *
- * A file's cloudPath is: {zAppID}/{dirPrefix_of_parent_node}/{cloudName}
+ * A file's cloudPath is: {treeID}/{dirPrefix_of_parent_node}/{cloudName}
  */
 @property (nonatomic, readonly) NSString *dirPrefix;
 
@@ -226,7 +226,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Pointers may point to nodes in a different treesystem.
  * These "foreign" nodes may be in a different user's treesystem (e.g. user's are collaborating).
- * Or they may be in the treesystem of a different zAppID (e.g. an app upgrade transition).
+ * Or they may be in the treesystem of a different treeID (e.g. an app upgrade transition).
  *
  * In any case, the "root" node for the grafting operation has an anchor
  * that points to the foreign location.

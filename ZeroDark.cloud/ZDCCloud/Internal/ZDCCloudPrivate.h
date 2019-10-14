@@ -34,12 +34,12 @@
  * @param localUserID
  *   The localUserID that will be used as the sender by all stored push operations.
  *
- * @param zAppID
- *   The zAppID from which the stored push operations were created.
+ * @param treeID
+ *   The treeID from which the stored push operations were created.
  *   Cross application operations are allowed.
  */
 - (instancetype)initWithLocalUserID:(NSString *)localUserID
-                             zAppID:(NSString *)zAppID;
+                             treeID:(NSString *)treeID;
 
 @end
 
