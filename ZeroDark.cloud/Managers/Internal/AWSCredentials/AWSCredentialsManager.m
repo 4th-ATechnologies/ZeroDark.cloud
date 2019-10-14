@@ -176,7 +176,7 @@
 			return;
 		}
 
-		NSDate *nowPlusBuffer = [[NSDate date] dateByAddingTimeInterval:15.0];
+		NSDate *nowPlusBuffer = [[NSDate date] dateByAddingTimeInterval:30.0];
 		
 		// Check for unexpired credentials
 		//
