@@ -13,6 +13,7 @@
 #import "ZDCAsyncCompletionDispatch.h"
 
 // Categories
+#import "NSString+S4.h"
 #import "NSError+Auth0API.h"
 #import "NSURLResponse+ZeroDark.h"
 
@@ -21,21 +22,23 @@
 #endif
 
 // Auth0 parameters
-NSString * const A0ParameterClientID     = @"client_id";
-NSString * const A0ParameterEmail        = @"email";
-NSString * const A0ParameterUsername     = @"username";
-NSString * const A0ParameterPassword     = @"password";
-NSString * const A0ParameterScope        = @"scope";
-NSString * const A0ParameterDevice       = @"device";
-NSString * const A0ParameterGrantType    = @"grant_type";
-NSString * const A0ParameterAPIType      = @"api_type";
-NSString * const A0ParameterRefreshToken = @"refresh_token";
-NSString * const A0ParameterIdToken      = @"id_token";
-NSString * const A0ParameterRealm        = @"realm";
-NSString * const A0ParameterState        = @"state";
-NSString * const A0ParameterRedirectURI  = @"redirect_uri";
-NSString * const A0ParameterResponseType = @"response_type";
-NSString * const A0ParameterConnection   = @"connection";
+NSString * const A0ParameterClientID            = @"client_id";
+NSString * const A0ParameterEmail               = @"email";
+NSString * const A0ParameterUsername            = @"username";
+NSString * const A0ParameterPassword            = @"password";
+NSString * const A0ParameterScope               = @"scope";
+NSString * const A0ParameterDevice              = @"device";
+NSString * const A0ParameterGrantType           = @"grant_type";
+NSString * const A0ParameterAPIType             = @"api_type";
+NSString * const A0ParameterRefreshToken        = @"refresh_token";
+NSString * const A0ParameterIdToken             = @"id_token";
+NSString * const A0ParameterRealm               = @"realm";
+NSString * const A0ParameterState               = @"state";
+NSString * const A0ParameterRedirectURI         = @"redirect_uri";
+NSString * const A0ParameterResponseType        = @"response_type";
+NSString * const A0ParameterConnection          = @"connection";
+NSString * const A0ParameterCodeChallengeMethod = @"code_challenge_method";
+NSString * const A0ParameterCodeChallenge       = @"code_challenge";
 
 #define TRACK_DEVICE 1
 
@@ -1134,7 +1137,7 @@ static Auth0APIManager *sharedInstance = nil;
 		for (NSUInteger i = 0; i < completionBlocks.count; i++)
 		{
 			dispatch_queue_t completionQueue = completionQueues[i];
-			void (^completionBlock)(NSDictionary *delegationToken, NSError *error) = completionBlocks[i];
+			void (^completionBlock)(NSDictionary *delegation, NSError *error) = completionBlocks[i];
 
 			dispatch_async(completionQueue, ^{ @autoreleasepool {
 
@@ -1159,7 +1162,7 @@ static Auth0APIManager *sharedInstance = nil;
 		for (NSUInteger i = 0; i < completionBlocks.count; i++)
 		{
 			dispatch_queue_t completionQueue = completionQueues[i];
-			void (^completionBlock)(NSDictionary *delegationToken, NSError *error) = completionBlocks[i];
+			void (^completionBlock)(NSDictionary *delegation, NSError *error) = completionBlocks[i];
 
 			dispatch_async(completionQueue, ^{ @autoreleasepool {
 
@@ -1259,7 +1262,7 @@ static Auth0APIManager *sharedInstance = nil;
 
 - (void)getAWSCredentialsWithRefreshToken:(NSString *)refreshToken
                           completionQueue:(nullable dispatch_queue_t)completionQueue
-                          completionBlock:(void (^)(NSDictionary * _Nullable delegationToken,
+                          completionBlock:(void (^)(NSDictionary * _Nullable delegation,
                                                     NSError *_Nullable error))completionBlock
 {
 #ifndef NS_BLOCK_ASSERTIONS
@@ -1296,44 +1299,105 @@ static Auth0APIManager *sharedInstance = nil;
 	return [[NSString stringWithFormat:@"a0%@", kAuth04thA_AppClientID] lowercaseString];
 }
 
--(NSURL*) socialQueryURLforStrategyName:(NSString*)strategyName
-					  callBackURLScheme:(NSString*)callBackURLScheme
-							  CSRFState:(NSString*)CSRFState
+- (NSURL *)socialQueryURLforStrategyName:(NSString *)strategyName
+                       callBackURLScheme:(NSString *)callbackURLScheme
+                               csrfState:(NSString *)csrfState
+                                pkceCode:(NSString *)pkceCode
 {
 	NSParameterAssert(strategyName != nil);
+	NSParameterAssert(callbackURLScheme != nil);
+	NSParameterAssert(csrfState != nil);
+	NSParameterAssert(pkceCode != nil);
 
-	static NSString* const kCallbackURLString =  @"%@://%@.auth0.com/authorize";
+	NSString *callbackURLString =
+	  [NSString stringWithFormat:@"%@://%@.auth0.com/authorize", callbackURLScheme, [strategyName lowercaseString]];
 
-	NSString *callbackURLString = [NSString stringWithFormat:kCallbackURLString,
-								   callBackURLScheme,
-								   strategyName].lowercaseString;
+	NSURL *callbackURL = [NSURL URLWithString:callbackURLString];
+	
+	NSMutableDictionary<NSString*, NSString*> *params = [NSMutableDictionary dictionaryWithCapacity:16];
+	
+#if 0 // Use PKCE (Still doesn't work. Waiting for response from Auth0 support.)
+	
+	NSData *hash = [pkceCode hashWithAlgorithm:kHASH_Algorithm_SHA256 error:nil];
+	NSString *challenge =
+	  [[[[hash base64EncodedStringWithOptions:0]
+	        stringByReplacingOccurrencesOfString:@"+" withString:@"-"]
+	        stringByReplacingOccurrencesOfString:@"/" withString:@"_"]
+	        stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"="]];
+	
+	params[A0ParameterClientID]            = kAuth04thA_AppClientID;
+	params[A0ParameterScope]               = @"openid profile email offline_access";
+	params[A0ParameterResponseType]        = @"code"; // Authorization Code Flow with PKCE
+	params[A0ParameterRedirectURI]         = [callbackURL absoluteString];
+	params[A0ParameterConnection]          = strategyName;
+	params[A0ParameterCodeChallengeMethod] = @"S256";
+	params[A0ParameterCodeChallenge]       = challenge;
+	params[A0ParameterState]               = csrfState;
+  #if TRACK_DEVICE
+	params[A0ParameterDevice]              = [self deviceName];
+  #endif
 
-	NSURL* callbackURL = [NSURL URLWithString:callbackURLString];
+#else
 
+	params[A0ParameterClientID]            = kAuth04thA_AppClientID;
+	params[A0ParameterScope]               = @"openid offline_access";
+	params[A0ParameterResponseType]        = @"token"; // Apparently this is an implicit grant flow
+	params[A0ParameterRedirectURI]         = [callbackURL absoluteString];
+	params[A0ParameterConnection]          = strategyName;
+	params[A0ParameterState]               = csrfState;
+  #if TRACK_DEVICE
+	params[A0ParameterDevice]              = [self deviceName];
+  #endif
+	
+#endif
+	
 	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
 	urlComponents.scheme = @"https";
 	urlComponents.host = kAuth04thADomain;
 	urlComponents.path = @"/authorize";
-
-	NSMutableArray<NSURLQueryItem *> *queryItems = [NSMutableArray arrayWithCapacity:8];
 	
-	[queryItems addObject:[NSURLQueryItem queryItemWithName:A0ParameterClientID     value:kAuth04thA_AppClientID]];
-	[queryItems addObject:[NSURLQueryItem queryItemWithName:A0ParameterScope        value:@"offline_access"]];
-	[queryItems addObject:[NSURLQueryItem queryItemWithName:A0ParameterResponseType value:@"token"]];
-	[queryItems addObject:[NSURLQueryItem queryItemWithName:A0ParameterRedirectURI  value:callbackURL.absoluteString]];
-	[queryItems addObject:[NSURLQueryItem queryItemWithName:A0ParameterConnection   value:strategyName]];
-#if TRACK_DEVICE
-	[queryItems addObject:[NSURLQueryItem queryItemWithName:A0ParameterDevice       value:[self deviceName]]];
-#endif
-	if (CSRFState) {
-		[queryItems addObject:[NSURLQueryItem queryItemWithName:A0ParameterState value:CSRFState]];
-	}
+	NSMutableArray<NSURLQueryItem *> *queryItems = [NSMutableArray arrayWithCapacity:params.count];
+	
+	[params enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSString *value, BOOL *stop) {
+		
+		[queryItems addObject:[NSURLQueryItem queryItemWithName:key value:value]];
+	}];
 	
 	urlComponents.queryItems = queryItems;
 
 	return urlComponents.URL;
 }
 
+- (NSDictionary *)parseQueryString:(NSString *)queryString
+{
+	NSString *urlStr;
+	if ([queryString hasPrefix:@"?"]) {
+		urlStr = [NSString stringWithFormat:@"http://www.apple.com%@", queryString];
+	}
+	else {
+		urlStr = [NSString stringWithFormat:@"http://www.apple.com?%@", queryString];
+	}
+	
+	NSURLComponents *components = [NSURLComponents componentsWithString:urlStr];
+	NSArray<NSURLQueryItem *> *queryItems = components.queryItems;
+	
+	NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:queryItems.count];
+	
+	for (NSURLQueryItem *item in queryItems)
+	{
+		dict[item.name] = item.value ?: @"";
+	}
+	
+	return dict;
+}
+
+- (void)exchangeAuthorizationCode:(NSString *)code
+                         pkceCode:(NSString *)pkceCode
+                  completionQueue:(nullable dispatch_queue_t)completionQueue
+                  completionBlock:(void (^)(NSDictionary *dict, NSError *error))completionBlock
+{
+	// Todo: Implement this when we get PKCE working properly. (Awaiting response from auth0 support)
+}
 
 -(BOOL) decodeSocialQueryString:(NSString*)queryString
 						a0Token:(A0Token * _Nullable*) a0TokenOut

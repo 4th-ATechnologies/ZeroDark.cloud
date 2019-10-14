@@ -40,7 +40,8 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	IBOutlet __weak UIButton           *_btnUseWebBrowser;
 
 	NSString    *connectionName;
-	NSString*   CSRFStateString;		//  a nonce to prevent CSRF attack
+	NSString*   csrfState; // a nonce to prevent CSRF attack
+	NSString*   pkceCode;
 	NSString* 	callbackURLscheme;
 
 	NSString*   eventQueryString;
@@ -209,8 +210,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 }
 
 
--(void)viewDidAppear:(BOOL)animated
-
+- (void)viewDidAppear:(BOOL)animated
 {
 	[super viewDidAppear:animated];
 
@@ -226,18 +226,16 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	if(eventQueryString.length)
 	{
 
-		// recover the CSRFStateString nonce
+		// recover the csrfState nonce
 //		NSDictionary* socialCallBackInfo = S4AppDelegate.auth0SocialCallBackInfo;
 //		if(socialCallBackInfo)
 //		{
 //			CSRFStateString = socialCallBackInfo[kAuth0SocialCallBackInfo_CSRFStateString];
 //		}
 
-
 		[self removeWebProgress];
 
-		[self processQueryString:eventQueryString
-						provider:connectionName];
+		[self processQueryString:eventQueryString provider:connectionName];
 
 		eventQueryString = nil;
 		connectionName = nil;
@@ -330,23 +328,27 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	connectionName = strategyName;
 
 	// generate a random string to prevent cross site reference attack.
-	CSRFStateString = [[NSUUID UUID] UUIDString];
+	csrfState = [[NSUUID UUID] UUIDString];
+	pkceCode = @"morecheeseplease";
 
 //	S4AppDelegate.auth0SocialCallBackInfo = nil;
 	webAuth0View.hidden = NO;
 
-	// first we display our loading HTML  and once thats up we query the social URL
-	socialURL = [[Auth0APIManager sharedInstance] socialQueryURLforStrategyName:strategyName
-															  callBackURLScheme:callbackURLscheme
-																	  CSRFState:CSRFStateString];
+	// First we display our loading HTML.
+	// And once that's up, we query the social URL.
+	
+	socialURL = [[Auth0APIManager sharedInstance] socialQueryURLforStrategyName: strategyName
+	                                                          callBackURLScheme: callbackURLscheme
+	                                                                  csrfState: csrfState
+	                                                                   pkceCode: pkceCode];
+	
 	didFirstLoad = NO;
-
-
 	[webAuth0View loadRequest:[NSURLRequest requestWithURL:loadingProgressURL]];
 }
 
 
 #pragma mark - actions
+
 - (IBAction)btnUseWebBrowserClicked:(id)sender
 {
 	ZDCLogAutoTrace();
@@ -528,7 +530,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 		return;
 	}
 	
-	if (![stateString isEqualToString:CSRFStateString])
+	if (![stateString isEqualToString:csrfState])
 	{
 		NSString *err_title = @"Social Login Failed";
 		NSString *err_msg = error ? error.localizedDescription : @"Possible cross-site request forgery attack";

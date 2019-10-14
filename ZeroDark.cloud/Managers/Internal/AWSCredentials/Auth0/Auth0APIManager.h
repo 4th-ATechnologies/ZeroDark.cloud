@@ -88,16 +88,39 @@ NS_ASSUME_NONNULL_BEGIN
                       completionBlock:(void (^)(A0UserProfile *_Nullable profile,
                                                 NSError *_Nullable error))completionBlock;
 
+/**
+ * Scheduled for deprecation...
+ */
 - (void)getAWSCredentialsWithRefreshToken:(NSString *)auth0_refreshToken
                           completionQueue:(nullable dispatch_queue_t)inCompletionQueue
-                          completionBlock:(void (^)(NSDictionary *_Nullable delegationToken,
+                          completionBlock:(void (^)(NSDictionary *_Nullable delegation,
                                                     NSError *_Nullable error))completionBlock;
+/**
+ * Extracts callback URL scheme from Info.plist.
+ */
+- (NSString *)callbackURLscheme;
 
--(NSURL*) socialQueryURLforStrategyName:(NSString*)strategyName
-					  callBackURLScheme:(NSString*)callBackURLScheme
-							  CSRFState:(NSString* _Nullable)CSRFState;
+/**
+ * Returns the URL used for Authorization Code Flow with Proof Key for Code Exchange (PKCE).
+ * More information can be found [here](https://auth0.com/docs/flows/concepts/auth-code-pkce).
+ */
+- (NSURL *)socialQueryURLforStrategyName:(NSString *)strategyName
+                       callBackURLScheme:(NSString *)callBackURLScheme
+                               csrfState:(NSString *)csrfState
+                                pkceCode:(NSString *)pkceCode;
 
--(NSString*) callbackURLscheme;
+/**
+ * Parses the given social query string into a standard dictionary format.
+ */
+- (NSDictionary *)parseQueryString:(NSString *)queryString;
+
+/**
+ *
+ */
+- (void)exchangeAuthorizationCode:(NSString *)code
+                         pkceCode:(NSString *)pkceCode
+                  completionQueue:(nullable dispatch_queue_t)completionQueue
+                  completionBlock:(void (^)(NSDictionary *_Nullable dict, NSError *_Nullable error))completionBlock;
 
 -(BOOL) decodeSocialQueryString:(NSString*)queryString
 						a0Token:(A0Token * _Nullable*_Nullable) a0TokenOut
