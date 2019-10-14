@@ -1518,10 +1518,6 @@ done:
 			[transaction setObject:localUser forKey:localUser.uuid inCollection:kZDCCollection_Users];
 		}
 	}
-	
-	// Register push token with server (if possible & if needed)
-	//
-	[zdc registerPushTokenForLocalUsersIfNeeded];
 }
 
 /**

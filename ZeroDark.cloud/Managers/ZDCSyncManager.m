@@ -823,22 +823,31 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 		BOOL wasDisabled = syncState.isEnabled == NO;
 		syncState.isEnabled = localUser.canPerformSync;
 		
-		if (wasDisabled && syncState.isEnabled && !isNewSyncState)
+		if (isNewSyncState || (wasDisabled && syncState.isEnabled))
 		{
-			// The method `registerPushTokenForLocalUsersIfNeeded` ignores users where
-			// `localUser.canPerformSync == NO`. So when that changes, we need to perform
-			// another check.
+			// Possibility #1:
 			//
-			// Here's an actual bug report from the field:
-			// - user A was disabled
-			// - macOS updated to a new version
-			// - user A was re-enabled
-			// - user A wasn't getting push notifications
+			//   A localUser was just added to the database.
+			//   And so we need to register for push notifications right away.
 			//
-			// Diagnosis:
-			// - push token changed with OS update
-			// - app launch ignored user A
-			// - re-enabling user A did not cause new push token to be registered with server
+			// Possibility #2:
+			//
+			//   A localUser.canPerformSync flag just got changed from NO to YES
+			//
+			//   The method `registerPushTokenForLocalUsersIfNeeded` ignores users where
+			//   `localUser.canPerformSync == NO`. So when that changes, we need to perform
+			//   another check.
+			//
+			//   Here's an actual bug report from the field:
+			//   - user A was disabled
+			//   - macOS updated to a new version
+			//   - user A was re-enabled
+			//   - user A wasn't getting push notifications
+			//
+			//   Diagnosis:
+			//   - push token changed with OS update
+			//   - app launch ignored user A
+			//   - re-enabling user A did not cause new push token to be registered with server
 			//
 			[zdc registerPushTokenForLocalUsersIfNeeded];
 		}
