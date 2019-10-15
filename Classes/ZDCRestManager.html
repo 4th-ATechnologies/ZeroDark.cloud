@@ -278,6 +278,9 @@
                 <a class="nav-group-task-link" href="../Classes/ZDCAccountSetupViewControllerProxy.html">ZDCAccountSetupViewControllerProxy</a>
               </li>
               <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCConfig.html">ZDCConfig</a>
+              </li>
+              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/ZDCDataPromise.html">ZDCDataPromise</a>
               </li>
               <li class="nav-group-task">
@@ -622,7 +625,7 @@
                 <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCUser_metadataKey">kZDCUser_metadataKey</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCUser_metadata_preferedAuth0ID">kZDCUser_metadata_preferedAuth0ID</a>
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCUser_metadata_preferredAuth0ID">kZDCUser_metadata_preferredAuth0ID</a>
               </li>
             </ul>
           </li>
@@ -897,9 +900,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCRestManager(im)setupAccountForLocalUser:withAuth:zAppIDs:completionQueue:completionBlock:"></a>
-                    <a name="//apple_ref/objc/Method/-setupAccountForLocalUser:withAuth:zAppIDs:completionQueue:completionBlock:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCRestManager(im)setupAccountForLocalUser:withAuth:zAppIDs:completionQueue:completionBlock:">-setupAccountForLocalUser:withAuth:zAppIDs:completionQueue:completionBlock:</a>
+                    <a name="/c:objc(cs)ZDCRestManager(im)setupAccountForLocalUser:withAuth:treeIDs:completionQueue:completionBlock:"></a>
+                    <a name="//apple_ref/objc/Method/-setupAccountForLocalUser:withAuth:treeIDs:completionQueue:completionBlock:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCRestManager(im)setupAccountForLocalUser:withAuth:treeIDs:completionQueue:completionBlock:">-setupAccountForLocalUser:withAuth:treeIDs:completionQueue:completionBlock:</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -919,7 +922,7 @@
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setupAccountForLocalUser</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCLocalUser.html">ZDCLocalUser</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">localUser</span>
                         <span class="nf">withAuth</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCLocalUserAuth.html">ZDCLocalUserAuth</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">auth</span>
-                         <span class="nf">zAppIDs</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n">NSString</span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span><span class="nv">zAppIDs</span>
+                         <span class="nf">treeIDs</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n">NSString</span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span><span class="nv">treeIDs</span>
                  <span class="nf">completionQueue</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">dispatch_queue_t</span><span class="p">)</span><span class="nv">completionQueue</span>
                  <span class="nf">completionBlock</span><span class="p">:</span>
                      <span class="p">(</span><span class="n">nonnull</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSString</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">,</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">,</span>
@@ -929,7 +932,7 @@
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">setupAccount</span><span class="p">(</span><span class="k">for</span> <span class="nv">localUser</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCLocalUser.html">ZDCLocalUser</a></span><span class="p">,</span> <span class="n">with</span> <span class="nv">auth</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCLocalUserAuth.html">ZDCLocalUserAuth</a></span><span class="p">,</span> <span class="nv">zAppIDs</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">],</span> <span class="nv">completionQueue</span><span class="p">:</span> <span class="kt">DispatchQueue</span><span class="p">?,</span> <span class="nv">completionBlock</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">String</span><span class="p">?,</span> <span class="kt">String</span><span class="p">?,</span> <span class="kt">String</span><span class="p">?,</span> <span class="kt">Date</span><span class="p">?,</span> <span class="kt">Error</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">setupAccount</span><span class="p">(</span><span class="k">for</span> <span class="nv">localUser</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCLocalUser.html">ZDCLocalUser</a></span><span class="p">,</span> <span class="n">with</span> <span class="nv">auth</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCLocalUserAuth.html">ZDCLocalUserAuth</a></span><span class="p">,</span> <span class="nv">treeIDs</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">],</span> <span class="nv">completionQueue</span><span class="p">:</span> <span class="kt">DispatchQueue</span><span class="p">?,</span> <span class="nv">completionBlock</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">String</span><span class="p">?,</span> <span class="kt">String</span><span class="p">?,</span> <span class="kt">String</span><span class="p">?,</span> <span class="kt">Date</span><span class="p">?,</span> <span class="kt">Error</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -964,12 +967,12 @@
                             <tr>
                               <td>
                                 <code>
-                                <em>zAppIDs</em>
+                                <em>treeIDs</em>
                                 </code>
                               </td>
                               <td>
                                 <div>
-                                  <p>A list of zAppID&rsquo;s that we&rsquo;re activating for the user.</p>
+                                  <p>A list of treeID&rsquo;s that we&rsquo;re activating for the user.</p>
                                 </div>
                               </td>
                             </tr>
@@ -1682,9 +1685,9 @@ If unspecified, the main thread is used.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCRestManager(im)listProxyWithPaths:appPrefix:pullID:continuationID:continuationOffset:continuationToken:inBucket:region:forLocalUserID:withAuth:"></a>
-                    <a name="//apple_ref/objc/Method/-listProxyWithPaths:appPrefix:pullID:continuationID:continuationOffset:continuationToken:inBucket:region:forLocalUserID:withAuth:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCRestManager(im)listProxyWithPaths:appPrefix:pullID:continuationID:continuationOffset:continuationToken:inBucket:region:forLocalUserID:withAuth:">-listProxyWithPaths:appPrefix:pullID:continuationID:continuationOffset:continuationToken:inBucket:region:forLocalUserID:withAuth:</a>
+                    <a name="/c:objc(cs)ZDCRestManager(im)listProxyWithPaths:treeID:pullID:continuationID:continuationOffset:continuationToken:inBucket:region:forLocalUserID:withAuth:"></a>
+                    <a name="//apple_ref/objc/Method/-listProxyWithPaths:treeID:pullID:continuationID:continuationOffset:continuationToken:inBucket:region:forLocalUserID:withAuth:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCRestManager(im)listProxyWithPaths:treeID:pullID:continuationID:continuationOffset:continuationToken:inBucket:region:forLocalUserID:withAuth:">-listProxyWithPaths:treeID:pullID:continuationID:continuationOffset:continuationToken:inBucket:region:forLocalUserID:withAuth:</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1709,7 +1712,7 @@ If unspecified, the main thread is used.</p>
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSMutableURLRequest</span> <span class="o">*</span><span class="p">)</span>
     <span class="nf">listProxyWithPaths</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n">NSString</span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span><span class="nv">paths</span>
-             <span class="nf">appPrefix</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">appPrefix</span>
+                <span class="nf">treeID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">treeID</span>
                 <span class="nf">pullID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">pullID</span>
         <span class="nf">continuationID</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">continuationID</span>
     <span class="nf">continuationOffset</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">NSNumber</span> <span class="o">*</span><span class="p">)</span><span class="nv">continuationOffset</span>
@@ -1722,7 +1725,7 @@ If unspecified, the main thread is used.</p>
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">listProxy</span><span class="p">(</span><span class="n">withPaths</span> <span class="nv">paths</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">],</span> <span class="nv">appPrefix</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">pullID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">continuationID</span><span class="p">:</span> <span class="kt">String</span><span class="p">?,</span> <span class="nv">continuationOffset</span><span class="p">:</span> <span class="kt">NSNumber</span><span class="p">?,</span> <span class="nv">continuationToken</span><span class="p">:</span> <span class="kt">String</span><span class="p">?,</span> <span class="n">inBucket</span> <span class="nv">bucket</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">region</span><span class="p">:</span> <span class="kt"><a href="../Enums/AWSRegion.html">AWSRegion</a></span><span class="p">,</span> <span class="n">forLocalUserID</span> <span class="nv">localUserID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="n">with</span> <span class="nv">auth</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCLocalUserAuth.html">ZDCLocalUserAuth</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">NSMutableURLRequest</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">listProxy</span><span class="p">(</span><span class="n">withPaths</span> <span class="nv">paths</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">],</span> <span class="nv">treeID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">pullID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">continuationID</span><span class="p">:</span> <span class="kt">String</span><span class="p">?,</span> <span class="nv">continuationOffset</span><span class="p">:</span> <span class="kt">NSNumber</span><span class="p">?,</span> <span class="nv">continuationToken</span><span class="p">:</span> <span class="kt">String</span><span class="p">?,</span> <span class="n">inBucket</span> <span class="nv">bucket</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">region</span><span class="p">:</span> <span class="kt"><a href="../Enums/AWSRegion.html">AWSRegion</a></span><span class="p">,</span> <span class="n">forLocalUserID</span> <span class="nv">localUserID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="n">with</span> <span class="nv">auth</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCLocalUserAuth.html">ZDCLocalUserAuth</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">NSMutableURLRequest</span></code></pre>
 
                         </div>
                       </div>
@@ -1918,9 +1921,9 @@ This information includes:</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCRestManager(im)searchUserMatch:provider:zAppID:requesterID:completionQueue:completionBlock:"></a>
-                    <a name="//apple_ref/objc/Method/-searchUserMatch:provider:zAppID:requesterID:completionQueue:completionBlock:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCRestManager(im)searchUserMatch:provider:zAppID:requesterID:completionQueue:completionBlock:">-searchUserMatch:provider:zAppID:requesterID:completionQueue:completionBlock:</a>
+                    <a name="/c:objc(cs)ZDCRestManager(im)searchUserMatch:provider:treeID:requesterID:completionQueue:completionBlock:"></a>
+                    <a name="//apple_ref/objc/Method/-searchUserMatch:provider:treeID:requesterID:completionQueue:completionBlock:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCRestManager(im)searchUserMatch:provider:treeID:requesterID:completionQueue:completionBlock:">-searchUserMatch:provider:treeID:requesterID:completionQueue:completionBlock:</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1937,7 +1940,7 @@ This information includes:</p>
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">searchUserMatch</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">queryString</span>
                <span class="nf">provider</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">provider</span>
-                 <span class="nf">zAppID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">zAppID</span>
+                 <span class="nf">treeID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">treeID</span>
             <span class="nf">requesterID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">localUserID</span>
         <span class="nf">completionQueue</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">dispatch_queue_t</span><span class="p">)</span><span class="nv">completionQueue</span>
         <span class="nf">completionBlock</span><span class="p">:(</span><span class="n">nullable</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">NSURLResponse</span> <span class="o">*</span><span class="n">_Nonnull</span><span class="p">,</span>
@@ -1947,7 +1950,7 @@ This information includes:</p>
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">searchUserMatch</span><span class="p">(</span><span class="n">_</span> <span class="nv">queryString</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">provider</span><span class="p">:</span> <span class="kt">String</span><span class="p">?,</span> <span class="nv">zAppID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="n">requesterID</span> <span class="nv">localUserID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">completionQueue</span><span class="p">:</span> <span class="kt">DispatchQueue</span><span class="p">?,</span> <span class="nv">completionBlock</span><span class="p">:</span> <span class="p">((</span><span class="kt">URLResponse</span><span class="p">,</span> <span class="kt">Any</span><span class="p">?,</span> <span class="kt">Error</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">searchUserMatch</span><span class="p">(</span><span class="n">_</span> <span class="nv">queryString</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">provider</span><span class="p">:</span> <span class="kt">String</span><span class="p">?,</span> <span class="nv">treeID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="n">requesterID</span> <span class="nv">localUserID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">completionQueue</span><span class="p">:</span> <span class="kt">DispatchQueue</span><span class="p">?,</span> <span class="nv">completionBlock</span><span class="p">:</span> <span class="p">((</span><span class="kt">URLResponse</span><span class="p">,</span> <span class="kt">Any</span><span class="p">?,</span> <span class="kt">Error</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -2436,7 +2439,7 @@ Either the primary or secondary auth_id doesn&rsquo;t exist.</li>
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-08-24)</p>
+      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-10-15)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

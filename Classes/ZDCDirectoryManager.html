@@ -278,6 +278,9 @@
                 <a class="nav-group-task-link" href="../Classes/ZDCAccountSetupViewControllerProxy.html">ZDCAccountSetupViewControllerProxy</a>
               </li>
               <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCConfig.html">ZDCConfig</a>
+              </li>
+              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/ZDCDataPromise.html">ZDCDataPromise</a>
               </li>
               <li class="nav-group-task">
@@ -622,7 +625,7 @@
                 <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCUser_metadataKey">kZDCUser_metadataKey</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCUser_metadata_preferedAuth0ID">kZDCUser_metadata_preferedAuth0ID</a>
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCUser_metadata_preferredAuth0ID">kZDCUser_metadata_preferredAuth0ID</a>
               </li>
             </ul>
           </li>
@@ -773,8 +776,8 @@
                         <p>The typical <q>Application Support</q> directory for the app.</p>
 
 <ul>
-<li>macOS : ~/Library/Application Support/{Bundle Identifier}</li>
-<li>iOS   : {App Sandbox}/Application Support</li>
+<li>macOS : ~/Library/Application Support/{Bundle Identifier}/</li>
+<li>iOS   : {App Sandbox}/Application Support/</li>
 </ul>
 
 <p>Files stored in this directory are persistent,
@@ -813,8 +816,8 @@
                         <p>The typical <q>Cache</q> directory for the app.</p>
 
 <ul>
-<li>mac OS : ~/Library/Caches/{Bundle Identifier}</li>
-<li>iOS    : {App Sandbox}/Caches</li>
+<li>mac OS : ~/Library/Caches/{Bundle Identifier}/</li>
+<li>iOS    : {App Sandbox}/Caches/</li>
 </ul>
 
 <p>Files stored in this directory are NOT persistent,
@@ -896,13 +899,11 @@
                       <div class="pointer"></div>
                       <div class="abstract">
                         <p>The ZeroDarkCloud framework attempts to keep all stored files within a few <q>zdc</q> folders.
- This method returns the top-level <q>zdc</q> directory for persistent files.
- Within this directory there will be multiple sub-directories,
- one for each database/ZeroDarCloud instance.</p>
+ This method returns the top-level <q>zdc</q> directory for persistent files.</p>
 
 <ul>
-<li>macOS : ~/Library/Application Support/{Bundle Identifier}/zdc</li>
-<li>iOS   : {App Sandbox}/Application Support/zdc</li>
+<li>macOS : ~/Library/Application Support/{Bundle Identifier}/zdc/</li>
+<li>iOS   : {App Sandbox}/Application Support/zdc/</li>
 </ul>
 
 <p>Files stored in this directory are persistent,
@@ -939,13 +940,11 @@
                       <div class="pointer"></div>
                       <div class="abstract">
                         <p>The ZeroDarkCloud framework attempts to keep all stored files within a few <q>zdc</q> folders.
- This method returns the top-level <q>zdc</q> directory for temporarily cached files.
- Within this directory there will be multiple sub-directories,
- one for each database/ZeroDarCloud instance.</p>
+ This method returns the top-level <q>zdc</q> directory for temporarily cached files.</p>
 
 <ul>
-<li>mac OS : ~/Library/Caches/{Bundle Identifier}/zdc</li>
-<li>iOS    : {App Sandbox}/Caches/zdc</li>
+<li>mac OS : ~/Library/Caches/{Bundle Identifier}/zdc/</li>
+<li>iOS    : {App Sandbox}/Caches/zdc/</li>
 </ul>
 
 <p>Files stored in this directory are NOT persistent,
@@ -971,9 +970,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCDirectoryManager(cm)zdcPersistentDirectoryForDatabaseName:"></a>
-                    <a name="//apple_ref/objc/Method/+zdcPersistentDirectoryForDatabaseName:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCDirectoryManager(cm)zdcPersistentDirectoryForDatabaseName:">+zdcPersistentDirectoryForDatabaseName:</a>
+                    <a name="/c:objc(cs)ZDCDirectoryManager(cm)zdcDatabaseDirectoryURL"></a>
+                    <a name="//apple_ref/objc/Method/+zdcDatabaseDirectoryURL" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDirectoryManager(cm)zdcDatabaseDirectoryURL">+zdcDatabaseDirectoryURL</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -982,12 +981,50 @@
                       <div class="pointer"></div>
                       <div class="abstract">
                         <p>The ZeroDarkCloud framework attempts to keep all stored files within a few <q>zdc</q> folders.
- This method returns the top-level container for persistent files
+ This method returns the top-level container that stores all database files.</p>
+
+<ul>
+<li>macOS : ~/Library/Application Support/{Bundle Identifier}/zdc/db/</li>
+<li>iOS   : {App Sandbox}/Application Support/zdc/db/</li>
+</ul>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="n">zdcDatabaseDirectoryURL</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kd">func</span> <span class="nf">zdcDatabaseDirectoryURL</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">URL</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCDirectoryManager(cm)zdcPersistentDataDirectoryForDatabaseName:"></a>
+                    <a name="//apple_ref/objc/Method/+zdcPersistentDataDirectoryForDatabaseName:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDirectoryManager(cm)zdcPersistentDataDirectoryForDatabaseName:">+zdcPersistentDataDirectoryForDatabaseName:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The ZeroDarkCloud framework attempts to keep all stored files within a few <q>zdc</q> folders.
+ This method returns the top-level container for persistent data files
  stored by the ZeroDarkCloud instance using the given databaseName.</p>
 
 <ul>
-<li>macOS : ~/Library/Application Support/{Bundle Identifier}/zdc/db/{Database Name}</li>
-<li>iOS   : {App Sandbox}/Application Support/zdc/db/{Database Name}</li>
+<li>macOS : ~/Library/Application Support/{Bundle Identifier}/zdc/data/{Database Name}/</li>
+<li>iOS   : {App Sandbox}/Application Support/zdc/data/{Database Name}/</li>
 </ul>
 
 <p>Files stored in this directory are persistent,
@@ -998,13 +1035,13 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nf">zdcPersistentDirectoryForDatabaseName</span><span class="p">:</span>
+                          <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nf">zdcPersistentDataDirectoryForDatabaseName</span><span class="p">:</span>
     <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">databaseName</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kd">func</span> <span class="nf">zdcPersistentDirectory</span><span class="p">(</span><span class="n">forDatabaseName</span> <span class="nv">databaseName</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">URL</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kd">func</span> <span class="nf">zdcPersistentDataDirectory</span><span class="p">(</span><span class="n">forDatabaseName</span> <span class="nv">databaseName</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">URL</span></code></pre>
 
                         </div>
                       </div>
@@ -1014,9 +1051,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCDirectoryManager(cm)zdcCacheDirectoryForDatabaseName:"></a>
-                    <a name="//apple_ref/objc/Method/+zdcCacheDirectoryForDatabaseName:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCDirectoryManager(cm)zdcCacheDirectoryForDatabaseName:">+zdcCacheDirectoryForDatabaseName:</a>
+                    <a name="/c:objc(cs)ZDCDirectoryManager(cm)zdcCacheDataDirectoryForDatabaseName:"></a>
+                    <a name="//apple_ref/objc/Method/+zdcCacheDataDirectoryForDatabaseName:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCDirectoryManager(cm)zdcCacheDataDirectoryForDatabaseName:">+zdcCacheDataDirectoryForDatabaseName:</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1025,12 +1062,12 @@
                       <div class="pointer"></div>
                       <div class="abstract">
                         <p>The ZeroDarkCloud framework attempts to keep all stored files within a few <q>zdc</q> folders.
- This method returns the top-level container for temporary cached files
+ This method returns the top-level container for temporary cached data files
  stored by the ZeroDarkCloud instance using the given databaseName.</p>
 
 <ul>
-<li>mac OS : ~/Library/Caches/{Bundle Identifier}/zdc/db/{Database Name}</li>
-<li>iOS    : {App Sandbox}/Caches/zdc/db/{Database Name}</li>
+<li>mac OS : ~/Library/Caches/{Bundle Identifier}/zdc/db/{Database Name}/</li>
+<li>iOS    : {App Sandbox}/Caches/zdc/db/{Database Name}/</li>
 </ul>
 
 <p>Files stored in this directory are NOT persistent,
@@ -1041,13 +1078,13 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nf">zdcCacheDirectoryForDatabaseName</span><span class="p">:</span>
+                          <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nf">zdcCacheDataDirectoryForDatabaseName</span><span class="p">:</span>
     <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">databaseName</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kd">func</span> <span class="nf">zdcCacheDirectory</span><span class="p">(</span><span class="n">forDatabaseName</span> <span class="nv">databaseName</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">URL</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kd">func</span> <span class="nf">zdcCacheDataDirectory</span><span class="p">(</span><span class="n">forDatabaseName</span> <span class="nv">databaseName</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">URL</span></code></pre>
 
                         </div>
                       </div>
@@ -1082,9 +1119,9 @@
  This method returns all the corresponding fileURL&rsquo;s.</p>
 
 <ul>
-<li>&hellip;/zdc/db/database.sqlite</li>
-<li>&hellip;/zdc/db/database.sqlite-wal</li>
-<li>&hellip;/zdc/db/database.sqlite-shm</li>
+<li>&hellip;/zdc/db/{Database Name}</li>
+<li>&hellip;/zdc/db/{Database Name}-wal</li>
+<li>&hellip;/zdc/db/{Database Name}-shm</li>
 </ul>
 
                       </div>
@@ -1401,7 +1438,7 @@
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-08-24)</p>
+      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-10-15)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

@@ -367,7 +367,7 @@
     {
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/ZDCUser.h",
       "line": 31,
-      "symbol": "kZDCUser_metadata_preferedAuth0ID",
+      "symbol": "kZDCUser_metadata_preferredAuth0ID",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.constant",
       "warning": "undocumented"
     },

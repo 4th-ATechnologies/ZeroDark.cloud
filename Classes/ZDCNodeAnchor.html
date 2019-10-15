@@ -278,6 +278,9 @@
                 <a class="nav-group-task-link" href="../Classes/ZDCAccountSetupViewControllerProxy.html">ZDCAccountSetupViewControllerProxy</a>
               </li>
               <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCConfig.html">ZDCConfig</a>
+              </li>
+              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/ZDCDataPromise.html">ZDCDataPromise</a>
               </li>
               <li class="nav-group-task">
@@ -622,7 +625,7 @@
                 <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCUser_metadataKey">kZDCUser_metadataKey</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCUser_metadata_preferedAuth0ID">kZDCUser_metadata_preferedAuth0ID</a>
+                <a class="nav-group-task-link" href="../Other Constants.html#/c:@kZDCUser_metadata_preferredAuth0ID">kZDCUser_metadata_preferredAuth0ID</a>
               </li>
             </ul>
           </li>
@@ -756,9 +759,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCNodeAnchor(im)initWithUserID:zAppID:dirPrefix:"></a>
-                    <a name="//apple_ref/objc/Method/-initWithUserID:zAppID:dirPrefix:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCNodeAnchor(im)initWithUserID:zAppID:dirPrefix:">-initWithUserID:zAppID:dirPrefix:</a>
+                    <a name="/c:objc(cs)ZDCNodeAnchor(im)initWithUserID:treeID:dirPrefix:"></a>
+                    <a name="//apple_ref/objc/Method/-initWithUserID:treeID:dirPrefix:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCNodeAnchor(im)initWithUserID:treeID:dirPrefix:">-initWithUserID:treeID:dirPrefix:</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -774,13 +777,13 @@
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithUserID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">userID</span>
-                                <span class="nf">zAppID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">zAppID</span>
+                                <span class="nf">treeID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">treeID</span>
                              <span class="nf">dirPrefix</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">dirPrefix</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="nf">init</span><span class="p">(</span><span class="nv">userID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">zAppID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">dirPrefix</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="nf">init</span><span class="p">(</span><span class="nv">userID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">treeID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">dirPrefix</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -824,9 +827,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCNodeAnchor(py)zAppID"></a>
-                    <a name="//apple_ref/objc/Property/zAppID" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCNodeAnchor(py)zAppID">zAppID</a>
+                    <a name="/c:objc(cs)ZDCNodeAnchor(py)treeID"></a>
+                    <a name="//apple_ref/objc/Property/treeID" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCNodeAnchor(py)treeID">treeID</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -834,19 +837,19 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Corresponds to <code>[ZDCCloudPath zAppID]</code>.</p>
+                        <p>Corresponds to <code>[ZDCCloudPath treeID]</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">copy</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">zAppID</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">copy</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">treeID</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">zAppID</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">treeID</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -893,7 +896,7 @@
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-08-24)</p>
+      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-10-15)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>
