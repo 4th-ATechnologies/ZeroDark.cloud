@@ -24,7 +24,7 @@
 
 // Log levels: off, error, warn, info, verbose
 #if DEBUG
-  static const int zdcLogLevel = ZDCLogLevelVerbose;
+  static const int zdcLogLevel = ZDCLogLevelVerbose | ZDCLogFlagTrace;
 #else
   static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
@@ -83,14 +83,9 @@
 	
 	_tblProviders.scrollIndicatorInsets = UIEdgeInsetsMake(6, 0, 6, 4);
 	_tblProviders.indicatorStyle = UIScrollViewIndicatorStyleDefault;
- }
-
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
 }
 
--(void) viewWillAppear:(BOOL)animated
+- (void)viewWillAppear:(BOOL)animated
 {
 	[super viewWillAppear:animated];
 
@@ -107,7 +102,7 @@
     else
     {
         _viewAuth0ButtonContainer.hidden = YES;
-        _TableContainerBottomConstraint.constant = 0;
+        _TableContainerBottomConstraint.constant = 20;
     }
     
     accountSetupVC.btnBack.hidden  = (accountSetupVC.identityMode == IdenititySelectionMode_ReauthorizeAccount );
@@ -224,42 +219,47 @@
 	 }];
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark - UITableViewDataSource
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#pragma mark - host table
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+- (CGFloat)tableView:(UITableView *)sender heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    return [IdentityProviderTableViewCell heightForCell];
-
+	return [IdentityProviderTableViewCell heightForCell];
 }
 
-- (NSInteger)tableView:(UITableView *)tv numberOfRowsInSection:(NSInteger)section
+- (NSInteger)tableView:(UITableView *)sender numberOfRowsInSection:(NSInteger)section
 {
-    return  identityProviderKeys.count ;
+	return identityProviderKeys.count;
 }
 
-
-- (UITableViewCell *)tableView:(UITableView *)tv cellForRowAtIndexPath:(NSIndexPath *)indexPath
+- (UITableViewCell *)tableView:(UITableView *)sender cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    
-    IdentityProviderTableViewCell *cell = (IdentityProviderTableViewCell *)  [tv dequeueReusableCellWithIdentifier:kIdentityProviderTableCellIdentifier];
-    NSString* key  = identityProviderKeys[indexPath.row];
-	OSImage* image = [providerManager providerIcon:Auth0ProviderIconType_Signin forProvider:key];
-    if(!image) image = [OSImage imageNamed:@"provider_auth0"];
+	IdentityProviderTableViewCell *cell = (IdentityProviderTableViewCell *)
+	  [sender dequeueReusableCellWithIdentifier:kIdentityProviderTableCellIdentifier];
+	
+	NSString *key = identityProviderKeys[indexPath.row];
+	OSImage *image = [providerManager providerIcon:Auth0ProviderIconType_Signin forProvider:key];
+	if (!image) {
+		image = [OSImage imageNamed:@"provider_auth0"];
+	}
 
-    cell.backgroundColor     = [UIColor colorWithWhite:1 alpha:1];
-    
-    cell.layer.cornerRadius = 16.0;
-    cell.layer.borderColor = [UIColor blackColor].CGColor;
-    cell.layer.borderWidth = 4.0f;
-    cell.layer.masksToBounds = YES;
-  
-    cell._imgProvider.image = [image scaledToHeight:32];
-    return cell;
+	cell.backgroundColor = [UIColor colorWithWhite:1 alpha:1];
+	cell.selectionStyle = UITableViewCellSelectionStyleNone; // don't show highlight on touchDown
+	
+	cell.layer.cornerRadius = 16.0;
+	cell.layer.borderColor = [UIColor blackColor].CGColor;
+	cell.layer.borderWidth = 4.0f;
+	cell.layer.masksToBounds = YES;
+
+	cell._imgProvider.image = [image scaledToHeight:32];
+	return cell;
 }
-
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
+	ZDCLogAutoTrace();
+	
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 
 	NSString* key  = identityProviderKeys[indexPath.row];

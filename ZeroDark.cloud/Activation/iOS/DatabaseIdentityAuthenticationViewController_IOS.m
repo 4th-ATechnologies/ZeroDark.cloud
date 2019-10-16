@@ -139,8 +139,9 @@
 	[self showWait:NO];
 }
 
--(void)viewDidAppear:(BOOL)animated
+- (void)viewDidAppear:(BOOL)animated
 {
+	ZDCLogAutoTrace();
 	[super viewDidAppear:animated];
 
 	if (self.accountSetupVC.identityMode == IdenititySelectionMode_NewAccount)

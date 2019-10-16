@@ -40,9 +40,9 @@
 
 // Log levels: off, error, warn, info, verbose
 #if DEBUG
-static const int zdcLogLevel = ZDCLogLevelVerbose;
+  static const int zdcLogLevel = ZDCLogLevelVerbose | ZDCLogFlagTrace;
 #else
-static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 #pragma unused(zdcLogLevel)
 
@@ -106,7 +106,6 @@ typedef enum {
 	
 	NSString*           lastQRCode;
 	BOOL                isReading;
-	BOOL                hasCamera;
 	
 	IBOutlet __weak UITabBar*           _tabBar;
 	IBOutlet __weak UITabBarItem*       _tabItemQR;
@@ -134,8 +133,14 @@ typedef enum {
 
 @synthesize accountSetupVC = accountSetupVC;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark View Lifecycle
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 - (void)viewDidLoad
 {
+	ZDCLogAutoTrace();
+	
 	[super viewDidLoad];
 	
 	_vwCloneContainer.layer.cornerRadius   = 16;
@@ -216,8 +221,9 @@ typedef enum {
 	originalContainerViewBottomConstraint  = CGFLOAT_MAX;
 }
 
--(void)viewWillAppear:(BOOL)animated
+- (void)viewWillAppear:(BOOL)animated
 {
+	ZDCLogAutoTrace();
 	[super viewWillAppear:animated];
 	
 	databaseConnection = accountSetupVC.zdc.databaseManager.uiDatabaseConnection;
@@ -232,20 +238,18 @@ typedef enum {
 	[[UITabBar appearance] setTintColor:[UIColor whiteColor ]];
 	[[UITabBar appearance] setBarTintColor:[UIColor clearColor]];
 	
-	
 	if(originalContainerViewBottomConstraint == CGFLOAT_MAX)
 		originalContainerViewBottomConstraint = _containerViewBottomConstraint.constant;
 	
-	[[NSNotificationCenter defaultCenter] addObserver:self
-														  selector:@selector(keyboardWillShow:)
-																name:UIKeyboardWillShowNotification
-															 object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver: self
+														  selector: @selector(keyboardWillShow:)
+																name: UIKeyboardWillShowNotification
+															 object: nil];
 	
-	[[NSNotificationCenter defaultCenter] addObserver:self
-														  selector:@selector(keyboardWillHide:)
-																name:UIKeyboardWillHideNotification
-															 object:nil];
-	
+	[[NSNotificationCenter defaultCenter] addObserver: self
+														  selector: @selector(keyboardWillHide:)
+																name: UIKeyboardWillHideNotification
+															 object: nil];
 	
 	accountSetupVC.btnBack.hidden = self.navigationController.viewControllers.count == 1;
 	
@@ -253,36 +257,49 @@ typedef enum {
 	[self refreshCloneWordForCount:0 validWords:0];
 	_btnCloneWordsVerify.enabled  = NO;
 	
+	NSString *msg_checking =
+	  NSLocalizedString(@"Checking camera access…",
+	                    @"Access key scanning window");
 	
 	_btnStatus.hidden = YES;
-	
-	[self setCameraStatusString:NSLocalizedString(@"Checking camera access…",
-																 @"Checking camera access…")
-							 isButton:NO
-								 color:UIColor.whiteColor];
+	[self setCameraStatusString: msg_checking
+	                   isButton: NO
+	                      color: UIColor.whiteColor];
 	
 	[self refreshView];
 	
 	_imgNoCamera.hidden = YES;
-	[self switchViewsToTag: kCloneCodeViewTab_QRCode];
+	[self switchViewsToTag:kCloneCodeViewTab_QRCode animated:NO];
+	[self.view layoutIfNeeded];
 	
+	[accountSetupVC setHelpButtonHidden:NO];
+	accountSetupVC.btnBack.hidden = YES;  // cant go back from here
 }
 
--(void)viewDidAppear:(BOOL)animated
+- (void)viewDidAppear:(BOOL)animated
 {
+	ZDCLogAutoTrace();
 	[super viewDidAppear:animated];
 	
 	BOOL canPaste = [[UIPasteboard generalPasteboard] image] != nil;
 	_btnPaste.enabled = canPaste;
 	
-	[accountSetupVC setHelpButtonHidden:NO];
-	accountSetupVC.btnBack.hidden = YES;  // cant go back from here
-	
+//	[self switchViewsToTag: kCloneCodeViewTab_QRCode animated:NO];
 }
 
--(void)viewWillDisappear:(BOOL)animated
+/*
+- (void)viewDidLayoutSubviews
 {
+	ZDCLogAutoTrace();
+	[super viewDidLayoutSubviews];
+}
+*/
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+	ZDCLogAutoTrace();
 	[super viewWillDisappear:animated];
+	
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	
 	isUsingCarmera = NO;
@@ -290,63 +307,65 @@ typedef enum {
 	
 	[[UITabBar appearance] setTintColor:nil];
 	[[UITabBar appearance] setBarTintColor:nil];
-	
 }
 
-
-- (BOOL)canPopViewControllerViaPanGesture:(AccountSetupViewController_IOS *)sender
-{
-	return (self.navigationController.viewControllers.count > 1);
-	
-}
-
-
-- (void)didReceiveMemoryWarning {
-	[super didReceiveMemoryWarning];
-	// Dispose of any resources that can be recreated.
-}
-
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Notifications
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)applicationDidResignActiveNotification
 {
-	[self stopReading];
+	ZDCLogAutoTrace();
 	
+	[self stopReading];
 }
 
 - (void)applicationDidBecomeActiveNotification
 {
-	if(isUsingCarmera)
+	ZDCLogAutoTrace();
+	
+	if (isUsingCarmera) {
 		[self startReading];
+	}
 }
-
-
 
 - (void)databaseConnectionDidUpdate:(NSNotification *)notification
 {
 	[self refreshView];
-	
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark AccountSetupViewController_IOS_Child_Delegate
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL)canPopViewControllerViaPanGesture:(AccountSetupViewController_IOS *)sender
+{
+	return (self.navigationController.viewControllers.count > 1);
 }
 
 
 
--(void)refreshView
+- (void)refreshView
 {
-	__weak typeof(self) weakSelf = self;
+	ZDCLogAutoTrace();
 	
-	__block ZDCLocalUser *user = NULL;
+	NSString *const localUserID = accountSetupVC.user.uuid;
+	__block ZDCLocalUser *localUser = nil;
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 	[databaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-		user = [transaction objectForKey:accountSetupVC.user.uuid inCollection:kZDCCollection_Users];
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
+		
+	#pragma clang diagnostic pop
 	}];
-#pragma clang diagnostic pop
-	
 
-	if(!user)return;
+	if (!localUser) {
+		return;
+	}
 	
-	NSString* displayName = user.displayName;
+	NSString *displayName = localUser.displayName;
 	
 	_lblCloneCodeDisplayName.text = displayName;
 	_lblCloneCodeDisplayName.hidden = NO;
@@ -354,29 +373,34 @@ typedef enum {
 	_lblCloneWordsDisplayName.text = displayName;
 	_lblCloneWordsDisplayName.hidden = NO;
 	
-	NSString* auth0ID = user.auth0_preferredID;
-	NSArray* comps = [auth0ID componentsSeparatedByString:@"|"];
-	NSString* provider = comps.firstObject;
+	NSString *auth0_preferredID = localUser.auth0_preferredID;
+	NSDictionary *auth0_preferredProfile = localUser.auth0_profiles[auth0_preferredID];
 	
-	NSURL *pictureURL = nil;
-	NSString* picture  = [Auth0ProviderManager correctPictureForAuth0ID:auth0ID
-																			  profileData:user.auth0_profiles[auth0ID]
-																					 region:user.aws_region
-																					 bucket:user.aws_bucket];
-	if(picture)
-		pictureURL = [NSURL URLWithString:picture];
+	NSArray *comps = [auth0_preferredID componentsSeparatedByString:@"|"];
+	NSString *provider = comps.firstObject;
 	
-	OSImage* providerImage = [[providerManager providerIcon:Auth0ProviderIconType_Signin forProvider:provider] scaledToHeight:_imgCloneWordsProvider.frame.size.height];
+	NSString *pictureStr =
+	  [Auth0ProviderManager correctPictureForAuth0ID: auth0_preferredID
+	                                     profileData: auth0_preferredProfile
+	                                          region: localUser.aws_region
+	                                          bucket: localUser.aws_bucket];
 	
-	if(providerImage)
+	NSURL *pictureURL = pictureStr ? [NSURL URLWithString:pictureStr] : nil;
+	
+	OSImage *providerImage =
+	  [[providerManager providerIcon: Auth0ProviderIconType_Signin
+	                     forProvider: provider]
+	                  scaledToHeight: _imgCloneWordsProvider.frame.size.height];
+	
+	if (providerImage)
 	{
 		_imgCloneCodeProvider.hidden = NO;
 		_imgCloneCodeProvider.image = providerImage;
-		_lblCloneWordsProvider.hidden = YES;
+		_lblCloneCodeProvider.hidden = YES;
 		
 		_imgCloneWordsProvider.hidden = NO;
 		_imgCloneWordsProvider.image = providerImage;
-		_lblCloneCodeProvider.hidden = YES;
+		_lblCloneWordsProvider.hidden = YES;
 		
 	}
 	else
@@ -390,47 +414,53 @@ typedef enum {
 		_lblCloneCodeProvider.hidden = NO;
 	}
 	
-	if(pictureURL)
+	if (pictureURL)
 	{
+		__weak typeof(self) weakSelf = self;
+		
 		CGSize avatarSize = _imgCloneWordsAvatar.frame.size;
-		[imageManager fetchUserAvatar: user.uuid
-									 auth0ID: auth0ID
+		
+		UIImage* (^processingBlock)(UIImage *) = ^(UIImage *image){
+			
+			return [image imageWithMaxSize: avatarSize];
+		};
+		void (^preFetchBlock)(UIImage *_Nullable) = ^(UIImage *image){
+			
+			__strong typeof(self) strongSelf = weakSelf;
+			if (!strongSelf) return;
+			
+			image = image ?: strongSelf->defaultUserImage;
+			
+			strongSelf->_imgCloneCodeAvatar.hidden = NO;
+			strongSelf->_imgCloneCodeAvatar.image = image;
+			
+			strongSelf->_imgCloneWordsAvatar.hidden = NO;
+			strongSelf->_imgCloneWordsAvatar.image = image;
+		};
+		void (^postFetchBlock)(UIImage *_Nullable, NSError *_Nullable) = ^(UIImage *image, NSError *error){
+			
+			__strong typeof(self) strongSelf = weakSelf;
+			if (!strongSelf) return;
+			
+			strongSelf->_imgCloneCodeAvatar.hidden = NO;
+			strongSelf->_imgCloneWordsAvatar.hidden = NO;
+			
+			if (!image)
+			{
+				image = strongSelf->defaultUserImage;
+			}
+			strongSelf->_imgCloneCodeAvatar.image = image;
+			strongSelf->_imgCloneWordsAvatar.image = image;
+		};
+		
+		[imageManager fetchUserAvatar: localUser.uuid
+									 auth0ID: auth0_preferredID
 									 fromURL: pictureURL
 									 options: nil
 							  processingID: pictureURL.absoluteString
-						  processingBlock:^UIImage * _Nonnull(UIImage * _Nonnull image)
-		 {
-			 return [image imageWithMaxSize: avatarSize];
-		 }
-							 preFetchBlock:^(UIImage * _Nullable image)
-		 {
-			 __strong typeof(self) strongSelf = weakSelf;
-			 if(strongSelf == nil) return;
-			 
-			 if(image)
-			 {
-				 strongSelf->_imgCloneCodeAvatar.hidden = NO;
-				 strongSelf->_imgCloneWordsAvatar.hidden = NO;
-				 strongSelf->_imgCloneCodeAvatar.image = image;
-				 strongSelf->_imgCloneWordsAvatar.image = image;
-			 }
-			 
-		 }            postFetchBlock:^(UIImage * _Nullable image, NSError * _Nullable error)
-		 {
-			 
-			 __strong typeof(self) strongSelf = weakSelf;
-			 if(strongSelf == nil) return;
-			 
-			 strongSelf->_imgCloneCodeAvatar.hidden = NO;
-			 strongSelf->_imgCloneWordsAvatar.hidden = NO;
-			 
-			 if(!image)
-			 {
-				 image = strongSelf->defaultUserImage;
-			 }
-			 strongSelf->_imgCloneCodeAvatar.image = image;
-			 strongSelf->_imgCloneWordsAvatar.image = image;
-		 }];
+						  processingBlock: processingBlock
+		                preFetchBlock: preFetchBlock
+		               postFetchBlock: postFetchBlock];
 	}
 	else
 	{
@@ -469,9 +499,8 @@ typedef enum {
 	
 }
 
-
--(void)hideNoCamera:(BOOL)shouldHide
-			completion:(dispatch_block_t)completion
+- (void)hideNoCamera:(BOOL)shouldHide
+          completion:(dispatch_block_t)completion
 {
 	__weak typeof(self) weakSelf = self;
 
@@ -552,99 +581,115 @@ typedef enum {
 }
 
 
--(void) refreshCloneCodeView
+- (void)refreshCloneCodeView
 {
-	__weak typeof(self) weakSelf = self;
-	lastQRCode = NULL;
+	ZDCLogAutoTrace();
 	
-	if(ZDCConstants.appHasCameraPermission)
+	lastQRCode = nil;
+	
+	NSString *msg_accessDenied =
+	  NSLocalizedString(@"Camera access is denied.",
+	                    @"Access key scanning window");
+	
+	NSString *msg_notAvailableDevice =
+	  NSLocalizedString(@"Camera is not available on this device.",
+	                    @"Access key scanning window");
+	
+	NSString *msg_notAvailableSimulator =
+	  NSLocalizedString(@"Camera is not available on the simulator.",
+	                    @"Access key scanning window");
+	
+	NSString *msg_notEnabled =
+	  NSLocalizedString(@"Camera access is not enabled by this application.",
+	                    @"Access key scanning window");
+	
+	if (ZDCConstants.appHasCameraPermission)
 	{
-		hasCamera = [UIImagePickerController isSourceTypeAvailable: UIImagePickerControllerSourceTypeCamera];
-		
-		if(hasCamera)
+		BOOL hasCamera = [UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera];
+		if (hasCamera)
 		{
-			// check camera authorization status
-			AVAuthorizationStatus cameraAuthStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+			// Check camera authorization status
+			AVAuthorizationStatus cameraAuthStatus =
+			  [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
 			
-			switch (cameraAuthStatus) {
+			if (cameraAuthStatus == AVAuthorizationStatusAuthorized)
+			{
+				// camera authorized
+				
+				__weak typeof(self) weakSelf = self;
+				[self hideNoCamera:YES completion:^{
+					[weakSelf startReading];
+				}];
+			}
+			else if (cameraAuthStatus == AVAuthorizationStatusNotDetermined)
+			{
+				// request authorization
+				
+				__weak typeof(self) weakSelf = self;
+				void (^completionHandler)(BOOL) = ^(BOOL granted){
 					
-				case AVAuthorizationStatusAuthorized: { // camera authorized
-					
-					[self hideNoCamera:YES completion:^{
-						[self startReading];
-					}];
-				}
-					break;
-					
-				case AVAuthorizationStatusNotDetermined: { // request authorization
-					
-					[AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
-						dispatch_async(dispatch_get_main_queue(), ^{
-							
-							__strong typeof(self) strongSelf = weakSelf;
-							if(!strongSelf) return;
+					__strong typeof(self) strongSelf = weakSelf;
+					if(!strongSelf) return;
 
-							if(granted) {
-								[strongSelf hideNoCamera:YES completion:^{
-									[strongSelf startReading];
-								}];
-								
-							} else {
-								
-								strongSelf->_imgNoCamera.hidden = NO;
-								
-								[strongSelf setCameraStatusString:NSLocalizedString(@"Camera access is denied.",
-																							 @"camera access is denied")
-														 isButton:YES
-															 color:strongSelf.view.tintColor];
-							}
+					if (granted)
+					{
+						[strongSelf hideNoCamera:YES completion:^{
+							[weakSelf startReading];
+						}];
+					}
+					else
+					{
+						strongSelf->_imgNoCamera.hidden = NO;
+						[strongSelf setCameraStatusString: msg_accessDenied
+						                         isButton:YES
+													       color: strongSelf.view.tintColor];
+					}
+				};
+				
+				[AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
+					
+					if ([NSThread isMainThread]) {
+						completionHandler(granted);
+					}
+					else {
+						dispatch_async(dispatch_get_main_queue(), ^{
+							completionHandler(granted);
 						});
-					}];
-				}
-					break;
-					
-				default:
-				{
-					
-					_imgNoCamera.hidden = NO;
-					[self setCameraStatusString:NSLocalizedString(@"Camera access is denied.",
-																				 @"camera access is denied")
-											 isButton:YES
-												 color:UIColor.whiteColor];
-					
-				}
+					}
+				}];
+			}
+			else
+			{
+				_imgNoCamera.hidden = NO;
+				[self setCameraStatusString: msg_accessDenied
+				                   isButton: YES
+				                      color: self.view.tintColor];
 			}
 		}
 		else
 		{
 			_imgNoCamera.hidden = NO;
 			
-			NSString* message =   NSLocalizedString(@"Camera is not available on this device.",
-																 @"Camera is not available on this device");
-			if(ZDCConstants.isSimulator)
-				message = NSLocalizedString(@"Camera is not available on the simulator.",
-													 @"Camera is not available on the simulator");
-			
-			[self setCameraStatusString: message
-									 isButton:NO
-										 color:UIColor.whiteColor];
-			
-			
+			NSString *msg = ZDCConstants.isSimulator ? msg_notAvailableSimulator : msg_notAvailableDevice;
+			[self setCameraStatusString: msg
+			                   isButton: NO
+			                      color: UIColor.whiteColor];
 		}
 	}
 	else
 	{
 		_imgNoCamera.hidden = NO;
-		[self setCameraStatusString:NSLocalizedString(@"Camera access is not enabled by this application.",
-																	 @"camera access is not enabled by this application")
-								 isButton:NO
-									 color:UIColor.whiteColor];
+		
+		NSString *msg = ZDCConstants.isSimulator ? msg_notAvailableSimulator : msg_notEnabled;
+		[self setCameraStatusString: msg
+		                   isButton: NO
+		                      color: UIColor.whiteColor];
 	}
 }
 
-
-#pragma  mark - check QRcode
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark - Check QRcode
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)setQRCodeWithImage:(UIImage *)image
 {
@@ -735,104 +780,97 @@ typedef enum {
 	}
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark - IBActions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 - (void)tabBar:(UITabBar *)tabBar didSelectItem:(UITabBarItem *)item
 {
-	CloneCodeViewTab newTag = (CloneCodeViewTab)item.tag;
+	ZDCLogAutoTrace();
 	
-	if(selectedTab != newTag)
+	CloneCodeViewTab newTag = (CloneCodeViewTab)item.tag;
+	if (selectedTab != newTag)
 	{
-		[self switchViewsToTag: newTag];
+		[self switchViewsToTag:newTag animated:YES];
 	}
 }
 
-
--(void) switchViewsToTag:(CloneCodeViewTab)newTag
+- (void)switchViewsToTag:(CloneCodeViewTab)newTag animated:(BOOL)animated
 {
-	__weak typeof(self) weakSelf = self;
+	ZDCLogAutoTrace();
 
-	for(UITabBarItem *item in  _tabBar.items)
+	for (UITabBarItem *item in _tabBar.items)
 	{
-		if(item.tag == newTag)
+		if (item.tag == newTag)
 		{
 			[_tabBar setSelectedItem:item];
 			break;
 		}
 	}
 	
+	failCount = 0;
+	
 	switch (newTag)
 	{
 		case kCloneCodeViewTab_Words:
-			[_tagView removeAllTags];
-			[self refreshCloneWordForCount:0 validWords:0];
-			_btnCloneWordsVerify.enabled  = NO;
-			failCount = 0;
-			isUsingCarmera = NO;
-			[self stopReading];
+			currentCloneView = _vwCloneWordsInput;
 			break;
 			
 		case kCloneCodeViewTab_QRCode:
-			
-			// delay this till view is up
-			//		[self refreshCloneCodeView];
-			
+			currentCloneView = _vwCloneCodeScan;
 			break;
 			
 		default:
-			currentCloneView = NULL;
+			currentCloneView = nil;
 			break;
 	}
 	
+	if (newTag != kCloneCodeViewTab_QRCode)
+	{
+		isUsingCarmera = NO;
+		[self stopReading];
+	}
 	
-	[UIView transitionWithView:_vwCloneContainer
-							duration:.2
-							 options:UIViewAnimationOptionCurveEaseInOut
-						 animations:^
-	 {
-		 __strong typeof(self) strongSelf = weakSelf;
-		 if(!strongSelf) return;
-
-		 // clear any old subviews
-		 for (UIView *subview in strongSelf->_vwCloneContainer.subviews)
-			 [subview removeFromSuperview];
-		 
-		 switch (newTag)
-		 {
-			 case kCloneCodeViewTab_Words:
-				 strongSelf->_vwCloneWordsInput.frame = strongSelf->_vwCloneContainer.bounds;
-				 [strongSelf->_vwCloneContainer  addSubview:strongSelf->_vwCloneWordsInput];
-				 strongSelf->currentCloneView = strongSelf->_vwCloneWordsInput;
-				 break;
-				 
-			 case kCloneCodeViewTab_QRCode:
-				 strongSelf->_vwCloneCodeScan.frame = strongSelf->_vwCloneContainer.bounds;
-				 [strongSelf->_vwCloneContainer  addSubview:strongSelf->_vwCloneCodeScan];
-				 strongSelf->currentCloneView = strongSelf->_vwCloneCodeScan;
-				 
-				 break;
-				 
-			 default:
-				 strongSelf->currentCloneView = NULL;
-				 break;
-		 }
-		 
-		 
-	 }completion:^(BOOL finished) {
-		 
-		 if(newTag == kCloneCodeViewTab_QRCode)
-		 {
-			 [self refreshCloneCodeView];
-		 }
-		 
-		 
-		 //		 [self.view layoutIfNeeded]; // animate constraint change
-	 }];
+	__weak typeof(self) weakSelf = self;
+	dispatch_block_t animationsBlock = ^{
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
+		// Clear any old subviews
+		for (UIView *subview in strongSelf->_vwCloneContainer.subviews) {
+			[subview removeFromSuperview];
+		}
+		
+		if (strongSelf->currentCloneView)
+		{
+			strongSelf->currentCloneView.frame = strongSelf->_vwCloneContainer.bounds;
+			[strongSelf->_vwCloneContainer addSubview:strongSelf->currentCloneView];
+		}
+	};
+	void (^completionBlock)(BOOL) = ^(BOOL finished){
+		
+		if (newTag == kCloneCodeViewTab_QRCode)
+		{
+			[weakSelf refreshCloneCodeView];
+		}
+		
+	//	[self.view layoutIfNeeded]; // animate constraint change
+	};
+	
+	if (animated)
+	{
+		[UIView transitionWithView: _vwCloneContainer
+		                  duration: 0.2
+		                   options: UIViewAnimationOptionCurveEaseInOut
+		                animations: animationsBlock
+		                completion: completionBlock];
+	}
+	else
+	{
+		animationsBlock();
+		completionBlock(YES);
+	}
 	
 	selectedTab  = newTag;
 }
@@ -1577,9 +1615,9 @@ typedef enum {
 	}
 }
 
-
-#pragma mark - Keyboard show/Hide Notifications
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark - Keyboard Notifications
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
@@ -1592,19 +1630,15 @@ typedef enum {
 	}
 	else
 	{
-		if(currentCloneView == _vwCloneWordsInput)
+		if (currentCloneView == _vwCloneWordsInput)
 		{
 			if(!CGRectContainsPoint(_tagView.frame, containerPoint))
 			{
 				[_tagView  endEditing:YES];
 				
 			}
-			
 		}
-		
 	}
-	
-	
 }
 
 static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCurve curve)
@@ -1707,12 +1741,14 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	 }];
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark - LanguageListViewController_Delegate
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)languageListViewController:(LanguageListViewController_IOS *)sender
 					  didSelectLanguage:(NSString* __nullable) languageID
 {
-	if([languageID isEqualToString:kLanguageListAutoDetect])
+	if ([languageID isEqualToString:kLanguageListAutoDetect])
 	{
 		autoPickLanguage = YES;
 		[self tagsViewDidChange:_tagView];
@@ -1724,9 +1760,6 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 		[self updateTagsToLanguageID:currentLanguageId];
 		[self tagsViewDidChange:_tagView];
 	}
-	
 }
-
-
 
 @end
