@@ -84,7 +84,7 @@
 		};
 		PrepContainer(_viewContainer);
 		
-		[_btnSignIn setup];
+		[_btnSignIn zdc_outline];
 	}
 	
 	_lblFail.layer.cornerRadius   = 16;

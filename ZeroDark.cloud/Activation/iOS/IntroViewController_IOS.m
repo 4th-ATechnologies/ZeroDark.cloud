@@ -32,13 +32,15 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 
 @synthesize accountSetupVC = accountSetupVC;
 
-- (void)viewDidLoad {
+- (void)viewDidLoad
+{
 	[super viewDidLoad];
 
-	[btnStartTrial setup];
-	[btnSignIn setup];
+	[btnStartTrial zdc_outline];
+	[btnSignIn zdc_outline];
 }
--(void)viewDidAppear:(BOOL)animated
+
+- (void)viewDidAppear:(BOOL)animated
 {
 	[super viewDidAppear:animated];
 
@@ -46,21 +48,9 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	[accountSetupVC setHelpButtonHidden:YES];
 }
 
-- (void)didReceiveMemoryWarning {
-	[super didReceiveMemoryWarning];
-	// Dispose of any resources that can be recreated.
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Actions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-- (IBAction)TESTButtonClicked:(id)sender
-{
-	ZDCLogAutoTrace();
-}
-
-
 
 - (IBAction)SignInButtonClicked:(id)sender
 {

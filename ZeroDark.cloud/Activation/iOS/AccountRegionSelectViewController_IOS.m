@@ -130,9 +130,8 @@ static NSString *const kRegions	      		= @"regions";
 	};
 	PrepContainer(_tblRegions);
 
-	[_btnSelect setup];
-	[_btnAgain setup];
-
+	[_btnSelect zdc_outline];
+	[_btnAgain zdc_outline];
 }
 
 -(void)viewWillAppear:(BOOL)animated

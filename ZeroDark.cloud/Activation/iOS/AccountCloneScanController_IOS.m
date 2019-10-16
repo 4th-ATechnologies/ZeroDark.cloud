@@ -159,7 +159,7 @@ typedef enum {
 	TintButtonImage(_btnPaste);
 	TintButtonImage(_btnPhoto);
 	
-	[_btnCloneWordsVerify setup];
+	[_btnCloneWordsVerify zdc_outline];
 	_btnCloneWordsVerify.enabled  = NO;
 	
 	_imgCloneCodeAvatar.layer.cornerRadius = 54 / 2;

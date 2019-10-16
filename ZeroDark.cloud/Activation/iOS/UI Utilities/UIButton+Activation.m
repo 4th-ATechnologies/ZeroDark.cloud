@@ -10,18 +10,18 @@
 
 @implementation UIButton (Activation)
 
-- (void)setup
+- (void)zdc_outline
 {
-	self.layer.cornerRadius  = 8.0f;
-	self.layer.masksToBounds = YES;
-	self.layer.borderWidth   = 1.0f;
-	self.layer.borderColor   = [UIColor whiteColor].CGColor;
+//	self.layer.cornerRadius  = 8.0f;
+//	self.layer.masksToBounds = YES;
+//	self.layer.borderWidth   = 1.0f;
+//	self.layer.borderColor   = [UIColor whiteColor].CGColor;
 	
-	[self setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-	[self setTitleColor:[UIColor lightGrayColor] forState:UIControlStateDisabled];
+//	[self setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+//	[self setTitleColor:[UIColor lightGrayColor] forState:UIControlStateDisabled];
 	
-	self.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
-	self.contentEdgeInsets = UIEdgeInsetsMake(8, 10, 12, 10); // top, left, bottom, right
+//	self.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
+//	self.contentEdgeInsets = UIEdgeInsetsMake(8, 10, 12, 10); // top, left, bottom, right
 }
 
 @end

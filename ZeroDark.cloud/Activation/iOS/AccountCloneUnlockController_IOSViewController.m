@@ -72,7 +72,7 @@ static const NSUInteger max_tries = 4;
 
 	originalContainerViewBottomConstraint = CGFLOAT_MAX;
 
-	[_btnUnlock setup];
+	[_btnUnlock zdc_outline];
 
 	_lblFail.layer.cornerRadius   = 16;
 	_lblFail.layer.masksToBounds  = YES;
