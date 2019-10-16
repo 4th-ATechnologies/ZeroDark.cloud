@@ -127,7 +127,8 @@ typedef enum {
 	ZDCUserAccessKeyManager *accessKeyManager;
 	ZDCImageManager         *imageManager;
 	
-	BOOL                    isUsingCarmera;
+	BOOL isUsingCarmera;
+	BOOL needsSetupView;
 	
 }
 
@@ -219,6 +220,7 @@ typedef enum {
 															 object: NULL];
 	
 	originalContainerViewBottomConstraint  = CGFLOAT_MAX;
+	needsSetupView = YES;
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -269,11 +271,29 @@ typedef enum {
 	[self refreshView];
 	
 	_imgNoCamera.hidden = YES;
-	[self switchViewsToTag:kCloneCodeViewTab_QRCode animated:NO];
-	[self.view layoutIfNeeded];
 	
 	[accountSetupVC setHelpButtonHidden:NO];
 	accountSetupVC.btnBack.hidden = YES;  // cant go back from here
+}
+
+- (void)viewDidLayoutSubviews
+{
+	ZDCLogAutoTrace();
+	[super viewDidLayoutSubviews];
+	
+	// This method is called multiple times.
+	// But it's also called:
+	// - after viewWillAppear
+	// - before viewDidLoad
+	
+	if (needsSetupView)
+	{
+		needsSetupView = NO;
+		
+		// If we call this from viewWillAppear, it doesn't work properly.
+		// If we call this from viewDidAppear, it's too late and looks goofy.
+		[self switchViewsToTag:kCloneCodeViewTab_QRCode animated:NO];
+	}
 }
 
 - (void)viewDidAppear:(BOOL)animated
