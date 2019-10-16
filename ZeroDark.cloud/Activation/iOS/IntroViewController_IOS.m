@@ -25,9 +25,9 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 
 @implementation IntroViewController_IOS
 {
-	IBOutlet __weak UIButton       *btnStartTrial;
-	IBOutlet __weak UIButton       *btnSignIn;
-	IBOutlet __weak UIView        *containerView;
+	IBOutlet __weak UIButton * btnStartTrial;
+	IBOutlet __weak UIButton * btnSignIn;
+	IBOutlet __weak UILabel  * titleLabel;
 }
 
 @synthesize accountSetupVC = accountSetupVC;
@@ -38,6 +38,9 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 
 	[btnStartTrial zdc_outline];
 	[btnSignIn zdc_outline];
+	
+	NSString *appName = [[NSBundle mainBundle] objectForInfoDictionaryKey:(NSString *)kCFBundleNameKey];
+	titleLabel.text = appName ?: @"";
 }
 
 - (void)viewDidAppear:(BOOL)animated

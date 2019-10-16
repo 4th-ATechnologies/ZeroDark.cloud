@@ -45,19 +45,19 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	IBOutlet __weak UITableView             *_tblProviders;
 	IBOutlet __weak UIView                  *_vwAddMoreLoser;
 
-    YapDatabaseConnection *         databaseConnection;
-    Auth0ProviderManager*			providerManager;
-    ZDCImageManager*                 imageManager;
-    AFNetworkReachabilityManager*   reachability;
+	YapDatabaseConnection *         databaseConnection;
+	Auth0ProviderManager*			providerManager;
+	ZDCImageManager*                 imageManager;
+	AFNetworkReachabilityManager*   reachability;
 
 	NSString*                       localUserID;
 	NSArray *                       providerTable;
-    UIImage*                        defaultUserImage;
+	UIImage*                        defaultUserImage;
   
-    dispatch_queue_t            internetQueue;
-    void  *                     IsOnInternetQueueKey;
+	dispatch_queue_t            internetQueue;
+	void  *                     IsOnInternetQueueKey;
     
-    BOOL                        hasInternet;
+	BOOL                        hasInternet;
 
 	SCLAlertView *                  warningAlert;
 	BOOL registered;
@@ -96,8 +96,8 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 
 	databaseConnection = accountSetupVC.owner.databaseManager.uiDatabaseConnection;
 	providerManager = accountSetupVC.owner.auth0ProviderManager;
-    imageManager =  accountSetupVC.owner.imageManager;
-    reachability = accountSetupVC.owner.reachability;
+	imageManager = accountSetupVC.owner.imageManager;
+	reachability = accountSetupVC.owner.reachability;
 
   
 	self.navigationItem.title = @"Social Identities";
