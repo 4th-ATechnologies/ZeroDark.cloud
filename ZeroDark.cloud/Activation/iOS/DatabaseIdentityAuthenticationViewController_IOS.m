@@ -36,22 +36,23 @@
 
 @implementation DatabaseIdentityAuthenticationViewController_IOS
 {
-    IBOutlet __weak UIView              *_viewContainer;
-//    IBOutlet __weak UIImageView         *_imgAvatar;
-    IBOutlet __weak UIButton            * _btnSignIn;
-    IBOutlet __weak UITextField    		* _txtUserNameField;
-    IBOutlet __weak UISecureTextField         * _txtPwdField;
-    IBOutlet __weak UIActivityIndicatorView   * _actBusy;
-    IBOutlet __weak UILabel             *_lblFail;
+	IBOutlet __weak UIView                  * _viewContainer;
+	IBOutlet __weak UITextField             * _txtUserNameField;
+	IBOutlet __weak UISecureTextField       * _txtPwdField;
+	IBOutlet __weak UIActivityIndicatorView * _actBusy;
+	IBOutlet __weak UIButton                * _btnSignIn;
+	IBOutlet __weak UILabel                 * _lblFail;
 
     SCLAlertView *reauthAlert;
-
-    BOOL                isInAuthDBView;
-    
+	
+    BOOL isInAuthDBView;
 }
+
 @synthesize accountSetupVC = accountSetupVC;
 
-#pragma mark  - view
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark View Lifecycle
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)viewDidLoad {
 	[super viewDidLoad];
@@ -84,7 +85,7 @@
 		};
 		PrepContainer(_viewContainer);
 		
-		[_btnSignIn zdc_outline];
+		[_btnSignIn zdc_colorize];
 	}
 	
 	_lblFail.layer.cornerRadius   = 16;
@@ -98,6 +99,7 @@
 	if (@available(iOS 11.0, *)) {
 		_txtUserNameField.textContentType =  UITextContentTypeUsername;
 	}
+	
 	_txtPwdField.delegate = (id <UITextFieldDelegate >)self;
 	_txtPwdField.text = @"";
 	_txtPwdField.placeholder = @"password";
@@ -117,24 +119,24 @@
 	[self showWait:NO];
 }
 
--(void) viewDidDisappear:(BOOL)animated
+- (void)viewDidDisappear:(BOOL)animated
 {
 	[super viewDidDisappear:animated];
-    _txtUserNameField.text = @"";
-    _txtUserNameField.enabled = YES;
-    _txtPwdField.text = @"";
-    _lblFail.hidden = YES;
+	
+	_txtUserNameField.text = @"";
+	_txtUserNameField.enabled = YES;
+	_txtPwdField.text = @"";
+	_lblFail.hidden = YES;
 
-    _btnSignIn.enabled = NO;
-    
-    if(reauthAlert)
-    {
-        [reauthAlert hideView];
-        reauthAlert = nil;
-    }
-
-    [self showWait:NO];
-
+	_btnSignIn.enabled = NO;
+	
+	if (reauthAlert)
+	{
+		[reauthAlert hideView];
+		reauthAlert = nil;
+	}
+	
+	[self showWait:NO];
 }
 
 -(void)viewDidAppear:(BOOL)animated
@@ -143,29 +145,17 @@
 
 	if (self.accountSetupVC.identityMode == IdenititySelectionMode_NewAccount)
 	{
-		_btnSignIn.layer.borderColor   = [UIColor whiteColor].CGColor;
 		[_btnSignIn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
 		[_btnSignIn setTitleColor:[UIColor lightGrayColor] forState:UIControlStateDisabled];
 	}
 	else
 	{
-		_btnSignIn.layer.borderColor   = [UIColor blackColor].CGColor;
 		[_btnSignIn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
 		[_btnSignIn setTitleColor:[UIColor lightGrayColor] forState:UIControlStateDisabled];
 	}
 
-	_btnSignIn.layer.cornerRadius  = 8.0f;
-	_btnSignIn.layer.masksToBounds = YES;
-	_btnSignIn.layer.borderWidth   = 1.0f;
-
 	[accountSetupVC setHelpButtonHidden:NO];
    accountSetupVC.btnBack.hidden = NO;
-
-}
-
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
 }
 
 #pragma mark  - UITextField delegate
@@ -213,8 +203,9 @@ replacementString:(NSString *)string
     return result;
 }
 
-
-#pragma mark  - actions
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Actions
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (IBAction)btnSignInClicked:(id)sender
 {

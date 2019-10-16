@@ -32,9 +32,9 @@
 
 // Log levels: off, error, warn, info, verbose
 #if DEBUG
-static const int zdcLogLevel = ZDCLogLevelVerbose;
+  static const int zdcLogLevel = ZDCLogLevelVerbose;
 #else
-static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 #pragma unused(zdcLogLevel)
 
@@ -94,10 +94,10 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	[super viewWillAppear:animated];
 	accountSetupVC.btnBack.hidden = YES;
 
-	databaseConnection = accountSetupVC.owner.databaseManager.uiDatabaseConnection;
-	providerManager = accountSetupVC.owner.auth0ProviderManager;
-	imageManager = accountSetupVC.owner.imageManager;
-	reachability = accountSetupVC.owner.reachability;
+	databaseConnection = accountSetupVC.zdc.databaseManager.uiDatabaseConnection;
+	providerManager = accountSetupVC.zdc.auth0ProviderManager;
+	imageManager = accountSetupVC.zdc.imageManager;
+	reachability = accountSetupVC.zdc.reachability;
 
   
 	self.navigationItem.title = @"Social Identities";
@@ -304,88 +304,95 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 {
 	__weak typeof(self) weakSelf = self;
 
-    if(!hasInternet)
-        return;
+	if (!hasInternet) {
+		return;
+	}
     
 	[accountSetupVC showWait: @"Please Wait…"
-					 message: @"Checking our server"
-			  viewController: self
-			 completionBlock: nil];
+	                 message: @"Checking with server"
+	          viewController: self
+	         completionBlock: nil];
 
-	[accountSetupVC.owner.localUserManager refreshAuth0ProfilesForLocalUserID: localUserID
-									  completionQueue: dispatch_get_main_queue()
-									  completionBlock:^(NSError *error)
-	 {
-		 __strong typeof(self) strongSelf = weakSelf;
-		 if (!strongSelf) return;
+	ZDCLocalUserManager *localUserManager = accountSetupVC.zdc.localUserManager;
+	[localUserManager refreshAuth0ProfilesForLocalUserID: localUserID
+	                                     completionQueue: dispatch_get_main_queue()
+	                                     completionBlock:^(NSError *error)
+	{
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
 
-		 [strongSelf->accountSetupVC cancelWait];
-		 if (error)
-		 {
-			 [strongSelf.accountSetupVC showError: @"Could not get social identity"
-									message: error.localizedDescription
-							 viewController: self
-							completionBlock: nil];
-		 }
-		 else
-		 {
- 			 [strongSelf refreshView];
-		 }
-	 }];
+		[strongSelf.accountSetupVC cancelWait];
+		if (error)
+		{
+			[strongSelf.accountSetupVC showError: @"Could not get social identity"
+			                              message: error.localizedDescription
+			                       viewController: strongSelf
+			                      completionBlock: nil];
+		}
+		else
+		{
+			[strongSelf refreshView];
+		}
+	}];
 }
-
 
 - (void)fillProviderView
 {
 	__weak typeof(self) weakSelf = self;
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
- 	__block ZDCLocalUser *user = nil;
+	__block ZDCLocalUser *user = nil;
 	[databaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
 		user = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
+		
+	#pragma clang diagnostic pop
 	}];
-#pragma clang diagnostic pop
 
 	if (!user) return;
 
 	NSMutableArray* providers = [NSMutableArray array];
 	NSDictionary* profiles = user.auth0_profiles;
 
-	[profiles enumerateKeysAndObjectsUsingBlock:^(NSString* auth0_userID, NSDictionary* profile, BOOL* stop) {
+	for (NSString *auth0_userID in profiles)
+	{
+		NSDictionary *profile = profiles[auth0_userID];
 
-		__strong typeof(self) strongSelf = weakSelf;
-		if (strongSelf == nil) return;
+		if ([Auth0Utilities isRecoveryProfile:profile])
+		{
+			// Skip the recovery identity
+			continue;
+		}
+		
+		NSArray *comps = [auth0_userID componentsSeparatedByString:@"|"];
+		NSString *provider = comps.firstObject;
 
-		NSArray* comps = [auth0_userID componentsSeparatedByString:@"|"];
-		NSString* provider = comps.firstObject;
-
-		BOOL isRecoveryId =  [Auth0Utilities isRecoveryProfile:profile];
-
-		NSDictionary* providerInfo = strongSelf->providerManager.providersInfo[provider];
-		if ( !isRecoveryId  // skip the recovery ident
-			&& providerInfo)
+		NSDictionary* providerInfo = providerManager.providersInfo[provider];
+		if (providerInfo)
 		{
 			NSString* providerName = providerInfo[kAuth0ProviderInfo_Key_DisplayName];
 			NSString* connection = profile[@"connection"];
 
 			// this is a hack for now, we would really use the entire auth0 ID
 
-			OSImage* 	providerImage = [[strongSelf->providerManager providerIcon:Auth0ProviderIconType_Signin
-																	 forProvider:provider]
-										 scaledToHeight:[SocialIDUITableViewCell imgProviderHeight]];
+			OSImage *providerImage =
+			  [[providerManager providerIcon: Auth0ProviderIconType_Signin
+			                     forProvider: provider]
+			                  scaledToHeight: [SocialIDUITableViewCell imgProviderHeight]];
 
 			NSURL * pictureURL = nil;
 			NSString* picture  = [Auth0ProviderManager correctPictureForAuth0ID:auth0_userID
 																	profileData:profile
 																		 region:user.aws_region
 																		 bucket:user.aws_bucket];
-			if(picture)
+			if (picture) {
 				pictureURL = [NSURL URLWithString:picture];
+			}
 
 			NSString* displayName = [user displayNameForAuth0ID:auth0_userID];
             
-            BOOL isUserAuthProfile = [Auth0Utilities isUserAuthProfile:profile];
+			BOOL isUserAuthProfile = [Auth0Utilities isUserAuthProfile:profile];
             
 			NSMutableDictionary* profileDict = [NSMutableDictionary dictionaryWithDictionary
 												:@{
@@ -408,7 +415,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 
 			[providers addObject:profileDict];
 		}
-	}];
+	}
 
 	// sort alpha
 	[providers sortUsingComparator:^NSComparisonResult(NSDictionary *item1, NSDictionary *item2) {
@@ -766,7 +773,7 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	__weak typeof(self) weakSelf = self;
+	ZDCLogAutoTrace();
 
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 
@@ -777,29 +784,28 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 	if(!isRealCell)
 		return;
 
-	// dont allow selection of recovery
-	BOOL isRecoveryId =  [Auth0Utilities isRecoveryProfile:info];
-	if(isRecoveryId)
+	// Sanity check:
+	// Don't allow selection of recovery.
+	// This shouldn't be in the list anyway, but just in case.
+	//
+	if ([Auth0Utilities isRecoveryProfile:info]) {
 		return;
+	}
 
-	[accountSetupVC. owner.databaseManager.rwDatabaseConnection
-	 asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+	NSString *_localUserID = [localUserID copy];
+	YapDatabaseConnection *rwConnection = accountSetupVC.zdc.databaseManager.rwDatabaseConnection;
+	
+	[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 
-		 __strong typeof(self) strongSelf = weakSelf;
-		 if (strongSelf == nil) return;
-
-		ZDCLocalUser *updatedUser = [transaction objectForKey:strongSelf->localUserID inCollection:kZDCCollection_Users];
-
-		if(updatedUser)
+		ZDCLocalUser *updatedUser = [transaction objectForKey:_localUserID inCollection:kZDCCollection_Users];
+		if (updatedUser)
 		{
-			updatedUser 				= updatedUser.copy;
+			updatedUser = [updatedUser copy];
 			updatedUser.auth0_preferredID = selectedAuth0ID;
+			
 			[transaction setObject:updatedUser forKey:updatedUser.uuid inCollection:kZDCCollection_Users];
 		}
-
-	}completionBlock:^{
 	}];
-
 }
 
 // MARK: SocialIDUITableViewCellDelegate

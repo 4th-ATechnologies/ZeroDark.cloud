@@ -88,7 +88,8 @@
 		PrepContainer(_txtUserNameField);
 		PrepContainer(_txtPwdField);
 		PrepContainer(_txtVrfPwdField);
-		[_btnCreate zdc_outline];
+		
+		[_btnCreate zdc_colorize];
 	}
 	else
 	{

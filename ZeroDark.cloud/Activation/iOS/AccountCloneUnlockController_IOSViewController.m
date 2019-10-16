@@ -59,7 +59,7 @@ static const NSUInteger max_tries = 4;
 - (void)viewDidLoad {
 	[super viewDidLoad];
 
-	providerManager = accountSetupVC.owner.auth0ProviderManager;
+	providerManager = accountSetupVC.zdc.auth0ProviderManager;
 
 	void (^PrepContainer)(UIView *) = ^(UIView *container){
 		container.layer.cornerRadius   = 16;
@@ -72,7 +72,7 @@ static const NSUInteger max_tries = 4;
 
 	originalContainerViewBottomConstraint = CGFLOAT_MAX;
 
-	[_btnUnlock zdc_outline];
+	[_btnUnlock zdc_colorize];
 
 	_lblFail.layer.cornerRadius   = 16;
 	_lblFail.layer.masksToBounds  = YES;

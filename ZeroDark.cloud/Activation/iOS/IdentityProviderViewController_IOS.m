@@ -55,7 +55,7 @@
     [super viewDidLoad];
 
 	// figure out how to get this..
-	providerManager = accountSetupVC.owner.auth0ProviderManager;
+	providerManager = accountSetupVC.zdc.auth0ProviderManager;
 
     originalTableContainerBottomConstraint = _TableContainerBottomConstraint.constant;
     

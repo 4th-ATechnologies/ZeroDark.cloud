@@ -10,6 +10,6 @@
 
 @interface UIButton (Activation)
 
-- (void)zdc_outline;
+- (void)zdc_colorize;
 
 @end

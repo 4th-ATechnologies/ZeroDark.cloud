@@ -65,7 +65,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 
 @implementation AccountSetup_Base
 
-@synthesize owner =  owner;
+@synthesize zdc = zdc;
 @synthesize setupMode = setupMode;
 @synthesize identityMode = identityMode;
 @synthesize selectedProvider = selectedProvider;
@@ -183,13 +183,14 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 #pragma mark - Utilities
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
--(BOOL) commonInitWithUserID:(NSString* __nonnull)userID error:(NSError **)errorOut
+- (BOOL)commonInitWithUserID:(NSString *)userID error:(NSError **)errorOut
 {
 	NSError* error = NULL;
 	BOOL    sucess = NO;
 	
-	
-	[owner.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction * _Nonnull transaction) {
+	YapDatabaseConnection *roConnection = zdc.databaseManager.roDatabaseConnection;
+	[roConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+		
 		ZDCUser* thisUser = nil;
 		
 		thisUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
@@ -213,44 +214,40 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 }
 
 
--(ZDCLocalUser*) localUserForUserID:(NSString*) userID
+- (ZDCLocalUser *)localUserForUserID:(NSString *)userID
 {
-	// check for existing user,
-	__block ZDCLocalUser* existingLocalUser = nil;
-	
-	[owner.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction * _Nonnull transaction) {
-		ZDCUser *matchingUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+	__block ZDCLocalUser *result = nil;
+	[zdc.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
-		if(matchingUser.isLocal)
-			existingLocalUser = (ZDCLocalUser*)matchingUser;
+		ZDCUser *user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+		
+		if (user.isLocal) {
+			result = (ZDCLocalUser *)user;
+		}
 	}];
 	
-	return existingLocalUser;
+	return result;
 }
 
-
--(ZDCLocalUser*) localUserForAuth0ID:(NSString*) auth0ID
+- (ZDCLocalUser *)localUserForAuth0ID:(NSString *)auth0ID
 {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-	// check for existing user,
-	__block ZDCLocalUser* foundUser = nil;
-	[owner.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction * _Nonnull transaction) {
+	ZDCLocalUserManager *localUserManager = zdc.localUserManager;
+	
+	__block ZDCLocalUser *result = nil;
+	[zdc.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
-		[owner.localUserManager enumerateLocalUsersWithTransaction:transaction
-																		usingBlock:^(ZDCLocalUser * _Nonnull localUser, BOOL * _Nonnull stop)
-		 {
-			 if([localUser.auth0_profiles.allKeys containsObject:auth0ID])
-			 {
-				 foundUser = localUser;
-				 *stop = YES;
-			 }
-		 }];
+		[localUserManager enumerateLocalUsersWithTransaction: transaction
+		                                          usingBlock:^(ZDCLocalUser *localUser, BOOL *stop)
+		{
+			if (localUser.auth0_profiles[auth0ID] != nil)
+			{
+				result = localUser;
+				*stop = YES;
+			}
+		}];
 	}];
 	
-	return foundUser;
-#pragma clang diagnostic pop
-
+	return result;
 }
 
 
@@ -259,11 +256,13 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	NSParameterAssert(user != nil);
 	NSParameterAssert(auth != nil);
 	
-	__block ZDCLocalUser* existingUser = nil;
+	ZDCLocalUser *_user = [user copy];
+	ZDCLocalUserAuth *_auth = [auth copy];
 	
-	[owner.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+	YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
+	[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
-		existingUser = [transaction objectForKey:self->user.uuid inCollection:kZDCCollection_Users];
+		ZDCLocalUser *existingUser = [transaction objectForKey:_user.uuid inCollection:kZDCCollection_Users];
 		if (existingUser)
 		{
 			if ([existingUser isKindOfClass:[ZDCLocalUser class]])
@@ -278,34 +277,34 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 				existingUser = localUser;
 			}
 			
-			// if user exists the merge the needed values.
+			// Merge values from _user
 			
-			existingUser.aws_bucket       = self->user.aws_bucket;
-			existingUser.aws_region       = self->user.aws_region;
-			existingUser.activationDate   = self->user.activationDate;
-			existingUser.syncedSalt       = self->user.syncedSalt;
-			existingUser.aws_stage        = self->user.aws_stage;
-			existingUser.isPayingCustomer = self->user.isPayingCustomer;
-			existingUser.auth0_profiles   = self->user.auth0_profiles;
-			existingUser.auth0_primary    = self->user.auth0_primary;
-			existingUser.auth0_lastUpdated = self->user.auth0_lastUpdated;
+			existingUser.aws_bucket        = _user.aws_bucket;
+			existingUser.aws_region        = _user.aws_region;
+			existingUser.activationDate    = _user.activationDate;
+			existingUser.syncedSalt        = _user.syncedSalt;
+			existingUser.aws_stage         = _user.aws_stage;
+			existingUser.isPayingCustomer  = _user.isPayingCustomer;
+			existingUser.auth0_profiles    = _user.auth0_profiles;
+			existingUser.auth0_primary     = _user.auth0_primary;
+			existingUser.auth0_lastUpdated = _user.auth0_lastUpdated;
 			
-			// copy the perfered if it isnt set yet
-			if(!existingUser.auth0_preferredID && self->user.auth0_preferredID)
-				existingUser.auth0_preferredID = self->user.auth0_preferredID;
+			// copy the preferred if it isnt set yet
+			if(!existingUser.auth0_preferredID && _user.auth0_preferredID)
+				existingUser.auth0_preferredID = _user.auth0_preferredID;
 		}
 		else
 		{
-			existingUser = self->user;
+			existingUser = _user;
 		}
 		
-		[transaction setObject:existingUser
-							 forKey:existingUser.uuid
-					 inCollection:kZDCCollection_Users];
+		[transaction setObject: existingUser
+							 forKey: existingUser.uuid
+					 inCollection: kZDCCollection_Users];
 		
-		[transaction setObject:self->auth
-							 forKey:existingUser.uuid
-					 inCollection:kZDCCollection_UserAuth];
+		[transaction setObject: _auth
+							 forKey: existingUser.uuid
+					 inCollection: kZDCCollection_UserAuth];
 		
 	} completionBlock:^{
 		
@@ -345,11 +344,11 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	__weak typeof(self) weakSelf = self;
 	
 	// in case this user has never registered this app.
-	[owner.restManager setupAccountForLocalUser:self.user
-	                                   withAuth: self.auth
-	                                    treeIDs: @[owner.primaryTreeID]
-	                            completionQueue: nil
-										completionBlock:^(NSString * _Nullable bucket,
+	[zdc.restManager setupAccountForLocalUser: self.user
+	                                 withAuth: self.auth
+	                                  treeIDs: @[zdc.primaryTreeID]
+	                          completionQueue: nil
+									completionBlock:^(NSString * _Nullable bucket,
 																NSString *_Nullable stage,
 																NSString *_Nullable syncedSalt,
 																NSDate *_Nullable activationDate,
@@ -366,7 +365,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 		 
 		 __block ZDCLocalUser*  localUser  = nil;
 		 
-		 [strongSelf->owner.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+		 [strongSelf->zdc.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 			 
 			 __strong typeof(self) strongSelf = weakSelf;
 			 if (!strongSelf) return;
@@ -597,7 +596,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	};
 	
 	Auth0APIManager *auth0APIManager = [Auth0APIManager sharedInstance];
-	AWSCredentialsManager *awsCredentialsManager = owner.awsCredentialsManager;
+	AWSCredentialsManager *awsCredentialsManager = zdc.awsCredentialsManager;
 	
 	dispatch_queue_t backgroundQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
@@ -749,7 +748,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	};
 	
 	Auth0APIManager *auth0APIManager = [Auth0APIManager sharedInstance];
-	AWSCredentialsManager *awsCredentialsManager = owner.awsCredentialsManager;
+	AWSCredentialsManager *awsCredentialsManager = zdc.awsCredentialsManager;
 	
 	dispatch_queue_t backgroundQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
@@ -943,7 +942,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 				return;
 			}
 			
-			[strongSelf->owner.localUserManager setupPubPrivKeyForLocalUser: strongSelf->user
+			[strongSelf->zdc.localUserManager setupPubPrivKeyForLocalUser: strongSelf->user
 																	 withAuth: strongSelf->auth
 															completionQueue: dispatch_get_main_queue()
 															completionBlock:^(NSData *pkData, NSError *error)
@@ -1146,7 +1145,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 		}
 	};
 	
-	[owner.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction * _Nonnull transaction) {
+	[zdc.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		ZDCUser* thisUser = nil;
 		
 		thisUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
@@ -1293,15 +1292,18 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	NSError *decryptError = nil;
 	NSError *createError = nil;
 	
-	ZDCPublicKey *  privateKey = [owner.cryptoTools createPrivateKeyFromJSON:privKeyString
-																						accessKey:accessKeyData
-																		  encryptionAlgorithm:kCipher_Algorithm_2FISH256
-																					 localUserID:user.uuid
-																							 error:&decryptError];
+	ZDCPublicKey *privateKey =
+	  [zdc.cryptoTools createPrivateKeyFromJSON: privKeyString
+	                                  accessKey: accessKeyData
+	                        encryptionAlgorithm: kCipher_Algorithm_2FISH256
+	                                localUserID: user.uuid
+	                                      error: &decryptError];
 	
-	ZDCSymmetricKey *symKey = [owner.cryptoTools createSymmetricKey: accessKeyData
-															  encryptionAlgorithm: kCipher_Algorithm_2FISH256
-																				 error: &createError];
+	ZDCSymmetricKey *symKey =
+	  [zdc.cryptoTools createSymmetricKey: accessKeyData
+	                  encryptionAlgorithm: kCipher_Algorithm_2FISH256
+	                                error: &createError];
+	
 	if (decryptError) {
 		invokeCompletionBlock(decryptError);
 		return;
@@ -1326,7 +1328,8 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 		__strong typeof(self) strongSelf = weakSelf;
 		if(!strongSelf) return;
  
-		[strongSelf->owner.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+		
+		[strongSelf->zdc.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 			
 			localUser = [transaction objectForKey:self->user.uuid inCollection:kZDCCollection_Users];
 			localUser = localUser.copy;
@@ -1349,7 +1352,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 								 forKey:localUser.uuid
 						 inCollection:kZDCCollection_Users];
 			
-			[strongSelf->owner.localUserManager createTrunkNodesForLocalUser: localUser
+			[strongSelf->zdc.localUserManager createTrunkNodesForLocalUser: localUser
 			                                                   withAccessKey: symKey
 			                                                     transaction: transaction];
 			
@@ -1365,12 +1368,11 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	}];
 }
 
--(void) reauthorizeUserID:(NSString*)userID
-			withRefreshToken:(NSString*)refreshToken
-			 completionBlock:(void (^)(NSError *error))completionBlock
-
+- (void)reauthorizeUserID:(NSString *)userID
+         withRefreshToken:(NSString *)refreshToken
+          completionBlock:(void (^)(NSError *error))completionBlock
 {
-	void (^invokeCompletionBlock)(NSError * error) = ^(NSError * error){
+	void (^InvokeCompletionBlock)(NSError*) = ^(NSError *error){
 		
 		if (completionBlock == nil) return;
 		
@@ -1386,41 +1388,37 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 		}
 	};
 	
-	[owner.awsCredentialsManager reauthorizeAWSCredentialsForUserID:userID
-																  withRefreshToken:refreshToken
-																	completionQueue:nil
-																	completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
-	 {
-		 invokeCompletionBlock(error);
-		 
-	 }];
+	[zdc.awsCredentialsManager reauthorizeAWSCredentialsForUserID: userID
+	                                             withRefreshToken: refreshToken
+	                                              completionQueue: nil
+	                                              completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	{
+		InvokeCompletionBlock(error);
+	}];
 }
-
 
 
 - (void)finalizeLocalUserWithCompletion:(dispatch_block_t)completionBlock
 {
 	NSParameterAssert(user != nil);
-	__weak typeof(self) weakSelf = self;
+	
+	NSString *localUserID = user.uuid;
+	ZDCLocalUserManager *localUserManager = zdc.localUserManager;
 
-	[owner.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
-		
-		__strong typeof(self) strongSelf = weakSelf;
-		if(!strongSelf) return;
+	YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
+	[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 
-		ZDCLocalUser* existingUser = nil;
-		
-		existingUser = [transaction objectForKey:self->user.uuid inCollection:kZDCCollection_Users];
-		
-		if (existingUser)
+		ZDCLocalUser *localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
+		if (localUser)
 		{
-			[strongSelf->owner.localUserManager finalizeAccountSetupForLocalUser:existingUser
-																		transaction:transaction];
+			[localUserManager finalizeAccountSetupForLocalUser:localUser transaction:transaction];
 		}
-	}completionBlock:^{
 		
-		if(completionBlock)
+	} completionBlock:^{
+		
+		if (completionBlock) {
 			completionBlock();
+		}
 	}];
 }
 
@@ -1542,10 +1540,10 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	
 	user = [self localUserForUserID:localUserID];
 	
-	[owner.restManager linkAuth0ID: profile.userId
-	                       forUser: user
-	               completionQueue: nil
-	               completionBlock:^(NSURLResponse *urlResponse, id linkResoponse, NSError *error)
+	[zdc.restManager linkAuth0ID: profile.userId
+	                     forUser: user
+	             completionQueue: nil
+	             completionBlock:^(NSURLResponse *urlResponse, id linkResoponse, NSError *error)
 	{
 		if (error)
 		{
@@ -1575,7 +1573,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 				return;
 			}
 			
-			ZDCLocalUserManager *localUserManager = weakSelf.owner.localUserManager;
+			ZDCLocalUserManager *localUserManager = weakSelf.zdc.localUserManager;
 			
 			[localUserManager updatePubKeyForLocalUserID: localUserID
 			                            completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
@@ -1618,7 +1616,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	
 	/** update the localuser to to server truth  */
 	
-	[owner.localUserManager refreshAuth0ProfilesForLocalUserID:localUserID
+	[zdc.localUserManager refreshAuth0ProfilesForLocalUserID:localUserID
 															 completionQueue:nil
 															 completionBlock:^(NSError * _Nonnull error)
 	 {
@@ -1663,7 +1661,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 			 
 		 }
 		 
-		 [strongSelf->owner.restManager unlinkAuth0ID: auth0ID
+		 [strongSelf->zdc.restManager unlinkAuth0ID: auth0ID
 										 forUser: self->user
 							  completionQueue: dispatch_get_main_queue()
 							  completionBlock:^(NSURLResponse *urlResponse, id responseObject, NSError *error)
@@ -1700,7 +1698,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 					}
 					strongSelf->user = [self localUserForUserID: localUserID];
 					
-					[strongSelf->owner.localUserManager updatePubKeyForLocalUserID: localUserID
+					[strongSelf->zdc.localUserManager updatePubKeyForLocalUserID: localUserID
 															completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
 															completionBlock:^(NSError *error)
 					 {
@@ -1819,7 +1817,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	}
 	
 	__block ZDCLocalUser *updatedUser = nil;
-	[owner.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction){
+	[zdc.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction){
 		
 		updatedUser = [transaction objectForKey:self->user.uuid inCollection:kZDCCollection_Users];
 		if (updatedUser)

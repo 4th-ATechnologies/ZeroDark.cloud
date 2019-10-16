@@ -11,17 +11,17 @@
 #import <ZeroDarkCloud/ZeroDarkCloud.h>
 #import "Auth0ProviderManager.h"
 
-#import "IntroViewController_IOS.h"
-#import "IdentityProviderViewController_IOS.h"
-#import "DatabaseIdentityAuthenticationViewController_IOS.h"
 #import "AccountCloneScanController_IOS.h"
 #import "AccountCloneUnlockController_IOS.h"
-#import "SocialIdentityAuthenticationViewController_IOS.h"
-#import "DatabaseIdentityCreateViewController_IOS.h"
 #import "AccountRegionSelectViewController_IOS.h"
 #import "AccountSetupHelpViewController_IOS.h"
-#import "SocialidentityManagementViewController_IOS.h"
 #import "AddIdentitityProviderViewController_IOS.h"
+#import "DatabaseIdentityAuthenticationViewController_IOS.h"
+#import "DatabaseIdentityCreateViewController_IOS.h"
+#import "IntroViewController_IOS.h"
+#import "IdentityProviderViewController_IOS.h"
+#import "SocialIdentityAuthenticationViewController_IOS.h"
+#import "SocialidentityManagementViewController_IOS.h"
 #import "UserAvatarViewController_IOS.h"
 
 #import "ZDCPanTransition.h"
@@ -82,7 +82,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 @synthesize canDismissWithoutNewAccount = canDismissWithoutNewAccount;
 @synthesize containedNavigationController = containedNavigationController;
 
-- (instancetype)initWithOwner:(ZeroDarkCloud*)inOwner
+- (instancetype)initWithOwner:(ZeroDarkCloud *)inOwner
 {
 	NSBundle *bundle = [ZeroDarkCloud frameworkBundle];
 	UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"AccountSetup_IOS" bundle:bundle];
@@ -90,7 +90,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	self = [storyboard instantiateViewControllerWithIdentifier:@"AccountSetupViewController"];
 	if (self)
 	{
-		self.owner = inOwner;
+		self.zdc = inOwner;
 	}
 	return self;
 }
@@ -105,7 +105,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	self = [storyboard instantiateViewControllerWithIdentifier:@"AccountSetupViewController"];
 	if (self)
 	{
-		self.owner = inOwner;
+		self.zdc = inOwner;
 		completionHandler = inCompletionHandler;
 		canDismissWithoutNewAccount = inCanDismissWithoutNewAccount;
 	}

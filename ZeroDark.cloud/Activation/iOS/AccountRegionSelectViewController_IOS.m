@@ -99,17 +99,17 @@ static NSString *const kRegions	      		= @"regions";
 	IsOnInternetQueueKey = &IsOnInternetQueueKey;
 	dispatch_queue_set_specific(internetQueue, IsOnInternetQueueKey, IsOnInternetQueueKey, NULL);
 
-	okImage = [UIImage imageNamed:@"ball-green"
-						 inBundle:[ZeroDarkCloud frameworkBundle]
-	compatibleWithTraitCollection:nil];
+	okImage = [UIImage imageNamed: @"ball-green"
+	                     inBundle: [ZeroDarkCloud frameworkBundle]
+	compatibleWithTraitCollection: nil];
 
-	failImage = [UIImage imageNamed:@"ball-red"
-						   inBundle:[ZeroDarkCloud frameworkBundle]
-	  compatibleWithTraitCollection:nil];
+	failImage = [UIImage imageNamed: @"ball-red"
+	                       inBundle: [ZeroDarkCloud frameworkBundle]
+	  compatibleWithTraitCollection: nil];
 
-	maybeImage = [UIImage imageNamed:@"ball-orange"
-							inBundle:[ZeroDarkCloud frameworkBundle]
-	   compatibleWithTraitCollection:nil];
+	maybeImage = [UIImage imageNamed: @"ball-orange"
+	                        inBundle: [ZeroDarkCloud frameworkBundle]
+	   compatibleWithTraitCollection: nil];
 
 	[PingTableViewCell registerViewsforTable:_tblRegions
 									  bundle:[ZeroDarkCloud frameworkBundle]];
@@ -117,24 +117,20 @@ static NSString *const kRegions	      		= @"regions";
 	_tblRegions.separatorInset = UIEdgeInsetsMake(0, 20, 0, 0); // top, left, bottom, right
 
 	[[NSNotificationCenter defaultCenter] addObserver: self
-											 selector: @selector(reachabilityChanged:)
-												 name: AFNetworkingReachabilityDidChangeNotification
-											   object: nil /* notification doesn't assign object ! */];
+	                                        selector: @selector(reachabilityChanged:)
+	                                            name: AFNetworkingReachabilityDidChangeNotification
+	                                          object: nil /* notification doesn't assign object ! */];
+	
+	_tblRegions.layer.cornerRadius  = 16;
+	_tblRegions.layer.masksToBounds = YES;
+	_tblRegions.layer.borderColor   = [UIColor whiteColor].CGColor;
+	_tblRegions.layer.borderWidth   = 1.0f;
 
-
-	void (^PrepContainer)(UIView *) = ^(UIView *container){
-		container.layer.cornerRadius   = 16;
-		container.layer.masksToBounds  = YES;
-		container.layer.borderColor    = [UIColor whiteColor].CGColor;
-		container.layer.borderWidth    = 1.0f;
-	};
-	PrepContainer(_tblRegions);
-
-	[_btnSelect zdc_outline];
-	[_btnAgain zdc_outline];
+	[_btnSelect zdc_colorize];
+	[_btnAgain zdc_colorize];
 }
 
--(void)viewWillAppear:(BOOL)animated
+- (void)viewWillAppear:(BOOL)animated
 {
 	[super viewWillDisappear:animated];
 	if(standAlone)
@@ -156,9 +152,9 @@ static NSString *const kRegions	      		= @"regions";
 {
 	[super viewDidAppear:animated];
 
-	databaseConnection = accountSetupVC.owner.databaseManager.uiDatabaseConnection;
-	reachability = accountSetupVC.owner.reachability;
-	restManager = accountSetupVC.owner.restManager;
+	databaseConnection = accountSetupVC.zdc.databaseManager.uiDatabaseConnection;
+	reachability = accountSetupVC.zdc.reachability;
+	restManager = accountSetupVC.zdc.restManager;
 
 	hasInternet = reachability.isReachable;
 

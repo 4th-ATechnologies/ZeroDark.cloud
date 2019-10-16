@@ -10,18 +10,27 @@
 
 @implementation UIButton (Activation)
 
-- (void)zdc_outline
+/**
+ * Standard colors for buttons throughout activation screens.
+ */
+- (void)zdc_colorize
 {
-//	self.layer.cornerRadius  = 8.0f;
-//	self.layer.masksToBounds = YES;
-//	self.layer.borderWidth   = 1.0f;
-//	self.layer.borderColor   = [UIColor whiteColor].CGColor;
-	
-//	[self setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-//	[self setTitleColor:[UIColor lightGrayColor] forState:UIControlStateDisabled];
-	
-//	self.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
-//	self.contentEdgeInsets = UIEdgeInsetsMake(8, 10, 12, 10); // top, left, bottom, right
+	[self setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+	[self setTitleColor:[UIColor lightGrayColor] forState:UIControlStateDisabled];
 }
 
+// We no longer do this for text buttons.
+// It's not common practice on iOS anymore.
+/*
+- (void)zdc_outline
+{
+	self.layer.cornerRadius  = 8.0f;
+	self.layer.masksToBounds = YES;
+	self.layer.borderWidth   = 1.0f;
+	self.layer.borderColor   = [UIColor whiteColor].CGColor;
+	
+	self.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
+	self.contentEdgeInsets = UIEdgeInsetsMake(8, 10, 12, 10); // top, left, bottom, right
+}
+*/
 @end

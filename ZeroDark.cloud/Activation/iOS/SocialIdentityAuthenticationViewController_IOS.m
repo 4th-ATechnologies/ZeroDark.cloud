@@ -73,29 +73,24 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	reauthAlert = nil;
 
 	isInAddSocialView = [self.restorationIdentifier isEqualToString:@"SocialIdentityAuthenticationViewControllerADD_IOS"];
-	if(isInAddSocialView)
+	if (isInAddSocialView)
 	{
 		_btnUseWebBrowser.layer.cornerRadius    = 8.0f;
 		_btnUseWebBrowser.layer.masksToBounds    = YES;
 		_btnUseWebBrowser.layer.borderWidth      = 1.0f;
 		_btnUseWebBrowser.layer.borderColor      = self.view.tintColor.CGColor;
-
 	}
 	else
 	{
-		void (^PrepContainer)(UIView *) = ^(UIView *container){
-			container.layer.cornerRadius   = 16;
-			container.layer.masksToBounds  = YES;
-			container.layer.borderColor    = [UIColor whiteColor].CGColor;
-			container.layer.borderWidth    = 1.0f;
-		};
-		PrepContainer(webAuth0View);
+	//	webAuth0View.layer.cornerRadius   = 16;
+	//	webAuth0View.layer.masksToBounds  = YES;
+	//	webAuth0View.layer.borderColor    = [UIColor whiteColor].CGColor;
+	//	webAuth0View.layer.borderWidth    = 1.0f;
 
 		_btnUseWebBrowser.layer.cornerRadius    = 8.0f;
 		_btnUseWebBrowser.layer.masksToBounds    = YES;
 		_btnUseWebBrowser.layer.borderWidth      = 1.0f;
 		_btnUseWebBrowser.layer.borderColor      = [UIColor whiteColor].CGColor;
-		//   [_btnUseWebBrowser.titleLabel setFont: [UIFont fontWithName:@"Hoefler Text" size:23.0f]];
 
 		[_btnUseWebBrowser setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
 		[_btnUseWebBrowser setTitleColor:[UIColor lightGrayColor] forState:UIControlStateDisabled];
@@ -111,40 +106,32 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	loadingProgressURL = [[ZeroDarkCloud frameworkBundle] URLForResource:@"SocialIdentityAuthenticationLoading" withExtension:@"html"];
 	isRunning = NO;
 
-
 	[self clearSessions];
-
 	[self removeWebProgress];
 }
 
--(void) viewWillDisappear
+- (void)viewWillDisappear
 {
-
 	lblTitle.text = @"";
-
-	//   [webAuth0View loadRequest:[NSURLRequest requestWithURL:loadingProgressURL]];
 	[accountSetupVC cancelWait];
 }
 
--(void) viewDidDisappear:(BOOL)animated
+- (void)viewDidDisappear:(BOOL)animated
 {
 	[super viewDidDisappear:animated];
 	isRunning = NO;
-
 	didFirstLoad = NO;
 
 	[webAuth0View loadRequest:[NSURLRequest requestWithURL:loadingProgressURL]];
 
 	[self clearSessions];
 
-	if(reauthAlert)
+	if (reauthAlert)
 	{
 		[reauthAlert hideView];
 		reauthAlert = nil;
 	}
-
 }
-
 
 - (BOOL)schemeAvailable:(NSString *)scheme
 {
@@ -509,7 +496,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	};
 	
 	Auth0APIManager *auth0APIManager = [Auth0APIManager sharedInstance];
-	AWSCredentialsManager *awsCredentialsManager = accountSetupVC.owner.awsCredentialsManager;
+	AWSCredentialsManager *awsCredentialsManager = accountSetupVC.zdc.awsCredentialsManager;
 	
 	A0Token *a0Token = nil;
 	NSString *stateString = nil;

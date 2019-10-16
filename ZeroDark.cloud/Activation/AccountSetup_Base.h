@@ -9,6 +9,8 @@
 
 #import <TargetConditionals.h>
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+
 #import "AWSRegions.h"
 
 @class ZeroDarkCloud;
@@ -66,61 +68,58 @@ typedef NS_ENUM(NSInteger, AccountState) {
 	AccountState_Reauthorized,
 };
 
+NS_ASSUME_NONNULL_BEGIN
+
 @protocol AccountSetup_Protocol
 @required
 
 - (void)pushIntro;
 
--(void) showWait:(NSString* __nonnull)title
-		 message:(NSString* __nullable)message
- completionBlock:(dispatch_block_t __nullable)completionBlock;
+- (void)showWait:(NSString *)title
+         message:(nullable NSString *)message
+ completionBlock:(nullable dispatch_block_t)completionBlock;
 
--(void) cancelWait;
+- (void)cancelWait;
 
--(void) showError:(NSString* __nonnull)title
-		  message:(NSString* __nullable)message
-  completionBlock:(dispatch_block_t __nullable)completionBlock;
+- (void)showError:(NSString *)title
+          message:(nullable NSString *)message
+  completionBlock:(nullable dispatch_block_t)completionBlock;
 
 - (void)popFromCurrentView;
 
--(void)pushCreateAccount;
--(void)pushSignInToAccount;
-
+- (void)pushCreateAccount;
+- (void)pushSignInToAccount;
 
 - (void)pushAccountReady;
 - (void)pushScanClodeCode;
-- (void)pushUnlockCloneCode:(NSString* _Nonnull)cloneString;
+- (void)pushUnlockCloneCode:(nullable NSString *)cloneString;
 
 - (void)pushRegionSelection;
 - (void)pushIdentity;
 - (void)pushDataBaseAuthenticate;
 - (void)pushSocialAuthenticate;
 - (void)pushDataBaseAccountCreate;
-- (void)pushResumeActivationForUserID:(NSString* _Nonnull)userID;
-- (void)pushReauthenticateWithUserID:(NSString* __nonnull)userID;
+- (void)pushResumeActivationForUserID:(NSString *)userID;
+- (void)pushReauthenticateWithUserID:(NSString *)userID;
 
 @end
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#if TARGET_OS_IPHONE
-#import <UIKit/UIKit.h>
 @interface AccountSetup_Base : UIViewController <AccountSetup_Protocol>
-#else
-#import <Cocoa/Cocoa.h>
-@interface AccountSetup_Base : NSViewController <AccountSetup_Protocol>
-#endif
 
-NS_ASSUME_NONNULL_BEGIN
-@property (nonatomic, readwrite, weak)		ZeroDarkCloud*        owner;
+@property (nonatomic, readwrite, weak) ZeroDarkCloud *zdc;
 
 // intermediate values we keep until we are established
-@property (nonatomic, readwrite)            AccountSetupMode        setupMode;
-@property (nonatomic, readwrite)            IdenititySelectionMode   identityMode;
-@property (nonatomic, readwrite ,nullable)  NSDictionary*      selectedProvider;
-@property (nonatomic, readwrite ,nullable)  A0UserProfile*     userProfile;
-@property (nonatomic, readwrite ,nullable)  NSData *           privKeyData;
+@property (nonatomic, readwrite)            AccountSetupMode       setupMode;
+@property (nonatomic, readwrite)            IdenititySelectionMode identityMode;
+@property (nonatomic, readwrite ,nullable)  NSDictionary*          selectedProvider;
+@property (nonatomic, readwrite ,nullable)  A0UserProfile*         userProfile;
+@property (nonatomic, readwrite ,nullable)  NSData *               privKeyData;
 
-@property (nonatomic, readwrite ,nullable)  NSString*          activationEmail;
+@property (nonatomic, readwrite ,nullable)  NSString* activationEmail;
 
 // stuff that can be written into the DB
 @property (nonatomic, readwrite ,nullable) ZDCLocalUserAuth*   auth;
@@ -128,9 +127,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readwrite ,nullable) ZDCPublicKey*       privKey;
 @property (nonatomic, readwrite ,nullable) ZDCSymmetricKey*    accessKey;
 
--(void)resetAll;
--(void) handleFail;   // prototype method
-
+- (void)resetAll;
+- (void)handleFail;   // prototype method
 
 // utility functions
 -(BOOL)commonInitWithUserID:(NSString* __nonnull)userID error:(NSError **)errorOut;

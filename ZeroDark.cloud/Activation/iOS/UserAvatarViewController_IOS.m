@@ -128,10 +128,10 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 	[super viewWillAppear:animated];
 	accountSetupVC.btnBack.hidden = YES;
 	
-	databaseConnection = accountSetupVC.owner.databaseManager.uiDatabaseConnection;
-	imageManager =  accountSetupVC.owner.imageManager;
-	providerManager = accountSetupVC.owner.auth0ProviderManager;
-	uiTools = accountSetupVC.owner.uiTools;
+	databaseConnection = accountSetupVC.zdc.databaseManager.uiDatabaseConnection;
+	imageManager =  accountSetupVC.zdc.imageManager;
+	providerManager = accountSetupVC.zdc.auth0ProviderManager;
+	uiTools = accountSetupVC.zdc.uiTools;
 	
 	self.navigationItem.title = @"Social Identities";
 	
@@ -564,8 +564,8 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 	
 	if (hasChanges)
 	{
-		ZDCDiskManager *diskManager = accountSetupVC.owner.diskManager;
-		ZDCLocalUserManager *localUserManager = accountSetupVC.owner.localUserManager;
+		ZDCDiskManager *diskManager = accountSetupVC.zdc.diskManager;
+		ZDCLocalUserManager *localUserManager = accountSetupVC.zdc.localUserManager;
 		
 		NSData *jpegData = nil;
 		if (!deleteUserImage && newUserImage)

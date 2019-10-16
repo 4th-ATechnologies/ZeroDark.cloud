@@ -60,34 +60,30 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 
 }
 
--(void) viewWillAppear:(BOOL)animated
+- (void)viewWillAppear:(BOOL)animated
 {
 	[super viewWillAppear:animated];
 
-	providerManager = accountSetupVC.owner.auth0ProviderManager;
+	providerManager = accountSetupVC.zdc.auth0ProviderManager;
 
 	[self fillIdentityProvidersWithCompletion:^{
 		[self->_tblProviders reloadData];
 	}];
-
 }
 
--(void) viewDidAppear:(BOOL)animated
+- (void)viewDidAppear:(BOOL)animated
 {
 	[super viewDidAppear:animated];
-	if(self.accountSetupVC.identityMode == IdenititySelectionMode_ReauthorizeAccount)
+	
+	if (self.accountSetupVC.identityMode == IdenititySelectionMode_ReauthorizeAccount)
 	{
 		self.navigationItem.title = @"Login To Account";
 	}
 	else
 	{
 		self.navigationItem.title = @"Add Identitiy";
-
 	}
-
-
 }
-
 
 - (BOOL)canPopViewControllerViaPanGesture:(AccountSetupViewController_IOS *)sender
 {

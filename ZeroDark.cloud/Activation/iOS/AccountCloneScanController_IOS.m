@@ -134,18 +134,15 @@ typedef enum {
 
 @synthesize accountSetupVC = accountSetupVC;
 
-- (void)viewDidLoad {
+- (void)viewDidLoad
+{
 	[super viewDidLoad];
 	
-	
-	void (^PrepContainer)(UIView *) = ^(UIView *container){
-		container.layer.cornerRadius   = 16;
-		container.layer.masksToBounds  = YES;
-		container.layer.borderColor    = [UIColor whiteColor].CGColor;
-		container.layer.borderWidth    = 1.0f;
-		container.backgroundColor      = [UIColor colorWithWhite:.8 alpha:.4];
-	};
-	PrepContainer(_vwCloneContainer);
+	_vwCloneContainer.layer.cornerRadius   = 16;
+	_vwCloneContainer.layer.masksToBounds  = YES;
+	_vwCloneContainer.layer.borderColor    = [UIColor whiteColor].CGColor;
+	_vwCloneContainer.layer.borderWidth    = 1.0f;
+	_vwCloneContainer.backgroundColor      = [UIColor colorWithWhite:.8 alpha:.4];
 	
 	void (^TintButtonImage)(UIButton *) = ^(UIButton *button){
 		
@@ -159,7 +156,7 @@ typedef enum {
 	TintButtonImage(_btnPaste);
 	TintButtonImage(_btnPhoto);
 	
-	[_btnCloneWordsVerify zdc_outline];
+	[_btnCloneWordsVerify zdc_colorize];
 	_btnCloneWordsVerify.enabled  = NO;
 	
 	_imgCloneCodeAvatar.layer.cornerRadius = 54 / 2;
@@ -201,20 +198,20 @@ typedef enum {
 	
 	[BIP39Mnemonic mnemonicCountForBits:256 mnemonicCount:&requiredbip39WordCount];
 	
-	[[NSNotificationCenter defaultCenter] addObserver:self
-														  selector:@selector(databaseConnectionDidUpdate:)
-																name:UIDatabaseConnectionDidUpdateNotification
-															 object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver: self
+														  selector: @selector(databaseConnectionDidUpdate:)
+																name: UIDatabaseConnectionDidUpdateNotification
+															 object: nil];
 	
-	[[NSNotificationCenter defaultCenter] addObserver:self
-														  selector:@selector(applicationDidResignActiveNotification)
-																name:UIApplicationWillResignActiveNotification
-															 object:NULL];
+	[[NSNotificationCenter defaultCenter] addObserver: self
+														  selector: @selector(applicationDidResignActiveNotification)
+																name: UIApplicationWillResignActiveNotification
+															 object: NULL];
 	
-	[[NSNotificationCenter defaultCenter] addObserver:self
-														  selector:@selector(applicationDidBecomeActiveNotification)
-																name:UIApplicationDidBecomeActiveNotification
-															 object:NULL];
+	[[NSNotificationCenter defaultCenter] addObserver: self
+														  selector: @selector(applicationDidBecomeActiveNotification)
+																name: UIApplicationDidBecomeActiveNotification
+															 object: NULL];
 	
 	originalContainerViewBottomConstraint  = CGFLOAT_MAX;
 }
@@ -223,10 +220,10 @@ typedef enum {
 {
 	[super viewWillAppear:animated];
 	
-	databaseConnection = accountSetupVC.owner.databaseManager.uiDatabaseConnection;
-	providerManager = accountSetupVC.owner.auth0ProviderManager;
-	accessKeyManager = accountSetupVC.owner.userAccessKeyManager;
-	imageManager = accountSetupVC.owner.imageManager;
+	databaseConnection = accountSetupVC.zdc.databaseManager.uiDatabaseConnection;
+	providerManager = accountSetupVC.zdc.auth0ProviderManager;
+	accessKeyManager = accountSetupVC.zdc.userAccessKeyManager;
+	imageManager = accountSetupVC.zdc.imageManager;
 	
 	defaultUserImage = imageManager.defaultUserAvatar;
 	_imgCloneCodeAvatar.image = defaultUserImage;
