@@ -13,11 +13,7 @@
 #import "ZeroDarkCloudPrivate.h"
 
 // Categories
-//#import "NSData+AWSUtilities.h"
-//#import "NSData+S4.h"
 #import "NSDate+ZeroDark.h"
-//#import "NSError+ZeroDark.h"
-//#import "NSURLResponse+ZeroDark.h"
 
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace

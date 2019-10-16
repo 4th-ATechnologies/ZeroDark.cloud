@@ -63,7 +63,7 @@
 /**
  * See header file for description.
  * Or view the api's online (for both Swift & Objective-C):
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCRemoteUserManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCRemoteUserManager.html
  */
 - (void)fetchRemoteUserWithID:(NSString *)remoteUserID
                   requesterID:(NSString *)localUserID

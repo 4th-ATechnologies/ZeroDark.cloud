@@ -159,7 +159,7 @@ static BOOL ZDCCloudPathEqual(NSString *treeID1, NSString *dirPrefix1, NSString 
 /**
  * See header file for description.
  * Or view the api's online (for both Swift & Objective-C):
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudPath.html
+ * https://apis.zerodark.cloud/Classes/ZDCCloudPath.html
  */
 + (instancetype)cloudPathFromPath:(NSString *)path
 {
@@ -182,7 +182,7 @@ static BOOL ZDCCloudPathEqual(NSString *treeID1, NSString *dirPrefix1, NSString 
 /**
  * See header file for description.
  * Or view the api's online (for both Swift & Objective-C):
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudPath.html
+ * https://apis.zerodark.cloud/Classes/ZDCCloudPath.html
  */
 + (BOOL)isValidTreeID:(NSString *)treeID
 {
@@ -207,7 +207,7 @@ static BOOL ZDCCloudPathEqual(NSString *treeID1, NSString *dirPrefix1, NSString 
 /**
  * See header file for description.
  * Or view the api's online (for both Swift & Objective-C):
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudPath.html
+ * https://apis.zerodark.cloud/Classes/ZDCCloudPath.html
  */
 + (BOOL)isValidDirPrefix:(NSString *)dirPrefix
 {
@@ -234,7 +234,7 @@ static BOOL ZDCCloudPathEqual(NSString *treeID1, NSString *dirPrefix1, NSString 
 /**
  * See header file for description.
  * Or view the api's online (for both Swift & Objective-C):
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudPath.html
+ * https://apis.zerodark.cloud/Classes/ZDCCloudPath.html
  */
 + (BOOL)isValidFileName:(NSString *)filename
 {
@@ -255,7 +255,7 @@ static BOOL ZDCCloudPathEqual(NSString *treeID1, NSString *dirPrefix1, NSString 
 /**
  * See header file for description.
  * Or view the api's online (for both Swift & Objective-C):
- * https://4th-atechnologies.github.io/ZeroDark.cloud/Classes/ZDCCloudPath.html
+ * https://apis.zerodark.cloud/Classes/ZDCCloudPath.html
  */
 + (BOOL)isValidCloudPath:(NSString *)cloudPath
 {
