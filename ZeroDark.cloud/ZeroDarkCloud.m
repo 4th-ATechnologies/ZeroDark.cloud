@@ -429,6 +429,8 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
  */
 - (nullable ZDCCloudTransaction *)cloudTransaction:(YapDatabaseReadTransaction *)transaction
                                     forLocalUserID:(NSString *)localUserID
@@ -438,6 +440,8 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
  */
 - (nullable ZDCCloudTransaction *)cloudTransaction:(YapDatabaseReadTransaction *)transaction
                                     forLocalUserID:(NSString *)localUserID
@@ -456,6 +460,8 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
  */
 - (void)didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
 {
@@ -582,6 +588,8 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 #if TARGET_OS_IOS
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
  */
 - (BOOL)didReceiveRemoteNotification:(NSDictionary *)apnsDict
               fetchCompletionHandler:(void (^)(UIBackgroundFetchResult result))completionHandler
@@ -609,6 +617,8 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 #else
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
  */
 - (BOOL)didReceiveRemoteNotification:(NSDictionary *)apnsDict
 {

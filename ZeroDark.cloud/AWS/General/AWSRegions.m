@@ -44,6 +44,11 @@ static NSArray *avalableRegionTable;
 #pragma mark Regions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/AWSRegions.html
+ */
 + (NSArray<NSNumber *> *)allRegions
 {
 	NSMutableArray<NSNumber *> *regions = [NSMutableArray arrayWithCapacity:awsRegionTable.count];
@@ -58,6 +63,8 @@ static NSArray *avalableRegionTable;
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/AWSRegions.html
  */
 + (NSString *)shortNameForRegion:(AWSRegion)region
 {
@@ -77,6 +84,8 @@ static NSArray *avalableRegionTable;
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/AWSRegions.html
  */
 + (NSString *)displayNameForRegion:(AWSRegion)region
 {
@@ -96,6 +105,8 @@ static NSArray *avalableRegionTable;
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/AWSRegions.html
  */
 + (NSString *)IPv4HostForRegion:(AWSRegion)region
 {
@@ -104,6 +115,8 @@ static NSArray *avalableRegionTable;
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/AWSRegions.html
  */
 + (NSString *)IPv4HostForRegion:(AWSRegion)region service:(AWSService)service
 {
@@ -138,6 +151,8 @@ static NSArray *avalableRegionTable;
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/AWSRegions.html
  */
 + (NSString *)dualStackHostForRegion:(AWSRegion)region
 {
@@ -146,6 +161,8 @@ static NSArray *avalableRegionTable;
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/AWSRegions.html
  */
 + (NSString *)dualStackHostForRegion:(AWSRegion)region service:(AWSService)service
 {
@@ -170,6 +187,8 @@ static NSArray *avalableRegionTable;
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/AWSRegions.html
  */
 + (AWSRegion)regionForName:(NSString *)name
 {
