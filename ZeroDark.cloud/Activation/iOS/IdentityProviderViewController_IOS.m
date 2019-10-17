@@ -24,7 +24,7 @@
 
 // Log levels: off, error, warn, info, verbose
 #if DEBUG
-  static const int zdcLogLevel = ZDCLogLevelVerbose | ZDCLogFlagTrace;
+  static const int zdcLogLevel = ZDCLogLevelVerbose; // | ZDCLogFlagTrace;
 #else
   static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
@@ -49,10 +49,10 @@
 @synthesize accountSetupVC = accountSetupVC;
 @synthesize idenitityMode = idenitityMode;
 
-
-
-- (void)viewDidLoad {
-    [super viewDidLoad];
+- (void)viewDidLoad
+{
+	ZDCLogAutoTrace();
+	[super viewDidLoad];
 
 	// figure out how to get this..
 	providerManager = accountSetupVC.zdc.auth0ProviderManager;
@@ -83,47 +83,46 @@
 	
 	_tblProviders.scrollIndicatorInsets = UIEdgeInsetsMake(6, 0, 6, 4);
 	_tblProviders.indicatorStyle = UIScrollViewIndicatorStyleDefault;
+	
+	[[NSNotificationCenter defaultCenter] addObserver: self
+	                                         selector: @selector(providersUpdated:)
+	                                             name: Auth0ProviderManagerDidUpdateNotification
+	                                           object: nil];
 }
 
 - (void)viewWillAppear:(BOOL)animated
 {
 	[super viewWillAppear:animated];
 
-	[[NSNotificationCenter defaultCenter] addObserver:self
-											 selector:@selector(providersUpdated:)
-												 name:Auth0ProviderManagerDidUpdateNotification
-											   object:nil];
-
-    if(accountSetupVC.setupMode ==  AccountSetupMode_Trial)
-    {
-        _viewAuth0ButtonContainer.hidden = NO;
-        _TableContainerBottomConstraint.constant = originalTableContainerBottomConstraint;
-    }
-    else
-    {
-        _viewAuth0ButtonContainer.hidden = YES;
-        _TableContainerBottomConstraint.constant = 20;
-    }
-    
-    accountSetupVC.btnBack.hidden  = (accountSetupVC.identityMode == IdenititySelectionMode_ReauthorizeAccount );
-    
-   }
-
-
--(void) viewDidAppear:(BOOL)animated
-{
-	[super viewDidAppear:animated];
+	if (accountSetupVC.setupMode ==  AccountSetupMode_Trial)
+	{
+		_viewAuth0ButtonContainer.hidden = NO;
+		_TableContainerBottomConstraint.constant = originalTableContainerBottomConstraint;
+	}
+	else
+	{
+		_viewAuth0ButtonContainer.hidden = YES;
+		_TableContainerBottomConstraint.constant = 20;
+	}
+	
+	accountSetupVC.btnBack.hidden = (accountSetupVC.identityMode == IdenititySelectionMode_ReauthorizeAccount);
 	[accountSetupVC setHelpButtonHidden:NO];
+}
+
+
+- (void)viewDidAppear:(BOOL)animated
+{
+	ZDCLogAutoTrace();
+	[super viewDidAppear:animated];
 	
-	__weak typeof(self) weakSelf = self;
-	
-	if(!providerManager.isUpdated)
+	if (!providerManager.isUpdated)
 	{
 		[accountSetupVC showWait: NSLocalizedString(@"Please Wait…", @"Please Wait…")
 							  message: NSLocalizedString(@"Updating providers", @"Updating providers")
 					completionBlock: nil];
 	}
 	
+	__weak typeof(self) weakSelf = self;
 	[self fillIdentityProvidersWithCompletion:^{
 		
 		__strong typeof(self) strongSelf = weakSelf;
@@ -137,16 +136,17 @@
 	}];
 }
 
--(void) viewWillDisappear:(BOOL)animated
+- (void)viewWillDisappear:(BOOL)animated
 {
+	ZDCLogAutoTrace();
 	[super viewWillDisappear:animated];
-    [accountSetupVC cancelWait];
+	
+	[accountSetupVC cancelWait];
 }
 
 - (BOOL)canPopViewControllerViaPanGesture:(AccountSetupViewController_IOS *)sender
 {
-    return YES;
-    
+	return YES;
 }
 
 - (void)providersUpdated:(NSNotification *)notification

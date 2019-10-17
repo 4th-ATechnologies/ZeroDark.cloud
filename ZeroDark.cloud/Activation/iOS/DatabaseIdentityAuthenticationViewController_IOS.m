@@ -54,7 +54,9 @@
 #pragma mark View Lifecycle
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)viewDidLoad {
+- (void)viewDidLoad
+{
+	ZDCLogAutoTrace();
 	[super viewDidLoad];
 	
 	reauthAlert = nil;
@@ -119,8 +121,35 @@
 	[self showWait:NO];
 }
 
+- (void)viewWillAppear:(BOOL)animated
+{
+	ZDCLogAutoTrace();
+	[super viewWillAppear:animated];
+	
+	accountSetupVC.btnBack.hidden = NO;
+	[accountSetupVC setHelpButtonHidden:NO];
+}
+
+- (void)viewDidAppear:(BOOL)animated
+{
+	ZDCLogAutoTrace();
+	[super viewDidAppear:animated];
+
+	if (self.accountSetupVC.identityMode == IdenititySelectionMode_NewAccount)
+	{
+		[_btnSignIn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+		[_btnSignIn setTitleColor:[UIColor lightGrayColor] forState:UIControlStateDisabled];
+	}
+	else
+	{
+		[_btnSignIn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+		[_btnSignIn setTitleColor:[UIColor lightGrayColor] forState:UIControlStateDisabled];
+	}
+}
+
 - (void)viewDidDisappear:(BOOL)animated
 {
+	ZDCLogAutoTrace();
 	[super viewDidDisappear:animated];
 	
 	_txtUserNameField.text = @"";
@@ -139,37 +168,19 @@
 	[self showWait:NO];
 }
 
-- (void)viewDidAppear:(BOOL)animated
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark  - UITextFieldDelegate
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)textFieldDidEndEditing:(UITextField *)textField
+                        reason:(UITextFieldDidEndEditingReason)reason API_AVAILABLE(ios(10.0))
 {
-	ZDCLogAutoTrace();
-	[super viewDidAppear:animated];
-
-	if (self.accountSetupVC.identityMode == IdenititySelectionMode_NewAccount)
+	if (textField == _txtUserNameField )
 	{
-		[_btnSignIn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-		[_btnSignIn setTitleColor:[UIColor lightGrayColor] forState:UIControlStateDisabled];
+		NSCharacterSet *whitespace = [NSCharacterSet whitespaceAndNewlineCharacterSet];
+		NSString *trimmedString = [_txtUserNameField.text stringByTrimmingCharactersInSet:whitespace];
+		_txtUserNameField.text = trimmedString;
 	}
-	else
-	{
-		[_btnSignIn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-		[_btnSignIn setTitleColor:[UIColor lightGrayColor] forState:UIControlStateDisabled];
-	}
-
-	[accountSetupVC setHelpButtonHidden:NO];
-   accountSetupVC.btnBack.hidden = NO;
-}
-
-#pragma mark  - UITextField delegate
-
-- (void)textFieldDidEndEditing:(UITextField *)textField reason:(UITextFieldDidEndEditingReason)reason
-API_AVAILABLE(ios(10.0)){
-    
-    if(textField == _txtUserNameField )
-    {
-        NSCharacterSet *whitespace = [NSCharacterSet whitespaceAndNewlineCharacterSet];
-        NSString *trimmedString = [_txtUserNameField.text stringByTrimmingCharactersInSet:whitespace];
-        _txtUserNameField.text = trimmedString;
-    }
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)aTextField
@@ -179,7 +190,7 @@ API_AVAILABLE(ios(10.0)){
 }
 
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range
-replacementString:(NSString *)string
+                                                       replacementString:(NSString *)string
 {
     BOOL result = YES;
     BOOL canSend = NO;

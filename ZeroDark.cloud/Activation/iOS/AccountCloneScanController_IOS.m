@@ -40,7 +40,7 @@
 
 // Log levels: off, error, warn, info, verbose
 #if DEBUG
-  static const int zdcLogLevel = ZDCLogLevelVerbose | ZDCLogFlagTrace;
+  static const int zdcLogLevel = ZDCLogLevelVerbose; // | ZDCLogFlagTrace;
 #else
   static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif

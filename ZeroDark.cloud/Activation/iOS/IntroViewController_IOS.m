@@ -43,10 +43,11 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	titleLabel.text = appName ?: @"";
 }
 
-- (void)viewDidAppear:(BOOL)animated
+- (void)viewWillAppear:(BOOL)animated
 {
-	[super viewDidAppear:animated];
-
+	ZDCLogAutoTrace();
+	[super viewWillAppear:animated];
+	
 	accountSetupVC.btnBack.hidden = YES;
 	[accountSetupVC setHelpButtonHidden:YES];
 }
