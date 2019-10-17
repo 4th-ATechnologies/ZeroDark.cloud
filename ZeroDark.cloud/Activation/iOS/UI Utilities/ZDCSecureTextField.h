@@ -9,10 +9,8 @@
 
 #import <UIKit/UIKit.h>
 
-typedef void (^UIBlockButtonActionBlock)(void);
+@interface ZDCSecureTextField : UITextField
 
-@interface UIBlockButton : UIButton
-
-- (void)handleControlEvent:(UIControlEvents)event withBlock:(UIBlockButtonActionBlock) action;
+@property (nonatomic) BOOL secureInput;
 
 @end

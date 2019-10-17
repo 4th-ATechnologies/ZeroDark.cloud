@@ -11,7 +11,7 @@
 
 #import "LanguageListViewController_IOS.h"
 #import "PasswordStrengthUIView.h"
-#import "UISecureTextField.h"
+#import "ZDCSecureTextField.h"
 #import "ZDCAccessCode.h"
 #import "ZDCConstantsPrivate.h"
 #import "ZDCLogging.h"
@@ -219,7 +219,7 @@
 	
 	IBOutlet __weak UILabel*           		_lblEnterPasscode;
 	
-	IBOutlet __weak UISecureTextField       *_txtPwdField;
+	IBOutlet __weak ZDCSecureTextField      *_txtPwdField;
 	IBOutlet __weak PasswordStrengthUIView  *_strengthField;
 	IBOutlet __weak UILabel                 *_lblStrength;
 	

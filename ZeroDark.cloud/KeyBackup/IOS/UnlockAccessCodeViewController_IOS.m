@@ -12,7 +12,7 @@
 #import <ZeroDarkCloud/ZeroDarkCloud.h>
 #import "ZeroDarkCloudPrivate.h"
 #import "ZDCConstantsPrivate.h"
-#import "UISecureTextField.h"
+#import "ZDCSecureTextField.h"
 
 #import "ZDCAccessCode.h"
 
@@ -40,7 +40,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 @implementation UnlockAccessCodeViewController_IOS
 {
     IBOutlet __weak UIImageView *           _imgQRCode;
-    IBOutlet __weak UISecureTextField*      _txtPwdField;
+    IBOutlet __weak ZDCSecureTextField*     _txtPwdField;
     IBOutlet __weak UIButton *              _bntUnlock;
     IBOutlet __weak UILabel *               _lblFail;
 

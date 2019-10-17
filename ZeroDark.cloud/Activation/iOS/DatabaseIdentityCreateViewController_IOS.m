@@ -14,7 +14,7 @@
 #import "Auth0Utilities.h"
 #import "PasswordStrengthUIView.h"
 #import "SCLAlertView.h"
-#import "UISecureTextField.h"
+#import "ZDCSecureTextField.h"
 #import "ZDCConstantsPrivate.h"
 #import "ZDCLogging.h"
 #import "ZDCPasswordStrengthCalculator.h"
@@ -50,12 +50,12 @@
 	IBOutlet __weak UITextField   		*_txtUserNameField;
 	IBOutlet __weak UIImageView             *_imgUserNameOK;
 
-	IBOutlet __weak UISecureTextField       *_txtPwdField;
+	IBOutlet __weak ZDCSecureTextField      *_txtPwdField;
 	IBOutlet __weak PasswordStrengthUIView  *_strengthField;
 	IBOutlet __weak UILabel                 *_lblStrength;
 	IBOutlet __weak UIImageView             *_imgNewPwdOK;
 
-	IBOutlet __weak UISecureTextField       *_txtVrfPwdField;
+	IBOutlet __weak ZDCSecureTextField      *_txtVrfPwdField;
 	IBOutlet __weak UIImageView             *_imgVrfPwdOK;
 
  	ZDCPasswordStrength					*pwdStrength;

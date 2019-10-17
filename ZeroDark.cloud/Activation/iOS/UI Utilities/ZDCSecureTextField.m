@@ -7,14 +7,15 @@
  * API Reference : https://apis.zerodark.cloud
 **/
 
-#import "UISecureTextField.h"
+#import "ZDCSecureTextField.h"
+#import "ZDCBlockButton.h"
 
 static CGFloat const EYE_WIDTH  = 22.F;
 static CGFloat const EYE_HEIGHT = 22.F;
 
-@implementation UISecureTextField {
+@implementation ZDCSecureTextField {
 	
-	UIBlockButton *btnEye;
+	ZDCBlockButton *btnEye;
 
 	UIImage *_openImage_useLazyLoaderMethod;
 	UIImage *_closedImage_useLazyLoaderMethod;
@@ -26,7 +27,7 @@ static CGFloat const EYE_HEIGHT = 22.F;
 {
 	if ((self = [super initWithCoder:decoder]))
 	{
-		btnEye = [UIBlockButton buttonWithType:UIButtonTypeSystem];
+		btnEye = [ZDCBlockButton buttonWithType:UIButtonTypeSystem];
 		btnEye.frame = CGRectMake(0, 0, EYE_WIDTH, EYE_HEIGHT);
 		btnEye.titleLabel.text = @"";
 		btnEye.imageEdgeInsets = UIEdgeInsetsMake(0, -EYE_WIDTH, 0, 0);

@@ -7,14 +7,14 @@
  * API Reference : https://apis.zerodark.cloud
 **/
 
-#import "UIBlockButton.h"
+#import "ZDCBlockButton.h"
 
-@implementation UIBlockButton {
+@implementation ZDCBlockButton {
 	
-	UIBlockButtonActionBlock _actionBlock;
+	ZDCBlockButtonActionBlock _actionBlock;
 }
 
-- (void)handleControlEvent:(UIControlEvents)event withBlock:(UIBlockButtonActionBlock)action
+- (void)handleControlEvent:(UIControlEvents)event withBlock:(ZDCBlockButtonActionBlock)action
 {
 	_actionBlock = action;
 	[self addTarget:self action:@selector(callActionBlock:) forControlEvents:event];

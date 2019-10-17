@@ -15,7 +15,7 @@
 
 #import "Auth0ProviderManager.h"
 #import "Auth0Utilities.h"
-#import "UISecureTextField.h"
+#import "ZDCSecureTextField.h"
 #import "UIButton+Activation.h"
 
 #import "SCLAlertView.h"
@@ -38,7 +38,7 @@
 {
 	IBOutlet __weak UIView                  * _viewContainer;
 	IBOutlet __weak UITextField             * _txtUserNameField;
-	IBOutlet __weak UISecureTextField       * _txtPwdField;
+	IBOutlet __weak ZDCSecureTextField      * _txtPwdField;
 	IBOutlet __weak UIActivityIndicatorView * _actBusy;
 	IBOutlet __weak UIButton                * _btnSignIn;
 	IBOutlet __weak UILabel                 * _lblFail;

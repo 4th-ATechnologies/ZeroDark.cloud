@@ -8,7 +8,7 @@
 #import "AccountCloneUnlockController_IOS.h"
 #import "ZeroDarkCloud.h"
 #import "ZeroDarkCloudPrivate.h"
-#import "UISecureTextField.h"
+#import "ZDCSecureTextField.h"
 #import "ZDCAccessCode.h"
 
 #import "ZDCLogging.h"
@@ -42,9 +42,9 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	IBOutlet __weak UILabel*            _lblDisplayName;
 	IBOutlet __weak UIImageView*        _imgQRCode;
 
-	IBOutlet __weak UISecureTextField*  _txtPwdField;
+	IBOutlet __weak ZDCSecureTextField* _txtPwdField;
 	IBOutlet __weak UIButton *          _btnUnlock;
-	IBOutlet __weak UILabel *			_lblFail;
+	IBOutlet __weak UILabel *           _lblFail;
 
 	NSUInteger                     		failedTries;
 
