@@ -1,24 +1,28 @@
-//
-//  UIBlockButton.m
-//  storm4_iOS
-//
-//  Created by vinnie on 12/28/17.
-//  Copyright © 2017 4th-A Technologies, LLC. All rights reserved.
-//
+/**
+ * ZeroDark.cloud
+ *
+ * Homepage      : https://www.zerodark.cloud
+ * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
+ * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
+ * API Reference : https://apis.zerodark.cloud
+**/
 
 #import "UIBlockButton.h"
 
-@implementation UIBlockButton
+@implementation UIBlockButton {
+	
+	UIBlockButtonActionBlock _actionBlock;
+}
 
--(void) handleControlEvent:(UIControlEvents)event
-withBlock:(UIBlockButtonActionBlock) action
+- (void)handleControlEvent:(UIControlEvents)event withBlock:(UIBlockButtonActionBlock)action
 {
-    _actionBlock = action;
-    [self addTarget:self action:@selector(callActionBlock:) forControlEvents:event];
+	_actionBlock = action;
+	[self addTarget:self action:@selector(callActionBlock:) forControlEvents:event];
 }
 
--(void) callActionBlock:(id)sender{
-    _actionBlock();
+- (void)callActionBlock:(id)sender
+{
+	_actionBlock();
 }
+
 @end
-
