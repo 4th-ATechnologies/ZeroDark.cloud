@@ -67,11 +67,35 @@ static NSString *const k_displayName = @"displayName";
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Single User Mode
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCLocalUserManager.html
+ */
+- (nullable NSString *)anyLocalUserID:(YapDatabaseReadTransaction *)transaction
+{
+	__block NSString *result = nil;
+	[self enumerateLocalUserIDsWithTransaction: transaction
+	                                usingBlock:^(NSString *localUserID, BOOL *stop)
+	{
+		result = localUserID;
+		*stop = YES;
+	}];
+	
+	return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark List & Enumerate
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCLocalUserManager.html
  */
 - (NSArray<NSString *> *)allLocalUserIDs:(YapDatabaseReadTransaction *)transaction
 {
@@ -95,6 +119,8 @@ static NSString *const k_displayName = @"displayName";
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCLocalUserManager.html
  */
 - (NSArray<ZDCLocalUser *> *)allLocalUsers:(YapDatabaseReadTransaction *)transaction
 {
@@ -118,6 +144,8 @@ static NSString *const k_displayName = @"displayName";
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCLocalUserManager.html
  */
 - (void)enumerateLocalUserIDsWithTransaction:(YapDatabaseReadTransaction *)transaction
                                   usingBlock:(void (^)(NSString *localUserID, BOOL *stop))enumBlock
@@ -151,6 +179,8 @@ static NSString *const k_displayName = @"displayName";
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCLocalUserManager.html
  */
 - (void)enumerateLocalUsersWithTransaction:(YapDatabaseReadTransaction *)transaction
                                 usingBlock:(void (^)(ZDCLocalUser *localUser, BOOL *stop))enumBlock
@@ -261,6 +291,8 @@ static NSString *const k_displayName = @"displayName";
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCLocalUserManager.html
  */
 - (void)deleteLocalUser:(NSString *)localUserID
             transaction:(YapDatabaseReadWriteTransaction *)transaction
@@ -395,6 +427,8 @@ static NSString *const k_displayName = @"displayName";
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCLocalUserManager.html
  */
 - (ZDCLocalUser *)createLocalUserFromJSON:(NSDictionary *)json
                               transaction:(YapDatabaseReadWriteTransaction *)transaction

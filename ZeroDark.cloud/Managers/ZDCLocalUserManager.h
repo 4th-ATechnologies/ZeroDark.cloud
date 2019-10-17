@@ -19,6 +19,16 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface ZDCLocalUserManager : NSObject
 
+#pragma mark Single User Mode
+
+/**
+ * Returns non-nil if a ZDCLocalUser exists in the database.
+ * This is primarily useful for applications that support only a single logged-in user.
+ *
+ * @note If there are multiple logged in users, the returned localUser is not guaranteed to be consistent.
+ */
+- (nullable NSString *)anyLocalUserID:(YapDatabaseReadTransaction *)transaction;
+
 #pragma mark List & Enumerate
 
 /**
