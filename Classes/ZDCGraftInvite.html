@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>ZDCDeleteNodeOptions Enumeration Reference</title>
+    <title>ZDCGraftInvite Class Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset="utf-8">
@@ -14,9 +14,9 @@
   </head>
   <body>
 
-    <a name="//apple_ref/objc/Enum/ZDCDeleteNodeOptions" class="dashAnchor"></a>
+    <a name="//apple_ref/objc/Class/ZDCGraftInvite" class="dashAnchor"></a>
 
-    <a title="ZDCDeleteNodeOptions Enumeration Reference"></a>
+    <a title="ZDCGraftInvite Class Reference"></a>
 
     <header class="header">
       <p class="header-col header-col--primary">
@@ -38,7 +38,7 @@
     <p class="breadcrumbs">
       <a class="breadcrumb" href="../index.html">ZeroDarkCloud Reference</a>
       <img class="carat" src="../img/carat.png" />
-      ZDCDeleteNodeOptions Enumeration Reference
+      ZDCGraftInvite Class Reference
     </p>
 
     <div class="content-wrapper">
@@ -740,18 +740,28 @@
 
         <section class="section">
           <div class="section-content">
-            <h1>ZDCDeleteNodeOptions</h1>
+            <h1>ZDCGraftInvite</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight objective_c"><code><span class="k">enum</span> <span class="n">ZDCDeleteNodeOptions</span> <span class="p">{}</span></code></pre>
+                  <pre class="highlight objective_c"><code><span class="k">@interface</span> <span class="nc">ZDCGraftInvite</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
 
                 </div>
               </div>
-            <p>When you queue an operation to delete a node in the cloud,
- it&rsquo;s possible the state of the cloud may change between when you issued the delete request,
- and when the request arrives at the server.</p>
+            <p>A GraftInvite encompasses the information required to complete a graft.</p>
 
-<p>These options specify how you&rsquo;d like the server to handle the request, in the event it finds changes.</p>
+<p>For example, if Alice wants to collaborate with Bob,
+ then she wants to share a branch of her treesystem with Bob.
+ There are 2 steps required for Alice.</p>
+
+<p>First, she needs to give Bob permission to access her branch.
+ She can accomplish this with <code><a href="../Classes/ZDCCloudTransaction.html#/c:objc(cs)ZDCCloudTransaction(im)recursiveAddShareItem:forUserID:nodeID:">-[ZDCCloudTransaction recursiveAddShareItem:forUserID:nodeID:]</a></code>.</p>
+
+<p>Second, she needs to send a message to Bob.
+ The message is some kind of application-specific <q>invite</q>.
+ And the invite must contain, at a minimum, the information contained in this class.</p>
+
+<p>After Bob receives the invite message, he can accept the invite via
+ <code>-[ZDCCloudTransaction graftNodeWithLocalPath:::::]</code>.</p>
 
           </div>
         </section>
@@ -763,9 +773,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@E@ZDCDeleteNodeOptions@ZDCDeleteOutdatedNodes"></a>
-                    <a name="//apple_ref/objc/Case/ZDCDeleteOutdatedNodes" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@E@ZDCDeleteNodeOptions@ZDCDeleteOutdatedNodes">ZDCDeleteOutdatedNodes</a>
+                    <a name="/c:objc(cs)ZDCGraftInvite(im)initWithCloudID:cloudPath:"></a>
+                    <a name="//apple_ref/objc/Method/-initWithCloudID:cloudPath:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCGraftInvite(im)initWithCloudID:cloudPath:">-initWithCloudID:cloudPath:</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -773,28 +783,20 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>This option indicates that <q>outdated</q> nodes should still be deleted.
- An <q>outdated</q> node is one which has been changed between when the request was created,
- and when the request arrived at the server.</p>
-
-<p>For example, the data has been modified, or the node has been renamed.</p>
-
-<p>This option specifies that you want outdated nodes to also be deleted.
- If this flag is NOT set, then outdated nodes will NOT be deleted.
- And, as such, the server will not delete any nodes in the hierarchy between
- the outdated node &amp; the target node.</p>
+                        <p>Standard initializer.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="n">ZDCDeleteOutdatedNodes</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">0</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithCloudID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">cloudID</span>
+                              <span class="nf">cloudPath</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCCloudPath.html">ZDCCloudPath</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">cloudPath</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="k">var</span> <span class="nv">outdatedNodes</span><span class="p">:</span> <span class="kt">ZDCDeleteNodeOptions</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="nf">init</span><span class="p">(</span><span class="nv">cloudID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">cloudPath</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCCloudPath.html">ZDCCloudPath</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -804,9 +806,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@E@ZDCDeleteNodeOptions@ZDCDeleteUnknownNodes"></a>
-                    <a name="//apple_ref/objc/Case/ZDCDeleteUnknownNodes" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@E@ZDCDeleteNodeOptions@ZDCDeleteUnknownNodes">ZDCDeleteUnknownNodes</a>
+                    <a name="/c:objc(cs)ZDCGraftInvite(py)cloudID"></a>
+                    <a name="//apple_ref/objc/Property/cloudID" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCGraftInvite(py)cloudID">cloudID</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -814,28 +816,67 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>This option indicates that <q>unknown</q> nodes should still be deleted.
- An <q>unknown</q> node is one which has been added between when the request was created,
- and when the request arrived at the server.</p>
+                        <p>Corresponds to ZDCNode.cloudID.</p>
 
-<p>For example, a child node (in one of the subdirectories, at any level) was added.</p>
+<p>Every node has a server-assigned uuid, called the cloudID.
+ Since the value is server-assigned, we won&rsquo;t know this value until after the node has been uploaded.</p>
 
-<p>This option specifies that you want unknown nodes to also be deleted.
- If this flag is NOT set, then unknown nodes will NOT be deleted.
- And, as such, the server will not delete any nodes in the hierarchy between
- the unknown node &amp; the target node.</p>
+<p>This value is important, because it ensures the recipient of the invite can still accept our
+ invitation even if we move the node.</p>
+
+<p>For example:
+ If Alice wants to collaborate with Bob, she may send an invite the references her node at home://foo/bar
+ But if Alice renamed the node to home://foo/buzz, then the location of the node changes,
+ both in her treesystem, and in the cloud.
+ By including the cloudID, Bob will be able to track down the current location of the node.
+ (The server has an API that allows Bob to perform this task, if necessary.)</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="n">ZDCDeleteUnknownNodes</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">copy</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">cloudID</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="k">var</span> <span class="nv">unknownNodes</span><span class="p">:</span> <span class="kt">ZDCDeleteNodeOptions</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">cloudID</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCGraftInvite(py)cloudPath"></a>
+                    <a name="//apple_ref/objc/Property/cloudPath" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCGraftInvite(py)cloudPath">cloudPath</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Represents the current location of the node in the cloud.</p>
+
+<p>If the cloudPath happens to change, the cloudID ensures the recipient can still
+ track down current cloudPath of the node.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">copy</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n"><a href="../Classes/ZDCCloudPath.html">ZDCCloudPath</a></span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">cloudPath</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@NSCopying</span> <span class="k">var</span> <span class="nv">cloudPath</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCCloudPath.html">ZDCCloudPath</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>

@@ -305,6 +305,9 @@
                 <a class="nav-group-task-link" href="../Classes/ZDCFetchOptions.html">ZDCFetchOptions</a>
               </li>
               <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCGraftInvite.html">ZDCGraftInvite</a>
+              </li>
+              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/ZDCProgressManagerChanges.html">ZDCProgressManagerChanges</a>
               </li>
               <li class="nav-group-task">
@@ -782,7 +785,9 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Messages are first uploaded into the sender&rsquo;s outbox,
+                        <p>Enqueues a message to be sent to the specified recipients.</p>
+
+<p>Messages are first uploaded into the sender&rsquo;s outbox,
  and then copied server-side into the recipient&rsquo;s inbox.</p>
 
 <p>You supply the data for the message via <code>[ZeroDarkCloudDelegate dataForMessage:transaction:]</code>.
@@ -849,6 +854,108 @@ Otherwise returns an error that explains what went wrong.</p>
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/c:objc(cs)ZDCCloudTransaction(im)sendMessageToRecipients:withDependencies:error:"></a>
+                    <a name="//apple_ref/objc/Method/-sendMessageToRecipients:withDependencies:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCCloudTransaction(im)sendMessageToRecipients:withDependencies:error:">-sendMessageToRecipients:withDependencies:error:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Enqueues a message to be sent to the specified recipients.</p>
+
+<p>Messages are first uploaded into the sender&rsquo;s outbox,
+ and then copied server-side into the recipient&rsquo;s inbox.</p>
+
+<p>You supply the data for the message via <code>[ZeroDarkCloudDelegate dataForMessage:transaction:]</code>.
+ And you&rsquo;ll be informed of the message deliveries via <code>[ZeroDarkCloudDelegate didSendMessage:transaction:]</code></p>
+
+<p>For more information about messaging, see the docs:
+ <a href="https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/">https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/</a></p>
+
+<p>In a collaboration scenario, your message may be dependent upon permissions changes.
+ For example, if Alice wants to share a branch of her treesystem with Bob, this is typically a 2-step process.
+ First Alice must give Bob read-write permission to the branch.
+ And then Alice can send Bob an invitation to collaborate on that branch.
+ This is typically achieved by first using the method <code>recursiveAddShareItem:forUserID:nodeID</code>.
+ This method returns an array of ZDCCloudOperations. So then you&rsquo;d just pass that array of operations
+ to this method as dependencies. This ensures that the treesystem permissions are
+ modified before the message is sent.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n"><a href="../Classes/ZDCNode.html">ZDCNode</a></span> <span class="o">*</span><span class="p">)</span>
+    <span class="nf">sendMessageToRecipients</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n"><a href="../Classes/ZDCUser.html">ZDCUser</a></span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span><span class="nv">recipients</span>
+           <span class="nf">withDependencies</span><span class="p">:</span>
+               <span class="p">(</span><span class="n">nullable</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n"><a href="../Classes/ZDCCloudOperation.html">ZDCCloudOperation</a></span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span><span class="nv">dependencies</span>
+                      <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">outError</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">sendMessage</span><span class="p">(</span><span class="n">toRecipients</span> <span class="nv">recipients</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Classes/ZDCUser.html">ZDCUser</a></span><span class="p">],</span> <span class="n">withDependencies</span> <span class="nv">dependencies</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Classes/ZDCCloudOperation.html">ZDCCloudOperation</a></span><span class="p">]?)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ZDCNode.html">ZDCNode</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>recipients</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A list of recipients that should receive the message.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dependencies</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>If the message operation should be dependent upon other operations, you may pass those dependencies here.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>outError</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Set to nil on success.
+Otherwise returns an error that explains what went wrong.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Returns the message node on success, nil otherwise.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/c:objc(cs)ZDCCloudTransaction(im)sendSignalToRecipient:error:"></a>
                     <a name="//apple_ref/objc/Method/-sendSignalToRecipient:error:" class="dashAnchor"></a>
                     <a class="token" href="#/c:objc(cs)ZDCCloudTransaction(im)sendSignalToRecipient:error:">-sendSignalToRecipient:error:</a>
@@ -859,7 +966,9 @@ Otherwise returns an error that explains what went wrong.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>A signal is a lightweight outgoing message.</p>
+                        <p>Enqueues a signal to be sent to the specified recipient.</p>
+
+<p>A signal is a lightweight outgoing message. (They&rsquo;re different from normal messaages.)</p>
 
 <p>Signals are delivered into the inbox of the recipient <em>ONLY</em>.
  There is NOT a copy of the message within the outbox of the sender.
@@ -900,6 +1009,101 @@ Otherwise returns an error that explains what went wrong.</p>
                               <td>
                                 <div>
                                   <p>The user to send the message to. (userID == ZDCUser.uuid)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>outError</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Set to nil on success.
+Otherwise returns an error that explains what went wrong.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Returns the message node on success, nil otherwise.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCCloudTransaction(im)sendSignalToRecipient:withDependencies:error:"></a>
+                    <a name="//apple_ref/objc/Method/-sendSignalToRecipient:withDependencies:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCCloudTransaction(im)sendSignalToRecipient:withDependencies:error:">-sendSignalToRecipient:withDependencies:error:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Enqueues a signal to be sent to the specified recipient.</p>
+
+<p>A signal is a lightweight outgoing message. (They&rsquo;re different from normal messaages.)</p>
+
+<p>Signals are delivered into the inbox of the recipient <em>ONLY</em>.
+ There is NOT a copy of the message within the outbox of the sender.
+ In other words, signals are designed to be minimal, and don&rsquo;t cause additional overhead for the sender.</p>
+
+<p>You supply the data for the message via <code>[ZeroDarkCloudDelegate dataForMessage:transaction:]</code>.
+ And you&rsquo;ll be informed of the message deliveries via <code>[ZeroDarkCloudDelegate didSendMessage:transaction:]</code></p>
+
+<p>For more information about messaging, see the docs:
+ <a href="https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/">https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/</a></p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n"><a href="../Classes/ZDCNode.html">ZDCNode</a></span> <span class="o">*</span><span class="p">)</span>
+    <span class="nf">sendSignalToRecipient</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCUser.html">ZDCUser</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">recipient</span>
+         <span class="nf">withDependencies</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n"><a href="../Classes/ZDCCloudOperation.html">ZDCCloudOperation</a></span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span><span class="nv">dependencies</span>
+                    <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">outError</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">sendSignal</span><span class="p">(</span><span class="n">toRecipient</span> <span class="nv">recipient</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCUser.html">ZDCUser</a></span><span class="p">,</span> <span class="n">withDependencies</span> <span class="nv">dependencies</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Classes/ZDCCloudOperation.html">ZDCCloudOperation</a></span><span class="p">]?)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ZDCNode.html">ZDCNode</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>recipient</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The user to send the message to. (userID == ZDCUser.uuid)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dependencies</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>If the signal operation should be dependent upon other operations, you may pass those dependencies here.</p>
                                 </div>
                               </td>
                             </tr>
@@ -1287,9 +1491,9 @@ Otherwise returns an error that explains what went wrong.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCCloudTransaction(im)createNode:error:"></a>
-                    <a name="//apple_ref/objc/Method/-createNode:error:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCCloudTransaction(im)createNode:error:">-createNode:error:</a>
+                    <a name="/c:objc(cs)ZDCCloudTransaction(im)insertNode:error:"></a>
+                    <a name="//apple_ref/objc/Method/-insertNode:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCCloudTransaction(im)insertNode:error:">-insertNode:error:</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1305,13 +1509,13 @@ Otherwise returns an error that explains what went wrong.</p>
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">createNode</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCNode.html">ZDCNode</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">node</span>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">insertNode</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCNode.html">ZDCNode</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">node</span>
              <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">outError</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">createNode</span><span class="p">(</span><span class="n">_</span> <span class="nv">node</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCNode.html">ZDCNode</a></span><span class="p">)</span> <span class="k">throws</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">insertNode</span><span class="p">(</span><span class="n">_</span> <span class="nv">node</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCNode.html">ZDCNode</a></span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -1383,13 +1587,14 @@ Otherwise returns an error that explains what went wrong.</p>
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">modifyNode</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCNode.html">ZDCNode</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">node</span>
-             <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">outError</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n"><a href="../Classes/ZDCCloudOperation.html">ZDCCloudOperation</a></span> <span class="o">*</span><span class="p">)</span><span class="nf">modifyNode</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCNode.html">ZDCNode</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">node</span>
+                                     <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span>
+                                               <span class="n">outError</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">modifyNode</span><span class="p">(</span><span class="n">_</span> <span class="nv">node</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCNode.html">ZDCNode</a></span><span class="p">)</span> <span class="k">throws</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">modifyNode</span><span class="p">(</span><span class="n">_</span> <span class="nv">node</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCNode.html">ZDCNode</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ZDCCloudOperation.html">ZDCCloudOperation</a></span></code></pre>
 
                         </div>
                       </div>
@@ -1427,7 +1632,8 @@ Otherwise returns an error that explains what went wrong.</p>
                       </div>
                       <div>
                         <h4>Return Value</h4>
-                        <p>YES if the modification was successful. NO otherwise (in which case, outError will be set).</p>
+                        <p>If the request was successful, returns the queued operation.
+     Otherwise returns nil, in which case, outError will be set.</p>
                       </div>
                     </section>
                   </div>
@@ -1501,6 +1707,11 @@ Otherwise returns an error that explains what went wrong.</p>
                           </tbody>
                         </table>
                       </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>If the request was successful, returns the queued operation.
+     Otherwise returns nil, in which case, outError will be set.</p>
+                      </div>
                     </section>
                   </div>
                 </li>
@@ -1569,7 +1780,7 @@ Otherwise returns an error that explains what went wrong.</p>
                       </div>
                       <div>
                         <h4>Return Value</h4>
-                        <p>If the modification was successful, returns the queued operation.
+                        <p>If the request was successful, returns the queued operation.
      Otherwise returns nil, in which case, outError will be set.</p>
                       </div>
                     </section>
@@ -1653,8 +1864,52 @@ Otherwise returns an error that explains what went wrong.</p>
                       </div>
                       <div>
                         <h4>Return Value</h4>
-                        <p>If the modification was successful, returns the queued operation.
+                        <p>If the request was successful, returns the queued operation.
      Otherwise returns nil, in which case, outError will be set.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Grafting"></a>
+                <a name="//apple_ref/objc/Section/Grafting" class="dashAnchor"></a>
+                <a href="#/Grafting">
+                  <h3 class="section-name">Grafting</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCCloudTransaction(im)graftInviteForNode:"></a>
+                    <a name="//apple_ref/objc/Method/-graftInviteForNode:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCCloudTransaction(im)graftInviteForNode:">-graftInviteForNode:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Grafting allows you to add another user&rsquo;s branch into your own treesystem.
+ It&rsquo;s used for collaboration, as the branch is now shared between multiple users.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n"><a href="../Classes/ZDCGraftInvite.html">ZDCGraftInvite</a></span> <span class="o">*</span><span class="p">)</span><span class="nf">graftInviteForNode</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCNode.html">ZDCNode</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">node</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">graftInvite</span><span class="p">(</span><span class="k">for</span> <span class="nv">node</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCNode.html">ZDCNode</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ZDCGraftInvite.html">ZDCGraftInvite</a></span><span class="p">?</span></code></pre>
+
+                        </div>
                       </div>
                     </section>
                   </div>
@@ -1774,8 +2029,112 @@ Otherwise returns an error that explains what went wrong.</p>
                       </div>
                       <div>
                         <h4>Return Value</h4>
-                        <p>If the grafting was successful, returns the newly created node.
+                        <p>If the request was successful, returns the newly created node.
      Otherwise returns nil, in which case, outError will be set.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Permissions"></a>
+                <a name="//apple_ref/objc/Section/Permissions" class="dashAnchor"></a>
+                <a href="#/Permissions">
+                  <h3 class="section-name">Permissions</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCCloudTransaction(im)recursiveAddShareItem:forUserID:nodeID:"></a>
+                    <a name="//apple_ref/objc/Method/-recursiveAddShareItem:forUserID:nodeID:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCCloudTransaction(im)recursiveAddShareItem:forUserID:nodeID:">-recursiveAddShareItem:forUserID:nodeID:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Modifies the permissons for a treesystem branch rooted at the specified node.</p>
+
+<p>This method adds the given shareItem to the specified node,
+ and all of the node&rsquo;s children, grand-children, etc (recursively).</p>
+
+<p>This is a convenience method for modifying a branch of the treesystem.
+ You can accomplish the same thing manually by:</p>
+
+<ul>
+<li>using the NodeManager to recursively enumerate the node</li>
+<li>modifying each node.shareList</li>
+<li>invoking cloudTransaction.modifyNode to save the changes, and queue the upload</li>
+</ul>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n"><a href="../Classes/ZDCCloudOperation.html">ZDCCloudOperation</a></span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span>
+    <span class="nf">recursiveAddShareItem</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCShareItem.html">ZDCShareItem</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">shareItem</span>
+                <span class="nf">forUserID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">userID</span>
+                   <span class="nf">nodeID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">nodeID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">recursiveAddShareItem</span><span class="p">(</span><span class="n">_</span> <span class="nv">shareItem</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCShareItem.html">ZDCShareItem</a></span><span class="p">,</span> <span class="n">forUserID</span> <span class="nv">userID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">nodeID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt"><a href="../Classes/ZDCCloudOperation.html">ZDCCloudOperation</a></span><span class="p">]</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCCloudTransaction(im)recursiveRemoveShareItemForUserID:nodeID:"></a>
+                    <a name="//apple_ref/objc/Method/-recursiveRemoveShareItemForUserID:nodeID:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCCloudTransaction(im)recursiveRemoveShareItemForUserID:nodeID:">-recursiveRemoveShareItemForUserID:nodeID:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Modifies the permissons for a treesystem branch rooted at the specified node.</p>
+
+<p>This method removes the permissions for the user from the specified node,
+ and all of the node&rsquo;s children, grand-children, etc (recursively).</p>
+
+<p>This is a convenience method for modifying a branch of the treesystem.
+ You can accomplish the same thing manually by:</p>
+
+<ul>
+<li>using the NodeManager to recursively enumerate the node</li>
+<li>modifying each node.shareList</li>
+<li>invoking cloudTransaction.modifyNode to save the changes, and queue the upload</li>
+</ul>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n"><a href="../Classes/ZDCCloudOperation.html">ZDCCloudOperation</a></span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span>
+    <span class="nf">recursiveRemoveShareItemForUserID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">userID</span>
+                               <span class="nf">nodeID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">nodeID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">recursiveRemoveShareItem</span><span class="p">(</span><span class="n">forUserID</span> <span class="nv">userID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">nodeID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt"><a href="../Classes/ZDCCloudOperation.html">ZDCCloudOperation</a></span><span class="p">]</span></code></pre>
+
+                        </div>
                       </div>
                     </section>
                   </div>
@@ -2873,6 +3232,74 @@ You can get the eTag from the DownloadManager&rsquo;s completion block parameter
             </div>
             <div class="task-group">
               <div class="task-name-container">
+                <a name="/User%20Utilities"></a>
+                <a name="//apple_ref/objc/Section/User Utilities" class="dashAnchor"></a>
+                <a href="#/User%20Utilities">
+                  <h3 class="section-name">User Utilities</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCCloudTransaction(im)userWithID:"></a>
+                    <a name="//apple_ref/objc/Method/-userWithID:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCCloudTransaction(im)userWithID:">-userWithID:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the user with the given userID.</p>
+
+<p>This is simply a convenience wrapper for <code>[transaction objectForKey:userID inCollection:kZDCCollection_Users]</code></p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n"><a href="../Classes/ZDCUser.html">ZDCUser</a></span> <span class="o">*</span><span class="p">)</span><span class="nf">userWithID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">userID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">user</span><span class="p">(</span><span class="n">id</span> <span class="nv">userID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ZDCUser.html">ZDCUser</a></span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>userID</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The identifier of the user. (userID == ZDCUser.uuid)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Returns the matching user, if it exists. Nil otherwise.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
                 <a name="/Operations"></a>
                 <a name="//apple_ref/objc/Section/Operations" class="dashAnchor"></a>
                 <a href="#/Operations">
@@ -3165,7 +3592,7 @@ This information may be useful in determining why your data is out-of-sync with 
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-10-15)</p>
+      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-10-18)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>
