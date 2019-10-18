@@ -16,13 +16,23 @@ install! 'cocoapods', :disable_input_output_paths => true
 
 abstract_target 'ios' do
 	platform :ios, '10.1'
-	
-	pod 'ZDCSyncable'
-	pod 'CocoaLumberjack/Swift'
-	pod 'YapDatabase/SQLCipher', :git =>'https://github.com/yapstudios/YapDatabase.git', :commit=>'5a7e70a2101ba78b1f92bc992b78dc2e06adb941'
+		
+	# This is the pod you need.
+	# In this project we're using it as a "Development Pod".
+	# But in your project you'll install it normally like this:
+	#
+	# pod 'ZeroDarkCloud/Swift'
+	#
 	pod 'ZeroDarkCloud/Swift', path: '../../', :inhibit_warnings => false
 	
+	# It's also recommended (but not required) that you use this Pod too.
+	# It helps with merging changes and handling conflicts.
+	# 
+	pod 'ZDCSyncable'
+    
+
 	# Used by sample application (not required for your application)
+	pod 'CocoaLumberjack/Swift'
 	pod 'KGHitTestingViews'
 	pod 'SWRevealViewController'
 	pod 'ImageScrollView'

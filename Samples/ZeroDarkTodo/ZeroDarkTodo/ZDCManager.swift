@@ -676,27 +676,13 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			return nil
 		}
 		
-		// Our message needs to include the cloudPath to the node.
-		// This will allow the message receiver to link the node into their treesystem.
-		//
-		// To get the cloudPath, we can use the ZDCCloudPathManager.
+		// Our message needs to include the cloudID & cloudPath to the node.
+		// This will allow the message receiver to graft the node into their treesystem.
 		//
 		guard
 			let listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List),
-			let cloudPath = zdc.cloudPathManager.cloudPath(for: listNode, transaction: transaction)
+			let graftInvite = cloudTransaction.graftInvite(for: listNode)
 		else {
-			return nil
-		}
-		
-		// Our message needs to include the cloudID for the node.
-		// The cloudID is a UUID for the node, which is assigned by the server.
-		//
-		// By including the cloudID, we ensure the receiver can find our node,
-		// even if we happen to rename it or move it in the future.
-		//
-		// Note that this value is nil until the node has been uploaded.
-		//
-		guard let cloudID = listNode.cloudID else {
 			return nil
 		}
 		
@@ -714,8 +700,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		//
 		let invitation = InvitationCloudJSON(listName: list.title,
 		                                      message: msgText,
-		                                    cloudPath: cloudPath.path(),
-		                                      cloudID: cloudID)
+		                                    cloudPath: graftInvite.cloudPath.path(),
+		                                      cloudID: graftInvite.cloudID)
 		
 		// Convert to JSON, and return data
 		do {
@@ -1722,48 +1708,25 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			//   So our collaboration partner does NOT have permission to delete the list2 node,
 			//   because he/she does NOT have read-write permission for list2's parent node (home).
 			
-			var nodeIDs: [String] = []
+			var permsOps: [ZDCCloudOperation] = []
 			
 			if let listNodeID = cloudTransaction.linkedNodeID(forKey: listID, inCollection: kZ2DCollection_List) {
 				
-				nodeIDs.append(listNodeID)
-				zdc.nodeManager.recursiveEnumerateNodeIDs(withParentID: listNodeID,
-				                                           transaction: transaction,
-				                                                 using:
-				{ (nodeID, _, _, _) in
-					
-					nodeIDs.append(nodeID)
-				})
-			}
-			
-			for nodeID in nodeIDs {
-				
-				guard var node = cloudTransaction.node(id: nodeID) else {
-					continue
-				}
-				
-				node = node.copy() as! ZDCNode
-				
 				for addedUserID in newUsers {
-					
+				
 					let shareItem = ZDCShareItem()
 					shareItem.addPermission(ZDCSharePermission.read)
 					shareItem.addPermission(ZDCSharePermission.write)
-					
-					node.shareList.add(shareItem, forUserID: addedUserID)
+				
+					let addedOps =
+					  cloudTransaction.recursiveAddShareItem(shareItem, forUserID: addedUserID, nodeID: listNodeID)
+					permsOps.append(contentsOf: addedOps)
 				}
 				
 				for removedUserID in removedUsers {
 					
-					node.shareList.removeShareItem(forUserID: removedUserID)
-				}
-				
-				do {
-					try cloudTransaction.modifyNode(node)
-					
-				} catch {
-					DDLogError("Error modifying node: \(error)")
-					return // from transaction
+					let addedOps = cloudTransaction.recursiveRemoveShareItem(forUserID: removedUserID, nodeID: listNodeID)
+					permsOps.append(contentsOf: addedOps)
 				}
 			}
 			
@@ -1786,8 +1749,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			//
 			// Our invitation tells the other user(s) about our List,
 			// and invites them to become a collaborator.
-		
-			let permsOps = cloudTransaction.addedOperations()
 			
 		#if true
 			//
@@ -1798,23 +1759,14 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				var addedUsers = [ZDCUser]()
 				for addedUserID in newUsers {
 					
-					if let user = transaction.object(forKey: addedUserID, inCollection: kZDCCollection_Users) as? ZDCUser {
+					if let user = cloudTransaction.user(id: addedUserID) {
 						addedUsers.append(user)
 					}
 				}
 				
 				do {
-					let message = try cloudTransaction.sendMessage(toRecipients: addedUsers)
+					let message = try cloudTransaction.sendMessage(toRecipients: addedUsers, withDependencies: permsOps)
 					cloudTransaction.setTag(listID, forNodeID: message.uuid, withIdentifier: "listID")
-					
-					let msgOps = cloudTransaction.addedOperations(forNodeID: message.uuid)
-					for msgOp in msgOps {
-						
-						let msgOp = msgOp.copy() as! ZDCCloudOperation
-						msgOp.addDependencies(permsOps)
-						
-						cloudTransaction.modifyOperation(msgOp)
-					}
 				}
 				catch {
 					DDLogError("Error sending message: \(error)")
@@ -1827,20 +1779,11 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			//
 			for addedUserID in newUsers {
 				
-				if let user = transaction.object(forKey: addedUserID, inCollection: kZDCCollection_Users) as? ZDCUser {
+				if let user = cloudTransaction.user(id: addedUserID) {
 					
 					do {
-						let signal = try cloudTransaction.sendSignal(toRecipient: user)
+						let signal = try cloudTransaction.sendSignal(toRecipient: user, withDependencies: permsOps)
 						cloudTransaction.setTag(listID, forNodeID: signal.uuid, withIdentifier: "listID")
-						
-						let signalOps = cloudTransaction.addedOperations(forNodeID: signal.uuid)
-						for signalOp in signalOps {
-							
-							let signalOp = signalOp.copy() as! ZDCCloudOperation
-							signalOp.addDependcies(permsOps)
-							
-							cloudTransaction.modifyOperation(signalOp)
-						}
 					}
 					catch {
 						print("\(LOG_PREFIX): Error sending message: \(error)")
@@ -2109,7 +2052,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					imageNode.name = "img"
 					
 					do {
-						try cloudTransaction.createNode(imageNode)
+						try cloudTransaction.insertNode(imageNode)
 					}
 					catch {
 						DDLogError("Error creating imageNode: \(error)")

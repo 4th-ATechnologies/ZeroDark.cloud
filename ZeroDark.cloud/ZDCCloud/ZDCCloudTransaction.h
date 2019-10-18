@@ -14,9 +14,10 @@
 
 #import "ZDCCloudLocator.h"
 #import "ZDCCloudOperation.h"
+#import "ZDCGraftInvite.h"
+#import "ZDCNode.h"
 #import "ZDCTreesystemPath.h"
 #import "ZDCTrunkNode.h"
-#import "ZDCNode.h"
 #import "ZDCUser.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -95,6 +96,8 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Enqueues a message to be sent to the specified recipients.
+ *
  * Messages are first uploaded into the sender's outbox,
  * and then copied server-side into the recipient's inbox.
  *
@@ -117,7 +120,47 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
                                         error:(NSError *_Nullable *_Nullable)outError;
 
 /**
- * A signal is a lightweight outgoing message.
+ * Enqueues a message to be sent to the specified recipients.
+ *
+ * Messages are first uploaded into the sender's outbox,
+ * and then copied server-side into the recipient's inbox.
+ *
+ * You supply the data for the message via `[ZeroDarkCloudDelegate dataForMessage:transaction:]`.
+ * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
+ *
+ * For more information about messaging, see the docs:
+ * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
+ *
+ * In a collaboration scenario, your message may be dependent upon permissions changes.
+ * For example, if Alice wants to share a branch of her treesystem with Bob, this is typically a 2-step process.
+ * First Alice must give Bob read-write permission to the branch.
+ * And then Alice can send Bob an invitation to collaborate on that branch.
+ * This is typically achieved by first using the method `recursiveAddShareItem:forUserID:nodeID`.
+ * This method returns an array of ZDCCloudOperations. So then you'd just pass that array of operations
+ * to this method as dependencies. This ensures that the treesystem permissions are
+ * modified before the message is sent.
+ *
+ * @param recipients
+ *   A list of recipients that should receive the message.
+ *
+ * @param dependencies
+ *   If the message operation should be dependent upon other operations, you may pass those dependencies here.
+ *
+ * @param outError
+ *   Set to nil on success.
+ *   Otherwise returns an error that explains what went wrong.
+ *
+ * @return Returns the message node on success, nil otherwise.
+ */
+- (nullable ZDCNode *)sendMessageToRecipients:(NSArray<ZDCUser*> *)recipients
+                             withDependencies:(nullable NSArray<ZDCCloudOperation*> *)dependencies
+                                        error:(NSError *_Nullable *_Nullable)outError;
+
+
+/**
+ * Enqueues a signal to be sent to the specified recipient.
+ *
+ * A signal is a lightweight outgoing message. (They're different from normal messaages.)
  *
  * Signals are delivered into the inbox of the recipient *ONLY*.
  * There is NOT a copy of the message within the outbox of the sender.
@@ -139,6 +182,37 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  * @return Returns the message node on success, nil otherwise.
  */
 - (nullable ZDCNode *)sendSignalToRecipient:(ZDCUser *)recipient
+                                      error:(NSError *_Nullable *_Nullable)outError;
+
+/**
+ * Enqueues a signal to be sent to the specified recipient.
+ *
+ * A signal is a lightweight outgoing message. (They're different from normal messaages.)
+ *
+ * Signals are delivered into the inbox of the recipient *ONLY*.
+ * There is NOT a copy of the message within the outbox of the sender.
+ * In other words, signals are designed to be minimal, and don't cause additional overhead for the sender.
+ *
+ * You supply the data for the message via `[ZeroDarkCloudDelegate dataForMessage:transaction:]`.
+ * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
+ *
+ * For more information about messaging, see the docs:
+ * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
+ *
+ * @param recipient
+ *   The user to send the message to. (userID == ZDCUser.uuid)
+ *
+ * @param dependencies
+ *   If the signal operation should be dependent upon other operations, you may pass those dependencies here.
+ *
+ * @param outError
+ *   Set to nil on success.
+ *   Otherwise returns an error that explains what went wrong.
+ *
+ * @return Returns the message node on success, nil otherwise.
+ */
+- (nullable ZDCNode *)sendSignalToRecipient:(ZDCUser *)recipient
+                           withDependencies:(nullable NSArray<ZDCCloudOperation*> *)dependencies
                                       error:(NSError *_Nullable *_Nullable)outError;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -238,7 +312,8 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  *
  * @return True on succeess. False otherwise.
  */
-- (BOOL)createNode:(ZDCNode *)node error:(NSError *_Nullable *_Nullable)outError;
+- (BOOL)insertNode:(ZDCNode *)node error:(NSError *_Nullable *_Nullable)outError
+NS_SWIFT_NAME(insertNode(_:));
 
 /**
  * Use this method to modify an existing node. For example, you can use it to:
@@ -256,9 +331,10 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  *   Set to nil on success.
  *   Otherwise returns an error that explains what went wrong.
  *
- * @return YES if the modification was successful. NO otherwise (in which case, outError will be set).
+ * @return If the request was successful, returns the queued operation.
+ *         Otherwise returns nil, in which case, outError will be set.
  */
-- (BOOL)modifyNode:(ZDCNode *)node error:(NSError *_Nullable *_Nullable)outError;
+- (nullable ZDCCloudOperation *)modifyNode:(ZDCNode *)node error:(NSError *_Nullable *_Nullable)outError;
 
 /**
  * Use this method to queue a data upload operation for the given node.
@@ -275,6 +351,9 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  *
  * @param changeset
  *   An optional changeset to store within the operation.
+ *
+ * @return If the request was successful, returns the queued operation.
+ *         Otherwise returns nil, in which case, outError will be set.
  */
 - (nullable ZDCCloudOperation *)queueDataUploadForNodeID:(NSString *)nodeID
                                            withChangeset:(nullable NSDictionary *)changeset;
@@ -289,7 +368,7 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  *   Set to nil on success.
  *   Otherwise returns an error that explains what went wrong.
  *
- * @return If the modification was successful, returns the queued operation.
+ * @return If the request was successful, returns the queued operation.
  *         Otherwise returns nil, in which case, outError will be set.
  */
 - (nullable ZDCCloudOperation *)deleteNode:(ZDCNode *)node error:(NSError *_Nullable *_Nullable)outError;
@@ -307,12 +386,24 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  *   Set to nil on success.
  *   Otherwise returns an error that explains what went wrong.
  *
- * @return If the modification was successful, returns the queued operation.
+ * @return If the request was successful, returns the queued operation.
  *         Otherwise returns nil, in which case, outError will be set.
  */
 - (nullable ZDCCloudOperation *)deleteNode:(ZDCNode *)node
                                withOptions:(ZDCDeleteNodeOptions)options
                                      error:(NSError *_Nullable *_Nullable)outError;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Grafting
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Grafting allows you to add another user's branch into your own treesystem.
+ * It's used for collaboration, as the branch is now shared between multiple users.
+ *
+ *
+ */
+- (nullable ZDCGraftInvite *)graftInviteForNode:(ZDCNode *)node;
 
 /**
  * Grafting allows you to add another user's branch into your own treesystem.
@@ -341,7 +432,7 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  *   Set to nil on success.
  *   Otherwise returns an error that explains what went wrong.
  *
- * @return If the grafting was successful, returns the newly created node.
+ * @return If the request was successful, returns the newly created node.
  *         Otherwise returns nil, in which case, outError will be set.
  */
 - (nullable ZDCNode *)graftNodeWithLocalPath:(ZDCTreesystemPath *)path
@@ -349,6 +440,42 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
                                remoteCloudID:(NSString *)remoteCloudID
                                   remoteUser:(ZDCUser *)remoteUser
                                        error:(NSError *_Nullable *_Nullable)outError;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Permissions
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Modifies the permissons for a treesystem branch rooted at the specified node.
+ *
+ * This method adds the given shareItem to the specified node,
+ * and all of the node's children, grand-children, etc (recursively).
+ *
+ * This is a convenience method for modifying a branch of the treesystem.
+ * You can accomplish the same thing manually by:
+ * - using the NodeManager to recursively enumerate the node
+ * - modifying each node.shareList
+ * - invoking cloudTransaction.modifyNode to save the changes, and queue the upload
+ */
+- (NSArray<ZDCCloudOperation*> *)recursiveAddShareItem:(ZDCShareItem *)shareItem
+                                             forUserID:(NSString *)userID
+                                                nodeID:(NSString *)nodeID
+NS_SWIFT_NAME(recursiveAddShareItem(_:forUserID:nodeID:));
+
+/**
+ * Modifies the permissons for a treesystem branch rooted at the specified node.
+ *
+ * This method removes the permissions for the user from the specified node,
+ * and all of the node's children, grand-children, etc (recursively).
+ *
+ * This is a convenience method for modifying a branch of the treesystem.
+ * You can accomplish the same thing manually by:
+ * - using the NodeManager to recursively enumerate the node
+ * - modifying each node.shareList
+ * - invoking cloudTransaction.modifyNode to save the changes, and queue the upload
+ */
+- (NSArray<ZDCCloudOperation*> *)recursiveRemoveShareItemForUserID:(NSString *)userID
+                                                            nodeID:(NSString *)nodeID;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Linking
@@ -617,6 +744,23 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  */
 - (BOOL)nodeIsMarkedAsNeedsDownload:(NSString *)nodeID components:(ZDCNodeComponents)components
  NS_SWIFT_NAME(nodeIsMarkedAsNeedsDownload(_:components:));;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark User Utilities
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Returns the user with the given userID.
+ *
+ * This is simply a convenience wrapper for `[transaction objectForKey:userID inCollection:kZDCCollection_Users]`
+ *
+ * @param userID
+ *   The identifier of the user. (userID == ZDCUser.uuid)
+ *
+ * @return Returns the matching user, if it exists. Nil otherwise.
+ */
+- (nullable ZDCUser *)userWithID:(NSString *)userID
+  NS_SWIFT_NAME(user(id:));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Operations

@@ -80,6 +80,18 @@
 - (nullable ZDCNode *)sendMessageToRecipients:(NSArray<ZDCUser*> *)recipients
                                         error:(NSError *_Nullable *_Nullable)outError
 {
+	return [self sendMessageToRecipients:recipients withDependencies:nil error:outError];
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (nullable ZDCNode *)sendMessageToRecipients:(NSArray<ZDCUser*> *)recipients
+                             withDependencies:(nullable NSArray<ZDCCloudOperation*> *)dependencies
+                                        error:(NSError *_Nullable *_Nullable)outError
+{
 	ZDCLogAutoTrace();
 	
 	// Proper API usage check
@@ -152,6 +164,9 @@
 	op_rcrd.cloudLocator = [cloudLocator copyWithFileNameExt:kZDCCloudFileExtension_Rcrd];
 	op_data.cloudLocator = [cloudLocator copyWithFileNameExt:kZDCCloudFileExtension_Data];
 	
+	if (dependencies) {
+		[op_rcrd addDependencies:dependencies];
+	}
 	[op_data addDependency:op_rcrd];
 	
 	[self addOperation:op_rcrd];
@@ -233,6 +248,13 @@
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
 - (nullable ZDCNode *)sendSignalToRecipient:(ZDCUser *)recipient
+                                      error:(NSError *_Nullable *_Nullable)outError
+{
+	return [self sendSignalToRecipient:recipient withDependencies:nil error:outError];
+}
+
+- (nullable ZDCNode *)sendSignalToRecipient:(ZDCUser *)recipient
+                           withDependencies:(nullable NSArray<ZDCCloudOperation*> *)dependencies
                                       error:(NSError *_Nullable *_Nullable)outError
 {
 	ZDCLogAutoTrace();
@@ -331,6 +353,9 @@
 	op_rcrd.cloudLocator = [cloudLocator copyWithFileNameExt:kZDCCloudFileExtension_Rcrd];
 	op_data.cloudLocator = [cloudLocator copyWithFileNameExt:kZDCCloudFileExtension_Data];
 	
+	if (dependencies) {
+		[op_rcrd addDependencies:dependencies];
+	}
 	[op_data addDependency:op_rcrd];
 	
 	[self addOperation:op_rcrd];
@@ -536,7 +561,7 @@
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
-- (BOOL)createNode:(ZDCNode *)node error:(NSError *_Nullable *_Nullable)outError
+- (BOOL)insertNode:(ZDCNode *)node error:(NSError *_Nullable *_Nullable)outError
 {
 	ZDCLogAutoTrace();
 	
@@ -678,7 +703,7 @@
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
-- (BOOL)modifyNode:(ZDCNode *)newNode error:(NSError *_Nullable *_Nullable)outError
+- (nullable ZDCCloudOperation *)modifyNode:(ZDCNode *)newNode error:(NSError *_Nullable *_Nullable)outError
 {
 	ZDCLogAutoTrace();
 	
@@ -699,7 +724,7 @@
 		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
 		
 		if (outError) *outError = error;
-		return NO;
+		return nil;
 	}
 	
 	ZDCNode *oldNode = [databaseTransaction objectForKey:newNode.uuid inCollection:kZDCCollection_Nodes];
@@ -713,7 +738,7 @@
 		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
 		
 		if (outError) *outError = error;
-		return NO;
+		return nil;
 	}
 	
 	ZDCCloudLocator *cloudLocator =
@@ -728,7 +753,7 @@
 		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
 		
 		if (outError) *outError = error;
-		return NO;
+		return nil;
 	}
 	
 	NSDictionary *changeset_permissions = newNode.shareList.changeset;
@@ -769,7 +794,7 @@
 	[self addOperation:op];
 	
 	if (outError) *outError = nil;
-	return YES;
+	return op;
 }
 
 /**
@@ -1186,6 +1211,54 @@
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
+- (nullable ZDCGraftInvite *)graftInviteForNode:(ZDCNode *)node
+{
+	ZDCLogAutoTrace();
+	
+	NSString *cloudID = node.cloudID;
+	
+	if (cloudID == nil)
+	{
+		// The node hasn't been uploaded yet.
+		//
+		// If you're running into this problem, it's probably because you forgot to add dependencies to your message.
+		// For example, you may have done something like this:
+		//
+		// zdc.databaseManager?.rwDatabaseConnection.asyncReadWrite {(transaction) in
+		//   {... create node ...}
+		//   {... enqueue message ...}
+		// }
+		//
+		// This creates multiple ZDCCloudOperation's to perform those tasks.
+		// But you forgot to ensure that:
+		// - the "send message" operation must be performed AFTER the "upload node" operations
+		//
+		// You can get the "upload node" operations via the `addedOperations` method.
+		// And you can pass those via:
+		// - `sendMesssageToRecipients:withDependencies::`
+		// - `sendSignalToRecipient:withDependencies::`
+		//
+		return nil;
+	}
+	
+	ZDCCloudPath *cloudPath =
+	  [[ZDCCloudPathManager sharedInstance] cloudPathForNode:node transaction:databaseTransaction];
+	
+	if (cloudPath == nil)
+	{
+		// Did you forget to add the node to the treesystem ?
+		//
+		return nil;
+	}
+	
+	return [[ZDCGraftInvite alloc] initWithCloudID:cloudID cloudPath:cloudPath];
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
+ */
 - (nullable ZDCNode *)graftNodeWithLocalPath:(ZDCTreesystemPath *)path
                              remoteCloudPath:(ZDCCloudPath *)remotePath
                                remoteCloudID:(NSString *)remoteCloudID
@@ -1317,6 +1390,112 @@
 	
 	if (outError) *outError = nil;
 	return pointerNode;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Permissions
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (NSArray<ZDCCloudOperation*> *)recursiveAddShareItem:(ZDCShareItem *)shareItem
+                                             forUserID:(NSString *)userID
+                                                nodeID:(NSString *)rootNodeID
+{
+	NSMutableArray<NSString*> *nodeIDs = [NSMutableArray array];
+	[nodeIDs addObject:rootNodeID];
+	
+	[[ZDCNodeManager sharedInstance] recursiveEnumerateNodeIDsWithParentID: rootNodeID
+	                                                           transaction: databaseTransaction
+	                                                            usingBlock:
+	^(NSString *descendentNodeID, NSArray<NSString *> *pathFromParent, BOOL *recurseInto, BOOL *stop) {
+		
+		[nodeIDs addObject:descendentNodeID];
+	}];
+	
+	NSMutableArray<ZDCCloudOperation*> *operations = [NSMutableArray array];
+	
+	for (NSString *nodeID in nodeIDs)
+	{
+		ZDCNode *node = [databaseTransaction objectForKey:nodeID inCollection:kZDCCollection_Nodes];
+		
+		if ([node.shareList hasShareItemForUserID:userID])
+		{
+			// Here's the deal:
+			//
+			// Since there's already a shareItem for this user, any attempt to ADD the item will fail.
+			// The ZDCShareList class operates this way because it's in charge of MERGING changes
+			// between multiple devices.
+			//
+			// In other words, if there's already a shareItem for this user, then you need to MODIFY it:
+			//
+			// if let shareItem = node.shareList.shareItem(forUserID: userID) {
+			//   shareItem.addPermission(ZDCSharePermission.read)
+			//   shareItem.addPermission(ZDCSharePermission.write)
+			// } else {
+			//   let shareItem = ZDCShareItem()
+			//   shareItem.addPermission(ZDCSharePermission.read)
+			//   shareItem.addPermission(ZDCSharePermission.write)
+			//   node.shareList.add(shareItem, forUserID: userID)
+			// }
+		}
+		else
+		{
+			node = [node copy];
+			[node.shareList addShareItem:shareItem forUserID:userID];
+			
+			ZDCCloudOperation *op = [self modifyNode:node error:nil];
+			if (op) {
+				[operations addObject:op];
+			}
+		}
+	}
+	
+	return operations;
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (NSArray<ZDCCloudOperation*> *)recursiveRemoveShareItemForUserID:(NSString *)userID
+                                                            nodeID:(NSString *)rootNodeID
+{
+	NSMutableArray<NSString*> *nodeIDs = [NSMutableArray array];
+	[nodeIDs addObject:rootNodeID];
+	
+	[[ZDCNodeManager sharedInstance] recursiveEnumerateNodeIDsWithParentID: rootNodeID
+	                                                           transaction: databaseTransaction
+	                                                            usingBlock:
+	^(NSString *descendentNodeID, NSArray<NSString *> *pathFromParent, BOOL *recurseInto, BOOL *stop) {
+		
+		[nodeIDs addObject:descendentNodeID];
+	}];
+	
+	NSMutableArray<ZDCCloudOperation*> *operations = [NSMutableArray array];
+	
+	for (NSString *nodeID in nodeIDs)
+	{
+		ZDCNode *node = [databaseTransaction objectForKey:nodeID inCollection:kZDCCollection_Nodes];
+		
+		if ([node.shareList hasShareItemForUserID:userID])
+		{
+			node = [node copy];
+			
+			[node.shareList removeShareItemForUserID:userID];
+			
+			ZDCCloudOperation *op = [self modifyNode:node error:nil];
+			if (op) {
+				[operations addObject:op];
+			}
+		}
+	}
+	
+	return operations;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1791,6 +1970,20 @@
 	}
 	
 	return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark User Utilities
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (nullable ZDCUser *)userWithID:(NSString *)userID
+{
+	return [databaseTransaction objectForKey:userID inCollection:kZDCCollection_Users];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
