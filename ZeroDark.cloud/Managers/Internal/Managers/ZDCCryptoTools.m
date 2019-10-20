@@ -9,6 +9,7 @@
 
 #import "ZDCCryptoTools.h"
 
+#import "ZDCConstantsPrivate.h"
 #import "ZDCNodePrivate.h"
 #import "ZeroDarkCloudPrivate.h"
 

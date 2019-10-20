@@ -19,11 +19,45 @@ extern NSString *const kZDCContext_Conflict;
 extern NSString *const ZDCSkippedOperationsNotification;
 extern NSString *const ZDCSkippedOperationsNotification_UserInfo_Ops;
 
+//
+// Dictionary keys within .rcrd files
+//
+
+extern NSString *const kZDCCloudRcrd_Version;
+extern NSString *const kZDCCloudRcrd_FileID;
+extern NSString *const kZDCCloudRcrd_Sender;
+extern NSString *const kZDCCloudRcrd_Keys;
+extern NSString *const kZDCCloudRcrd_Children;
+extern NSString *const kZDCCloudRcrd_Meta;
+extern NSString *const kZDCCloudRcrd_Data;
+extern NSString *const kZDCCloudRcrd_BurnDate;
+
+extern NSString *const kZDCCloudRcrd_Keys_Perms;
+extern NSString *const kZDCCloudRcrd_Keys_Burn;
+extern NSString *const kZDCCloudRcrd_Keys_Key;
+
+extern NSString *const kZDCCloudRcrd_Keys_Deprecated_Perms;
+extern NSString *const kZDCCloudRcrd_Keys_Deprecated_Burn;
+extern NSString *const kZDCCloudRcrd_Keys_Deprecated_PubKeyID;
+extern NSString *const kZDCCloudRcrd_Keys_Deprecated_SymKey;
+
+extern NSString *const kZDCCloudRcrd_Children_Prefix;
+
+extern NSString *const kZDCCloudRcrd_Meta_Filename;
+extern NSString *const kZDCCloudRcrd_Meta_DirSalt;
+
+extern NSString *const kZDCCloudRcrd_Data_Pointer;
+extern NSString *const kZDCCloudRcrd_Data_Pointer_Owner;
+extern NSString *const kZDCCloudRcrd_Data_Pointer_Path;
+extern NSString *const kZDCCloudRcrd_Data_Pointer_CloudID;
+
 // Names of special files found at resourcesURL
 
 extern NSString *const kSupportedConfigurations;
 
-// KEYS USED IN fetchConfigWithCompletionQueue
+//
+// Keys used in fetchConfigWithCompletionQueue
+//
 
 extern NSString *const kSupportedConfigurations_Key_AWSRegions;
 extern NSString *const kSupportedConfigurations_Key_AWSRegions_ComingSoon;

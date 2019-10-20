@@ -11,7 +11,7 @@
 
 #import "ZDCObjectSubclass.h"
 #import "ZDCDictionary.h"
-#import "ZDCConstants.h"
+#import "ZDCConstantsPrivate.h"
 
 // Encoding/Decoding Keys
 

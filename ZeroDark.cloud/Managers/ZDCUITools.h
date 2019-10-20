@@ -40,18 +40,27 @@ typedef void(^accountSetupViewCompletionHandler)(NSString *__nullable localUserI
 																 BOOL shouldBackupAccessKey);
 
 /**
- * return a UIViewController for user activation activation
+ * Returns a UIViewController that can be used for sign-in & sign-up.
+ *
+ * It walks users through the processing of either:
+ * - logging-in & restoring their private key
+ * - creating a new account
  *
  * @param viewController
- * an optional initial view controler for app customization
+ *   An optional initial view controler for app customization.
+ *   This is the first screen that's displayed.
+ *   If nil, then a generic view is displayed with the app name (+ sign-in & sign-up buttons).
  *
  * @param canDismiss
- *   boolean indicating if the user can dismiss the activation view before completing activation
+ *   Indicates whether or not the user can dismiss the activation view before completing activation.
+ *   Typically this is set to false if there aren't other logged-in users,
+ *   and the app requires a logged-in user to work properly.
  *
  * @param completionHandler
- *   The completionHandler, to call once the user has completed it's interaction
+ *   Called once the user has completed interaction with the view controller.
+ *   This is always called on the main thread.
  */
--(ZDCAccountSetupViewControllerProxy*)accountSetupViewControllerWithInitialViewController:(UIViewController* __nullable) viewController
+- (ZDCAccountSetupViewControllerProxy *)accountSetupViewControllerWithInitialViewController:(UIViewController* __nullable) viewController
 																  canDismissWithoutNewAccount:(BOOL)canDismiss
 																		completionHandler:(accountSetupViewCompletionHandler __nullable )completionHandler;
 

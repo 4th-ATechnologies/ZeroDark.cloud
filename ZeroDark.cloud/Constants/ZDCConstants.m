@@ -46,37 +46,6 @@
 /* extern */ NSString *const kZDCDirPrefix_Deprecated_Inbox  = @"inbox";
 /* extern */ NSString *const kZDCDirPrefix_Deprecated_Outbox = @"outbox";
 
-// Dictionary keys used in .rcrd files
-
-/* extern */ NSString *const kZDCCloudRcrd_Version  = @"version";
-/* extern */ NSString *const kZDCCloudRcrd_FileID   = @"fileID";
-/* extern */ NSString *const kZDCCloudRcrd_Sender   = @"sender";
-/* extern */ NSString *const kZDCCloudRcrd_Keys     = @"keys";
-/* extern */ NSString *const kZDCCloudRcrd_Children = @"children";
-/* extern */ NSString *const kZDCCloudRcrd_Meta     = @"metadata";
-/* extern */ NSString *const kZDCCloudRcrd_Data     = @"data";
-/* extern */ NSString *const kZDCCloudRcrd_BurnDate = @"burnDate";
-
-/* extern */ NSString *const kZDCCloudRcrd_Keys_Perms               = @"perms";
-/* extern */ NSString *const kZDCCloudRcrd_Keys_Burn                = @"burn";
-/* extern */ NSString *const kZDCCloudRcrd_Keys_Key                 = @"key";
-
-/* extern */ NSString *const kZDCCloudRcrd_Keys_Deprecated_Perms    = @"Share";
-/* extern */ NSString *const kZDCCloudRcrd_Keys_Deprecated_Burn     = @"BurnDate";
-/* extern */ NSString *const kZDCCloudRcrd_Keys_Deprecated_PubKeyID = @"pubKeyID";
-/* extern */ NSString *const kZDCCloudRcrd_Keys_Deprecated_SymKey   = @"symKey";
-
-/* extern */ NSString *const kZDCCloudRcrd_Children_Prefix = @"prefix";
-
-/* extern */ NSString *const kZDCCloudRcrd_Meta_Filename       = @"filename";
-/* extern */ NSString *const kZDCCloudRcrd_Meta_DirSalt        = @"dirSalt";
-
-/* extern */ NSString *const kZDCCloudRcrd_Data_Pointer        = @"pointer";
-
-/* extern */ NSString *const kZDCCloudRcrd_Data_Pointer_Owner   = @"owner";
-/* extern */ NSString *const kZDCCloudRcrd_Data_Pointer_Path    = @"path";
-/* extern */ NSString *const kZDCCloudRcrd_Data_Pointer_CloudID = @"cloudID";
-
 // Dictionary keys used in .pubKey/.privKey files
 
 NSString *const kZDCCloudRcrd_UserID  = @"userID";

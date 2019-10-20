@@ -696,6 +696,10 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		//
 		let msgText: String? = nil
 		
+		let wtf = [
+			"foo": "bar"
+		]
+		
 		// Create invitation wrapper
 		//
 		let invitation = InvitationCloudJSON(listName: list.title,
@@ -1812,8 +1816,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			guard
 				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-				let sender = transaction.object(forKey: senderUserID, inCollection: kZDCCollection_Users) as? ZDCUser,
-				let remoteCloudPath = ZDCCloudPath.init(fromPath: invitation.cloudPath)
+				let sender = cloudTransaction.user(id: senderUserID),
+				let remoteCloudPath = ZDCCloudPath(fromPath: invitation.cloudPath)
 			else {
 				return
 			}

@@ -5,7 +5,7 @@
  * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
  * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
  * API Reference : https://apis.zerodark.cloud
- **/
+**/
 
 #import "ZDCUIToolsPrivate.h"
 #import "ZeroDarkCloudPrivate.h"
@@ -16,11 +16,11 @@
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG && robbie_hanson
-static const int zdcLogLevel = ZDCLogLevelInfo | ZDCLogFlagTrace;
+  static const int zdcLogLevel = ZDCLogLevelInfo | ZDCLogFlagTrace;
 #elif DEBUG
-static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 #pragma unused(zdcLogLevel)
 
@@ -63,7 +63,12 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 #if TARGET_OS_IPHONE
 //MARK: IOS
 
--(ZDCAccountSetupViewControllerProxy*)accountSetupViewControllerWithInitialViewController:(UIViewController* __nullable) viewController
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCUITools.html
+ */
+- (ZDCAccountSetupViewControllerProxy *)accountSetupViewControllerWithInitialViewController:(UIViewController* __nullable) viewController
 																				  canDismissWithoutNewAccount:(BOOL)canDismiss
 																								completionHandler:(accountSetupViewCompletionHandler __nullable )completionHandler
 {

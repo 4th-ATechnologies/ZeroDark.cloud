@@ -247,6 +247,11 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, readonly) BOOL isPointer;
 
+/**
+ * Returns True if the node is an outgoing signal (lightweight message).
+ */
+@property (nonatomic, readonly) BOOL isSignal;
+
 #pragma mark Random Values
 
 /**

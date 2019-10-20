@@ -73,6 +73,7 @@ static NSString *const k_pointeeID             = @"pointeeID";
 @synthesize anchor = anchor;
 @synthesize pointeeID = pointeeID;
 @dynamic isPointer;
+@dynamic isSignal;
 
 - (void)setDirSalt:(NSData *)newDirSalt
 {
@@ -269,6 +270,11 @@ static NSString *const k_pointeeID             = @"pointeeID";
 - (BOOL)isPointer
 {
 	return (pointeeID != nil);
+}
+
+- (BOOL)isSignal
+{
+	return [parentID hasSuffix:@"|signal"];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

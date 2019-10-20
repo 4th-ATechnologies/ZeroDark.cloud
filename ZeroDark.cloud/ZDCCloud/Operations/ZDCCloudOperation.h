@@ -126,10 +126,16 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * ZDCCloudOperation is a lightweight representation of a push task that needs to be performed.
  *
+ * That is, it represents a change that needs to be pushed to the server such as:
+ * - uploading a new node
+ * - modifying an existing node
+ * - moving or renaming a node
+ * - deleting a node
+ *
  * It encodes the minimum information necessary to to execute the task at a later date,
  * possibly after an app re-launch.
  *
- * The operation objects get stored in the database as part of ZDCCloud,
+ * The operation objects get stored in the database as part of ZDCCloud (a database extension),
  * which manages the operation objects in a semi-queue-like fashion.
  *
  * @note ZDCCloudOperation extends YapDatabaseCloudCoreOperation.

@@ -1,6 +1,6 @@
 #import "ZDCCloudRcrd.h"
 
-#import "ZDCConstants.h"
+#import "ZDCConstantsPrivate.h"
 #import "NSString+ZeroDark.h"
 
 @implementation ZDCCloudRcrd
