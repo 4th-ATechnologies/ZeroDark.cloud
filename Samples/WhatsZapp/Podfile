@@ -1,0 +1,20 @@
+platform :ios, '10.0'
+
+use_frameworks!
+inhibit_all_warnings!
+
+# Workaround for Xcode bug:
+# - https://www.ralfebert.de/ios/blog/cocoapods-clean-input-output-files/
+# - https://github.com/CocoaPods/CocoaPods/issues/8073
+# - https://github.com/CocoaPods/CocoaPods/pull/8105
+# 
+install! 'cocoapods', :disable_input_output_paths => true
+
+target 'WhatsZapp' do
+
+  pod 'CocoaLumberjack/Swift'
+  pod 'MessageKit'
+  pod 'YapDatabase/SQLCipher', path: '../../../../GitHub/YapDatabase', :inhibit_warnings => false
+  pod 'ZeroDarkCloud/Swift', path: '../../', :inhibit_warnings => false
+
+end

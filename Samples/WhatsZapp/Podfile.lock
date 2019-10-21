@@ -1,0 +1,193 @@
+PODS:
+  - AFNetworking (3.2.1):
+    - AFNetworking/NSURLSession (= 3.2.1)
+    - AFNetworking/Reachability (= 3.2.1)
+    - AFNetworking/Security (= 3.2.1)
+    - AFNetworking/Serialization (= 3.2.1)
+    - AFNetworking/UIKit (= 3.2.1)
+  - AFNetworking/NSURLSession (3.2.1):
+    - AFNetworking/Reachability
+    - AFNetworking/Security
+    - AFNetworking/Serialization
+  - AFNetworking/Reachability (3.2.1)
+  - AFNetworking/Security (3.2.1)
+  - AFNetworking/Serialization (3.2.1)
+  - AFNetworking/UIKit (3.2.1):
+    - AFNetworking/NSURLSession
+  - Base64 (1.1.2)
+  - CocoaLumberjack (3.6.0):
+    - CocoaLumberjack/Core (= 3.6.0)
+  - CocoaLumberjack/Core (3.6.0)
+  - CocoaLumberjack/Swift (3.6.0):
+    - CocoaLumberjack/Core
+  - InputBarAccessoryView (4.2.2)
+  - JGProgressView (1.2.1)
+  - JWT (2.2.0):
+    - Base64 (~> 1.1.2)
+  - KGHitTestingViews (0.9.5)
+  - MessageKit (3.0.0):
+    - InputBarAccessoryView (~> 4.2.2)
+  - S4Crypto (2.2.10)
+  - SCLAlertView-Objective-C (1.1.6)
+  - SQLCipher (4.2.0):
+    - SQLCipher/standard (= 4.2.0)
+  - SQLCipher/common (4.2.0)
+  - SQLCipher/standard (4.2.0):
+    - SQLCipher/common
+  - TCCopyableLabel (1.0.1)
+  - UIColor-Crayola (1.0)
+  - XMLDictionary (1.4.1)
+  - YapDatabase/SQLCipher (3.1.4):
+    - YapDatabase/SQLCipher/Core (= 3.1.4)
+    - YapDatabase/SQLCipher/Extensions (= 3.1.4)
+  - YapDatabase/SQLCipher/Core (3.1.4):
+    - CocoaLumberjack
+    - SQLCipher (>= 3.4.0)
+    - YapDatabase/SQLCipher/Core/Swift (= 3.1.4)
+  - YapDatabase/SQLCipher/Core/Swift (3.1.4):
+    - CocoaLumberjack
+    - SQLCipher (>= 3.4.0)
+  - YapDatabase/SQLCipher/Extensions (3.1.4):
+    - YapDatabase/SQLCipher/Core
+    - YapDatabase/SQLCipher/Extensions/ActionManager (= 3.1.4)
+    - YapDatabase/SQLCipher/Extensions/AutoView (= 3.1.4)
+    - YapDatabase/SQLCipher/Extensions/CloudCore (= 3.1.4)
+    - YapDatabase/SQLCipher/Extensions/CloudKit (= 3.1.4)
+    - YapDatabase/SQLCipher/Extensions/ConnectionPool (= 3.1.4)
+    - YapDatabase/SQLCipher/Extensions/ConnectionProxy (= 3.1.4)
+    - YapDatabase/SQLCipher/Extensions/CrossProcessNotification (= 3.1.4)
+    - YapDatabase/SQLCipher/Extensions/FilteredView (= 3.1.4)
+    - YapDatabase/SQLCipher/Extensions/FullTextSearch (= 3.1.4)
+    - YapDatabase/SQLCipher/Extensions/Hooks (= 3.1.4)
+    - YapDatabase/SQLCipher/Extensions/ManualView (= 3.1.4)
+    - YapDatabase/SQLCipher/Extensions/Relationships (= 3.1.4)
+    - YapDatabase/SQLCipher/Extensions/RTreeIndex (= 3.1.4)
+    - YapDatabase/SQLCipher/Extensions/SearchResultsView (= 3.1.4)
+    - YapDatabase/SQLCipher/Extensions/SecondaryIndex (= 3.1.4)
+    - YapDatabase/SQLCipher/Extensions/View (= 3.1.4)
+  - YapDatabase/SQLCipher/Extensions/ActionManager (3.1.4):
+    - YapDatabase/SQLCipher/Core
+    - YapDatabase/SQLCipher/Extensions/AutoView
+  - YapDatabase/SQLCipher/Extensions/AutoView (3.1.4):
+    - YapDatabase/SQLCipher/Core
+    - YapDatabase/SQLCipher/Extensions/View
+  - YapDatabase/SQLCipher/Extensions/CloudCore (3.1.4):
+    - YapDatabase/SQLCipher/Core
+  - YapDatabase/SQLCipher/Extensions/CloudKit (3.1.4):
+    - YapDatabase/SQLCipher/Core
+  - YapDatabase/SQLCipher/Extensions/ConnectionPool (3.1.4):
+    - YapDatabase/SQLCipher/Core
+  - YapDatabase/SQLCipher/Extensions/ConnectionProxy (3.1.4):
+    - YapDatabase/SQLCipher/Core
+  - YapDatabase/SQLCipher/Extensions/CrossProcessNotification (3.1.4):
+    - YapDatabase/SQLCipher/Core
+  - YapDatabase/SQLCipher/Extensions/FilteredView (3.1.4):
+    - YapDatabase/SQLCipher/Core
+    - YapDatabase/SQLCipher/Extensions/View
+  - YapDatabase/SQLCipher/Extensions/FullTextSearch (3.1.4):
+    - YapDatabase/SQLCipher/Core
+  - YapDatabase/SQLCipher/Extensions/Hooks (3.1.4):
+    - YapDatabase/SQLCipher/Core
+  - YapDatabase/SQLCipher/Extensions/ManualView (3.1.4):
+    - YapDatabase/SQLCipher/Core
+    - YapDatabase/SQLCipher/Extensions/View
+  - YapDatabase/SQLCipher/Extensions/Relationships (3.1.4):
+    - YapDatabase/SQLCipher/Core
+  - YapDatabase/SQLCipher/Extensions/RTreeIndex (3.1.4):
+    - YapDatabase/SQLCipher/Core
+  - YapDatabase/SQLCipher/Extensions/SearchResultsView (3.1.4):
+    - YapDatabase/SQLCipher/Core
+    - YapDatabase/SQLCipher/Extensions/AutoView
+    - YapDatabase/SQLCipher/Extensions/FullTextSearch
+  - YapDatabase/SQLCipher/Extensions/SecondaryIndex (3.1.4):
+    - YapDatabase/SQLCipher/Core
+  - YapDatabase/SQLCipher/Extensions/View (3.1.4):
+    - YapDatabase/SQLCipher/Core
+  - ZDCSyncableObjC (1.0.1)
+  - ZeroDarkCloud/Core (1.0.0):
+    - AFNetworking
+    - CocoaLumberjack
+    - JGProgressView
+    - JWT
+    - KGHitTestingViews
+    - NSColor-Crayola
+    - S4Crypto (>= 2.2.9)
+    - SCLAlertView-Objective-C
+    - TCCopyableLabel
+    - UIColor-Crayola
+    - XMLDictionary
+    - YapDatabase/SQLCipher (>= 3.1.4)
+    - ZDCSyncableObjC
+    - zipzap
+  - ZeroDarkCloud/Swift (1.0.0):
+    - AFNetworking
+    - CocoaLumberjack
+    - JGProgressView
+    - JWT
+    - KGHitTestingViews
+    - NSColor-Crayola
+    - S4Crypto (>= 2.2.9)
+    - SCLAlertView-Objective-C
+    - TCCopyableLabel
+    - UIColor-Crayola
+    - XMLDictionary
+    - YapDatabase/SQLCipher (>= 3.1.4)
+    - ZDCSyncableObjC
+    - ZeroDarkCloud/Core
+    - zipzap
+  - zipzap (8.1.1)
+
+DEPENDENCIES:
+  - CocoaLumberjack/Swift
+  - MessageKit
+  - YapDatabase/SQLCipher (from `../../../../GitHub/YapDatabase`)
+  - ZeroDarkCloud/Swift (from `../../`)
+
+SPEC REPOS:
+  trunk:
+    - AFNetworking
+    - Base64
+    - CocoaLumberjack
+    - InputBarAccessoryView
+    - JGProgressView
+    - JWT
+    - KGHitTestingViews
+    - MessageKit
+    - S4Crypto
+    - SCLAlertView-Objective-C
+    - SQLCipher
+    - TCCopyableLabel
+    - UIColor-Crayola
+    - XMLDictionary
+    - ZDCSyncableObjC
+    - zipzap
+
+EXTERNAL SOURCES:
+  YapDatabase:
+    :path: "../../../../GitHub/YapDatabase"
+  ZeroDarkCloud:
+    :path: "../../"
+
+SPEC CHECKSUMS:
+  AFNetworking: b6f891fdfaed196b46c7a83cf209e09697b94057
+  Base64: cecfb41a004124895a7bcee567a89bae5a89d49b
+  CocoaLumberjack: 78b0c238666f4f58db069738ec176f4519557516
+  InputBarAccessoryView: 2b937602598e2fab3149f37f51dd7ad795653812
+  JGProgressView: 6f3dfda0de2d7c49b249f3075553d09f39e42bd5
+  JWT: cf73c0ab0dac762df3de8a3f1164352089d97780
+  KGHitTestingViews: 34a1c05a3ec0778ca8c46fadf994c9292c56f374
+  MessageKit: e892a9ca49ebe6d82684d3a93ad84021fa23e2c6
+  S4Crypto: 6f563ee3bd08f02791508717c58f14fff83cfe2d
+  SCLAlertView-Objective-C: 2bb9be204bffaf24762a0e33fe6ca9645819b3b7
+  SQLCipher: 0187a2180ac288ea686b670b7141da62cd013b16
+  TCCopyableLabel: 31958ac1969b8bf8e08ef7e711ee42e86b2f5215
+  UIColor-Crayola: 0d2f68032cbea6ba4669b360ffb641d203b41a0d
+  XMLDictionary: fa07b6ff422b3a91d47a5de9bc82e3fc04fbd167
+  YapDatabase: dcd967fc6f9cb07c4b99a475254edf75049f4383
+  ZDCSyncableObjC: 0866ef66fc5be67e0b6df713cff9b9b84eed9967
+  ZeroDarkCloud: 84d722e1ba5dd6b146f90dade0ec11144d252ad5
+  zipzap: 940162d9c9c60472c2eab341385e4214da0fdf1c
+
+PODFILE CHECKSUM: d3c04c84b006f3dd2f1af08df8bf767e6061f575
+
+COCOAPODS: 1.8.3
