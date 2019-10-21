@@ -87,14 +87,14 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	BOOL                 		didModifyRecipents;
 	int                  		level;
 	
-	sharedUsersViewCompletionHandler	completionHandler;
+	SharedUsersViewCompletionHandler	completionHandler;
 }
 
-- (instancetype)initWithOwner:(ZeroDarkCloud*)inOwner
-						localUserID:(NSString* __nonnull)inLocalUserID
-					 remoteUserIDs:(nullable NSSet <NSString*> * )inRemoteUserIDs
-								title:(NSString * __nullable)title
-				completionHandler:(sharedUsersViewCompletionHandler __nullable )inCompletionHandler
+- (instancetype)initWithOwner:(ZeroDarkCloud *)inOwner
+						localUserID:(NSString *)inLocalUserID
+					 remoteUserIDs:(NSSet<NSString*> *_Nullable)inRemoteUserIDs
+								title:(NSString *_Nullable)title
+				completionHandler:(SharedUsersViewCompletionHandler)inCompletionHandler
 {
 	NSBundle *bundle = [ZeroDarkCloud frameworkBundle];
 	UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"RemoteUsersViewController_IOS" bundle:bundle];
@@ -229,23 +229,27 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 // MARK: Actions
 - (IBAction)doneButtonTapped:(id)sender
 {
-	
-	if(completionHandler)
+	if (completionHandler)
 	{
-		if(didModifyRecipents)
+		NSSet<NSString*> *addedUserIDs = nil;
+		NSSet<NSString*> *removedUserIDs = nil;
+		
+		if (didModifyRecipents)
 		{
-			NSMutableSet* removedUsers = [NSMutableSet setWithSet:originalRemoteUserSet];
-			[removedUsers minusSet: [NSSet setWithArray:remoteUserIDs]];
+			NSMutableSet<NSString *> *added = [NSMutableSet setWithArray:remoteUserIDs];
+			[added minusSet:originalRemoteUserSet];
 			
-			NSMutableSet* addUsers = [NSMutableSet setWithArray:remoteUserIDs];
-			[addUsers minusSet:originalRemoteUserSet];
+			NSMutableSet<NSString *> *removed = [originalRemoteUserSet mutableCopy];
+			[removed minusSet:[NSSet setWithArray:remoteUserIDs]];
 			
-			completionHandler(addUsers,removedUsers);
+			addedUserIDs = [added copy];
+			removedUserIDs = [removed copy];
 		}
-		else
-		{
-			completionHandler(NULL,NULL);
-		}
+		
+		if (addedUserIDs == nil) addedUserIDs = [NSSet set];
+		if (removedUserIDs == nil) removedUserIDs = [NSSet set];
+		
+		completionHandler(addedUserIDs, removedUserIDs);
 	}
 	
 	[self.navigationController popViewControllerAnimated:YES];
@@ -254,9 +258,10 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 
 - (IBAction)cancelButtonTapped:(id)sender
 {
-	if(completionHandler)
+	if (completionHandler)
 	{
-		completionHandler(NULL,NULL);
+		NSSet *empty = [NSSet set];
+		completionHandler(empty, empty);
 	}
 	
 	[self.navigationController popViewControllerAnimated:YES];

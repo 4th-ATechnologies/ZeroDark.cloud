@@ -150,18 +150,18 @@
 	[navigationController pushViewController:vc animated:YES];
 }
 
- - (void)pushSharedUsersViewForLocalUserID:(NSString* __nonnull)localUserID
-									 remoteUserIDs:(NSSet <NSString*> * __nullable)remoteUserIDs
-												 title:(NSString * __nullable)title
-							navigationController:(UINavigationController* __nonnull)navigationController
-								completionHandler:(sharedUsersViewCompletionHandler __nullable )completionHandler
+ - (void)pushSharedUsersViewForLocalUserID:(NSString *)localUserID
+                             remoteUserIDs:(NSSet<NSString*> *_Nullable)remoteUserIDs
+                                     title:(NSString *_Nullable)title
+                      navigationController:(UINavigationController *)navigationController
+                         completionHandler:(SharedUsersViewCompletionHandler)completionHandler
 {
-	
-	RemoteUsersViewController_IOS *vc = [[RemoteUsersViewController_IOS alloc] initWithOwner:zdc
-																										  localUserID:localUserID
-																										remoteUserIDs:remoteUserIDs
-																												  title:title
-																								  completionHandler: completionHandler];
+	RemoteUsersViewController_IOS *vc =
+	  [[RemoteUsersViewController_IOS alloc] initWithOwner: zdc
+	                                           localUserID: localUserID
+	                                         remoteUserIDs: remoteUserIDs
+	                                                 title: title
+	                                     completionHandler: completionHandler];
 
 	[navigationController pushViewController:vc animated:YES];
 }

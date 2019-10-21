@@ -126,8 +126,8 @@ typedef void(^accountSetupViewCompletionHandler)(NSString *__nullable localUserI
             withNavigationController:(UINavigationController*)navigationController;
 
 
-typedef void(^sharedUsersViewCompletionHandler)(NSSet <NSString*>  * _Nullable  addedUserIDs,
-																NSSet <NSString*>  * _Nullable  removedUserIDs );
+typedef void(^SharedUsersViewCompletionHandler)(NSSet<NSString*> *addedUserIDs,
+                                                NSSet<NSString*> *removedUserIDs);
 
 /**
  * Push a UIViewController for managing the list of users that an object is shared with.
@@ -147,11 +147,11 @@ typedef void(^sharedUsersViewCompletionHandler)(NSSet <NSString*>  * _Nullable  
  * @param completionHandler
  *   The completionHandler, to call once the user has completed it's interaction
  */
-- (void)pushSharedUsersViewForLocalUserID:(NSString* __nonnull)localUserID
-                            remoteUserIDs:(NSSet <NSString*> * __nullable)remoteUserIDs
-												title:(NSString * __nullable)title
-                     navigationController:(UINavigationController* __nonnull)navigationController
-                        completionHandler:(sharedUsersViewCompletionHandler __nullable )completionHandler;
+- (void)pushSharedUsersViewForLocalUserID:(NSString *)localUserID
+                            remoteUserIDs:(NSSet<NSString*> *_Nullable)remoteUserIDs
+												title:(NSString *_Nullable)title
+                     navigationController:(UINavigationController *)navigationController
+                        completionHandler:(SharedUsersViewCompletionHandler)completionHandler;
 
 
 /**

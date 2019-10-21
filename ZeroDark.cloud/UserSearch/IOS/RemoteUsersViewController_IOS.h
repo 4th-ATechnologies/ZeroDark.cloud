@@ -30,10 +30,10 @@ NS_ASSUME_NONNULL_BEGIN
 @interface RemoteUsersViewController_IOS : UIViewController
 
 - (instancetype)initWithOwner:(ZeroDarkCloud*)inOwner
-						localUserID:(NSString* __nonnull)inLocalUserID
-					 remoteUserIDs:(nullable NSSet <NSString*> * )remoteUserIDs
-								title:(NSString * __nullable)title
-				completionHandler:(sharedUsersViewCompletionHandler __nullable )completionHandler;
+						localUserID:(NSString *)inLocalUserID
+					 remoteUserIDs:(NSSet <NSString*> *_Nullable)remoteUserIDs
+								title:(NSString *_Nullable)title
+				completionHandler:(SharedUsersViewCompletionHandler)completionHandler;
 
 @end
 
