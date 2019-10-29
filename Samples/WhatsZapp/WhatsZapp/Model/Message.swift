@@ -22,6 +22,7 @@ class Message: NSCopying, Codable {
 		case conversationID = "conversationID"
 		case text = "text"
 		case date = "date"
+		case isRead = "isRead"
 	}
 	
 	/// We store `Message` objects in the database.
@@ -55,17 +56,24 @@ class Message: NSCopying, Codable {
 	///
 	let date: Date
 	
-	init(uuid: String, conversationID: String, text: String, date: Date) {
+	/// Whether or not the message has been read yet.
+	///
+	var isRead: Bool
+	
+	
+	init(uuid: String, conversationID: String, text: String, date: Date, isRead: Bool) {
 		self.uuid = uuid
 		self.conversationID = conversationID
 		self.text = text
 		self.date = date
+		self.isRead = isRead
 	}
 	
 	convenience init(conversationID: String, text: String) {
 		let _uuid = UUID().uuidString
 		let _date = Date()
-		self.init(uuid: _uuid, conversationID: conversationID, text: text, date: _date)
+		let _isRead = true
+		self.init(uuid: _uuid, conversationID: conversationID, text: text, date: _date, isRead: _isRead)
 	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,7 +82,11 @@ class Message: NSCopying, Codable {
 		
 	func copy(with zone: NSZone? = nil) -> Any {
 		
-		let copy = Message(uuid: uuid, conversationID: conversationID, text: text, date: date)
+		let copy = Message(uuid: uuid,
+		         conversationID: conversationID,
+		                   text: text,
+		                   date: date,
+		                 isRead: isRead)
 		return copy
 	}
 }

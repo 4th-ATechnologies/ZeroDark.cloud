@@ -24,6 +24,7 @@
 		DC97C1A323565FF000B46DA4 /* ZDCManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC97C1A223565FF000B46DA4 /* ZDCManager.swift */; };
 		DC97C1A52356682000B46DA4 /* CustomLogFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC97C1A42356682000B46DA4 /* CustomLogFormatter.swift */; };
 		DC97E49D2368A2A90022B25F /* ConversationTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC97E49C2368A2A90022B25F /* ConversationTableViewCell.swift */; };
+		DC97E4A12368F98B0022B25F /* BadgeLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC97E4A02368F98B0022B25F /* BadgeLabel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +49,7 @@
 		DC97C1A42356682000B46DA4 /* CustomLogFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomLogFormatter.swift; sourceTree = "<group>"; };
 		DC97C1A62358D8B900B46DA4 /* WhatsZapp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WhatsZapp.entitlements; sourceTree = "<group>"; };
 		DC97E49C2368A2A90022B25F /* ConversationTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationTableViewCell.swift; sourceTree = "<group>"; };
+		DC97E4A02368F98B0022B25F /* BadgeLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeLabel.swift; sourceTree = "<group>"; };
 		FBBBD2B62B85DA6406E854FC /* Pods-WhatsZapp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WhatsZapp.debug.xcconfig"; path = "Target Support Files/Pods-WhatsZapp/Pods-WhatsZapp.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -87,6 +89,7 @@
 				DC97C1A42356682000B46DA4 /* CustomLogFormatter.swift */,
 				DC76FC06235AB25F0013047B /* IconTitleButton.swift */,
 				DC76FC08235AB5460013047B /* UIImage+scaling.swift */,
+				DC97E4A02368F98B0022B25F /* BadgeLabel.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -256,6 +259,7 @@
 				DC76FC00235A96980013047B /* SceneDelegate.swift in Sources */,
 				DC97C1932356340700B46DA4 /* RootViewController.swift in Sources */,
 				DC97C18F2356340700B46DA4 /* AppDelegate.swift in Sources */,
+				DC97E4A12368F98B0022B25F /* BadgeLabel.swift in Sources */,
 				DC76FC02235A9A650013047B /* ConversationsViewController.swift in Sources */,
 				DC1CEF02235BD875004B2EBC /* Conversation.swift in Sources */,
 				DC97C1A52356682000B46DA4 /* CustomLogFormatter.swift in Sources */,

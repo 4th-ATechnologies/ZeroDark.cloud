@@ -11,8 +11,9 @@ import Foundation
 import CocoaLumberjack
 import YapDatabase
 
-let DBExt_ConversationsView = "ConversationsView"
-let DBExt_MessagesView      = "MessagesView"
+let DBExt_ConversationsView  = "ConversationsView"
+let DBExt_MessagesView       = "MessagesView"
+let DBExt_UnreadMessagesView = "UnreadMessagesView"
 
 
 class DBManager {
@@ -30,11 +31,11 @@ class DBManager {
 	#endif
 	}
 	
-	
 	public func registerExtensions(_ database: YapDatabase) {
 		
 		registerExtension_ConversationsView(database)
 		registerExtension_MessagesView(database)
+		registerExtension_UnreadMessagesView(database)
 		registerExtension_Hooks(database)
 	}
 	
@@ -168,7 +169,7 @@ class DBManager {
 			return msg1.date.compare(msg2.date)
 		})
 		
-		let version = "1"; // <---------- change me if you modify grouping or sorting closure
+		let version = "1" // <---------- change me if you modify grouping or sorting closure
 		
 		let options = YapDatabaseViewOptions()
 		options.allowedCollections = YapWhitelistBlacklist(whitelist: Set([kCollection_Messages]))
@@ -180,6 +181,45 @@ class DBManager {
 			                     options: options)
 		
 		let extName = DBExt_MessagesView
+		database.asyncRegister(view, withName: extName) {(ready) in
+			
+			if !ready {
+				DDLogError("Error registering \(extName) !!!")
+			}
+		}
+	}
+	
+	/// In the user interface, we need the ability to quickly retrieve the unread count
+	/// for a conversation. That is, the number of unread messages within that conversation.
+	/// We use a `YapDatabaseFilteredView` to accomplish this.
+	///
+	private func registerExtension_UnreadMessagesView(_ database: YapDatabase) -> Void {
+		
+		// YapDatabaseFilteredView simply "filters" another view.
+		//
+		// So we're just going to filter the MessagesView.
+		// Thus the UnreadMessagesView will have the same structure as the MessagesView,
+		// but it will only contain unread messages.
+		
+		let filtering = YapDatabaseViewFiltering.withObjectBlock({
+			(transaction, group, collection, key, object) -> Bool in
+			
+			if let message = object as? Message {
+				return message.isRead
+			}
+			else {
+				return false
+			}
+		})
+		
+		let versionTag = "1" // <---------- change me if you modify filtering closure
+		
+		let view =
+		  YapDatabaseFilteredView(parentViewName: DBExt_MessagesView,
+		                               filtering: filtering,
+		                              versionTag: versionTag)
+		
+		let extName = DBExt_UnreadMessagesView
 		database.asyncRegister(view, withName: extName) {(ready) in
 			
 			if !ready {

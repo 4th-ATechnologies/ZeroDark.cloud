@@ -175,6 +175,20 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 		return message
 	}
 	
+	private func unreadCount(in conversation: Conversation) -> UInt {
+		
+		var unreadCount: UInt = 0
+		uiDatabaseConnection?.read({ (transaction) in
+			
+			if let viewTransaction = transaction.ext(DBExt_UnreadMessagesView) as? YapDatabaseViewTransaction {
+				
+				unreadCount = viewTransaction.numberOfItems(inGroup: conversation.uuid)
+			}
+		})
+		
+		return unreadCount
+	}
+	
 	private func remoteUser(id userID: String) -> ZDCUser? {
 		
 		var user: ZDCUser? = nil
@@ -467,9 +481,24 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 			else {
 				cell.messageLabel.text = "empty conversation"
 			}
+			
+			let unreadCount = self.unreadCount(in: conversation)
+			if unreadCount == 0 {
+				
+				cell.badgeLabel.isHidden = true
+			}
+			else {
+				
+				if unreadCount < 100 {
+					cell.badgeLabel.text = String(unreadCount)
+				} else {
+					cell.badgeLabel.text = "99+"
+				}
+				
+				cell.badgeLabel.isHidden = false
+			}
 		}
-	
-	//	cell.accessoryType = .disclosureIndicator
+		
 		return cell
 	}
 }

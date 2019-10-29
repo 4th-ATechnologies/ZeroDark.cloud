@@ -64,6 +64,12 @@
                                                         <constraint firstAttribute="width" constant="64" id="pgC-az-iUB"/>
                                                     </constraints>
                                                 </imageView>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="99+" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="AJC-rs-BuS" customClass="BadgeLabel" customModule="WhatsZapp" customModuleProvider="target">
+                                                    <rect key="frame" x="14" y="10" width="29.5" height="18"/>
+                                                    <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15"/>
+                                                    <nil key="textColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Marcus Aurelius" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YjO-Sc-A2X">
                                                     <rect key="frame" x="92" y="10" width="302" height="21"/>
                                                     <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
@@ -71,32 +77,46 @@
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zJl-RP-1Fd">
-                                                    <rect key="frame" x="92" y="33" width="302" height="41"/>
+                                                    <rect key="frame" x="92" y="33" width="283.5" height="41"/>
                                                     <string key="text">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</string>
                                                     <fontDescription key="fontDescription" type="system" weight="light" pointSize="17"/>
                                                     <color key="textColor" red="0.25098039220000001" green="0.25098039220000001" blue="0.25098039220000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="chevron.right" catalog="system" translatesAutoresizingMaskIntoConstraints="NO" id="Ajz-vM-4SQ">
+                                                    <rect key="frame" x="381.5" y="35" width="12.5" height="16.5"/>
+                                                    <color key="tintColor" red="0.25098039215686274" green="0.25098039215686274" blue="0.25098039215686274" alpha="0.29999999999999999" colorSpace="custom" customColorSpace="sRGB"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="12.5" id="H6X-iu-uCU"/>
+                                                        <constraint firstAttribute="height" constant="20" id="mZa-nh-Zed"/>
+                                                    </constraints>
+                                                </imageView>
                                             </subviews>
                                             <constraints>
+                                                <constraint firstItem="AJC-rs-BuS" firstAttribute="top" secondItem="aXp-tB-vD5" secondAttribute="top" id="3Oz-rH-JvG"/>
                                                 <constraint firstItem="F5Y-Hb-juI" firstAttribute="centerX" secondItem="aXp-tB-vD5" secondAttribute="centerX" id="5F7-PT-s4U"/>
                                                 <constraint firstItem="F5Y-Hb-juI" firstAttribute="centerY" secondItem="aXp-tB-vD5" secondAttribute="centerY" id="DRS-zy-Zog"/>
                                                 <constraint firstAttribute="trailing" secondItem="YjO-Sc-A2X" secondAttribute="trailing" constant="20" id="JHg-I7-zPm"/>
-                                                <constraint firstItem="zJl-RP-1Fd" firstAttribute="bottom" secondItem="aXp-tB-vD5" secondAttribute="bottom" id="LNO-WB-wtE"/>
+                                                <constraint firstItem="YjO-Sc-A2X" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="AJC-rs-BuS" secondAttribute="trailing" constant="8" id="RUQ-zf-m9d"/>
                                                 <constraint firstItem="zJl-RP-1Fd" firstAttribute="top" secondItem="YjO-Sc-A2X" secondAttribute="bottom" constant="2" id="SIB-9C-aI2"/>
-                                                <constraint firstAttribute="trailing" secondItem="zJl-RP-1Fd" secondAttribute="trailing" constant="20" id="aYh-vI-vMg"/>
+                                                <constraint firstItem="Ajz-vM-4SQ" firstAttribute="trailing" secondItem="vYc-20-iqN" secondAttribute="trailingMargin" id="Van-2d-ot0"/>
+                                                <constraint firstItem="Ajz-vM-4SQ" firstAttribute="leading" secondItem="zJl-RP-1Fd" secondAttribute="trailing" constant="6" id="Xa8-Wj-rfN"/>
+                                                <constraint firstItem="Ajz-vM-4SQ" firstAttribute="top" secondItem="zJl-RP-1Fd" secondAttribute="top" id="Xq5-Qa-J4C"/>
                                                 <constraint firstItem="YjO-Sc-A2X" firstAttribute="leading" secondItem="aXp-tB-vD5" secondAttribute="trailing" constant="8" id="bCL-mL-adg"/>
                                                 <constraint firstItem="F5Y-Hb-juI" firstAttribute="width" secondItem="aXp-tB-vD5" secondAttribute="width" constant="2" id="i4D-U5-Wns"/>
                                                 <constraint firstItem="aXp-tB-vD5" firstAttribute="centerY" secondItem="vYc-20-iqN" secondAttribute="centerY" id="nHJ-Zb-d0S"/>
                                                 <constraint firstItem="YjO-Sc-A2X" firstAttribute="top" secondItem="aXp-tB-vD5" secondAttribute="top" id="pZ3-yn-vpf"/>
                                                 <constraint firstItem="zJl-RP-1Fd" firstAttribute="leading" secondItem="YjO-Sc-A2X" secondAttribute="leading" id="u4w-3n-7su"/>
                                                 <constraint firstItem="F5Y-Hb-juI" firstAttribute="height" secondItem="aXp-tB-vD5" secondAttribute="height" constant="2" id="vhw-5z-gyP"/>
+                                                <constraint firstItem="AJC-rs-BuS" firstAttribute="leading" secondItem="aXp-tB-vD5" secondAttribute="leading" constant="-6" id="wKP-LY-DMg"/>
                                                 <constraint firstItem="aXp-tB-vD5" firstAttribute="leading" secondItem="vYc-20-iqN" secondAttribute="leading" constant="20" id="xMs-ab-BIu"/>
+                                                <constraint firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="zJl-RP-1Fd" secondAttribute="bottom" constant="10" id="xdQ-9m-yoN"/>
                                             </constraints>
                                         </tableViewCellContentView>
                                         <connections>
                                             <outlet property="avatarBackgroundView" destination="F5Y-Hb-juI" id="30d-es-CUf"/>
                                             <outlet property="avatarView" destination="aXp-tB-vD5" id="iuX-Oa-JT5"/>
+                                            <outlet property="badgeLabel" destination="AJC-rs-BuS" id="YoC-nu-o1Y"/>
                                             <outlet property="messageLabel" destination="zJl-RP-1Fd" id="3B4-vw-igW"/>
                                             <outlet property="titleLabel" destination="YjO-Sc-A2X" id="4w5-Jw-ZDU"/>
                                         </connections>
@@ -159,4 +179,7 @@
             <point key="canvasLocation" x="138" y="773"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="chevron.right" catalog="system" width="48" height="64"/>
+    </resources>
 </document>
