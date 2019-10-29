@@ -23,6 +23,7 @@
 		DC97C19B2356341000B46DA4 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DC97C1992356341000B46DA4 /* LaunchScreen.storyboard */; };
 		DC97C1A323565FF000B46DA4 /* ZDCManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC97C1A223565FF000B46DA4 /* ZDCManager.swift */; };
 		DC97C1A52356682000B46DA4 /* CustomLogFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC97C1A42356682000B46DA4 /* CustomLogFormatter.swift */; };
+		DC97E49D2368A2A90022B25F /* ConversationTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC97E49C2368A2A90022B25F /* ConversationTableViewCell.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,6 +47,7 @@
 		DC97C1A223565FF000B46DA4 /* ZDCManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZDCManager.swift; sourceTree = "<group>"; };
 		DC97C1A42356682000B46DA4 /* CustomLogFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomLogFormatter.swift; sourceTree = "<group>"; };
 		DC97C1A62358D8B900B46DA4 /* WhatsZapp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WhatsZapp.entitlements; sourceTree = "<group>"; };
+		DC97E49C2368A2A90022B25F /* ConversationTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationTableViewCell.swift; sourceTree = "<group>"; };
 		FBBBD2B62B85DA6406E854FC /* Pods-WhatsZapp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WhatsZapp.debug.xcconfig"; path = "Target Support Files/Pods-WhatsZapp/Pods-WhatsZapp.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -116,6 +118,7 @@
 				DC97C1922356340700B46DA4 /* RootViewController.swift */,
 				DC76FC03235AA3260013047B /* MainViewController.swift */,
 				DC76FC01235A9A650013047B /* ConversationsViewController.swift */,
+				DC97E49C2368A2A90022B25F /* ConversationTableViewCell.swift */,
 				DC97C1942356340700B46DA4 /* Main.storyboard */,
 				DC97C1972356341000B46DA4 /* Assets.xcassets */,
 				DC97C1992356341000B46DA4 /* LaunchScreen.storyboard */,
@@ -258,6 +261,7 @@
 				DC97C1A52356682000B46DA4 /* CustomLogFormatter.swift in Sources */,
 				DC1CEF3C235E3242004B2EBC /* DBManager.swift in Sources */,
 				DC97C1A323565FF000B46DA4 /* ZDCManager.swift in Sources */,
+				DC97E49D2368A2A90022B25F /* ConversationTableViewCell.swift in Sources */,
 				DC1CEF35235E2C74004B2EBC /* Message.swift in Sources */,
 				DC76FC09235AB5470013047B /* UIImage+scaling.swift in Sources */,
 				DC76FC07235AB25F0013047B /* IconTitleButton.swift in Sources */,

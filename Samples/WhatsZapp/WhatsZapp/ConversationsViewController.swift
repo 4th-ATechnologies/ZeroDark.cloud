@@ -11,13 +11,20 @@ import Foundation
 import CocoaLumberjack
 import ZeroDarkCloud
 
-class ConversationsViewController: UIViewController {
+class ConversationsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 	
 	var localUserID: String = ""
 	var navTitleButton: IconTitleButton?
 	
+	var uiDatabaseConnection: YapDatabaseConnection?
+	var mappings: YapDatabaseViewMappings?
+	
 	@IBOutlet var tableView: UITableView!
 	@IBOutlet var simulatorView : UIView!
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MARK: Creation
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	class func create(localUserID: String) -> ConversationsViewController? {
 		let storyboard = UIStoryboard(name: "Main", bundle: nil)
@@ -58,6 +65,14 @@ class ConversationsViewController: UIViewController {
 			simulatorView.hidden = true
 		}
 		#endif
+		
+		uiDatabaseConnection = ZDCManager.zdc().databaseManager?.uiDatabaseConnection
+		initializeMappings()
+		
+		NotificationCenter.default.addObserver( self,
+		                              selector: #selector(self.uiDatabaseConnectionDidUpdate(_:)),
+		                                  name: Notification.Name.UIDatabaseConnectionDidUpdate,
+		                                object: nil)
 	}
 	
 	override func viewWillAppear(_ animated: Bool) {
@@ -89,31 +104,182 @@ class ConversationsViewController: UIViewController {
 		super.viewDidAppear(animated)
 	}
 	
-	private func writeConvo() {
-		DDLogInfo("writeConvo")
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MARK: Utilities
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private func initializeMappings() {
 		
-		let convo = Conversation(remoteUserID: "bob")
+		// What are YapDatabaseViewMappings ???
+		//
+		// Mappings are explained extensively in the docs:
+		// https://github.com/yapstudios/YapDatabase/wiki/Views#mappings
 		
-		let rwConnection = ZDCManager.zdc().databaseManager!.rwDatabaseConnection
-		rwConnection.asyncReadWrite { (transaction) in
+		uiDatabaseConnection?.read({ (transaction) in
 			
-			transaction.setObject(convo, forKey: "foobar", inCollection: "conversations")
+			if let _ = transaction.ext(DBExt_ConversationsView) as? YapDatabaseViewTransaction {
+				
+				self.mappings = YapDatabaseViewMappings.init(groups: [""], view: DBExt_ConversationsView)
+				self.mappings?.update(with: transaction)
+			}
+			else {
+				// Waiting for view to finish registering
+			}
+		})
+	}
+	
+	private func conversation(indexPath: IndexPath) -> Conversation? {
+		
+		guard let mappings = self.mappings else {
+			return nil
+		}
+		
+		// In DBManager, we setup a YapDatabaseAutoView that automatically sorts all conversations
+		// according to their `lastActivity` property.
+		//
+		// So an item at index 0 within the YapDBAutoView corresponds with the cell at row 0.
+		//
+		//
+		
+		var conversation: Conversation? = nil
+		uiDatabaseConnection?.read({ (transaction) in
+			
+			if let viewTransaction = transaction.ext(DBExt_ConversationsView) as? YapDatabaseViewTransaction {
+				
+				conversation = viewTransaction.object(at: indexPath, with: mappings) as? Conversation
+			}
+		})
+		
+		return conversation
+	}
+	
+	private func mostRecentMessage(in conversation: Conversation) -> Message? {
+		
+		// In DBManager, we setup a YapDatabaseAutoView that automatically sorts all messages
+		// within each conversation, according to their date:
+		//
+		// - the earliest message is at index zero
+		// - the latest message is at index last
+		//
+		// So all we need to do is use this view, and ask it for the lastObject within the conversation group.
+		
+		var message: Message? = nil
+		uiDatabaseConnection?.read({ (transaction) in
+			
+			if let viewTransaction = transaction.ext(DBExt_MessagesView) as? YapDatabaseViewTransaction {
+				
+				message = viewTransaction.lastObject(inGroup: conversation.uuid) as? Message
+			}
+		})
+		
+		return message
+	}
+	
+	private func remoteUser(id userID: String) -> ZDCUser? {
+		
+		var user: ZDCUser? = nil
+		uiDatabaseConnection?.read({ (transaction) in
+			
+			user = transaction.object(forKey: userID, inCollection: kZDCCollection_Users) as? ZDCUser
+		})
+		
+		if (user != nil) {
+			return user
+		}
+		
+		// The user doesn't exist in the database yet.
+		// So we're goint to ask ZDC to fetch the user for us.
+		// After that completes, we'll refresh the corresponding row in the tableView.
+		//
+		// Note: The ZDCRemoteUserManager consolidates multiple requests.
+		// So if we make this request a hundred times, it will only do a single network request.
+		
+		let zdc = ZDCManager.zdc()
+		zdc.remoteUserManager?.fetchRemoteUser(withID: userID,
+		                                  requesterID: self.localUserID,
+		                              completionQueue: DispatchQueue.main,
+		                              completionBlock:
+		{[weak self] (user: ZDCUser?, error: Error?) in
+			
+			if let user = user {
+				self?.updateVisibleRow(forUser: user)
+			}
+		})
+		
+		return nil
+	}
+	
+	private func updateVisibleRow(forUser user: ZDCUser) {
+		
+		guard let indexPaths = tableView.indexPathsForVisibleRows else {
+			return
+		}
+		
+		var matchingIndexPath: IndexPath?
+		for indexPath in indexPaths {
+			
+			if let conversation = self.conversation(indexPath: indexPath) {
+				
+				if conversation.remoteUserID == user.uuid {
+					matchingIndexPath = indexPath
+					break
+				}
+			}
+		}
+		
+		if let matchingIndexPath = matchingIndexPath {
+			
+			tableView.reloadRows(at: [matchingIndexPath], with: .none)
 		}
 	}
 	
-	private func readConvo() {
-		DDLogInfo("readConvo()")
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MARK: Notifications
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	@objc private func uiDatabaseConnectionDidUpdate(_ notification: NSNotification) {
 		
-		let rwConnection = ZDCManager.zdc().databaseManager!.rwDatabaseConnection
-		rwConnection.asyncRead { (transaction) in
+		guard let mappings = mappings else {
 			
-			if let convo = transaction.conversation(id: "foobar") {
-				DDLogInfo("convo.remoteUserID = \(convo.remoteUserID)")
-			}
-			else {
-				DDLogError("Alice is a lying whore")
+			initializeMappings()
+			tableView.reloadData()
+			return
+		}
+		
+		guard let notifications = notification.userInfo?[kNotificationsKey] as? [Notification],
+		      let ext = uiDatabaseConnection?.ext(DBExt_ConversationsView) as? YapDatabaseViewConnection
+		else {
+			return
+		}
+		
+		let (sectionChanges, rowChanges) = ext.getChanges(forNotifications: notifications, withMappings: mappings)
+		
+		if (sectionChanges.count == 0) && (rowChanges.count == 0) {
+			// No changes for the tableView
+			return
+		}
+		
+		tableView.beginUpdates()
+		for rowChange in rowChanges {
+			switch rowChange.type {
+				 
+				case .delete:
+					tableView.deleteRows(at: [rowChange.indexPath!], with: .automatic)
+				
+				case .insert:
+					tableView.insertRows(at: [rowChange.newIndexPath!], with: .automatic)
+				 
+				case .move:
+					tableView.moveRow(at: rowChange.indexPath!, to: rowChange.newIndexPath!)
+				
+				case .update:
+					tableView.reloadRows(at: [rowChange.indexPath!], with: .automatic)
+				
+				default:
+					break
 			}
 		}
+		tableView.endUpdates()
 	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -183,7 +349,7 @@ class ConversationsViewController: UIViewController {
 	@objc func didTapPlusButton(_ sender: Any) {
 		
 		DDLogInfo("didTapPlusButton()")
-/*
+
 		guard let navigationController = self.navigationController else {
 			return
 		}
@@ -203,22 +369,6 @@ class ConversationsViewController: UIViewController {
 		                                     title: "New Conversation",
 		                      navigationController: navigationController,
 		                         completionHandler: completion)
-*/
-		let msg = Message(conversationID: "foobar", text: "ur mom's a hoe")
-		
-		let rwConnection = ZDCManager.zdc().databaseManager!.rwDatabaseConnection
-		rwConnection.asyncReadWrite { (transaction) in
-			
-		//	transaction.setObject(msg, forKey: msg.uuid, inCollection: kCollection_Messages)
-			
-			if let msgsViewTransaction = transaction.ext(DBExt_MessagesView) as? YapDatabaseViewTransaction {
-				
-				if let lastMsg = msgsViewTransaction.lastObject(inGroup: msg.conversationID) as? Message {
-					
-					print("lastMsg: \(lastMsg.text)")
-				}
-			}
-		}
 	}
 	
 	private func createConversation(_ remoteUserID: String) {
@@ -232,5 +382,94 @@ class ConversationsViewController: UIViewController {
 		}
 		
 		// Todo...
+	}
+	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MARK: UITableViewDataSource
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	func numberOfSections(in tableView: UITableView) -> Int {
+		
+		if let mappings = mappings {
+			return Int(mappings.numberOfSections())
+		}
+		else {
+			return 0
+		}
+	}
+	
+	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+		
+		if let mappings = mappings {
+			return Int(mappings.numberOfItems(inSection: UInt(section)))
+		}
+		else {
+			return 0
+		}
+	}
+	
+	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+		
+		let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! ConversationTableViewCell
+		
+		if let conversation = self.conversation(indexPath: indexPath) {
+			
+			let conversationID = conversation.uuid
+			cell.conversationID = conversation.uuid
+			
+			let imageManager = ZDCManager.zdc().imageManager!
+			
+			let avatarSize = cell.avatarView.frame.size
+			let defaultImage = {
+				return imageManager.defaultUserAvatar().scaled(to: avatarSize, scalingMode: .aspectFit)
+			}
+			
+			if let remoteUser = self.remoteUser(id: conversation.remoteUserID) {
+				
+				cell.titleLabel.text = remoteUser.displayName
+				
+				let processing = {(image: UIImage) in
+					return image.scaled(to: avatarSize, scalingMode: .aspectFit)
+				}
+				let preFetch = {(image: UIImage?, willFetch: Bool) -> Void in
+					
+					// This closure is invoked BEFORE the fetchUserAvatar() function returns.
+					
+					cell.avatarView.image = image ?? defaultImage()
+				}
+				let postFetch = {[weak cell] (image: UIImage?, error: Error?) -> Void in
+					
+					// This closure in invoked later, after the imageManager has fetched the image.
+					//
+					// The image may be cached on disk, in which case it's invoked shortly.
+					// Or the image may need to be downloaded, which takes longer.
+					
+					if conversationID == cell?.conversationID {
+						cell?.avatarView.image = image ?? defaultImage()
+					}
+				}
+				
+				imageManager.fetchUserAvatar( remoteUser,
+								withProcessingID: "convoCellAvatar",
+								 processingBlock: processing,
+										  preFetch: preFetch,
+										 postFetch: postFetch)
+			}
+			else {
+				
+				cell.titleLabel.text = "Fetching user information..."
+			}
+			
+			if let mostRecentMsg = self.mostRecentMessage(in: conversation) {
+		
+				cell.messageLabel.text = mostRecentMsg.text
+			}
+			else {
+				cell.messageLabel.text = "empty conversation"
+			}
+		}
+	
+	//	cell.accessoryType = .disclosureIndicator
+		return cell
 	}
 }
