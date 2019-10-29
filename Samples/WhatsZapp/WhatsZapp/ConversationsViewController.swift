@@ -68,10 +68,10 @@ class ConversationsViewController: UIViewController {
 		let zdc = ZDCManager.zdc()
 		
 		var localUser: ZDCLocalUser?
-		zdc.databaseManager?.uiDatabaseConnection.read {(transaction) in
+		zdc.databaseManager?.uiDatabaseConnection.read({ (transaction) in
 			
-			localUser = transaction.object(key: self.localUserID, collection: kZDCCollection_Users)
-		}
+			localUser = transaction.localUser(id: self.localUserID)
+		})
 		
 		if let localUser = localUser {
 			configureNavigationTitle(localUser)
@@ -97,7 +97,7 @@ class ConversationsViewController: UIViewController {
 		let rwConnection = ZDCManager.zdc().databaseManager!.rwDatabaseConnection
 		rwConnection.asyncReadWrite { (transaction) in
 			
-			transaction.setObject(convo, key: "foobar", collection: "conversations")
+			transaction.setObject(convo, forKey: "foobar", inCollection: "conversations")
 		}
 	}
 	
@@ -107,7 +107,7 @@ class ConversationsViewController: UIViewController {
 		let rwConnection = ZDCManager.zdc().databaseManager!.rwDatabaseConnection
 		rwConnection.asyncRead { (transaction) in
 			
-			if let convo: Conversation = transaction.object(key: "foobar", collection: "conversations") {
+			if let convo = transaction.conversation(id: "foobar") {
 				DDLogInfo("convo.remoteUserID = \(convo.remoteUserID)")
 			}
 			else {
@@ -183,7 +183,7 @@ class ConversationsViewController: UIViewController {
 	@objc func didTapPlusButton(_ sender: Any) {
 		
 		DDLogInfo("didTapPlusButton()")
-		
+/*
 		guard let navigationController = self.navigationController else {
 			return
 		}
@@ -203,6 +203,22 @@ class ConversationsViewController: UIViewController {
 		                                     title: "New Conversation",
 		                      navigationController: navigationController,
 		                         completionHandler: completion)
+*/
+		let msg = Message(conversationID: "foobar", text: "ur mom's a hoe")
+		
+		let rwConnection = ZDCManager.zdc().databaseManager!.rwDatabaseConnection
+		rwConnection.asyncReadWrite { (transaction) in
+			
+		//	transaction.setObject(msg, forKey: msg.uuid, inCollection: kCollection_Messages)
+			
+			if let msgsViewTransaction = transaction.ext(DBExt_MessagesView) as? YapDatabaseViewTransaction {
+				
+				if let lastMsg = msgsViewTransaction.lastObject(inGroup: msg.conversationID) as? Message {
+					
+					print("lastMsg: \(lastMsg.text)")
+				}
+			}
+		}
 	}
 	
 	private func createConversation(_ remoteUserID: String) {
@@ -212,7 +228,7 @@ class ConversationsViewController: UIViewController {
 		let rwConnection = ZDCManager.zdc().databaseManager!.rwDatabaseConnection
 		rwConnection.asyncReadWrite { (transaction) in
 			
-			transaction.setObject(conversation, key: conversation.uuid, collection: kCollection_Conversations)
+			transaction.setObject(conversation, forKey: conversation.uuid, inCollection: kCollection_Conversations)
 		}
 		
 		// Todo...

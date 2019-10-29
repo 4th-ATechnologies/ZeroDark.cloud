@@ -81,7 +81,10 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		
 		let config = ZDCDatabaseConfig(encryptionKey: encryptionKey)
 		
-		config.extensionsRegistration = {(database: YapDatabase) in
+		config.configHook = {(database: YapDatabase) in
+			
+			database.registerCodableSerialization(Conversation.self, forCollection: kCollection_Conversations)
+			database.registerCodableSerialization(Message.self, forCollection: kCollection_Messages)
 			
 			DBManager.sharedInstance.registerExtensions(database)
 		}

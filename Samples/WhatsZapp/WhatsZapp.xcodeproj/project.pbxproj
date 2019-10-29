@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		451C1A396AE5F3B60F7E5A0F /* Pods_WhatsZapp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D1004B7C5825AB368EAAEDB1 /* Pods_WhatsZapp.framework */; };
+		DBCF680148F22C655059DD97 /* Pods_WhatsZapp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B762E8E1EFF12D554F8DD861 /* Pods_WhatsZapp.framework */; };
 		DC1CEF02235BD875004B2EBC /* Conversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1CEF01235BD875004B2EBC /* Conversation.swift */; };
 		DC1CEF35235E2C74004B2EBC /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1CEF34235E2C74004B2EBC /* Message.swift */; };
 		DC1CEF3C235E3242004B2EBC /* DBManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1CEF3B235E3242004B2EBC /* DBManager.swift */; };
@@ -26,9 +26,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		27BDEAA8277B420111B9B9A2 /* Pods-WhatsZapp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WhatsZapp.release.xcconfig"; path = "Target Support Files/Pods-WhatsZapp/Pods-WhatsZapp.release.xcconfig"; sourceTree = "<group>"; };
-		D1004B7C5825AB368EAAEDB1 /* Pods_WhatsZapp.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_WhatsZapp.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		D97436AF2672FBC06185F19B /* Pods-WhatsZapp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WhatsZapp.debug.xcconfig"; path = "Target Support Files/Pods-WhatsZapp/Pods-WhatsZapp.debug.xcconfig"; sourceTree = "<group>"; };
+		B762E8E1EFF12D554F8DD861 /* Pods_WhatsZapp.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_WhatsZapp.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DBD83FE7B08624940F82CB06 /* Pods-WhatsZapp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WhatsZapp.release.xcconfig"; path = "Target Support Files/Pods-WhatsZapp/Pods-WhatsZapp.release.xcconfig"; sourceTree = "<group>"; };
 		DC1CEF01235BD875004B2EBC /* Conversation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conversation.swift; sourceTree = "<group>"; };
 		DC1CEF34235E2C74004B2EBC /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
 		DC1CEF3B235E3242004B2EBC /* DBManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DBManager.swift; sourceTree = "<group>"; };
@@ -47,6 +46,7 @@
 		DC97C1A223565FF000B46DA4 /* ZDCManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZDCManager.swift; sourceTree = "<group>"; };
 		DC97C1A42356682000B46DA4 /* CustomLogFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomLogFormatter.swift; sourceTree = "<group>"; };
 		DC97C1A62358D8B900B46DA4 /* WhatsZapp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WhatsZapp.entitlements; sourceTree = "<group>"; };
+		FBBBD2B62B85DA6406E854FC /* Pods-WhatsZapp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WhatsZapp.debug.xcconfig"; path = "Target Support Files/Pods-WhatsZapp/Pods-WhatsZapp.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,26 +54,18 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				451C1A396AE5F3B60F7E5A0F /* Pods_WhatsZapp.framework in Frameworks */,
+				DBCF680148F22C655059DD97 /* Pods_WhatsZapp.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		2BFA2A12C5C4C3F8C6309A2D /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				D1004B7C5825AB368EAAEDB1 /* Pods_WhatsZapp.framework */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		652C17A829CE474EB46D5646 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				D97436AF2672FBC06185F19B /* Pods-WhatsZapp.debug.xcconfig */,
-				27BDEAA8277B420111B9B9A2 /* Pods-WhatsZapp.release.xcconfig */,
+				FBBBD2B62B85DA6406E854FC /* Pods-WhatsZapp.debug.xcconfig */,
+				DBD83FE7B08624940F82CB06 /* Pods-WhatsZapp.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -103,7 +95,7 @@
 				DC97C18D2356340700B46DA4 /* WhatsZapp */,
 				DC97C18C2356340700B46DA4 /* Products */,
 				652C17A829CE474EB46D5646 /* Pods */,
-				2BFA2A12C5C4C3F8C6309A2D /* Frameworks */,
+				DECBCE259FD8F93FEA90FF3E /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -136,6 +128,14 @@
 			path = WhatsZapp;
 			sourceTree = "<group>";
 		};
+		DECBCE259FD8F93FEA90FF3E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				B762E8E1EFF12D554F8DD861 /* Pods_WhatsZapp.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -143,11 +143,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = DC97C19F2356341100B46DA4 /* Build configuration list for PBXNativeTarget "WhatsZapp" */;
 			buildPhases = (
-				6D283B8BB7F8E90D5841ECAF /* [CP] Check Pods Manifest.lock */,
+				D56BB0053887625F2D27CE8C /* [CP] Check Pods Manifest.lock */,
 				DC97C1872356340700B46DA4 /* Sources */,
 				DC97C1882356340700B46DA4 /* Frameworks */,
 				DC97C1892356340700B46DA4 /* Resources */,
-				2B2F571DA6A88F0DCDC0815A /* [CP] Embed Pods Frameworks */,
+				01451E9A2A085CA51B044E88 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -205,7 +205,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		2B2F571DA6A88F0DCDC0815A /* [CP] Embed Pods Frameworks */ = {
+		01451E9A2A085CA51B044E88 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -220,7 +220,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-WhatsZapp/Pods-WhatsZapp-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		6D283B8BB7F8E90D5841ECAF /* [CP] Check Pods Manifest.lock */ = {
+		D56BB0053887625F2D27CE8C /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -402,7 +402,7 @@
 		};
 		DC97C1A02356341100B46DA4 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D97436AF2672FBC06185F19B /* Pods-WhatsZapp.debug.xcconfig */;
+			baseConfigurationReference = FBBBD2B62B85DA6406E854FC /* Pods-WhatsZapp.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = WhatsZapp/WhatsZapp.entitlements;
@@ -424,7 +424,7 @@
 		};
 		DC97C1A12356341100B46DA4 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 27BDEAA8277B420111B9B9A2 /* Pods-WhatsZapp.release.xcconfig */;
+			baseConfigurationReference = DBD83FE7B08624940F82CB06 /* Pods-WhatsZapp.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = WhatsZapp/WhatsZapp.entitlements;

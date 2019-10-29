@@ -1058,15 +1058,15 @@ typedef enum {
 	[UIAlertAction actionWithTitle: NSLocalizedString(@"Photos Access Off", @"Photos Access Off")
 									 style:UIAlertActionStyleDefault
 								  handler:^(UIAlertAction *action)
-	 {
-		 
-		 if (UIApplicationOpenSettingsURLString != nil)
-		 {
-			 [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
-			 
-		 }
-		 
-	 }];
+	{
+		if (UIApplicationOpenSettingsURLString != nil)
+		{
+			NSURL *url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
+			NSDictionary *options = @{};
+			[[UIApplication sharedApplication] openURL:url options:options completionHandler:nil];
+		}
+	}];
+	
 	[noPhotoAction setValue:[photoImage imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]
 						  forKey:@"image"];
 	
@@ -1168,10 +1168,10 @@ typedef enum {
 {
 	if (UIApplicationOpenSettingsURLString != nil)
 	{
-		[[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
-		
+		NSURL *url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
+		NSDictionary *options = @{};
+		[[UIApplication sharedApplication] openURL:url options:options completionHandler:nil];
 	}
-	
 }
 
 - (void)showPhotoPicker

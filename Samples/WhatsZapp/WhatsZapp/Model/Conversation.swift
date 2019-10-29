@@ -8,6 +8,7 @@
 /// Sample App: WhatsZapp
 
 import Foundation
+import YapDatabase
 
 /// The database being used by this sample app is YapDatabase, which is a collection/key/value store.
 /// All conversations will be stored in this collection.
@@ -88,5 +89,17 @@ class Conversation: NSCopying, Codable {
 
 		let copy = Conversation(remoteUserID: remoteUserID, lastActivity: lastActivity)
 		return copy
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MARK: -
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+extension YapDatabaseReadTransaction {
+	
+	func conversation(id: String) -> Conversation? {
+		
+		return self.object(forKey: id, inCollection: kCollection_Conversations) as? Conversation
 	}
 }

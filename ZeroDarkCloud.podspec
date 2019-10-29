@@ -10,12 +10,12 @@ Pod::Spec.new do |s|
 		"Vinnie Moscaritolo" => "vinnie@4th-a.com"
 	}
 	s.source = {
-		:git => "https://bitbucket.org/4thA/sync4.git",
+		:git => "https://github.com/4th-ATechnologies/ZeroDark.cloud.git",
 		:tag => s.version.to_s
 	}
 
-	s.osx.deployment_target = '10.11'
-	s.ios.deployment_target = '9.2'
+	s.osx.deployment_target = '10.12'
+	s.ios.deployment_target = '10.0'
 #	s.tvos.deployment_target = '9.0'
 #	s.watchos.deployment_target = '3.0'
 

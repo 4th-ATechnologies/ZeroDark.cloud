@@ -264,8 +264,9 @@
 {
     if (UIApplicationOpenSettingsURLString != nil)
     {
-        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
-        
+		 NSURL *url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
+		 NSDictionary *options = @{};
+		 [[UIApplication sharedApplication] openURL:url options:options completionHandler:nil];
     }
     
 }

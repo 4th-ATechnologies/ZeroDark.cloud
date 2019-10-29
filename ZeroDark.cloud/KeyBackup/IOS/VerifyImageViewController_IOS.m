@@ -508,15 +508,16 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
     [UIAlertAction actionWithTitle: NSLocalizedString(@"Photos Access Off", @"Photos Access Off")
                              style:UIAlertActionStyleDefault
                            handler:^(UIAlertAction *action)
-     {
-         if (UIApplicationOpenSettingsURLString != nil)
-         {
-             [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
-             
-         }
-         
-     }];
-    [noPhotoAction setValue:[photoImage imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]
+	{
+		if (UIApplicationOpenSettingsURLString != nil)
+		{
+			NSURL *url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
+			NSDictionary *options = @{};
+			[[UIApplication sharedApplication] openURL:url options:options completionHandler:nil];
+		}
+	}];
+	
+	[noPhotoAction setValue:[photoImage imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]
                      forKey:@"image"];
     
     
@@ -615,12 +616,12 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 
 - (IBAction)statusButtonTapped:(id)sender
 {
-    if (UIApplicationOpenSettingsURLString != nil)
-    {
-        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
-        
-    }
-    
+	if (UIApplicationOpenSettingsURLString != nil)
+	{
+		NSURL *url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
+		NSDictionary *options = @{};
+		[[UIApplication sharedApplication] openURL:url options:options completionHandler:nil];
+	}
 }
 
 - (void)showPhotoPicker

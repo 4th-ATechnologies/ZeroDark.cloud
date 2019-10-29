@@ -91,7 +91,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		
 		serialQueue = dispatch_queue_create("ZDCDatabaseManager", DISPATCH_QUEUE_SERIAL);
 		
-		spinlock = OS_SPINLOCK_INIT;
+		spinlock = YAP_UNFAIR_LOCK_INIT;
 		registeredCloudDict = [[NSMutableDictionary alloc] initWithCapacity:4];
 	}
 	return self;
@@ -218,33 +218,13 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 /**
  * The serializer block converts objects into encrypted data blobs.
  *
- * First we use the NSCoding protocol to turn the object into a data blob.
- * Thus all objects that go into the databse need only support the NSCoding protocol.
- * Then we encrypt the data blob.
-**/
-- (YapDatabaseSerializer)databaseSerializer:(ZDCDatabaseConfig *)config
-                                collections:(NSSet<NSString*> *)zdcCollections
+ * (All of the objects used by the ZeroDarkCloud framework support the NSCoding protocol.)
+ */
+- (YapDatabaseSerializer)databaseSerializer
 {
-	YapDatabaseSerializer clientSerializer = config.serializer;
-	YapDatabaseSerializer zdcSerializer = ^(NSString *collection, NSString *key, id object){
-		
-		return [NSKeyedArchiver archivedDataWithRootObject:object];
-	};
-	
 	YapDatabaseSerializer serializer = ^(NSString *collection, NSString *key, id object){
 		
-		if ([zdcCollections containsObject:collection])
-		{
-			return zdcSerializer(collection, key, object);
-		}
-		else
-		{
-			if (clientSerializer) {
-				return clientSerializer(collection, key, object);
-			} else {
-				return zdcSerializer(collection, key, object);
-			}
-		}
+		return [NSKeyedArchiver archivedDataWithRootObject:object];
 	};
 	
 	return serializer;
@@ -252,12 +232,12 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 
 /**
  * The deserializer block converts encrypted data blobs back into objects.
-**/
-- (YapDatabaseDeserializer)databaseDeserializer:(ZDCDatabaseConfig *)config
-                                    collections:(NSSet<NSString*> *)zdcCollections
+ *
+ * (All of the objects used by the ZeroDarkCloud framework support the NSCoding protocol.)
+ */
+- (YapDatabaseDeserializer)databaseDeserializer
 {
-	YapDatabaseDeserializer clientDeserializer = config.deserializer;
-	YapDatabaseDeserializer zdcDeserializer = ^(NSString *collection, NSString *key, NSData *data){
+	YapDatabaseDeserializer deserializer = ^(NSString *collection, NSString *key, NSData *data){
 		
 		id object = [NSKeyedUnarchiver unarchiveObjectWithData:data];
 		if ([object isKindOfClass:[ZDCObject class]])
@@ -268,30 +248,12 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		return object;
 	};
 	
-	YapDatabaseDeserializer deserializer = ^(NSString *collection, NSString *key, NSData *data){
-		
-		if ([zdcCollections containsObject:collection])
-		{
-			return zdcDeserializer(collection, key, data);
-		}
-		else
-		{
-			if (clientDeserializer) {
-				return clientDeserializer(collection, key, data);
-			} else {
-				return zdcDeserializer(collection, key, data);
-			}
-		}
-	};
-	
 	return deserializer;
 }
 
-- (YapDatabasePreSanitizer)databasePreSanitizer:(ZDCDatabaseConfig *)config
-                                    collections:(NSSet<NSString*> *)zdcCollections
+- (YapDatabasePreSanitizer)databasePreSanitizer
 {
-	YapDatabasePreSanitizer clientPreSanitizer = config.preSanitizer;
-	YapDatabasePreSanitizer zdcPreSanitizer = ^(NSString *collection, NSString *key, id object){
+	YapDatabasePreSanitizer preSanitizer = ^(NSString *collection, NSString *key, id object){
 		
 		if ([object isKindOfClass:[ZDCObject class]])
 		{
@@ -301,50 +263,16 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		return object;
 	};
 	
-	YapDatabasePreSanitizer preSanitizer = ^(NSString *collection, NSString *key, id object){
-		
-		if ([zdcCollections containsObject:collection])
-		{
-			return zdcPreSanitizer(collection, key, object);
-		}
-		else
-		{
-			if (clientPreSanitizer) {
-				return clientPreSanitizer(collection, key, object);
-			} else {
-				return zdcPreSanitizer(collection, key, object);
-			}
-		}
-	};
-	
 	return preSanitizer;
 }
 
-- (YapDatabasePostSanitizer)databasePostSanitizer:(ZDCDatabaseConfig *)config
-                                      collections:(NSSet<NSString*> *)zdcCollections
+- (YapDatabasePostSanitizer)databasePostSanitizer
 {
-	YapDatabasePostSanitizer clientPostSanitizer = config.postSanitizer;
-	YapDatabasePostSanitizer zdcPostSanitizer = ^(NSString *collection, NSString *key, id object){
+	YapDatabasePostSanitizer postSanitizer = ^(NSString *collection, NSString *key, id object){
 		
 		if ([object isKindOfClass:[ZDCObject class]])
 		{
 			[(ZDCObject *)object clearChangeTracking];
-		}
-	};
-	
-	YapDatabasePostSanitizer postSanitizer = ^(NSString *collection, NSString *key, id object){
-		
-		if ([zdcCollections containsObject:collection])
-		{
-			zdcPostSanitizer(collection, key, object);
-		}
-		else
-		{
-			if (clientPostSanitizer) {
-				return clientPostSanitizer(collection, key, object);
-			} else {
-				return zdcPostSanitizer(collection, key, object);
-			}
 		}
 	};
 	
@@ -359,8 +287,8 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	
 	[NSKeyedUnarchiver setClass:[ZDCTrunkNode class] forClassName:@"ZDCContainerNode"];
 	
-	NSString *databasePath = zdc.databasePath.filePathURL.path;
-	ZDCLogDebug(@"databasePath = %@", databasePath);
+	NSURL *databaseURL = zdc.databasePath;
+	ZDCLogDebug(@"databaseURL = %@", databaseURL);
 	
 	YapDatabaseOptions *options = [[YapDatabaseOptions alloc] init];
 	options.corruptAction = YapDatabaseCorruptAction_Rename;
@@ -377,7 +305,17 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	
 #endif
 	
-	NSSet<NSString*> *collections = [NSSet setWithArray:@[
+	database = [[YapDatabase alloc] initWithURL:databaseURL options:options];
+	if (database == nil) {
+		return NO;
+	}
+	
+	YapDatabaseSerializer serializer = [self databaseSerializer];
+	YapDatabaseDeserializer deserializer = [self databaseDeserializer];
+	YapDatabasePreSanitizer preSanitizer = [self databasePreSanitizer];
+	YapDatabasePostSanitizer postSanitizer = [self databasePostSanitizer];
+	
+	NSArray<NSString*> *collections = @[
 		kZDCCollection_CachedResponse,
 		kZDCCollection_CloudNodes,
 		kZDCCollection_Nodes,
@@ -391,22 +329,18 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		kZDCCollection_Users,
 		kZDCCollection_UserAuth,
 		kZDCCollection_SplitKeys,
-	]];
+	];
 	
-	database =
-	  [[YapDatabase alloc] initWithPath: databasePath
-	                         serializer: [self databaseSerializer:config collections:collections]
-	                       deserializer: [self databaseDeserializer:config collections:collections]
-	                       preSanitizer: [self databasePreSanitizer:config collections:collections]
-	                      postSanitizer: [self databasePostSanitizer:config collections:collections]
-	                            options: options];
+	[database registerSerializer: serializer
+	                deserializer: deserializer
+	                preSanitizer: preSanitizer
+	               postSanitizer: postSanitizer
+	              forCollections: collections];
 	
-	if (database == nil) {
-		return NO;
+	for (NSString *collection in collections)
+	{
+		[database setObjectPolicy:YapDatabasePolicyShare forCollection:collection];
 	}
-	
-	database.connectionDefaults.objectPolicy = YapDatabasePolicyShare;
-	database.connectionDefaults.metadataPolicy = YapDatabasePolicyShare;
 	
 	// Create a dedicated read-only connection for the UI (main thread).
 	// It will use a longLivedReadTransaction,
@@ -463,10 +397,10 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	[self setupCloudExtensions];
 	[self setupActionManager];
 
-	if (config.extensionsRegistration)
+	if (config.configHook)
 	{
 		@try {
-			config.extensionsRegistration(database);
+			config.configHook(database);
 			
 		} @catch (NSException * __unused exception) {}
 	}

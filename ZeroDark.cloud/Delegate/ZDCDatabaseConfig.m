@@ -12,11 +12,7 @@
 @implementation ZDCDatabaseConfig
 
 @synthesize encryptionKey = encryptionKey;
-@synthesize serializer;
-@synthesize deserializer;
-@synthesize preSanitizer;
-@synthesize postSanitizer;
-@synthesize extensionsRegistration;
+@synthesize configHook;
 
 - (instancetype)initWithEncryptionKey:(NSData *)inEncryptionKey
 {

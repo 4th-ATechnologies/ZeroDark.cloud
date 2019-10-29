@@ -8,6 +8,20 @@
 **/
 
 import Foundation
+import YapDatabase
+
+extension YapDatabaseReadTransaction {
+	
+	open func localUser(id: String) -> ZDCLocalUser? {
+		
+		return self.object(forKey: id, inCollection: kZDCCollection_Users) as? ZDCLocalUser
+	}
+	
+	open func node(id: String) -> ZDCNode? {
+		
+		return self.object(forKey: id, inCollection: kZDCCollection_Nodes) as? ZDCNode
+	}
+}
 
 extension ZDCCloudTransaction {
 	
