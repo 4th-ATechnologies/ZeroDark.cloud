@@ -472,13 +472,20 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 			else {
 				
 				cell.titleLabel.text = "Fetching user information..."
+				cell.avatarView.image = defaultImage()
 			}
 			
 			if let mostRecentMsg = self.mostRecentMessage(in: conversation) {
 		
+				cell.dateLabel.isHidden = false
+				cell.dateLabel.text = mostRecentMsg.date.whenString()
+				
 				cell.messageLabel.text = mostRecentMsg.text
 			}
 			else {
+				
+				cell.dateLabel.isHidden = true
+				
 				cell.messageLabel.text = "empty conversation"
 			}
 			
@@ -489,16 +496,31 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 			}
 			else {
 				
+				cell.badgeLabel.isHidden = false
+				
 				if unreadCount < 100 {
 					cell.badgeLabel.text = String(unreadCount)
 				} else {
 					cell.badgeLabel.text = "99+"
 				}
-				
-				cell.badgeLabel.isHidden = false
 			}
 		}
 		
 		return cell
+	}
+	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MARK: UITableViewDelegate
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+		
+		if let conversation = self.conversation(indexPath: indexPath) {
+			
+			let msgsVC = MyMessagesViewController(localUserID: localUserID, conversationID: conversation.uuid)
+			self.navigationController?.pushViewController(msgsVC, animated: true)
+		}
+		
+		tableView.deselectRow(at: indexPath, animated: true)
 	}
 }

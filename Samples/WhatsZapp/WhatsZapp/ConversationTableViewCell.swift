@@ -8,7 +8,6 @@
 /// Sample App: WhatsZapp
 
 import UIKit
-import os
 
 class ConversationTableViewCell: UITableViewCell {
 	
@@ -16,6 +15,7 @@ class ConversationTableViewCell: UITableViewCell {
 	@IBOutlet public var avatarBackgroundView: UIView!
 	
 	@IBOutlet public var titleLabel: UILabel!
+	@IBOutlet public var dateLabel: UILabel!
 	@IBOutlet public var messageLabel: UILabel!
 	@IBOutlet public var badgeLabel: BadgeLabel!
 	
@@ -37,15 +37,10 @@ class ConversationTableViewCell: UITableViewCell {
 		badgeLabel.layer.borderWidth = 0.0
 		badgeLabel.clipsToBounds = true
 		badgeLabel.numberOfLines = 1
-	//	badgeLabel.isHidden = true
+		badgeLabel.isHidden = true
 		badgeLabel.backgroundColor = bgColor
 		badgeLabel.layer.borderColor = bgColor.cgColor
 		badgeLabel.layer.borderWidth = 4.0
 		badgeLabel.textColor = txColor
-	}
-	
-	public func setBadgeText(_ text: String) {
-		
-		
 	}
 }
