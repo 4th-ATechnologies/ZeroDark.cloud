@@ -134,13 +134,13 @@
 	};
 	
 	__block ZDCLocalUser *localUser = nil;
-	__block ZDCLocalUserAuth *localUserAuth = nil;
+	__block ZDCLocalUserAuth *auth = nil;
 	
 	ZDCDatabaseManager *databaseManager = zdc.databaseManager;
 	[databaseManager.roDatabaseConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
 		localUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
-		localUserAuth = [transaction objectForKey:userID inCollection:kZDCCollection_UserAuth];
+		auth = [transaction objectForKey:userID inCollection:kZDCCollection_UserAuth];
 		
 	} completionQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) completionBlock:^{
 
@@ -148,14 +148,14 @@
 		if (!strongSelf) return;
 		
 		// Sanity check: localUserAuth is non-nil
-		if (!localUserAuth || ![localUserAuth isKindOfClass:[ZDCLocalUserAuth class]])
+		if (!auth || ![auth isKindOfClass:[ZDCLocalUserAuth class]])
 		{
 			Fail([strongSelf missingInvalidUserError]);
 			return;
 		}
 
 		// Sanity check: localUserAuth has non-nil refresh_token
-		if (!localUserAuth.auth0_refreshToken)
+		if (!auth.auth0_refreshToken)
 		{
 			NSError *noRefreshTokensError = [strongSelf noRefreshTokensError];
 			
@@ -180,9 +180,9 @@
 		
 		// Check for unexpired credentials
 		//
-		if (localUserAuth.aws_expiration && [localUserAuth.aws_expiration isAfter:nowPlusBuffer])
+		if (auth.aws_expiration && [auth.aws_expiration isAfter:nowPlusBuffer])
 		{
-			Succeed(localUserAuth);
+			Succeed(auth);
 			return;
 		}
 		
@@ -190,9 +190,9 @@
 		
 		// Check for unexpired idToken
 		//
-		if (localUserAuth.auth0_idToken)
+		if (auth.auth0_idToken)
 		{
-			NSDate *expiration = [NSString expireDateFromJWTString:localUserAuth.auth0_idToken withError:nil];
+			NSDate *expiration = [NSString expireDateFromJWTString:auth.auth0_idToken withError:nil];
 			if (expiration && [expiration isAfter:nowPlusBuffer])
 			{
 				needsRefreshIDToken = NO;
@@ -204,9 +204,9 @@
 		if (needsRefreshIDToken)
 		{
 			[strongSelf refreshIDTokenForUserID: userID
-			                   withRefreshToken: localUserAuth.auth0_refreshToken
+			                   withRefreshToken: auth.auth0_refreshToken
 			                    completionQueue: backgroundQueue
-			                    completionBlock:^(ZDCLocalUserAuth *localUserAuth, NSError *error)
+			                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 			{
 				if (error)
 				{
@@ -215,7 +215,7 @@
 				}
 				
 				[weakSelf refreshAWSCredentialsForUserID: userID
-				                                 idToken: localUserAuth.auth0_idToken
+				                                 idToken: auth.auth0_idToken
 				                                   stage: localUser.aws_stage
 				                         completionQueue: backgroundQueue
 				                         completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
@@ -223,14 +223,14 @@
 					if (error)
 						Fail(error);
 					else
-						Succeed(localUserAuth);
+						Succeed(auth);
 				}];
 			}];
 		}
 		else
 		{
 			[strongSelf refreshAWSCredentialsForUserID: userID
-			                                   idToken: localUserAuth.auth0_idToken
+			                                   idToken: auth.auth0_idToken
 			                                     stage: localUser.aws_stage
 			                           completionQueue: backgroundQueue
 			                           completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
@@ -238,7 +238,7 @@
 				if (error)
 					Fail(error);
 				else
-					Succeed(localUserAuth);
+					Succeed(auth);
 			}];
 		}
 	}];
