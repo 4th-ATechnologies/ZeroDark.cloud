@@ -205,14 +205,14 @@ class DBManager {
 			(transaction, group, collection, key, object) -> Bool in
 			
 			if let message = object as? Message {
-				return message.isRead
+				return (message.isRead == false)
 			}
 			else {
 				return false
 			}
 		})
 		
-		let versionTag = "1" // <---------- change me if you modify filtering closure
+		let versionTag = "2" // <---------- change me if you modify filtering closure
 		
 		let view =
 		  YapDatabaseFilteredView(parentViewName: DBExt_MessagesView,
@@ -325,6 +325,14 @@ class DBManager {
 					
 					transaction.setObject(conversation, forKey: conversation.uuid, inCollection: kCollection_Conversations)
 				}
+			}
+		}
+		
+		let extName = "hooks"
+		database.asyncRegister(hooks, withName: extName) {(ready) in
+			
+			if !ready {
+				DDLogError("Error registering \(extName) !!!")
 			}
 		}
 	}

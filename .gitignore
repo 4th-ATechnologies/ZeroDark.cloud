@@ -33,6 +33,7 @@ docs
 #CocoaPods
 Pods
 Testing/Pods
+Samples/Messaging
 Samples/TestSetup
 Samples/ZeroDarkTodo/Pods
 Samples/KeyTesting/Pods

@@ -80,15 +80,7 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 		DDLogInfo("viewWillAppear()")
 		super.viewWillAppear(animated)
 		
-		let zdc = ZDCManager.zdc()
-		
-		var localUser: ZDCLocalUser?
-		zdc.databaseManager?.uiDatabaseConnection.read({ (transaction) in
-			
-			localUser = transaction.localUser(id: self.localUserID)
-		})
-		
-		if let localUser = localUser {
+		if let localUser = self.localUser() {
 			configureNavigationTitle(localUser)
 		}
 		
@@ -136,10 +128,6 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 		
 		// In DBManager, we setup a YapDatabaseAutoView that automatically sorts all conversations
 		// according to their `lastActivity` property.
-		//
-		// So an item at index 0 within the YapDBAutoView corresponds with the cell at row 0.
-		//
-		//
 		
 		var conversation: Conversation? = nil
 		uiDatabaseConnection?.read({ (transaction) in
@@ -187,6 +175,17 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 		})
 		
 		return unreadCount
+	}
+	
+	func localUser() -> ZDCLocalUser? {
+		
+		var localUser: ZDCLocalUser? = nil
+		uiDatabaseConnection?.read({ (transaction) in
+			
+			localUser = transaction.localUser(id: localUserID)
+		})
+		
+		return localUser
 	}
 	
 	private func remoteUser(id userID: String) -> ZDCUser? {
@@ -519,6 +518,16 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 			
 			let msgsVC = MyMessagesViewController(localUserID: localUserID, conversationID: conversation.uuid)
 			self.navigationController?.pushViewController(msgsVC, animated: true)
+			
+			// Testing...
+			
+		//	let message = Message(conversationID: conversation.uuid, senderID: localUserID, text: "How's it going?")
+		//
+		//	let rwConnection = ZDCManager.zdc().databaseManager?.rwDatabaseConnection
+		//	rwConnection?.asyncReadWrite({ (transaction) in
+		//
+		//		transaction.setObject(message, forKey: message.uuid, inCollection: kCollection_Messages)
+		//	})
 		}
 		
 		tableView.deselectRow(at: indexPath, animated: true)

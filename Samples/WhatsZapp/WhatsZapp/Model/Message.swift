@@ -20,6 +20,7 @@ class Message: NSCopying, Codable {
 	enum CodingKeys: String, CodingKey {
 		case uuid = "uuid"
 		case conversationID = "conversationID"
+		case senderID = "senderID"
 		case text = "text"
 		case date = "date"
 		case isRead = "isRead"
@@ -48,6 +49,12 @@ class Message: NSCopying, Codable {
 	///
 	let conversationID: String
 	
+	/// The userID of the sender.
+	///
+	/// Note: userID == ZDCUser.uuid
+	///
+	let senderID: String
+	
 	/// The content of the message.
 	///
 	let text: String
@@ -61,19 +68,23 @@ class Message: NSCopying, Codable {
 	var isRead: Bool
 	
 	
-	init(uuid: String, conversationID: String, text: String, date: Date, isRead: Bool) {
+	init(uuid: String, conversationID: String, senderID: String, text: String, date: Date, isRead: Bool) {
 		self.uuid = uuid
 		self.conversationID = conversationID
+		self.senderID = senderID
 		self.text = text
 		self.date = date
 		self.isRead = isRead
 	}
 	
-	convenience init(conversationID: String, text: String) {
-		let _uuid = UUID().uuidString
-		let _date = Date()
-		let _isRead = true
-		self.init(uuid: _uuid, conversationID: conversationID, text: text, date: _date, isRead: _isRead)
+	convenience init(conversationID: String, senderID: String, text: String) {
+		
+		self.init( uuid: UUID().uuidString,
+		 conversationID: conversationID,
+		       senderID: senderID,
+		           text: text,
+		           date: Date(),
+		         isRead: true)
 	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -84,6 +95,7 @@ class Message: NSCopying, Codable {
 		
 		let copy = Message(uuid: uuid,
 		         conversationID: conversationID,
+		               senderID: senderID,
 		                   text: text,
 		                   date: date,
 		                 isRead: isRead)
