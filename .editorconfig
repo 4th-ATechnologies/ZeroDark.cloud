@@ -1,0 +1,12 @@
+# https://EditorConfig.org
+# 
+# GitHub's default tab size is a whopping 8 spaces!
+# But GitHub does respect a '.editorconfig', if the project has one.
+
+# top-most EditorConfig file
+root = true
+
+[*]
+indent_style = tab
+indent_size = 3
+
