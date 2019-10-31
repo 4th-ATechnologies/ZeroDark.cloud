@@ -10,6 +10,7 @@
 #import "ZeroDarkCloudPrivate.h"
 
 #import "Auth0ProviderManagerPrivate.h"
+#import "ZDCAuditPrivate.h"
 #import "ZDCBlockchainManagerPrivate.h"
 #import "ZDCDatabaseKeyManagerPrivate.h"
 #import "ZDCDatabaseManagerPrivate.h"
@@ -35,10 +36,12 @@
 #import "NSData+AWSUtilities.h"
 #import "NSDate+ZeroDark.h"
 #import "NSError+S4.h"
+#import "NSError+ZeroDark.h"
 
 // Libraries
 #import <YapDatabase/YapDatabase.h>
 #import <YapDatabase/YapDatabaseAtomic.h>
+
 @import CoreText;
 
 // Log Levels: off, error, warning, info, verbose
@@ -776,6 +779,92 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 	}];
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Cloud Audit
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#if DEBUG
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
+ */
+- (void)fetchAuditCredentials:(NSString *)localUserID
+            completionHandler:(void (^)(ZDCAudit *_Nullable audit, NSError *_Nullable error))completionHandler
+{
+	if (completionHandler == nil) return;
+	
+	AWSCredentialsManager *aws = self.awsCredentialsManager;
+	
+	if (aws == nil)
+	{
+		NSString *msg = @"You must unlock the database first";
+		NSError *error = [NSError errorWithClass:[self class] code:500 description:msg];
+		
+		dispatch_async(dispatch_get_main_queue(), ^{
+			completionHandler(nil, error);
+		});
+		return;
+	}
+	
+	// We always want to give the caller fresh credentials.
+	// Otherwise, we might end up giving them credentials that expire in 5 minutes.
+	
+	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	
+	[aws flushAWSCredentialsForUserID: localUserID
+	               deleteRefreshToken: NO
+	                  completionQueue: bgQueue
+	                  completionBlock:^
+	{
+		[aws getAWSCredentialsForUser: localUserID
+		              completionQueue: bgQueue
+		              completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+		{
+			if (error)
+			{
+				dispatch_async(dispatch_get_main_queue(), ^{
+					completionHandler(nil, error);
+				});
+				return;
+			}
+			
+			__block ZDCLocalUser *localUser = nil;
+			
+			YapDatabaseConnection *roConnection = self.databaseManager.roDatabaseConnection;
+			[roConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
+				
+				localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
+				
+			} completionQueue:dispatch_get_main_queue() completionBlock:^{
+				
+				if (!localUser || ![localUser isKindOfClass:[ZDCLocalUser class]])
+				{
+					NSString *msg = @"You must first login to the given user's account.";
+					NSError *error = [NSError errorWithClass:[self class] code:500 description:msg];
+					
+					completionHandler(nil, error);
+					return;
+				}
+				
+				NSString *regionStr = [AWSRegions shortNameForRegion:localUser.aws_region];
+				
+				ZDCAudit *audit =
+				  [[ZDCAudit alloc] initWithLocalUserID: localUserID
+				                                 region: regionStr
+				                                 bucket: localUser.aws_bucket
+				                            accessKeyID: auth.aws_accessKeyID
+				                                 secret: auth.aws_secret
+				                                session: auth.aws_session
+				                             expiration: auth.aws_expiration];
+				
+				completionHandler(audit, nil);
+			}];
+		}];
+	}];
+}
+
+#endif
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Background Networking
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
