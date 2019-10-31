@@ -435,7 +435,7 @@ class MyMessagesViewController: MessagesViewController,
 		let rwConnection = ZDCManager.zdc().databaseManager?.rwDatabaseConnection
 		rwConnection?.asyncReadWrite({ (transaction) in
 			
-			transaction.setObject(message, forKey: message.uuid, inCollection: kCollection_Messages)
+			transaction.setMessage(message)
 		})
 		
 		inputBar.inputTextView.text = ""

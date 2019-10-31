@@ -37,7 +37,7 @@ class Conversation: NSCopying, Codable {
 	/// ```
 	/// var conversation: Conversation? = nil
 	/// databaseConnection.read() {(transaction) in
-	///   conversation = transaction.object(key: conversationID, collection: kCollection_Conversations)
+	///   conversation = transaction.conversation(id: conversationID)
 	/// }
 	/// ```
 	var uuid: String {
@@ -101,5 +101,13 @@ extension YapDatabaseReadTransaction {
 	func conversation(id: String) -> Conversation? {
 		
 		return self.object(forKey: id, inCollection: kCollection_Conversations) as? Conversation
+	}
+}
+
+extension YapDatabaseReadWriteTransaction {
+	
+	func setConversation(_ conversation: Conversation) {
+		
+		self.setObject(conversation, forKey: conversation.uuid, inCollection: kCollection_Conversations)
 	}
 }
