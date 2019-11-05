@@ -36,32 +36,6 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
-@interface NSString (badgeText)
-// Used for creating unread count for badges
-+ (NSString*)badgeTextWithCount:(NSUInteger)count;
-@end
-
-@implementation NSString (badgeText)
-
-+ (NSString*)badgeTextWithCount:(NSUInteger)count
-{
-	NSString* result = nil;
-	
-	if(count == 0)
-	{
-		result = @"";
-	}
-	else if (count > 99)
-	{
-		result = @"99+";
-	}
-	else
-		result = [NSString stringWithFormat:@"%ld", count];
-	
-	return result;
-}
-@end
-
 
 @implementation RemoteUsersViewController_IOS
 {
@@ -206,10 +180,9 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	}
 }
 
-
-
-// MARK:  - NSNotification
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MARK: Notifications
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 -(void)prefsChanged:(NSNotification *)notification
 {
@@ -225,8 +198,10 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	}
 }
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: Actions
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 - (IBAction)doneButtonTapped:(id)sender
 {
 	if (completionHandler)
@@ -280,9 +255,31 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	[self.navigationController pushViewController:vc animated:YES];
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Utilities
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+- (NSString *)badgeTextWithCount:(NSUInteger)count
+{
+	NSString* result = nil;
+	
+	if(count == 0)
+	{
+		result = @"";
+	}
+	else if (count > 99)
+	{
+		result = @"99+";
+	}
+	else
+		result = [NSString stringWithFormat:@"%ld", count];
+	
+	return result;
+}
 
-#pragma mark - EmptyTableViewCell
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark EmptyTableViewCell
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)tableView:(UITableView * _Nonnull)tv emptyCellButtonTappedAtCell:(EmptyTableViewCell* _Nonnull)cell
 {
@@ -429,7 +426,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 				.bottom = 0,
 				.right = 3};
 			
-			cell.lblBadge.text =  [NSString  badgeTextWithCount: auth0_profiles.count];
+			cell.lblBadge.text =  [self badgeTextWithCount: auth0_profiles.count];
 			CGSize newSize = [cell.lblBadge sizeThatFits:CGSizeMake(cell.lblBadge.frame.size.width, 18)];
 			newSize.width += 8;
 			cell.cnstlblBadgeWidth.constant  = MAX(18,newSize.width);

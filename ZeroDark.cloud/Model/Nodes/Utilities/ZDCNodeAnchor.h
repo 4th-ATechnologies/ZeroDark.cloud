@@ -12,7 +12,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- * When a node is located in a different bucket (not the localUserID's bucket),
+ * When a node is located in a different bucket (not the localUser's bucket),
  * then the ZDCNodeAnchor class is used as a reference point for the foreign node.
  *
  * The ZDCNodeAnchor class is immutable.

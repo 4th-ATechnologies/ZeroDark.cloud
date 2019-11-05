@@ -21,8 +21,9 @@ let kCollection_Conversations = "conversations"
 class Conversation: NSCopying, Codable {
 	
 	enum CodingKeys: String, CodingKey {
-		case remoteUserID = "remoteUserID"
-		case lastActivity = "lastActivity"
+		case remoteUserID  = "remoteUserID"
+		case lastActivity  = "lastActivity"
+		case remoteDropbox = "remoteDropbox"
 	}
 	
 	/// We store `Conversation` objects in the database.
@@ -45,9 +46,19 @@ class Conversation: NSCopying, Codable {
 			
 			// If this is a one-on-one convesation, we can simply use the remoteUserID.
 			//
-			// For a group conversation, we'd use a different technique.
-			// One possibility is to sort the remoteUserID's alphabetically, and then hash the result.
-			// This gives you a short but deterministic uuid.
+			// There are other possibilities here:
+			//
+			// Static group conversation: ("static" means group participants don't change)
+			//
+			//   We could sort remoteUserID's alphabetically, and then hash the result.
+			//   This would give us a short but deterministic uuid.
+			//
+			// Dynamic group conversation: ("dynamic" means group participants can change)
+			//
+			//   We'd probably just use a UUID.
+			//
+			// Since this is a sample app, we're focusing on teaching here.
+			// And we'll save group conversations for a different sample app.
 			
 			return remoteUserID
 		}
@@ -68,17 +79,22 @@ class Conversation: NSCopying, Codable {
 	///
 	var lastActivity: Date
 	
+	/// Add link to ReadTheDocs article here.
+	///
+	var remoteDropbox: ConversationDropbox?
+	
 	
 	/// Designated initializer.
 	///
-	init(remoteUserID: String, lastActivity: Date) {
-		self.remoteUserID = remoteUserID
-		self.lastActivity = lastActivity
+	init(remoteUserID: String, lastActivity: Date, remoteDropbox: ConversationDropbox?) {
+		self.remoteUserID  = remoteUserID
+		self.lastActivity  = lastActivity
+		self.remoteDropbox = remoteDropbox
 	}
 	
 	convenience init(remoteUserID: String) {
 		let _lastActivity = Date()
-		self.init(remoteUserID: remoteUserID, lastActivity: _lastActivity)
+		self.init(remoteUserID: remoteUserID, lastActivity: _lastActivity, remoteDropbox: nil)
 	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -87,7 +103,7 @@ class Conversation: NSCopying, Codable {
 	
 	func copy(with zone: NSZone? = nil) -> Any {
 
-		let copy = Conversation(remoteUserID: remoteUserID, lastActivity: lastActivity)
+		let copy = Conversation(remoteUserID: remoteUserID, lastActivity: lastActivity, remoteDropbox: remoteDropbox)
 		return copy
 	}
 }

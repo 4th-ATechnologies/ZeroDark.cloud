@@ -37,31 +37,6 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
-@interface NSString (badgeText)
-// Used for creating unread count for badges
-+ (NSString*)badgeTextWithCount:(NSUInteger)count;
-@end
-
-@implementation NSString (badgeText)
-
-+ (NSString*)badgeTextWithCount:(NSUInteger)count
-{
-    NSString* result = nil;
-    
-    if(count == 0)
-    {
-        result = @"";
-    }
-    else if (count > 99)
-    {
-        result = @"99+";
-    }
-    else
-        result = [NSString stringWithFormat:@"%ld", count];
-        
-        return result;
-}
-@end
 
 @interface SearchBarWithloading : UISearchBar
 @property(nonatomic) BOOL isLoading;
@@ -137,6 +112,10 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 }
 
 @end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 @implementation UserSearchViewController_IOS
 {
@@ -399,25 +378,9 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
     }
 }
 
-//MARK:  - NSNotification
-
-//
-//-(void)prefsChanged:(NSNotification *)notification
-//{
-//    ZDCLogAutoTrace();
-//
-//    NSString *prefs_key = [notification.userInfo objectForKey:ZDCLocalPreferencesChanged_UserInfo_Key];
-//
-//    if ([prefs_key isEqualToString:ZDCprefs_recentRecipients])
-//    {
-//        recentRecipients =   owner.internalPreferences.recentRecipients;
-//
-////        [_tblUsers reloadData];
-//
-//    }
-//}
-
-//MARK: Keyboard show/Hide Notifications
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Keyboard Notifications
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCurve curve)
 {
@@ -538,8 +501,31 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
     return transition;
 }
 
-//MARK: actions
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Utilities
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+- (NSString *)badgeTextWithCount:(NSUInteger)count
+{
+    NSString* result = nil;
+    
+    if(count == 0)
+    {
+        result = @"";
+    }
+    else if (count > 99)
+    {
+        result = @"99+";
+    }
+    else
+        result = [NSString stringWithFormat:@"%ld", count];
+        
+        return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Actions
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (IBAction)btnFilterTapped:(id)sender
 {
@@ -597,7 +583,9 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
     [_tblUsers reloadData];
 }
 
-//MARK: recipient mgmt
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Recipient Management
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 -(void) setPreferedAuth0ID:(NSString*)auth0ID forUserID:(NSString*)userID
 {
@@ -1369,7 +1357,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
             .bottom = 0,
             .right = 3};
         
-        cell.lblBadge.text =  [NSString  badgeTextWithCount: auth0_profiles.count];
+        cell.lblBadge.text =  [self badgeTextWithCount: auth0_profiles.count];
         CGSize newSize = [cell.lblBadge sizeThatFits:CGSizeMake(cell.lblBadge.frame.size.width, 18)];
         newSize.width += 8;
         cell.cnstlblBadgeWidth.constant  = MAX(18,newSize.width);
@@ -1538,7 +1526,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
             .bottom = 0,
             .right = 3};
         
-        cell.lblBadge.text =  [NSString  badgeTextWithCount: auth0_profiles.count];
+        cell.lblBadge.text =  [self badgeTextWithCount: auth0_profiles.count];
         CGSize newSize = [cell.lblBadge sizeThatFits:CGSizeMake(cell.lblBadge.frame.size.width, 18)];
         newSize.width += 8;
         cell.cnstlblBadgeWidth.constant  = MAX(18,newSize.width);

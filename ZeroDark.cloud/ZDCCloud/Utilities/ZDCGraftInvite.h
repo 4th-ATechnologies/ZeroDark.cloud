@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
  * After Bob receives the invite message, he can accept the invite via
  * `-[ZDCCloudTransaction graftNodeWithLocalPath:::::]`.
  */
-@interface ZDCGraftInvite : NSObject
+@interface ZDCGraftInvite : NSObject <NSCopying>
 
 /**
  * Standard initializer.

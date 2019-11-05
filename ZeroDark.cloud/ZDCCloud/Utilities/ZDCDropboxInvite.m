@@ -7,19 +7,19 @@
  * API Reference : https://apis.zerodark.cloud
 **/
 
-#import "ZDCGraftInvite.h"
+#import "ZDCDropboxInvite.h"
 
-@implementation ZDCGraftInvite
+@implementation ZDCDropboxInvite
 
-@synthesize cloudID = cloudID;
-@synthesize cloudPath = cloudPath;
+@synthesize treeID = treeID;
+@synthesize dirPrefix = dirPrefix;
 
-- (instancetype)initWithCloudID:(NSString *)inCloudID cloudPath:(ZDCCloudPath *)inCloudPath
+- (instancetype)initWithTreeID:(NSString *)inTreeID dirPrefix:(NSString *)inDirPrefix
 {
 	if ((self = [super init]))
 	{
-		cloudID = [inCloudID copy];
-		cloudPath = [inCloudPath copy];
+		treeID = [inTreeID copy];
+		dirPrefix = [inDirPrefix copy];
 	}
 	return self;
 }

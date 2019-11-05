@@ -430,7 +430,11 @@ class MyMessagesViewController: MessagesViewController,
 			return
 		}
 		
-		let message = Message(conversationID: conversationID, senderID: localUserID, text: text)
+		let message = Message(conversationID: conversationID,
+		                            senderID: localUserID,
+		                                text: text,
+		                                date: Date(),
+		                              isRead: true)
 		
 		let rwConnection = ZDCManager.zdc().databaseManager?.rwDatabaseConnection
 		rwConnection?.asyncReadWrite({ (transaction) in

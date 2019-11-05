@@ -11,6 +11,9 @@ import Foundation
 import CocoaLumberjack
 import ZeroDarkCloud
 
+import os
+
+
 class ConversationsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 	
 	var localUserID: String = ""
@@ -246,6 +249,84 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 		}
 	}
 	
+	private func createConversation(_ remoteUserID: String) {
+		
+		let zdc = ZDCManager.zdc()
+		var conversation: Conversation = Conversation(remoteUserID: remoteUserID)
+		
+		let rwConnection = ZDCManager.zdc().databaseManager!.rwDatabaseConnection
+		rwConnection.asyncReadWrite({ (transaction) in
+			
+			// Step 1 of 3:
+			//
+			// If the user selected a user for which we already have a conversation,
+			// then we can just use the existing conversation.
+			
+			if let existingConversation = transaction.conversation(id: remoteUserID) {
+				
+				// We've already setup this conversation
+				
+				conversation = existingConversation
+				return
+			}
+			
+			// Step 2 of 3:
+			//
+			// Create the conversation object, and write it to the database
+			
+			transaction.setConversation(conversation)
+			
+			// Step 3 of 3:
+			//
+			// Create the corresponding node in the ZDC treesystem.
+			// This will trigger ZDC to upload the node to the cloud.
+			
+			// First we specify where we want to store the node in the cloud.
+			// In this case, we want to use:
+			//
+			// home://{remoteUserID}
+			//
+			let path = ZDCTreesystemPath(pathComponents: [conversation.remoteUserID])
+			
+			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: self.localUserID) {
+				
+				do {
+					// Then we tell ZDC to create a node at that path.
+					// This will only fail if there's already a node at that path.
+					//
+					let node = try cloudTransaction.createNode(withPath: path)
+					//
+					// ^ OK, that worked,
+					// Which means ZDC now has a node that's queued to be uploaded.
+					// So when ZDC is ready to upload the node it will ask the ZeroDarkCloudDelegate for the data.
+					//
+					// In this app, the ZeroDarkCloudDelegate == ZDCManager
+					//
+					// @see ZDCManager.data(for:at:transaction:)
+					
+					// And finally, we create a link between the zdc node and our conversation.
+					// This isn't something that's required by ZDC.
+					// It's just something we do because its useful for us, within the context of this application.
+					//
+					try cloudTransaction.linkNodeID(node.uuid, toKey: conversation.uuid, inCollection: kCollection_Conversations)
+					
+				} catch {
+					print("Error creating node: \(error)")
+				}
+			}
+			
+		}, completionBlock: {//[weak self]
+			
+			self.pushMessagesViewController(conversation)
+		})
+	}
+	
+	private func pushMessagesViewController(_ conversation: Conversation) {
+		
+		let msgsVC = MyMessagesViewController(localUserID: localUserID, conversationID: conversation.uuid)
+		self.navigationController?.pushViewController(msgsVC, animated: true)
+	}
+	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: Notifications
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -384,19 +465,6 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 		                         completionHandler: completion)
 	}
 	
-	private func createConversation(_ remoteUserID: String) {
-		
-		let conversation = Conversation(remoteUserID: remoteUserID)
-		
-		let rwConnection = ZDCManager.zdc().databaseManager!.rwDatabaseConnection
-		rwConnection.asyncReadWrite { (transaction) in
-			
-			transaction.setObject(conversation, forKey: conversation.uuid, inCollection: kCollection_Conversations)
-		}
-		
-		// Todo...
-	}
-	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: UITableViewDataSource
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -516,18 +584,7 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 		
 		if let conversation = self.conversation(indexPath: indexPath) {
 			
-			let msgsVC = MyMessagesViewController(localUserID: localUserID, conversationID: conversation.uuid)
-			self.navigationController?.pushViewController(msgsVC, animated: true)
-			
-			// Testing...
-			
-		//	let message = Message(conversationID: conversation.uuid, senderID: localUserID, text: "How's it going?")
-		//
-		//	let rwConnection = ZDCManager.zdc().databaseManager?.rwDatabaseConnection
-		//	rwConnection?.asyncReadWrite({ (transaction) in
-		//
-		//		transaction.setObject(message, forKey: message.uuid, inCollection: kCollection_Messages)
-		//	})
+			self.pushMessagesViewController(conversation)
 		}
 		
 		tableView.deselectRow(at: indexPath, animated: true)

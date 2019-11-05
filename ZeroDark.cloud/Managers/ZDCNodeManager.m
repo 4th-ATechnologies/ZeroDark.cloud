@@ -379,7 +379,7 @@ static ZDCNodeManager *sharedInstance = nil;
  */
 - (void)enumerateNodeIDsWithParentID:(NSString *)parentID
                          transaction:(YapDatabaseReadTransaction *)transaction
-                          usingBlock:(void (^)(NSString *nodeID, BOOL *stop))enumBlock
+                          usingBlock:(void (^NS_NOESCAPE)(NSString *nodeID, BOOL *stop))enumBlock
 {
 	ZDCLogAutoTrace();
 	NSParameterAssert(transaction != nil);
@@ -464,10 +464,10 @@ static ZDCNodeManager *sharedInstance = nil;
  */
 - (void)recursiveEnumerateNodeIDsWithParentID:(NSString *)parentID
                                   transaction:(YapDatabaseReadTransaction *)transaction
-                                   usingBlock:(void (^)(NSString *nodeID,
-                                                        NSArray<NSString*> *pathFromParent,
-                                                        BOOL *recurseInto,
-                                                        BOOL *stop))enumBlock
+                                   usingBlock:(void (^NS_NOESCAPE)(NSString *nodeID,
+                                                                   NSArray<NSString*> *pathFromParent,
+                                                                   BOOL *recurseInto,
+                                                                   BOOL *stop))enumBlock
 {
 	ZDCLogAutoTrace();
 	NSParameterAssert(transaction != nil);
@@ -488,10 +488,10 @@ static ZDCNodeManager *sharedInstance = nil;
 - (BOOL)_recursiveEnumerateNodeIDsWithParentID:(NSString *)parentID
                                 pathFromParent:(NSMutableArray<NSString*> *)pathFromParent
                                    transaction:(YapDatabaseReadTransaction *)transaction
-                                    usingBlock:(void (^)(NSString *nodeID,
-                                                         NSArray<NSString*> *pathFromParent,
-                                                         BOOL *recurseInto,
-                                                         BOOL *stop))enumBlock
+                                    usingBlock:(void (^NS_NOESCAPE)(NSString *nodeID,
+                                                                   NSArray<NSString*> *pathFromParent,
+                                                                   BOOL *recurseInto,
+                                                                   BOOL *stop))enumBlock
 {
 	__block BOOL stopped = NO;
 	
@@ -530,7 +530,7 @@ static ZDCNodeManager *sharedInstance = nil;
  */
 - (void)enumerateNodesWithParentID:(NSString *)parentID
                        transaction:(YapDatabaseReadTransaction *)transaction
-                        usingBlock:(void (^)(ZDCNode *node, BOOL *stop))enumBlock
+                        usingBlock:(void (^NS_NOESCAPE)(ZDCNode *node, BOOL *stop))enumBlock
 {
 	ZDCLogAutoTrace();
 	NSParameterAssert(transaction != nil);
@@ -615,10 +615,10 @@ static ZDCNodeManager *sharedInstance = nil;
  */
 - (void)recursiveEnumerateNodesWithParentID:(NSString *)parentID
                                 transaction:(YapDatabaseReadTransaction *)transaction
-                                 usingBlock:(void (^)(ZDCNode *node,
-                                                      NSArray<ZDCNode*> *pathFromParent,
-                                                      BOOL *recurseInto,
-                                                      BOOL *stop))enumBlock
+                                 usingBlock:(void (^NS_NOESCAPE)(ZDCNode *node,
+                                                                 NSArray<ZDCNode*> *pathFromParent,
+                                                                 BOOL *recurseInto,
+                                                                 BOOL *stop))enumBlock
 {
 	ZDCLogAutoTrace();
 	NSParameterAssert(transaction != nil);
@@ -639,10 +639,10 @@ static ZDCNodeManager *sharedInstance = nil;
 - (BOOL)_recursiveEnumerateNodesWithParentID:(NSString *)parentID
                               pathFromParent:(NSMutableArray<ZDCNode*> *)pathFromParent
                                  transaction:(YapDatabaseReadTransaction *)transaction
-                                  usingBlock:(void (^)(ZDCNode *node,
-                                                       NSArray<ZDCNode*> *pathFromParent,
-                                                       BOOL *recurseInto,
-                                                       BOOL *stop))enumBlock
+                                  usingBlock:(void (^NS_NOESCAPE)(ZDCNode *node,
+                                                                  NSArray<ZDCNode*> *pathFromParent,
+                                                                  BOOL *recurseInto,
+                                                                  BOOL *stop))enumBlock
 {
 	__block BOOL stopped = NO;
 	

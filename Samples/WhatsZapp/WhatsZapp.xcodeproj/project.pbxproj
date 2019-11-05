@@ -27,6 +27,9 @@
 		DC97E4A12368F98B0022B25F /* BadgeLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC97E4A02368F98B0022B25F /* BadgeLabel.swift */; };
 		DC97E4A3236909AA0022B25F /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC97E4A2236909AA0022B25F /* Date+Extensions.swift */; };
 		DC97E4A52369F32C0022B25F /* MyMessagesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC97E4A42369F32C0022B25F /* MyMessagesViewController.swift */; };
+		DC97E4AD236CD0870022B25F /* ConversationDropbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC97E4AC236CD0870022B25F /* ConversationDropbox.swift */; };
+		DC97E4AF236CD26F0022B25F /* ConversationCloudJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC97E4AE236CD26F0022B25F /* ConversationCloudJSON.swift */; };
+		DC97E4B2236CE5060022B25F /* MessageCloudJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC97E4B1236CE5060022B25F /* MessageCloudJSON.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -54,6 +57,9 @@
 		DC97E4A02368F98B0022B25F /* BadgeLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeLabel.swift; sourceTree = "<group>"; };
 		DC97E4A2236909AA0022B25F /* Date+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extensions.swift"; sourceTree = "<group>"; };
 		DC97E4A42369F32C0022B25F /* MyMessagesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyMessagesViewController.swift; sourceTree = "<group>"; };
+		DC97E4AC236CD0870022B25F /* ConversationDropbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationDropbox.swift; sourceTree = "<group>"; };
+		DC97E4AE236CD26F0022B25F /* ConversationCloudJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationCloudJSON.swift; sourceTree = "<group>"; };
+		DC97E4B1236CE5060022B25F /* MessageCloudJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageCloudJSON.swift; sourceTree = "<group>"; };
 		FBBBD2B62B85DA6406E854FC /* Pods-WhatsZapp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WhatsZapp.debug.xcconfig"; path = "Target Support Files/Pods-WhatsZapp/Pods-WhatsZapp.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -78,13 +84,14 @@
 			path = Pods;
 			sourceTree = "<group>";
 		};
-		DC1CEF3A235E2D82004B2EBC /* Model */ = {
+		DC1CEF3A235E2D82004B2EBC /* Local Model */ = {
 			isa = PBXGroup;
 			children = (
 				DC1CEF01235BD875004B2EBC /* Conversation.swift */,
+				DC97E4AC236CD0870022B25F /* ConversationDropbox.swift */,
 				DC1CEF34235E2C74004B2EBC /* Message.swift */,
 			);
-			path = Model;
+			path = "Local Model";
 			sourceTree = "<group>";
 		};
 		DC76FC0A235AB54F0013047B /* Utilities */ = {
@@ -134,10 +141,20 @@
 				DC97C19C2356341000B46DA4 /* Info.plist */,
 				DC97C1A223565FF000B46DA4 /* ZDCManager.swift */,
 				DC1CEF3B235E3242004B2EBC /* DBManager.swift */,
-				DC1CEF3A235E2D82004B2EBC /* Model */,
+				DC1CEF3A235E2D82004B2EBC /* Local Model */,
+				DC97E4B0236CD2850022B25F /* Cloud Model */,
 				DC76FC0A235AB54F0013047B /* Utilities */,
 			);
 			path = WhatsZapp;
+			sourceTree = "<group>";
+		};
+		DC97E4B0236CD2850022B25F /* Cloud Model */ = {
+			isa = PBXGroup;
+			children = (
+				DC97E4AE236CD26F0022B25F /* ConversationCloudJSON.swift */,
+				DC97E4B1236CE5060022B25F /* MessageCloudJSON.swift */,
+			);
+			path = "Cloud Model";
 			sourceTree = "<group>";
 		};
 		DECBCE259FD8F93FEA90FF3E /* Frameworks */ = {
@@ -263,11 +280,13 @@
 			files = (
 				DC76FC04235AA3260013047B /* MainViewController.swift in Sources */,
 				DC76FC00235A96980013047B /* SceneDelegate.swift in Sources */,
+				DC97E4B2236CE5060022B25F /* MessageCloudJSON.swift in Sources */,
 				DC97C1932356340700B46DA4 /* RootViewController.swift in Sources */,
 				DC97C18F2356340700B46DA4 /* AppDelegate.swift in Sources */,
 				DC97E4A12368F98B0022B25F /* BadgeLabel.swift in Sources */,
 				DC76FC02235A9A650013047B /* ConversationsViewController.swift in Sources */,
 				DC97E4A52369F32C0022B25F /* MyMessagesViewController.swift in Sources */,
+				DC97E4AD236CD0870022B25F /* ConversationDropbox.swift in Sources */,
 				DC1CEF02235BD875004B2EBC /* Conversation.swift in Sources */,
 				DC97C1A52356682000B46DA4 /* CustomLogFormatter.swift in Sources */,
 				DC97E4A3236909AA0022B25F /* Date+Extensions.swift in Sources */,
@@ -276,6 +295,7 @@
 				DC97E49D2368A2A90022B25F /* ConversationTableViewCell.swift in Sources */,
 				DC1CEF35235E2C74004B2EBC /* Message.swift in Sources */,
 				DC76FC09235AB5470013047B /* UIImage+scaling.swift in Sources */,
+				DC97E4AF236CD26F0022B25F /* ConversationCloudJSON.swift in Sources */,
 				DC76FC07235AB25F0013047B /* IconTitleButton.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -57,11 +57,11 @@ class Message: NSCopying, Codable {
 	
 	/// The content of the message.
 	///
-	let text: String
+	var text: String
 	
 	/// When the message was sent or received.
 	///
-	let date: Date
+	var date: Date
 	
 	/// Whether or not the message has been read yet.
 	///
@@ -77,14 +77,14 @@ class Message: NSCopying, Codable {
 		self.isRead = isRead
 	}
 	
-	convenience init(conversationID: String, senderID: String, text: String) {
+	convenience init(conversationID: String, senderID: String, text: String, date: Date, isRead: Bool) {
 		
 		self.init( uuid: UUID().uuidString,
 		 conversationID: conversationID,
 		       senderID: senderID,
 		           text: text,
-		           date: Date(),
-		         isRead: true)
+		           date: date,
+		         isRead: isRead)
 	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

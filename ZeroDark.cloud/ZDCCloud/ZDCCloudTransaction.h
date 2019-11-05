@@ -14,6 +14,7 @@
 
 #import "ZDCCloudLocator.h"
 #import "ZDCCloudOperation.h"
+#import "ZDCDropboxInvite.h"
 #import "ZDCGraftInvite.h"
 #import "ZDCNode.h"
 #import "ZDCTreesystemPath.h"
@@ -394,6 +395,34 @@ NS_SWIFT_NAME(insertNode(_:));
                                      error:(NSError *_Nullable *_Nullable)outError;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Dropbox
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * A "dropbox invite" encompasses the information required for another user to write into your treesystem.
+ *
+ * Imagine that Alice has a node in her treesystem at: /foo/bar/filesFromFriends
+ *
+ * She wants to setup the node as a dropbox for Bob:
+ * That is:
+ * - Bob should be allowed to write files into this directory
+ * - But Bob doesn't have permission to read the files in this directory
+ * - And Bob doesn't have permission to delete files from this directory
+ *
+ * Alice can accomplish this by:
+ * - giving Bob write permission on the node
+ * - sending Bob a "dropbox invite" for the node
+ *
+ * What's nice about this system is that Bob doesn't see the parentNode.
+ * That is, Bob cannot discover the location of "/foo/bar/filesFromFriends".
+ * So he wouldn't be able to determine, for example, who else Alice has given Dropbox permission to.
+ *
+ * Further, since Bob doesn't have read permission, he won't be able to see the other children of the node.
+ * So he also won't be able to determine which other friends have sent Alice files.
+ */
+- (nullable ZDCDropboxInvite *)dropboxInviteForNode:(ZDCNode *)node;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Grafting
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -401,7 +430,8 @@ NS_SWIFT_NAME(insertNode(_:));
  * Grafting allows you to add another user's branch into your own treesystem.
  * It's used for collaboration, as the branch is now shared between multiple users.
  *
- *
+ * More information about grafting can be found in the docs:
+ * https://zerodarkcloud.readthedocs.io/en/latest/client/collaboration/
  */
 - (nullable ZDCGraftInvite *)graftInviteForNode:(ZDCNode *)node;
 

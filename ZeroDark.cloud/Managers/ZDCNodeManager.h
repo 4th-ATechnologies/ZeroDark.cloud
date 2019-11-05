@@ -210,7 +210,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)enumerateNodeIDsWithParentID:(NSString *)parentID
                          transaction:(YapDatabaseReadTransaction *)transaction
-                          usingBlock:(void (^)(NSString *nodeID, BOOL *stop))enumBlock;
+                          usingBlock:(void (^NS_NOESCAPE)(NSString *nodeID, BOOL *stop))enumBlock;
 
 /**
  * Enumerates all ZDCNode.uuid's who are ancestors of the given parentID.
@@ -245,10 +245,10 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)recursiveEnumerateNodeIDsWithParentID:(NSString *)parentID
                                   transaction:(YapDatabaseReadTransaction *)transaction
-                                   usingBlock:(void (^)(NSString *nodeID,
-                                                        NSArray<NSString*> *pathFromParent,
-																		  BOOL *recurseInto,
-                                                        BOOL *stop))enumBlock;
+                                   usingBlock:(void (^NS_NOESCAPE)(NSString *nodeID,
+                                                                   NSArray<NSString*> *pathFromParent,
+                                                                   BOOL *recurseInto,
+                                                                   BOOL *stop))enumBlock;
 
 /**
  * Enumerates all ZDCNode's whose parentID property matches the given parentID.
@@ -260,7 +260,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)enumerateNodesWithParentID:(NSString *)parentID
                        transaction:(YapDatabaseReadTransaction *)transaction
-                        usingBlock:(void (^)(ZDCNode *node, BOOL *stop))enumBlock;
+                        usingBlock:(void (^NS_NOESCAPE)(ZDCNode *node, BOOL *stop))enumBlock;
 
 /**
  * Enumerates all ZDCNodes's who are ancestors of the given parentID.
@@ -292,10 +292,10 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)recursiveEnumerateNodesWithParentID:(NSString *)parentID
                                 transaction:(YapDatabaseReadTransaction *)transaction
-                                 usingBlock:(void (^)(ZDCNode *node,
-                                                      NSArray<ZDCNode*> *pathFromParent,
-                                                      BOOL *recurseInto,
-                                                      BOOL *stop))enumBlock;
+                                 usingBlock:(void (^NS_NOESCAPE)(ZDCNode *node,
+                                                                 NSArray<ZDCNode*> *pathFromParent,
+                                                                 BOOL *recurseInto,
+                                                                 BOOL *stop))enumBlock;
 
 /**
  * Returns whether or not the node has any children.
