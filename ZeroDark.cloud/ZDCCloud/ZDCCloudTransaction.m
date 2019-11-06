@@ -3186,24 +3186,6 @@
 	return NO;
 }
 
-- (BOOL)addOperation:(YapDatabaseCloudCoreOperation *)operation
-{
-	[self validateOperation:operation];
-	return [super addOperation:operation];
-}
-
-- (BOOL)modifyOperation:(YapDatabaseCloudCoreOperation *)operation
-{
-	[self validateOperation:operation];
-	return [super modifyOperation:operation];
-}
-
-- (BOOL)insertOperation:(YapDatabaseCloudCoreOperation *)operation inGraph:(NSInteger)graphIdx
-{
-	[self validateOperation:operation];
-	return [super insertOperation:operation inGraph:graphIdx];
-}
-
 - (void)didCompleteOperation:(YapDatabaseCloudCoreOperation *)operation
 {
 //	ZDCLogCookie(@"Did COMPLETE operation: %@", operation.uuid);
