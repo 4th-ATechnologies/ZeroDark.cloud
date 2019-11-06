@@ -174,13 +174,13 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
  *
  * @param recipient
- *   The user to send the message to. (userID == ZDCUser.uuid)
+ *   The user to send the message to.
  *
  * @param outError
  *   Set to nil on success.
  *   Otherwise returns an error that explains what went wrong.
  *
- * @return Returns the message node on success, nil otherwise.
+ * @return Returns a signal node on success, nil otherwise.
  */
 - (nullable ZDCNode *)sendSignalToRecipient:(ZDCUser *)recipient
                                       error:(NSError *_Nullable *_Nullable)outError;
@@ -201,7 +201,7 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
  *
  * @param recipient
- *   The user to send the message to. (userID == ZDCUser.uuid)
+ *   The user to send the message to.
  *
  * @param dependencies
  *   If the signal operation should be dependent upon other operations, you may pass those dependencies here.
@@ -210,11 +210,29 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  *   Set to nil on success.
  *   Otherwise returns an error that explains what went wrong.
  *
- * @return Returns the message node on success, nil otherwise.
+ * @return Returns a signal node on success, nil otherwise.
  */
 - (nullable ZDCNode *)sendSignalToRecipient:(ZDCUser *)recipient
                            withDependencies:(nullable NSArray<ZDCCloudOperation*> *)dependencies
                                       error:(NSError *_Nullable *_Nullable)outError;
+
+/**
+ * Queues an operation to perform a server-side-copy, from the given node, to the recipient's inbox.
+ *
+ * The given node should be part of the localUser's treesystem.
+ *
+ * @param recipient
+ *   The user to send the message to.
+ *
+ * @param outError
+ *   Set to nil on success.
+ *   Otherwise returns an error that explains what went wrong.
+ *
+ * @return Returns a signal node on success, nil otherwise.
+ */
+- (nullable ZDCNode *)copyNode:(ZDCNode *)node
+              toRecipientInbox:(ZDCUser *)recipient
+                         error:(NSError *_Nullable *_Nullable)outError;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Node Utilities
@@ -773,24 +791,7 @@ NS_SWIFT_NAME(recursiveAddShareItem(_:forUserID:nodeID:));
  *   The component(s) in question.
  */
 - (BOOL)nodeIsMarkedAsNeedsDownload:(NSString *)nodeID components:(ZDCNodeComponents)components
- NS_SWIFT_NAME(nodeIsMarkedAsNeedsDownload(_:components:));;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark User Utilities
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * Returns the user with the given userID.
- *
- * This is simply a convenience wrapper for `[transaction objectForKey:userID inCollection:kZDCCollection_Users]`
- *
- * @param userID
- *   The identifier of the user. (userID == ZDCUser.uuid)
- *
- * @return Returns the matching user, if it exists. Nil otherwise.
- */
-- (nullable ZDCUser *)userWithID:(NSString *)userID
-  NS_SWIFT_NAME(user(id:));
+ NS_SWIFT_NAME(nodeIsMarkedAsNeedsDownload(_:components:));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Operations

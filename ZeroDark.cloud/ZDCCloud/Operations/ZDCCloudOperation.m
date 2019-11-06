@@ -178,7 +178,7 @@ static NSString *const putType_str_node_data    = @"data";
 			
 			if ([value isKindOfClass:[NSString class]])
 			{
-				dstCloudPath = [ZDCCloudPath cloudPathFromPath:(NSString *)value];
+				dstCloudPath = [[ZDCCloudPath alloc] initWithPath:(NSString *)value];
 			}
 			else if ([value isKindOfClass:[ZDCCloudPath class]])
 			{

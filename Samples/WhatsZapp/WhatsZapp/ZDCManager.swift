@@ -324,8 +324,12 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 						// Mark the node as "needs download".
 						cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
 						
-						// Try to download it now
-						downloadNode(node, at: path)
+						// Only try to download the message now if we've already downloaded the parent conversation.
+						if let convoNodeID = node.parentID,
+							let convo = cloudTransaction.linkedObject(forNodeID: convoNodeID) as? Conversation
+						{
+							downloadNode(node, at: path)
+						}
 					
 					default:
 						DDLogError("Unknown cloud path: \(path)")
@@ -407,8 +411,12 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 							// Mark the node as "needs download".
 							cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
 							
-							// Try to download it now
-							downloadNode(node, at: path)
+							// Only try to download the message now if we've already downloaded the parent conversation.
+							if let convoNodeID = node.parentID,
+							   let convo = cloudTransaction.linkedObject(forNodeID: convoNodeID) as? Conversation
+							{
+								downloadNode(node, at: path)
+							}
 						
 						default:
 							DDLogError("Unknown cloud path: \(path)")
@@ -534,7 +542,24 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		let options = ZDCDownloadOptions()
 		options.cacheToDiskManager = false
 		options.canDownloadWhileInBackground = true
-		options.completionTag = String(describing: type(of: self))
+		
+		options.completionConsolidationTag = String(describing: type(of: self))
+		//      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+		// Only invoke the given completion closure once, no matter how many times we request this download.
+		//
+		// For example:
+		//
+		// for 0 ..< 100_000 {
+		//   self.downloadNode(node, at: path)
+		// }
+		//
+		// The DownloadManager would consolidate all network requests.
+		// So it would only perform the download once.
+		//
+		// However, without the completionConsolidationTag, it would invoke our completionBlock 100,000 times!
+		// We don't want that in this particular situation.
+		// We only want it to invoke our completionBlock once (per node).
+		// So we specify a non-nil completionConsolidationTag (with a value of "ZDCManager").
 		
 		let queue = DispatchQueue.global()
 		
@@ -567,7 +592,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 						self.processDownloadedConversation(cleartext, forNodeID: nodeID, with: cloudDataInfo)
 					}
 					else {
-					//	self.processDownloadedMessage(cleartext, forNodeID: nodeID, with: cloudDataInfo)
+						self.processDownloadedMessage(cleartext, forNodeID: nodeID, with: cloudDataInfo)
 					}
 					
 				} catch {
@@ -706,6 +731,45 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		}
 	}
 	
+	/// After downloading a new conversation, use this method to download any corresponding messages.
+	///
+	private func downloadMissingOrOutdatedNodes(inConversation convo: Conversation) {
+		
+		guard
+			let zdc = self.zdc,
+			let databaseManager = zdc.databaseManager,
+			let localUserManager = zdc.localUserManager
+		else {
+			// The database is still locked.
+			return
+		}
+		
+		databaseManager.roDatabaseConnection.asyncRead { (transaction) in
+			
+			guard let localUserID = localUserManager.anyLocalUserID(transaction) else {
+				// The user isn't logged into any account yet
+				return
+			}
+			
+			guard
+				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
+				let convoNode = cloudTransaction.linkedNode(forKey: convo.uuid, inCollection: kCollection_Conversations)
+			else {
+				return
+			}
+			
+			zdc.nodeManager.iterateNodeIDs(withParentID: convoNode.uuid, // <- Enumerating home
+			                                transaction: transaction)
+			{(nodeID: String, stop: inout Bool) in
+				
+				let needsDownload = cloudTransaction.nodeIsMarkedAsNeedsDownload(nodeID, components: .all)
+				if needsDownload {
+					self.downloadNode(withNodeID: nodeID, transaction: transaction)
+				}
+			}
+		}
+	}
+	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: Processing Logic
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -714,8 +778,10 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	///
 	private func processDownloadedConversation(_ cloudData: Data, forNodeID convoNodeID: String, with cloudDataInfo: ZDCCloudDataInfo) {
 		
+		var newConvo: Conversation? = nil
+		
 		let rwConnection = zdc.databaseManager?.rwDatabaseConnection
-		rwConnection?.asyncReadWrite { (transaction) in
+		rwConnection?.asyncReadWrite({ (transaction) in
 			
 			guard
 				let convoNode = transaction.node(id: convoNodeID),
@@ -757,21 +823,27 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				
 				// Create a new Conversation object, and store it in the database.
 				//
-				let convo = Conversation(remoteUserID: cloudJSON.remoteUserID)
-				convo.remoteDropbox = cloudJSON.remoteDropbox
+				newConvo = Conversation(remoteUserID: cloudJSON.remoteUserID)
+				newConvo!.remoteDropbox = cloudJSON.remoteDropbox
 
-				transaction.setConversation(convo)
+				transaction.setConversation(newConvo!)
 
 				// Link the Conversation to the Node
 				//
 				do {
-					try cloudTransaction.linkNodeID(convoNodeID, toKey: convo.uuid, inCollection: kCollection_Conversations)
+					try cloudTransaction.linkNodeID(convoNodeID, toConversationID: newConvo!.uuid)
 
 				} catch {
 					DDLogError("Error linking node to conversation: \(error)")
 				}
 			}
-		}
+			
+		}, completionBlock: {
+			
+			if let newConvo = newConvo {
+				self.downloadMissingOrOutdatedNodes(inConversation: newConvo)
+			}
+		})
 	}
 	
 	/// Invoked after a MessageCloudJSON node has been downloaded from the cloud.
@@ -824,7 +896,12 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// Create a new Message object, and store it in the database.
 				
 				let senderID = msgNode.senderID ?? msgNode.localUserID
-				let isRead = senderID == msgNode.localUserID
+				
+				var isRead = false
+				if senderID == msgNode.localUserID {
+					isRead = true
+				}
+			//	else if convo.
 				
 				let msg = Message(conversationID: convo.uuid,
 				                        senderID: senderID,
@@ -837,7 +914,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// Link the message to the Node
 				//
 				do {
-					try cloudTransaction.linkNodeID(msgNodeID, toKey: msg.uuid, inCollection: kCollection_Messages)
+					try cloudTransaction.linkNodeID(msgNodeID, toMessageID: msg.uuid)
 
 				} catch {
 					DDLogError("Error linking node to message: \(error)")

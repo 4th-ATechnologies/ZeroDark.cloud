@@ -289,18 +289,26 @@ typedef void (^UserAvatarDownloadCompletionBlock)(NSData *_Nullable avatar, NSEr
 #endif
 
 /**
- * The completionTag acts as a consolidation tool, and prevents multiple callbacks.
+ * The completionConsolidationTag helps you prevent multiple callbacks.
  *
- * For example, you may have code that requests all missing downloads.
- * The DownloadManager consolidates download requests, so the same resource is only downloaded once.
+ * It's common to have a function that requests a download (if needed).
+ * However, this function may run multiple times.
+ * For example, it may run as part of the dataSource for tableView/collectionView,
+ * and thereform may request a download dozens of times as the user scrolls around the view.
+ *
+ * The optimium result would be:
+ * 1. perform the download only once (consolidate network requests)
+ * 2. perform the completion callback only once (consolidate completion callbacks)
+ *
+ * The DownloadManager automatically consolidates network requests.
  * However, the DownloadManager will invoke every queued completionBlock when the download completes.
  * This may not be what you want. Sometimes you only want to receive a single callback,
- * regardless of how many times your code requested the download.
- * When this is the case, you can set a non-nil completionTag value.
- * And if there's already a queued completionBlock with the same completionTag,
+ * regardless of how many times your code requested the download. (i.e. consolidate completion callbacks)
+ * When this is the case, you can set a non-nil completionConsolidationTag.
+ * And if there's already a queued completionBlock with the same completionConsolidationTag,
  * then the passed completionBlock won't be added to the queue again.
  */
-@property (nonatomic, copy, readwrite, nullable) NSString *completionTag;
+@property (nonatomic, copy, readwrite, nullable) NSString *completionConsolidationTag;
 
 @end
 

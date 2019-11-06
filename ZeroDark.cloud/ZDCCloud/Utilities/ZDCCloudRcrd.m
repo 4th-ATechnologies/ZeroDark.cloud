@@ -131,7 +131,7 @@
 				}
 				
 				cloudID = p_cloudID;
-				cloudPath = [ZDCCloudPath cloudPathFromPath:p_path];
+				cloudPath = [[ZDCCloudPath alloc] initWithPath:p_path];
 				
 				result = (ownerID != nil) && (cloudID != nil) && (cloudPath != nil);
 			}

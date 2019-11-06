@@ -304,11 +304,11 @@ static NSUInteger const kMaxFailCount = 8;
 	
 		ZDCDownloadRef *ref = downloadDict[downloadKey];
 		
-		if (options.completionTag && ref)
+		if (options.completionConsolidationTag && ref)
 		{
 			for (ZDCDownloadTicket *ticket in ref.tickets)
 			{
-				if ([ticket.options.completionTag isEqualToString:options.completionTag])
+				if ([ticket.options.completionConsolidationTag isEqualToString:options.completionConsolidationTag])
 				{
 					existingTicket = ticket;
 					break;
@@ -353,7 +353,7 @@ static NSUInteger const kMaxFailCount = 8;
 	if (existingTicket)
 	{
 		// Download already in progress.
-		// Request is a duplicate (as per completionTag).
+		// Request is a duplicate (as per completionConsolidationTag).
 		return existingTicket;
 	}
 	if (existingProgress)
@@ -886,11 +886,11 @@ static NSUInteger const kMaxFailCount = 8;
 			
 			ZDCDownloadRef *ref = downloadDict[piggybackKey];
 			
-			if (options.completionTag && ref)
+			if (options.completionConsolidationTag && ref)
 			{
 				for (ZDCDownloadTicket *ticket in ref.tickets)
 				{
-					if ([ticket.options.completionTag isEqualToString:options.completionTag])
+					if ([ticket.options.completionConsolidationTag isEqualToString:options.completionConsolidationTag])
 					{
 						piggybackTicket = ticket;
 						break;
@@ -949,11 +949,11 @@ static NSUInteger const kMaxFailCount = 8;
 	
 		ZDCDownloadRef *ref = downloadDict[downloadKey];
 		
-		if (options.completionTag && ref)
+		if (options.completionConsolidationTag && ref)
 		{
 			for (ZDCDownloadTicket *ticket in ref.tickets)
 			{
-				if ([ticket.options.completionTag isEqualToString:options.completionTag])
+				if ([ticket.options.completionConsolidationTag isEqualToString:options.completionConsolidationTag])
 				{
 					existingTicket = ticket;
 					break;
@@ -993,7 +993,7 @@ static NSUInteger const kMaxFailCount = 8;
 	if (existingTicket)
 	{
 		// Download already in progress.
-		// Request is a duplicate (as per completionTag).
+		// Request is a duplicate (as per completionConsolidationTag).
 		return existingTicket;
 	}
 	if (existingProgress)
@@ -1785,11 +1785,11 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		ZDCDownloadRef *ref = downloadDict[downloadKey];
 		
-		if (options.completionTag && ref)
+		if (options.completionConsolidationTag && ref)
 		{
 			for (ZDCDownloadTicket *ticket in ref.tickets)
 			{
-				if ([ticket.options.completionTag isEqualToString:options.completionTag])
+				if ([ticket.options.completionConsolidationTag isEqualToString:options.completionConsolidationTag])
 				{
 					existingTicket = ticket;
 					break;
@@ -1832,7 +1832,7 @@ static NSUInteger const kMaxFailCount = 8;
 	if (existingTicket)
 	{
 		// Download already in progress.
-		// Request is a duplicate (as per completionTag).
+		// Request is a duplicate (as per completionConsolidationTag).
 		return existingTicket;
 	}
 	if (existingProgress)
@@ -3046,7 +3046,7 @@ static NSString *const k_completionTag = @"completionTag";
 #if TARGET_OS_IPHONE
 @synthesize canDownloadWhileInBackground = _canBackground;
 #endif
-@synthesize completionTag = _completionTag;
+@synthesize completionConsolidationTag = _completionConsolidationTag;
 
 
 - (instancetype)initWithCoder:(NSCoder *)decoder
@@ -3058,7 +3058,7 @@ static NSString *const k_completionTag = @"completionTag";
 	#if TARGET_OS_IPHONE
 		_canBackground = [decoder decodeBoolForKey:k_canBackground];
 	#endif
-		_completionTag = [decoder decodeObjectForKey:k_completionTag];
+		_completionConsolidationTag = [decoder decodeObjectForKey:k_completionTag];
 	}
 	return self;
 }
@@ -3070,7 +3070,7 @@ static NSString *const k_completionTag = @"completionTag";
 #if TARGET_OS_IPHONE
 	[coder encodeBool:_canBackground forKey:k_canBackground];
 #endif
-	[coder encodeObject:_completionTag forKey:k_completionTag];
+	[coder encodeObject:_completionConsolidationTag forKey:k_completionTag];
 }
 
 - (id)copyWithZone:(NSZone *)zone
@@ -3081,7 +3081,7 @@ static NSString *const k_completionTag = @"completionTag";
 #if TARGET_OS_IPHONE
 	copy.canDownloadWhileInBackground = _canBackground;
 #endif
-	copy.completionTag = [_completionTag copy];
+	copy.completionConsolidationTag = [_completionConsolidationTag copy];
 	
 	return copy;
 }

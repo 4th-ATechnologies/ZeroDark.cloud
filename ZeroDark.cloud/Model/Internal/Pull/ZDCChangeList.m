@@ -459,7 +459,7 @@ static NSString *const k_skippedPendingChangeIDs  = @"skippedPendingChangeIDs";
 					//    So we just need to update the path (and maybe the eTag) of our op.
 					
 					NSString *ext = [mergedChange.path pathExtension];
-					ZDCCloudPath *dstPath = [ZDCCloudPath cloudPathFromPath:change.dstPath];
+					ZDCCloudPath *dstPath = [[ZDCCloudPath alloc] initWithPath:change.dstPath];
 					
 					mergedChange.path = [dstPath pathWithExt:ext];
 					

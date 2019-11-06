@@ -142,12 +142,58 @@ class MyMessagesViewController: MessagesViewController,
 			user = transaction.object(forKey: userID, inCollection: kZDCCollection_Users) as? ZDCUser
 		})
 		
-		return user
+		if (user != nil) {
+			return user
+		}
+		
+		// The user doesn't exist in the database yet.
+		// So we're goint to ask ZDC to fetch the user for us.
+		// After that completes, we'll refresh the corresponding sections in the tableView.
+		//
+		// Note: The ZDCRemoteUserManager consolidates multiple requests.
+		// So if we make this request a hundred times, it will only do a single network request.
+		
+		let zdc = ZDCManager.zdc()
+		zdc.remoteUserManager?.fetchRemoteUser(withID: userID,
+		                                  requesterID: self.localUserID,
+		                              completionQueue: DispatchQueue.main,
+		                              completionBlock:
+		{[weak self] (user: ZDCUser?, error: Error?) in
+			
+			if let user = user {
+				self?.updateVisibleRows(forUser: user)
+			}
+		})
+		
+		return nil
 	}
 	
 	private func updateVisibleRows(forUser user: ZDCUser) {
 		
-		// Todo...
+		let collectionView = self.messagesCollectionView
+		
+		var sections = IndexSet()
+		for indexPath in collectionView.indexPathsForVisibleItems {
+			
+			if let message = self.message(at: indexPath) {
+				
+				if message.senderID == user.uuid {
+					sections.insert(indexPath.section)
+				}
+			}
+		}
+		
+		if sections.count > 0 {
+			
+			// Performance Note:
+			//
+			// There may be a better way to do this.
+			// The only thing we want to update here is the avatarView.
+			// So if you can figure out how to get a reference to the appropriate avatarView,
+			// then you can update it without forcing a reload of the UICollectionView.
+			//
+			collectionView.reloadSections(sections)
+		}
 	}
 	
 	private func conversation() -> Conversation? {
@@ -430,16 +476,67 @@ class MyMessagesViewController: MessagesViewController,
 			return
 		}
 		
+		guard
+			let conversation = self.conversation(),
+			let remoteUser = self.remoteUser(id: conversation.remoteUserID),
+			let remoteUser_bucket = remoteUser.aws_bucket
+		else {
+			return
+		}
+		
 		let message = Message(conversationID: conversationID,
 		                            senderID: localUserID,
 		                                text: text,
 		                                date: Date(),
-		                              isRead: true)
+		                              isRead: true) // outgoing message
+		
+		let conversationID = self.conversationID
+		let localUserID = self.localUserID
+		let zdc = ZDCManager.zdc()
 		
 		let rwConnection = ZDCManager.zdc().databaseManager?.rwDatabaseConnection
 		rwConnection?.asyncReadWrite({ (transaction) in
 			
+			guard let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID) else {
+				return
+			}
+			
+			// Step 1 of 3:
+			//
+			// Write the message to the database
+			
 			transaction.setMessage(message)
+			
+			// Step 2 of 3:
+			//
+			// Store the message in the treesystem, using path:
+			//
+			// home://conversationID/messageID
+			
+			let localPath = ZDCTreesystemPath(pathComponents: [conversationID, message.uuid])
+			
+			let node: ZDCNode!
+			do {
+				node = try cloudTransaction.createNode(withPath: localPath)
+				
+				try cloudTransaction.linkNodeID(node.uuid, toMessageID: message.uuid)
+				
+			} catch {
+				print("Error creating message node: \(error)")
+				return
+			}
+			
+			// Step 3 of 3:
+			//
+			// After we've uploaded the node to our treesystem,
+			// use a server-side-copy operation to put the message into the recipients treesystem.
+			
+			do {
+				
+				try cloudTransaction.copy(node, toRecipientInbox: remoteUser)
+			} catch {
+				print("Error creating server-side-copy operation: \(error)")
+			}
 		})
 		
 		inputBar.inputTextView.text = ""

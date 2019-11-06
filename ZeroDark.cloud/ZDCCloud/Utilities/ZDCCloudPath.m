@@ -156,28 +156,9 @@ static BOOL ZDCCloudPathEqual(NSString *treeID1, NSString *dirPrefix1, NSString 
 	return YES;
 }
 
-/**
- * See header file for description.
- * Or view the api's online (for both Swift & Objective-C):
- * https://apis.zerodark.cloud/Classes/ZDCCloudPath.html
- */
-+ (instancetype)cloudPathFromPath:(NSString *)path
-{
-	NSString *treeID    = nil;
-	NSString *dirPrefix = nil;
-	NSString *fileName  = nil;
-	
-	BOOL isValid = ZDCCloudPathParse(&treeID, &dirPrefix, &fileName, path);
-	if (!isValid) {
-		return nil;
-	}
-	
-	return [[self alloc] initWithTreeID: treeID
-	                          dirPrefix: dirPrefix
-	                           fileName: fileName];
-}
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Validity
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * See header file for description.
@@ -263,13 +244,43 @@ static BOOL ZDCCloudPathEqual(NSString *treeID1, NSString *dirPrefix1, NSString 
 	return isValid;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Init
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (instancetype)initWithTreeID:(NSString *)inTreeID
-                     dirPrefix:(NSString *)inDirPrefix
-                      fileName:(NSString *)inFileName
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudPath.html
+ */
+- (nullable instancetype)initWithPath:(NSString *)path
 {
-	if (inFileName.length == 0) {
+	NSArray<NSString *> *components = [path componentsSeparatedByString:@"/"];
+	if (components.count != 3) {
+		return nil;
+	}
+	
+	return [self initWithTreeID: components[0]
+	                  dirPrefix: components[1]
+	                   fileName: components[2]];
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudPath.html
+ */
+- (nullable instancetype)initWithTreeID:(NSString *)inTreeID
+                              dirPrefix:(NSString *)inDirPrefix
+                               fileName:(NSString *)inFileName
+{
+	if (![ZDCCloudPath isValidTreeID:inTreeID]) {
+		return nil;
+	}
+	if (![ZDCCloudPath isValidDirPrefix:inDirPrefix]) {
+		return nil;
+	}
+	if (![ZDCCloudPath isValidFileName:inFileName]) {
 		return nil;
 	}
 	
@@ -282,7 +293,35 @@ static BOOL ZDCCloudPathEqual(NSString *treeID1, NSString *dirPrefix1, NSString 
 	return self;
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudPath.html
+ */
+- (nullable instancetype)initWithTreeID:(NSString *)inTreeID
+                          inboxFileName:(NSString *)inFileName
+{
+	return [self initWithTreeID: inTreeID
+	                  dirPrefix: kZDCDirPrefix_MsgsIn
+	                   fileName: inFileName];
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudPath.html
+ */
+- (nullable instancetype)initWithTreeID:(NSString *)inTreeID
+                         outboxFileName:(NSString *)inFileName
+{
+	return [self initWithTreeID: inTreeID
+	                  dirPrefix: kZDCDirPrefix_MsgsOut
+	                   fileName: inFileName];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark NSCoding
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (instancetype)initWithCoder:(NSCoder *)decoder
 {
@@ -302,7 +341,9 @@ static BOOL ZDCCloudPathEqual(NSString *treeID1, NSString *dirPrefix1, NSString 
 	[coder encodeObject:fileName  forKey:k_fileName];
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark NSCopying
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (id)copyWithZone:(NSZone *)zone
 {
@@ -321,7 +362,9 @@ static BOOL ZDCCloudPathEqual(NSString *treeID1, NSString *dirPrefix1, NSString 
 	return copy;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark FileName
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (NSString *)fileNameExt
 {
@@ -341,7 +384,9 @@ static BOOL ZDCCloudPathEqual(NSString *treeID1, NSString *dirPrefix1, NSString 
 	return newFileName;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Path (as string)
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (NSString *)path
 {
@@ -393,7 +438,9 @@ static BOOL ZDCCloudPathEqual(NSString *treeID1, NSString *dirPrefix1, NSString 
 	return [path copy];
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Comparisons
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (BOOL)matchesFileName:(NSString *)_fileName
 {
@@ -426,7 +473,9 @@ static BOOL ZDCCloudPathEqual(NSString *treeID1, NSString *dirPrefix1, NSString 
 	return ZDCCloudPathEqual(treeID, dirPrefix, fileName, _treeID, _dirPrefix, _fileName, components);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Equality
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (BOOL)isEqual:(id)another
 {
@@ -454,7 +503,9 @@ static BOOL ZDCCloudPathEqual(NSString *treeID1, NSString *dirPrefix1, NSString 
 	                         another->treeID, another->dirPrefix, another->fileName, components);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Debugging
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (NSString *)description
 {

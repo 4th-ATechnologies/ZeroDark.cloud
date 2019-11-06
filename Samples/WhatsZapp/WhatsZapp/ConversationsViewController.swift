@@ -252,10 +252,12 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 	private func createConversation(_ remoteUserID: String) {
 		
 		let zdc = ZDCManager.zdc()
+		let localUserID = self.localUserID
+		
 		var conversation: Conversation = Conversation(remoteUserID: remoteUserID)
 		
-		let rwConnection = ZDCManager.zdc().databaseManager!.rwDatabaseConnection
-		rwConnection.asyncReadWrite({ (transaction) in
+		let rwConnection = zdc.databaseManager?.rwDatabaseConnection
+		rwConnection?.asyncReadWrite({ (transaction) in
 			
 			// Step 1 of 3:
 			//
@@ -267,7 +269,7 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 				// We've already setup this conversation
 				
 				conversation = existingConversation
-				return
+				return // from transaction block (i.e. jump to completionBlock below)
 			}
 			
 			// Step 2 of 3:
@@ -281,6 +283,10 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 			// Create the corresponding node in the ZDC treesystem.
 			// This will trigger ZDC to upload the node to the cloud.
 			
+			guard let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID) else {
+				return
+			}
+			
 			// First we specify where we want to store the node in the cloud.
 			// In this case, we want to use:
 			//
@@ -288,36 +294,33 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 			//
 			let path = ZDCTreesystemPath(pathComponents: [conversation.remoteUserID])
 			
-			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: self.localUserID) {
+			do {
+				// Then we tell ZDC to create a node at that path.
+				// This will only fail if there's already a node at that path.
+				//
+				let node = try cloudTransaction.createNode(withPath: path)
+				//
+				// ^ OK, that worked,
+				// Which means ZDC now has a node that's queued to be uploaded.
+				// So when ZDC is ready to upload the node it will ask the ZeroDarkCloudDelegate for the data.
+				//
+				// In this app, the ZeroDarkCloudDelegate == ZDCManager
+				//
+				// @see ZDCManager.data(for:at:transaction:)
 				
-				do {
-					// Then we tell ZDC to create a node at that path.
-					// This will only fail if there's already a node at that path.
-					//
-					let node = try cloudTransaction.createNode(withPath: path)
-					//
-					// ^ OK, that worked,
-					// Which means ZDC now has a node that's queued to be uploaded.
-					// So when ZDC is ready to upload the node it will ask the ZeroDarkCloudDelegate for the data.
-					//
-					// In this app, the ZeroDarkCloudDelegate == ZDCManager
-					//
-					// @see ZDCManager.data(for:at:transaction:)
-					
-					// And finally, we create a link between the zdc node and our conversation.
-					// This isn't something that's required by ZDC.
-					// It's just something we do because its useful for us, within the context of this application.
-					//
-					try cloudTransaction.linkNodeID(node.uuid, toKey: conversation.uuid, inCollection: kCollection_Conversations)
-					
-				} catch {
-					print("Error creating node: \(error)")
-				}
+				// And finally, we create a link between the zdc node and our conversation.
+				// This isn't something that's required by ZDC.
+				// It's just something we do because its useful for us, within the context of this application.
+				//
+				try cloudTransaction.linkNodeID(node.uuid, toConversationID: conversation.uuid)
+				
+			} catch {
+				print("Error creating node: \(error)")
 			}
 			
-		}, completionBlock: {//[weak self]
+		}, completionBlock: { [weak self] in
 			
-			self.pushMessagesViewController(conversation)
+			self?.pushMessagesViewController(conversation)
 		})
 	}
 	

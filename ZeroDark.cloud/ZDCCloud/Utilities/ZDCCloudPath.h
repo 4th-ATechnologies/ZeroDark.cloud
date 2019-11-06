@@ -51,6 +51,12 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
 
 /**
  * Encapsultes a standardized & parsed cloudPath, which takes the form of: {treeID}/{dirPrefix}/{filename}
+ *
+ * For example, the following are valid cloudPaths:
+ *
+ * - com.4th-a.storm4/00000000000000000000000000000000/3h6omkbtsn3o7xfsjtz6xcnyxn5e6bug.rcrd
+ * - tld.foo.bar/640C24E8B6874D428A19C63652DF5F8C/54yqj8u5796uaoaa41n6unywki8t3wpn.data
+ * - tld.foo.bar/mgsIn/7ckebgr1c4s7a9xgu6gqcb7ix55mndbg
  */
 @interface ZDCCloudPath : NSObject <NSCoding, NSCopying>
 
@@ -100,8 +106,11 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
 
 /**
  * Attempts to parse the given string into a cloudPath.
+ *
+ * @param path
+ *   A cloud path of the form "X/Y/Z", where X=treeID, Y=dirPrefix, Z=fileName
  */
-+ (nullable instancetype)cloudPathFromPath:(NSString *)path;
+- (nullable instancetype)initWithPath:(NSString *)path;
 
 /**
  * Creates a new instance with the given components.
@@ -118,9 +127,37 @@ typedef NS_OPTIONS(NSUInteger, ZDCCloudPathComponents) {
  *   The (hashed) name of the file. This is also referred to as the cloudName.
  *   The fileName does not require a fileExtension.
  */
-- (instancetype)initWithTreeID:(NSString *)treeID
-                     dirPrefix:(NSString *)dirPrefix
-                      fileName:(NSString *)fileName;
+- (nullable instancetype)initWithTreeID:(NSString *)treeID
+                              dirPrefix:(NSString *)dirPrefix
+                               fileName:(NSString *)fileName;
+
+/**
+ * Creates a new instance, where the dirPrefix is set to be the inbox.
+ *
+ * @param treeID
+ *   The treesystem container name.
+ *   This is the name you registered via dashboard.zerodark.cloud.
+ *
+ * @param fileName
+ *   The (hashed) name of the file. This is also referred to as the cloudName.
+ *   The fileName does not require a fileExtension.
+ */
+- (nullable instancetype)initWithTreeID:(NSString *)treeID
+                          inboxFileName:(NSString *)fileName;
+
+/**
+ * Creates a new instance, where the dirPrefix is set to be the outbox.
+ *
+ * @param treeID
+ *   The treesystem container name.
+ *   This is the name you registered via dashboard.zerodark.cloud.
+ *
+ * @param fileName
+ *   The (hashed) name of the file. This is also referred to as the cloudName.
+ *   The fileName does not require a fileExtension.
+ */
+- (nullable instancetype)initWithTreeID:(NSString *)treeID
+                         outboxFileName:(NSString *)fileName;
 
 #pragma mark Properties
 

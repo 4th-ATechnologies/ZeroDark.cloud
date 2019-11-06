@@ -9,6 +9,7 @@
 
 import Foundation
 import YapDatabase
+import ZeroDarkCloud
 
 /// The database being used by this sample app is YapDatabase, which is a collection/key/value store.
 /// All conversations will be stored in this collection.
@@ -97,9 +98,7 @@ class Conversation: NSCopying, Codable {
 		self.init(remoteUserID: remoteUserID, lastActivity: _lastActivity, remoteDropbox: nil)
 	}
 	
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: NSCopying
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// MARK: NSCopying
 	
 	func copy(with zone: NSZone? = nil) -> Any {
 
@@ -125,5 +124,13 @@ extension YapDatabaseReadWriteTransaction {
 	func setConversation(_ conversation: Conversation) {
 		
 		self.setObject(conversation, forKey: conversation.uuid, inCollection: kCollection_Conversations)
+	}
+}
+
+extension ZDCCloudTransaction {
+	
+	func linkNodeID(_ nodeID: String, toConversationID conversationID: String) throws {
+		
+		try self.linkNodeID(nodeID, toKey: conversationID, inCollection: kCollection_Conversations)
 	}
 }

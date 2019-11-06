@@ -1007,7 +1007,7 @@ static NSUInteger const kMaxFailCount = 8;
 	NSString *regionStr = change.region;
 	NSDate *timestamp   = change.timestamp;
 
-	ZDCCloudPath *cloudPath = [ZDCCloudPath cloudPathFromPath:path];
+	ZDCCloudPath *cloudPath = [[ZDCCloudPath alloc] initWithPath:path];
 	AWSRegion region = [AWSRegions regionForName:regionStr];
 	
 	if (cloudID == nil || cloudPath == nil || region == AWSRegion_Invalid || bucket == nil)
@@ -1281,7 +1281,7 @@ static NSUInteger const kMaxFailCount = 8;
 	NSString *regionStr = change.region;
 	NSDate *timestamp   = change.timestamp;
 	
-	ZDCCloudPath *cloudPath = [ZDCCloudPath cloudPathFromPath:path];
+	ZDCCloudPath *cloudPath = [[ZDCCloudPath alloc] initWithPath:path];
 	AWSRegion region = [AWSRegions regionForName:regionStr];
 	
 	if (cloudID == nil || cloudPath == nil || region == AWSRegion_Invalid || bucket == nil)
@@ -1631,8 +1631,8 @@ static NSUInteger const kMaxFailCount = 8;
 	NSString *regionStr = change.region;
 	NSDate *timestamp   = change.timestamp;
 	
-	ZDCCloudPath *srcCloudPath = [ZDCCloudPath cloudPathFromPath:srcPath];
-	ZDCCloudPath *dstCloudPath = [ZDCCloudPath cloudPathFromPath:dstPath];
+	ZDCCloudPath *srcCloudPath = [[ZDCCloudPath alloc] initWithPath:srcPath];
+	ZDCCloudPath *dstCloudPath = [[ZDCCloudPath alloc] initWithPath:dstPath];
 	AWSRegion region = [AWSRegions regionForName:regionStr];
 	
 	if (cloudID == nil || srcCloudPath == nil || dstCloudPath == nil || region == AWSRegion_Invalid || bucket == nil)
@@ -1883,7 +1883,7 @@ static NSUInteger const kMaxFailCount = 8;
 	NSString *regionStr = change.region;
 	NSDate *timestamp   = change.timestamp;
 	
-	ZDCCloudPath *cloudPath = [ZDCCloudPath cloudPathFromPath:path];
+	ZDCCloudPath *cloudPath = [[ZDCCloudPath alloc] initWithPath:path];
 	AWSRegion region = [AWSRegions regionForName:regionStr];
 	
 	if (cloudID == nil || cloudPath == nil || region == AWSRegion_Invalid || bucket == nil)
@@ -2818,7 +2818,7 @@ static NSUInteger const kMaxFailCount = 8;
 	
 			nodeData = PopFileWithKey(dataKey);
 			
-			ZDCCloudPath *rcrdCloudPath = [ZDCCloudPath cloudPathFromPath:nodeRcrd.key];
+			ZDCCloudPath *rcrdCloudPath = [[ZDCCloudPath alloc] initWithPath:nodeRcrd.key];
 			if (rcrdCloudPath == nil)
 			{
 				ZDCLogTrace(@"[%@] Ignoring invalid node path: %@", pullState.localUserID, nodeRcrd.key);
@@ -3150,7 +3150,7 @@ static NSUInteger const kMaxFailCount = 8;
 				value = json[@"path"];
 				if ([value isKindOfClass:[NSString class]])
 				{
-					cloudPath = [ZDCCloudPath cloudPathFromPath:(NSString *)value];
+					cloudPath = [[ZDCCloudPath alloc] initWithPath:(NSString *)value];
 				}
 				
 				value = json[@"eTag"];
