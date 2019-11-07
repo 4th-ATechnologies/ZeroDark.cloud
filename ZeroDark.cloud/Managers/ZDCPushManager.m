@@ -2407,13 +2407,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
-		// Mark operation as complete
-		
-		NSString *extName = [self extNameForContext:context];
-		ZDCCloudTransaction *cloudTransaction = [transaction ext:extName];
-		
-		[cloudTransaction completeOperationWithUUID:context.operationUUID];
-		
 		// Update node (if operation was node related)
 		
 		node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
@@ -2482,6 +2475,13 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				}
 			}
 		}
+		
+		// Mark operation as complete
+		
+		NSString *extName = [self extNameForContext:context];
+		ZDCCloudTransaction *cloudTransaction = [transaction ext:extName];
+		
+		[cloudTransaction completeOperationWithUUID:context.operationUUID];
 		
 		// Remove redundant operations (if needed)
 		
@@ -4029,13 +4029,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
-		// Mark operation as complete
-		
-		NSString *extName = [self extNameForContext:context];
-		
-		[[transaction ext:extName] completeOperationWithUUID:context.operationUUID];
-		
-		// Fetch node
+		// Update node
 		
 		ZDCNode *node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
 		if (node)
@@ -4059,6 +4053,13 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			
 			[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
 		}
+		
+		// Mark operation as complete
+		
+		NSString *extName = [self extNameForContext:context];
+		ZDCCloudTransaction *cloudTransaction = [transaction ext:extName];
+		
+		[cloudTransaction completeOperationWithUUID:context.operationUUID];
 		
 	} completionQueue:concurrentQueue completionBlock:^{
 		
@@ -4430,12 +4431,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
-		// Mark operation as complete
-		
-		NSString *extName = [self extNameForContext:context];
-		
-		[[transaction ext:extName] completeOperationWithUUID:context.operationUUID];
-		
 		// Delete corresponding ZDCCloudNode's from database.
 		
 		ZDCCloudNode *cloudNode = nil;
@@ -4468,6 +4463,13 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			
 			[transaction removeObjectsForKeys:cloudNodeIDs inCollection:kZDCCollection_CloudNodes];
 		}
+		
+		// Mark operation as complete
+		
+		NSString *extName = [self extNameForContext:context];
+		ZDCCloudTransaction *cloudTransaction = [transaction ext:extName];
+		
+		[cloudTransaction completeOperationWithUUID:context.operationUUID];
 		
 	} completionQueue:concurrentQueue completionBlock:^{
 		
@@ -4901,12 +4903,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
-		// Mark operation as complete
-		
-		NSString *extName = [self extNameForContext:context];
-		
-		[[transaction ext:extName] completeOperationWithUUID:context.operationUUID];
-		
 		// Delete corresponding ZDCCloudNode's from database.
 		
 		ZDCCloudNode *cloudNode = nil;
@@ -4939,6 +4935,13 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			
 			[transaction removeObjectsForKeys:cloudNodeIDs inCollection:kZDCCollection_CloudNodes];
 		}
+		
+		// Mark operation as complete
+		
+		NSString *extName = [self extNameForContext:context];
+		ZDCCloudTransaction *cloudTransaction = [transaction ext:extName];
+		
+		[cloudTransaction completeOperationWithUUID:context.operationUUID];
 		
 	} completionQueue:concurrentQueue completionBlock:^{
 		
@@ -5651,12 +5654,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
-		// Mark operation as complete
-		
-		NSString *extName = [self extNameForContext:context];
-		
-		[[transaction ext:extName] completeOperationWithUUID:context.operationUUID];
-		
 		// Update node (if operation was node related)
 		
 		BOOL isOutgoingMessage =
@@ -5734,6 +5731,13 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				[zdc.delegate didSendMessage:node toRecipient:recipient transaction:transaction];
 			}
 		}
+		
+		// Mark operation as complete
+		
+		NSString *extName = [self extNameForContext:context];
+		ZDCCloudTransaction *cloudTransaction = [transaction ext:extName];
+		
+		[cloudTransaction completeOperationWithUUID:context.operationUUID];
 	}];
 }
 
@@ -7146,8 +7150,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// Mark operation as complete
 		
 		NSString *extName = [self extNameForContext:context];
+		ZDCCloudTransaction *cloudTransaction = [transaction ext:extName];
 		
-		[[transaction ext:extName] completeOperationWithUUID:context.operationUUID];
+		[cloudTransaction completeOperationWithUUID:context.operationUUID];
 		
 		// Remove redundant operations (if needed)
 		

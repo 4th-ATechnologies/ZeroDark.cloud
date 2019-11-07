@@ -16,7 +16,6 @@
 #import "ZDCLogging.h"
 #import "ZDCNodeManager.h"
 #import "ZDCNodePrivate.h"
-#import "ZDCPushManager.h"
 
 #import "NSData+S4.h"
 #import "NSError+ZeroDark.h"
@@ -2604,6 +2603,65 @@
 	}];
 }
 
+/**
+ * Signal nodes are temporary.
+ * They contain the information we need to complete an operation in the queue.
+ * And once the operation is completed/skipped, we're free to delete the node.
+ */
+- (void)maybeDeleteSignalNode:(ZDCCloudOperation *)finishedOp
+{
+	BOOL (^hasRemainingOps)(ZDCNode *) = ^BOOL (ZDCNode *node){
+		
+		NSString *pipelineName = finishedOp.pipeline;
+		YapDatabaseCloudCorePipeline *pipeline = [self->parentConnection->parent pipelineWithName:pipelineName];
+		
+		__block BOOL foundMatch = NO;
+		[self _enumerateOperations: YDBCloudCore_EnumOps_All
+		                inPipeline: pipeline
+		                usingBlock:
+		^(YapDatabaseCloudCoreOperation *_op, NSUInteger graphIdx, BOOL *stop)
+		{
+			ZDCCloudOperation *op = (ZDCCloudOperation *)_op;
+			
+			if (![op.uuid isEqual:finishedOp.uuid])
+			{
+				if ([op.nodeID isEqualToString:node.uuid]) {
+					foundMatch = YES;
+					*stop = YES;
+				}
+				
+				if ([op.dstNodeID isEqualToString:node.uuid]) {
+					foundMatch = YES;
+					*stop = YES;
+				}
+			}
+		}];
+		
+		return foundMatch;
+	};
+	
+	YapDatabaseReadWriteTransaction *rwTransaction = (YapDatabaseReadWriteTransaction *)databaseTransaction;
+	
+	NSString *srcNodeID = finishedOp.nodeID;
+	NSString *dstNodeID = finishedOp.dstNodeID;
+	
+	ZDCNode *srcNode = [databaseTransaction objectForKey:srcNodeID inCollection:kZDCCollection_Nodes];
+	if (srcNode.isSignal)
+	{
+		if (!hasRemainingOps(srcNode)) {
+			[rwTransaction removeObjectForKey:srcNodeID inCollection:kZDCCollection_Nodes];
+		}
+	}
+	
+	ZDCNode *dstNode = [databaseTransaction objectForKey:dstNodeID inCollection:kZDCCollection_Nodes];
+	if (dstNode.isSignal)
+	{
+		if (!hasRemainingOps(dstNode)) {
+			[rwTransaction removeObjectForKey:srcNodeID inCollection:kZDCCollection_Nodes];
+		}
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Subclass Hooks
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3188,12 +3246,18 @@
 
 - (void)didCompleteOperation:(YapDatabaseCloudCoreOperation *)operation
 {
-//	ZDCLogCookie(@"Did COMPLETE operation: %@", operation.uuid);
+	if ([operation isKindOfClass:[ZDCCloudOperation class]])
+	{
+		[self maybeDeleteSignalNode:(ZDCCloudOperation *)operation];
+	}
 }
 
 - (void)didSkipOperation:(YapDatabaseCloudCoreOperation *)operation
 {
-//	ZDCLogCookie(@"Did SKIP operation: %@", operation.uuid);
+	if ([operation isKindOfClass:[ZDCCloudOperation class]])
+	{
+		[self maybeDeleteSignalNode:(ZDCCloudOperation *)operation];
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
