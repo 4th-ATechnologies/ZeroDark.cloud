@@ -5660,34 +5660,78 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		// Update node (if operation was node related)
 		
 		BOOL isOutgoingMessage =
-		  (operation.type == ZDCCloudOperationType_CopyLeaf) &&
-		  ([operation.cloudLocator.cloudPath.dirPrefix isEqualToString:kZDCDirPrefix_MsgsOut]) &&
-		  ([operation.dstCloudLocator.cloudPath.dirPrefix isEqualToString:kZDCDirPrefix_MsgsIn]);
+		  [operation.dstCloudLocator.cloudPath.dirPrefix isEqualToString:kZDCDirPrefix_MsgsIn];
 		
 		if (isOutgoingMessage)
 		{
-			ZDCNode *node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
-			if (node)
+			NSString *dstUserID = operation.dstCloudLocator.bucketOwner ?: @"";
+			
+			ZDCNode *srcNode = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
+			if (srcNode && [srcNode.pendingRecipients containsObject:dstUserID])
 			{
-				NSString *dstUserID = operation.dstCloudLocator.bucketOwner;
-				if (dstUserID && [node.pendingRecipients containsObject:dstUserID])
+				NSMutableSet<NSString*> *pendingRecipients = [srcNode.pendingRecipients mutableCopy];
+				[pendingRecipients removeObject:dstUserID];
+				
+				srcNode = [srcNode copy];
+				srcNode.pendingRecipients = pendingRecipients;
+				
+				[transaction setObject:srcNode forKey:srcNode.uuid inCollection:kZDCCollection_Nodes];
+			}
+			
+			ZDCNode *dstNode = [transaction objectForKey:operation.dstNodeID inCollection:kZDCCollection_Nodes];
+			if (dstNode && [dstNode.pendingRecipients containsObject:dstUserID])
+			{
+				NSMutableSet<NSString*> *pendingRecipients = [dstNode.pendingRecipients mutableCopy];
+				[pendingRecipients removeObject:dstUserID];
+				
+				dstNode = [dstNode copy];
+				dstNode.pendingRecipients = pendingRecipients;
+				
+				[transaction setObject:dstNode forKey:dstNode.uuid inCollection:kZDCCollection_Nodes];
+			}
+			
+			// Notify delegate
+			
+			ZDCUser *recipient = [transaction objectForKey:dstUserID inCollection:kZDCCollection_Users];
+			if (recipient && didSendMessage)
+			{
+				// We're going to invoke [delegate didSendMessage:toRecipient:transaction:]
+				// The question is: What should the 'node' parameter be?
+				//
+				// The intention is that the parameter is always a message.
+				// So either an outgoing message (i.e. node in outbox),
+				// or a signal (i.e. detached node, where node.isSignal == YES).
+				//
+				// Message:
+				// - srcNode : msg in outbox
+				// - dstNode : signal (detached node, not part of treesystem)
+				//
+				// Signal:
+				// - srcNode : signal (detached node, not part of treesystem)
+				// - dstNode : nil
+				//
+				// CopyToInbox:
+				// - srcNode : normal node in treesystem somewhere
+				// - dstNode : signal (detached node, not part of treesystem)
+				
+				ZDCNode *node = nil;
+				if (dstNode)
 				{
-					NSMutableSet<NSString*> *pendingRecipients = [node.pendingRecipients mutableCopy];
-					[pendingRecipients removeObject:dstUserID];
+					ZDCTrunkNode *trunkNode =
+					  [[ZDCNodeManager sharedInstance] trunkNodeForNode:srcNode transaction:transaction];
 					
-					node = [node copy];
-					node.pendingRecipients = pendingRecipients;
-					
-					[transaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
-					
-					// Notify delegate
-					
-					ZDCUser *recipient = [transaction objectForKey:dstUserID inCollection:kZDCCollection_Users];
-					if (recipient && didSendMessage)
-					{
-						[zdc.delegate didSendMessage:node toRecipient:recipient transaction:transaction];
+					if (trunkNode.trunk == ZDCTreesystemTrunk_Outbox) {
+						node = srcNode;
+					} else {
+						node = dstNode;
 					}
 				}
+				else
+				{
+					node = srcNode;
+				}
+				
+				[zdc.delegate didSendMessage:node toRecipient:recipient transaction:transaction];
 			}
 		}
 	}];
