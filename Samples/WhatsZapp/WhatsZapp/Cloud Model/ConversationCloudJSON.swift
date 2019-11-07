@@ -15,19 +15,12 @@ import Foundation
 struct ConversationCloudJSON: Codable {
 	
 	enum CodingKeys: String, CodingKey {
-		case remoteUserID              = "remoteUserID"
-		case remoteDropbox             = "remoteDropbox"
-		case mostRecentReadMessageDate = "mostRecentReadMessageDate"
+		case remoteUserID = "remoteUserID"
 	}
 	
 	let remoteUserID: String
-	let remoteDropbox: ConversationDropbox?
 	
-	let mostRecentReadMessageDate: Date?
-	
-	init(conversation: Conversation, mostRecentReadMessageDate: Date?) {
+	init(conversation: Conversation) {
 		self.remoteUserID = conversation.remoteUserID
-		self.remoteDropbox = conversation.remoteDropbox
-		self.mostRecentReadMessageDate = mostRecentReadMessageDate
 	}
 }

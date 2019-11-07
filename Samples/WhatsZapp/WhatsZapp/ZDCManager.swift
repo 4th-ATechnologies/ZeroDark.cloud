@@ -22,12 +22,11 @@ let kZDC_TreeID = "com.4th-a.WhatsZapp"
 /// To use ZeroDarkCloud, we need to implement the protocol ZeroDarkCloudDelegate.
 /// We've opted to put all these delegate methods into their own dedicated class.
 ///
-class ZDCManager: NSObject, ZeroDarkCloudDelegate {
+class ZDCManager: ZeroDarkCloudDelegate {
 
 	var zdc: ZeroDarkCloud!
 	
-	private override init() {
-		super.init()
+	private init() {
 		
 		// Configure log level (for CocoaLumberjack).
 	#if DEBUG
@@ -148,22 +147,12 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		
 			// We're going to put a conversation node into the cloud that looks like this:
 			// {
-			//   remoteUserID: String,
-			//   remoteDropbox: {
-			//     treeID: String,
-			//     dirPrefix: String
-			//   }?,
-			//   mostRecentReadMessageDate: Date?
+			//   remoteUserID: String
 			// }
 			//
 			// In other words, a serialized ConversationCloudJSON object.
 			
-			let mostRecentReadMessageDate =
-				self.mostRecentReadMessageDate(conversation: conversation, transaction: transaction)
-			
-			let cloudJSON =
-				ConversationCloudJSON(conversation: conversation,
-			            mostRecentReadMessageDate: mostRecentReadMessageDate)
+			let cloudJSON = ConversationCloudJSON(conversation: conversation)
 			do {
 				
 				let encoder = JSONEncoder()
@@ -180,20 +169,13 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			// We're going to put a message node into the cloud that looks like this:
 			// {
+			//   senderID: String,
 			//   text: String,
-			//   invite: {
-			//     treeID: String,
-			//     dirPrefix: String
-			//   }
 			// }
 			//
 			// In other words, a serialized MessageCloudJSON object.
 			
-			let dropboxInvite = cloudTransaction.dropboxInvite(for: node)!
-			
-			let invite = ConversationDropbox(treeID: dropboxInvite.treeID, dirPrefix: dropboxInvite.dirPrefix)
-			let cloudJSON = MessageCloudJSON(text: message.text, invite: invite)
-			
+			let cloudJSON = MessageCloudJSON(message: message)
 			do {
 				
 				let encoder = JSONEncoder()
@@ -240,7 +222,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	/// In other words, the file is composed of 4 sections.
 	/// And the metadata & thumbnail sections are optional.
 	///
-	/// We only use thumbnails when uploading images.
+	/// We don't use thumbnails in this example, so we always return nil.
 	///
 	func thumbnail(for node: ZDCNode, at path: ZDCTreesystemPath, transaction: YapDatabaseReadTransaction) -> ZDCData? {
 		
@@ -259,15 +241,16 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/// ZeroDark is asking us to supply the serialized data for the message.
-	/// This is the data that will get uploaded to the cloud (after ZeroDark encrypts it).
 	///
 	func data(forMessage message: ZDCNode, transaction: YapDatabaseReadTransaction) -> ZDCData? {
 		
+		// We don't use this function in this sample app.
+		// @see data(for:at:transaction:)
 		return nil
 	}
 	
 	/// ZeroDark has finished sending the message.
-	/// This means a copy of the message is now in our outbox, and the recipient's inbox.
+	/// This means a copy of the message is now in the recipient's inbox.
 	///
 	func didSendMessage(_ message: ZDCNode, toRecipient recipient: ZDCUser, transaction: YapDatabaseReadWriteTransaction) {
 		
@@ -279,7 +262,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/// ZeroDark has just discovered a new node in the cloud.
-	/// It's notifying us so that we can react appropriately.
 	///
 	func didDiscoverNewNode(_ node: ZDCNode, at path: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
 		
@@ -291,12 +273,12 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		
 		// What kind of node is this ?
 		//
-		// If it's in the home trunk, it could be:
+		// If it's in "home", it could be:
 		// - Conversation node
 		// - Message node
 		//
-		// If it's in the inbox trunk:
-		// - Message invitation
+		// If it's in "inbox":
+		// - Unread Message
 		//
 		switch path.trunk {
 			
@@ -326,7 +308,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 						
 						// Only try to download the message now if we've already downloaded the parent conversation.
 						if let convoNodeID = node.parentID,
-							let convo = cloudTransaction.linkedObject(forNodeID: convoNodeID) as? Conversation
+							let _ = cloudTransaction.linkedObject(forNodeID: convoNodeID) as? Conversation
 						{
 							downloadNode(node, at: path)
 						}
@@ -337,7 +319,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			case .inbox:
 			
-				// This is a message invitation.
+				// This is an unread message.
 				cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
 			
 				// We can download it now.
@@ -351,7 +333,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	}
 	
 	/// ZeroDark has just discovered a modified node in the cloud.
-	/// It's notifying us so we can react appropriately.
 	///
 	func didDiscoverModifiedNode(_ node: ZDCNode, with change: ZDCNodeChange, at path: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
 		
@@ -378,12 +359,12 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			// What kind of node is this ?
 			//
-			// If it's in the home trunk, it could be:
+			// If it's in "home", it could be:
 			// - Conversation node
 			// - Message node
 			//
-			// If it's in the inbox trunk:
-			// - Message invitation
+			// If it's in "inbox":
+			// - Unread Message
 			//
 			switch path.trunk {
 				
@@ -413,7 +394,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 							
 							// Only try to download the message now if we've already downloaded the parent conversation.
 							if let convoNodeID = node.parentID,
-							   let convo = cloudTransaction.linkedObject(forNodeID: convoNodeID) as? Conversation
+							   let _ = cloudTransaction.linkedObject(forNodeID: convoNodeID) as? Conversation
 							{
 								downloadNode(node, at: path)
 							}
@@ -424,7 +405,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				
 				case .inbox:
 				
-					// This is a message invitation.
+					// This is an unread message.
 					cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
 				
 					// We can download it now.
@@ -439,29 +420,86 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	}
 	
 	/// ZeroDark has just discovered a node that was moved or renamed in the cloud.
-	/// It's notifying us so we can react appropriately.
 	///
 	func didDiscoverMovedNode(_ node: ZDCNode, from oldPath: ZDCTreesystemPath, to newPath: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
 		
 		DDLogInfo("didDiscoverMovedNode: \(oldPath.fullPath()) => \(newPath.fullPath())")
 		
-		// We would get this notification if a node was moved or renamed.
+		// Unread messages sit in our inbox until a device reads them.
+		// Once read, they get moved into the appropriate conversation.
 		//
-		// But we don't perform any such operation in this sample app.
+		// For example, here's the treesystem when 'msg3' first arrives:
+		//
+		//       (home)           (inbox)
+		//        /   \              |
+		//  (convoA) (convoB)      (msg3) <= Unread message
+		//     |        |
+		//  (msg1)    (msg2)
+		//
+		// And a device will mark 'msg4' as read by moving it to the convesation:
+		//
+		//       (home)           (inbox)
+		//        /   \
+		//  (convoA) (convoB)
+		//     |       / \
+		//  (msg1) (msg2)(msg3) <= Read message
+		
+		guard let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: node.localUserID) else {
+			return
+		}
+		
+		if var message = cloudTransaction.linkedObject(forNodeID: node.uuid) as? Message {
+			
+			if !message.isRead && (newPath.trunk == .home) {
+				
+				message = message.copy() as! Message
+				message.isRead = true
+				
+				transaction.setMessage(message)
+			}
+		}
 	}
 	
 	/// ZeroDark has just discovered a node that deleted from the cloud.
-	/// It's notifying us so we can react appropriately.
 	///
 	func didDiscoverDeletedNode(_ node: ZDCNode, at path: ZDCTreesystemPath, timestamp: Date?, transaction: YapDatabaseReadWriteTransaction) {
 		
 		DDLogInfo("didDiscoverDeletedNode:at: \(path.fullPath())")
 		
-		// Todo...
+		guard let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: node.localUserID) else {
+			return
+		}
+		
+		let linked = cloudTransaction.linkedObject(forNodeID: node.uuid)
+		
+		if let conversation = linked as? Conversation {
+			
+			// A conversation was deleted (along with all associated messages)
+			
+			transaction.removeObject(forKey: conversation.uuid, inCollection: kCollection_Conversations)
+			
+			if let viewTransaction = transaction.ext(DBExt_MessagesView) as? YapDatabaseViewTransaction {
+				
+				var messageIDs: [String] = []
+				viewTransaction.iterateKeys(inGroup: conversation.uuid) {
+					(collection: String, key: String, index: Int, stop: inout Bool) in
+					
+					messageIDs.append(key)
+				}
+				
+				transaction.removeObjects(forKeys: messageIDs, inCollection: kCollection_Messages)
+			}
+			
+		}
+		else if let message = linked as? Message {
+			
+			// A message was deleted
+			
+			transaction.removeObject(forKey: message.uuid, inCollection: kCollection_Messages)
+		}
 	}
 	
 	/// ZeroDark has discovered some kind of conflict.
-	/// It's notifying us so we can react appropriately.
 	///
 	func didDiscoverConflict(_ conflict: ZDCNodeConflict, forNode node: ZDCNode, atPath path: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
 	
@@ -490,17 +528,17 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		let nodeID = node.uuid
 		
 		var isConversationNode = false
-		var isMessageNode = false
-		var isInvitation = false
+		var isMessageNode      = false
+		var isInboxMessage    = false
 		
 		// What kind of node is this ?
 		//
-		// If it's in the home trunk, it could be:
+		// If it's in "home", it could be:
 		// - Conversation object
 		// - Message object
 		//
-		// If it's in the inbox:
-		// - Invitation message
+		// If it's in "inbox":
+		// - Unread message
 		//
 		switch path.trunk {
 			
@@ -523,13 +561,13 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				}
 			
 			case .inbox:
-				isInvitation = true
+				isInboxMessage = true
 			
 			default:
 				break
 		}
 		
-		if !isConversationNode && !isMessageNode && !isInvitation {
+		if !isConversationNode && !isMessageNode && !isInboxMessage {
 			
 			DDLogError("Unsupported download request: \(path)")
 			return
@@ -592,7 +630,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 						self.processDownloadedConversation(cleartext, forNodeID: nodeID, with: cloudDataInfo)
 					}
 					else {
-						self.processDownloadedMessage(cleartext, forNodeID: nodeID, with: cloudDataInfo)
+						self.processDownloadedMessage(cleartext, forNodeID: nodeID, isInbox: isInboxMessage, with: cloudDataInfo)
 					}
 					
 				} catch {
@@ -805,26 +843,18 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				return // from block
 			}
 			
-			if var existingConvo = cloudTransaction.linkedObject(forNodeID: convoNodeID) as? Conversation {
+			if let _ = cloudTransaction.linkedObject(forNodeID: convoNodeID) as? Conversation {
 				
-				existingConvo = existingConvo.copy() as! Conversation
-				existingConvo.remoteDropbox = cloudJSON.remoteDropbox
-				
-				transaction.setConversation(existingConvo)
-				
-				if let mostRecentReadMessageDate = cloudJSON.mostRecentReadMessageDate {
-				
-					self.markMessagesAsRead(conversation: existingConvo,
-					           mostRecentReadMessageDate: mostRecentReadMessageDate,
-					                         transaction: transaction)
-				}
+				// Conversation already exists.
+				//
+				// There's nothing for us to do here in this sample app.
+				// In your own app, you might take this opportunity to update the local object.
 			}
 			else {
 				
 				// Create a new Conversation object, and store it in the database.
 				//
 				newConvo = Conversation(remoteUserID: cloudJSON.remoteUserID)
-				newConvo!.remoteDropbox = cloudJSON.remoteDropbox
 
 				transaction.setConversation(newConvo!)
 
@@ -848,7 +878,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	
 	/// Invoked after a MessageCloudJSON node has been downloaded from the cloud.
 	///
-	private func processDownloadedMessage(_ cloudData: Data, forNodeID msgNodeID: String, with cloudDataInfo: ZDCCloudDataInfo) {
+	private func processDownloadedMessage(_ cloudData: Data, forNodeID msgNodeID: String, isInbox: Bool, with cloudDataInfo: ZDCCloudDataInfo) {
 		
 		let rwConnection = zdc.databaseManager?.rwDatabaseConnection
 		rwConnection?.asyncReadWrite { (transaction) in
@@ -895,13 +925,14 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				
 				// Create a new Message object, and store it in the database.
 				
-				let senderID = msgNode.senderID ?? msgNode.localUserID
-				
-				var isRead = false
-				if senderID == msgNode.localUserID {
-					isRead = true
+				let senderID: String!
+				if isInbox {
+					senderID = msgNode.senderID ?? msgNode.localUserID
+				} else {
+					senderID = cloudJSON.senderID
 				}
-			//	else if convo.
+				
+				let isRead = isInbox ? false : true
 				
 				let msg = Message(conversationID: convo.uuid,
 				                        senderID: senderID,
@@ -919,93 +950,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				} catch {
 					DDLogError("Error linking node to message: \(error)")
 				}
-			}
-		}
-	}
-	
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: Utilities
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	func mostRecentReadMessageDate(conversation: Conversation, transaction: YapDatabaseReadTransaction) -> Date? {
-		
-		// How do find the most recently read message ?
-		// That is, the message (within the given conversation) with the latest `date` property,
-		// and that has its `isRead` property set to true.
-		//
-		// We already have a YapDBView for the conversation: DBExt_MessagesView
-		// The view sorts all the messages in the conversation:
-		//
-		// - the earliest message is at index zero
-		// - the latest message is at index last
-		//
-		// So we can just iterate through this view backwards until we find
-		// a message whose isRead property is set to true.
-		
-		guard let viewTransaction = transaction.ext(DBExt_MessagesView) as? YapDatabaseViewTransaction else {
-			return nil
-		}
-		
-		var mostRecentReadMessage: Message?
-		
-		viewTransaction.iterateKeysAndObjects(inGroup: conversation.uuid, reversed: true) {
-			(collection: String, key: String, object: Any, index: Int, stop: inout Bool) in
-			
-			if let message = object as? Message {
-				
-				if message.isRead {
-					
-					mostRecentReadMessage = message
-					stop = true
-				}
-			}
-		}
-		
-		return mostRecentReadMessage?.date
-	}
-	
-	func markMessagesAsRead(conversation: Conversation, mostRecentReadMessageDate: Date, transaction: YapDatabaseReadWriteTransaction) {
-		
-		// How can we perform this operation in an efficient manner ?
-		//
-		// We already have a YapDBView for the conversation: DBExt_UnreadMessagesView
-		// The view sorts all the UNREAD messages in the conversation:
-		//
-		// - the earliest UNREAD message is at index zero
-		// - the latest UNREAD message is at index last
-		//
-		// So we can just iterate through this view backwards until we find
-		// a message whose isRead property is set to true.
-		
-		guard let viewTransaction = transaction.ext(DBExt_UnreadMessagesView) as? YapDatabaseViewTransaction else {
-			return
-		}
-		
-		var messageIDs: [String] = []
-		
-		viewTransaction.iterateKeysAndObjects(inGroup: conversation.uuid) {
-			(collection: String, key: String, object: Any, index: Int, stop: inout Bool) in
-			
-			if let message = object as? Message {
-				
-				if message.date <= mostRecentReadMessageDate {
-					
-					messageIDs.append(message.uuid)
-				}
-				else {
-					stop = true
-				}
-			}
-		}
-		
-		for messageID in messageIDs {
-			
-			if var message = transaction.message(id: messageID) {
-				
-				message = message.copy() as! Message
-				message.isRead = true
-				
-				transaction.setMessage(message)
 			}
 		}
 	}

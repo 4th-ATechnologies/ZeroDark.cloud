@@ -478,8 +478,7 @@ class MyMessagesViewController: MessagesViewController,
 		
 		guard
 			let conversation = self.conversation(),
-			let remoteUser = self.remoteUser(id: conversation.remoteUserID),
-			let remoteUser_bucket = remoteUser.aws_bucket
+			let remoteUser = self.remoteUser(id: conversation.remoteUserID)
 		else {
 			return
 		}

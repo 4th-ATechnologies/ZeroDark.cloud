@@ -15,15 +15,15 @@ import Foundation
 struct MessageCloudJSON: Codable {
 	
 	enum CodingKeys: String, CodingKey {
-		case text   = "text"
-		case invite = "invite"
+		case senderID = "senderID"
+		case text = "text"
 	}
 	
+	let senderID: String
 	let text: String
-	let invite: ConversationDropbox
 	
-	init(text: String, invite: ConversationDropbox) {
-		self.text = text
-		self.invite = invite
+	init(message: Message) {
+		self.senderID = message.senderID
+		self.text = message.text
 	}
 }

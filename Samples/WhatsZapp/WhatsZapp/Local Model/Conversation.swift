@@ -24,7 +24,6 @@ class Conversation: NSCopying, Codable {
 	enum CodingKeys: String, CodingKey {
 		case remoteUserID  = "remoteUserID"
 		case lastActivity  = "lastActivity"
-		case remoteDropbox = "remoteDropbox"
 	}
 	
 	/// We store `Conversation` objects in the database.
@@ -80,29 +79,24 @@ class Conversation: NSCopying, Codable {
 	///
 	var lastActivity: Date
 	
-	/// Add link to ReadTheDocs article here.
-	///
-	var remoteDropbox: ConversationDropbox?
-	
 	
 	/// Designated initializer.
 	///
-	init(remoteUserID: String, lastActivity: Date, remoteDropbox: ConversationDropbox?) {
+	init(remoteUserID: String, lastActivity: Date) {
 		self.remoteUserID  = remoteUserID
 		self.lastActivity  = lastActivity
-		self.remoteDropbox = remoteDropbox
 	}
 	
 	convenience init(remoteUserID: String) {
 		let _lastActivity = Date()
-		self.init(remoteUserID: remoteUserID, lastActivity: _lastActivity, remoteDropbox: nil)
+		self.init(remoteUserID: remoteUserID, lastActivity: _lastActivity)
 	}
 	
 	// MARK: NSCopying
 	
 	func copy(with zone: NSZone? = nil) -> Any {
 
-		let copy = Conversation(remoteUserID: remoteUserID, lastActivity: lastActivity, remoteDropbox: remoteDropbox)
+		let copy = Conversation(remoteUserID: remoteUserID, lastActivity: lastActivity)
 		return copy
 	}
 }
