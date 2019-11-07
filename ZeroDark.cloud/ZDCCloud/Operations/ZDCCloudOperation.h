@@ -273,7 +273,8 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Used for DATA operations.
  * This value is supplied by the framework user,
- * either via the ZDCNodeLink protocol, or the user can set it manually.
+ * either via `[ZDCCloudTransaction queueDataUploadForNodeID:withChangeset:]`,
+ * or the user can set it manually via the operation.
  *
  * It's recommended (but not required) that the ZDCSyncable protocol is used
  * to simplify the process of merging changes.

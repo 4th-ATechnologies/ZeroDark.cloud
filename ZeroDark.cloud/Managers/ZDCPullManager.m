@@ -3571,9 +3571,11 @@ static NSUInteger const kMaxFailCount = 8;
 		return;
 	}
 	
+	id<ZeroDarkCloudDelegate> delegate = zdc.delegate;
+	
 	NSSet<NSString *> *preferredNodeIDs = nil;
-	if ([zdc.delegate respondsToSelector:@selector(preferredNodeIDsForPullingRcrds)]) {
-		preferredNodeIDs = [zdc.delegate preferredNodeIDsForPullingRcrds];
+	if ([(id)delegate respondsToSelector:@selector(preferredNodeIDsForPullingRcrds)]) {
+		preferredNodeIDs = [delegate preferredNodeIDsForPullingRcrds];
 	}
 	
 	// Smart dequeue algorithm

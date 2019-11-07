@@ -105,7 +105,7 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
  * The ZeroDarkCloudDelegate assists in push & pull operations,
  * and facilitates communication about cloud changes.
  */
-@protocol ZeroDarkCloudDelegate <NSObject>
+@protocol ZeroDarkCloudDelegate
 @required
 
 #pragma mark Push - Nodes

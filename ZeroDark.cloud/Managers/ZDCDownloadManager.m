@@ -2973,7 +2973,7 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		id<ZeroDarkCloudDelegate> delegate = strongSelf->zdc.delegate;
 		
-		if ([delegate respondsToSelector:
+		if ([(id)delegate respondsToSelector:
 		      @selector(didBackgroundDownloadNodeMeta:atPath:withComponents:header:metadata:thumbnail:)])
 		{
 			[delegate didBackgroundDownloadNodeMeta: context.ephemeralInfo.node
@@ -3015,7 +3015,7 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		id<ZeroDarkCloudDelegate> delegate = strongSelf->zdc.delegate;
 		
-		if ([delegate respondsToSelector:
+		if ([(id)delegate respondsToSelector:
 		      @selector(didBackgroundDownloadNodeData:atPath:withCryptoFile:)])
 		{
 			[delegate didBackgroundDownloadNodeData: context.ephemeralInfo.node
