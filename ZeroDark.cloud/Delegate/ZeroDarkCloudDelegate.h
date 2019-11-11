@@ -92,12 +92,18 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
 	ZDCNodeConflict_Data,
 	
 	/**
-	 *
+	 * Unable to perform graft because the destination user's account has been deleted.
 	 */
 	ZDCNodeConflict_Graft_DstUserAccountDeleted,
 	
+	/**
+	 * Unable to perform graft because the destination node doesn't grant us appropriate permission(s).
+	 */
 	ZDCNodeConflict_Graft_DstNodeNotReadable,
 	
+	/**
+	 * Unable to perform graft because the destination node has been deleted.
+	 */
 	ZDCNodeConflict_Graft_DstNodeNotFound
 };
 
