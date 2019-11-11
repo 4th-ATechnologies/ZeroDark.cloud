@@ -214,7 +214,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, SettingsViewControllerDel
 			for listID in listsIDs {
 
 				transaction.removeObject(forKey: listID,
-										 inCollection: kZ2DCollection_List)
+										 inCollection: kCollection_Lists)
 
 			}
 

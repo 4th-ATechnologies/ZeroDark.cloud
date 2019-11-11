@@ -114,7 +114,7 @@ class MyMessagesViewController: MessagesViewController,
 			
 			if let _ = transaction.ext(DBExt_ConversationsView) as? YapDatabaseViewTransaction {
 				
-				self.mappings = YapDatabaseViewMappings.init(groups: [conversationID], view: DBExt_MessagesView)
+				self.mappings = YapDatabaseViewMappings(groups: [conversationID], view: DBExt_MessagesView)
 				self.mappings?.update(with: transaction)
 			}
 			else {

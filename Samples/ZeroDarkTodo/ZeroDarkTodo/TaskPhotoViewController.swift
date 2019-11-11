@@ -83,7 +83,7 @@ class TaskPhotoViewController: UIViewController, UINavigationControllerDelegate,
 		
 		databaseConnection?.read { (transaction) in
 			
-			task = transaction.object(forKey: self.taskID, inCollection: kZ2DCollection_Task) as? Task
+			task = transaction.object(forKey: self.taskID, inCollection: kCollection_Tasks) as? Task
 			
 			// We don't create an explicit object for the TaskImage.
 			// That is, we have the following model classes:
@@ -103,7 +103,7 @@ class TaskPhotoViewController: UIViewController, UINavigationControllerDelegate,
 			
 			if
 				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-				let taskNode = cloudTransaction.linkedNode(forKey: self.taskID, inCollection: kZ2DCollection_Task)
+				let taskNode = cloudTransaction.linkedNode(forKey: self.taskID, inCollection: kCollection_Tasks)
 			{
 				imageNode =
 				  zdc.nodeManager.findNode(withName    : "img",
@@ -283,7 +283,7 @@ class TaskPhotoViewController: UIViewController, UINavigationControllerDelegate,
 		if (taskID != nil) {
 			
 			hasChanges = databaseConnection.hasChange(forKey: taskID,
-			                                          inCollection: kZ2DCollection_Task,
+			                                          inCollection: kCollection_Tasks,
 			                                          in: notifications)
 		}
 		

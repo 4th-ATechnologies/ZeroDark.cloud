@@ -17,10 +17,6 @@ import ZeroDarkCloud
 ///
 let kZDC_TreeID = "com.4th-a.ZeroDarkTodo"
 
-let Ext_View_Lists         = "Lists"
-let Ext_View_Tasks         = "Tasks"
-let Ext_View_Pending_Tasks = "PendingTasks"
-let Ext_Hooks              = "Hooks"
 
 /// ZDCManager is our interface into the ZeroDarkCloud framework.
 ///
@@ -30,12 +26,11 @@ let Ext_Hooks              = "Hooks"
 /// - providing the data that ZeroDark uploads to the cloud
 /// - downloading nodes from the ZeroDark cloud treesystem
 ///
-class ZDCManager: NSObject, ZeroDarkCloudDelegate {
+class ZDCManager: ZeroDarkCloudDelegate {
 	
 	var zdc: ZeroDarkCloud!
 	
-	private override init() {
-		super.init()
+	private init() {
 		
 	#if DEBUG
 		dynamicLogLevel = .all
@@ -49,10 +44,16 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 
 		do {
 			let dbEncryptionKey = try zdc.databaseKeyManager.unlockUsingKeychain()
-			let dbConfig = databaseConfig(encryptionKey: dbEncryptionKey)
-			zdc.unlockOrCreateDatabase(dbConfig)
-		} catch {
 			
+			let dbConfig = ZDCDatabaseConfig(encryptionKey: dbEncryptionKey)
+			dbConfig.configHook = {(db: YapDatabase) in
+				
+				DBManager.sharedInstance.configureDatabase(db)
+			}
+			
+			zdc.unlockOrCreateDatabase(dbConfig)
+			
+		} catch {
 			DDLogError("Ooops! Something went wrong: \(error)")
 		}
 		
@@ -90,428 +91,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// MARK: YapDatabase Configuration
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	/// We're using YapDatabase in this example.
-	/// You don't have to use it (but it's pretty awesome).
-	///
-	/// So we're going to configure the database according to our needs.
-	/// Mostly, this means we're going to setup some extensions to:
-	///
-	/// - automatically sort items according to how we want them in the UI
-	/// - automatically delete items when their "parents" get deleted
-	/// - automatically "touch" items when their "children" get modified/deleted
-	///
-	/// Basically, a bunch of cool tricks to simplify the work we need to do within the UI.
-	///
-	func databaseConfig(encryptionKey: Data) -> ZDCDatabaseConfig {
-		
-		let config = ZDCDatabaseConfig(encryptionKey: encryptionKey)
-		
-		config.serializer = databaseSerializer()
-		config.deserializer = databaseDeserializer()
-		
-		config.extensionsRegistration = {(database: YapDatabase) in
-			
-			self.setupView_Lists(database)
-			self.setupView_Tasks(database)
-			self.setupView_PendingTasks(database)
-			self.setupHooks(database)
-		}
-		
-		return config
-	}
-	
-	/// A 'serializer' is a block that takes an object,
-	/// and turns it into raw Data so that it can be stored in the database.
-	///
-	/// The default serializer in YapDatabase uses NSKeyedArchiver,
-	/// which means it supports any objects that support NSCoding.
-	/// But we prefer to use Swift's new Codable protocol instead.
-	/// So we supply our own serializer so we can use Codable instead of NSCoding.
-	///
-	func databaseSerializer() -> YapDatabaseSerializer {
-		
-		let serializer: YapDatabaseSerializer = {(collection: String, key: String, object: Any) -> Data in
-			
-			if let list = object as? List {
-				
-				let encoder = PropertyListEncoder()
-				do {
-					return try encoder.encode(list)
-				} catch {
-					DDLogError("Error encoding List: \(error)")
-				}
-			}
-			else if let task = object as? Task {
-				
-				let encoder = PropertyListEncoder()
-				do {
-					return try encoder.encode(task)
-				} catch {
-					DDLogError("Error encoding Task: \(error)")
-				}
-			}
-			else if let invitation = object as? Invitation {
-				
-				let encoder = PropertyListEncoder()
-				do {
-					return try encoder.encode(invitation)
-				} catch {
-					DDLogError("Error encoding Invitation: \(error)")
-				}
-			}
-			
-			DDLogError("Error encoding object: Unhandled class")
-			return Data()
-		}
-		return serializer
-	}
-	
-	/// A 'deserializer' is a block that takes raw data,
-	/// and generates the original serialized object from that data.
-	///
-	/// As mentioned above, the default serializer/deserializer in YapDatabase supports NSCoding.
-	/// But we prefer to use Swift's new Codable protocol instead.
-	/// So we supply our own custom serializer & deserializer.
-	///
-	func databaseDeserializer() -> YapDatabaseDeserializer {
-		
-		let deserializer: YapDatabaseDeserializer = {(collection: String, key: String, data: Data) -> Any in
-			
-			switch collection {
-				case kZ2DCollection_List:
-				
-					let decoder = PropertyListDecoder()
-					do {
-						return try decoder.decode(List.self, from: data)
-					} catch {
-						DDLogError("Error decoding List: \(error)")
-					}
-			
-				case kZ2DCollection_Task:
-			
-					let decoder = PropertyListDecoder()
-					do {
-						return try decoder.decode(Task.self, from: data)
-					} catch {
-						DDLogError("Error decoding Task: \(error)")
-					}
-			
-				case kZ2DCollection_Invitation:
-			
-					let decoder = PropertyListDecoder()
-					do {
-						return try decoder.decode(Invitation.self, from: data)
-					} catch {
-						DDLogError("Error decoding Invitation: \(error)")
-					}
-				
-				default: break
-			}
-			
-			DDLogError("Error decoding object: Unhandled collection")
-			return NSNull()
-		}
-		return deserializer
-	}
-	
-	/// YapDatabase is a collection/key/value store.
-	/// This sample app is storing 2 different types of objects in the database:
-	///
-	/// - List (in collection kZ2DCollection_List)
-	/// - Task (in collection kZ2DCollection_Task)
-	///
-	/// In the user interface, we need to display a tableView of all the Lists.
-	/// The question is, how do we sort the Lists ?
-	/// There are multiple ways we could go about this.
-	/// For this example we're simply going to allow the user to sort the lists manually.
-	///
-	func setupView_Lists(_ database: YapDatabase) {
-		
-		// YapDatabaseAutoView is a YapDatabase extension.
-		// It allows us to store a list of {collection,key} tuples.
-		// Furthermore, the view creates this list automatically using a grouping & sorting block.
-		//
-		// YapDatabase has extensive documentation for views:
-		// https://github.com/yapstudios/YapDatabase/wiki/Views
-		//
-		// Here's the cliff notes version:
-		//
-		// Imagine you're storing a large collection of Book's in the databse.
-		// You'd like to create a "view" of this data wherein each book is first grouped
-		// according to its genre. For example, "fiction", "mystery", "travel", etc.
-		// Then, within each genre, you want to sort the books by title, in alphabetical order.
-		//
-		// So there are 2 tasks:
-		// Task 1: GROUP the books by genre
-		// Task 2: SORT the books within each genre
-		//
-		// And this is what we're doing here.
-		//
-		// The grouping block allows us to group each item into the database.
-		// We simply return a string, and the view will place the item into a group that matches this string.
-		// From our Books example above, this means we'd return a string like "fiction".
-		// If you return nil from the grouping block, then the item isn't included in the view at all.
-		//
-		// And the sorting block does what you think it does.
-		// It sorts 2 items just like any comparison block.
-		// And YapDatabaseAutoView uses it to sort all the items in a group.
-		// (Just like an Array would use a similar technique to sort the items in an Array.)
-		
-		// GROUPING CLOSURE:
-		//
-		// We're only going to have 1 group in our view.
-		// So the group name will just be the empty string.
-		//
-		let grouping = YapDatabaseViewGrouping.withObjectBlock({
-			(transaction, collection, key, obj) -> String? in
-			
-			if let list = obj as? List {
-				return list.localUserID
-			}
-			return nil
-		})
-		
-		// SORTING CLOSURE:
-		//
-		// Sort the List's by title.
-		//
-		let sorting = YapDatabaseViewSorting.withObjectBlock({
-			(transaction, group, collection1, key1, obj1, collection2, key2, obj2) -> ComparisonResult in
-			
-			let list1 = obj1 as! List
-			let list2 = obj2 as! List
-			
-			return list1.title.localizedCaseInsensitiveCompare(list2.title)
-		})
-		
-		let version = "2019-18-13-B"; // <---------- change me if you modify grouping or sorting closure
-		let locale = NSLocale()
-		
-		let versionTag = "\(version)-\(locale)"
-		
-		let options = YapDatabaseViewOptions()
-		options.allowedCollections = YapWhitelistBlacklist(whitelist: Set([kZ2DCollection_List]))
-		
-		let view =
-			YapDatabaseAutoView(grouping: grouping,
-			                     sorting: sorting,
-			                  versionTag: versionTag,
-			                     options: options)
-		
-		let extName = Ext_View_Lists
-		database.asyncRegister(view, withName: extName) {(ready) in
-			
-			if !ready {
-				DDLogError("Error registering \(extName) !!!")
-			}
-		}
-	}
-	
-	/// In the user interface, we need to display a tableView of all the tasks in a list.
-	/// We need to sort these tasks somehow.
-	/// We use a YapDatabaseView to accomplish this, as described below.
-	///
-	func setupView_Tasks(_ database : YapDatabase) {
-		
-		// YapDatabaseAutoView is described above (in setupView_Lists function)
-		//
-		// YapDatabase has extensive documentation for views:
-		// https://github.com/yapstudios/YapDatabase/wiki/Views
-		
-		// GROUPING CLOSURE:
-		//
-		// Group all the Task's into groups, based on their List.
-		//
-		let grouping = YapDatabaseViewGrouping.withObjectBlock({
-			(transaction, collection, key, obj) -> String? in
-			
-			if let task = obj as? Task {
-				return task.listID
-			}
-			return nil
-		})
-		
-		// SORTING CLOSURE:
-		//
-		// Sort all the Task's in a given List.
-		//
-		// We want to sort the Tasks like so:
-		// - If the Task is marked as completed, move it towards the bottom of the list.
-		// - If the Task is NOT completed, move it towards the top of the list.
-		// - Within each section, sort the Task's by creationDate.
-		//
-		// There are many different ways in which we could go about doing this.
-		// I bet you can think of something better.
-		//
-		let sorting = YapDatabaseViewSorting.withObjectBlock({
-			(transaction, group, collection1, key1, obj1, collection2, key2, obj2) -> ComparisonResult in
-			
-			let task1 = obj1 as! Task
-			let task2 = obj2 as! Task
-			
-			if (task1.completed && !task2.completed)
-			{
-				return .orderedDescending
-			}
-			else if (!task1.completed && task2.completed)
-			{
-				return .orderedAscending
-			}
-			else
-			{
-				return task2.creationDate.compare(task1.creationDate)
-			}
-		})
-		
-		let versionTag =  "2019-02-04-x"; // <---------- change me if you modify grouping or sorting closure
-		
-		let options = YapDatabaseViewOptions()
-		options.allowedCollections = YapWhitelistBlacklist(whitelist: Set([kZ2DCollection_Task]))
-
-		let view =
-			YapDatabaseAutoView(grouping: grouping,
-			                     sorting: sorting,
-			                  versionTag: versionTag,
-			                     options: options)
-
-		let extName = Ext_View_Tasks
-		database.asyncRegister(view, withName: extName) {(ready) in
-			
-			if !ready {
-				DDLogError("Error registering \(extName) !!!")
-			}
-		}
-	}
-	
-	// In the user interface, we need a quick way to get the total count of all Task's that are not completed.
-	// We need to do this on a per-list basis.
-	// So we're going to create a View that will give us this info.
-	//
-	func setupView_PendingTasks(_ database: YapDatabase) {
-		
-		// YapDatabaseAutoView is described above (in setupView_Lists function)
-		//
-		// YapDatabase has extensive documentation for views:
-		// https://github.com/yapstudios/YapDatabase/wiki/Views
-		
-		// GROUPING CLOSURE:
-		//
-		// Group the Task's into groups based on their List.
-		// Only include Tasks that are NOT complete.
-		//
-		let grouping = YapDatabaseViewGrouping.withObjectBlock(
-		{(transaction, collection, key, obj) -> String? in
-			
-			if let task = obj as? Task {
-				
-				if !task.completed {
-					return task.listID
-				}
-			}
-			
-			return nil
-		})
-		
-		// SORTING CLOSURE:
-		//
-		// It doesn't matter how we sort these Tasks.
-		// We're only interested in the count (per List).
-		//
-		let sorting = YapDatabaseViewSorting.withObjectBlock({
-			(transaction, group, collection1, key1, obj1, collection2, key2, obj2) -> ComparisonResult in
-			
-			let task1 = obj1 as! Task
-			let task2 = obj2 as! Task
-			
-			return task1.uuid.compare(task2.uuid)
-		})
-		
-		let versionTag =  "2019-02-04-x"; // <---------- change me if you modify grouping or sorting closure
-		
-		let options = YapDatabaseViewOptions()
-		options.allowedCollections = YapWhitelistBlacklist(whitelist: Set([kZ2DCollection_Task]))
-
-		let view = YapDatabaseAutoView(grouping: grouping,
-		                                sorting: sorting,
-		                             versionTag: versionTag,
-		                                options: options)
-
-		let extName = Ext_View_Pending_Tasks
-		database.asyncRegister(view, withName: extName) { (ready) in
-			
-			if !ready {
-				DDLogError("Error registering \(extName) !!!")
-			}
-		}
-	}
-	
-	/// In our UI, we have a TableView that displays all the List items.
-	/// And within the TableView row, we display information concerning the Task's within the List.
-	/// For example:
-	///
-	/// > Weekend Chores
-	/// > 2 tasks remaining, 5 total
-	///
-	/// In practice, this means we need to update this TableView cell whenever either:
-	///
-	/// - The List is changed
-	/// - Any children Tasks are added/modified/deleted
-	///
-	/// YapDatabase has a few tricks we can use to simplify the work we need to do.
-	/// First, we setup our UI (in ListsViewController) so that it listens for changes to any List.
-	/// Then, we add hooks so that if a Task is changed, we will automatically "touch" the parent List.
-	/// And by "touching" a List item, it will get reported to the UI via the database listeners.
-	///
-	func setupHooks(_ database: YapDatabase) {
-		
-		let hooks = YapDatabaseHooks()
-		
-		// DidModifyRow:
-		//
-		//   This closure is called after an item is inserted or modified in the database.
-		//
-		hooks.didModifyRow = {(transaction: YapDatabaseReadWriteTransaction, collection: String, key: String,
-			proxyObject: YapProxyObject, _, _) in
-			
-			if collection == kZ2DCollection_Task,
-				let task = proxyObject.realObject as? Task
-			{
-				// A Task item was inserted or modified.
-				// So we "touch" the parent List, which will trigger a UI update for it.
-				//
-				transaction.touchObject(forKey: task.listID, inCollection: kZ2DCollection_List)
-			}
-		}
-		
-		// WillRemoveRow:
-		//
-		//   This closure is called before an item is removed from the database.
-		//
-		hooks.willRemoveRow = {(transaction: YapDatabaseReadWriteTransaction, collection: String, key: String) in
-			
-			if collection == kZ2DCollection_Task,
-				let task = transaction.object(forKey: key, inCollection: collection) as? Task
-			{
-				// A Task item will be deleted.
-				// So we "touch" the parent List, which will trigger a UI update for it.
-				//
-				transaction.touchObject(forKey: task.listID, inCollection: kZ2DCollection_List)
-			}
-		}
-		
-		let extName = Ext_Hooks
-		database.asyncRegister(hooks, withName: extName) {(ready) in
-			
-			if !ready {
-				DDLogError("Error registering \(extName) !!!")
-			}
-		}
-	}
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// MARK: ZeroDarkCloudDelegate: Push (Nodes)
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -537,14 +116,14 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			// Now we need to serialize our object for storage in the cloud.
 			// Our model classes use the `cloudEncode()` function for this task.
 			
-			if collection == kZ2DCollection_List {
+			if collection == kCollection_Lists {
 				
 				// We don't actually store anything in the cloud for a list.
 				// For the current codebase, the title is the only thing we currently need.
 				//
 				return ZDCData()
 			}
-			else if collection == kZ2DCollection_Task {
+			else if collection == kCollection_Tasks {
 				
 				let taskID = key
 				if let task = transaction.object(forKey: taskID, inCollection: collection) as? Task {
@@ -671,7 +250,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		guard
 			let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: message.localUserID),
 		   let listID = cloudTransaction.tag(forNodeID: message.uuid, withIdentifier: "listID") as? String,
-			let list = transaction.object(forKey: listID, inCollection: kZ2DCollection_List) as? List
+			let list = transaction.object(forKey: listID, inCollection: kCollection_Lists) as? List
 		else {
 			return nil
 		}
@@ -680,7 +259,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		// This will allow the message receiver to graft the node into their treesystem.
 		//
 		guard
-			let listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List),
+			let listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kCollection_Lists),
 			let graftInvite = cloudTransaction.graftInvite(for: listNode)
 		else {
 			return nil
@@ -695,10 +274,6 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		// But you can test it out by hard-coding a message here.
 		//
 		let msgText: String? = nil
-		
-		let wtf = [
-			"foo": "bar"
-		]
 		
 		// Create invitation wrapper
 		//
@@ -780,17 +355,17 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 						// Store the downloaded List object in the database.
 						//
 						// YapDatabase is a collection/key/value store.
-						// So we store all List objects in the same collection: kZ2DCollection_List
+						// So we store all List objects in the same collection: kCollection_Lists
 						// And every list has a uuid, which we use as the key in the database.
 						//
 						// Wondering how the object gets serialized / deserialized ?
 						// The List object supports the Swift Codable protocol.
 						
-						transaction.setObject(list, forKey: list.uuid, inCollection: kZ2DCollection_List)
+						transaction.setObject(list, forKey: list.uuid, inCollection: kCollection_Lists)
 						
 						// Link the List to the Node
 						do {
-							try cloudTransaction.linkNodeID(node.uuid, toKey: list.uuid, inCollection: kZ2DCollection_List)
+							try cloudTransaction.linkNodeID(node.uuid, toKey: list.uuid, inCollection: kCollection_Lists)
 							
 						} catch {
 							DDLogError("Error linking node to list: \(error)")
@@ -996,7 +571,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		
 		if let (collection, key) = cloudTransaction.linkedCollectionAndKey(forNodeID: node.uuid) {
 			
-			if collection == kZ2DCollection_List {
+			if collection == kCollection_Lists {
 				
 				// A List title was changed
 				
@@ -1039,7 +614,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					
 					// All we have to do is delete the corresponding List from the database.
 					
-					transaction.removeObject(forKey: list.uuid, inCollection: kZ2DCollection_List)
+					transaction.removeObject(forKey: list.uuid, inCollection: kCollection_Lists)
 					
 					// The Tasks will be automatically deleted, courtesy of YapDatabaseRelationship extension.
 					// For more information on how this works, look at the function:
@@ -1054,7 +629,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					
 					// Delete the corresponding task.
 					
-					transaction.removeObject(forKey: task.uuid, inCollection: kZ2DCollection_Task)
+					transaction.removeObject(forKey: task.uuid, inCollection: kCollection_Tasks)
 				}
 			
 			case 3:
@@ -1068,7 +643,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				if let parentPath = path.parent(),
 				   let task = cloudTransaction.linkedObject(for: parentPath) as? Task
 				{
-					transaction.touchObject(forKey: task.uuid, inCollection: kZ2DCollection_Task)
+					transaction.touchObject(forKey: task.uuid, inCollection: kCollection_Tasks)
 				}
 			
 			default:
@@ -1218,7 +793,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		let options = ZDCDownloadOptions()
 		options.cacheToDiskManager = false
 		options.canDownloadWhileInBackground = true
-		options.completionTag = String(describing: type(of: self))
+		options.completionConsolidationTag = String(describing: type(of: self))
 		
 		let queue = DispatchQueue.global()
 		
@@ -1423,14 +998,13 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		var pendingInvitations: [Invitation] = []
 		databaseManager.rwDatabaseConnection.asyncReadWrite({ (transaction) in
 			
-			transaction.enumerateKeysAndObjects(inCollection: kZ2DCollection_Invitation,
-			                                           using:
-			{ (listID: String, object: Any, stop) in
+			transaction.iterateKeysAndObjects(inCollection: kCollection_Invitations) {
+				(listID: String, object: Any, stop) in
 				
 				if let invitation = object as? Invitation {
 					pendingInvitations.append(invitation)
 				}
-			})
+			}
 			
 		}, completionQueue: DispatchQueue.global(), completionBlock: {
 		
@@ -1525,13 +1099,13 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					// Store the updated Task object in the database.
 					//
 					// YapDatabase is a collection/key/value store.
-					// We store all Task objects in the same collection: kZ2DCollection_Task
+					// We store all Task objects in the same collection: kCollection_Tasks
 					// And every task has a uuid, which we use as the key in the database.
 					//
 					// Wondering how the object gets serialized / deserialized ?
 					// The Task object supports the Swift Codable protocol.
 					
-					transaction.setObject(existingTask, forKey: existingTask.uuid, inCollection: kZ2DCollection_Task)
+					transaction.setObject(existingTask, forKey: existingTask.uuid, inCollection: kCollection_Tasks)
 					
 					// We notify the system that we've merged the changes from the cloud.
 					//
@@ -1550,7 +1124,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					// We just need to change its uuid to match.
 					//
 					downloadedTask = Task(copy: downloadedTask, uuid: existingTask.uuid)
-					transaction.setObject(downloadedTask, forKey: downloadedTask.uuid, inCollection: kZ2DCollection_Task)
+					transaction.setObject(downloadedTask, forKey: downloadedTask.uuid, inCollection: kCollection_Tasks)
 				}
 			}
 			else {
@@ -1558,18 +1132,18 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				// Store the new Task object in the database.
 				//
 				// YapDatabase is a collection/key/value store.
-				// We store all Task objects in the same collection: kZ2DCollection_Task
+				// We store all Task objects in the same collection: kCollection_Tasks
 				// And every task has a uuid, which we use as the key in the database.
 				//
 				// Wondering how the object gets serialized / deserialized ?
 				// The Task object supports the Swift Codable protocol.
 				
-				transaction.setObject(downloadedTask, forKey: downloadedTask.uuid, inCollection: kZ2DCollection_Task)
+				transaction.setObject(downloadedTask, forKey: downloadedTask.uuid, inCollection: kCollection_Tasks)
 				
 				// Link the Task to the Node
 				//
 				do {
-					try cloudTransaction.linkNodeID(taskNodeID, toKey: downloadedTask.uuid, inCollection: kZ2DCollection_Task)
+					try cloudTransaction.linkNodeID(taskNodeID, toKey: downloadedTask.uuid, inCollection: kCollection_Tasks)
 					
 				} catch {
 					DDLogError("Error linking node to task: \(error)")
@@ -1616,7 +1190,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			// Store the new Invitation object in the database.
 			//
 			// YapDatabase is a collection/key/value store.
-			// We store all Invitation objects in the same collection: kZ2DCollection_Invitation
+			// We store all Invitation objects in the same collection: kCollection_Invitations
 			// And every invitation has a uuid, which we use as the key in the database.
 			//
 			// Wondering how the object gets serialized / deserialized ?
@@ -1624,14 +1198,14 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			transaction.setObject( downloadedInvitation!,
 			               forKey: downloadedInvitation!.uuid,
-			         inCollection: kZ2DCollection_Invitation)
+			         inCollection: kCollection_Invitations)
 			
 			// Link the Invitation to the Node
 			//
 			do {
 				try cloudTransaction.linkNodeID( nodeID,
 				                          toKey: downloadedInvitation!.uuid,
-				                   inCollection: kZ2DCollection_Invitation)
+				                   inCollection: kCollection_Invitations)
 				
 			} catch {
 				DDLogError("Error linking node to invitation: \(error)")
@@ -1714,7 +1288,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			var permsOps: [ZDCCloudOperation] = []
 			
-			if let listNodeID = cloudTransaction.linkedNodeID(forKey: listID, inCollection: kZ2DCollection_List) {
+			if let listNodeID = cloudTransaction.linkedNodeID(forKey: listID, inCollection: kCollection_Lists) {
 				
 				for addedUserID in newUsers {
 				
@@ -1745,7 +1319,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			//
 			// We can accomplish this using YapDatabase's `touch` functionality.
 			
-			transaction.touchObject(forKey: listID, inCollection: kZ2DCollection_List)
+			transaction.touchObject(forKey: listID, inCollection: kCollection_Lists)
 			
 			// Step 3 of 3:
 			//
@@ -1763,7 +1337,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				var addedUsers = [ZDCUser]()
 				for addedUserID in newUsers {
 					
-					if let user = cloudTransaction.user(id: addedUserID) {
+					if let user = transaction.user(id: addedUserID) {
 						addedUsers.append(user)
 					}
 				}
@@ -1806,7 +1380,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		let rwConnection = zdc.databaseManager!.rwDatabaseConnection
 		rwConnection.asyncReadWrite({ (transaction) in
 			
-			if !transaction.hasObject(forKey: invitation.uuid, inCollection: kZ2DCollection_Invitation) {
+			if !transaction.hasObject(forKey: invitation.uuid, inCollection: kCollection_Invitations) {
 				// We've already processed this invitation
 				return;
 			}
@@ -1816,8 +1390,8 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			guard
 				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-				let sender = cloudTransaction.user(id: senderUserID),
-				let remoteCloudPath = ZDCCloudPath(fromPath: invitation.cloudPath)
+				let sender = transaction.user(id: senderUserID),
+				let remoteCloudPath = ZDCCloudPath(path: invitation.cloudPath)
 			else {
 				return
 			}
@@ -1878,7 +1452,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 		
 					let list = List(localUserID: invitation.receiverID, title: localPath.nodeName)
 		
-					transaction.setObject(list, forKey: list.uuid, inCollection: kZ2DCollection_List)
+					transaction.setObject(list, forKey: list.uuid, inCollection: kCollection_Lists)
 		
 					// Step 5:
 					//
@@ -1888,7 +1462,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 					// And allows us to quickly lookup the List given the node. Or vice-versa.
 		
 					do {
-						try cloudTransaction.linkNodeID(listNode.uuid, toKey: list.uuid, inCollection: kZ2DCollection_List)
+						try cloudTransaction.linkNodeID(listNode.uuid, toKey: list.uuid, inCollection: kCollection_Lists)
 					} catch {
 						DDLogError("Error linking node: \(error)")
 					}
@@ -1899,7 +1473,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			//
 			// Delete the invitation message from the cloud.
 			
-			if let invitationNode = cloudTransaction.linkedNode(forKey: invitation.uuid, inCollection: kZ2DCollection_Invitation) {
+			if let invitationNode = cloudTransaction.linkedNode(forKey: invitation.uuid, inCollection: kCollection_Invitations) {
 				
 				do {
 					// Delete the invitation message from our treesystem.
@@ -1936,7 +1510,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			//
 			// Finally, we can delete the parsed Invitation object from the database.
 			
-			transaction.removeObject(forKey: invitation.uuid, inCollection: kZ2DCollection_Invitation)
+			transaction.removeObject(forKey: invitation.uuid, inCollection: kCollection_Invitations)
 		})
 	}
 	
@@ -1957,7 +1531,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			guard
 				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-				let taskNode = cloudTransaction.linkedNode(forKey: taskID, inCollection: kZ2DCollection_Task)
+				let taskNode = cloudTransaction.linkedNode(forKey: taskID, inCollection: kCollection_Tasks)
 			else {
 					return
 			}
@@ -1987,7 +1561,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			//
 			// We're lazy, so we're going with option 2 for now.
 			
-			transaction.touchObject(forKey: taskID, inCollection: kZ2DCollection_Task)
+			transaction.touchObject(forKey: taskID, inCollection: kCollection_Tasks)
 		})
 	}
 	
@@ -2008,7 +1582,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 			
 			if
 				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-				let taskNode = cloudTransaction.linkedNode(forKey: taskID, inCollection: kZ2DCollection_Task)
+				let taskNode = cloudTransaction.linkedNode(forKey: taskID, inCollection: kCollection_Tasks)
 			{
 				existingImageNode =
 					zdc.nodeManager.findNode(withName    : "img",
@@ -2045,7 +1619,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				
 				guard
 					let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-					let taskNode = cloudTransaction.linkedNode(forKey: taskID, inCollection: kZ2DCollection_Task)
+					let taskNode = cloudTransaction.linkedNode(forKey: taskID, inCollection: kCollection_Tasks)
 				else {
 					return
 				}
@@ -2078,7 +1652,7 @@ class ZDCManager: NSObject, ZeroDarkCloudDelegate {
 				//
 				// We're lazy, so we're going with option 2 for now.
 				
-				transaction.touchObject(forKey: taskID, inCollection: kZ2DCollection_Task)
+				transaction.touchObject(forKey: taskID, inCollection: kCollection_Tasks)
 			})
 		}
 	}

@@ -19,8 +19,13 @@ import ZeroDarkCloud
 let kZDC_TreeID = "com.4th-a.WhatsZapp"
 
 
-/// To use ZeroDarkCloud, we need to implement the protocol ZeroDarkCloudDelegate.
-/// We've opted to put all these delegate methods into their own dedicated class.
+/// ZDCManager is our interface into the ZeroDarkCloud framework.
+///
+/// This class demonstrates much of the functionality you'll use within your own app, such as:
+/// - setting up the ZeroDark database
+/// - implementing the methods required by the ZeroDarkCloudDelegate protocol
+/// - providing the data that ZeroDark uploads to the cloud
+/// - downloading nodes from the ZeroDark cloud treesystem
 ///
 class ZDCManager: ZeroDarkCloudDelegate {
 
@@ -41,7 +46,13 @@ class ZDCManager: ZeroDarkCloudDelegate {
 
 		do {
 			let dbEncryptionKey = try zdc.databaseKeyManager.unlockUsingKeychain()
-			let dbConfig = databaseConfig(encryptionKey: dbEncryptionKey)
+			
+			let dbConfig = ZDCDatabaseConfig(encryptionKey: dbEncryptionKey)
+			dbConfig.configHook = {(database: YapDatabase) in
+				
+				DBManager.sharedInstance.configureDatabase(database)
+			}
+			
 			zdc.unlockOrCreateDatabase(dbConfig)
 		} catch {
 			
@@ -59,6 +70,35 @@ class ZDCManager: ZeroDarkCloudDelegate {
 				self?.downloadMissingOrOutdatedNodes()
 			}
 		}
+		
+		fetchAuditCredentials()
+	}
+	
+	private func fetchAuditCredentials() {
+		
+		let zdc = self.zdc!
+		
+		var localUserID: String?
+		zdc.databaseManager?.roDatabaseConnection.asyncRead({ (transaction) in
+			
+			localUserID = zdc.localUserManager?.anyLocalUserID(transaction)
+			
+		}, completionBlock: {
+			
+			if let localUserID = localUserID {
+				self.fetchAuditCredentials(localUserID)
+			}
+		})
+	}
+	
+	private func fetchAuditCredentials(_ localUserID: String) {
+		
+		zdc.fetchAuditCredentials(localUserID) { (audit: ZDCAudit?, error: Error?) in
+			
+			if let audit = audit {
+				print("Audit:\(audit)")
+			}
+		}
 	}
 	
 	public static var sharedInstance: ZDCManager = {
@@ -70,37 +110,6 @@ class ZDCManager: ZeroDarkCloudDelegate {
 	///
 	class func zdc() -> ZeroDarkCloud {
 		return ZDCManager.sharedInstance.zdc
-	}
-	
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: YapDatabase Configuration
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	/// We're using YapDatabase in this example.
-	/// You don't have to use it (but it's pretty awesome).
-	///
-	/// So we're going to configure the database according to our needs.
-	/// Mostly, this means we're going to setup some extensions to:
-	///
-	/// - automatically sort items according to how we want them in the UI
-	/// - automatically delete items when their "parents" get deleted
-	/// - automatically "touch" items when their "children" get modified/deleted
-	///
-	/// Basically, a bunch of cool tricks to simplify the work we need to do within the UI.
-	///
-	func databaseConfig(encryptionKey: Data) -> ZDCDatabaseConfig {
-		
-		let config = ZDCDatabaseConfig(encryptionKey: encryptionKey)
-		
-		config.configHook = {(database: YapDatabase) in
-			
-			database.registerCodableSerialization(Conversation.self, forCollection: kCollection_Conversations)
-			database.registerCodableSerialization(Message.self, forCollection: kCollection_Messages)
-			
-			DBManager.sharedInstance.registerExtensions(database)
-		}
-		
-		return config
 	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

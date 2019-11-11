@@ -35,6 +35,7 @@
 		DC1A75AD2268CD4C009E5C4E /* CloudCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1A75AC2268CD4C009E5C4E /* CloudCodable.swift */; };
 		DC7DD80522D3B18000677034 /* Invitation.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC7DD80422D3B18000677034 /* Invitation.swift */; };
 		DCB1A6BA2301FE3100414198 /* CustomLogFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCB1A6B92301FE3100414198 /* CustomLogFormatter.swift */; };
+		DCDDC32B2377592C00A5358D /* DBManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDDC32A2377592C00A5358D /* DBManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -76,6 +77,7 @@
 		DC349B1122342B3000F1542F /* ZeroDarkTodo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ZeroDarkTodo.entitlements; sourceTree = "<group>"; };
 		DC7DD80422D3B18000677034 /* Invitation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Invitation.swift; sourceTree = "<group>"; };
 		DCB1A6B92301FE3100414198 /* CustomLogFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomLogFormatter.swift; sourceTree = "<group>"; };
+		DCDDC32A2377592C00A5358D /* DBManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DBManager.swift; sourceTree = "<group>"; };
 		E376CFB205C720437B250618 /* Pods_ios_ZeroDarkTodo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ios_ZeroDarkTodo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -114,6 +116,7 @@
 			children = (
 				2E0C41382207A15400D05BC9 /* AppDelegate.swift */,
 				2EE89F9D2214A400006B6663 /* ZDCManager.swift */,
+				DCDDC32A2377592C00A5358D /* DBManager.swift */,
 				2E9D04492229DDD30070D2E5 /* RootContainerViewController.swift */,
 				2EA301B3221B287700E5C990 /* SettingsViewController.swift */,
 				2EA301B7221B2B4A00E5C990 /* SettingsViewController.storyboard */,
@@ -126,6 +129,7 @@
 				2E9D044D2229DFB80070D2E5 /* InitialViewController.storyboard */,
 				DC1A75AE2268CD5E009E5C4E /* Model */,
 				2E76DF27220DE84200F96E6D /* UI tools */,
+				DCDDC32C2377594700A5358D /* Utilities */,
 				2E0C413C2207A15400D05BC9 /* Main.storyboard */,
 				2E0C415E220A536200D05BC9 /* UIAlertController+TextField.swift */,
 				2E0C413F2207A15500D05BC9 /* Assets.xcassets */,
@@ -135,7 +139,6 @@
 				2EE89F91220E6188006B6663 /* Localizable.strings */,
 				2E0C4161220B658000D05BC9 /* ZeroDarkTodo-Bridging-Header.h */,
 				DC349B1122342B3000F1542F /* ZeroDarkTodo.entitlements */,
-				DCB1A6B92301FE3100414198 /* CustomLogFormatter.swift */,
 			);
 			path = ZeroDarkTodo;
 			sourceTree = "<group>";
@@ -171,6 +174,14 @@
 				DC7DD80422D3B18000677034 /* Invitation.swift */,
 			);
 			path = Model;
+			sourceTree = "<group>";
+		};
+		DCDDC32C2377594700A5358D /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				DCB1A6B92301FE3100414198 /* CustomLogFormatter.swift */,
+			);
+			path = Utilities;
 			sourceTree = "<group>";
 		};
 		FA5342063E9310A27BD38F5D /* Pods */ = {
@@ -322,6 +333,7 @@
 				2E0C414E2207C93F00D05BC9 /* List.swift in Sources */,
 				2E76DF2A220DE85200F96E6D /* BadgedBarButtonItem.m in Sources */,
 				2E9D04482229ACD40070D2E5 /* ZDCManager.swift in Sources */,
+				DCDDC32B2377592C00A5358D /* DBManager.swift in Sources */,
 				2E9D044A2229DDD30070D2E5 /* RootContainerViewController.swift in Sources */,
 				2E9D04C02232FD410070D2E5 /* CompleteActivationViewController.swift in Sources */,
 				2EA301B5221B287700E5C990 /* SettingsViewController.swift in Sources */,

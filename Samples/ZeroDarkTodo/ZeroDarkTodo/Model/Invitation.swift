@@ -13,7 +13,7 @@ import ZeroDarkCloud
 /// All `Invitation` objects get stored in the database using this collection.
 /// (The database being used by this sample app is a collection/key/value store.)
 ///
-let kZ2DCollection_Invitation = "Invitation"
+let kCollection_Invitations = "Invitations"
 
 /// The `Invitation` class represents an invitation to collaborate on a List.
 /// For example, if Alice wants to share a List (e.g. "Groceries") with Bob,

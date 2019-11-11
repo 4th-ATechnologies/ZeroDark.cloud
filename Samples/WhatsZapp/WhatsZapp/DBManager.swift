@@ -15,7 +15,11 @@ let DBExt_ConversationsView  = "ConversationsView"
 let DBExt_MessagesView       = "MessagesView"
 let DBExt_UnreadMessagesView = "UnreadMessagesView"
 
-
+/// We're using YapDatabase in this example.
+/// You don't have to use it (but it's pretty awesome).
+///
+/// https://github.com/yapstudios/YapDatabase
+///
 class DBManager {
 	
 	public static var sharedInstance: DBManager = {
@@ -31,7 +35,10 @@ class DBManager {
 	#endif
 	}
 	
-	public func registerExtensions(_ database: YapDatabase) {
+	public func configureDatabase(_ database: YapDatabase) {
+		
+		database.registerCodableSerialization(Conversation.self, forCollection: kCollection_Conversations)
+		database.registerCodableSerialization(Message.self, forCollection: kCollection_Messages)
 		
 		registerExtension_ConversationsView(database)
 		registerExtension_MessagesView(database)

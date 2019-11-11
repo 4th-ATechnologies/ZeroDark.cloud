@@ -153,7 +153,7 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 		databaseConnection.read { (transaction) in
 			
 			guard
-				let task = transaction.object(forKey: self.taskID, inCollection: kZ2DCollection_Task) as? Task
+				let task = transaction.object(forKey: self.taskID, inCollection: kCollection_Tasks) as? Task
 			else {
 				return
 			}
@@ -241,7 +241,7 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 		
 		let hasChanges = databaseConnection.hasChange(
 			forKey: taskID,
-			inCollection: kZ2DCollection_Task,
+			inCollection: kCollection_Tasks,
 			in: notifications
 		)
 
@@ -279,7 +279,7 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 		var imageNode: ZDCNode? = nil
 		
 		if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-			let taskNode = cloudTransaction.linkedNode(forKey: task.uuid, inCollection: kZ2DCollection_Task)
+			let taskNode = cloudTransaction.linkedNode(forKey: task.uuid, inCollection: kCollection_Tasks)
 		{
 			imageNode = zdc.nodeManager.findNode(withName: "img", parentID: taskNode.uuid, transaction: transaction)
 		}
@@ -305,7 +305,7 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 		rwDatabaseConnection.asyncReadWrite { (transaction) in
 			
 			guard
-				var task = transaction.object(forKey: self.taskID, inCollection: kZ2DCollection_Task) as? Task
+				var task = transaction.object(forKey: self.taskID, inCollection: kCollection_Tasks) as? Task
 			else {
 				return
 			}
@@ -382,10 +382,10 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 				//
 				let changeset = task.changeset() ?? Dictionary()
 				
-				transaction.setObject(task , forKey: task.uuid, inCollection: kZ2DCollection_Task)
+				transaction.setObject(task , forKey: task.uuid, inCollection: kCollection_Tasks)
 		
 				if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-					let taskNode = cloudTransaction.linkedNode(forKey: task.uuid, inCollection: kZ2DCollection_Task)
+					let taskNode = cloudTransaction.linkedNode(forKey: task.uuid, inCollection: kCollection_Tasks)
 				{
 					cloudTransaction.queueDataUpload(forNodeID: taskNode.uuid, withChangeset: changeset)
 					//                                                         ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -430,7 +430,7 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 		var hasImage: Bool = false
 		databaseConnection .read { (transaction) in
 			
-			if let task = transaction.object(forKey: self.taskID, inCollection: kZ2DCollection_Task) as? Task {
+			if let task = transaction.object(forKey: self.taskID, inCollection: kCollection_Tasks) as? Task {
 				
 				let imageNode = self.imageNode(forTask: task, transaction: transaction)
 				hasImage = (imageNode != nil)

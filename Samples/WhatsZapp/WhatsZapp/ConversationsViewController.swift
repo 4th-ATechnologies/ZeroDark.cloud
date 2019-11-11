@@ -343,8 +343,9 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 			return
 		}
 		
-		guard let notifications = notification.userInfo?[kNotificationsKey] as? [Notification],
-		      let ext = uiDatabaseConnection?.ext(DBExt_ConversationsView) as? YapDatabaseViewConnection
+		guard
+			let notifications = notification.userInfo?[kNotificationsKey] as? [Notification],
+			let ext = uiDatabaseConnection?.ext(DBExt_ConversationsView) as? YapDatabaseViewConnection
 		else {
 			return
 		}

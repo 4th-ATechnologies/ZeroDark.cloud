@@ -13,7 +13,7 @@ import ZeroDarkCloud
 /// All `List` objects get stored in the database using this collection.
 /// (The database being used by this sample app is a collection/key/value store.)
 ///
-let kZ2DCollection_List = "List"
+let kCollection_Lists = "Lists"
 
 /// The `List` class is a container for Tasks (i.e. a container for Todo items).
 /// Every List has a title, such as "Groceries" or "Weekend Chores".
@@ -32,7 +32,7 @@ class List: NSCopying, Codable {
 	/// We store `List` objects in the database.
 	///
 	/// The database being used by this sample app is YapDatabase, which is a collection/key/value store.
-	/// All List objects go into the same collection: kZ2DCollection_List.
+	/// All List objects go into the same collection: kCollection_Lists.
 	/// And each List has a uuid, which we use as the database key.
 	///
 	/// We commonly refer to the List.uuid value as the ListID.
@@ -41,7 +41,7 @@ class List: NSCopying, Codable {
 	/// ```
 	/// var list: List? = nil
 	/// databaseConnection.read() {(transaction) in
-	///   list = transaction.object(forKey: listID, inCollection: kZ2DCollection_List) as? List
+	///   list = transaction.object(forKey: listID, inCollection: kCollection_Lists) as? List
 	/// }
 	/// ```
 	let uuid: String

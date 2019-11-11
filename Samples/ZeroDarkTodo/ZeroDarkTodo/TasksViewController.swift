@@ -129,7 +129,7 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 		
 		var list: List? = nil
 		databaseConnection.read { (transaction) in
-			list = transaction.object(forKey: self.listID, inCollection: kZ2DCollection_List) as? List
+			list = transaction.object(forKey: self.listID, inCollection: kCollection_Lists) as? List
 		}
 		
 		self.navigationItem.title = list?.title ?? "List"
@@ -241,9 +241,7 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 		// And it gives us this information in a way that allows us to
 		// easily animate the changes in our UITableView/UICollectionView.
 		
-		var rowChanges = NSArray()
-		var sectionChanges = NSArray()
-		ext.getSectionChanges(&sectionChanges, rowChanges: &rowChanges, for: notifications, with: mappings)
+		let (sectionChanges, rowChanges) = ext.getChanges(forNotifications: notifications, withMappings: mappings)
 
 		if (sectionChanges.count == 0) && (rowChanges.count == 0) {
 			
@@ -252,30 +250,26 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 		}
 
 		tasksTable.beginUpdates()
-		if let changes = rowChanges as? [YapDatabaseViewRowChange] {
+		for change in rowChanges {
+			switch change.type {
 
-			for change in changes {
-				switch change.type {
-
-					case .delete:
-						tasksTable.deleteRows(at: [change.indexPath!], with: .automatic)
+				case .delete:
+					tasksTable.deleteRows(at: [change.indexPath!], with: .automatic)
+				
+				case .insert:
+					tasksTable.insertRows(at: [change.newIndexPath!], with: .automatic)
 					
-					case .insert:
-						tasksTable.insertRows(at: [change.newIndexPath!], with: .automatic)
+				case .move:
+					tasksTable.deleteRows(at: [change.indexPath!], with: .automatic)
+					tasksTable.insertRows(at: [change.newIndexPath!], with: .automatic)
 					
-					case .move:
-						tasksTable.deleteRows(at: [change.indexPath!], with: .automatic)
-						tasksTable.insertRows(at: [change.newIndexPath!], with: .automatic)
+				case .update:
+					tasksTable.reloadRows(at: [change.indexPath!], with: .automatic)
 					
-					case .update:
-						tasksTable.reloadRows(at: [change.indexPath!], with: .automatic)
-					
-					default:
-						break
-				}
+				default:
+					break
 			}
 		}
-
 		tasksTable.endUpdates()
 	}
 
@@ -323,7 +317,7 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 		databaseConnection.read { (transaction) in
 			
 			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-				let taskNode = cloudTransaction.linkedNode(forKey: task.uuid, inCollection: kZ2DCollection_Task)
+				let taskNode = cloudTransaction.linkedNode(forKey: task.uuid, inCollection: kCollection_Tasks)
 			{
 				imageNode = zdc.nodeManager.findNode(withName: "img", parentID: taskNode.uuid, transaction: transaction)
 			}
@@ -399,13 +393,13 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 			// Store the Task object in the database.
 			//
 			// YapDatabase is a collection/key/value store.
-			// So we store all List objects in the same collection: kZ2DCollection_Task
+			// So we store all List objects in the same collection: kCollection_Tasks
 			// And every task has a uuid, which we use as the key in the database.
 			//
 			// Wondering how the object gets serialized / deserialized ?
 			// The Task object supports the Swift Codable protocol.
 			
-			transaction.setObject(task, forKey: task.uuid, inCollection: kZ2DCollection_Task)
+			transaction.setObject(task, forKey: task.uuid, inCollection: kCollection_Tasks)
 			
 			// The ZeroDarkCloud framework supports multiple localUser's.
 			// In fact, this is part of the sample app.
@@ -439,7 +433,7 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 				// For more information on treesystem paths, check out the docs here:
 				// https://zerodarkcloud.readthedocs.io/en/latest/advanced/tree/
 				
-				if let listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List),
+				if let listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kCollection_Lists),
 				   let listPath = zdc.nodeManager.path(for: listNode, transaction: transaction) {
 					
 					let taskPath = listPath.appendingComponent(UUID().uuidString)
@@ -453,7 +447,7 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 						// Link our task to the node.
 						// This is optional, but it makes life easier for this particular app.
 						
-						try cloudTransaction.linkNodeID(node.uuid, toKey: task.uuid, inCollection: kZ2DCollection_Task)
+						try cloudTransaction.linkNodeID(node.uuid, toKey: task.uuid, inCollection: kCollection_Tasks)
 						
 					} catch {
 						
@@ -492,7 +486,7 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 
 		rwDatabaseConnection.asyncReadWrite({ (transaction) in
 
-			let object  = transaction.object(forKey: taskID, inCollection: kZ2DCollection_Task)
+			let object  = transaction.object(forKey: taskID, inCollection: kCollection_Tasks)
 			if var task = object as? Task {
 
 				task = task.copy() as! Task
@@ -501,10 +495,10 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 
 				transaction.setObject(task ,
 									  forKey: task.uuid,
-									  inCollection: kZ2DCollection_Task)
+									  inCollection: kCollection_Tasks)
 				
 				if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-					let taskNode = cloudTransaction.linkedNode(forKey: task.uuid, inCollection: kZ2DCollection_Task)
+					let taskNode = cloudTransaction.linkedNode(forKey: task.uuid, inCollection: kCollection_Tasks)
 				{
 					cloudTransaction.queueDataUpload(forNodeID: taskNode.uuid, withChangeset: nil)
 				}
@@ -665,7 +659,7 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 			
 			rwDatabaseConnection.asyncReadWrite({ (transaction) in
 				
-				transaction.removeObject(forKey: task.uuid, inCollection: kZ2DCollection_Task)
+				transaction.removeObject(forKey: task.uuid, inCollection: kCollection_Tasks)
 			
 			}, completionBlock: {
 				
@@ -699,7 +693,7 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 			
 			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID) {
 				
-				listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kZ2DCollection_List)
+				listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kCollection_Lists)
 			}
 		}
 		
@@ -730,7 +724,7 @@ class TasksViewController: UIViewController, UITableViewDelegate, UITableViewDat
 			var listNode: ZDCNode? = nil
 			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID) {
 				
-				listNode = cloudTransaction.linkedNode(forKey: self.listID, inCollection: kZ2DCollection_List)
+				listNode = cloudTransaction.linkedNode(forKey: self.listID, inCollection: kCollection_Lists)
 			}
 			
 			count = listNode?.shareList.countOfUserIDs(excluding: localUserID) ?? 0

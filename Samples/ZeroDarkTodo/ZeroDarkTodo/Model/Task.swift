@@ -15,7 +15,7 @@ import ZDCSyncable
 /// All `Task` objects get stored in the database using this collection.
 /// (The database being used by this sample app is a collection/key/value store.)
 ///
-let kZ2DCollection_Task = "Task"
+let kCollection_Tasks = "Tasks"
 
 @objc enum TaskPriority: Int, Codable {
 	case low    = 0
@@ -71,7 +71,7 @@ class Task: ZDCRecord, Codable, YapDatabaseRelationshipNode {
 	/// ```
 	/// var task: Task? = nil
 	/// databaseConnection.read() {(transaction) in
-	///   task = transaction.object(forKey: listID, inCollection: kZ2DCollection_Task) as? Task
+	///   task = transaction.object(forKey: listID, inCollection: kCollection_Tasks) as? Task
 	/// }
 	/// ```
 	var uuid: String
@@ -83,7 +83,7 @@ class Task: ZDCRecord, Codable, YapDatabaseRelationshipNode {
 	/// ```
 	/// var list: List? = nil
 	/// databaseConnection.read() {(transaction) in
-	///   list = transaction.object(forKey: task.listID, inCollection: kZ2DCollection_List) as? List
+	///   list = transaction.object(forKey: task.listID, inCollection: kCollection_Lists) as? List
 	/// }
 	/// ```
 	var listID: String
@@ -250,10 +250,10 @@ class Task: ZDCRecord, Codable, YapDatabaseRelationshipNode {
 	func yapDatabaseRelationshipEdges() -> [YapDatabaseRelationshipEdge]? {
 
 		let listEdge =
-			YapDatabaseRelationshipEdge.init(name: "listIDNode",
-			                                 destinationKey: listID,
-			                                 collection: kZ2DCollection_List,
-			                                 nodeDeleteRules: .deleteSourceIfDestinationDeleted)
+			YapDatabaseRelationshipEdge(name: "listIDNode",
+			                  destinationKey: listID,
+			                      collection: kCollection_Lists,
+			                 nodeDeleteRules: [.deleteSourceIfDestinationDeleted])
 		
 		return [listEdge]
 	}
