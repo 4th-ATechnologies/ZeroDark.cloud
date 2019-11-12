@@ -24,7 +24,7 @@ Pod::Spec.new do |s|
 	s.dependency 'JWT'
 	s.dependency 'S4Crypto', '>= 2.2.9'
 	s.dependency 'XMLDictionary'
-	s.dependency 'YapDatabase/SQLCipher', '>= 3.1.4'
+	s.dependency 'YapDatabase/SQLCipher-ObjC', '>= 4.0'
 	s.dependency 'zipzap'
 	s.dependency 'ZDCSyncableObjC'
 	
