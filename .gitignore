@@ -32,8 +32,8 @@ docs
 
 #CocoaPods
 Pods
-Testing/Pods
-Samples/Messaging
-Samples/TestSetup
+Testing/DatabaseKey/Pods
+Testing/KeyTesting/Pods
+Testing/UnitTests/Pods
+Samples/WhatsZapp/Pods
 Samples/ZeroDarkTodo/Pods
-Samples/KeyTesting/Pods

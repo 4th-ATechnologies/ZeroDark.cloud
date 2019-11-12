@@ -29,19 +29,15 @@ class ViewController: UIViewController, UITabBarDelegate, UITextFieldDelegate, Z
 
 	var zdc: ZeroDarkCloud!
 
-	var dbEncryptionKey:Data?
-	
-	let kZDC_DatabaseName = "DatabaseKey";
-	let kZDC_zAppID       = "com.4th-a.DatabaseKey"
+	var dbEncryptionKey: Data?
 	
 	//MARK: view management
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		
-		zdc = ZeroDarkCloud(delegate: self,
-								  databaseName: kZDC_DatabaseName,
-								  zAppID: kZDC_zAppID)
-
+		let config = ZDCConfig(primaryTreeID: "com.4th-a.DatabaseKey")
+		
+		zdc = ZeroDarkCloud(delegate: self, config: config)
  	}
 
 	override func viewWillAppear(_ animated: Bool) {
