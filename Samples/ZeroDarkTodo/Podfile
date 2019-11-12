@@ -1,5 +1,3 @@
-source 'https://github.com/CocoaPods/Specs.git'
-
 workspace 'ZeroDarkTodo'
 project 'ZeroDarkTodo.xcodeproj'
 
@@ -13,8 +11,7 @@ inhibit_all_warnings!
 # 
 install! 'cocoapods', :disable_input_output_paths => true
 
-
-abstract_target 'ios' do
+target :'ZeroDarkTodo' do
 	platform :ios, '10.1'
 		
 	# This is the pod you need.
@@ -23,7 +20,7 @@ abstract_target 'ios' do
 	#
 	# pod 'ZeroDarkCloud/Swift'
 	#
-	pod 'ZeroDarkCloud/Swift', path: '../../', :inhibit_warnings => false    
+	pod 'ZeroDarkCloud/Swift', path: '../../', :inhibit_warnings => false
 
 	# Used by sample application (not required for your application)
 	# 
@@ -33,8 +30,5 @@ abstract_target 'ios' do
 	pod 'SWRevealViewController'
 	pod 'YapDatabase/SQLCipher'
 	pod 'ZDCSyncable'
-
-	target :'ZeroDarkTodo' do
-	end
 
 end

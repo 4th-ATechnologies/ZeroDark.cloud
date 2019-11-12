@@ -31,7 +31,7 @@
 		2EA301B8221B2B4A00E5C990 /* SettingsViewController.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2EA301B7221B2B4A00E5C990 /* SettingsViewController.storyboard */; };
 		2EE89F8F220E6188006B6663 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 2EE89F91220E6188006B6663 /* Localizable.strings */; };
 		2EE89F92220E618E006B6663 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = 2EE89F94220E618E006B6663 /* Localizable.stringsdict */; };
-		754671C13692B5B6E0E837F4 /* Pods_ios_ZeroDarkTodo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 408D82D3BD68376E6B56063C /* Pods_ios_ZeroDarkTodo.framework */; };
+		D2DDE8E294018817B771FD77 /* Pods_ZeroDarkTodo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 125DE18DB100289358355251 /* Pods_ZeroDarkTodo.framework */; };
 		DC1A75AD2268CD4C009E5C4E /* CloudCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1A75AC2268CD4C009E5C4E /* CloudCodable.swift */; };
 		DC7DD80522D3B18000677034 /* Invitation.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC7DD80422D3B18000677034 /* Invitation.swift */; };
 		DCB1A6BA2301FE3100414198 /* CustomLogFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCB1A6B92301FE3100414198 /* CustomLogFormatter.swift */; };
@@ -39,6 +39,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		125DE18DB100289358355251 /* Pods_ZeroDarkTodo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZeroDarkTodo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		287413054D660497A283C306 /* Pods-ZeroDarkTodo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ZeroDarkTodo.debug.xcconfig"; path = "Target Support Files/Pods-ZeroDarkTodo/Pods-ZeroDarkTodo.debug.xcconfig"; sourceTree = "<group>"; };
 		2E0C41352207A15400D05BC9 /* ZeroDarkTodo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ZeroDarkTodo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2E0C41382207A15400D05BC9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		2E0C413A2207A15400D05BC9 /* ListsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsViewController.swift; sourceTree = "<group>"; };
@@ -71,7 +73,7 @@
 		2EE89F93220E618E006B6663 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = en; path = en.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		2EE89F96220F4B98006B6663 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Main.strings; sourceTree = "<group>"; };
 		2EE89F9D2214A400006B6663 /* ZDCManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZDCManager.swift; sourceTree = "<group>"; };
-		408D82D3BD68376E6B56063C /* Pods_ios_ZeroDarkTodo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ios_ZeroDarkTodo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A4C6F16B69D4966C873EFA26 /* Pods-ZeroDarkTodo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ZeroDarkTodo.release.xcconfig"; path = "Target Support Files/Pods-ZeroDarkTodo/Pods-ZeroDarkTodo.release.xcconfig"; sourceTree = "<group>"; };
 		C7FD169F3229EB48B18DAD05 /* Pods-ios-ZeroDarkTodo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ios-ZeroDarkTodo.release.xcconfig"; path = "Target Support Files/Pods-ios-ZeroDarkTodo/Pods-ios-ZeroDarkTodo.release.xcconfig"; sourceTree = "<group>"; };
 		DC1A75AC2268CD4C009E5C4E /* CloudCodable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudCodable.swift; sourceTree = "<group>"; };
 		DC349B1122342B3000F1542F /* ZeroDarkTodo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ZeroDarkTodo.entitlements; sourceTree = "<group>"; };
@@ -86,7 +88,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				754671C13692B5B6E0E837F4 /* Pods_ios_ZeroDarkTodo.framework in Frameworks */,
+				D2DDE8E294018817B771FD77 /* Pods_ZeroDarkTodo.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -160,7 +162,7 @@
 		600375F11F030C9D4B7E4594 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				408D82D3BD68376E6B56063C /* Pods_ios_ZeroDarkTodo.framework */,
+				125DE18DB100289358355251 /* Pods_ZeroDarkTodo.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -190,6 +192,8 @@
 				2E76DF26220DE5B800F96E6D /* Podfile */,
 				FD3A0A739677846855EBB67E /* Pods-ios-ZeroDarkTodo.debug.xcconfig */,
 				C7FD169F3229EB48B18DAD05 /* Pods-ios-ZeroDarkTodo.release.xcconfig */,
+				287413054D660497A283C306 /* Pods-ZeroDarkTodo.debug.xcconfig */,
+				A4C6F16B69D4966C873EFA26 /* Pods-ZeroDarkTodo.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -288,7 +292,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ios-ZeroDarkTodo/Pods-ios-ZeroDarkTodo-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ZeroDarkTodo/Pods-ZeroDarkTodo-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		D6C364766B9AF6539E8982D6 /* [CP] Check Pods Manifest.lock */ = {
@@ -306,7 +310,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-ios-ZeroDarkTodo-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-ZeroDarkTodo-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -501,7 +505,7 @@
 		};
 		2E0C41482207A15500D05BC9 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = FD3A0A739677846855EBB67E /* Pods-ios-ZeroDarkTodo.debug.xcconfig */;
+			baseConfigurationReference = 287413054D660497A283C306 /* Pods-ZeroDarkTodo.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				AWS_STAGE = "@\"dev\"";
@@ -525,7 +529,7 @@
 		};
 		2E0C41492207A15500D05BC9 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C7FD169F3229EB48B18DAD05 /* Pods-ios-ZeroDarkTodo.release.xcconfig */;
+			baseConfigurationReference = A4C6F16B69D4966C873EFA26 /* Pods-ZeroDarkTodo.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				AWS_STAGE = "@\"dev\"";

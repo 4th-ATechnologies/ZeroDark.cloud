@@ -1,4 +1,4 @@
-platform :ios, '10.0'
+workspace 'WhatsZapp'
 
 use_frameworks!
 inhibit_all_warnings!
@@ -11,10 +11,20 @@ inhibit_all_warnings!
 install! 'cocoapods', :disable_input_output_paths => true
 
 target 'WhatsZapp' do
+	platform :ios, '10.0'
 
-  pod 'CocoaLumberjack/Swift'
-  pod 'MessageKit'
-  pod 'YapDatabase/SQLCipher', path: '../../../../GitHub/YapDatabase', :inhibit_warnings => false
-  pod 'ZeroDarkCloud/Swift', path: '../../', :inhibit_warnings => false
+	# This is the pod you need.
+	# In this project we're using it as a "Development Pod".
+	# But in your project you'll install it normally like this:
+	#
+	# pod 'ZeroDarkCloud/Swift'
+	#
+	pod 'ZeroDarkCloud/Swift', path: '../../', :inhibit_warnings => false
+
+	# Used by sample application (not required for your application)
+	# 
+	pod 'CocoaLumberjack/Swift'
+	pod 'MessageKit'
+	pod 'YapDatabase/SQLCipher'
 
 end
