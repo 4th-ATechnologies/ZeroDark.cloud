@@ -233,15 +233,15 @@ static NSString *const k_dict    = @"dict";
  */
 - (BOOL)addShareItem:(ZDCShareItem *)item forKey:(NSString *)key
 {
-#ifndef NS_BLOCK_ASSERTIONS
-	NSAssert(key != nil && [[self class] isValidKey:key],
-	         @"Invalid key - will be silently ignored in production. Do you have a bug ?");
-	NSAssert(item == nil || [item isKindOfClass:[ZDCShareItem class]],
-	         @"Invalid item - will be silently ignored in production. Do you have a bug ?");
-#else
-	if (!key || ![[self class] isValidKey:key]) return;
-	if (item && ![item isKindOfClass:[ZDCShareItem class]]) return;
-#endif
+	if (!key || ![[self class] isValidKey:key]) {
+		NSAssert(NO, @"Invalid key - will be silently ignored in production. Do you have a bug ?");
+		return NO;
+	}
+	if (item && ![item isKindOfClass:[ZDCShareItem class]]) {
+		NSAssert(NO, @"Invalid item - will be silently ignored in production. Do you have a bug ?");
+		return NO;
+		
+	}
 	
 	if ([dict containsKey:key]) {
 		return NO; // Did you read the description in the header file ?

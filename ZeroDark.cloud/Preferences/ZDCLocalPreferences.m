@@ -9,6 +9,15 @@
 
 #import "ZDCLocalPreferences.h"
 #import "ZDCPreferenceUtilities.h"
+#import "ZDCLogging.h"
+
+// Log Levels: off, error, warning, info, verbose
+// Log Flags : trace
+#if DEBUG
+  static const int zdcLogLevel = ZDCLogLevelWarning;
+#else
+  static const int zdcLogLevel = ZDCLogLevelWarning;
+#endif
 
 /* extern */ NSString *const ZDCLocalPreferencesChangedNotification = @"ZDCLocalPreferencesChangedNotification";
 /* extern */ NSString *const ZDCLocalPreferencesChanged_UserInfo_Key = @"key";

@@ -224,11 +224,10 @@
 	NSDictionary* identDict =  accountSetupVC.selectedProvider;
 	if (identDict)
 	{
-
+	#ifndef NS_BLOCK_ASSERTIONS
 		Auth0ProviderType strategyType = [identDict[kAuth0ProviderInfo_Key_Type] integerValue];
-
-		NSParameterAssert(strategyType == Auth0ProviderType_Database);    // this cant happen
-
+		NSParameterAssert(strategyType == Auth0ProviderType_Database); // this shouldn't ever happen
+	#endif
 
 		[self tryDatabaseLoginWithEmail: [Auth0Utilities create4thAEmailForUsername:_txtUserNameField.text]
 							   password: _txtPwdField.text];
