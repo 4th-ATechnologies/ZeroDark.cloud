@@ -9,7 +9,10 @@
 
 #import <TargetConditionals.h>
 #import <Foundation/Foundation.h>
+
+#if !TARGET_OS_OSX
 #import <UIKit/UIKit.h>
+#endif
 
 #import "AWSRegions.h"
 
@@ -107,8 +110,11 @@ NS_ASSUME_NONNULL_BEGIN
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+#if TARGET_OS_OSX
+@interface AccountSetup_Base : NSViewController <AccountSetup_Protocol>
+#else
 @interface AccountSetup_Base : UIViewController <AccountSetup_Protocol>
+#endif
 
 @property (nonatomic, readwrite, weak) ZeroDarkCloud *zdc;
 
