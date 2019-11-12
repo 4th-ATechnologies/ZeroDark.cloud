@@ -23,23 +23,16 @@ abstract_target 'ios' do
 	#
 	# pod 'ZeroDarkCloud/Swift'
 	#
-	pod 'ZeroDarkCloud/Swift', path: '../../', :inhibit_warnings => false
-
-	# Temp: Working on getting YapDB v4.0 out the door.
-	# 
-	pod 'YapDatabase/SQLCipher', path: '../../../../GitHub/YapDatabase', :inhibit_warnings => false	
-
-	# It's also recommended (but not required) that you use this Pod too.
-	# It helps with merging changes and handling conflicts.
-	# 
-	pod 'ZDCSyncable'
-    
+	pod 'ZeroDarkCloud/Swift', path: '../../', :inhibit_warnings => false    
 
 	# Used by sample application (not required for your application)
+	# 
 	pod 'CocoaLumberjack/Swift'
 	pod 'KGHitTestingViews'
-	pod 'SWRevealViewController'
 	pod 'ImageScrollView'
+	pod 'SWRevealViewController'
+	pod 'YapDatabase/SQLCipher'
+	pod 'ZDCSyncable'
 
 	target :'ZeroDarkTodo' do
 	end
