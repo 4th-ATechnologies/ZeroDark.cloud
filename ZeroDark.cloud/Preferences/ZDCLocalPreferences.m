@@ -18,6 +18,7 @@
 #else
   static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
+#pragma unused(zdcLogLevel)
 
 /* extern */ NSString *const ZDCLocalPreferencesChangedNotification = @"ZDCLocalPreferencesChangedNotification";
 /* extern */ NSString *const ZDCLocalPreferencesChanged_UserInfo_Key = @"key";
