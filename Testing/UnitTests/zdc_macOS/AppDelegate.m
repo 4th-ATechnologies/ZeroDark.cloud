@@ -15,12 +15,12 @@
 - (void)applicationDidFinishLaunching:(NSNotification *)notification
 {
 	[self setupZeroDarkCloud];
-//	[self createTestLocalUser];
 	
-	uint64_t nodeDataCacheSize = zdc.diskManager.maxNodeDataCacheSize;
-	NSLog(@"nodeDataCacheSize: %llu", nodeDataCacheSize);
-	
-	zdc.diskManager.maxNodeDataCacheSize = (1024 * 1024 * 1);
+	dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5.0 * NSEC_PER_SEC));
+	dispatch_after(delay, dispatch_get_main_queue(), ^{
+		
+		[self createTestLocalUser];
+	});
 	
 	[[NSNotificationCenter defaultCenter] addObserver: self
 	                                         selector: @selector(pullStarted:)
@@ -47,24 +47,25 @@
 		}
 	}
 	
+	ZDCConfig *config = [[ZDCConfig alloc] initWithPrimaryTreeID:@"com.4th-a.storm4"];
+	
 	zdc = [[ZeroDarkCloud alloc] initWithDelegate: delegate
-	                                 databaseName: dbName
-	                                       zAppID: @"com.4th-a.storm4"];
+	                                       config: config];
 	
 	NSLog(@"zdc: %@", zdc);
 	
 	NSError *error = nil;
 	NSData *databaseKey = nil;
 
-	databaseKey = [zdc.databaseKeyManager unlockUsingKeychainKeyWithError:&error];
+	databaseKey = [zdc.databaseKeyManager unlockUsingKeychain:&error];
 	if (error) {
 		NSLog(@"Error fetching database key: %@", error);
 		return NO;
 	}
 
-	ZDCDatabaseConfig *config = [[ZDCDatabaseConfig alloc] initWithEncryptionKey:databaseKey];
+	ZDCDatabaseConfig *dbConfig = [[ZDCDatabaseConfig alloc] initWithEncryptionKey:databaseKey];
 	
-	error = [zdc unlockOrCreateDatabase:config];
+	error = [zdc unlockOrCreateDatabase:dbConfig];
 	if (error) {
 		NSLog(@"Error unlocking database: %@", error);
 		return NO;
@@ -88,40 +89,56 @@
 	
 	NSLog(@"TestUser.json: %@", json);
 
+	__block ZDCLocalUser *newLocalUser = nil;
+	__block NSString *existingLocalUserID = nil;
+	
 	[zdc.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:
 	  ^(YapDatabaseReadWriteTransaction *transaction)
 	{
-		NSError *oops =
-		  [self->zdc.localUserManager createLocalUserFromJSON: json
-		                                          transaction: transaction
-		                                       outLocalUserID: nil];
-		if (oops) {
-			NSLog(@"Error creating localUser: %@", oops);
+		ZDCLocalUserManager *localUserManager = self->zdc.localUserManager;
+		
+		NSError *error = nil;
+		newLocalUser = [localUserManager createLocalUserFromJSON: json
+		                                             transaction: transaction
+		                                                   error: &error];
+		
+		if (newLocalUser == nil)
+		{
+			existingLocalUserID = [localUserManager anyLocalUserID:transaction];
+		}
+		
+	} completionBlock:^{
+		
+		if (newLocalUser)
+		{
+			// We just created a NEW localUser.
+			// So we need to wait for ZDC to sync the treesystem (i.e. perform the first PULL from the cloud).
+			//
+			// We're setup to receive a notification about this: ZDCPullStoppedNotification
+		}
+		else if (existingLocalUserID)
+		{
+			// The localUser already exists in the database.
+			// So we can explore their treesystem immediately.
+			
+			[self exploreTreesystem:existingLocalUserID];
 		}
 	}];
 }
 
-- (void)pullStarted:(NSNotification *)notification
+- (void)exploreTreesystem:(NSString *)localUserID
 {
-	NSLog(@"PullStarted: %@", notification.userInfo);
-}
-
-- (void)pullStopped:(NSNotification *)notification
-{
-	NSLog(@"pullStopped: %@", notification.userInfo);
+	NSLog(@"exploreTreesystem: localUserID = %@", localUserID);
+	
+	if (localUserID == nil) return;
 	
 	[zdc.databaseManager.uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
-		NSArray<NSString*> *localUserIDs = [zdc.localUserManager allLocalUserIDs:transaction];
-		NSString *localUserID = [localUserIDs firstObject];
-		
-		if (localUserID == nil) return;
-		
 		ZDCTrunkNode *trunkNode =
 		  [zdc.nodeManager trunkNodeForLocalUserID: localUserID
-		                                    zAppID: zdc.zAppID
+		                                    treeID: zdc.primaryTreeID
 		                                     trunk: ZDCTreesystemTrunk_Home
 		                               transaction: transaction];
 		
@@ -145,6 +162,19 @@
 		
 	#pragma clang diagnostic pop
 	}];
+}
+
+- (void)pullStarted:(NSNotification *)notification
+{
+	NSLog(@"PullStarted: %@", notification.userInfo);
+}
+
+- (void)pullStopped:(NSNotification *)notification
+{
+	NSLog(@"pullStopped: %@", notification.userInfo);
+	
+	NSString *localUserID = notification.userInfo[kLocalUserIDKey];
+	[self exploreTreesystem:localUserID];
 }
 
 @end

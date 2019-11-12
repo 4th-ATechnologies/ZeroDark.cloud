@@ -7,11 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0AA95C3B2EDD2B5D0DC5E265 /* Pods_iOS_zdc_iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C456DEDCE977FFABD81F15D /* Pods_iOS_zdc_iOS.framework */; };
-		2EA301BD221C930F00E5C990 /* mnemonic_vectors.json in Resources */ = {isa = PBXBuildFile; fileRef = 2EA301BC221C930F00E5C990 /* mnemonic_vectors.json */; };
 		2EA301BE221C932900E5C990 /* mnemonic_vectors.json in Resources */ = {isa = PBXBuildFile; fileRef = 2EA301BC221C930F00E5C990 /* mnemonic_vectors.json */; };
-		35F53A91E39A5D8D4956754B /* Pods_iOS_zdc_iOS_test.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC8E8AD4A0ECB129E7AB9EF2 /* Pods_iOS_zdc_iOS_test.framework */; };
-		C9B99E757322417CD1396DE8 /* Pods_macOS_zdc_macOS_test.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7C902A792EF4C666F85B263C /* Pods_macOS_zdc_macOS_test.framework */; };
+		4C8268799A7DD588A96A03AB /* Pods_both_macOS_zdc_macOS_test.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 792F206F27C130C070A0C4AB /* Pods_both_macOS_zdc_macOS_test.framework */; };
+		94169CF25FF806C17B434EB8 /* Pods_both_iOS_zdc_iOS_test.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D439C8D33074688C44FA2809 /* Pods_both_iOS_zdc_iOS_test.framework */; };
+		BF8963324C917C78516F4C59 /* Pods_both_macOS_zdc_macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 80886340B385E372DCDD3129 /* Pods_both_macOS_zdc_macOS.framework */; };
+		D71AB494FAD372963DAD9096 /* Pods_both_iOS_zdc_iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B62542930D1F19787A8D4735 /* Pods_both_iOS_zdc_iOS.framework */; };
+		DC195444237A3FCB00B78869 /* mnemonic_vectors.json in Resources */ = {isa = PBXBuildFile; fileRef = 2EA301BC221C930F00E5C990 /* mnemonic_vectors.json */; };
 		DC4B8CE92214D69D00902B08 /* Test Files in Resources */ = {isa = PBXBuildFile; fileRef = DC4B8CE82214D69D00902B08 /* Test Files */; };
 		DC4B8CEA2214D69D00902B08 /* Test Files in Resources */ = {isa = PBXBuildFile; fileRef = DC4B8CE82214D69D00902B08 /* Test Files */; };
 		DC4B8CEC2214D6C100902B08 /* test_AWSSignature.m in Sources */ = {isa = PBXBuildFile; fileRef = DC4B8CEB2214D6C100902B08 /* test_AWSSignature.m */; };
@@ -38,7 +39,6 @@
 		DCF9F570224838AE00E52EFF /* ZDCDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF9F56D224838AE00E52EFF /* ZDCDelegate.m */; };
 		DCFEFB0B2229E04600DD183B /* test_Models.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFEFB0A2229E04600DD183B /* test_Models.m */; };
 		DCFEFB0C2229E04600DD183B /* test_Models.m in Sources */ = {isa = PBXBuildFile; fileRef = DCFEFB0A2229E04600DD183B /* test_Models.m */; };
-		EDF05514EF9C53051965A09C /* Pods_macOS_zdc_macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C628583ABA83BE69E0F1C983 /* Pods_macOS_zdc_macOS.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -64,15 +64,23 @@
 		1132C963500BB4193B26BEB5 /* Pods-iOS-zdc_iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iOS-zdc_iOS.release.xcconfig"; path = "Target Support Files/Pods-iOS-zdc_iOS/Pods-iOS-zdc_iOS.release.xcconfig"; sourceTree = "<group>"; };
 		1248923E808D3A02C465565E /* Pods-iOS-zdc_iOS_test.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iOS-zdc_iOS_test.release.xcconfig"; path = "Target Support Files/Pods-iOS-zdc_iOS_test/Pods-iOS-zdc_iOS_test.release.xcconfig"; sourceTree = "<group>"; };
 		12DF8726F74EE16C7E0DADA3 /* Pods-macOS-zdc_macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-macOS-zdc_macOS.debug.xcconfig"; path = "Target Support Files/Pods-macOS-zdc_macOS/Pods-macOS-zdc_macOS.debug.xcconfig"; sourceTree = "<group>"; };
+		203BB3BC8DFA2FBAEADB3C4D /* Pods-both-iOS-zdc_iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-both-iOS-zdc_iOS.debug.xcconfig"; path = "Target Support Files/Pods-both-iOS-zdc_iOS/Pods-both-iOS-zdc_iOS.debug.xcconfig"; sourceTree = "<group>"; };
 		2EA301BC221C930F00E5C990 /* mnemonic_vectors.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = mnemonic_vectors.json; sourceTree = SOURCE_ROOT; };
-		3C456DEDCE977FFABD81F15D /* Pods_iOS_zdc_iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_iOS_zdc_iOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F172E2DCEB7BFBF003DFCF9 /* Pods-both-iOS-zdc_iOS_test.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-both-iOS-zdc_iOS_test.debug.xcconfig"; path = "Target Support Files/Pods-both-iOS-zdc_iOS_test/Pods-both-iOS-zdc_iOS_test.debug.xcconfig"; sourceTree = "<group>"; };
+		4C22E500E7A5659203D633F6 /* Pods-both-iOS-zdc_iOS_test.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-both-iOS-zdc_iOS_test.release.xcconfig"; path = "Target Support Files/Pods-both-iOS-zdc_iOS_test/Pods-both-iOS-zdc_iOS_test.release.xcconfig"; sourceTree = "<group>"; };
+		586CC1960C6DB0C48256DF35 /* Pods-both-macOS-zdc_macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-both-macOS-zdc_macOS.debug.xcconfig"; path = "Target Support Files/Pods-both-macOS-zdc_macOS/Pods-both-macOS-zdc_macOS.debug.xcconfig"; sourceTree = "<group>"; };
 		5A13DABB85B916040093F0EC /* Pods-macOS-ZeroDarkCloudTesting.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-macOS-ZeroDarkCloudTesting.debug.xcconfig"; path = "Target Support Files/Pods-macOS-ZeroDarkCloudTesting/Pods-macOS-ZeroDarkCloudTesting.debug.xcconfig"; sourceTree = "<group>"; };
-		7C902A792EF4C666F85B263C /* Pods_macOS_zdc_macOS_test.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_macOS_zdc_macOS_test.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		792F206F27C130C070A0C4AB /* Pods_both_macOS_zdc_macOS_test.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_both_macOS_zdc_macOS_test.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7CBC6D49862E6F22728B678E /* Pods_macOS_ZeroDarkCloudTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_macOS_ZeroDarkCloudTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		7D3A764460925F924E77ABF2 /* Pods-both-macOS-zdc_macOS_test.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-both-macOS-zdc_macOS_test.release.xcconfig"; path = "Target Support Files/Pods-both-macOS-zdc_macOS_test/Pods-both-macOS-zdc_macOS_test.release.xcconfig"; sourceTree = "<group>"; };
+		80886340B385E372DCDD3129 /* Pods_both_macOS_zdc_macOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_both_macOS_zdc_macOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		83BA56D7582D31435D675669 /* Pods-both-macOS-zdc_macOS_test.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-both-macOS-zdc_macOS_test.debug.xcconfig"; path = "Target Support Files/Pods-both-macOS-zdc_macOS_test/Pods-both-macOS-zdc_macOS_test.debug.xcconfig"; sourceTree = "<group>"; };
+		9DBE6CB2433E5D95BC1E5E08 /* Pods-both-macOS-zdc_macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-both-macOS-zdc_macOS.release.xcconfig"; path = "Target Support Files/Pods-both-macOS-zdc_macOS/Pods-both-macOS-zdc_macOS.release.xcconfig"; sourceTree = "<group>"; };
 		9FD4C326FC09D0B1EBD3F861 /* Pods-macOS-zdc_macOS_test.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-macOS-zdc_macOS_test.release.xcconfig"; path = "Target Support Files/Pods-macOS-zdc_macOS_test/Pods-macOS-zdc_macOS_test.release.xcconfig"; sourceTree = "<group>"; };
+		B62542930D1F19787A8D4735 /* Pods_both_iOS_zdc_iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_both_iOS_zdc_iOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C3AB626BB7E0AF140FE33171 /* Pods-iOS-zdc_iOS_test.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iOS-zdc_iOS_test.debug.xcconfig"; path = "Target Support Files/Pods-iOS-zdc_iOS_test/Pods-iOS-zdc_iOS_test.debug.xcconfig"; sourceTree = "<group>"; };
-		C628583ABA83BE69E0F1C983 /* Pods_macOS_zdc_macOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_macOS_zdc_macOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		CC8E8AD4A0ECB129E7AB9EF2 /* Pods_iOS_zdc_iOS_test.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_iOS_zdc_iOS_test.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		CF441CAF9A48D255DCD8CDBF /* Pods-both-iOS-zdc_iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-both-iOS-zdc_iOS.release.xcconfig"; path = "Target Support Files/Pods-both-iOS-zdc_iOS/Pods-both-iOS-zdc_iOS.release.xcconfig"; sourceTree = "<group>"; };
+		D439C8D33074688C44FA2809 /* Pods_both_iOS_zdc_iOS_test.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_both_iOS_zdc_iOS_test.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC4B8CE82214D69D00902B08 /* Test Files */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "Test Files"; sourceTree = "<group>"; };
 		DC4B8CEB2214D6C100902B08 /* test_AWSSignature.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = test_AWSSignature.m; sourceTree = "<group>"; };
 		DC61C8D72214D1EF00829546 /* zdc_macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = zdc_macOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -115,7 +123,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EDF05514EF9C53051965A09C /* Pods_macOS_zdc_macOS.framework in Frameworks */,
+				BF8963324C917C78516F4C59 /* Pods_both_macOS_zdc_macOS.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -123,7 +131,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C9B99E757322417CD1396DE8 /* Pods_macOS_zdc_macOS_test.framework in Frameworks */,
+				4C8268799A7DD588A96A03AB /* Pods_both_macOS_zdc_macOS_test.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,7 +139,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0AA95C3B2EDD2B5D0DC5E265 /* Pods_iOS_zdc_iOS.framework in Frameworks */,
+				D71AB494FAD372963DAD9096 /* Pods_both_iOS_zdc_iOS.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -139,7 +147,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				35F53A91E39A5D8D4956754B /* Pods_iOS_zdc_iOS_test.framework in Frameworks */,
+				94169CF25FF806C17B434EB8 /* Pods_both_iOS_zdc_iOS_test.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -150,10 +158,10 @@
 			isa = PBXGroup;
 			children = (
 				7CBC6D49862E6F22728B678E /* Pods_macOS_ZeroDarkCloudTesting.framework */,
-				3C456DEDCE977FFABD81F15D /* Pods_iOS_zdc_iOS.framework */,
-				C628583ABA83BE69E0F1C983 /* Pods_macOS_zdc_macOS.framework */,
-				7C902A792EF4C666F85B263C /* Pods_macOS_zdc_macOS_test.framework */,
-				CC8E8AD4A0ECB129E7AB9EF2 /* Pods_iOS_zdc_iOS_test.framework */,
+				B62542930D1F19787A8D4735 /* Pods_both_iOS_zdc_iOS.framework */,
+				D439C8D33074688C44FA2809 /* Pods_both_iOS_zdc_iOS_test.framework */,
+				80886340B385E372DCDD3129 /* Pods_both_macOS_zdc_macOS.framework */,
+				792F206F27C130C070A0C4AB /* Pods_both_macOS_zdc_macOS_test.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -171,6 +179,14 @@
 				9FD4C326FC09D0B1EBD3F861 /* Pods-macOS-zdc_macOS_test.release.xcconfig */,
 				C3AB626BB7E0AF140FE33171 /* Pods-iOS-zdc_iOS_test.debug.xcconfig */,
 				1248923E808D3A02C465565E /* Pods-iOS-zdc_iOS_test.release.xcconfig */,
+				203BB3BC8DFA2FBAEADB3C4D /* Pods-both-iOS-zdc_iOS.debug.xcconfig */,
+				CF441CAF9A48D255DCD8CDBF /* Pods-both-iOS-zdc_iOS.release.xcconfig */,
+				3F172E2DCEB7BFBF003DFCF9 /* Pods-both-iOS-zdc_iOS_test.debug.xcconfig */,
+				4C22E500E7A5659203D633F6 /* Pods-both-iOS-zdc_iOS_test.release.xcconfig */,
+				586CC1960C6DB0C48256DF35 /* Pods-both-macOS-zdc_macOS.debug.xcconfig */,
+				9DBE6CB2433E5D95BC1E5E08 /* Pods-both-macOS-zdc_macOS.release.xcconfig */,
+				83BA56D7582D31435D675669 /* Pods-both-macOS-zdc_macOS_test.debug.xcconfig */,
+				7D3A764460925F924E77ABF2 /* Pods-both-macOS-zdc_macOS_test.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -417,7 +433,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2EA301BD221C930F00E5C990 /* mnemonic_vectors.json in Resources */,
 				DC4B8CE92214D69D00902B08 /* Test Files in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -426,6 +441,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC195444237A3FCB00B78869 /* mnemonic_vectors.json in Resources */,
 				DC61C90C2214D23500829546 /* LaunchScreen.storyboard in Resources */,
 				DC61C9092214D23500829546 /* Assets.xcassets in Resources */,
 				DC61C9072214D23400829546 /* Main.storyboard in Resources */,
@@ -458,7 +474,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-iOS-zdc_iOS-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-both-iOS-zdc_iOS-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -477,7 +493,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-iOS-zdc_iOS_test/Pods-iOS-zdc_iOS_test-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-both-iOS-zdc_iOS_test/Pods-both-iOS-zdc_iOS_test-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		0C368994F5A7FAE9B8C22E54 /* [CP] Embed Pods Frameworks */ = {
@@ -492,7 +508,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-macOS-zdc_macOS_test/Pods-macOS-zdc_macOS_test-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-both-macOS-zdc_macOS_test/Pods-both-macOS-zdc_macOS_test-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		265FE77E951BD46963A0E3E7 /* [CP] Check Pods Manifest.lock */ = {
@@ -510,7 +526,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-macOS-zdc_macOS-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-both-macOS-zdc_macOS-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -532,7 +548,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-iOS-zdc_iOS_test-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-both-iOS-zdc_iOS_test-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -554,7 +570,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-macOS-zdc_macOS_test-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-both-macOS-zdc_macOS_test-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -573,7 +589,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-macOS-zdc_macOS/Pods-macOS-zdc_macOS-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-both-macOS-zdc_macOS/Pods-both-macOS-zdc_macOS-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		DCE71DF2833121567D33E33B /* [CP] Embed Pods Frameworks */ = {
@@ -588,7 +604,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-iOS-zdc_iOS/Pods-iOS-zdc_iOS-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-both-iOS-zdc_iOS/Pods-both-iOS-zdc_iOS-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -796,11 +812,11 @@
 		};
 		DC61C8E92214D1F400829546 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 12DF8726F74EE16C7E0DADA3 /* Pods-macOS-zdc_macOS.debug.xcconfig */;
+			baseConfigurationReference = 586CC1960C6DB0C48256DF35 /* Pods-both-macOS-zdc_macOS.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = zdc_macOS/zdc_macOS.entitlements;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = VT5GYGYX83;
@@ -816,10 +832,11 @@
 		};
 		DC61C8EA2214D1F400829546 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0F217B49C4EEFDEB21CB181D /* Pods-macOS-zdc_macOS.release.xcconfig */;
+			baseConfigurationReference = 9DBE6CB2433E5D95BC1E5E08 /* Pods-both-macOS-zdc_macOS.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = zdc_macOS/zdc_macOS.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = VT5GYGYX83;
@@ -835,7 +852,7 @@
 		};
 		DC61C8F72214D20A00829546 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0A82CC2A91793E871B894A91 /* Pods-macOS-zdc_macOS_test.debug.xcconfig */;
+			baseConfigurationReference = 83BA56D7582D31435D675669 /* Pods-both-macOS-zdc_macOS_test.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_IDENTITY = "-";
@@ -856,7 +873,7 @@
 		};
 		DC61C8F82214D20A00829546 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9FD4C326FC09D0B1EBD3F861 /* Pods-macOS-zdc_macOS_test.release.xcconfig */;
+			baseConfigurationReference = 7D3A764460925F924E77ABF2 /* Pods-both-macOS-zdc_macOS_test.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
@@ -876,7 +893,7 @@
 		};
 		DC61C9112214D23500829546 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = DFC87B283EBBB921EC6E2895 /* Pods-iOS-zdc_iOS.debug.xcconfig */;
+			baseConfigurationReference = 203BB3BC8DFA2FBAEADB3C4D /* Pods-both-iOS-zdc_iOS.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -897,7 +914,7 @@
 		};
 		DC61C9122214D23500829546 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1132C963500BB4193B26BEB5 /* Pods-iOS-zdc_iOS.release.xcconfig */;
+			baseConfigurationReference = CF441CAF9A48D255DCD8CDBF /* Pods-both-iOS-zdc_iOS.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -919,7 +936,7 @@
 		};
 		DC61C91F2214D24300829546 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C3AB626BB7E0AF140FE33171 /* Pods-iOS-zdc_iOS_test.debug.xcconfig */;
+			baseConfigurationReference = 3F172E2DCEB7BFBF003DFCF9 /* Pods-both-iOS-zdc_iOS_test.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -942,7 +959,7 @@
 		};
 		DC61C9202214D24300829546 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1248923E808D3A02C465565E /* Pods-iOS-zdc_iOS_test.release.xcconfig */;
+			baseConfigurationReference = 4C22E500E7A5659203D633F6 /* Pods-both-iOS-zdc_iOS_test.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_IDENTITY = "iPhone Developer";

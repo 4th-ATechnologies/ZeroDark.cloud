@@ -27,6 +27,15 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "DC61C8FC2214D23400829546"
+            BuildableName = "zdc_iOS.app"
+            BlueprintName = "zdc_iOS"
+            ReferencedContainer = "container:ZeroDarkCloudTesting.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
       <Testables>
          <TestableReference
             skipped = "NO">
@@ -37,30 +46,8 @@
                BlueprintName = "zdc_iOS_test"
                ReferencedContainer = "container:ZeroDarkCloudTesting.xcodeproj">
             </BuildableReference>
-            <SkippedTests>
-               <Test
-                  Identifier = "test_AWSSignature">
-               </Test>
-               <Test
-                  Identifier = "test_BIP39Mnemonic">
-               </Test>
-               <Test
-                  Identifier = "test_Models">
-               </Test>
-            </SkippedTests>
          </TestableReference>
       </Testables>
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "DC61C8FC2214D23400829546"
-            BuildableName = "zdc_iOS.app"
-            BlueprintName = "zdc_iOS"
-            ReferencedContainer = "container:ZeroDarkCloudTesting.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
@@ -82,8 +69,6 @@
             ReferencedContainer = "container:ZeroDarkCloudTesting.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
