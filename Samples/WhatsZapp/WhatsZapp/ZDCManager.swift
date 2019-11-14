@@ -71,35 +71,35 @@ class ZDCManager: ZeroDarkCloudDelegate {
 			}
 		}
 		
-		fetchAuditCredentials()
+//		fetchAuditCredentials()
 	}
 	
-	private func fetchAuditCredentials() {
-		
-		let zdc = self.zdc!
-		
-		var localUserID: String?
-		zdc.databaseManager?.roDatabaseConnection.asyncRead({ (transaction) in
-			
-			localUserID = zdc.localUserManager?.anyLocalUserID(transaction)
-			
-		}, completionBlock: {
-			
-			if let localUserID = localUserID {
-				self.fetchAuditCredentials(localUserID)
-			}
-		})
-	}
-	
-	private func fetchAuditCredentials(_ localUserID: String) {
-		
-		zdc.fetchAuditCredentials(localUserID) { (audit: ZDCAudit?, error: Error?) in
-			
-			if let audit = audit {
-				print("Audit:\(audit)")
-			}
-		}
-	}
+//	private func fetchAuditCredentials() {
+//
+//		let zdc = self.zdc!
+//
+//		var localUserID: String?
+//		zdc.databaseManager?.roDatabaseConnection.asyncRead({ (transaction) in
+//
+//			localUserID = zdc.localUserManager?.anyLocalUserID(transaction)
+//
+//		}, completionBlock: {
+//
+//			if let localUserID = localUserID {
+//				self.fetchAuditCredentials(localUserID)
+//			}
+//		})
+//	}
+//
+//	private func fetchAuditCredentials(_ localUserID: String) {
+//
+//		zdc.fetchAuditCredentials(localUserID) { (audit: ZDCAudit?, error: Error?) in
+//
+//			if let audit = audit {
+//				print("Audit:\(audit)")
+//			}
+//		}
+//	}
 	
 	public static var sharedInstance: ZDCManager = {
 		let zdcManager = ZDCManager()
@@ -538,6 +538,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 	
 	private func downloadNode(_ node: ZDCNode, at path: ZDCTreesystemPath) {
 		
+		let zdc = self.zdc!
 		let nodeID = node.uuid
 		
 		var isConversationNode = false
@@ -928,13 +929,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 				
 				DDLogError("Error parsing message from cloudData: \(error)")
 				
-				do {
-					try cloudTransaction.delete(msgNode)
-					
-				} catch {
-					DDLogError("Error deleting node: \(error)")
-				}
-				
+				// You may consider deleting the node here.
 				return // from block
 			}
 			
