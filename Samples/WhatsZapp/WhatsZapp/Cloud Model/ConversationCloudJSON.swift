@@ -15,7 +15,7 @@ import Foundation
 struct ConversationCloudJSON: Codable {
 	
 	enum CodingKeys: String, CodingKey {
-		case remoteUserID = "remoteUserID"
+		case remoteUserID  = "remoteUserID"
 	}
 	
 	let remoteUserID: String

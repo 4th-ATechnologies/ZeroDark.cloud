@@ -51,7 +51,7 @@
   static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
-static int const kStagingVersion = 3;
+static int const kStagingVersion = 4;
 
 #if TARGET_OS_IPHONE
 static const uint64_t multipart_minCloudFileSize = (1024 * 1024 * 10);

@@ -16,7 +16,7 @@ struct MessageCloudJSON: Codable {
 	
 	enum CodingKeys: String, CodingKey {
 		case senderID = "senderID"
-		case text = "text"
+		case text     = "text"
 	}
 	
 	let senderID: String
@@ -24,6 +24,6 @@ struct MessageCloudJSON: Codable {
 	
 	init(message: Message) {
 		self.senderID = message.senderID
-		self.text = message.text
+		self.text     = message.text
 	}
 }

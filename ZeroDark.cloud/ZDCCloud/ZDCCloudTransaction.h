@@ -93,148 +93,6 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
 @interface ZDCCloudTransaction : YapDatabaseCloudCoreTransaction
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Messaging
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * Enqueues a message to be sent to the specified recipients.
- *
- * Messages are first uploaded into the sender's outbox,
- * and then copied server-side into the recipient's inbox.
- *
- * You supply the data for the message via `[ZeroDarkCloudDelegate dataForMessage:transaction:]`.
- * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
- *
- * For more information about messaging, see the docs:
- * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
- *
- * @param recipients
- *   A list of recipients that should receive the message.
- *
- * @param outError
- *   Set to nil on success.
- *   Otherwise returns an error that explains what went wrong.
- *
- * @return Returns the message node on success, nil otherwise.
- */
-- (nullable ZDCNode *)sendMessageToRecipients:(NSArray<ZDCUser*> *)recipients
-                                        error:(NSError *_Nullable *_Nullable)outError;
-
-/**
- * Enqueues a message to be sent to the specified recipients.
- *
- * Messages are first uploaded into the sender's outbox,
- * and then copied server-side into the recipient's inbox.
- *
- * You supply the data for the message via `[ZeroDarkCloudDelegate dataForMessage:transaction:]`.
- * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
- *
- * For more information about messaging, see the docs:
- * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
- *
- * In a collaboration scenario, your message may be dependent upon permissions changes.
- * For example, if Alice wants to share a branch of her treesystem with Bob, this is typically a 2-step process.
- * First Alice must give Bob read-write permission to the branch.
- * And then Alice can send Bob an invitation to collaborate on that branch.
- * This is typically achieved by first using the method `recursiveAddShareItem:forUserID:nodeID`.
- * This method returns an array of ZDCCloudOperations. So then you'd just pass that array of operations
- * to this method as dependencies. This ensures that the treesystem permissions are
- * modified before the message is sent.
- *
- * @param recipients
- *   A list of recipients that should receive the message.
- *
- * @param dependencies
- *   If the message operation should be dependent upon other operations, you may pass those dependencies here.
- *
- * @param outError
- *   Set to nil on success.
- *   Otherwise returns an error that explains what went wrong.
- *
- * @return Returns the message node on success, nil otherwise.
- */
-- (nullable ZDCNode *)sendMessageToRecipients:(NSArray<ZDCUser*> *)recipients
-                             withDependencies:(nullable NSArray<ZDCCloudOperation*> *)dependencies
-                                        error:(NSError *_Nullable *_Nullable)outError;
-
-
-/**
- * Enqueues a signal to be sent to the specified recipient.
- *
- * A signal is a lightweight outgoing message. (They're different from normal messaages.)
- *
- * Signals are delivered into the inbox of the recipient *ONLY*.
- * There is NOT a copy of the message within the outbox of the sender.
- * In other words, signals are designed to be minimal, and don't cause additional overhead for the sender.
- *
- * You supply the data for the message via `[ZeroDarkCloudDelegate dataForMessage:transaction:]`.
- * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
- * 
- * For more information about messaging, see the docs:
- * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
- *
- * @param recipient
- *   The user to send the message to.
- *
- * @param outError
- *   Set to nil on success.
- *   Otherwise returns an error that explains what went wrong.
- *
- * @return Returns a signal node on success, nil otherwise.
- */
-- (nullable ZDCNode *)sendSignalToRecipient:(ZDCUser *)recipient
-                                      error:(NSError *_Nullable *_Nullable)outError;
-
-/**
- * Enqueues a signal to be sent to the specified recipient.
- *
- * A signal is a lightweight outgoing message. (They're different from normal messaages.)
- *
- * Signals are delivered into the inbox of the recipient *ONLY*.
- * There is NOT a copy of the message within the outbox of the sender.
- * In other words, signals are designed to be minimal, and don't cause additional overhead for the sender.
- *
- * You supply the data for the message via `[ZeroDarkCloudDelegate dataForMessage:transaction:]`.
- * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
- *
- * For more information about messaging, see the docs:
- * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
- *
- * @param recipient
- *   The user to send the message to.
- *
- * @param dependencies
- *   If the signal operation should be dependent upon other operations, you may pass those dependencies here.
- *
- * @param outError
- *   Set to nil on success.
- *   Otherwise returns an error that explains what went wrong.
- *
- * @return Returns a signal node on success, nil otherwise.
- */
-- (nullable ZDCNode *)sendSignalToRecipient:(ZDCUser *)recipient
-                           withDependencies:(nullable NSArray<ZDCCloudOperation*> *)dependencies
-                                      error:(NSError *_Nullable *_Nullable)outError;
-
-/**
- * Queues an operation to perform a server-side-copy, from the given node, to the recipient's inbox.
- *
- * The given node should be part of the localUser's treesystem.
- *
- * @param recipient
- *   The user to send the message to.
- *
- * @param outError
- *   Set to nil on success.
- *   Otherwise returns an error that explains what went wrong.
- *
- * @return Returns a signal node on success, nil otherwise.
- */
-- (nullable ZDCNode *)copyNode:(ZDCNode *)node
-              toRecipientInbox:(ZDCUser *)recipient
-                         error:(NSError *_Nullable *_Nullable)outError;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Node Utilities
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -356,6 +214,31 @@ NS_SWIFT_NAME(insertNode(_:));
 - (nullable ZDCCloudOperation *)modifyNode:(ZDCNode *)node error:(NSError *_Nullable *_Nullable)outError;
 
 /**
+ * Moves the given node to a new location, and queues an operation to push the change to the cloud.
+ *
+ * On success, this method will change the following properties of the node:
+ * - parentID
+ * - name
+ * - shareList (to match new parent)
+ *
+ * @param node
+ *   The node you want to modify.
+ *
+ * @param path
+ *   The treesystem path of the new location.
+ *
+ * @param outError
+ *   Set to nil on success.
+ *   Otherwise returns an error that explains what went wrong.
+ *
+ * @return If the request was successful, returns the modified node.
+ *         Otherwise returns nil, in which case, outError will be set.
+ */
+- (nullable ZDCNode *)moveNode:(ZDCNode *)node
+                        toPath:(ZDCTreesystemPath *)path
+                         error:(NSError *_Nullable *_Nullable)outError;
+
+/**
  * Use this method to queue a data upload operation for the given node.
  *
  * That is, you've modified the underlying data for a node.
@@ -411,6 +294,189 @@ NS_SWIFT_NAME(insertNode(_:));
 - (nullable ZDCCloudOperation *)deleteNode:(ZDCNode *)node
                                withOptions:(ZDCDeleteNodeOptions)options
                                      error:(NSError *_Nullable *_Nullable)outError;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Messaging
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Enqueues a message to be sent to the specified recipients.
+ *
+ * Messages are first uploaded into the sender's outbox,
+ * and then copied server-side into the recipient's inbox.
+ *
+ * You supply the data for the message via `[ZeroDarkCloudDelegate dataForMessage:transaction:]`.
+ * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
+ *
+ * For more information about messaging, see the docs:
+ * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
+ *
+ * @param recipients
+ *   A list of recipients that should receive the message.
+ *
+ * @param outError
+ *   Set to nil on success.
+ *   Otherwise returns an error that explains what went wrong.
+ *
+ * @return Returns the message node on success, nil otherwise.
+ */
+- (nullable ZDCNode *)sendMessageToRecipients:(NSArray<ZDCUser*> *)recipients
+                                        error:(NSError *_Nullable *_Nullable)outError;
+
+/**
+ * Enqueues a message to be sent to the specified recipients.
+ *
+ * Messages are first uploaded into the sender's outbox,
+ * and then copied server-side into the recipient's inbox.
+ *
+ * You supply the data for the message via `[ZeroDarkCloudDelegate dataForMessage:transaction:]`.
+ * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
+ *
+ * For more information about messaging, see the docs:
+ * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
+ *
+ * In a collaboration scenario, your message may be dependent upon permissions changes.
+ * For example, if Alice wants to share a branch of her treesystem with Bob, this is typically a 2-step process.
+ * First Alice must give Bob read-write permission to the branch.
+ * And then Alice can send Bob an invitation to collaborate on that branch.
+ * This is typically achieved by first using the method `recursiveAddShareItem:forUserID:nodeID`.
+ * This method returns an array of ZDCCloudOperations. So then you'd just pass that array of operations
+ * to this method as dependencies. This ensures that the treesystem permissions are
+ * modified before the message is sent.
+ *
+ * @param recipients
+ *   A list of recipients that should receive the message.
+ *
+ * @param dependencies
+ *   If the message operation should be dependent upon other operations, you may pass those dependencies here.
+ *
+ * @param outError
+ *   Set to nil on success.
+ *   Otherwise returns an error that explains what went wrong.
+ *
+ * @return Returns the message node on success, nil otherwise.
+ */
+- (nullable ZDCNode *)sendMessageToRecipients:(NSArray<ZDCUser*> *)recipients
+                             withDependencies:(nullable NSArray<ZDCCloudOperation*> *)dependencies
+                                        error:(NSError *_Nullable *_Nullable)outError;
+
+
+/**
+ * Enqueues a signal to be sent to the specified recipient.
+ *
+ * A signal is a lightweight outgoing message. (They're different from normal messaages.)
+ *
+ * Signals are delivered into the inbox of the recipient *ONLY*.
+ * There is NOT a copy of the message within the outbox of the sender.
+ * In other words, signals are designed to be minimal, and don't cause additional overhead for the sender.
+ *
+ * You supply the data for the message via `[ZeroDarkCloudDelegate dataForMessage:transaction:]`.
+ * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
+ *
+ * For more information about messaging, see the docs:
+ * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
+ *
+ * @param recipient
+ *   The user to send the message to.
+ *
+ * @param outError
+ *   Set to nil on success.
+ *   Otherwise returns an error that explains what went wrong.
+ *
+ * @return Returns a signal node on success, nil otherwise.
+ */
+- (nullable ZDCNode *)sendSignalToRecipient:(ZDCUser *)recipient
+                                      error:(NSError *_Nullable *_Nullable)outError;
+
+/**
+ * Enqueues a signal to be sent to the specified recipient.
+ *
+ * A signal is a lightweight outgoing message. (They're different from normal messaages.)
+ *
+ * Signals are delivered into the inbox of the recipient *ONLY*.
+ * There is NOT a copy of the message within the outbox of the sender.
+ * In other words, signals are designed to be minimal, and don't cause additional overhead for the sender.
+ *
+ * You supply the data for the message via `[ZeroDarkCloudDelegate dataForMessage:transaction:]`.
+ * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
+ *
+ * For more information about messaging, see the docs:
+ * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
+ *
+ * @param recipient
+ *   The user to send the message to.
+ *
+ * @param dependencies
+ *   If the signal operation should be dependent upon other operations, you may pass those dependencies here.
+ *
+ * @param outError
+ *   Set to nil on success.
+ *   Otherwise returns an error that explains what went wrong.
+ *
+ * @return Returns a signal node on success, nil otherwise.
+ */
+- (nullable ZDCNode *)sendSignalToRecipient:(ZDCUser *)recipient
+                           withDependencies:(nullable NSArray<ZDCCloudOperation*> *)dependencies
+                                      error:(NSError *_Nullable *_Nullable)outError;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Copying
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Queues an operation to perform a server-side-copy, from the given node, to the recipient's inbox.
+ *
+ * The given node must be part of the localUser's treesystem.
+ *
+ * On success, a temporary node is returned.
+ * The temporary node isn't part of the treesystem, but it is stored in the database.
+ * This node will be automatically deleted after the operation has been completed.
+ *
+ * @param node
+ *   The node to copy.
+ *
+ * @param recipient
+ *   The user to send the message to.
+ *
+ * @param outError
+ *   Set to nil on success.
+ *   Otherwise returns an error that explains what went wrong.
+ *
+ * @return Returns a temporary node on success, nil otherwise.
+ */
+- (nullable ZDCNode *)copyNode:(ZDCNode *)node
+              toRecipientInbox:(ZDCUser *)recipient
+                         error:(NSError *_Nullable *_Nullable)outError;
+
+/**
+ * Queues an operation to perform a server-side-copy, from the given node, to the recipient's treesystem.
+ *
+ * The given node must be part of the localUser's treesystem.
+ *
+ * On success, a temporary node is returned.
+ * The temporary node isn't part of the treesystem, but it is stored in the database.
+ * This node will be automatically deleted after the operation has been completed.
+ *
+ * @param node
+ *   The node to copy.
+ *
+ * @param recipient
+ *   The user to send the message to.
+ *
+ * @param remoteCloudPath
+ *   The destination location to copy the node to.
+ *   Typically this information is derived from a dropbox invite.
+ *
+ * @param outError
+ *   Set to nil on success.
+ *   Otherwise returns an error that explains what went wrong.
+ *
+ * @return Returns a temporary node on success, nil otherwise.
+ */
+- (nullable ZDCNode *)copyNode:(ZDCNode *)node
+                   toRecipient:(ZDCUser *)recipient
+               remoteCloudPath:(ZDCCloudPath *)remoteCloudPath
+                         error:(NSError *_Nullable *_Nullable)outError;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Dropbox

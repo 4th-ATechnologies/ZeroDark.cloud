@@ -1607,10 +1607,10 @@
 	#endif
 		
 		NSString *stage = userInfo.stage;
-	//	if (!stage)
-	//	{
+		if (!stage)
+		{
 			stage = DEFAULT_AWS_STAGE;
-	//	}
+		}
 
 		// Generate request
 

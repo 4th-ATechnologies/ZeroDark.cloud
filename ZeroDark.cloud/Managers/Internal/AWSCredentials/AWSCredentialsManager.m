@@ -52,7 +52,7 @@
 	{
 		if (completionBlock)
 		{
-			NSError *error = [self missingInvalidUserError];
+			NSError *error = [self missingInvalidUserError:@"Invalid parameter: userID == nil"];
 			dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
 				
 				completionBlock(nil, error);
@@ -147,10 +147,17 @@
 		__strong typeof(self) strongSelf = weakSelf;
 		if (!strongSelf) return;
 		
+		// Sanity check: localUser is configured
+		if (!localUser || ![localUser hasCompletedActivation])
+		{
+			Fail([strongSelf missingInvalidUserError:@"The localUser has completed activation."]);
+			return;
+		}
+		
 		// Sanity check: localUserAuth is non-nil
 		if (!auth || ![auth isKindOfClass:[ZDCLocalUserAuth class]])
 		{
-			Fail([strongSelf missingInvalidUserError]);
+			Fail([strongSelf missingInvalidUserError:@"No matching ZDCLocalUserAuth for userID."]);
 			return;
 		}
 
@@ -402,7 +409,7 @@
 			if (auth)
 				completionBlock(auth, nil);
 			else
-				completionBlock(nil, [weakSelf missingInvalidUserError]);
+				completionBlock(nil, [weakSelf missingInvalidUserError:@"No matching ZDCLocalUserAuth for userID."]);
 		}];
 		
 	}];
@@ -478,7 +485,7 @@
 			if (auth)
 				completionBlock(auth, nil);
 			else
-				completionBlock(nil, [weakSelf missingInvalidUserError]);
+				completionBlock(nil, [weakSelf missingInvalidUserError:@"No matching ZDCLocalUserAuth for userID."]);
 		}];
 	}];
 }
@@ -762,9 +769,8 @@
 #pragma mark Errors
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (NSError *)missingInvalidUserError
+- (NSError *)missingInvalidUserError:(NSString *)description
 {
-	NSString *description = @"No matching ZDCLocalUserAuth for userID.";
 	return [NSError errorWithClass: [self class]
 	                          code: AWSCredentialsErrorCode_MissingInvalidUser
 	                   description: description];

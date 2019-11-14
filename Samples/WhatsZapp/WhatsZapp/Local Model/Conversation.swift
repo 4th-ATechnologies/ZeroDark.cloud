@@ -88,22 +88,24 @@ class Conversation: NSCopying, Codable {
 	}
 	
 	convenience init(remoteUserID: String) {
-		let _lastActivity = Date()
-		self.init(remoteUserID: remoteUserID, lastActivity: _lastActivity)
+		self.init(remoteUserID: remoteUserID, lastActivity: Date())
 	}
 	
 	// MARK: NSCopying
 	
 	func copy(with zone: NSZone? = nil) -> Any {
 
-		let copy = Conversation(remoteUserID: remoteUserID, lastActivity: lastActivity)
+		let copy = Conversation(remoteUserID: remoteUserID,
+		                        lastActivity: lastActivity)
 		return copy
 	}
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: -
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// We're adding a few simple extensions to YapDatabse.
+// Mostly because we're lazy, and don't want to keep typing `kCollection_Conversations`.
+// But it also makes the code a little easier to read.
 
 extension YapDatabaseReadTransaction {
 	
@@ -126,5 +128,10 @@ extension ZDCCloudTransaction {
 	func linkNodeID(_ nodeID: String, toConversationID conversationID: String) throws {
 		
 		try self.linkNodeID(nodeID, toKey: conversationID, inCollection: kCollection_Conversations)
+	}
+	
+	func linkedNode(forConversationID conversationID: String) -> ZDCNode? {
+		
+		return self.linkedNode(forKey: conversationID, inCollection: kCollection_Conversations)
 	}
 }

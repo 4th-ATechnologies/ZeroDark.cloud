@@ -679,12 +679,12 @@ static NSString *const k_dict    = @"dict";
 		}
 		case ZDCTreesystemTrunk_Prefs:
 		{
-			{ // "UID:{localUserID}" : "rwL"
+			{ // "UID:{localUserID}" : "rws"
 				
 				ZDCShareItem *shareItem = [[ZDCShareItem alloc] init];
 				[shareItem addPermission:ZDCSharePermission_Read];
 				[shareItem addPermission:ZDCSharePermission_Write];
-				[shareItem addPermission:ZDCSharePermission_LeafsOnly];
+				[shareItem addPermission:ZDCSharePermission_Share];
 				
 				[shareList addShareItem:shareItem forUserID:localUserID];
 			}
@@ -692,20 +692,18 @@ static NSString *const k_dict    = @"dict";
 		}
 		case ZDCTreesystemTrunk_Inbox:
 		{
-			{ // "UID:{localUserID}" : "rwsL"
+			{ // "UID:{localUserID}" : "rws"
 				
 				ZDCShareItem *shareItem = [[ZDCShareItem alloc] init];
 				[shareItem addPermission:ZDCSharePermission_Read];
 				[shareItem addPermission:ZDCSharePermission_Write];
 				[shareItem addPermission:ZDCSharePermission_Share];
-				[shareItem addPermission:ZDCSharePermission_LeafsOnly];
 				
 				[shareList addShareItem:shareItem forUserID:localUserID];
 			}
-			{ // "UID:*" : "LWB"
+			{ // "UID:*" : "WB"
 				
 				ZDCShareItem *shareItem = [[ZDCShareItem alloc] init];
-				[shareItem addPermission:ZDCSharePermission_LeafsOnly];
 				[shareItem addPermission:ZDCSharePermission_WriteOnce];
 				[shareItem addPermission:ZDCSharePermission_BurnIfSender];
 				
@@ -715,13 +713,12 @@ static NSString *const k_dict    = @"dict";
 		}
 		case ZDCTreesystemTrunk_Outbox:
 		{
-			{ // "UID:{localUserID}" : "rwsL"
+			{ // "UID:{localUserID}" : "rws"
 				
 				ZDCShareItem *shareItem = [[ZDCShareItem alloc] init];
 				[shareItem addPermission:ZDCSharePermission_Read];
 				[shareItem addPermission:ZDCSharePermission_Write];
 				[shareItem addPermission:ZDCSharePermission_Share];
-				[shareItem addPermission:ZDCSharePermission_LeafsOnly];
 				
 				[shareList addShareItem:shareItem forUserID:localUserID];
 			}

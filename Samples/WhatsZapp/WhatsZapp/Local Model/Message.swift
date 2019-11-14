@@ -16,15 +16,15 @@ import ZeroDarkCloud
 ///
 let kCollection_Messages = "messages"
 
-class Message: NSCopying, Codable {
+class Message: Codable, NSCopying {
 	
 	enum CodingKeys: String, CodingKey {
-		case uuid = "uuid"
+		case uuid           = "uuid"
 		case conversationID = "conversationID"
-		case senderID = "senderID"
-		case text = "text"
-		case date = "date"
-		case isRead = "isRead"
+		case senderID       = "senderID"
+		case text           = "text"
+		case date           = "date"
+		case isRead         = "isRead"
 	}
 	
 	/// We store `Message` objects in the database.
@@ -62,30 +62,26 @@ class Message: NSCopying, Codable {
 	
 	/// When the message was sent or received.
 	///
-	var date: Date
+	var date: Date = Date()
 	
 	/// Whether or not the message has been read yet.
 	///
-	var isRead: Bool
+	var isRead: Bool = true
 	
 	
-	init(uuid: String, conversationID: String, senderID: String, text: String, date: Date, isRead: Bool) {
+	init(uuid: String, conversationID: String, senderID: String, text: String) {
 		self.uuid = uuid
 		self.conversationID = conversationID
 		self.senderID = senderID
 		self.text = text
-		self.date = date
-		self.isRead = isRead
 	}
 	
-	convenience init(conversationID: String, senderID: String, text: String, date: Date, isRead: Bool) {
+	convenience init(conversationID: String, senderID: String, text: String) {
 		
 		self.init( uuid: UUID().uuidString,
 		 conversationID: conversationID,
 		       senderID: senderID,
-		           text: text,
-		           date: date,
-		         isRead: isRead)
+		           text: text)
 	}
 	
 	// MARK: NSCopying
@@ -95,16 +91,20 @@ class Message: NSCopying, Codable {
 		let copy = Message(uuid: uuid,
 		         conversationID: conversationID,
 		               senderID: senderID,
-		                   text: text,
-		                   date: date,
-		                 isRead: isRead)
+		                   text: text)
+		
+		copy.date   = self.date
+		copy.isRead = self.isRead
+		
 		return copy
 	}
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: -
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// We're adding a few simple extensions to YapDatabse.
+// Mostly because we're lazy, and don't want to keep typing `kCollection_Messages`.
+// But it also makes the code a little easier to read.
 
 extension YapDatabaseReadTransaction {
 	
@@ -127,5 +127,10 @@ extension ZDCCloudTransaction {
 	func linkNodeID(_ nodeID: String, toMessageID messageID: String) throws {
 		
 		try self.linkNodeID(nodeID, toKey: messageID, inCollection: kCollection_Messages)
+	}
+	
+	func linkedNode(forMessage messageID: String) -> ZDCNode? {
+		
+		return self.linkedNode(forKey: messageID, inCollection: kCollection_Messages)
 	}
 }

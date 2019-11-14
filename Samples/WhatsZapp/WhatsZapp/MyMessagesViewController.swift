@@ -232,6 +232,45 @@ class MyMessagesViewController: MessagesViewController,
 		return message
 	}
 	
+	private func markMessageAsRead(_ messageID: String) {
+		
+		let zdc = ZDCManager.zdc()
+		let localUserID = self.localUserID
+		
+		let rwConnection = zdc.databaseManager?.rwDatabaseConnection
+		rwConnection?.asyncReadWrite {(transaction) in
+			
+			guard
+				var message = transaction.message(id: messageID),
+				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
+				let msgNode = cloudTransaction.linkedNode(forMessage: messageID)
+			else {
+				return
+			}
+			
+			if message.isRead == false {
+				// Nothing to do here
+				return
+			}
+			
+			let dstName = UUID().uuidString // don't care - doesn't matter to us
+			let dstPath = ZDCTreesystemPath(pathComponents: [message.conversationID, dstName])
+			
+			do {
+				try cloudTransaction.move(msgNode, to: dstPath)
+				
+			} catch {
+				DDLogError("Error moving node: \(error)")
+				return
+			}
+			
+			message = message.copy() as! Message
+			message.isRead = true
+			
+			transaction.setMessage(message)
+		}
+	}
+	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: Notifications
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -402,6 +441,10 @@ class MyMessagesViewController: MessagesViewController,
 			displayName = remoteUser?.displayName ?? ""
 		}
 		
+		if message.isRead == false {
+			self.markMessageAsRead(message.uuid)
+		}
+		
 		return MsgKitMessage(messageId: message.uuid,
 		                      sentDate: message.date,
 		                          kind: .text(message.text),
@@ -476,27 +519,24 @@ class MyMessagesViewController: MessagesViewController,
 			return
 		}
 		
-		guard
-			let conversation = self.conversation(),
-			let remoteUser = self.remoteUser(id: conversation.remoteUserID)
-		else {
-			return
-		}
+		let zdc = ZDCManager.zdc()
+		let localUserID = self.localUserID
+		let conversationID = self.conversationID
 		
 		let message = Message(conversationID: conversationID,
 		                            senderID: localUserID,
-		                                text: text,
-		                                date: Date(),
-		                              isRead: true) // outgoing message
+	 	                                text: text)
 		
-		let conversationID = self.conversationID
-		let localUserID = self.localUserID
-		let zdc = ZDCManager.zdc()
+		message.isRead = true // outgoing message
 		
-		let rwConnection = ZDCManager.zdc().databaseManager?.rwDatabaseConnection
-		rwConnection?.asyncReadWrite({ (transaction) in
+		let rwConnection = zdc.databaseManager?.rwDatabaseConnection
+		rwConnection?.asyncReadWrite {(transaction) in
 			
-			guard let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID) else {
+			guard
+				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
+				let conversation = transaction.conversation(id: conversationID),
+				let remoteUser = transaction.user(id: conversation.remoteUserID)
+			else {
 				return
 			}
 			
@@ -508,7 +548,7 @@ class MyMessagesViewController: MessagesViewController,
 			
 			// Step 2 of 3:
 			//
-			// Store the message in the treesystem, using path:
+			// Create node in the treesystem, using path:
 			//
 			// home://conversationID/messageID
 			
@@ -522,21 +562,27 @@ class MyMessagesViewController: MessagesViewController,
 				
 			} catch {
 				print("Error creating message node: \(error)")
+				
+				// Note: You could also choose to rollback the transaction here:
+				// transaction.rollback()
 				return
 			}
 			
 			// Step 3 of 3:
 			//
-			// After we've uploaded the node to our treesystem,
-			// use a server-side-copy operation to put the message into the recipients treesystem.
-			
+			// After we've uploaded the message to our treesystem,
+			// use a server-side-copy operation to put the message into the recipients inbox.
+		
 			do {
-				
 				try cloudTransaction.copy(node, toRecipientInbox: remoteUser)
+				
 			} catch {
 				print("Error creating server-side-copy operation: \(error)")
+				
+				// Note: You could also choose to rollback the transaction here:
+				// transaction.rollback()
 			}
-		})
+		}
 		
 		inputBar.inputTextView.text = ""
 	}

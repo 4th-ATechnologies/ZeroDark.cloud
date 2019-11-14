@@ -147,6 +147,10 @@ class ZDCManager: ZeroDarkCloudDelegate {
 		// How you decide to go about this in your own application doesn't matter.
 		// Just use whatever technique you find to be the easiest for you.
 		//
+		// You can find more information about this topic here:
+		// https://zerodarkcloud.readthedocs.io/en/latest/client/mappingTutorial/
+		//
+		//
 		// In this particular app, we have a one-to-one mapping.
 		// So we've opted to use the "linking" option in ZDCCloudTransaction.
 		
@@ -445,7 +449,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 		//     |        |
 		//  (msg1)    (msg2)
 		//
-		// And a device will mark 'msg4' as read by moving it to the convesation:
+		// And a device will mark 'msg3' as read by moving it to the convesation:
 		//
 		//       (home)           (inbox)
 		//        /   \
@@ -538,7 +542,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 		
 		var isConversationNode = false
 		var isMessageNode      = false
-		var isInboxMessage    = false
+		var isInboxMessage     = false
 		
 		// What kind of node is this ?
 		//
@@ -639,7 +643,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 						self.processDownloadedConversation(cleartext, forNodeID: nodeID, with: cloudDataInfo)
 					}
 					else {
-						self.processDownloadedMessage(cleartext, forNodeID: nodeID, isInbox: isInboxMessage, with: cloudDataInfo)
+						self.processDownloadedMessage(cleartext, forNodeID: nodeID, with: cloudDataInfo)
 					}
 					
 				} catch {
@@ -766,7 +770,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 				}
 			}
 			
-			zdc.nodeManager.iterateNodeIDs(withParentID: inboxNode.uuid,
+			zdc.nodeManager.iterateNodeIDs(withParentID: inboxNode.uuid, // <- Enumerating inbox
 			                                transaction: transaction)
 			{(nodeID: String, stop: inout Bool) in
 				
@@ -805,7 +809,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 				return
 			}
 			
-			zdc.nodeManager.iterateNodeIDs(withParentID: convoNode.uuid, // <- Enumerating home
+			zdc.nodeManager.iterateNodeIDs(withParentID: convoNode.uuid, // <- Enumerating conversation
 			                                transaction: transaction)
 			{(nodeID: String, stop: inout Bool) in
 				
@@ -825,6 +829,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 	///
 	private func processDownloadedConversation(_ cloudData: Data, forNodeID convoNodeID: String, with cloudDataInfo: ZDCCloudDataInfo) {
 		
+		let zdc = self.zdc!
 		var newConvo: Conversation? = nil
 		
 		let rwConnection = zdc.databaseManager?.rwDatabaseConnection
@@ -832,7 +837,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 			
 			guard
 				let convoNode = transaction.node(id: convoNodeID),
-				let cloudTransaction = self.zdc.cloudTransaction(transaction, forLocalUserID: convoNode.localUserID)
+				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: convoNode.localUserID)
 			else {
 				return
 			}
@@ -852,12 +857,12 @@ class ZDCManager: ZeroDarkCloudDelegate {
 				return // from block
 			}
 			
-			if let _ = cloudTransaction.linkedObject(forNodeID: convoNodeID) as? Conversation {
+			if var _ = cloudTransaction.linkedObject(forNodeID: convoNodeID) as? Conversation {
 				
 				// Conversation already exists.
 				//
-				// There's nothing for us to do here in this sample app.
-				// In your own app, you might take this opportunity to update the local object.
+				// Update it, if needed.
+				// We don't need to do anything here for this sample app.
 			}
 			else {
 				
@@ -867,7 +872,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 
 				transaction.setConversation(newConvo!)
 
-				// Link the Conversation to the Node
+				// Link the new Conversation to the ZDCNode
 				//
 				do {
 					try cloudTransaction.linkNodeID(convoNodeID, toConversationID: newConvo!.uuid)
@@ -887,21 +892,30 @@ class ZDCManager: ZeroDarkCloudDelegate {
 	
 	/// Invoked after a MessageCloudJSON node has been downloaded from the cloud.
 	///
-	private func processDownloadedMessage(_ cloudData: Data, forNodeID msgNodeID: String, isInbox: Bool, with cloudDataInfo: ZDCCloudDataInfo) {
+	private func processDownloadedMessage(_ cloudData: Data, forNodeID msgNodeID: String, with cloudDataInfo: ZDCCloudDataInfo) {
+		
+		let zdc = self.zdc!
 		
 		let rwConnection = zdc.databaseManager?.rwDatabaseConnection
 		rwConnection?.asyncReadWrite { (transaction) in
 			
 			guard
 				let msgNode = transaction.node(id: msgNodeID),
-				let cloudTransaction = self.zdc.cloudTransaction(transaction, forLocalUserID: msgNode.localUserID),
-				let convoNodeID = msgNode.parentID,
-				let convo = cloudTransaction.linkedObject(forNodeID: convoNodeID) as? Conversation
+				let msgPath = zdc.nodeManager.path(for: msgNode, transaction: transaction),
+				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: msgNode.localUserID)
 			else {
 				return
 			}
 			
+			// Step 1 of 4:
+			//
+			// Now that we've downloaded the node, we can unmark it as "needs download"
+			
 			cloudTransaction.unmarkNodeAsNeedsDownload(msgNodeID, components: .all, ifETagMatches: cloudDataInfo.eTag)
+			
+			// Step 2 of 4:
+			//
+			// Parse the downloaded message.
 			
 			var cloudJSON: MessageCloudJSON!
 			do {
@@ -913,15 +927,79 @@ class ZDCManager: ZeroDarkCloudDelegate {
 			} catch {
 				
 				DDLogError("Error parsing message from cloudData: \(error)")
+				
+				do {
+					try cloudTransaction.delete(msgNode)
+					
+				} catch {
+					DDLogError("Error deleting node: \(error)")
+				}
+				
 				return // from block
 			}
+			
+			// Step 3 of 5:
+			//
+			// Inspect the parsed data, and ensure it's valid.
+			
+			// Who sent this message ?
+			//
+			// When a node is created in our bucket,
+			// and the node creator is not the bucket owner,
+			// then the server adds a `senderID` property to the RCRD file.
+			// This information can be fetched via ZDCNode.senderID.
+			//
+			// So if msgNode.senderID is non-nil, then this is sender of the node.
+			//
+			let senderID = msgNode.senderID ?? cloudJSON.senderID
+			
+			if msgPath.trunk == .inbox {
+				
+				// For messages in our inbox:
+				//
+				// Is the sender trying to be dishonest ?
+				//
+				// - msgNode.senderID => as recorded by the server
+				// - cloudJSON.senderID => as written by the sender
+				//
+				// If we detect the sender lied to us, we're just going to delete the message.
+				// By design, we're not going to display it to the user.
+				//
+				if let serverReportedUserID = msgNode.senderID,
+					serverReportedUserID != cloudJSON.senderID {
+					
+					do {
+						try cloudTransaction.delete(msgNode)
+						
+					} catch {
+						DDLogError("Error deleting node: \(error)")
+					}
+					return
+				}
+			}
+			
+			// Step 4 of 5:
+			//
+			// If this is a NEW conversation, we may need to create the conversation (object + node).
+			
+			let remoteUserID = (msgPath.trunk == .inbox) ? senderID : msgPath.pathComponents[0]
+			
+			let conversation =
+			  self.fetchOrCreateConversation(remoteUserID: remoteUserID,
+			                                cloudDataInfo: cloudDataInfo,
+			                                  transaction: transaction,
+			                             cloudTransaction: cloudTransaction)
+			
+			// Step 5 of 5:
+			//
+			// Create the message object, and store it in the database.
 			
 			if var existingMsg = cloudTransaction.linkedObject(forNodeID: msgNodeID) as? Message {
 				
 				// A message was updated ???
 				//
 				// We don't actually do this within this sample app.
-				// But here's what you might do in your own app.
+				// But you might add such functionality to your app.
 				
 				existingMsg = existingMsg.copy() as! Message
 				
@@ -934,32 +1012,93 @@ class ZDCManager: ZeroDarkCloudDelegate {
 				
 				// Create a new Message object, and store it in the database.
 				
-				let senderID: String!
-				if isInbox {
-					senderID = msgNode.senderID ?? msgNode.localUserID
+				let newMsg = Message(conversationID: conversation.uuid,
+				                           senderID: senderID,
+				                               text: cloudJSON.text)
+				
+				newMsg.date = cloudDataInfo.lastModified
+				
+				// Has the message been marked as read yet ?
+				//
+				//        (our treesystem)
+				//         /            \
+				//     (convoA)        (inbox)
+				//      /    \           |
+				//  (msg1) (msg2)      (msg3)
+				//
+				//
+				// Read   : msg1 & msg2
+				// Unread : msg3
+				//
+				
+				if msgPath.trunk == .inbox {
+					newMsg.isRead = false
 				} else {
-					senderID = cloudJSON.senderID
+					newMsg.isRead = true
 				}
-				
-				let isRead = isInbox ? false : true
-				
-				let msg = Message(conversationID: convo.uuid,
-				                        senderID: senderID,
-				                            text: cloudJSON.text,
-				                            date: cloudDataInfo.lastModified,
-				                          isRead: isRead)
 
-				transaction.setMessage(msg)
-
+				transaction.setMessage(newMsg)
+				
 				// Link the message to the Node
 				//
 				do {
-					try cloudTransaction.linkNodeID(msgNodeID, toMessageID: msg.uuid)
+					try cloudTransaction.linkNodeID(msgNodeID, toMessageID: newMsg.uuid)
 
 				} catch {
 					DDLogError("Error linking node to message: \(error)")
 				}
 			}
 		}
+	}
+	
+	private func fetchOrCreateConversation(remoteUserID: String,
+	                                      cloudDataInfo: ZDCCloudDataInfo,
+	                                        transaction: YapDatabaseReadWriteTransaction,
+	                                   cloudTransaction: ZDCCloudTransaction) -> Conversation
+	{
+		if let existingConversation = transaction.conversation(id: remoteUserID) {
+			
+			return existingConversation
+		}
+		
+		// Step 1 of 2:
+		//
+		// Create the conversation object, and write it to the database
+		
+		let newConversation =
+		  Conversation(remoteUserID: remoteUserID,
+		               lastActivity: cloudDataInfo.lastModified)
+		
+		transaction.setConversation(newConversation)
+		
+		// Step 2 of 2:
+		//
+		// Create the corresponding node in the ZDC treesystem.
+		// This will trigger ZDC to upload the node to the cloud.
+		
+		// First we specify where we want to store the node in the cloud.
+		// In this case, we want to use:
+		//
+		// home://{senderID}
+		//
+		let path = ZDCTreesystemPath(pathComponents: [newConversation.uuid])
+		
+		do {
+			// Then we tell ZDC to create a node at that path.
+			// This will only fail if there's already a node at that path.
+			//
+			let node = try cloudTransaction.createNode(withPath: path)
+	
+			// And we create a link between the zdc node and our conversation.
+			// This isn't something that's required by ZDC.
+			// It's just something we do because it's useful for us, within the context of this application.
+			//
+			try cloudTransaction.linkNodeID(node.uuid, toConversationID: newConversation.uuid)
+	
+		} catch {
+			print("Error creating node: \(error)")
+		}
+		
+		return newConversation
 	}
 }

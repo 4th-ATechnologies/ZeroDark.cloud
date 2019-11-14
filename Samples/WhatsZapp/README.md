@@ -24,7 +24,7 @@ Within the code, nearly all ZeroDarkCloud integration is done within the ZDCMana
 
 ## Overview
 
-This is a sample app, written for the express purpose of teaching. You can think of it as a chapter 1 exercise from a text book. It's not meant to demonstrate every possible feature that's possible.
+This is a sample app, written for the express purpose of teaching. You can think of it as a chapter-1 exercise from a text book. It's not meant to demonstrate every possible feature — just the basics.
 
 
 
@@ -81,13 +81,15 @@ More details about the treesystem can be found in the [docs](https://zerodarkclo
 In order to store data in the ZeroDark cloud, all we have to do is come up with a treesystem design for our data. Every user gets their own treesystem, which comes with a "home" container, and some other special containers. Here's what it looks like:
 
 ```
-       (Alice's Treesystem)
+       (alice's treesystem)
        /     /    \      \ 
       /     /      \      \
  (home) (prefs) (outbox) (inbox) 
 ```
 
-The WhatsZapp treesystem only uses the 'home' & 'inbox' containers, and is structured like this:
+(*These built-in containers are called "trunks".*)
+
+The WhatsZapp treesystem only uses the 'home' & 'inbox' trunk, and is structured like this:
 
 ```
                 (Alice's Treesystem)
@@ -131,7 +133,7 @@ When she uploads the message node, she instructs the server to copy the node int
   (msg1)---------------
 ```
 
-Bob receives the message from Alice, and then moves it into a new conversation node for her:
+Bob receives the message from Alice. The message then sits in his inbox until he reads it on one of this devices. Once the message has been read, he moves it into a conversation:
 
 ```
  (alice's treesystem)           (bob's treesystem)
@@ -143,63 +145,33 @@ Bob receives the message from Alice, and then moves it into a new conversation n
   (msg1)                       (msg1)
 ```
 
-Now `msg1` contains a reference to Alice's `convoBob` node. So when Bob replies to Alice, he can have the message delivered directly into the proper location:
+If Bob responds to Alice, the reverse flow occurs:
 
 ```
  (alice's treesystem)           (bob's treesystem)
        /    \                      /            \
   (home)    (inbox)            (home)        (inbox)
-    |                             |
-(convoBob)                  (convoAlice)
-   /  \       server-side-copy   / \
-(msg1)(msg2) <---------------(msg2)(msg1)
+    |          |                   |
+(convoBob)  (msg2)<----      (convoAlice)
+    |                 |          / \
+  (msg1)              |------(msg2)(msg1)
 ```
 
-This time, `msg2` contains a reference to Bob's `convoAlice` node. So at this point, both parties can continue sending messages back-and-forth without utilizing the `inbox` container.
-
-
+&nbsp;
 
 ## Designing for the cloud
 
-When you design your treesystem, what you're doing is optimizing for the cloud. For example, imagine we didn't bother with conversation nodes. Every single message that Alice receives, whether it's from Bob, Carol or whoever, just sits in her inbox. But now fast-forward 12 months. Alice has 100,000 messages sitting in her inbox. And she just bought a new phone. Then she logs into your app on this brand new phone...
+When you design your treesystem, what you're doing is optimizing for the cloud. For example, imagine we didn't bother with conversation nodes. Every single message that Alice receives (whether from Bob, Carol or whoever), just sits in her inbox. But now fast-forward 12 months. Alice has 100,000 messages sitting in her inbox. And she just bought a new phone. Then she logs into your app on this brand new phone...
 
 Leaving all messages in the inbox container means the app has to download all 100,000 messages. Without doing so, we can't be sure who Alice has conversations with. Now contrast that the design above.
 
 It's easy for our app to quickly see who Alice has conversations with. All we have to do is download the conversation nodes. (And any pending messages in her inbox.)
 
-Further, we can optimize our app. Alice might have 250,000 messages with her spouse. But there's no need to download them all. We can download only the most recent messages within each conversation.
+Further, we can optimize our app. Alice might have 250,000 messages with her spouse. But there's no need to download them all. We can download only the most recent messages within each conversation. (And download older conversations on demand, if she scrolls back that far.)
 
 
 
 When you design the treesystem for your app, think about long-time users of your app. Imagine them upgrading their phone, and then logging into your app on their new phone. How can you exploit the treesystem to minimize the amount of information you must download? How can you make your app quickly restore its previous state?
-
-
-
-## Permissions
-
-The treesystem supports a diverse set of permissions:
-
-- read
-- write
-- share
-- leafs-only
-- users-only
-- write-once
-- burn
-
-
-
-These are documented in more detail [here](https://zerodarkcloud.readthedocs.io/en/latest/client/tree/).
-
-
-
-So how does Alice give Bob permission to write into `convoBob`? She gives Bob **write-once** permission:
-
-> Users with the write-once permission are allowed to create child nodes. However, the nodes are considered "write once", in that the user can create them, but doesn't have permission to modify them afterwards.
-
-So Bob can write/copy messages into Alice's `convoBob` node, but he can't modify or delete those messages later. (If we wanted to allow Bob to delete those messages later, we'd give him **burn** permission.)
-
-Further, Bob cannot see the messages in Alice's treesystem. That is, he can't get a list of the messages in the `convoBob` node.
 
 
 
