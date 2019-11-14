@@ -248,7 +248,7 @@ class MyMessagesViewController: MessagesViewController,
 				return
 			}
 			
-			if message.isRead == false {
+			if message.isRead {
 				// Nothing to do here
 				return
 			}
