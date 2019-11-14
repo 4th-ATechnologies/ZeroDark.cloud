@@ -1376,7 +1376,7 @@
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
-- (nullable ZDCNode *)copyNode:(ZDCNode *)node
+- (nullable ZDCNode *)copyNode:(ZDCNode *)srcNode
                    toRecipient:(ZDCUser *)recipient
                remoteCloudPath:(ZDCCloudPath *)remoteCloudPath
                          error:(NSError *_Nullable *_Nullable)outError
@@ -1395,7 +1395,7 @@
 	
 	// Sanity checks
 	
-	if (node == nil)
+	if (srcNode == nil)
 	{
 		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
 		NSString *desc = @"Invalid parameter: the given node is nil";
@@ -1427,7 +1427,7 @@
 	
 	NSString *localUserID = [self localUserID];
 	
-	if (![node.localUserID isEqualToString:localUserID])
+	if (![srcNode.localUserID isEqualToString:localUserID])
 	{
 		// You're adding the operation to the wrong ZDCCloud extension.
 		// ZDCNode.localUserID MUST match ZDCCloud.localUserID.
@@ -1441,7 +1441,8 @@
 	}
 	
 	ZDCCloudLocator *srcCloudLocator =
-	  [[ZDCCloudPathManager sharedInstance] cloudLocatorForNode:node transaction:databaseTransaction];
+	  [[ZDCCloudPathManager sharedInstance] cloudLocatorForNode: srcNode
+	                                                transaction: databaseTransaction];
 	
 	if (srcCloudLocator == nil)
 	{
@@ -1456,21 +1457,34 @@
 		return nil;
 	}
 	
-	// Create signal node
+	// Create dstNode (this is a temporary node, that gets deleted after the operation finishes)
 	
-	ZDCNode *signal = [[ZDCNode alloc] initWithLocalUserID:localUserID];
-	signal.parentID = [self signalParentID];
+	ZDCNode *dstNode = [[ZDCNode alloc] initWithLocalUserID:localUserID];
+	dstNode.parentID = [self signalParentID];
 	
 	NSString *cloudName = [remoteCloudPath fileNameWithExt:nil];
-	signal.name = cloudName;
-	signal.explicitCloudName = cloudName;
+	dstNode.name = cloudName;
+	dstNode.explicitCloudName = cloudName;
 	
-	signal.pendingRecipients = [NSSet setWithObject:recipient.uuid];
+	dstNode.pendingRecipients = [NSSet setWithObject:recipient.uuid];
 	
-	signal.anchor =
+	dstNode.anchor =
 	  [[ZDCNodeAnchor alloc] initWithUserID: recipient.uuid
 	                                 treeID: remoteCloudPath.treeID
 	                              dirPrefix: remoteCloudPath.dirPrefix];
+	
+	// We're copying the DATA file, which is already encrypted with srcNode.encryptionKey.
+	// So the dstNode's encryptionKey must remain the same during a copy.
+	//
+	// Things to consider:
+	//
+	// 1. The recipient does NOT know the location of the original node (srcNode).
+	//    This information isn't revealed to the recipient in any way via the server.
+	//
+	// 2. If this isn't acceptable, then you simply cannot use a copy.
+	//    You must create a new node or message.
+	//
+	dstNode.encryptionKey = srcNode.encryptionKey;
 	
 	{ // Add recipient permissions
 		
@@ -1480,10 +1494,10 @@
 		[item addPermission:ZDCSharePermission_Share];
 		[item addPermission:ZDCSharePermission_LeafsOnly];
 		
-		[signal.shareList addShareItem:item forUserID:recipient.uuid];
+		[dstNode.shareList addShareItem:item forUserID:recipient.uuid];
 	}
 	
-	if (![signal.shareList hasShareItemForUserID:localUserID])
+	if (![dstNode.shareList hasShareItemForUserID:localUserID])
 	{
 		// Add sender permissions
 		
@@ -1492,10 +1506,10 @@
 		[item addPermission:ZDCSharePermission_WriteOnce];
 		[item addPermission:ZDCSharePermission_BurnIfSender];
 		
-		[signal.shareList addShareItem:item forUserID:localUserID];
+		[dstNode.shareList addShareItem:item forUserID:localUserID];
 	}
 	
-	[rwTransaction setObject:signal forKey:signal.uuid inCollection:kZDCCollection_Nodes];
+	[rwTransaction setObject:dstNode forKey:dstNode.uuid inCollection:kZDCCollection_Nodes];
 	
 	// Create & queue operation
 	
@@ -1509,15 +1523,15 @@
 	                                          treeID: [self treeID]
 	                                            type: ZDCCloudOperationType_CopyLeaf];
 	
-	op_copy.nodeID = node.uuid;
-	op_copy.dstNodeID = signal.uuid;
+	op_copy.nodeID = srcNode.uuid;
+	op_copy.dstNodeID = dstNode.uuid;
 	
 	op_copy.cloudLocator = srcCloudLocator;
 	op_copy.dstCloudLocator = dstCloudLocator;
 	
 	[self addOperation:op_copy];
 	
-	return signal;
+	return dstNode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
