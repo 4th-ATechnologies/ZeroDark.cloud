@@ -268,6 +268,26 @@ class MyMessagesViewController: MessagesViewController,
 			message.isRead = true
 			
 			transaction.setMessage(message)
+			
+			// We want the ConversationsViewController to update properly.
+			// That is, it's displaying a list of conversations, with an unread badge count.
+			// The unread badge should update properly.
+			//
+			// However, the way we've currently coded the ConversationsVC, that's not going to happen.
+			// Why ?
+			// Because the ConversationsVC is monitoring the the Conversation objects in the database.
+			// So it will receive a uiDatabaseConnectionDidUpdate notification.
+			// But then it will ask: "Did any Conversation objects change ?"
+			// And the answer is going to be NO, so it's not going to update its tableView.
+			//
+			// Now... YapDatabase has a half-dozen different ways in which we can fix this.
+			// But since this is a leaning-focused project, we're going to pick the easiest solution:
+			//
+			// We can "touch" the corresponding Conversation.
+			// And this will get reported to our ConversationsVC as an update for this Conversation object.
+			// Which will trigger it to reload the appropriate tableView row.
+			// 
+			transaction.touchObject(forKey: message.conversationID, inCollection: kCollection_Conversations)
 		}
 	}
 	
