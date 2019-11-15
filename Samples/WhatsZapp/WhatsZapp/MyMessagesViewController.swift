@@ -8,6 +8,7 @@
 /// Sample App: WhatsZapp
 
 import Foundation
+import InputBarAccessoryView
 import MessageKit
 import ZeroDarkCloud
 
@@ -39,7 +40,8 @@ struct MsgKitMessage: MessageKit.MessageType {
 
 class MyMessagesViewController: MessagesViewController,
                                 MessagesDataSource, MessagesLayoutDelegate, MessagesDisplayDelegate,
-                                MessageInputBarDelegate {
+                                MessageInputBarDelegate,
+                                UIImagePickerControllerDelegate, UINavigationControllerDelegate {
 	
 	let localUserID: String
 	let conversationID: String
@@ -48,6 +50,7 @@ class MyMessagesViewController: MessagesViewController,
 	var mappings: YapDatabaseViewMappings?
 	
 	var navTitleButton: IconTitleButton?
+	var imagePicker: UIImagePickerController?
 	
 	init(localUserID: String, conversationID: String) {
 		
@@ -87,6 +90,18 @@ class MyMessagesViewController: MessagesViewController,
 		messagesCollectionView.messagesLayoutDelegate = self
 		messagesCollectionView.messagesDisplayDelegate = self
 		self.messageInputBar.delegate = self
+		
+		let photoButton = InputBarButtonItem()
+		photoButton.image = UIImage(systemName: "photo")
+		photoButton.onTouchUpInside() {[weak self](_) in
+			
+			self?.didTapPhotoButton()
+		}
+		
+		self.messageInputBar.leftStackView.addArrangedSubview(photoButton)
+		self.messageInputBar.leftStackView.alignment = .center
+		
+		self.messageInputBar.setLeftStackViewWidthConstant(to: 44, animated: false)
 	}
 	
 	override func viewWillAppear(_ animated: Bool) {
@@ -253,8 +268,8 @@ class MyMessagesViewController: MessagesViewController,
 				return
 			}
 			
-			let dstName = UUID().uuidString // don't care - doesn't matter to us
-			let dstPath = ZDCTreesystemPath(pathComponents: [message.conversationID, dstName])
+			let msgNodeName = UUID().uuidString // don't care - doesn't matter to us
+			let dstPath = ZDCTreesystemPath(pathComponents: [message.conversationID, msgNodeName])
 			
 			do {
 				try cloudTransaction.move(msgNode, to: dstPath)
@@ -570,9 +585,10 @@ class MyMessagesViewController: MessagesViewController,
 			//
 			// Create node in the treesystem, using path:
 			//
-			// home://conversationID/messageID
+			// home://conversationID/uuid
 			
-			let localPath = ZDCTreesystemPath(pathComponents: [conversationID, message.uuid])
+			let msgNodeName = UUID().uuidString // don't care - doesn't matter to us
+			let localPath = ZDCTreesystemPath(pathComponents: [conversationID, msgNodeName])
 			
 			let node: ZDCNode!
 			do {
@@ -605,5 +621,190 @@ class MyMessagesViewController: MessagesViewController,
 		}
 		
 		inputBar.inputTextView.text = ""
+	}
+	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MARK: MessageInputBarDelegate
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private func didTapPhotoButton() {
+		DDLogInfo("didTapPhotoButton()")
+		
+		if imagePicker == nil {
+			imagePicker = UIImagePickerController()
+		}
+		
+		if let imagePicker = imagePicker {
+			
+			imagePicker.delegate = self
+			imagePicker.sourceType = .photoLibrary
+			imagePicker.allowsEditing = false
+			imagePicker.modalPresentationStyle = .overCurrentContext
+			
+			self.present(imagePicker, animated: true, completion: nil)
+		}
+	}
+	
+	func imagePickerController(_ picker: UIImagePickerController,
+	                           didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any])
+	{
+		picker.dismiss(animated: true)
+		
+		var pickedImage :UIImage?
+
+		if (info[UIImagePickerController.InfoKey.editedImage] != nil)
+		{
+			pickedImage = info[UIImagePickerController.InfoKey.editedImage] as? UIImage
+		}
+
+		if (info[UIImagePickerController.InfoKey.originalImage] != nil)
+		{
+			pickedImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage
+		}
+
+		if let safeImage = pickedImage as UIImage? {
+			
+			let orientedImage =  safeImage.correctOrientation()
+			sendImage(orientedImage)
+		}
+	}
+	
+	func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+		
+		picker.dismiss(animated: true)
+	}
+	
+	func sendImage(_ image: UIImage) {
+		
+		let zdc = ZDCManager.zdc()
+		let localUserID = self.localUserID
+		let conversationID = self.conversationID
+		
+		// Create the message
+		
+		let message =
+		  Message(conversationID: conversationID,
+		                senderID: localUserID,
+	 	                    text: "")
+		
+		message.isRead = true // outgoing message
+		message.hasAttachment = true
+		
+		// We want to convert the image to JPEG data.
+		// This operation could be a litle bit slow,
+		// so let's do it off the main threa.
+		
+		DispatchQueue.global().async {
+			
+			let thumbnailSize = CGSize(width: 256, height: 256)
+			guard
+				let imageData = image.jpegData(compressionQuality: 1.0),
+				let thumbnailData = image.withMaxSize(thumbnailSize).jpegData(compressionQuality: 1.0)
+			else {
+				return
+			}
+			
+			// Create a placeholder node for the attachment
+			
+			let attachmentNode = ZDCNode(localUserID: localUserID)
+			attachmentNode.name = "attachment"
+			
+			// Now what we want to do is store the image to disk.
+			// We're going to use the DiskManager for this purpose.
+			//
+			// The DiskManager supports 2 different modes of storage:
+			// - persistent mode
+			// - cache mode
+			//
+			// Items in persistent-mode are stored to disk, and not deleted unless we manually delete them.
+			// Items in cache-mode are treated as temporary files, and they become part of the storage pool.
+			// The storage pool can be given a max size, and thus items in the storage pool may get deleted.
+			// Furthermore, items in the storage pool can be deleted by the OS due to low-disk-space pressure.
+			//
+			// Now, we need to store the image persistently, at least until we're able to upload it.
+			// And then, after uploading it, we can store it in cache-mode.
+			//
+			// So we tell the DiskManager to do exactly that.
+			
+			do {
+				
+				var diskImport = ZDCDiskImport(cleartextData: imageData)
+				diskImport.storePersistently = true
+				diskImport.migrateToCacheAfterUpload = true
+			
+				try zdc.diskManager?.importNodeData(diskImport, for: attachmentNode)
+				
+				diskImport = ZDCDiskImport(cleartextData: thumbnailData)
+				diskImport.storePersistently = true
+				diskImport.migrateToCacheAfterUpload = true
+				
+				try zdc.diskManager?.importNodeThumbnail(diskImport, for: attachmentNode)
+				
+			} catch {
+				DDLogError("Error importing JPG: \(error)")
+			}
+			
+			let rwConnection = zdc.databaseManager?.rwDatabaseConnection
+			rwConnection?.asyncReadWrite {(transaction) in
+				
+				guard
+					let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
+					let conversation = transaction.conversation(id: conversationID),
+					let remoteUser = transaction.user(id: conversation.remoteUserID)
+				else {
+					return
+				}
+				
+				// Step 1 of 3:
+				//
+				// Write the message to the database
+				
+				transaction.setMessage(message)
+				
+				// Step 2 of 3:
+				//
+				// Create the message node and insert the attachment node.
+				
+				let msgNodeName = UUID().uuidString // don't care - doesn't matter to us
+				let localPath = ZDCTreesystemPath(pathComponents: [conversationID, msgNodeName])
+				
+				let msgNode: ZDCNode!
+				do {
+					msgNode = try cloudTransaction.createNode(withPath: localPath)
+					
+					attachmentNode.parentID = msgNode.uuid
+					try cloudTransaction.insertNode(attachmentNode)
+					
+					try cloudTransaction.linkNodeID(msgNode.uuid, toMessageID: message.uuid)
+					
+				} catch {
+					print("Error creating message/attachment node: \(error)")
+					
+					// Note: You could also choose to rollback the transaction here:
+					// transaction.rollback()
+					return
+				}
+				
+				// Step 3 of 3:
+				//
+				// After we've uploaded the message to our treesystem,
+				// use a server-side-copy operation to put the message into the recipients inbox.
+				
+				do {
+					let copyMsgNode = try cloudTransaction.copy(msgNode, toRecipientInbox: remoteUser)
+					
+					let copyAttachmentNode = try cloudTransaction.copy( attachmentNode,
+					                                       toRecipient: remoteUser,
+					                                          withName: "attachment",
+					                                        parentNode: copyMsgNode)
+					
+				} catch {
+					print("Error creating server-side-copy operation: \(error)")
+					
+					// Note: You could also choose to rollback the transaction here:
+					// transaction.rollback()
+				}
+			}
+		}
 	}
 }

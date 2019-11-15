@@ -391,7 +391,7 @@ done:
 	}
 	
 	// Add children section
-	if (!isPointer && !isMessage && node.dirPrefix)
+	if (!isPointer && node.dirPrefix)
 	{
 		BOOL parentNodeAllowsChildren = YES;
 		

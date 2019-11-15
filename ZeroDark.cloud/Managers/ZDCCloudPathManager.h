@@ -63,8 +63,9 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)sharedInstance;
 
 /**
- * Returns the cloud locator for the given node, which specifies:
+ * Returns the cloud locator for the given node.
  *
+ * A cloud locator specifies:
  * - AWS region
  * - AWS bucket
  * - cloudPath (AWS S3 keyPath) (encrypted version of cleartext treepath)
@@ -79,8 +80,9 @@ NS_ASSUME_NONNULL_BEGIN
                                       transaction:(YapDatabaseReadTransaction *)transaction;
 
 /**
- * Returns the cloud locator for the given node, which specifies:
+ * Returns the cloud locator for the given node.
  *
+ * A cloud locator specifies:
  * - AWS region
  * - AWS bucket
  * - cloudPath (AWS S3 keyPath) (encrypted version of cleartext treepath)
@@ -96,6 +98,32 @@ NS_ASSUME_NONNULL_BEGIN
  *   A transaction is required to read from the database.
  */
 - (nullable ZDCCloudLocator *)cloudLocatorForNode:(ZDCNode *)node
+                                    fileExtension:(nullable NSString *)fileExt
+                                      transaction:(YapDatabaseReadTransaction *)transaction;
+
+/**
+ * Returns the cloud locator for a theoretical child node with the given name.
+ *
+ * A cloud locator specifies:
+ * - AWS region
+ * - AWS bucket
+ * - cloudPath (AWS S3 keyPath) (encrypted version of cleartext treepath)
+ *
+ * @param nodeName
+ *   The name of the theoretical child node.
+ *
+ * @param parentNode
+ *   The parentNode of the theoretical child node.
+ *
+ * @param fileExt
+ *   If non-nil, the returned path will have the given file extension.
+ *   This is typically `kZDCCloudFileExtension_Rcrd` or `kZDCCloudFileExtension_Data`.
+ *
+ * @param transaction
+ *   A transaction is required to read from the database.
+ */
+- (nullable ZDCCloudLocator *)cloudLocatorForName:(NSString *)nodeName
+                                       parentNode:(ZDCNode *)parentNode
                                     fileExtension:(nullable NSString *)fileExt
                                       transaction:(YapDatabaseReadTransaction *)transaction;
 
@@ -116,8 +144,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Returns the cloud path for the node.
- * The cloudPath is the AWS S3 keyPath, which is the encrypted version of the cleartext treepath.
  *
+ * A cloudPath represents the AWS S3 keyPath, which is an encrypted version of the cleartext treepath.
  * A cloudPath has the general format: "{treeID}/{dirPrefix}/{hashedNodeName}.{ext}"
  *
  * @param node
@@ -131,6 +159,30 @@ NS_ASSUME_NONNULL_BEGIN
  *   A transaction is required to read from the database.
  */
 - (nullable ZDCCloudPath *)cloudPathForNode:(ZDCNode *)node
+                              fileExtension:(nullable NSString *)fileExt
+                                transaction:(YapDatabaseReadTransaction *)transaction;
+
+/**
+ * Returns the cloud path for a theoretical child node with the given name.
+ *
+ * A cloudPath represents the AWS S3 keyPath, which is an encrypted version of the cleartext treepath.
+ * A cloudPath has the general format: "{treeID}/{dirPrefix}/{hashedNodeName}.{ext}"
+ *
+ * @param nodeName
+ *   The name of the theoretical child node.
+ *   
+ * @param parentNode
+ *   The parentNode of the theoretical child node.
+ *
+ * @param fileExt
+ *   If non-nil, the returned path will have the given file extension.
+ *   This is typically `kZDCCloudFileExtension_Rcrd` or `kZDCCloudFileExtension_Data`.
+ *
+ * @param transaction
+ *   A transaction is required to read from the database.
+ */
+- (nullable ZDCCloudPath *)cloudPathForName:(NSString *)nodeName
+                                 parentNode:(ZDCNode *)parentNode
                               fileExtension:(nullable NSString *)fileExt
                                 transaction:(YapDatabaseReadTransaction *)transaction;
 

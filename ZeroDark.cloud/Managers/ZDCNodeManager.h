@@ -299,8 +299,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Returns whether or not the node has any children.
-**/
-- (BOOL)isEmptyNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction;
+ */
+- (BOOL)hasChildren:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Find Nodes

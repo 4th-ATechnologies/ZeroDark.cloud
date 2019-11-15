@@ -174,7 +174,7 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
  */
 - (nullable ZDCNode *)createNodeWithPath:(ZDCTreesystemPath *)path
                                    error:(NSError *_Nullable *_Nullable)outError
- NS_SWIFT_NAME(createNode(withPath:));
+NS_SWIFT_NAME(createNode(withPath:));
 
 /**
  * Inserts the given node into the treesystem (as configured),
@@ -446,6 +446,35 @@ NS_SWIFT_NAME(insertNode(_:));
  */
 - (nullable ZDCNode *)copyNode:(ZDCNode *)node
               toRecipientInbox:(ZDCUser *)recipient
+                         error:(NSError *_Nullable *_Nullable)outError;
+
+/**
+ * Queues an operation to perform a server-side-copy, from the given node, to the recipient's treesystem.
+ *
+ * The given node must be part of the localUser's treesystem.
+ *
+ * On success, a temporary node is returned.
+ * The temporary node isn't part of the treesystem, but it is stored in the database.
+ * This node will be automatically deleted after the operation has been completed.
+ *
+ * @param node
+ *   The node to copy.
+ *
+ * @param recipient
+ *   The user to send the message to.
+ *
+ * @param nodeName
+ *   The name of the destination node.
+ *
+ * @param parentNode
+ *   The parent of the destination node.
+ *
+ * @return Returns a temporary node on success, nil otherwise.
+ */
+- (nullable ZDCNode *)copyNode:(ZDCNode *)node
+                   toRecipient:(ZDCUser *)recipient
+                      withName:(NSString *)nodeName
+                    parentNode:(ZDCNode *)parentNode
                          error:(NSError *_Nullable *_Nullable)outError;
 
 /**

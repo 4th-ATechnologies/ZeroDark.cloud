@@ -679,7 +679,7 @@ static ZDCNodeManager *sharedInstance = nil;
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
-- (BOOL)isEmptyNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
+- (BOOL)hasChildren:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
 	NSParameterAssert(transaction != nil);

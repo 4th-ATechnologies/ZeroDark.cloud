@@ -68,6 +68,10 @@ class Message: Codable, NSCopying {
 	///
 	var isRead: Bool = true
 	
+	/// Whether or not the message has an attachment.
+	///
+	var hasAttachment: Bool = false
+	
 	
 	init(uuid: String, conversationID: String, senderID: String, text: String) {
 		self.uuid = uuid
@@ -93,8 +97,9 @@ class Message: Codable, NSCopying {
 		               senderID: senderID,
 		                   text: text)
 		
-		copy.date   = self.date
-		copy.isRead = self.isRead
+		copy.date          = self.date
+		copy.isRead        = self.isRead
+		copy.hasAttachment = self.hasAttachment
 		
 		return copy
 	}

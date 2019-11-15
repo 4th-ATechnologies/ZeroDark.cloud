@@ -200,6 +200,12 @@ class ZDCManager: ZeroDarkCloudDelegate {
 				print("Error encoding message: \(error)")
 			}
 		}
+		else if let export = zdc.diskManager?.nodeData(node) {
+			
+			if let cryptoFile = export.cryptoFile {
+				return ZDCData(cryptoFile: cryptoFile)
+			}
+		}
 		else {
 			
 			print("Error: Unhandled object type in ZeroDarkCloudDelegate: data(for:at:transaction:)")
@@ -235,9 +241,31 @@ class ZDCManager: ZeroDarkCloudDelegate {
 	/// In other words, the file is composed of 4 sections.
 	/// And the metadata & thumbnail sections are optional.
 	///
-	/// We don't use thumbnails in this example, so we always return nil.
-	///
 	func thumbnail(for node: ZDCNode, at path: ZDCTreesystemPath, transaction: YapDatabaseReadTransaction) -> ZDCData? {
+		
+		if (path.trunk == .home) && (path.pathComponents.count == 3) {
+			
+			// This is a message attachment:
+			//
+			//      (home)
+			//       /  \
+			// (convoA)  (convoB)
+			//            /    \
+			//        (msg1)   (msg2)
+			//          |
+			//        (imgA)
+			//
+			// path: /{convoB}/{msg1}/{imgA}
+			//
+			// When the user sets an image, we always store the image & thumbnail in the DiskManager.
+			// And we store it with the "persistent" flag so it can't get deleted until after we've uploaded it.
+			
+			if let export = zdc.diskManager?.nodeThumbnail(node),
+				let cryptoFile = export.cryptoFile
+			{
+				return ZDCData(cryptoFile: cryptoFile)
+			}
+		}
 		
 		return nil
 	}
@@ -284,64 +312,87 @@ class ZDCManager: ZeroDarkCloudDelegate {
 			return
 		}
 		
+		// Mark the node as "needs download".
+		cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+		
 		// What kind of node is this ?
 		//
-		// If it's in "home", it could be:
-		// - Conversation node
-		// - Message node
+		// Given our tree hierarchy:
 		//
-		// If it's in "inbox":
-		// - Unread Message
-		//
+		// - home:/X      => Conversation
+		// - home:/X/Y    => Message
+		// - home:/X/Y/Z  => Message attachment
+		// - inbox:/X     => Message
+		// - inbox:/X/Y   => Message attachment
+		
+		var isConversation      = false
+		var isMessage           = false
+		var isMessageAttachment = false
+		
 		switch path.trunk {
 			
 			case .home:
 				
-				// Given our tree hierarchy:
-				//
-				// - All Conversation nodes have a path that looks like : /X
-				// - All Message nodes have a path that looks like      : /X/Y
-				//
-				// So we know what type of node we're downloading based on the number of path components.
-				//
 				switch path.pathComponents.count {
 					
-					case 1: // This is a Conversation node.
-						
-						// Mark the node as "needs download".
-						cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
-						
-						// Try to download it now
-						downloadNode(node, at: path)
-					
-					case 2: // This is a Message node.
-						
-						// Mark the node as "needs download".
-						cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
-						
-						// Only try to download the message now if we've already downloaded the parent conversation.
-						if let convoNodeID = node.parentID,
-							let _ = cloudTransaction.linkedObject(forNodeID: convoNodeID) as? Conversation
-						{
-							downloadNode(node, at: path)
-						}
-					
-					default:
-						DDLogError("Unknown cloud path: \(path)")
+					case 1  : isConversation = true
+					case 2  : isMessage = true
+					case 3  : isMessageAttachment = true
+					default : break
 				}
 			
 			case .inbox:
+				
+				switch path.pathComponents.count {
+					
+					case 1  : isMessage = true
+					case 2  : isMessageAttachment = true
+					default : break
+				}
 			
-				// This is an unread message.
-				cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+			default: break
+		}
+		
+		if isConversation {
 			
-				// We can download it now.
+			// Try to download it now
+			downloadNode(node, at: path)
+		}
+		else if isMessage {
+			
+			if path.trunk == .home {
+				
+				// Only try to download the message now if we've already downloaded the parent conversation.
+				if let convoNodeID = node.parentID,
+					let _ = cloudTransaction.linkedObject(forNodeID: convoNodeID) as? Conversation
+				{
+					downloadNode(node, at: path)
+				}
+				
+			} else {
+				
 				downloadNode(node, at: path)
+			}
+		}
+		else if isMessageAttachment {
 			
-			default:
+			// We don't need to download the message attachment now.
+			// We download attachments on demand.
+			//
+			// But if we've already downloaded the message,
+			// then let's set it's hasAttachment property to true.
 			
-				// We don't do anything with the other containers in this app.
-				break
+			if let msgNodeID = node.parentID,
+			   var message = cloudTransaction.linkedObject(forNodeID: msgNodeID) as? Message
+			{
+				message = message.copy() as! Message
+				message.hasAttachment = true
+				
+				transaction.setMessage(message)
+			}
+		}
+		else {
+			DDLogError("Unknown cloud path: \(path)")
 		}
 	}
 	
@@ -370,64 +421,74 @@ class ZDCManager: ZeroDarkCloudDelegate {
 		}
 		else {
 			
+			// Mark the node as "needs download".
+			cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+			
 			// What kind of node is this ?
 			//
-			// If it's in "home", it could be:
-			// - Conversation node
-			// - Message node
+			// Given our tree hierarchy:
 			//
-			// If it's in "inbox":
-			// - Unread Message
-			//
+			// - home:/X      => Conversation
+			// - home:/X/Y    => Message
+			// - home:/X/Y/Z  => Message attachment
+			// - inbox:/X     => Message
+			// - inbox:/X/Y   => Message attachment
+			
+			var isConversation      = false
+			var isMessage           = false
+			var isMessageAttachment = false
+			
 			switch path.trunk {
 				
 				case .home:
 					
-					// Given our tree hierarchy:
-					//
-					// - All Conversation nodes have a path that looks like : /X
-					// - All Message nodes have a path that looks like      : /X/Y
-					//
-					// So we know what type of node we're downloading based on the number of path components.
-					//
 					switch path.pathComponents.count {
 						
-						case 1: // This is a Conversation node.
-							
-							// Mark the node as "needs download".
-							cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
-							
-							// Try to download it now
-							downloadNode(node, at: path)
-						
-						case 2: // This is a Message node.
-							
-							// Mark the node as "needs download".
-							cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
-							
-							// Only try to download the message now if we've already downloaded the parent conversation.
-							if let convoNodeID = node.parentID,
-							   let _ = cloudTransaction.linkedObject(forNodeID: convoNodeID) as? Conversation
-							{
-								downloadNode(node, at: path)
-							}
-						
-						default:
-							DDLogError("Unknown cloud path: \(path)")
+						case 1  : isConversation = true
+						case 2  : isMessage = true
+						case 3  : isMessageAttachment = true
+						default : break
 					}
 				
 				case .inbox:
 				
-					// This is an unread message.
-					cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+					switch path.pathComponents.count {
+						
+						case 1  : isMessage = true
+						case 2  : isMessageAttachment = true
+						default : break
+					}
 				
-					// We can download it now.
+				default: break
+			}
+			
+			if isConversation {
+				
+				// Try to download it now
+				downloadNode(node, at: path)
+			}
+			else if isMessage {
+				
+				if path.trunk == .inbox {
+					
+					// Only try to download the message now if we've already downloaded the parent conversation.
+					if let convoNodeID = node.parentID,
+						let _ = cloudTransaction.linkedObject(forNodeID: convoNodeID) as? Conversation
+					{
+						downloadNode(node, at: path)
+					}
+				}
+				else {
+					
 					downloadNode(node, at: path)
+				}
+			}
+			else if isMessageAttachment {
 				
-				default:
 				
-					// We don't do anything with the other containers in this app.
-					break
+			}
+			else {
+				DDLogError("Unknown cloud path: \(path)")
 			}
 		}
 	}
@@ -538,7 +599,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 	
 		DDLogInfo("didDiscoverConflict: \(conflict) at: \(path.fullPath())")
 		
-		// Todo...
+		// Nothing to do here for this app
 	}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -561,47 +622,42 @@ class ZDCManager: ZeroDarkCloudDelegate {
 		let zdc = self.zdc!
 		let nodeID = node.uuid
 		
-		var isConversationNode = false
-		var isMessageNode      = false
-		var isInboxMessage     = false
-		
 		// What kind of node is this ?
 		//
-		// If it's in "home", it could be:
-		// - Conversation object
-		// - Message object
+		// Given our tree hierarchy:
 		//
-		// If it's in "inbox":
-		// - Unread message
-		//
+		// - home:/X      => Conversation
+		// - home:/X/Y    => Message
+		// - home:/X/Y/Z  => Message attachment
+		// - inbox:/X     => Message
+		// - inbox:/X/Y   => Message attachment
+		
+		var isConversation = false
+		var isMessage      = false
+		
 		switch path.trunk {
 			
 			case .home:
 				
-				// Given our tree hierarchy:
-				//
-				// - All Conversation objects have a path that looks like : /X
-				// - All Message objects have a path that looks like      : /X/Y
-				//
-				// So we can identify the type of node based on the number of path components.
-				//
 				switch path.pathComponents.count {
-					case 1:
-						isConversationNode = true
-					case 2:
-						isMessageNode = true
-					default:
-						break
+					
+					case 1  : isConversation = true
+					case 2  : isMessage = true
+					default : break
 				}
 			
 			case .inbox:
-				isInboxMessage = true
+				
+				switch path.pathComponents.count {
+					
+					case 1  : isMessage = true
+					default : break
+				}
 			
-			default:
-				break
+			default: break
 		}
 		
-		if !isConversationNode && !isMessageNode && !isInboxMessage {
+		if !isConversation && !isMessage {
 			
 			DDLogError("Unsupported download request: \(path)")
 			return
@@ -660,7 +716,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 					
 					// Process it
 					
-					if isConversationNode {
+					if isConversation {
 						self.processDownloadedConversation(cleartext, forNodeID: nodeID, with: cloudDataInfo)
 					}
 					else {
@@ -716,11 +772,14 @@ class ZDCManager: ZeroDarkCloudDelegate {
 			//        (convoA)    (convoB)
 			//       /   |   \        |
 			//  (msg1)(msg2)(msg3)  (msg4)
+			//           |
+			//        (imgA)
 			//
 			// Then the recursiveEnumerate function would give us:
 			// - ~/convoA
 			// - ~/convoA/msg1
 			// - ~/convoA/msg2
+			// - ~/convoA/msg2/imgA
 			// - ~/convoA/msg3
 			// - ~/convoB
 			// - ~/convoB/msg4
@@ -786,6 +845,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 						if needsDownload {
 							self.downloadNode(withNodeID: nodeID, transaction: transaction)
 						}
+						recurseInto = false
 					
 					default: break
 				}
@@ -1051,6 +1111,9 @@ class ZDCManager: ZeroDarkCloudDelegate {
 				} else {
 					newMsg.isRead = true
 				}
+				
+				// Does the node have an attachment ?
+				newMsg.hasAttachment = zdc.nodeManager.hasChildren(msgNode, transaction: transaction)
 
 				transaction.setMessage(newMsg)
 				

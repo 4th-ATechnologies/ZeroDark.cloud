@@ -1376,9 +1376,75 @@
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
  */
+- (nullable ZDCNode *)copyNode:(ZDCNode *)node
+                   toRecipient:(ZDCUser *)recipient
+                      withName:(NSString *)nodeName
+                    parentNode:(ZDCNode *)parentNode
+                         error:(NSError *_Nullable *_Nullable)outError
+{
+	ZDCLogAutoTrace();
+	
+	ZDCNode *anchorNode =
+	  [[ZDCNodeManager sharedInstance] anchorNodeForNode: parentNode
+	                                         transaction: databaseTransaction];
+	
+	if (!anchorNode || !anchorNode.anchor || ![anchorNode.anchor.userID isEqual:recipient.uuid])
+	{
+		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
+		NSString *desc = @"Invalid parameter: the parentNode isn't anchored within the recipient's treesystem";
+		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
+		
+		if (outError) *outError = error;
+		return nil;
+	}
+	
+	ZDCCloudPath *dstCloudPath =
+	  [[ZDCCloudPathManager sharedInstance] cloudPathForName: nodeName
+	                                              parentNode: parentNode
+	                                           fileExtension: nil
+	                                             transaction: databaseTransaction];
+	
+	if (dstCloudPath == nil)
+	{
+		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
+		NSString *desc = @"Invalid parameter: cannot determine destination from given parameters";
+		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
+		
+		if (outError) *outError = error;
+		return nil;
+	}
+	
+	return [self copyNode: node
+	          toRecipient: recipient
+	      remoteCloudPath: dstCloudPath
+	        cleartextName: nodeName
+	                error: outError];
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
+ */
 - (nullable ZDCNode *)copyNode:(ZDCNode *)srcNode
                    toRecipient:(ZDCUser *)recipient
                remoteCloudPath:(ZDCCloudPath *)remoteCloudPath
+                         error:(NSError *_Nullable *_Nullable)outError
+{
+	return [self copyNode: srcNode
+	          toRecipient: recipient
+	      remoteCloudPath: remoteCloudPath
+	        cleartextName: nil
+	                error: outError];
+}
+
+/**
+ * Internal copy logic.
+ */
+- (nullable ZDCNode *)copyNode:(ZDCNode *)srcNode
+                   toRecipient:(ZDCUser *)recipient
+               remoteCloudPath:(ZDCCloudPath *)remoteCloudPath
+                 cleartextName:(nullable NSString *)cleartextName
                          error:(NSError *_Nullable *_Nullable)outError
 {
 	ZDCLogAutoTrace();
@@ -1463,7 +1529,7 @@
 	dstNode.parentID = [self signalParentID];
 	
 	NSString *cloudName = [remoteCloudPath fileNameWithExt:nil];
-	dstNode.name = cloudName;
+	dstNode.name = cleartextName ?: cloudName;
 	dstNode.explicitCloudName = cloudName;
 	
 	dstNode.pendingRecipients = [NSSet setWithObject:recipient.uuid];

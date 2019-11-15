@@ -86,6 +86,36 @@ static ZDCCloudPathManager *sharedInstance = nil;
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCCloudPathManager.html
  */
+- (nullable ZDCCloudLocator *)cloudLocatorForName:(NSString *)nodeName
+                                       parentNode:(ZDCNode *)parentNode
+                                    fileExtension:(nullable NSString *)fileExt
+                                      transaction:(YapDatabaseReadTransaction *)transaction
+{
+	ZDCUser *owner = [[ZDCNodeManager sharedInstance] ownerForNode:parentNode transaction:transaction];
+	if (owner == nil || owner.aws_bucket == nil || owner.aws_region == AWSRegion_Invalid) {
+		return nil;
+	}
+	
+	ZDCCloudPath *cloudPath =
+	  [self cloudPathForName: nodeName
+	              parentNode: parentNode
+	           fileExtension: fileExt
+	             transaction: transaction];
+	
+	if (cloudPath == nil) {
+		return nil;
+	}
+	
+	return [[ZDCCloudLocator alloc] initWithRegion: owner.aws_region
+	                                        bucket: owner.aws_bucket
+	                                     cloudPath: cloudPath];
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudPathManager.html
+ */
 - (nullable ZDCCloudPath *)cloudPathForNode:(ZDCNode *)node
                                 transaction:(YapDatabaseReadTransaction *)transaction
 {
@@ -129,6 +159,59 @@ static ZDCCloudPathManager *sharedInstance = nil;
 	}
 	
 	NSString *cloudName = [self cloudNameForNode:node transaction:transaction];
+	
+	if (cloudName.length == 0) {
+		return nil;
+	}
+	
+	NSString *fileName = nil;
+	if (fileExt.length > 0)
+		fileName = [NSString stringWithFormat:@"%@.%@", cloudName, fileExt];
+	else
+		fileName = cloudName;
+	
+	return [[ZDCCloudPath alloc] initWithTreeID: treeID
+	                                  dirPrefix: dirPrefix
+	                                   fileName: fileName];
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudPathManager.html
+ */
+- (nullable ZDCCloudPath *)cloudPathForName:(NSString *)nodeName
+                                 parentNode:(ZDCNode *)parentNode
+                              fileExtension:(nullable NSString *)fileExt
+                                transaction:(YapDatabaseReadTransaction *)transaction
+{
+	ZDCNode *anchorNode = [[ZDCNodeManager sharedInstance] anchorNodeForNode:parentNode transaction:transaction];
+	
+	NSString *treeID = anchorNode.anchor.treeID;
+	if (!treeID && [anchorNode isKindOfClass:[ZDCTrunkNode class]]) {
+		treeID = [(ZDCTrunkNode *)anchorNode treeID];
+	}
+	
+	if (treeID == nil) {
+		return nil;
+	}
+	
+	NSString *dirPrefix = parentNode.dirPrefix;
+	
+	if (dirPrefix == nil) {
+		return nil;
+	}
+	
+	NSData *parentDirSalt = parentNode.dirSalt;
+	if (parentDirSalt == nil) {
+		return nil;
+	}
+	
+	if (nodeName == nil) {
+		return nil;
+	}
+	
+	NSString *cloudName = [self cloudNameForName:nodeName withParentDirSalt:parentDirSalt];
 	
 	if (cloudName.length == 0) {
 		return nil;
