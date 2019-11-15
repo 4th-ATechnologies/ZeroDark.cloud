@@ -333,8 +333,9 @@
 				return nil;
 			}
 		}
-	
-		preFetchBlock(nil, YES);
+		else {
+			preFetchBlock(nil, YES); // willFetch=YES, either from disk or network
+		}
 	}
 	
 	__weak typeof(self) weakSelf = self;
@@ -344,20 +345,28 @@
 		// Executing on the processingQueue now
 		
 		OSImage *image = nil;
+		NSError *processingError = nil;
+		
 		if (imageData)
 		{
 			image = [[OSImage alloc] initWithData:imageData];
 			
 			if (image == nil)
 			{
-				NSString *msg = @"Unable to create image from cached thumbnail data";
-				error = [NSError errorWithClass:[self class] code:500 description:msg];
+				NSString *msg = @"Unable to create image from thumbnail data";
+				processingError = [NSError errorWithClass:[self class] code:500 description:msg];
 			}
 		}
 		
 		if (image && imageProcessingBlock)
 		{
 			image = imageProcessingBlock(image);
+			
+			if (image == nil)
+			{
+				NSString *msg = @"Your imageProcessingBlock returned a nil result";
+				processingError = [NSError errorWithClass:[self class] code:500 description:msg];
+			}
 		}
 		
 		__strong typeof(self) strongSelf = weakSelf;
@@ -369,7 +378,7 @@
 				[strongSelf cacheNodeThumbnail:image forKey:cacheKey withETag:eTag cost:cost];
 			}
 			
-			if (isDownload && options.downloadIfMarkedAsNeedsDownload && imageData)
+			if (isDownload && options.downloadIfMarkedAsNeedsDownload && !error)
 			{
 				__strong ZeroDarkCloud *_zdc = strongSelf->zdc;
 				
@@ -389,7 +398,7 @@
 		if (postFetchBlock)
 		{
 			dispatch_async(dispatch_get_main_queue(), ^{
-				postFetchBlock(image, error);
+				postFetchBlock(image, error ?: processingError);
 			});
 		}
 	}};

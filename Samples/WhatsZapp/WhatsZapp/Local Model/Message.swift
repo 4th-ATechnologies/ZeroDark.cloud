@@ -25,6 +25,7 @@ class Message: Codable, NSCopying {
 		case text           = "text"
 		case date           = "date"
 		case isRead         = "isRead"
+		case hasAttachment  = "hasAttachment"
 	}
 	
 	/// We store `Message` objects in the database.

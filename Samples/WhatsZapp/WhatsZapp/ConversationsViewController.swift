@@ -551,7 +551,11 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 				cell.dateLabel.isHidden = false
 				cell.dateLabel.text = mostRecentMsg.date.whenString()
 				
-				cell.messageLabel.text = mostRecentMsg.text
+				if mostRecentMsg.hasAttachment {
+					cell.messageLabel.text = "<image>"
+				} else {
+					cell.messageLabel.text = mostRecentMsg.text
+				}
 			}
 			else {
 				

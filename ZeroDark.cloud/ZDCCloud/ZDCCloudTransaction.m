@@ -2387,8 +2387,8 @@
 		
 		ZDCNodeComponents passed = components & ZDCNodeComponents_All;
 		
-		ZDCNodeComponents bitwiseOR = existing | passed;
-		if (bitwiseOR != 0) {
+		ZDCNodeComponents bitwiseAND = existing & passed;
+		if (bitwiseAND != 0) {
 			result = YES;
 		}
 	}

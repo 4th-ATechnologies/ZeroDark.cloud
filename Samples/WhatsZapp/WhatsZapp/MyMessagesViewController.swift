@@ -38,6 +38,23 @@ struct MsgKitMessage: MessageKit.MessageType {
 	}
 }
 
+class MsgKitPhoto: MessageKit.MediaItem { // cannot be a struct !
+
+	let url: URL? = nil // Not used
+	
+	var image: UIImage?
+	var placeholderImage: UIImage
+	var size: CGSize {
+		get {
+			return CGSize(width: 256, height: 256)
+		}
+	}
+
+	init(placeholderImage: UIImage) {
+		self.placeholderImage = placeholderImage
+	}
+}
+
 class MyMessagesViewController: MessagesViewController,
                                 MessagesDataSource, MessagesLayoutDelegate, MessagesDisplayDelegate,
                                 MessageInputBarDelegate,
@@ -112,6 +129,8 @@ class MyMessagesViewController: MessagesViewController,
 			
 			configureNavigationTitle(remoteUser)
 		}
+		
+		self.messagesCollectionView.scrollToBottom(animated: false)
 	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -211,6 +230,28 @@ class MyMessagesViewController: MessagesViewController,
 		}
 	}
 	
+	private func updateVisibleRow(forMessageID messageID: String) {
+		
+		let collectionView = self.messagesCollectionView
+		
+		var matchingIndexPath: IndexPath? = nil
+		for indexPath in collectionView.indexPathsForVisibleItems {
+			
+			if let message = self.message(at: indexPath) {
+				
+				if message.uuid == messageID {
+					matchingIndexPath = indexPath
+					break
+				}
+			}
+		}
+		
+		if let indexPath = matchingIndexPath {
+			
+			collectionView.reloadItems(at: [indexPath])
+		}
+	}
+	
 	private func conversation() -> Conversation? {
 		
 		var conversation: Conversation?
@@ -236,15 +277,37 @@ class MyMessagesViewController: MessagesViewController,
 		let row = UInt(indexPath.section)
 		
 		var message: Message? = nil
-		uiDatabaseConnection?.read({ (transaction) in
+		uiDatabaseConnection?.read {(transaction) in
 			
 			if let viewTransaction = transaction.ext(DBExt_MessagesView) as? YapDatabaseViewTransaction {
 				
 				message = viewTransaction.object(atRow: row, inSection: section, with: mappings) as? Message
 			}
-		})
+		}
 		
 		return message
+	}
+	
+	private func attachmentNode(for messageID: String) -> ZDCNode? {
+		
+		let zdc = ZDCManager.zdc()
+		
+		var node: ZDCNode? = nil
+		uiDatabaseConnection?.read {(transaction) in
+			
+			guard
+				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: self.localUserID),
+				let msgNode = cloudTransaction.linkedNode(forMessage: messageID),
+				let msgPath = zdc.nodeManager.path(for: msgNode, transaction: transaction)
+			else {
+				return
+			}
+			
+			let attachmentPath = msgPath.appendingComponent("attachment")
+			node = cloudTransaction.node(path: attachmentPath)
+		}
+		
+		return node
 	}
 	
 	private func markMessageAsRead(_ messageID: String) {
@@ -332,6 +395,7 @@ class MyMessagesViewController: MessagesViewController,
 			return
 		}
 		
+		var insertedNewMessages = false
 		messagesCollectionView.performBatchUpdates({
 			
 			for rowChange in rowChanges {
@@ -346,6 +410,7 @@ class MyMessagesViewController: MessagesViewController,
 					
 					case .insert:
 						messagesCollectionView.insertSections([rowChange.newIndexPath!.row])
+						insertedNewMessages = true
 					 
 					case .move:
 						messagesCollectionView.moveSection(rowChange.indexPath!.row, toSection: rowChange.newIndexPath!.row)
@@ -358,9 +423,12 @@ class MyMessagesViewController: MessagesViewController,
 				}
 			}
 			
-		}, completion: { (finished) in
+		}, completion: {[weak self] (finished) in
 			
-			// Nothing to do here ?
+			if insertedNewMessages {
+				
+				self?.messagesCollectionView.scrollToBottom(animated: true)
+			}
 		})
 	}
 	
@@ -475,15 +543,68 @@ class MyMessagesViewController: MessagesViewController,
 			let remoteUser = self.remoteUser(id: message.senderID)
 			displayName = remoteUser?.displayName ?? ""
 		}
+		let sender = MsgKitSender(senderId: message.senderID, displayName: displayName)
+		
 		
 		if message.isRead == false {
 			self.markMessageAsRead(message.uuid)
 		}
 		
-		return MsgKitMessage(messageId: message.uuid,
-		                      sentDate: message.date,
-		                          kind: .text(message.text),
-		                        sender: MsgKitSender(senderId: message.senderID, displayName: displayName))
+		if message.hasAttachment {
+			let placeholder = UIImage(systemName: "paperplane.fill")!
+			
+			let photo = MsgKitPhoto(placeholderImage: placeholder)
+			
+			if let attachmentNode = self.attachmentNode(for: message.uuid) {
+			
+				let messageID = message.uuid
+				
+				// The preFetch is invoked BEFORE the `fetchNodeThumbnail()` function returns.
+				//
+				let preFetch = {(image: UIImage?, willFetch: Bool) in
+					photo.image = image
+				}
+				
+				// The postFetch is invoked at a LATER time.
+				// Possibly after a download has occurred.
+				//
+				let postFetch = {[weak self, weak photo](image: UIImage?, error: Error?) in
+					
+					guard let _ = photo else {
+						// Cell recycled - ignore
+						return
+					}
+					
+					if let _ = image {
+						
+						self?.updateVisibleRow(forMessageID: messageID)
+					}
+					else {
+						// One of the following is true:
+						// - There was an error downloading the image (and error parameter is non-nil)
+						// - The node doesn't have a thumbnail section.
+						//   Meaning the sender didn't properly include one via ZDCDelegate.thumbnail(for:node)
+					}
+				}
+				
+				let zdc = ZDCManager.zdc()
+				zdc.imageManager?.fetchNodeThumbnail( attachmentNode,
+				                                with: nil,
+				                            preFetch: preFetch,
+				                           postFetch: postFetch)
+			}
+		
+			return MsgKitMessage(messageId: message.uuid,
+			                      sentDate: message.date,
+			                          kind: .photo(photo),
+			                        sender: sender)
+		}
+		else {
+			return MsgKitMessage(messageId: message.uuid,
+			                      sentDate: message.date,
+			                          kind: .text(message.text),
+			                        sender: sender)
+		}
 	}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

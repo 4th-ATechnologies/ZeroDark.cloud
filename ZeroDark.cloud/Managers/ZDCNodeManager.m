@@ -684,17 +684,17 @@ static ZDCNodeManager *sharedInstance = nil;
 	ZDCLogAutoTrace();
 	NSParameterAssert(transaction != nil);
 	
-	__block BOOL isEmpty = YES;
+	__block BOOL hasChildren = NO;
 	
 	[self enumerateNodeIDsWithParentID: node.uuid
 	                       transaction: transaction
 	                        usingBlock:^(NSString *nodeID, BOOL *stop)
 	{
-		isEmpty = NO;
+		hasChildren = YES;
 		*stop = YES;
 	}];
 	
-	return isEmpty;
+	return hasChildren;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
