@@ -47,11 +47,11 @@ static NSString *const k_trunkStr = @"container";
 		
 		switch (trunk)
 		{
-			case ZDCTreesystemTrunk_Home    : self.dirPrefix = kZDCDirPrefix_Home;    break;
-			case ZDCTreesystemTrunk_Prefs   : self.dirPrefix = kZDCDirPrefix_Prefs;   break;
-			case ZDCTreesystemTrunk_Inbox   : self.dirPrefix = kZDCDirPrefix_MsgsIn;  break;
-			case ZDCTreesystemTrunk_Outbox  : self.dirPrefix = kZDCDirPrefix_MsgsOut; break;
-			case ZDCTreesystemTrunk_Invalid : self.dirPrefix = kZDCDirPrefix_Fake;    break;
+			case ZDCTreesystemTrunk_Home     : self.dirPrefix = kZDCDirPrefix_Home;    break;
+			case ZDCTreesystemTrunk_Prefs    : self.dirPrefix = kZDCDirPrefix_Prefs;   break;
+			case ZDCTreesystemTrunk_Inbox    : self.dirPrefix = kZDCDirPrefix_MsgsIn;  break;
+			case ZDCTreesystemTrunk_Outbox   : self.dirPrefix = kZDCDirPrefix_MsgsOut; break;
+			case ZDCTreesystemTrunk_Detached : self.dirPrefix = kZDCDirPrefix_Fake;    break;
 		}
 	}
 	return self;

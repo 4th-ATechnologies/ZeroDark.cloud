@@ -46,10 +46,10 @@ typedef NS_ENUM(NSInteger, ZDCTreesystemTrunk) {
 	ZDCTreesystemTrunk_Outbox,
 	
 	/**
-	 * A special value used to indicate an invalid trunk.
-	 * Don't use this value - it's reserved for errors.
+	 * A special value used for nodes that aren't attached to a local treesystem.
+	 * Don't use this value - it's reserved for special nodes (e.g. signals)
 	 */
-	ZDCTreesystemTrunk_Invalid = NSIntegerMax,
+	ZDCTreesystemTrunk_Detached = NSIntegerMax,
 };
 
 /** Converts from enum value to string. */

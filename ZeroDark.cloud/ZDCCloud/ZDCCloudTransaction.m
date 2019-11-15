@@ -2908,7 +2908,7 @@
 	if (dstNode.isSignal)
 	{
 		if (!hasRemainingOps(dstNode)) {
-			[rwTransaction removeObjectForKey:srcNodeID inCollection:kZDCCollection_Nodes];
+			[rwTransaction removeObjectForKey:dstNodeID inCollection:kZDCCollection_Nodes];
 		}
 	}
 }

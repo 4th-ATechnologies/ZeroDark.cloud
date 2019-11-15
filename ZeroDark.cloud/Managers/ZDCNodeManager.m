@@ -275,7 +275,7 @@ static ZDCNodeManager *sharedInstance = nil;
 		}
 	}
 	
-	ZDCTreesystemTrunk trunk = (trunkNode ? trunkNode.trunk : ZDCTreesystemTrunk_Invalid);
+	ZDCTreesystemTrunk trunk = (trunkNode ? trunkNode.trunk : ZDCTreesystemTrunk_Detached);
 	
 	ZDCTreesystemPath *path =
 	  [[ZDCTreesystemPath alloc] initWithPathComponents: pathComponents

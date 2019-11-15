@@ -724,7 +724,7 @@ static NSString *const k_dict    = @"dict";
 			}
 			break;
 		}
-		case ZDCTreesystemTrunk_Invalid: break;
+		default: break;
 	}
 	
 	return shareList;

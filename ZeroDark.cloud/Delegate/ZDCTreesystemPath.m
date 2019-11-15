@@ -30,7 +30,7 @@ NSString* NSStringFromTreesystemTrunk(ZDCTreesystemTrunk trunk)
 		case ZDCTreesystemTrunk_Prefs  : return k_prefs;
 		case ZDCTreesystemTrunk_Inbox  : return k_inbox;
 		case ZDCTreesystemTrunk_Outbox : return k_outbox;
-		default                        : return @"invalid";
+		default                        : return @"detached";
 	}
 }
 
@@ -41,7 +41,7 @@ ZDCTreesystemTrunk TreesystemTrunkFromString(NSString *str)
 	if ([str isEqualToString:k_inbox])  return ZDCTreesystemTrunk_Inbox;
 	if ([str isEqualToString:k_outbox]) return ZDCTreesystemTrunk_Outbox;
 	
-	return ZDCTreesystemTrunk_Invalid;
+	return ZDCTreesystemTrunk_Detached;
 }
 	
 
