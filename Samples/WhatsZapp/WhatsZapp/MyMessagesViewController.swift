@@ -69,6 +69,8 @@ class MyMessagesViewController: MessagesViewController,
 	var navTitleButton: IconTitleButton?
 	var imagePicker: UIImagePickerController?
 	
+	var initialScrollToBottom = false
+	
 	init(localUserID: String, conversationID: String) {
 		
 		self.localUserID = localUserID
@@ -129,8 +131,15 @@ class MyMessagesViewController: MessagesViewController,
 			
 			configureNavigationTitle(remoteUser)
 		}
+	}
+	
+	override func viewDidLayoutSubviews() {
+		super.viewDidLayoutSubviews()
 		
-		self.messagesCollectionView.scrollToBottom(animated: false)
+		if !initialScrollToBottom {
+			initialScrollToBottom = true
+			self.messagesCollectionView.scrollToBottom(animated: false)
+		}
 	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -562,6 +571,7 @@ class MyMessagesViewController: MessagesViewController,
 				// The preFetch is invoked BEFORE the `fetchNodeThumbnail()` function returns.
 				//
 				let preFetch = {(image: UIImage?, willFetch: Bool) in
+					
 					photo.image = image
 				}
 				
@@ -570,13 +580,9 @@ class MyMessagesViewController: MessagesViewController,
 				//
 				let postFetch = {[weak self, weak photo](image: UIImage?, error: Error?) in
 					
-					guard let _ = photo else {
-						// Cell recycled - ignore
-						return
-					}
-					
-					if let _ = image {
+					if let image = image {
 						
+						photo?.image = image
 						self?.updateVisibleRow(forMessageID: messageID)
 					}
 					else {
