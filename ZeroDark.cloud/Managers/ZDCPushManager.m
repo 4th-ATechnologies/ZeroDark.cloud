@@ -6824,8 +6824,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		else
 		{
-			context.sha256Hash = [AWSPayload signatureForPayload:avatarData];
-			
 			// Convert avatarData into JSON request
 			
 			NSString *contentType = [self mimeTypeByGuessingFromData:avatarData];
@@ -6854,6 +6852,8 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				return;
 			}
 		
+			context.sha256Hash = [AWSPayload signatureForPayload:jsonData];
+			
 		#if TARGET_OS_IPHONE
 	
 			// Background NSURLSession's don't support data tasks !
@@ -6951,7 +6951,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		AFURLSessionManager *session = sessionInfo.session;
 	#endif
 		
-		// Calculate staging path
+		// Calculate path
 		
 		NSString *social_userID;
 		
