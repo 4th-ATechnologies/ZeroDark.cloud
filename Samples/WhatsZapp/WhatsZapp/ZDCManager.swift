@@ -53,7 +53,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 				DBManager.sharedInstance.configureDatabase(database)
 			}
 			
-			zdc.unlockOrCreateDatabase(dbConfig)
+			try zdc.unlockOrCreateDatabase(dbConfig)
 		} catch {
 			
 			DDLogError("Ooops! Something went wrong: \(error)")

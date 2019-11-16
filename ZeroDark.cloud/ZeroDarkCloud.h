@@ -85,9 +85,9 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * @see DatabaseKeyManager
  *
- * @return On success, returns nil. Otherwise returns an error that describes what went wrong.
+ * @return Returns true on success. Otherwise returns false, and sets outError.
  */
-- (nullable NSError *)unlockOrCreateDatabase:(ZDCDatabaseConfig *)config;
+- (BOOL)unlockOrCreateDatabase:(ZDCDatabaseConfig *)config error:(NSError *_Nullable *_Nullable)outError;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Managers

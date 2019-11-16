@@ -294,12 +294,11 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 #pragma mark Framework Unlock
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (nullable NSError *)unlockOrCreateDatabase:(ZDCDatabaseConfig *)config
+- (BOOL)unlockOrCreateDatabase:(ZDCDatabaseConfig *)config error:(NSError *_Nullable *_Nullable)outError
 {
 	ZDCLogAutoTrace();
 	
 	__block NSError *error = nil;
-	__block S4Err	err = kS4Err_NoErr;
 
 	dispatch_sync(serialQueue, ^{ @autoreleasepool {
 	#pragma clang diagnostic push
@@ -310,6 +309,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 			return; // from block
 		}
 
+		S4Err	err = kS4Err_NoErr;
 		ZDCDatabaseManager *db = nil;
 
 		// Create the storage key.
@@ -376,13 +376,15 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 	#pragma clang diagnostic pop
 	}});
 	
-	if (error == nil) // success !
+	BOOL success = (error == nil);
+	if (success)
 	{
 		[self resumePushQueues];
 		[auth0ProviderManager updateProviderCache:NO];  // update provider cache if needed
 	}
 	
-	return error;
+	if (outError) *outError = error;
+	return success;
 }
 
 - (BOOL)isDatabaseUnlocked
