@@ -449,6 +449,35 @@ NS_SWIFT_NAME(insertNode(_:));
                          error:(NSError *_Nullable *_Nullable)outError;
 
 /**
+ * Queues an operation to perform a server-side-copy, from the given node, to the recipient's inbox.
+ *
+ * The given node must be part of the localUser's treesystem.
+ *
+ * On success, a temporary node is returned.
+ * The temporary node isn't part of the treesystem, but it is stored in the database.
+ * This node will be automatically deleted after the operation has been completed.
+ *
+ * @param node
+ *   The node to copy.
+ *
+ * @param recipient
+ *   The user to send the message to.
+ *
+ * @param dependencies
+ *   If the message operation should be dependent upon other operations, you may pass those dependencies here.
+ *
+ * @param outError
+ *   Set to nil on success.
+ *   Otherwise returns an error that explains what went wrong.
+ *
+ * @return Returns a temporary node on success, nil otherwise.
+ */
+- (nullable ZDCNode *)copyNode:(ZDCNode *)node
+              toRecipientInbox:(ZDCUser *)recipient
+              withDependencies:(nullable NSArray<ZDCCloudOperation*> *)dependencies
+                         error:(NSError *_Nullable *_Nullable)outError;
+
+/**
  * Queues an operation to perform a server-side-copy, from the given node, to the recipient's treesystem.
  *
  * The given node must be part of the localUser's treesystem.

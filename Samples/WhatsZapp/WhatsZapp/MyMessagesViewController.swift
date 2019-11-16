@@ -918,16 +918,37 @@ class MyMessagesViewController: MessagesViewController,
 				// use a server-side-copy operation to put the message into the recipients inbox.
 				
 				do {
-					let copyMsgNode = try cloudTransaction.copy(msgNode, toRecipientInbox: remoteUser)
 					
-					let copyAttachmentNode = try cloudTransaction.copy( attachmentNode,
-					                                       toRecipient: remoteUser,
-					                                          withName: "attachment",
-					                                        parentNode: copyMsgNode)
+					// So we're performing 2 uploads here:
+					//
+					// - message     => home:/convo/msg
+					// - attachement => home:/convo/msg/attachment
+					//
+					// And we're going to copy both of these into the recipient's inbox.
+					//
+					// Option 1:
+					//   Technically, we can copy the message as soon as it's uploaded.
+					// Option 2:
+					//   Or we can wait until both the message and attachment are uploaded,
+					//   and then perform the copies.
+					//
+					// We're going with option 2 here.
+					//
+					let uploadOps = cloudTransaction.addedOperations()
 					
+					let copyMsgNode =
+						try cloudTransaction.copy( msgNode,
+						         toRecipientInbox: remoteUser,
+						         withDependencies: uploadOps)
+					
+					try cloudTransaction.copy( attachmentNode,
+					              toRecipient: remoteUser,
+					                 withName: "attachment",
+					               parentNode: copyMsgNode)
+			
 				} catch {
 					print("Error creating server-side-copy operation: \(error)")
-					
+			
 					// Note: You could also choose to rollback the transaction here:
 					// transaction.rollback()
 				}

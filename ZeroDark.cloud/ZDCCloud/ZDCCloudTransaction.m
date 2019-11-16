@@ -1359,15 +1359,29 @@
               toRecipientInbox:(ZDCUser *)recipient
                          error:(NSError *_Nullable *_Nullable)outError
 {
+	return [self copyNode: node
+	     toRecipientInbox: recipient
+	     withDependencies: nil
+	                error: outError];
+}
+
+- (nullable ZDCNode *)copyNode:(ZDCNode *)node
+              toRecipientInbox:(ZDCUser *)recipient
+              withDependencies:(nullable NSArray<ZDCCloudOperation*> *)dependencies
+                         error:(NSError *_Nullable *_Nullable)outError
+{
 	ZDCLogAutoTrace();
 	
 	ZDCCloudPath *remoteCloudPath =
 	  [[ZDCCloudPath alloc] initWithTreeID: [self treeID]
 	                         inboxFileName: [ZDCNode randomCloudName]];
 	
-	return [self copyNode: node
-	          toRecipient: recipient
-	      remoteCloudPath: remoteCloudPath
+	return [self _copyNode: node
+	           toRecipient: recipient
+	       remoteCloudPath: remoteCloudPath
+	              withName: nil
+	            parentNode: nil
+	          dependencies: dependencies
 	                error: outError];
 }
 
@@ -1414,10 +1428,12 @@
 		return nil;
 	}
 	
-	return [self copyNode: node
-	          toRecipient: recipient
-	      remoteCloudPath: dstCloudPath
-	        cleartextName: nodeName
+	return [self _copyNode: node
+	           toRecipient: recipient
+	       remoteCloudPath: dstCloudPath
+	              withName: nodeName
+	            parentNode: parentNode
+	          dependencies: nil
 	                error: outError];
 }
 
@@ -1431,21 +1447,25 @@
                remoteCloudPath:(ZDCCloudPath *)remoteCloudPath
                          error:(NSError *_Nullable *_Nullable)outError
 {
-	return [self copyNode: srcNode
-	          toRecipient: recipient
-	      remoteCloudPath: remoteCloudPath
-	        cleartextName: nil
+	return [self _copyNode: srcNode
+	           toRecipient: recipient
+	       remoteCloudPath: remoteCloudPath
+	              withName: nil
+	            parentNode: nil
+	          dependencies: nil
 	                error: outError];
 }
 
 /**
  * Internal copy logic.
  */
-- (nullable ZDCNode *)copyNode:(ZDCNode *)srcNode
-                   toRecipient:(ZDCUser *)recipient
-               remoteCloudPath:(ZDCCloudPath *)remoteCloudPath
-                 cleartextName:(nullable NSString *)cleartextName
-                         error:(NSError *_Nullable *_Nullable)outError
+- (nullable ZDCNode *)_copyNode:(ZDCNode *)srcNode
+                    toRecipient:(ZDCUser *)recipient
+                remoteCloudPath:(ZDCCloudPath *)remoteCloudPath
+                       withName:(nullable NSString *)nodeName
+                     parentNode:(nullable ZDCNode *)parentNode
+                   dependencies:(nullable NSArray<ZDCCloudOperation*> *)dependencies
+                          error:(NSError *_Nullable *_Nullable)outError
 {
 	ZDCLogAutoTrace();
 	
@@ -1526,10 +1546,10 @@
 	// Create dstNode (this is a temporary node, that gets deleted after the operation finishes)
 	
 	ZDCNode *dstNode = [[ZDCNode alloc] initWithLocalUserID:localUserID];
-	dstNode.parentID = [self signalParentID];
+	dstNode.parentID = parentNode ? parentNode.uuid : [self signalParentID];
 	
 	NSString *cloudName = [remoteCloudPath fileNameWithExt:nil];
-	dstNode.name = cleartextName ?: cloudName;
+	dstNode.name = nodeName ?: cloudName;
 	dstNode.explicitCloudName = cloudName;
 	
 	dstNode.pendingRecipients = [NSSet setWithObject:recipient.uuid];
@@ -1594,6 +1614,10 @@
 	
 	op_copy.cloudLocator = srcCloudLocator;
 	op_copy.dstCloudLocator = dstCloudLocator;
+	
+	if (dependencies) {
+		[op_copy addDependencies:dependencies];
+	}
 	
 	[self addOperation:op_copy];
 	
@@ -3301,27 +3325,24 @@
 					//   new.put.rcrd || new.put.data
 					// + old.put.rcrd || old.put.data
 					// ------------------------------
-					// => same.node || old.node.in.hierarchy.of.new.node
+					// => same.node || old.node.is.parent.of.new.node
 					
 					NSString *newNodeID = newOp.nodeID;
 					NSString *oldNodeID = oldOp.nodeID;
 					
 					if ([newNodeID isEqualToString:oldNodeID]) return YES;
 					
-					BOOL isDescendant =
-					  [[ZDCNodeManager sharedInstance] isNode: newNodeID
-					                            aDescendantOf: oldNodeID
-					                              transaction: databaseTransaction];
-					if (isDescendant) return YES;
+					ZDCNode *newNode = [databaseTransaction objectForKey:newNodeID inCollection:kZDCCollection_Nodes];
+					
+					if ([newNode.parentID isEqualToString:oldNodeID]) return YES;
 					
 					return NO;
 				}
 			}
-			else if (oldOp.type == ZDCCloudOperationType_Move ||
-			         oldOp.type == ZDCCloudOperationType_CopyLeaf)
+			else if (oldOp.type == ZDCCloudOperationType_Move)
 			{
 				//   new.put.rcrd || new.put.data
-				// + old.move || old.copyLeaf
+				// + old.move
 				// ------------------------------
 				// => same.src || same.dst
 				
@@ -3333,12 +3354,34 @@
 				
 				return NO;
 			}
+			else if (oldOp.type == ZDCCloudOperationType_CopyLeaf)
+			{
+				//   new.put.rcrd || new.put.data
+				// + old.copyLeaf
+				// ------------------------------
+				// => same.src || same.dst || old.dstNode.is.parent.of.new.node
+				
+				if ([newOp.cloudLocator isEqualToCloudLocator: oldOp.cloudLocator
+				                                   components: ZDCCloudPathComponents_All_WithoutExt]) return YES;
+				
+				if ([newOp.cloudLocator isEqualToCloudLocator: oldOp.dstCloudLocator
+				                                   components: ZDCCloudPathComponents_All_WithoutExt]) return YES;
+				
+				NSString *newNodeID = newOp.nodeID;
+				NSString *oldDstNodeID = oldOp.dstNodeID;
+				
+				ZDCNode *newNode = [databaseTransaction objectForKey:newNodeID inCollection:kZDCCollection_Nodes];
+				
+				if ([newNode.parentID isEqualToString:oldDstNodeID]) return YES;
+				
+				return NO;
+			}
 			else if (oldOp.type == ZDCCloudOperationType_DeleteLeaf ||
 			         oldOp.type == ZDCCloudOperationType_DeleteNode)
 			{
 				//   new.put.rcrd || new.put.data
 				// + old.deleteLeaf || old.deleteNode
-				// ------------------------------
+				// ----------------------------------
 				// => same.src
 				
 				if ([newOp.cloudLocator isEqualToCloudLocator: oldOp.cloudLocator
@@ -3357,16 +3400,15 @@
 			}
 		}
 	}
-	else if (newOp.type == ZDCCloudOperationType_Move ||
-	         newOp.type == ZDCCloudOperationType_CopyLeaf)
+	else if (newOp.type == ZDCCloudOperationType_Move)
 	{
 		if (oldOp.type == ZDCCloudOperationType_Put ||
 		    oldOp.type == ZDCCloudOperationType_DeleteLeaf ||
 		    oldOp.type == ZDCCloudOperationType_DeleteNode)
 		{
-			//   new.move || new.copyLeaf
+			//   new.move
 			// + old.put || old.deleteLeaf || old.deleteNode
-			// ----------
+			// ---------------------------------------------
 			// => same.src || same.dst
 			
 			ZDCCloudLocator *newLocatorSrc = newOp.cloudLocator;
@@ -3385,7 +3427,7 @@
 		else if (oldOp.type == ZDCCloudOperationType_Move ||
 		         oldOp.type == ZDCCloudOperationType_CopyLeaf)
 		{
-			//   new.move || new.copyLeaf
+			//   new.move
 			// + old.move || old.copyLeaf
 			// --------------------------
 			// => same.src || same.dst
@@ -3407,6 +3449,108 @@
 			
 			if ([newLocatorDst isEqualToCloudLocator: oldLocatorDst
 			                              components: ZDCCloudPathComponents_All_WithoutExt]) return YES;
+			
+			return NO;
+		}
+		else if (oldOp.type == ZDCCloudOperationType_Avatar)
+		{
+			//   new.move
+			// + old.avatar
+			// --------------------------
+			// => NO
+			
+			return NO;
+		}
+	}
+	else if (newOp.type == ZDCCloudOperationType_CopyLeaf)
+	{
+		if (oldOp.type == ZDCCloudOperationType_Put ||
+		    oldOp.type == ZDCCloudOperationType_DeleteLeaf ||
+		    oldOp.type == ZDCCloudOperationType_DeleteNode)
+		{
+			//   new.copyLeaf
+			// + old.put || old.deleteLeaf || old.deleteNode
+			// ---------------------------------------------
+			// => same.src || same.dst || old.node.is.parent.of.new.node
+			
+			ZDCCloudLocator *newLocatorSrc = newOp.cloudLocator;
+			ZDCCloudLocator *newLocatorDst = newOp.dstCloudLocator;
+			
+			ZDCCloudLocator *oldLocator = oldOp.cloudLocator;
+			
+			if ([newLocatorSrc isEqualToCloudLocator: oldLocator
+			                              components: ZDCCloudPathComponents_All_WithoutExt]) return YES;
+			
+			if ([newLocatorDst isEqualToCloudLocator: oldLocator
+			                              components: ZDCCloudPathComponents_All_WithoutExt]) return YES;
+			
+			NSString *newDstNodeID = newOp.dstNodeID;
+			NSString *oldNodeID = oldOp.nodeID;
+			
+			ZDCNode *newDstNode = [databaseTransaction objectForKey:newDstNodeID inCollection:kZDCCollection_Nodes];
+			
+			if ([newDstNode.parentID isEqualToString:oldNodeID]) return YES;
+			
+			return NO;
+		}
+		else if (oldOp.type == ZDCCloudOperationType_Move)
+		{
+			//   new.copyLeaf
+			// + old.move
+			// --------------------------
+			// => same.src || same.dst
+			
+			ZDCCloudLocator *newLocatorSrc = newOp.cloudLocator;
+			ZDCCloudLocator *newLocatorDst = newOp.dstCloudLocator;
+			
+			ZDCCloudLocator *oldLocatorSrc = oldOp.cloudLocator;
+			ZDCCloudLocator *oldLocatorDst = oldOp.cloudLocator;
+			
+			if ([newLocatorSrc isEqualToCloudLocator: oldLocatorSrc
+			                              components: ZDCCloudPathComponents_All_WithoutExt]) return YES;
+			
+			if ([newLocatorDst isEqualToCloudLocator: oldLocatorSrc
+			                              components: ZDCCloudPathComponents_All_WithoutExt]) return YES;
+			
+			if ([newLocatorSrc isEqualToCloudLocator: oldLocatorDst
+			                              components: ZDCCloudPathComponents_All_WithoutExt]) return YES;
+			
+			if ([newLocatorDst isEqualToCloudLocator: oldLocatorDst
+			                              components: ZDCCloudPathComponents_All_WithoutExt]) return YES;
+			
+			return NO;
+		}
+		else if (oldOp.type == ZDCCloudOperationType_CopyLeaf)
+		{
+			//   new.copyLeaf
+			// + old.copyLeaf
+			// --------------------------
+			// => same.src || same.dst || old.node.is.parent.of.new.node
+			
+			ZDCCloudLocator *newLocatorSrc = newOp.cloudLocator;
+			ZDCCloudLocator *newLocatorDst = newOp.dstCloudLocator;
+			
+			ZDCCloudLocator *oldLocatorSrc = oldOp.cloudLocator;
+			ZDCCloudLocator *oldLocatorDst = oldOp.cloudLocator;
+			
+			if ([newLocatorSrc isEqualToCloudLocator: oldLocatorSrc
+			                              components: ZDCCloudPathComponents_All_WithoutExt]) return YES;
+			
+			if ([newLocatorDst isEqualToCloudLocator: oldLocatorSrc
+			                              components: ZDCCloudPathComponents_All_WithoutExt]) return YES;
+			
+			if ([newLocatorSrc isEqualToCloudLocator: oldLocatorDst
+			                              components: ZDCCloudPathComponents_All_WithoutExt]) return YES;
+			
+			if ([newLocatorDst isEqualToCloudLocator: oldLocatorDst
+			                              components: ZDCCloudPathComponents_All_WithoutExt]) return YES;
+			
+			NSString *newDstNodeID = newOp.dstNodeID;
+			NSString *oldDstNodeID = oldOp.dstNodeID;
+			
+			ZDCNode *newDstNode = [databaseTransaction objectForKey:newDstNodeID inCollection:kZDCCollection_Nodes];
+			
+			if ([newDstNode.parentID isEqualToString:oldDstNodeID]) return YES;
 			
 			return NO;
 		}
