@@ -1588,14 +1588,14 @@ done:
 	
 	ZDCCloudOperation *op =
 	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUser.uuid
-	                                          treeID: zdc.primaryTreeID
+	                                          treeID: @"*"
 	                                            type: ZDCCloudOperationType_Avatar];
 	
 	op.avatar_auth0ID = auth0ID;
 	op.avatar_oldETag = oldAvatarData ? [[AWSPayload rawMD5HashForPayload:oldAvatarData] lowercaseHexString] : nil;
 	op.avatar_newETag = newAvatarData ? [[AWSPayload rawMD5HashForPayload:newAvatarData] lowercaseHexString] : nil;
 	
-	NSString *extName = [zdc.databaseManager cloudExtNameForUserID:localUser.uuid treeID:zdc.primaryTreeID];
+	NSString *extName = [zdc.databaseManager cloudExtNameForUserID:@"*" treeID:@"*"];
 	
 	YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
 	[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {

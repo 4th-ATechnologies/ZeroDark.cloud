@@ -1661,10 +1661,8 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	
 	[ext registerPipeline:pipeline];
 	
-	// We always start the extension suspended !
-	// ZDCLocalUserManager is in charge of resuming the extension (at the appropriate time).
-	//
-	[ext suspend];
+	// We always start the extension suspended.
+	// Every call to suspend must be matched with a call to resume.
 	
 	// This method is getting called before the PushManager has been initialized.
 	// So we let ZeroDarkCloud finish its initialization process,
@@ -1674,10 +1672,17 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	//
 	[ext suspend];
 	
+	// ZDCSyncManager will resume the extension when:
+	//
+	// - it's completed a pull (to ensure we've processed cloud changes)
+	// - it knows we have network connectivity
+	//
+	[ext suspend];
+	
 #if TARGET_OS_IPHONE
 	if (previouslyRegisteredCloudExtTuples == nil)
 	{
-		// CloudCore extensions that are re-registered during database setup get a few extra suspensions.
+		// CloudCore extensions that are re-registered during database setup get an extra suspension.
 		
 		// The ZDCSessionManager handles resuming background uploads/downloads.
 		// We don't want to start the push queue until after its resumed its list of active uploads.

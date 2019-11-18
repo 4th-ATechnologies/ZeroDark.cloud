@@ -55,8 +55,8 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 @property (nonatomic, assign, readwrite) BOOL isEnabled;
 @property (nonatomic, assign, readwrite) BOOL isPushingPaused;
 
-@property (nonatomic, assign, readwrite) BOOL isPulling;            // S4PullManager activated for user
-@property (nonatomic, assign, readwrite) BOOL isPullingWithChanges; // S4PullManager actually found changes to pull
+@property (nonatomic, assign, readwrite) BOOL isPulling;            // PullManager activated for user
+@property (nonatomic, assign, readwrite) BOOL isPullingWithChanges; // PullManager actually found changes to pull
 
 @property (nonatomic, assign, readwrite) BOOL isPushing;
 @property (nonatomic, assign, readwrite) BOOL isPushingSuspended; // the suspend/resume we're responsible for
@@ -168,6 +168,10 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 		                                             name: UIApplicationDidBecomeActiveNotification
 		                                           object: nil];
 	#endif
+		
+		if (hasInternet) {
+			[[zdc.databaseManager cloudExtForUserID:@"*" treeID:@"*"] resume];
+		}
 		
 		[self refreshLocalUsers];
 	}
@@ -430,29 +434,38 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 	BOOL newHasInternet = (status > AFNetworkReachabilityStatusNotReachable);
 	
 	__weak typeof(self) weakSelf = self;
-	
-	// Note: the 'hasInternet' variable is only safe to access/modify within the 'queue'.
 	dispatch_block_t block = ^{ @autoreleasepool {
 		
-		__strong typeof(self) strongSelf = weakSelf;
-		if (strongSelf == nil) return;
-		
-		if (!strongSelf->hasInternet && newHasInternet)
-		{
-			strongSelf->hasInternet = YES;
-			[strongSelf pullChangesForAllEnabledUsersIfNeeded];
-		}
-		else if (strongSelf->hasInternet && !newHasInternet)
-		{
-			strongSelf->hasInternet = NO;
-			[strongSelf abortPullAndSuspendPushForAllUsers];
-		}
+		[weakSelf updateHasInternet:newHasInternet];
 	}};
 	
 	if (dispatch_get_specific(IsOnQueueKey))
 		block();
 	else
 		dispatch_async(queue, block);
+}
+
+- (void)updateHasInternet:(BOOL)newHasInternet
+{
+	ZDCLogAutoTrace();
+	NSAssert(dispatch_get_specific(IsOnQueueKey), @"Must be executed within queue");
+	
+	// Note: the 'hasInternet' variable is only safe to access/modify within the 'queue'.
+	
+	if (!hasInternet && newHasInternet)
+	{
+		hasInternet = YES;
+		[self pullChangesForAllEnabledUsersIfNeeded];
+		
+		[[zdc.databaseManager cloudExtForUserID:@"*" treeID:@"*"] resume];
+	}
+	else if (hasInternet && !newHasInternet)
+	{
+		hasInternet = NO;
+		[self abortPullAndSuspendPushForAllUsers];
+		
+		[[zdc.databaseManager cloudExtForUserID:@"*" treeID:@"*"] suspend];
+	}
 }
 
 /**
@@ -794,9 +807,6 @@ static NSTimeInterval const ZDCDefaultPullInterval = 60 * 15; // 15 minutes (in 
 			{
 				syncState.cloudExt = [zdc.databaseManager registerCloudExtensionForUserID:localUserID treeID:treeID];
 			}
-			
-		//	YapDatabaseCloudCorePipeline *pipeline = [syncState.cloudExt defaultPipeline];
-		//	pipeline.maxConcurrentOperationCount = [S4Preferences_si uploadConcurrencyForLocalUserID:localUserID];
 			
 			__weak typeof(self) weakSelf = self;
 			syncState.timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
