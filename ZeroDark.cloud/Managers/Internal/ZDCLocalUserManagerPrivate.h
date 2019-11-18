@@ -90,6 +90,7 @@ NS_ASSUME_NONNULL_BEGIN
 -(NSDictionary*) createProfilesFromIdentities:(NSArray*)identities
                                        region:(AWSRegion)region
                                        bucket:(NSString *)bucket;
+
 /**
  * Convenience routine for updating a user's avatar.
  * It performs all the requisite tasks, tying together the various components of framework.

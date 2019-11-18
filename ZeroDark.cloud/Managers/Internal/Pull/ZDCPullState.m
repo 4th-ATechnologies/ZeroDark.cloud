@@ -23,7 +23,6 @@
 	NSMutableArray<NSURLSessionTask*>* tasks;
 	
 	NSMutableSet<NSString*> *unprocessedNodeIDs;
-	NSMutableSet<NSString*> *unprocessedAvatarFilenames;
 	NSMutableSet<NSString*> *unknownUserIDs;
 	
 	BOOL changeDetected;
@@ -41,7 +40,6 @@
 @dynamic tasks;
 @dynamic tasksCount;
 @dynamic unprocessedNodeIDs;
-@dynamic unprocessedAvatarFilenames;
 @dynamic unknownUserIDs;
 
 - (instancetype)initWithLocalUserID:(NSString *)inLocalUserID treeID:(NSString *)inTreeID
@@ -59,9 +57,8 @@
 		items = [[NSMutableArray alloc] init];
 		tasks = [[NSMutableArray alloc] init];
 		
-		unprocessedNodeIDs         = [[NSMutableSet alloc] init];
-		unprocessedAvatarFilenames = [[NSMutableSet alloc] init];
-		unknownUserIDs             = [[NSMutableSet alloc] init];
+		unprocessedNodeIDs = [[NSMutableSet alloc] init];
+		unknownUserIDs     = [[NSMutableSet alloc] init];
 		
 		authFailed = NO;
 	}
@@ -378,50 +375,6 @@
 	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
 		[unprocessedNodeIDs removeObject:nodeID];
-		
-	#pragma clang diagnostic pop
-	}});
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Avatar Tracking
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-- (NSSet<NSString *> *)unprocessedAvatarFilenames
-{
-	__block NSSet<NSString *>* result = nil;
-	
-	dispatch_sync(queue, ^{ @autoreleasepool {
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-		
-		result = [unprocessedAvatarFilenames copy];
-		
-	#pragma clang diagnostic pop
-	}});
-	
-	return result;
-}
-
-- (void)addUnprocessedAvatarFilenames:(NSArray<NSString *> *)avatarFilenames
-{
-	dispatch_sync(queue, ^{ @autoreleasepool {
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-		
-		[unprocessedAvatarFilenames addObjectsFromArray:avatarFilenames];
-		
-	#pragma clang diagnostic pop
-	}});
-}
-
-- (void)removeUnprocessedAvatarFilename:(NSString *)avatarFilename
-{
-	dispatch_sync(queue, ^{ @autoreleasepool {
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-		
-		[unprocessedAvatarFilenames removeObject:avatarFilename];
 		
 	#pragma clang diagnostic pop
 	}});

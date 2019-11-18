@@ -464,31 +464,49 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 
 - (NSString *)extNameForContext:(ZDCTaskContext *)context
 {
-	return [zdc.databaseManager cloudExtNameForUserID:context.localUserID treeID:context.treeID];
+	if ([context.treeID isEqualToString:@"*"]) {
+		return [zdc.databaseManager cloudExtNameForUserID:@"*" treeID:@"*"];
+	} else {
+		return [zdc.databaseManager cloudExtNameForUserID:context.localUserID treeID:context.treeID];
+	}
 }
 
 - (NSString *)extNameForOperation:(ZDCCloudOperation *)operation
 {
-	return [zdc.databaseManager cloudExtNameForUserID:operation.localUserID treeID:operation.treeID];
-}
-
-- (ZDCCloudOperation *)operationForContext:(ZDCTaskContext *)context
-{
-	return (ZDCCloudOperation *)[[self pipelineForContext:context] operationWithUUID:context.operationUUID];
+	if ([operation.treeID isEqualToString:@"*"]) {
+		return [zdc.databaseManager cloudExtNameForUserID:@"*" treeID:@"*"];
+	} else {
+		return [zdc.databaseManager cloudExtNameForUserID:operation.localUserID treeID:operation.treeID];
+	}
 }
 
 - (YapDatabaseCloudCorePipeline *)pipelineForContext:(ZDCTaskContext *)context
 {
-	ZDCCloud *ext = [zdc.databaseManager cloudExtForUserID:context.localUserID treeID:context.treeID];
+	ZDCCloud *ext = nil;
+	if ([context.treeID isEqualToString:@"*"]) {
+		ext = [zdc.databaseManager cloudExtForUserID:@"*" treeID:@"*"];
+	} else {
+		ext = [zdc.databaseManager cloudExtForUserID:context.localUserID treeID:context.treeID];
+	}
 	
 	return [ext pipelineWithName:context.pipeline];
 }
 
 - (YapDatabaseCloudCorePipeline *)pipelineForOperation:(ZDCCloudOperation *)operation
 {
-	ZDCCloud *ext = [zdc.databaseManager cloudExtForUserID:operation.localUserID treeID:operation.treeID];
+	ZDCCloud *ext = nil;
+	if ([operation.treeID isEqualToString:@"*"]) {
+		ext = [zdc.databaseManager cloudExtForUserID:@"*" treeID:@"*"];
+	} else {
+		ext = [zdc.databaseManager cloudExtForUserID:operation.localUserID treeID:operation.treeID];
+	}
 	
 	return [ext pipelineWithName:operation.pipeline];
+}
+
+- (ZDCCloudOperation *)operationForContext:(ZDCTaskContext *)context
+{
+	return (ZDCCloudOperation *)[[self pipelineForContext:context] operationWithUUID:context.operationUUID];
 }
 
 - (void)stashContext:(id)context
@@ -1188,6 +1206,44 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		NSAssert(NO, @"Unexpected context");
 	}
 }
+
+#if TARGET_OS_IPHONE
+/**
+ * Used on iOS, where uploads may be handled via a background NSURLSession.
+ */
+- (void)taskDidRestore:(NSURLSessionTask *)task
+             inSession:(NSURLSession *)session
+               context:(ZDCObject *)inContext
+{
+	if ([inContext isKindOfClass:[ZDCTaskContext class]])
+	{
+		ZDCTaskContext *context = (ZDCTaskContext *)inContext;
+		
+		YapDatabaseCloudCorePipeline *pipeline = [self pipelineForContext:context];
+		ZDCCloudOperation *operation = [self operationForContext:context];
+		
+		[pipeline setStatusAsActiveForOperationWithUUID:operation.uuid];
+		
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:context.localUserID];
+		AFURLSessionManager *sessionManager = sessionInfo.backgroundSession;
+		
+		NSProgress *progress = [sessionManager uploadProgressForTask:task];
+		if (progress)
+		{
+			context.progress = progress;
+			
+			if (operation.multipartInfo)
+			{
+				[self restoreInProgressMultipartContext:context];
+			}
+			else
+			{
+				[zdc.progressManager setUploadProgress:progress forOperation:operation];
+			}
+		}
+	}
+}
+#endif
 
 - (void)resumeOperationsPendingPullCompletion:(NSString *)latestChangeToken
                                forLocalUserID:(NSString *)localUserID

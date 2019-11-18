@@ -735,6 +735,8 @@ done:
 			
 			isReadyForStorage = YES;
 		});
+		
+		[[zdc.databaseManager cloudExtForUserID:@"*" treeID:@"*"] resume];
 	}
 	else
 	{
@@ -883,6 +885,7 @@ done:
 		if (localUserIDsPendingRestore.count == 0)
 		{
 			[pending removeAllObjects];
+			[[zdc.databaseManager cloudExtForUserID:@"*" treeID:@"*"] resume];
 		}
 	}];
 }
@@ -929,9 +932,8 @@ done:
 		}
 		else
 		{
-			NSAssert(NO, @"Not implemented");
+			[zdc.pushManager taskDidRestore:task inSession:session context:inContext];
 		}
-		
 	}});
 }
 #endif

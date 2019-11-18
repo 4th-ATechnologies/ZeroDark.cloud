@@ -26,7 +26,6 @@
 @property (atomic, assign, readonly) NSUInteger tasksCount;
 
 @property (atomic, strong, readonly) NSSet<NSString *>* unprocessedNodeIDs;
-@property (atomic, strong, readonly) NSSet<NSString *>* unprocessedAvatarFilenames;
 @property (atomic, strong, readonly) NSSet<NSString *>* unknownUserIDs;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -84,17 +83,6 @@
 - (void)addUnprocessedNodeIDs:(NSArray<NSString *>*)nodeIDs;
 
 - (void)removeUnprocessedNodeID:(NSString *)nodeID;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Avatar Tracking
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * Helps us detect items that have been deleted from our 'avatar' directory.
-**/
-- (void)addUnprocessedAvatarFilenames:(NSArray<NSString *>*)avatarFilenames;
-
-- (void)removeUnprocessedAvatarFilename:(NSString *)avatarFilename;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark User Tracking

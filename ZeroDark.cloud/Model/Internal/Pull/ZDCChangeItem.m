@@ -187,8 +187,15 @@ static NSString *const k_deprecated_uuid = @"uuid";
 - (NSString *)eTag
 {
 	id value = dict[k_eTag];
-	if ([value isKindOfClass:[NSString class]]) {
-		return (NSString *)value;
+	if ([value isKindOfClass:[NSString class]])
+	{
+		NSString *eTag = (NSString *)value;
+		
+		// If the server forgot to trim the quotes, let's fix it here.
+		NSCharacterSet *quotes = [NSCharacterSet characterSetWithCharactersInString:@"\""];
+		eTag = [eTag stringByTrimmingCharactersInSet:quotes];
+		
+		return eTag;
 	}
 	
 	return nil;

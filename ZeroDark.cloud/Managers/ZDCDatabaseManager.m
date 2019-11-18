@@ -1091,8 +1091,13 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	//
 	// The cloud core extension manages the upload queue for local users.
 	//
+	// We register 1 shared ZDCCloud instance (with localUserID="*" and treeID="*").
+	// This instance is only used for uploading user avatars.
+	//
+	// And then we automatically re-register any ZDCCloud instances that were registered from last app launch.
 	
 	NSMutableArray<YapCollectionKey *> *tuples = nil;
+	BOOL foundAvatarExt = NO;
 	
 	NSArray<NSString *> *previouslyRegisteredExtensionNames = database.previouslyRegisteredExtensionNames;
 	for (NSString *extName in previouslyRegisteredExtensionNames)
@@ -1105,20 +1110,25 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 			
 			NSArray<NSString*> *components = [suffix componentsSeparatedByString:@"_"];
 			
-			if ((components.count == 2) && (components[0].length == 32)) // sanity checks
+			if (components.count == 2)
 			{
 				NSString *localUserID = components[0];
 				NSString *treeID = components[1];
 				
-				YapDatabaseCloudCore* ext = [self registerCloudExtensionForUserID:localUserID treeID:treeID];
-				if(ext)
+				YapDatabaseCloudCore *ext = [self registerCloudExtensionForUserID:localUserID treeID:treeID];
+				if (ext)
 				{
 					if (tuples == nil) {
 						tuples = [NSMutableArray arrayWithCapacity:4];
 					}
-					
+				
 					YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, treeID);
 					[tuples addObject:tuple];
+				
+					if ([localUserID isEqualToString:@"*"] && [treeID isEqualToString:@"*"])
+					{
+						foundAvatarExt = YES;
+					}
 				}
 			}
 		}
@@ -1127,6 +1137,11 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	// The 'previouslyRegisteredCloudExtTuples' variable MUST be non-nil at the completion of this method !
 	//
 	previouslyRegisteredCloudExtTuples = tuples ? [tuples copy] : [NSArray array];
+	
+	if (!foundAvatarExt)
+	{
+		[self registerCloudExtensionForUserID:@"*" treeID:@"*"];
+	}
 }
 
 - (void)setupActionManager
@@ -1615,17 +1630,21 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	NSString *localUserID = [inLocalUserID copy]; // mutable string protection
 	NSString *treeID = [inTreeID copy];           // mutable string protection
 	
-	__block ZDCLocalUser *localUser = nil;
-	[self.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-
-		ZDCUser *user = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
-		if (user.isLocal) {
-			localUser = (ZDCLocalUser *)user;
+	BOOL isAvatarExt = [localUserID isEqualToString:@"*"];
+	if (!isAvatarExt)
+	{
+		__block ZDCLocalUser *localUser = nil;
+		[self.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+			
+			ZDCUser *user = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
+			if (user.isLocal) {
+				localUser = (ZDCLocalUser *)user;
+			}
+		}];
+		
+		if (!localUser) {
+			return nil;
 		}
-	}];
-
-	if (!localUser) {
-		return nil;
 	}
 	
 	ZDCCloud *ext =
@@ -1647,9 +1666,13 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	//
 	[ext suspend];
 	
-#if TARGET_EXTENSION
-	[ext suspendWithCount:1000]; // Never run
-#endif
+	// This method is getting called before the PushManager has been initialized.
+	// So we let ZeroDarkCloud finish its initialization process,
+	// and then it inovkes [ext resume] when it's done.
+	//
+	// @see [ZeroDarkCloud resumePushQueues]
+	//
+	[ext suspend];
 	
 #if TARGET_OS_IPHONE
 	if (previouslyRegisteredCloudExtTuples == nil)
@@ -1663,15 +1686,11 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		// @see [ZDCSessionManager restoreTasksInBackgroundSessions]
 		//
 		[ext suspend];
-		
-		// This method is getting called before the PushManager has been initialized.
-		// So we let ZeroDarkCloud finish its initialization process,
-		// and then it inovkes [ext resume] when it's done.
-		//
-		// @see [ZeroDarkCloud resumePushQueues]
-		//
-		[ext suspend];
 	}
+#endif
+	
+#if TARGET_EXTENSION
+	[ext suspendWithCount:1000]; // Never run
 #endif
 	
 	// Debugging ?
@@ -1810,8 +1829,10 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	for (YapCollectionKey *tuple in previouslyRegisteredCloudExtTuples)
 	{
 		NSString *localUserID = tuple.collection;
-		
-		[localUserIDs addObject:localUserID];
+		if (![localUserID isEqualToString:@"*"])
+		{
+			[localUserIDs addObject:localUserID];
+		}
 	}
 	
 	return localUserIDs;

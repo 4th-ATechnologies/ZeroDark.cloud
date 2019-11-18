@@ -37,6 +37,13 @@ NS_ASSUME_NONNULL_BEGIN
               withError:(nullable NSError *)error
                 context:(ZDCObject *)context;
 
+#if TARGET_OS_IPHONE
+/** Forwarded from ZDCSessionManager. */
+- (void)taskDidRestore:(NSURLSessionTask *)task
+             inSession:(NSURLSession *)session
+               context:(ZDCObject *)context;
+#endif
+
 /** Forwarded from ZDCPullManager */
 - (void)resumeOperationsPendingPullCompletion:(NSString *)latestChangeToken
                                forLocalUserID:(NSString *)localUserID

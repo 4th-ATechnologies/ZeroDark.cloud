@@ -32,6 +32,7 @@
 #import "ZeroDarkCloudPrivate.h"
 
 // Categories
+#import "NSData+AWSUtilities.h"
 #import "NSError+Auth0API.h"
 #import "NSError+ZeroDark.h"
 #import "NSString+ZeroDark.h"
@@ -124,34 +125,7 @@ static NSUInteger const kMaxFailCount = 8;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Notifications
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 /*
-- (void)postAvatarUpdatedNotification:(NSString *)localUserID
-                         withFilename:(NSString *)filename
-                                 eTag:(NSString *)eTag
-{
-	NSParameterAssert(localUserID != nil);
-	NSParameterAssert(filename != nil);
-
-	dispatch_block_t block = ^{
-		
-		NSDictionary *userInfo = @{
-			kUserIDKey  : localUserID,
-			kAuth0IDKey : filename,
-			kETagKey    : eTag ?: @""
-		};
-		
-		[[NSNotificationCenter defaultCenter] postNotificationName: CloudSyncAvatarChangedNotification
-		                                                    object: self
-		                                                  userInfo: userInfo];
-	};
-	
-	if ([NSThread isMainThread])
-		block();
-	else
-		dispatch_async(dispatch_get_main_queue(), block);
-}
-
 - (void)postAuth0ProfileUpdatedNotification:(NSString *)userID
 {
 	NSParameterAssert(userID != nil);
@@ -938,7 +912,12 @@ static NSUInteger const kMaxFailCount = 8;
 		
 	//	NSString *avatarFilename = [change.path lastPathComponent];
 	//	NSString *eTag           = change.eTag;
-	//	
+	
+		[self processPendingChange_UpdateAvatar: change
+		                              changeIDs: changeIDs
+		                              pullState: pullState
+		                        finalCompletion: finalCompletionBlock];
+		
 		[self skipPendingChange: change
 		              changeIDs: changeIDs
 		              pullState: pullState
@@ -1982,6 +1961,130 @@ static NSUInteger const kMaxFailCount = 8;
 			               finalCompletion: finalCompletionBlock];
 		}];
 	}];
+}
+
+- (void)processPendingChange_UpdateAvatar:(ZDCChangeItem *)change
+                                changeIDs:(NSOrderedSet<NSString *> *)changeIDs
+                                pullState:(ZDCPullState *)pullState
+                          finalCompletion:(ZDCPullTaskCompletion)finalCompletionBlock
+{
+	ZDCLogTrace(@"[%@] ProcessPendingChange: update-avatar", pullState.localUserID);
+	
+	// Example change:
+	//
+	// {
+	//   app = "*";
+	//   bucket = "com.4th-a.user.99xownhcm5p1t1ofm4ny4jq159r8zd5z-675c7206";
+	//   command = "update-avatar";
+	//   eTag = "ff296bebdd6be6e209df133a58c6ff98";
+	//   id = 9D37AF2AFB694539A1340C3124A12A4D;
+	//   path = "avatar/5dcca037370a4d0e9463eb75";
+	//   region = "us-west-2";
+	//   ts = 1573939631567;
+	//   uuid = 9D37AF2AFB694539A1340C3124A12A4D;
+	// }
+	//
+	// We're being told about a change to a localUser's avatar (for a particular auth0_id).
+	// Now, user avatars are stored in the DiskManager.
+	// So all we need to do is flush the image from the DiskManager,
+	// and it will get automatically re-downloaded (refreshed) as needed.
+	
+	NSString *const localUserID = pullState.localUserID;
+	
+	NSString *auth0_userID = [change.path lastPathComponent];
+	NSString *auth0_id = [NSString stringWithFormat:@"auth0|%@", auth0_userID];
+	
+	NSString *cloud_eTag = change.eTag;
+	
+	__block ZDCLocalUser *localUser = nil;
+	[[self roConnection] readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+		
+		localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
+	}];
+	
+	ZDCDiskExport *export = [zdc.diskManager userAvatar:localUser forAuth0ID:auth0_id];
+	ZDCCryptoFile *cryptoFile = export.cryptoFile;
+	
+	if (cryptoFile == nil)
+	{
+		// Avatar isn't stored in the DiskManager, so we're done here.
+		[self skipPendingChange: change
+		              changeIDs: changeIDs
+		              pullState: pullState
+		        finalCompletion: finalCompletionBlock];
+		return;
+	}
+	
+	// Note: We're currently executing on a background thread (concurrentQueue).
+	// So synchronous diskIO is OK here.
+	
+	NSError *error = nil;
+	NSData *data = [ZDCFileConversion decryptCryptoFileIntoMemory:export.cryptoFile error:&error];
+	
+	if (error || !data)
+	{
+		// File is corrupt — delete it.
+		[zdc.diskManager deleteUserAvatar:localUserID forAuth0ID:auth0_id];
+		
+		// Avatar isn't stored in the DiskManager (anymore), so we're done here.
+		[self skipPendingChange: change
+		              changeIDs: changeIDs
+		              pullState: pullState
+		        finalCompletion: finalCompletionBlock];
+		return;
+	}
+	
+	// AWS eTags are actually just MD5 hashes.
+	// So we can calculate AWS's eTag from our local data.
+	
+	NSString *local_eTag = [[AWSPayload rawMD5HashForPayload:data] lowercaseHexString];
+	
+	if ([local_eTag isEqualToString:cloud_eTag])
+	{
+		// We're already up-to-date.
+		[self skipPendingChange: change
+		              changeIDs: changeIDs
+		              pullState: pullState
+		        finalCompletion: finalCompletionBlock];
+		return;
+	}
+	
+	// What we have in the DiskManager doesn't match what's in the cloud.
+	// But this could be because we have an operation queued to push a NEW avatar to the cloud.
+	
+	__block BOOL hasPotentialMatch = NO;
+	
+	ZDCCloud *ext = [zdc.databaseManager cloudExtForUserID:@"*" treeID:@"*"];
+	YapDatabaseCloudCorePipeline *pipeline = [ext defaultPipeline];
+	
+	[pipeline enumerateOperationsUsingBlock:
+		^(YapDatabaseCloudCoreOperation *operation, NSUInteger graphIdx, BOOL *stop)
+	{
+		if ([operation isKindOfClass:[ZDCCloudOperation class]])
+		{
+			ZDCCloudOperation *op = (ZDCCloudOperation *)operation;
+			
+			if ([op.localUserID isEqualToString:localUserID] && (op.type == ZDCCloudOperationType_Avatar))
+			{
+				if ([op.avatar_oldETag isEqualToString:cloud_eTag] ||
+				    [op.avatar_newETag isEqualToString:cloud_eTag]  )
+				{
+					hasPotentialMatch = YES;
+					*stop = YES;
+				}
+			}
+		}
+	}];
+	
+	if (!hasPotentialMatch)
+	{
+		[zdc.diskManager deleteUserAvatar:localUserID forAuth0ID:auth0_id];
+	}
+	
+	[self skipPendingChange: change
+	              changeIDs: changeIDs
+	              pullState: pullState
+	        finalCompletion: finalCompletionBlock];
 }
 
 /**
@@ -5159,21 +5262,6 @@ static NSUInteger const kMaxFailCount = 8;
 			}
 		}
 	}
-	
-	// - avatars
-//	{
-//		NSSet<NSString *> *deletedAvatars = pullState.unprocessedAvatarFilenames;
-//		if (deletedAvatars.count > 0)
-//		{
-//			[transaction addCompletionQueue:concurrentQueue completionBlock:^{
-//
-//				for (NSString *avatarFilename in deletedAvatars)
-//				{
-//					[self postAvatarUpdatedNotification:localUserID withFilename:avatarFilename eTag:nil];
-//				}
-//			}];
-//		}
-//	}
 }
 
 #pragma clang diagnostic pop
