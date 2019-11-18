@@ -72,10 +72,17 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 		uiDatabaseConnection = ZDCManager.zdc().databaseManager?.uiDatabaseConnection
 		initializeMappings()
 		
-		NotificationCenter.default.addObserver( self,
-		                              selector: #selector(self.uiDatabaseConnectionDidUpdate(_:)),
-		                                  name: Notification.Name.UIDatabaseConnectionDidUpdate,
-		                                object: nil)
+		let nc = NotificationCenter.default
+		
+		nc.addObserver( self,
+		       selector: #selector(self.uiDatabaseConnectionDidUpdate(_:)),
+		           name: Notification.Name.UIDatabaseConnectionDidUpdate,
+		         object: nil)
+		
+		nc.addObserver(self,
+		      selector: #selector(self.diskManagerChanged(_:)),
+		          name: Notification.Name.ZDCDiskManagerChanged,
+		        object: nil)
 	}
 	
 	override func viewWillAppear(_ animated: Bool) {
@@ -121,6 +128,55 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 				// Waiting for view to finish registering
 			}
 		})
+	}
+	
+	private func configureNavigationTitle(_ localUser: ZDCLocalUser) {
+		
+		DDLogInfo("configureNavigationTitle()")
+		
+		if navTitleButton == nil {
+			
+			navTitleButton = IconTitleButton.create()
+			navTitleButton?.setTitleColor(self.view.tintColor, for: .normal)
+			navTitleButton?.addTarget( self,
+			                   action: #selector(self.didTapNavTitleButton(_:)),
+			                      for: .touchUpInside)
+		}
+		
+		navTitleButton?.setTitle(localUser.displayName, for: .normal)
+		navTitleButton?.isEnabled = true
+		self.navigationItem.titleView = navTitleButton
+		
+		let imageManager = ZDCManager.zdc().imageManager!
+		
+		let size = CGSize(width: 30, height: 30)
+		let defaultImage = {
+			return imageManager.defaultUserAvatar().scaled(to: size, scalingMode: .aspectFit)
+		}
+		let processing = {(image: UIImage) in
+			return image.scaled(to: size, scalingMode: .aspectFit)
+		}
+		let preFetch = {[weak self] (image: UIImage?, willFetch: Bool) -> Void in
+			
+			// This closure is invoked BEFORE the fetchUserAvatar() function returns.
+			
+			self?.navTitleButton?.setImage(image ?? defaultImage(), for: .normal)
+		}
+		let postFetch = {[weak self] (image: UIImage?, error: Error?) -> Void in
+			
+			// This closure in invoked later, after the imageManager has fetched the image.
+			//
+			// The image may be cached on disk, in which case it's invoked shortly.
+			// Or the image may need to be downloaded, which takes longer.
+			
+			self?.navTitleButton?.setImage(image ?? defaultImage(), for: .normal)
+		}
+		
+		imageManager.fetchUserAvatar( localUser,
+		            withProcessingID: "navTitle",
+		             processingBlock: processing,
+		                    preFetch: preFetch,
+		                   postFetch: postFetch)
 	}
 	
 	private func conversation(indexPath: IndexPath) -> Conversation? {
@@ -336,6 +392,10 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 	
 	@objc private func uiDatabaseConnectionDidUpdate(_ notification: NSNotification) {
 		
+		guard let tableView = self.tableView else {
+			return
+		}
+		
 		guard let mappings = mappings else {
 			
 			initializeMappings()
@@ -357,81 +417,66 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 			return
 		}
 		
-		tableView.beginUpdates()
-		for rowChange in rowChanges {
-			switch rowChange.type {
-				 
-				case .delete:
-					tableView.deleteRows(at: [rowChange.indexPath!], with: .automatic)
+		var indexPathsToReload: [IndexPath] = []
+		
+		tableView.performBatchUpdates({
+			
+			for rowChange in rowChanges {
+				switch rowChange.type {
+					 
+					case .delete:
+						tableView.deleteRows(at: [rowChange.indexPath!], with: .automatic)
+					
+					case .insert:
+						tableView.insertRows(at: [rowChange.newIndexPath!], with: .automatic)
+					 
+					case .move:
+						tableView.moveRow(at: rowChange.indexPath!, to: rowChange.newIndexPath!)
+						if rowChange.changes.contains(.changedObject) {
+							indexPathsToReload.append(rowChange.newIndexPath!)
+						}
+					
+					case .update:
+						tableView.reloadRows(at: [rowChange.indexPath!], with: .automatic)
+					
+					default:
+						break
+				}
+			}
+			
+		}, completion: {(completed) in
+			
+			// UITableView crashes if we try to perform both a move + reload on the same indexPath.
+			// Which is kinda silly.
+			// I mean, if a cell is moving, that doesn't exclude it from also changing...
+			//
+			// So we're trying to workaround Apple's bugs here.
+			//
+			if indexPathsToReload.count > 0 {
+				tableView.reloadRows(at: indexPathsToReload, with: .automatic)
+			}
+		})
+	}
+	
+	@objc private func diskManagerChanged(_ notification: NSNotification) {
+		
+		if let changes = notification.userInfo?[kZDCDiskManagerChanges] as? ZDCDiskManagerChanges {
+		
+			if changes.changedUsersIDs.contains(localUserID) {
 				
-				case .insert:
-					tableView.insertRows(at: [rowChange.newIndexPath!], with: .automatic)
-				 
-				case .move:
-					tableView.moveRow(at: rowChange.indexPath!, to: rowChange.newIndexPath!)
+				// The localUser's avatar may have changed.
+				// Refresh the nav title.
 				
-				case .update:
-					tableView.reloadRows(at: [rowChange.indexPath!], with: .automatic)
-				
-				default:
-					break
+				if let localUser = self.localUser() {
+					self.configureNavigationTitle(localUser)
+				}
 			}
 		}
-		tableView.endUpdates()
 	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: Navigation Bar
+// MARK: User Actions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	private func configureNavigationTitle(_ localUser: ZDCLocalUser) {
-		
-		DDLogInfo("configureNavigationTitle()")
-		
-		if navTitleButton == nil {
-			
-			navTitleButton = IconTitleButton.create()
-			navTitleButton?.setTitleColor(self.view.tintColor, for: .normal)
-			navTitleButton?.addTarget( self,
-			                   action: #selector(self.didTapNavTitleButton(_:)),
-			                      for: .touchUpInside)
-		}
-		
-		navTitleButton?.setTitle(localUser.displayName, for: .normal)
-		navTitleButton?.isEnabled = true
-		self.navigationItem.titleView = navTitleButton
-		
-		let imageManager = ZDCManager.zdc().imageManager!
-		
-		let size = CGSize(width: 30, height: 30)
-		let defaultImage = {
-			return imageManager.defaultUserAvatar().scaled(to: size, scalingMode: .aspectFit)
-		}
-		let processing = {(image: UIImage) in
-			return image.scaled(to: size, scalingMode: .aspectFit)
-		}
-		let preFetch = {[weak self] (image: UIImage?, willFetch: Bool) -> Void in
-			
-			// This closure is invoked BEFORE the fetchUserAvatar() function returns.
-			
-			self?.navTitleButton?.setImage(image ?? defaultImage(), for: .normal)
-		}
-		let postFetch = {[weak self] (image: UIImage?, error: Error?) -> Void in
-			
-			// This closure in invoked later, after the imageManager has fetched the image.
-			//
-			// The image may be cached on disk, in which case it's invoked shortly.
-			// Or the image may need to be downloaded, which takes longer.
-			
-			self?.navTitleButton?.setImage(image ?? defaultImage(), for: .normal)
-		}
-		
-		imageManager.fetchUserAvatar( localUser,
-		            withProcessingID: "navTitle",
-		             processingBlock: processing,
-		                    preFetch: preFetch,
-		                   postFetch: postFetch)
-	}
 	
 	@objc func didTapNavTitleButton(_ sender: Any) {
 		
@@ -467,6 +512,14 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 		                                     title: "New Conversation",
 		                      navigationController: navigationController,
 		                         completionHandler: completion)
+	}
+	
+	@IBAction func didTapSimulatePushNotification(_ sender: Any) {
+		
+		DDLogInfo("didTapSimulatePushNotification()")
+		
+		let zdc = ZDCManager.zdc()
+		zdc.syncManager?.pullChangesForAllLocalUsers()
 	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

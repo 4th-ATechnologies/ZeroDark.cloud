@@ -259,20 +259,27 @@ class DBManager {
 			
 			guard
 				let msg = proxyObject.realObject as? Message,
-				var conversation = transaction.conversation(id: msg.conversationID),
-				let msgsViewTransaction = transaction.ext(DBExt_MessagesView) as? YapDatabaseViewTransaction
+				var conversation = transaction.conversation(id: msg.conversationID)
 			else {
 				return
 			}
 			
-			// msgsViewTransaction -> This is the YapDatabaseAutoView that we created in
-			// the registerExtension_MessagesView() function above.
+			// When a message is inserted or modified, there are 2 things we want to do:
 			//
-			// It has all of the messages that belong to the conversation, sorted for us by date.
-			// So if we want to find the most recent message in the conversation,
-			// we can just ask this view for the lastObject in the conversation group.
+			// 1. Automatically update the conversation.lastActivity
+			// 2. Touch the conversation (if needed)
+			
+			var didUpdateConversation = false
 				
-			if let latestMsg = msgsViewTransaction.lastObject(inGroup: msg.conversationID) as? Message {
+			if let msgsViewTransaction = transaction.ext(DBExt_MessagesView) as? YapDatabaseViewTransaction,
+				let latestMsg = msgsViewTransaction.lastObject(inGroup: msg.conversationID) as? Message
+			{
+				// msgsViewTransaction -> This is the YapDatabaseAutoView that we created in
+				// the registerExtension_MessagesView() function above.
+				//
+				// It has all of the messages that belong to the conversation, sorted for us by date.
+				// So if we want to find the most recent message in the conversation,
+				// we can just ask this view for the lastObject in the conversation group.
 				
 				let old_lastActivity = conversation.lastActivity
 				let new_lastActivity = latestMsg.date
@@ -283,7 +290,34 @@ class DBManager {
 					conversation.lastActivity = new_lastActivity
 					
 					transaction.setObject(conversation, forKey: conversation.uuid, inCollection: kCollection_Conversations)
+					didUpdateConversation = true
 				}
+			}
+			
+			if !didUpdateConversation {
+				
+				// We want the ConversationsViewController to update properly.
+				// However, the ConversationsVC is only monitoring the Conversation objects in the database.
+				//
+				// That is, it receives a UIDatabaseConnectionDidUpdate notification,
+				// and then asks: "Did any Conversation objects change ?"
+				//
+				// However, if a Message is modified, this might actually affect the ConversationsVC.
+				//
+				// - A message.isRead changes from false to true.
+				//   In this case, the ConversationsVC needs to update the badge count.
+				//
+				// - A message.isAttachment changes.
+				//   If the message is the most recent message in the conversation, this should trigger a cell refresh.
+				//
+				// Now this all boils down to how we decide to solve these problems.
+				// We can code the ConversationsVC to look for these edge cases.
+				// Or we can use the Hooks extension to "touch" the Conversation object.
+				//
+				// A "touch" will get reported to our ConversationsVC as an update for this Conversation object.
+				// Which will trigger it to reload the appropriate tableView row.
+				
+				transaction.touchObject(forKey: conversation.uuid, inCollection: kCollection_Conversations)
 			}
 		}
 		
@@ -302,14 +336,16 @@ class DBManager {
 			
 			guard
 				let msg = transaction.message(id: key),
-				var conversation = transaction.conversation(id: msg.conversationID),
-				let msgsViewTransaction = transaction.ext(DBExt_MessagesView) as? YapDatabaseViewTransaction
+				var conversation = transaction.conversation(id: msg.conversationID)
 			else {
 				return
 			}
 			
-			if let latestMsg = msgsViewTransaction.lastObject(inGroup: msg.conversationID) as? Message {
-				
+			var didUpdateConversation = false
+			
+			if let msgsViewTransaction = transaction.ext(DBExt_MessagesView) as? YapDatabaseViewTransaction,
+				let latestMsg = msgsViewTransaction.lastObject(inGroup: msg.conversationID) as? Message
+			{
 				if latestMsg.uuid == key {
 					
 					// We're deleting the most recent message in the conversation.
@@ -331,7 +367,13 @@ class DBManager {
 					conversation.lastActivity = new_lastActivity
 					
 					transaction.setObject(conversation, forKey: conversation.uuid, inCollection: kCollection_Conversations)
+					didUpdateConversation = true
 				}
+			}
+			
+			if !didUpdateConversation {
+				
+				transaction.touchObject(forKey: conversation.uuid, inCollection: kCollection_Conversations)
 			}
 		}
 		
