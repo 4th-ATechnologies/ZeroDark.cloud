@@ -6,7 +6,7 @@ static int const kCurrentVersion = 4;
 #pragma unused(kCurrentVersion)
 
 static NSString *const k_version            = @"version";
-static NSString *const k_userID             = @"userID";
+static NSString *const k_localUserID        = @"userID"; // historical name
 static NSString *const k_aws_accessKeyID    = @"aws_accessKeyID";
 static NSString *const k_aws_secret         = @"aws_secret";
 static NSString *const k_aws_session        = @"aws_session";
@@ -18,7 +18,7 @@ static NSString *const k_auth0_idToken      = @"auth0_idToken";
 
 @implementation ZDCLocalUserAuth
 
-@synthesize userID = userID;
+@synthesize localUserID = localUserID;
 
 @synthesize aws_accessKeyID = aws_accessKeyID;
 @synthesize aws_secret = aws_secret;
@@ -34,7 +34,7 @@ static NSString *const k_auth0_idToken      = @"auth0_idToken";
 	{
 	//	int version = [decoder decodeIntForKey:k_version];
 		
-		userID = [decoder decodeObjectForKey:k_userID];
+		localUserID = [decoder decodeObjectForKey:k_localUserID];
 		
 		aws_accessKeyID = [decoder decodeObjectForKey:k_aws_accessKeyID];
 		aws_secret = [decoder decodeObjectForKey:k_aws_secret];
@@ -47,14 +47,13 @@ static NSString *const k_auth0_idToken      = @"auth0_idToken";
 	return self;
 }
 
-
 - (void)encodeWithCoder:(NSCoder *)coder
 {
 	if (kCurrentVersion != 0) {
 		[coder encodeInt:kCurrentVersion forKey:k_version];
 	}
 	
-	[coder encodeObject:userID forKey:k_userID];
+	[coder encodeObject:localUserID forKey:k_localUserID];
 	
 	[coder encodeObject:aws_accessKeyID forKey:k_aws_accessKeyID];
 	[coder encodeObject:aws_secret forKey:k_aws_secret];
@@ -69,7 +68,7 @@ static NSString *const k_auth0_idToken      = @"auth0_idToken";
 {
 	ZDCLocalUserAuth *copy = [super copyWithZone:zone]; // [ZDCObject copyWithZone:]
 	
-	copy->userID = userID;
+	copy->localUserID = localUserID;
 	
 	copy->aws_accessKeyID = aws_accessKeyID;
 	copy->aws_secret = aws_secret;

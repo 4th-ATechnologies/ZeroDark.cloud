@@ -42,6 +42,9 @@
 #pragma mark User API
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * See header file for description.
+ */
 - (void)getAWSCredentialsForUser:(NSString *)userID
                  completionQueue:(dispatch_queue_t)completionQueue
                  completionBlock:(void (^)(ZDCLocalUserAuth *auth, NSError *error))completionBlock
@@ -251,10 +254,13 @@
 	}];
 }
 
-- (void)flushAWSCredentialsForUserID:(NSString *)userID
-                  deleteRefreshToken:(BOOL)deleteRefreshToken
-                     completionQueue:(dispatch_queue_t)completionQueue
-                     completionBlock:(dispatch_block_t)completionBlock
+/**
+ * See header file for description.
+ */
+- (void)flushAWSCredentialsForUser:(NSString *)userID
+                deleteRefreshToken:(BOOL)deleteRefreshToken
+                   completionQueue:(dispatch_queue_t)completionQueue
+                   completionBlock:(dispatch_block_t)completionBlock
 {
 	ZDCDatabaseManager *databaseManager = zdc.databaseManager;
 	[databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
@@ -290,11 +296,13 @@
 	} completionQueue:completionQueue completionBlock:completionBlock];
 }
 
-
-- (void)reauthorizeAWSCredentialsForUserID:(NSString *)userID
-                          withRefreshToken:(NSString *)refreshToken
-                           completionQueue:(dispatch_queue_t)completionQueue
-                           completionBlock:(void (^)(ZDCLocalUserAuth *auth, NSError *error))completionBlock
+/**
+ * See header file for description.
+ */
+- (void)resetAWSCredentialsForUser:(NSString *)userID
+                  withRefreshToken:(NSString *)refreshToken
+                   completionQueue:(dispatch_queue_t)completionQueue
+                   completionBlock:(void (^)(ZDCLocalUserAuth *auth, NSError *error))completionBlock
 {
 	ZDCDatabaseManager *databaseManager = zdc.databaseManager;
 	[databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
@@ -436,10 +444,10 @@
 	__weak typeof(self) weakSelf = self;
 	dispatch_queue_t backgroundQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
-	[self getAWSCredentialsWithIDToken: idToken
-	                             stage: stage
-	                   completionQueue: backgroundQueue
-	                   completionBlock:^(NSDictionary *delegation, NSError *error)
+	[self fetchAWSCredentialsWithIDToken: idToken
+	                               stage: stage
+	                     completionQueue: backgroundQueue
+	                     completionBlock:^(NSDictionary *delegation, NSError *error)
 	{
 		if (error)
 		{
@@ -494,10 +502,10 @@
 #pragma mark Low Level
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)getAWSCredentialsWithIDToken:(NSString *)idToken
-                               stage:(NSString *)stage
-                     completionQueue:(dispatch_queue_t)completionQueue
-                     completionBlock:(void (^)(NSDictionary *delegation, NSError *error))completionBlock
+- (void)fetchAWSCredentialsWithIDToken:(NSString *)idToken
+                                 stage:(NSString *)stage
+                       completionQueue:(dispatch_queue_t)completionQueue
+                       completionBlock:(void (^)(NSDictionary *delegation, NSError *error))completionBlock
 {
 #ifndef NS_BLOCK_ASSERTIONS
 	NSParameterAssert(idToken != nil);
@@ -531,12 +539,12 @@
 		return;
 	}
 	
-	[self getAWSCredentialsWithIDToken:idToken stage:stage requestKey:requestKey];
+	[self fetchAWSCredentialsWithIDToken:idToken stage:stage requestKey:requestKey];
 }
 
-- (void)getAWSCredentialsWithIDToken:(NSString *)idToken
-                               stage:(NSString *)stage
-                          requestKey:(NSString *)requestKey
+- (void)fetchAWSCredentialsWithIDToken:(NSString *)idToken
+                                 stage:(NSString *)stage
+                            requestKey:(NSString *)requestKey
 {
 	__weak typeof(self) weakSelf = self;
 	
@@ -572,7 +580,7 @@
 	                                  path: @"/delegation"];
 
 	NSDictionary *jsonDict = @{
-		@"token" : idToken
+		@"token" : (idToken ?: @"")
 	};
 
 	NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:nil];
@@ -750,7 +758,7 @@
 	{
 		auth = [[ZDCLocalUserAuth alloc] init];
 		
-		auth.userID = userID;
+		auth.localUserID = userID;
 		
 		auth.aws_accessKeyID = accessKeyID;
 		auth.aws_secret = secret;

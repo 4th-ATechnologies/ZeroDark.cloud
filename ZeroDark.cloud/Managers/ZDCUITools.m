@@ -321,14 +321,14 @@
 #endif
 
 //MARK: Common
+
 - (void)deleteRefreshTokenforUserID:(NSString *)localUserID
                     completionBlock:(dispatch_block_t __nullable )completionBlock
 {
-    [zdc.awsCredentialsManager flushAWSCredentialsForUserID:localUserID
-                                           deleteRefreshToken:YES
-                                              completionQueue:nil
-                                              completionBlock:completionBlock];
-
+	[zdc.awsCredentialsManager flushAWSCredentialsForUser: localUserID
+	                                   deleteRefreshToken: YES
+	                                      completionQueue: nil
+	                                      completionBlock: completionBlock];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

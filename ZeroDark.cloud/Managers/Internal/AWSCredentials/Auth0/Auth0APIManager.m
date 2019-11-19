@@ -455,7 +455,6 @@ static Auth0APIManager *sharedInstance = nil;
 	}];
 
 	[task resume];
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -661,6 +660,8 @@ static Auth0APIManager *sharedInstance = nil;
 	NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
 	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
 
+#if 1
+	
 	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
 	urlComponents.scheme = @"https";
 	urlComponents.host = kAuth04thADomain;
@@ -728,6 +729,15 @@ static Auth0APIManager *sharedInstance = nil;
 	}];
 
 	[task resume];
+	
+#else
+	
+	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
+	urlComponents.scheme = @"https";
+	urlComponents.host = kAuth04thADomain;
+	urlComponents.path = @"/delegation";
+	
+#endif
 }
 
 - (void)getUserProfileWithAccessToken:(NSString *)accessToken
@@ -906,6 +916,13 @@ static Auth0APIManager *sharedInstance = nil;
 	[task resume];
 }
 
+/**
+ * IMPORTANT: This method does NOT work with all flows !!!
+ *
+ * In particular:
+ * - It works if you login using the auth0 database (with a username & password)
+ * - It does NOT work if you login using a social identity provider (e.g. Google)
+ */
 - (void)getAccessTokenWithRefreshToken:(NSString *)auth0_refreshToken
                        completionQueue:(nullable dispatch_queue_t)completionQueue
                        completionBlock:(void (^)(NSString *_Nullable auth0_accessToken,
@@ -1087,7 +1104,7 @@ static Auth0APIManager *sharedInstance = nil;
                    completionBlock:(void (^)(NSString * _Nullable auth0_idToken,
                                              NSError *_Nullable error))completionBlock
 {
-	#ifndef NS_BLOCK_ASSERTIONS
+#ifndef NS_BLOCK_ASSERTIONS
 	NSParameterAssert(auth0_refreshToken);
 	NSParameterAssert(completionBlock);
 #else
@@ -1110,184 +1127,6 @@ static Auth0APIManager *sharedInstance = nil;
 
 	[self getIDTokenWithRefreshToken: auth0_refreshToken
 	                      requestKey: requestKey];
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark - Get AWS Credentials
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-- (void)getAWSCredentialsWithRefreshToken:(NSString *)refreshToken
-                               requestKey:(NSString *)requestKey
-{
-	__weak typeof(self) weakSelf = self;
-	
-	void (^Fail)(NSError*) = ^(NSError *error){
-		
-		NSParameterAssert(error != nil);
-		
-		__strong typeof(self) strongSelf = weakSelf;
-		if (!strongSelf) return;
-		
-		NSArray<dispatch_queue_t> * completionQueues = nil;
-		NSArray<id>               * completionBlocks = nil;
-		[strongSelf->pendingRequests popCompletionQueues: &completionQueues
-		                                completionBlocks: &completionBlocks
-		                                          forKey: requestKey];
-
-		for (NSUInteger i = 0; i < completionBlocks.count; i++)
-		{
-			dispatch_queue_t completionQueue = completionQueues[i];
-			void (^completionBlock)(NSDictionary *delegation, NSError *error) = completionBlocks[i];
-
-			dispatch_async(completionQueue, ^{ @autoreleasepool {
-
-				completionBlock(nil, error);
-			}});
-		}
-	};
-	
-	void (^Succeed)(NSDictionary*) = ^(NSDictionary *delegation){
-		
-		NSParameterAssert(delegation != nil);
-		
-		__strong typeof(self) strongSelf = weakSelf;
-		if (!strongSelf) return;
-		
-		NSArray<dispatch_queue_t> * completionQueues = nil;
-		NSArray<id>               * completionBlocks = nil;
-		[strongSelf->pendingRequests popCompletionQueues: &completionQueues
-		                                completionBlocks: &completionBlocks
-		                                          forKey: requestKey];
-
-		for (NSUInteger i = 0; i < completionBlocks.count; i++)
-		{
-			dispatch_queue_t completionQueue = completionQueues[i];
-			void (^completionBlock)(NSDictionary *delegation, NSError *error) = completionBlocks[i];
-
-			dispatch_async(completionQueue, ^{ @autoreleasepool {
-
-				completionBlock(delegation, nil);
-			}});
-		}
-	};
-	
-	NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
-	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
-
-	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
-	urlComponents.scheme = @"https";
-	urlComponents.host = kAuth04thADomain;
-	urlComponents.path = @"/delegation";
-
-	NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:5];
-	jsonDict[A0ParameterClientID]     = kAuth04thA_AppClientID;
-	jsonDict[A0ParameterGrantType]    = @"urn:ietf:params:oauth:grant-type:jwt-bearer";
-	jsonDict[A0ParameterScope]        = @"openid offline_access";
-	jsonDict[A0ParameterAPIType]      = @"aws";
-	jsonDict[A0ParameterRefreshToken] = refreshToken;
-
-	NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:nil];
-
-	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
-	request.HTTPMethod = @"POST";
-	request.HTTPBody = jsonData;
-
-	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-
-	NSURLSessionDataTask *task =
-	  [session dataTaskWithRequest: request
-	             completionHandler:^(NSData *responseObject, NSURLResponse *response, NSError *error)
-	{
-		if (error)
-		{
-			Fail(error);
-			return;
-		}
-
-		NSInteger statusCode = response.httpStatusCode;
-		if ((statusCode != 200) &&
-		    (statusCode != 401) &&
-		    (statusCode != 403) &&
-		    (statusCode != 429))
-		{
-			error = [self errorWithStatusCode:statusCode description:@"Bad Status response"];
-			
-			Fail(error);
-			return;
-		}
-		  
-		NSDictionary *jsonDict = nil;
-		NSDictionary *delegation = nil;
-		
-		if ([responseObject isKindOfClass:[NSData class]] && (responseObject.length > 0))
-		{
-			jsonDict = [NSJSONSerialization JSONObjectWithData:(NSData *)responseObject options:0 error:&error];
-			
-			if (![jsonDict isKindOfClass:[NSDictionary class]]) {
-				jsonDict = nil;
-			}
-		}
-
-		if (jsonDict)
-		{
-			NSString *error_code = jsonDict[@"error"];
-			if (error_code)
-			{
-				NSString *error_description = jsonDict[@"error_description"];
-				error = [self errorWithDescription:error_description a0Code:error_code];
-			}
-			else
-			{
-				delegation = jsonDict;
-			}
-		}
-
-		if (delegation)
-		{
-			Succeed(delegation);
-		}
-		else if (error)
-		{
-			Fail(error);
-		}
-		else
-		{
-			error = [self errorWithStatusCode:statusCode description:@"Invalid response from server"];
-			Fail(error);
-		}
-	}];
-
-	[task resume];
-}
-
-- (void)getAWSCredentialsWithRefreshToken:(NSString *)refreshToken
-                          completionQueue:(nullable dispatch_queue_t)completionQueue
-                          completionBlock:(void (^)(NSDictionary * _Nullable delegation,
-                                                    NSError *_Nullable error))completionBlock
-{
-#ifndef NS_BLOCK_ASSERTIONS
-	NSParameterAssert(refreshToken);
-	NSParameterAssert(completionBlock);
-#else
-	if (completionBlock == nil) return;
-#endif
-
-	NSString *requestKey = [NSString stringWithFormat:@"%@-%@", NSStringFromSelector(_cmd), refreshToken];
-
-	NSUInteger requestCount =
-	  [pendingRequests pushCompletionQueue: completionQueue
-	                       completionBlock: completionBlock
-	                                forKey: requestKey];
-
-	if (requestCount > 1)
-	{
-		// There's a previous request currently in-flight.
-		// The <completionQueue, completionBlock> have been added to the existing request's list.
-		return;
-	}
-
-	[self getAWSCredentialsWithRefreshToken: refreshToken
-	                             requestKey: requestKey];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1389,14 +1228,6 @@ static Auth0APIManager *sharedInstance = nil;
 	}
 	
 	return dict;
-}
-
-- (void)exchangeAuthorizationCode:(NSString *)code
-                         pkceCode:(NSString *)pkceCode
-                  completionQueue:(nullable dispatch_queue_t)completionQueue
-                  completionBlock:(void (^)(NSDictionary *dict, NSError *error))completionBlock
-{
-	// Todo: Implement this when we get PKCE working properly. (Awaiting response from auth0 support)
 }
 
 -(BOOL) decodeSocialQueryString:(NSString*)queryString

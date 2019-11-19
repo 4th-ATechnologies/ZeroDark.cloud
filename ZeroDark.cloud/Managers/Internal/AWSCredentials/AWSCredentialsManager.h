@@ -10,6 +10,8 @@
 #import "ZeroDarkCloud.h"
 #import "ZDCLocalUserAuth.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  * If an error occurs (i.e. an error is returned via completionBlock),
  * and the NSError.domain is AWSCredentialsManager,
@@ -51,8 +53,8 @@ typedef NS_ENUM(NSInteger, AWSCredentialsErrorCode) {
  * Otherwise the manager will attempt to refresh the AWS credentials using the user's refreshToken.
  */
 - (void)getAWSCredentialsForUser:(NSString *)userID
-                 completionQueue:(dispatch_queue_t)completionQueue
-                 completionBlock:(void (^)(ZDCLocalUserAuth *auth, NSError *error))completionBlock;
+                 completionQueue:(nullable dispatch_queue_t)completionQueue
+                 completionBlock:(void (^)(ZDCLocalUserAuth *_Nullable auth, NSError *_Nullable error))completionBlock;
 
 /**
  * Deletes the user's AWS credentials, by deleting the corresponding properties in ZDCLocalUserAuth.
@@ -64,18 +66,18 @@ typedef NS_ENUM(NSInteger, AWSCredentialsErrorCode) {
  * Use this as a way to force-logout the user, without actually deleting the localUser account.
  * This might be done, for example, if the user's account is blocked due to non-payment.
  */
-- (void)flushAWSCredentialsForUserID:(NSString *)userID
-                  deleteRefreshToken:(BOOL)deleteRefreshToken
-                     completionQueue:(dispatch_queue_t)completionQueue
-                     completionBlock:(dispatch_block_t)completionBlock;
+- (void)flushAWSCredentialsForUser:(NSString *)userID
+                deleteRefreshToken:(BOOL)deleteRefreshToken
+                   completionQueue:(nullable dispatch_queue_t)completionQueue
+                   completionBlock:(dispatch_block_t)completionBlock;
 
 /**
  * After the user logs back into the system, this can be used to reset & restart the authentication flow.
  */
-- (void)reauthorizeAWSCredentialsForUserID:(NSString *)userID
-                          withRefreshToken:(NSString *)refreshToken
-                           completionQueue:(dispatch_queue_t)completionQueue
-                           completionBlock:(void (^)(ZDCLocalUserAuth *auth, NSError *error))completionBlock;
+- (void)resetAWSCredentialsForUser:(NSString *)userID
+                  withRefreshToken:(NSString *)refreshToken
+                   completionQueue:(nullable dispatch_queue_t)completionQueue
+                   completionBlock:(void (^)(ZDCLocalUserAuth *_Nullable auth, NSError *_Nullable error))completionBlock;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Low-Level API
@@ -86,10 +88,10 @@ typedef NS_ENUM(NSInteger, AWSCredentialsErrorCode) {
  *
  * Fetches the AWS credentials using the non-expired idToken (JWT).
  */
-- (void)getAWSCredentialsWithIDToken:(NSString *)idToken
-                               stage:(NSString *)stage
-                     completionQueue:(dispatch_queue_t)completionQueue
-                     completionBlock:(void (^)(NSDictionary *delegation, NSError *error))completionBlock;
+- (void)fetchAWSCredentialsWithIDToken:(NSString *)idToken
+                                 stage:(NSString *)stage
+                       completionQueue:(nullable dispatch_queue_t)completionQueue
+                       completionBlock:(void (^)(NSDictionary *_Nullable delegation, NSError *_Nullable error))completionBlock;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Utilities
@@ -98,9 +100,11 @@ typedef NS_ENUM(NSInteger, AWSCredentialsErrorCode) {
 /**
  * Utility method for parsing the delegation dictionary returned from the server.
  */
-- (BOOL)parseLocalUserAuth:(ZDCLocalUserAuth **)localUserAuth
+- (BOOL)parseLocalUserAuth:(ZDCLocalUserAuth *_Nullable *_Nonnull)localUserAuth
             fromDelegation:(NSDictionary *)delegationToken
               refreshToken:(NSString *)refreshToken
                    idToken:(NSString *)idToken;
 
 @end
+
+NS_ASSUME_NONNULL_END

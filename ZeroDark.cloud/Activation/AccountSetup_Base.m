@@ -640,10 +640,10 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 				return;
 			}
 			
-			[awsCredentialsManager getAWSCredentialsWithIDToken: result.idToken
-			                                              stage: @"dev"
-			                                    completionQueue: backgroundQueue
-			                                    completionBlock:^(NSDictionary *delegation, NSError *error)
+			[awsCredentialsManager fetchAWSCredentialsWithIDToken: result.idToken
+			                                                stage: @"prod"
+			                                      completionQueue: backgroundQueue
+			                                      completionBlock:^(NSDictionary *delegation, NSError *error)
 			{
 				__strong typeof(self) strongSelf = weakSelf;
 				if (strongSelf == nil) return;
@@ -784,10 +784,10 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 			return;
 		}
 		
-		[awsCredentialsManager getAWSCredentialsWithIDToken: result.idToken
-		                                              stage: @"dev"
-		                                    completionQueue: backgroundQueue
-		                                    completionBlock:^(NSDictionary *delegation, NSError *error)
+		[awsCredentialsManager fetchAWSCredentialsWithIDToken: result.idToken
+		                                                stage: @"prod"
+		                                      completionQueue: backgroundQueue
+		                                      completionBlock:^(NSDictionary *delegation, NSError *error)
 		{
 			__strong typeof(self) strongSelf = weakSelf;
 			if (!strongSelf) return;
@@ -1388,10 +1388,10 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 		}
 	};
 	
-	[zdc.awsCredentialsManager reauthorizeAWSCredentialsForUserID: userID
-	                                             withRefreshToken: refreshToken
-	                                              completionQueue: nil
-	                                              completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.awsCredentialsManager resetAWSCredentialsForUser: userID
+	                                     withRefreshToken: refreshToken
+	                                      completionQueue: nil
+	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		InvokeCompletionBlock(error);
 	}];

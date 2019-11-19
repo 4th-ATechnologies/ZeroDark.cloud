@@ -459,18 +459,17 @@ enum
 			
 		case kButton_Logout:
 		{
-			[owner.awsCredentialsManager flushAWSCredentialsForUserID:localUserID
-																deleteRefreshToken:YES
-																	completionQueue:nil
-																	completionBlock:^{
-																		
-																		[[self navigationController] popViewControllerAnimated:YES];
-																		
-																	}];
+			AWSCredentialsManager *aws = owner.awsCredentialsManager;
+			[aws flushAWSCredentialsForUser: localUserID
+			             deleteRefreshToken: YES
+			                completionQueue: nil
+			                completionBlock:
+			^{
+				[[self navigationController] popViewControllerAnimated:YES];
+			}];
 			
-		}
 			break;
-			
+		}
 		case kButton_PauseSync:
 		{
 			__block ZDCLocalUser *updatedUser = nil;

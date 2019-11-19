@@ -814,10 +814,10 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 	
 	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
-	[aws flushAWSCredentialsForUserID: localUserID
-	               deleteRefreshToken: NO
-	                  completionQueue: bgQueue
-	                  completionBlock:^
+	[aws flushAWSCredentialsForUser: localUserID
+	             deleteRefreshToken: NO
+	                completionQueue: bgQueue
+	                completionBlock:^
 	{
 		[aws getAWSCredentialsForUser: localUserID
 		              completionQueue: bgQueue

@@ -614,12 +614,12 @@
 		  #endif
 		#endif
 		
-		NSDictionary* bodyDict = @{
-			@"app_id"     : treeID,
-			@"tree_ids"   : @[treeID],
-			@"platform"   : platform,
-			@"push_token" : localUser.pushToken
-		};
+		NSMutableDictionary *bodyDict = [NSMutableDictionary dictionaryWithCapacity:4];
+		
+		bodyDict[@"app_id"]     = treeID;
+		bodyDict[@"tree_ids"]   = @[treeID];
+		bodyDict[@"platform"]   = platform;
+		bodyDict[@"push_token"] = localUser.pushToken;
 		
 		NSData *bodyData = [NSJSONSerialization dataWithJSONObject:bodyDict options:0 error:nil];
 		
@@ -698,11 +698,11 @@
 	  #endif
 	#endif
 	
-	NSDictionary* bodyDict = @{
-		@"user_id"    : userID,
-		@"push_token" : pushToken,
-		@"platform"   : platform,
-	};
+	NSMutableDictionary *bodyDict = [NSMutableDictionary dictionaryWithCapacity:3];
+	
+	bodyDict[@"user_id"]    = userID;
+	bodyDict[@"push_token"] = pushToken;
+	bodyDict[@"platform"]   = platform;
 	
 	NSData *bodyData = [NSJSONSerialization dataWithJSONObject:bodyDict options:0 error:nil];
 	

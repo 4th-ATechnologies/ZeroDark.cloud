@@ -9,7 +9,7 @@
 /**
  * Matches ZDDLocalUser.uuid, which is the global userID for the user throughout the ZeroDark ecosystem.
  */
-@property (nonatomic, copy, readwrite) NSString * userID;
+@property (nonatomic, copy, readwrite) NSString * localUserID;
 
 /**
  * Part of the credentials used by AWS.
@@ -27,8 +27,8 @@
 @property (nonatomic, copy, readwrite) NSString * aws_session;
 
 /**
- * The AWS credentials are only valid for a short period of time. (usualy just a few hours)
- * This property stores when the expire, so we know if we can re-use them, or if we need to refresh them.
+ * The AWS credentials are only valid for a short period of time. (usually just a few hours)
+ * This property stores when they expire, so we know if we can re-use them, or if we need to refresh them.
  */
 @property (nonatomic, copy, readwrite) NSDate * aws_expiration;
 

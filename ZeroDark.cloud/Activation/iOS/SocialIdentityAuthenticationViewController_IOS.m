@@ -229,17 +229,16 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 		return;
 	}
 
-	NSDictionary* identDict =  accountSetupVC.selectedProvider;
-
-	if(identDict)
+	NSDictionary *identDict = accountSetupVC.selectedProvider;
+	if (identDict)
 	{
 		Auth0ProviderType strategyType = [identDict[kAuth0ProviderInfo_Key_Type] integerValue];
 		NSString* strategyName      =  identDict[kAuth0ProviderInfo_Key_ID];
 		NSString* displayName       = identDict[kAuth0ProviderInfo_Key_DisplayName];
 
-		if(strategyType == Auth0ProviderType_Social)
+		if (strategyType == Auth0ProviderType_Social)
 		{
-			if(isInAddSocialView)
+			if (isInAddSocialView)
 			{
 				self.navigationItem.title = [NSString stringWithFormat:@"Sign in to %@", displayName];
 
@@ -250,7 +249,6 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 				lblTitle.text = [NSString stringWithFormat:@"Sign in to %@", displayName];
 
 				lblTitle.hidden = NO;
-
 			}
 
 			//
@@ -269,18 +267,13 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 			}
 
 			[self startLoginProcessWithStrategyName:strategyName];
-
 		}
 		else
 		{
-
 			// error should never get here
 		}
 	}
-
 }
-
-
 
 - (void)clearSessions
 {
@@ -340,22 +333,21 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 {
 	ZDCLogAutoTrace();
 
-	[self authenticateWithWebBrowser:socialURL
-						strategyName:connectionName];
+	[self authenticateWithWebBrowser: socialURL
+	                    strategyName: connectionName];
 }
 
 
--(BOOL)authenticateWithWebBrowser:(NSURL *)url
-					 strategyName:(NSString*)strategyName
+- (BOOL)authenticateWithWebBrowser:(NSURL *)url
+                      strategyName:(NSString *)strategyName
 {
-
-	[accountSetupVC showError:@"Not yet!"
-					  message:@"this code isnt ready yet"
-			   viewController:self
-			  completionBlock:^{
-
-	//			  [accountSetupVC popFromCurrentView   ];
-			  }];
+	[accountSetupVC showError: @"Not yet!"
+	                  message: @"This code isnt ready yet."
+	           viewController: self
+	          completionBlock:
+	^{
+	//	[accountSetupVC popFromCurrentView];
+	}];
 
 	/*
 
@@ -395,10 +387,8 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 //	[[UIApplication sharedApplication] openURL: socialURL ];
 
 	return YES;
-
 }
 
- 
 #pragma mark - webview delagate
 
 
@@ -410,46 +400,29 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 
 - (void)webViewDidFinishLoad:(UIWebView *)webView
 {
+	ZDCLogAutoTrace();
 
-	//    if (frame != [webAuth0View mainFrame])
-	//    {
-	//        return;
-	//    }
-
-	if(!didFirstLoad)
+	if (!didFirstLoad)
 	{
 		didFirstLoad = YES;
 
-		if(socialURL)
+		if (socialURL)
 		{
-			//
-			//            NSString *oldAgent = [webAuth0View stringByEvaluatingJavaScriptFromString:@"navigator.userAgent"];
-			//
-			//            NSString *newAgent = [oldAgent stringByAppendingString:@" Safari/602.1"];
-			//
-			//            NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:socialURL];
-			//            [request setValue:newAgent forHTTPHeaderField:@"User-Agent"];
-			//            [webAuth0View loadRequest:request];
-
 			[webAuth0View loadRequest:[NSURLRequest requestWithURL:socialURL]];
-
 		}
-
 	}
-
+	
 	[self removeWebProgress];
-
 }
 
 
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error
 {
 	[self removeWebProgress];
-
 }
 
 - (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request
- navigationType:(UIWebViewNavigationType)navigationType
+                                                 navigationType:(UIWebViewNavigationType)navigationType
 {
 
 	if(!isRunning)
@@ -563,10 +536,10 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 				return;
 			}
 			
-			[awsCredentialsManager reauthorizeAWSCredentialsForUserID: userID
-			                                         withRefreshToken: a0Token.refreshToken
-			                                          completionQueue: nil
-			                                          completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+			[awsCredentialsManager resetAWSCredentialsForUser: userID
+			                                 withRefreshToken: a0Token.refreshToken
+			                                  completionQueue: nil
+			                                  completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 			{
 				if (error)
 				{
@@ -615,10 +588,10 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 					return;
 				}
 				
-				[awsCredentialsManager getAWSCredentialsWithIDToken: auth0_idToken
-				                                              stage: @"dev"
-				                                    completionQueue: nil
-				                                    completionBlock:^(NSDictionary *delegation, NSError *error)
+				[awsCredentialsManager fetchAWSCredentialsWithIDToken: auth0_idToken
+				                                                stage: @"prod"
+				                                      completionQueue: nil
+				                                      completionBlock:^(NSDictionary *delegation, NSError *error)
 				{
 					if (error)
 					{

@@ -69,18 +69,6 @@ NS_ASSUME_NONNULL_BEGIN
                                              NSError *_Nullable error))completionBlock;
 
 /**
- * Trades a refreshToken for an accessToken.
- *
- * A refreshToken is an opaque token that doesn't expire (although it can be revoked).
- * An accessToken is another opaque token, but does expire.
- * The accessToken is only used for one thing: it's required to fetch the user profile.
- */
-- (void)getAccessTokenWithRefreshToken:(NSString *)auth0_refreshToken
-                       completionQueue:(nullable dispatch_queue_t)completionQueue
-                       completionBlock:(void (^)(NSString * _Nullable auth0_accessToken,
-                                                 NSError *_Nullable error))completionBlock;
-
-/**
  * Fetches the user's profile (which requires a valid accessToken).
  */
 - (void)getUserProfileWithAccessToken:(NSString *)auth0_accessToken
@@ -88,13 +76,6 @@ NS_ASSUME_NONNULL_BEGIN
                       completionBlock:(void (^)(A0UserProfile *_Nullable profile,
                                                 NSError *_Nullable error))completionBlock;
 
-/**
- * Scheduled for deprecation...
- */
-- (void)getAWSCredentialsWithRefreshToken:(NSString *)auth0_refreshToken
-                          completionQueue:(nullable dispatch_queue_t)inCompletionQueue
-                          completionBlock:(void (^)(NSDictionary *_Nullable delegation,
-                                                    NSError *_Nullable error))completionBlock;
 /**
  * Extracts callback URL scheme from Info.plist.
  */
@@ -113,14 +94,6 @@ NS_ASSUME_NONNULL_BEGIN
  * Parses the given social query string into a standard dictionary format.
  */
 - (NSDictionary *)parseQueryString:(NSString *)queryString;
-
-/**
- *
- */
-- (void)exchangeAuthorizationCode:(NSString *)code
-                         pkceCode:(NSString *)pkceCode
-                  completionQueue:(nullable dispatch_queue_t)completionQueue
-                  completionBlock:(void (^)(NSDictionary *_Nullable dict, NSError *_Nullable error))completionBlock;
 
 -(BOOL) decodeSocialQueryString:(NSString*)queryString
 						a0Token:(A0Token * _Nullable*_Nullable) a0TokenOut
