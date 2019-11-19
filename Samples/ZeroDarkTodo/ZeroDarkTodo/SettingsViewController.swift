@@ -260,7 +260,10 @@ SettingsTableHeaderViewDelegate {
 						accountCell.userAvatar.image = image ?? defaultImage()
 					}
 					
-					zdc.imageManager!.fetchUserAvatar(localUser, preFetch: preFetch, postFetch: postFetch)
+					zdc.imageManager!.fetchUserAvatar( localUser,
+					                             with: nil,
+					                         preFetch: preFetch,
+					                        postFetch: postFetch)
 
 					accountCell.userName.textColor = localUser.hasCompletedSetup ? UIColor.black : UIColor.lightGray ;
 

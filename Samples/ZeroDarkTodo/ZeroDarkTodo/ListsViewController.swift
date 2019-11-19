@@ -199,7 +199,8 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		}
 		
 		zdc.imageManager!.fetchUserAvatar( user,
-		                 withProcessingID: "30*30",
+		                             with: nil,
+		                     processingID: "30*30",
 		                  processingBlock: processing,
 		                         preFetch: preFetch,
 		                        postFetch: postFetch)
