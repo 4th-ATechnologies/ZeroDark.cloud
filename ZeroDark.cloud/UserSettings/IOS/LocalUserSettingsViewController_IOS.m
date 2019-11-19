@@ -245,6 +245,7 @@ static NSString *const kLocalUserSettingsUICellIdentifier = @"LocalUserSettingsU
 	};
 	
 	[imageManager fetchUserAvatar: localUser
+	                  withOptions: nil
 	                preFetchBlock: preFetchBlock
 	               postFetchBlock: postFetchBlock];
 	

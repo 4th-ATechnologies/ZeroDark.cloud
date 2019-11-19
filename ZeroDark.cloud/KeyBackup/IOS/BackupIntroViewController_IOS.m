@@ -239,6 +239,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	};
 
 	[imageManager fetchUserAvatar: keyBackupVC.user
+	                  withOptions: nil
 	                preFetchBlock: preFetchBlock
 	               postFetchBlock: postFetchBlock];
 	

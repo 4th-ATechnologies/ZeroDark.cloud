@@ -301,6 +301,7 @@ static NSString *const k_displayName = @"displayName";
 		};
 		
 		[imageManager fetchUserAvatar: user
+		                  withOptions: nil
 							 preFetchBlock: preFetchBlock
 							postFetchBlock: postFetchBlock];
 	}

@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
-    <device id="retina4_7" orientation="portrait">
-        <adaptation id="fullscreen"/>
-    </device>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14490.49"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15510"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
-        <tableViewCell contentMode="scaleToFill" restorationIdentifier="SocialIDCell" selectionStyle="default" indentationWidth="10" rowHeight="56" id="KGk-i7-Jjw" customClass="SocialIDUITableViewCell">
+        <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" restorationIdentifier="SocialIDCell" selectionStyle="default" indentationWidth="10" rowHeight="56" id="KGk-i7-Jjw" customClass="SocialIDUITableViewCell">
             <rect key="frame" x="0.0" y="0.0" width="320" height="50"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
             <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
-                <rect key="frame" x="0.0" y="0.0" width="320" height="49.5"/>
+                <rect key="frame" x="0.0" y="0.0" width="320" height="50"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Name" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="vne-ID-IgX" userLabel="lblName">
@@ -47,7 +45,7 @@
                         </constraints>
                     </imageView>
                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Tec-T8-F4A">
-                        <rect key="frame" x="74" y="27.5" width="214" height="13.5"/>
+                        <rect key="frame" x="74" y="28" width="214" height="13.5"/>
                         <fontDescription key="fontDescription" style="UICTFontTextStyleCaption2"/>
                         <color key="textColor" white="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <nil key="highlightedColor"/>
@@ -68,8 +66,8 @@
                     <constraint firstItem="Fp2-Hr-ZI9" firstAttribute="centerY" secondItem="Fa4-nX-fzm" secondAttribute="centerY" id="0YI-yU-Ug4"/>
                     <constraint firstAttribute="trailing" secondItem="Fp2-Hr-ZI9" secondAttribute="trailing" constant="8" id="2gs-ht-3l3"/>
                     <constraint firstAttribute="trailing" secondItem="vne-ID-IgX" secondAttribute="trailing" constant="32" id="7Wt-XD-1MB"/>
-                    <constraint firstItem="Tec-T8-F4A" firstAttribute="trailing" secondItem="v9r-Mc-d8d" secondAttribute="trailing" id="BUu-sS-Ddh"/>
                     <constraint firstItem="Fa4-nX-fzm" firstAttribute="centerY" secondItem="H2p-sc-9uM" secondAttribute="centerY" id="Bb2-vQ-34o"/>
+                    <constraint firstItem="Tec-T8-F4A" firstAttribute="leading" secondItem="v9r-Mc-d8d" secondAttribute="leading" id="Czi-dL-ESf"/>
                     <constraint firstItem="Fa4-nX-fzm" firstAttribute="leading" secondItem="kX8-mV-hP9" secondAttribute="trailing" constant="2" id="J9O-z5-8mS"/>
                     <constraint firstItem="kX8-mV-hP9" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="4" id="M8U-vY-Ygw"/>
                     <constraint firstItem="v9r-Mc-d8d" firstAttribute="trailing" secondItem="vne-ID-IgX" secondAttribute="trailing" id="Pxb-9n-2Hd"/>
@@ -77,7 +75,7 @@
                     <constraint firstItem="v9r-Mc-d8d" firstAttribute="top" secondItem="vne-ID-IgX" secondAttribute="bottom" constant="6" id="QxV-DC-3O2"/>
                     <constraint firstItem="Tec-T8-F4A" firstAttribute="centerY" secondItem="v9r-Mc-d8d" secondAttribute="centerY" id="S1g-1c-qRQ"/>
                     <constraint firstItem="Fa4-nX-fzm" firstAttribute="centerY" secondItem="kX8-mV-hP9" secondAttribute="centerY" id="VYx-6h-cNI"/>
-                    <constraint firstItem="Tec-T8-F4A" firstAttribute="leading" secondItem="v9r-Mc-d8d" secondAttribute="leading" id="WeQ-ba-oAu"/>
+                    <constraint firstItem="Tec-T8-F4A" firstAttribute="trailing" secondItem="v9r-Mc-d8d" secondAttribute="trailing" id="WHf-WE-I6G"/>
                     <constraint firstItem="vne-ID-IgX" firstAttribute="leading" secondItem="Fa4-nX-fzm" secondAttribute="trailing" constant="4" id="qsA-cK-Z6b"/>
                     <constraint firstItem="v9r-Mc-d8d" firstAttribute="leading" secondItem="vne-ID-IgX" secondAttribute="leading" constant="2" id="v6O-zC-LDS"/>
                 </constraints>

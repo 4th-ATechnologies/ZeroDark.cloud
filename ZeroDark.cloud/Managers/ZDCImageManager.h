@@ -235,6 +235,9 @@ typedef OSImage*_Nonnull (^ZDCImageProcessingBlock)(OSImage *image);
  * @param user
  *   The user for which you wish to display the avatar.
  *
+ * @param options
+ *   If nil, the default options will be used.
+ *
  * @param preFetchBlock
  *   This block is always invoked.
  *   And it's invoked BEFORE this method returns.
@@ -250,6 +253,7 @@ typedef OSImage*_Nonnull (^ZDCImageProcessingBlock)(OSImage *image);
  */
 - (nullable ZDCDownloadTicket *)
         fetchUserAvatar:(ZDCUser *)user
+            withOptions:(nullable ZDCFetchOptions *)options
           preFetchBlock:(void(NS_NOESCAPE^)(OSImage *_Nullable image, BOOL willFetch))preFetchBlock
          postFetchBlock:(void(^)(OSImage *_Nullable image, NSError *_Nullable error))postFetchBlock;
 
@@ -283,6 +287,9 @@ typedef OSImage*_Nonnull (^ZDCImageProcessingBlock)(OSImage *image);
  * @param user
  *   The user for which you wish to fetch the avatar.
  *
+ * @param options
+ *   If nil, the default options will be used.
+ * 
  * @param processingID
  *   A unique identifier that distinguishes the results of this imageProcessingBlock from
  *   other imageProcessingBlocks that you may be using in other parts of your application.
@@ -310,7 +317,8 @@ typedef OSImage*_Nonnull (^ZDCImageProcessingBlock)(OSImage *image);
  */
 - (nullable ZDCDownloadTicket *)
         fetchUserAvatar:(ZDCUser *)user
-       withProcessingID:(nullable NSString *)processingID
+            withOptions:(nullable ZDCFetchOptions *)options
+           processingID:(nullable NSString *)processingID
         processingBlock:(ZDCImageProcessingBlock)imageProcessingBlock
           preFetchBlock:(void(NS_NOESCAPE^)(OSImage *_Nullable image, BOOL willFetch))preFetchBlock
          postFetchBlock:(void(^)(OSImage *_Nullable image, NSError *_Nullable error))postFetchBlock;
@@ -360,6 +368,8 @@ typedef OSImage*_Nonnull (^ZDCImageProcessingBlock)(OSImage *image);
 @interface ZDCFetchOptions : NSObject <NSCopying>
 
 /**
+ * Applies to Node Thumbnails:
+ *
  * If set to YES, then the ImageManager will automatically attempt to download the latest version as needed.
  *
  * More specifically:
@@ -373,6 +383,14 @@ typedef OSImage*_Nonnull (^ZDCImageProcessingBlock)(OSImage *image);
  * The default value is YES.
  */
 @property (nonatomic, assign, readwrite) BOOL downloadIfMarkedAsNeedsDownload;
+
+
+/**
+ * Applies to User Avatars:
+ *
+ * If set to non-nil, will attempt to download a specific user avatar, associated with the specified identity.
+ */
+@property (nonatomic, copy, readwrite, nullable) NSString *auth0ID;
 
 @end
 

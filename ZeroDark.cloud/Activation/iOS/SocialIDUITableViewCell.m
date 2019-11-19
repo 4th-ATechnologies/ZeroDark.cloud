@@ -1,10 +1,11 @@
-//
-//  SocialIDUITableViewCell.m
-//  storm4
-//
-//  Created by vinnie on 8/7/17.
-//  Copyright © 2017 4th-A Technologies, LLC. All rights reserved.
-//
+/**
+ * ZeroDark.cloud
+ *
+ * Homepage      : https://www.zerodark.cloud
+ * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
+ * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
+ * API Reference : https://apis.zerodark.cloud
+**/
 
 #import "SocialIDUITableViewCell.h"
 #import "KGHitTestingButton.h"
@@ -48,7 +49,7 @@ NSString *const kSocialIDCellIdentifier = @"SocialIDCell";
 }
 
 - (void)awakeFromNib {
-    [super awakeFromNib];
+	[super awakeFromNib];
 	[self showRightButton:NO];
 }
 
@@ -79,7 +80,7 @@ NSString *const kSocialIDCellIdentifier = @"SocialIDCell";
     return nil;
 }
 
--(void)showRightButton:(BOOL)shouldShow
+- (void)showRightButton:(BOOL)shouldShow
 {
     if(shouldShow)
     {

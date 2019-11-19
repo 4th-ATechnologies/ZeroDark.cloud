@@ -442,6 +442,7 @@ static NSString *const kActionStatus   = @"action";
 		
 
 		[imageManager fetchUserAvatar: user
+		                  withOptions: nil
 							 preFetchBlock: preFetchBlock
 							postFetchBlock: postFetchBlock];
 	}

@@ -223,6 +223,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCImageManager.html
  */
 - (nullable ZDCDownloadTicket *)
         fetchNodeThumbnail:(ZDCNode *)node
@@ -242,6 +244,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCImageManager.html
  */
 - (nullable ZDCDownloadTicket *)
         fetchNodeThumbnail:(ZDCNode *)node
@@ -576,15 +580,21 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCImageManager.html
  */
 - (nullable ZDCDownloadTicket *)
         fetchUserAvatar:(ZDCUser *)user
+            withOptions:(nullable ZDCFetchOptions *)options
           preFetchBlock:(void(NS_NOESCAPE^)(OSImage *_Nullable image, BOOL willFetch))preFetchBlock
          postFetchBlock:(void(^)(OSImage *_Nullable image, NSError *_Nullable error))postFetchBlock
 {
 	ZDCLogAutoTrace();
 	
-	NSString *auth0ID = user.auth0_preferredID;
+	NSString *auth0ID = options.auth0ID;
+	if (!auth0ID) {
+		auth0ID = user.auth0_preferredID;
+	}
 	if (!auth0ID) {
 		auth0ID = [Auth0Utilities firstAvailableAuth0IDFromProfiles:user.auth0_profiles];
 	}
@@ -601,17 +611,23 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCImageManager.html
  */
 - (nullable ZDCDownloadTicket *)
         fetchUserAvatar:(ZDCUser *)user
-       withProcessingID:(nullable NSString *)processingID
+            withOptions:(nullable ZDCFetchOptions *)options
+           processingID:(nullable NSString *)processingID
         processingBlock:(ZDCImageProcessingBlock)imageProcessingBlock
           preFetchBlock:(void(NS_NOESCAPE^)(OSImage *_Nullable image, BOOL willFetch))preFetchBlock
          postFetchBlock:(void(^)(OSImage *_Nullable image, NSError *_Nullable error))postFetchBlock
 {
 	ZDCLogAutoTrace();
 	
-	NSString *auth0ID = user.auth0_preferredID;
+	NSString *auth0ID = options.auth0ID;
+	if (!auth0ID) {
+		auth0ID = user.auth0_preferredID;
+	}
 	if (!auth0ID) {
 		auth0ID = [Auth0Utilities firstAvailableAuth0IDFromProfiles:user.auth0_profiles];
 	}
@@ -960,12 +976,14 @@
 @implementation ZDCFetchOptions
 
 @synthesize downloadIfMarkedAsNeedsDownload = _downloadIfMarkedAsNeedsDownload;
+@synthesize auth0ID = _auth0ID;
 
 - (instancetype)init
 {
 	if ((self = [super init]))
 	{
 		_downloadIfMarkedAsNeedsDownload = YES;
+		_auth0ID = nil;
 	}
 	return self;
 }
@@ -974,6 +992,7 @@
 {
 	ZDCFetchOptions *copy = [[ZDCFetchOptions alloc] init];
 	copy->_downloadIfMarkedAsNeedsDownload = _downloadIfMarkedAsNeedsDownload;
+	copy->_auth0ID = _auth0ID;
 	
 	return copy;
 }

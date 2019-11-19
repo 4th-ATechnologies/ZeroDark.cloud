@@ -283,8 +283,9 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	};
 	
 	[imageManager fetchUserAvatar: remoteUser
-						 preFetchBlock: preFetchBlock
-						postFetchBlock: postFetchBlock];
+	                  withOptions: nil
+	                preFetchBlock: preFetchBlock
+	               postFetchBlock: postFetchBlock];
 }
 
 -(void)refreshKeyInfo

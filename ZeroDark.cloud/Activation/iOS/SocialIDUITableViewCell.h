@@ -1,10 +1,11 @@
-//
-//  SocialIDUITableViewCell.h
-//  storm4
-//
-//  Created by vinnie on 8/7/17.
-//  Copyright © 2017 4th-A Technologies, LLC. All rights reserved.
-//
+/**
+ * ZeroDark.cloud
+ *
+ * Homepage      : https://www.zerodark.cloud
+ * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
+ * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
+ * API Reference : https://apis.zerodark.cloud
+**/
 
 #import <UIKit/UIKit.h>
 

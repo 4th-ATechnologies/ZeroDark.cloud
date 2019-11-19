@@ -55,10 +55,10 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 	IBOutlet __weak UITableView             *_tblButtons;
 	IBOutlet __weak NSLayoutConstraint      *_cnstTblButtonsHeight;
 	
-	YapDatabaseConnection 				*databaseConnection;
-	ZDCImageManager						*imageManager;
-	Auth0ProviderManager					*providerManager;
-	ZDCUITools								*uiTools;
+	ZeroDarkCloud         * zdc;
+	YapDatabaseConnection * uiDatabaseConnection;
+	Auth0ProviderManager  * providerManager;
+	ZDCUITools            * uiTools;
 	
 	UIImage*        defaultUserImage;
 	UIImage*        cameraImage;
@@ -76,60 +76,64 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 	UIDocumentPickerViewController  *docPicker;
 	UIImagePickerController         *photoPicker;
 	
-	UIViewController                *currentVC;      // currently posted view controller, used for removing on passcode lock
-	
+	// currently posted view controller, used for removing on passcode lock
+	UIViewController                *currentVC;
 }
 
 @synthesize accountSetupVC = accountSetupVC;
-@synthesize userID = userID;
+@synthesize localUserID = localUserID;
 @synthesize auth0ID = auth0ID;
 
-- (void)viewDidLoad {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark View Lifecycle
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)viewDidLoad
+{
 	[super viewDidLoad];
 	
-	defaultUserImage = [imageManager.defaultUserAvatar imageWithMaxSize:_imgAvatar.frame.size];
+	defaultUserImage = [zdc.imageManager.defaultUserAvatar imageWithMaxSize:_imgAvatar.frame.size];
 	
-	_imgAvatar.delegate = (id<UIImageViewPasteableDelegate> )self;
+	_imgAvatar.delegate = (id <UIImageViewPasteableDelegate>)self;
 	
 	_imgAvatar.layer.cornerRadius = 100 / 2;
 	_imgAvatar.clipsToBounds = YES;
 	_tblButtons.tableFooterView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, _tblButtons.frame.size.width, 1)];
 	
-	cameraImage = [[UIImage imageNamed:@"camera"
-									  inBundle:[ZeroDarkCloud frameworkBundle]
-		  compatibleWithTraitCollection:nil] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+	NSBundle *zdcBundle = [ZeroDarkCloud frameworkBundle];
 	
-	photosImage = [[UIImage imageNamed:@"photos"
-									  inBundle:[ZeroDarkCloud frameworkBundle]
-		  compatibleWithTraitCollection:nil] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+	cameraImage = [[UIImage imageNamed: @"camera"
+	                          inBundle: zdcBundle
+	     compatibleWithTraitCollection: nil] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
 	
-	pasteImage = [[UIImage imageNamed:@"paste"
-									 inBundle:[ZeroDarkCloud frameworkBundle]
-		 compatibleWithTraitCollection:nil] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+	photosImage = [[UIImage imageNamed: @"photos"
+	                          inBundle: zdcBundle
+	     compatibleWithTraitCollection: nil] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
 	
-	documentsImage = [[UIImage imageNamed:@"files"
-										  inBundle:[ZeroDarkCloud frameworkBundle]
-			  compatibleWithTraitCollection:nil] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+	pasteImage = [[UIImage imageNamed: @"paste"
+	                         inBundle: zdcBundle
+	    compatibleWithTraitCollection: nil] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
 	
-	removeImage = [[UIImage imageNamed:@"circle-minus"
-									  inBundle:[ZeroDarkCloud frameworkBundle]
-		  compatibleWithTraitCollection:nil] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+	documentsImage = [[UIImage imageNamed: @"files"
+	                             inBundle: zdcBundle
+	        compatibleWithTraitCollection: nil] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
 	
+	removeImage = [[UIImage imageNamed: @"circle-minus"
+	                          inBundle: zdcBundle
+	     compatibleWithTraitCollection: nil] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
 	
 	newUserImage = NULL;
 	currentUserImage = NULL;
 	deleteUserImage = NO;
-	
 }
-
 
 - (void)viewWillAppear:(BOOL)animated
 {
 	[super viewWillAppear:animated];
 	accountSetupVC.btnBack.hidden = YES;
 	
-	databaseConnection = accountSetupVC.zdc.databaseManager.uiDatabaseConnection;
-	imageManager =  accountSetupVC.zdc.imageManager;
+	zdc = accountSetupVC.zdc;
+	uiDatabaseConnection = zdc.databaseManager.uiDatabaseConnection;
 	providerManager = accountSetupVC.zdc.auth0ProviderManager;
 	uiTools = accountSetupVC.zdc.uiTools;
 	
@@ -150,44 +154,36 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 	
 	self.navigationItem.title = @"Update Profile Picture";
 	
-	[[NSNotificationCenter defaultCenter] addObserver:self
-														  selector:@selector(databaseConnectionDidUpdate:)
-																name:UIDatabaseConnectionDidUpdateNotification
-															 object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver: self
+	                                         selector: @selector(databaseConnectionDidUpdate:)
+	                                             name: UIDatabaseConnectionDidUpdateNotification
+	                                           object: nil];
 	
 	[_tblButtons reloadData];
 	[self refreshView];
-	
 }
 
 - (void)viewWillDisappear:(BOOL)animated
 {
 	ZDCLogAutoTrace();
 	
-	[[NSNotificationCenter defaultCenter] removeObserver:self  ];
-	
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	[super viewWillDisappear:animated];
-	
-	
-}
-
-- (void)handleNavigationBack:(UIButton *)backButton
-{
-	[[self navigationController] popViewControllerAnimated:YES];
-}
-
-
-
-- (BOOL)canPopViewControllerViaPanGesture:(AccountSetupViewController_IOS *)sender
-{
-	return NO;
-	
 }
 
 - (void)updateViewConstraints
 {
 	[super updateViewConstraints];
 	_cnstTblButtonsHeight.constant = _tblButtons.contentSize.height;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark AccountSetupViewController_IOS_Child_Delegate
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (BOOL)canPopViewControllerViaPanGesture:(AccountSetupViewController_IOS *)sender
+{
+	return NO;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -199,15 +195,15 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 	NSArray *notifications = [notification.userInfo objectForKey:kNotificationsKey];
 	
 	BOOL hasUserChanges = NO;
-	
-	if(userID)
+	if (localUserID)
 	{
-		hasUserChanges =  [databaseConnection hasChangeForKey:userID
-															  inCollection:kZDCCollection_Users
-														  inNotifications:notifications];
-		
+		hasUserChanges =
+		  [uiDatabaseConnection hasChangeForKey: localUserID
+		                           inCollection: kZDCCollection_Users
+		                        inNotifications: notifications];
 	}
-	if(hasUserChanges)
+	
+	if (hasUserChanges)
 	{
 		[self refreshView];
 	}
@@ -219,24 +215,26 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 
 - (void)refreshView
 {
-	if (userID) {
+	if (localUserID) {
 		[self refreshUserNameAndIcon];
 	}
 }
 
 - (void)refreshUserNameAndIcon
 {
-	__block ZDCLocalUser *user = nil;;
-	[databaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+	__block ZDCLocalUser *localUser = nil;
+	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
-		user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+		localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
 		
-#pragma clang diagnostic pop
+	#pragma clang diagnostic pop
 	}];
 	
-	if (!user) return;
+	if (!localUser || !localUser.isLocal) {
+		return;
+	}
 	
 	NSArray* comps = [auth0ID componentsSeparatedByString:@"|"];
 	NSString* provider = comps.firstObject;
@@ -256,81 +254,54 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 		_lblProvider.hidden = NO;
 	}
 	
-	NSString* displayName = [user displayNameForAuth0ID:auth0ID];
-	
-	if (displayName.length)
-	{
+	NSString *displayName = [localUser displayNameForAuth0ID:auth0ID];
+	if (displayName.length > 0) {
 		_lblDisplayName.text = displayName;
 	}
-	else
-	{
-		_lblDisplayName.text = user.displayName.length ? user.displayName : @"";
-	}
-	
-	NSDictionary *profile = [user.auth0_profiles objectForKey:auth0ID];
-	NSURL *pictureURL = nil;
-	
-	NSString *picture =
-	[Auth0ProviderManager correctPictureForAuth0ID: auth0ID
-												  profileData: profile
-														 region: user.aws_region
-														 bucket: user.aws_bucket];
-	if (picture) {
-		pictureURL = [NSURL URLWithString:picture];
+	else {
+		_lblDisplayName.text = (localUser.displayName.length > 0) ? localUser.displayName : @"";
 	}
 	
 	CGSize avatarSize = _imgAvatar.image.size;
 	
-	if (pictureURL)
-	{
-		ZDCDownloadOptions *opts = [[ZDCDownloadOptions alloc] init];
-		opts.savePersistentlyToDiskManager = YES;
+	UIImage* (^processingBlock)(UIImage *_Nonnull) = ^(UIImage *image) {
 		
-		UIImage* (^processingBlock)(UIImage *_Nonnull) = ^(UIImage *image) {
-			
-			return [image imageWithMaxSize:avatarSize];
-		};
-		
-		__weak typeof(self) weakSelf = self;
-		void (^preFetchBlock)(UIImage *_Nullable) = ^(UIImage *image){
-			
-			__strong typeof(self) strongSelf = weakSelf;
-			if (strongSelf == nil) return;
-			
-			if (image)
-			{
-				strongSelf->_imgAvatar.image = image;
-			}
-		};
-		
-		void (^postFetchBlock)(UIImage *_Nullable, NSError *_Nullable) = ^(UIImage *image, NSError *error){
-			
-			__strong typeof(self) strongSelf = weakSelf;
-			if (strongSelf == nil) return;
-			
-			if (image) {
-				strongSelf->_imgAvatar.image =  image;
-			}
-			else {
-				strongSelf->_imgAvatar.image = strongSelf->defaultUserImage;
-			}
-		};
-		
-		[imageManager fetchUserAvatar: userID
-									 auth0ID: auth0ID
-									 fromURL: pictureURL
-									 options: opts
-							  processingID: pictureURL.absoluteString
-						  processingBlock: processingBlock
-							 preFetchBlock: preFetchBlock
-							postFetchBlock: postFetchBlock];
-	}
-	else
-	{
-		_imgAvatar.image = defaultUserImage;
-	}
+		return [image imageWithMaxSize:avatarSize];
+	};
 	
-
+	void (^preFetchBlock)(UIImage*, BOOL) = ^(UIImage *image, BOOL willFetch){
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		// The preFetch is invoked BEFORE the fetchUserAvatar method returns.
+		
+		_imgAvatar.image = image ?: defaultUserImage;
+		
+	#pragma clang diagnostic pop
+	};
+	
+	__weak typeof(self) weakSelf = self;
+	void (^postFetchBlock)(UIImage*, NSError*) = ^(UIImage *image, NSError *error){
+		
+		// The postFetch is invoked LATER, possibly after a download.
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (strongSelf == nil) return;
+		
+		if (image) {
+			strongSelf->_imgAvatar.image =  image;
+		}
+	};
+	
+	ZDCFetchOptions *opts = [[ZDCFetchOptions alloc] init];
+	opts.auth0ID = auth0ID;
+	
+	[zdc.imageManager fetchUserAvatar: localUser
+	                      withOptions: opts
+	                     processingID: NSStringFromClass([self class])
+	                  processingBlock: processingBlock
+	                    preFetchBlock: preFetchBlock
+	                   postFetchBlock: postFetchBlock];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -361,14 +332,14 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 	cell.textLabel.textColor = self.view.tintColor;
 	cell.textLabel.font = [UIFont systemFontOfSize:20];
 	
-	__block ZDCLocalUser *user = nil;
-	[databaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+	__block ZDCLocalUser *localUser = nil;
+	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
-		user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+		localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
 		
-#pragma clang diagnostic pop
+	#pragma clang diagnostic pop
 	}];
 	
 	switch (indexPath.row)
@@ -489,18 +460,19 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 {
 	[tv deselectRowAtIndexPath:indexPath animated:YES];
 	
-	__block ZDCLocalUser *user = nil;
-	[databaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+	__block ZDCLocalUser *localUser = nil;
+	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
-		user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+		localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
 		
-#pragma clang diagnostic pop
+	#pragma clang diagnostic pop
 	}];
 	
-	if(!user.hasCompletedSetup)
+	if (!localUser.hasCompletedSetup) {
 		return;
+	}
 	
 	CGRect aFrame = [tv rectForRowAtIndexPath:indexPath];
 	aFrame.origin.y += aFrame.size.height/2;
@@ -557,6 +529,10 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 // MARK: Actions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+- (void)handleNavigationBack:(UIButton *)backButton
+{
+	[[self navigationController] popViewControllerAnimated:YES];
+}
 
 - (IBAction)doneButtonTapped:(id)sender
 {
@@ -575,9 +551,9 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 		}
 		
 		__block ZDCLocalUser *localUser = nil;
-		[databaseConnection readWithBlock:^(YapDatabaseReadTransaction * _Nonnull transaction) {
+		[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction * _Nonnull transaction) {
 			
-			localUser = [transaction objectForKey:self.userID inCollection:kZDCCollection_Users];
+			localUser = [transaction objectForKey:self.localUserID inCollection:kZDCCollection_Users];
 		}];
 		
 		// Now we need to get the previous eTag
@@ -611,10 +587,8 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 	[self.navigationController popViewControllerAnimated:YES];
 }
 
-
 - (IBAction)removeButtonTapped:(id)sender
 {
-	
 	_imgAvatar.image = defaultUserImage;
 	
 	if(newUserImage)

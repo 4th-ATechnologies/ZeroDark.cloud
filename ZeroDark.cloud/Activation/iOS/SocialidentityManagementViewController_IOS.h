@@ -13,6 +13,6 @@
 
 @interface SocialidentityManagementViewController_IOS : AccountSetupSubViewController_Base
 
-@property (nonatomic, assign) NSString*   userID;
-@end
- 
+@property (nonatomic, copy, readwrite) NSString *localUserID;
+
+@end 

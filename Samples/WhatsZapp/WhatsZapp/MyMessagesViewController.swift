@@ -468,7 +468,8 @@ class MyMessagesViewController: MessagesViewController,
 		}
 		
 		imageManager.fetchUserAvatar( remoteUser,
-		            withProcessingID: "\(size)",
+		                        with: nil,
+		                processingID: "\(size)",
 		             processingBlock: processing,
 		                    preFetch: preFetch,
 		                   postFetch: postFetch)
@@ -643,7 +644,8 @@ class MyMessagesViewController: MessagesViewController,
 		}
 		
 		imageManager.fetchUserAvatar( user,
-		            withProcessingID: "avatarView",
+		                        with: nil,
+		                processingID: "avatarView",
 		             processingBlock: processing,
 		                    preFetch: preFetch,
 		                   postFetch: postFetch)

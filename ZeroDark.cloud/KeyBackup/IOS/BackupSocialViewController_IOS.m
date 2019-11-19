@@ -1569,6 +1569,7 @@ API_AVAILABLE(ios(10.0)){
 	};
 	
 	[imageManager fetchUserAvatar: localUser
+	                  withOptions: nil
 						 preFetchBlock: preFetchBlock
 						postFetchBlock: postFetchBlock];
 }

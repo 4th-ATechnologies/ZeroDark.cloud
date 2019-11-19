@@ -369,7 +369,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 			vc = vc_UserAvatar;
 			break;
 			
-		default:;
+		default:
 			
 			@throw [NSException exceptionWithName:NSInternalInconsistencyException
 													 reason:[NSString stringWithFormat:@"internal error viewControllerForViewID (%ld)", (long)viewID ]  userInfo:nil];
@@ -1080,7 +1080,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 	[self viewControllerForViewID:AccountSetupViewID_SocialidMgmt];
 	
 	[navigationController pushViewController:vc_SocialidMgmt animated:YES];
-	vc_SocialidMgmt.userID =  userID;
+	vc_SocialidMgmt.localUserID = userID;
 }
 
 
@@ -1097,7 +1097,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 	
 	self.identityMode = IdenititySelectionMode_ExistingAccount;
 	[self viewControllerForViewID:AccountSetupViewID_UserAvatar];
-	vc_UserAvatar.userID =  userID;
+	vc_UserAvatar.localUserID = userID;
 	vc_UserAvatar.auth0ID = auth0ID;
 	
 	[navigationController pushViewController:vc_UserAvatar animated:YES];

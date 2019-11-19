@@ -146,6 +146,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	};
 	
 	[imageManager fetchUserAvatar: localUser
+	                  withOptions: nil
 	                preFetchBlock: preFetchBlock
 	               postFetchBlock: postFetchBlock];
 }

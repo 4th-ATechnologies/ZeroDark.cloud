@@ -173,7 +173,8 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 		}
 		
 		imageManager.fetchUserAvatar( localUser,
-		            withProcessingID: "navTitle",
+		                        with: nil,
+		                processingID: "navTitle",
 		             processingBlock: processing,
 		                    preFetch: preFetch,
 		                   postFetch: postFetch)
@@ -588,7 +589,8 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 				}
 				
 				imageManager.fetchUserAvatar( remoteUser,
-								withProcessingID: "convoCellAvatar",
+				                        with: nil,
+								    processingID: "convoCellAvatar",
 								 processingBlock: processing,
 										  preFetch: preFetch,
 										 postFetch: postFetch)
