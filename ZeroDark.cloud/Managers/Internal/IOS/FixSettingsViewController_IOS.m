@@ -169,7 +169,7 @@
     NSString* stepText     = step[1];
     UIImage* stepImage     = step[0];
     
-    cell.lblStep.text = [NSString stringWithFormat:@"%ld. %@", indexPath.row+1, stepText];
+    cell.lblStep.text = [NSString stringWithFormat:@"%lu. %@", (unsigned long)indexPath.row+1, stepText];
     cell.lblStep.textColor  =  UIColor.darkGrayColor;
     
     cell.imgStep.image =  stepImage;

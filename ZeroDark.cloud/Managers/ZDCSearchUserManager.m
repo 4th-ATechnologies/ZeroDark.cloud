@@ -58,9 +58,15 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
     copy->_matchingRanges = _matchingRanges;
  }
 
-- (NSString *)description {
-    return [NSString stringWithFormat:@"<%@: %p, auth0_profileID: %@, matchingString: %@, rangesFound: %ld>", NSStringFromClass([self class]), self,
-            self.auth0_profileID, self.matchingString, self.matchingRanges.count ];
+- (NSString *)description
+{
+	return [NSString stringWithFormat:
+		@"<%@: %p, auth0_profileID: %@, matchingString: %@, rangesFound: %lu>",
+		NSStringFromClass([self class]),
+		self,
+		self.auth0_profileID,
+		self.matchingString,
+		(unsigned long)self.matchingRanges.count];
 }
 
 @end
@@ -114,13 +120,16 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
     copy->_matches = _matches;
 }
 
-- (NSString *)description {
-     return [NSString stringWithFormat:@"<%@: %p, uuid: %@, aws_region: %@, bucket: %@, auth0_profile count <%ld>",
-            NSStringFromClass([self class]), self,
-            self.uuid,
-            [AWSRegions shortNameForRegion:self.aws_region],
-            self.aws_bucket,
-            self.auth0_profiles.count ];
+- (NSString *)description
+{
+	return [NSString stringWithFormat:
+		@"<%@: %p, uuid: %@, aws_region: %@, bucket: %@, auth0_profile count <%lu>",
+		NSStringFromClass([self class]), self,
+		self.uuid,
+		[AWSRegions shortNameForRegion:self.aws_region],
+		self.aws_bucket,
+		(unsigned long)self.auth0_profiles.count
+	];
 }
 @end
 

@@ -264,7 +264,7 @@ static NSString *const k_displayName = @"displayName";
 				if(count == 0)
 					displayName  = [NSString stringWithFormat:@"%@ (%@)",key, providerName];
 				else
-					displayName  = [NSString stringWithFormat:@"%@ (%@-%lu)",key, providerName, count];
+					displayName  = [NSString stringWithFormat:@"%@ (%@-%lu)",key, providerName, (unsigned long)count];
 				
 			}
 			

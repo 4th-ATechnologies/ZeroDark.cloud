@@ -1114,7 +1114,7 @@ static NSString *const kActionStatus   = @"action";
 		cell.selectionStyle = UITableViewCellSelectionStyleNone;
 	}
 
-	cell.textLabel.text =  [NSString stringWithFormat:@"Upload %ld ", rowIndex];
+	cell.textLabel.text =  [NSString stringWithFormat:@"Upload %ld ", (long)rowIndex];
 	cell.accessoryType = UITableViewCellAccessoryNone;
 	cell.selectionStyle = UITableViewCellSelectionStyleNone;
 	return cell;
@@ -1130,7 +1130,7 @@ static NSString *const kActionStatus   = @"action";
 		cell.selectionStyle = UITableViewCellSelectionStyleNone;
 	}
 	
-	cell.textLabel.text =  [NSString stringWithFormat:@"Dwonload %ld ", rowIndex];
+	cell.textLabel.text =  [NSString stringWithFormat:@"Dwonload %ld ", (long)rowIndex];
 	cell.accessoryType = UITableViewCellAccessoryNone;
 	cell.selectionStyle = UITableViewCellSelectionStyleNone;
 
@@ -1148,7 +1148,7 @@ static NSString *const kActionStatus   = @"action";
 		cell.selectionStyle = UITableViewCellSelectionStyleNone;
 	}
 	
-	cell.textLabel.text =  [NSString stringWithFormat:@"Raw %ld ", rowIndex];
+	cell.textLabel.text =  [NSString stringWithFormat:@"Raw %ld ", (long)rowIndex];
 	cell.accessoryType = UITableViewCellAccessoryNone;
 	cell.selectionStyle = UITableViewCellSelectionStyleNone;
 

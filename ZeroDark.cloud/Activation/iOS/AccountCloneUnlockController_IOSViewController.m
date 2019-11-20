@@ -231,16 +231,18 @@ static const NSUInteger max_tries = 4;
 	}
 	else
 	{
-		if([error.domain isEqualToString:S4FrameworkErrorDomain]
-		   && error.code == kS4Err_BadIntegrity)
+		if ([error.domain isEqualToString:S4FrameworkErrorDomain] && (error.code == kS4Err_BadIntegrity))
 		{
-			if(++failedTries >= max_tries)
+			failedTries++;
+			
+			if (failedTries >= max_tries)
 			{
 				[accountSetupVC popFromCurrentView];
 			}
-			else if(failedTries > 1)
+			else if (failedTries > 1)
 			{
-				[self flashErrorText:[NSString stringWithFormat:@ "%ld failed password attempts ",failedTries ]];
+				NSString *txt = [NSString stringWithFormat:@ "%lu failed password attempts ",(unsigned long) failedTries];
+				[self flashErrorText:txt];
 			}
 			else
 			{

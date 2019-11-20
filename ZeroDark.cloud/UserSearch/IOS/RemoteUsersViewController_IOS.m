@@ -261,18 +261,17 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 
 - (NSString *)badgeTextWithCount:(NSUInteger)count
 {
-	NSString* result = nil;
+	NSString *result = nil;
 	
-	if(count == 0)
-	{
+	if (count == 0) {
 		result = @"";
 	}
-	else if (count > 99)
-	{
+	else if (count > 99) {
 		result = @"99+";
 	}
-	else
-		result = [NSString stringWithFormat:@"%ld", count];
+	else {
+		result = [NSString stringWithFormat:@"%lu", (unsigned long)count];
+	}
 	
 	return result;
 }

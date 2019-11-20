@@ -206,30 +206,28 @@ static Auth0ProviderManager *sharedInstance = nil;
 }
 
 
--(OSImage*) providerIcon:(Auth0ProviderIconType)type forProvider:(NSString*) provider
+- (OSImage *)providerIcon:(Auth0ProviderIconType)type forProvider:(NSString *)provider
 {
-    __block OSImage *thumbnail = nil;
+	__block OSImage *thumbnail = nil;
 
-    NSString *cacheKey = nil;
-    NSString *urlKey = nil;
+	NSString *cacheKey = nil;
+	NSString *urlKey = nil;
+	
+	switch (type) {
+		case Auth0ProviderIconType_64x64:
+			cacheKey = [self keyPrefixForIcon64x64:provider];
+			urlKey = kAuth0ProviderInfo_Key_64x64URL;
+			break;
 
-    switch (type) {
-        case Auth0ProviderIconType_64x64:
-            cacheKey = [self keyPrefixForIcon64x64:provider];
-            urlKey = kAuth0ProviderInfo_Key_64x64URL;
-            break;
+		case Auth0ProviderIconType_Signin:
+			cacheKey = [self keyPrefixForIconSignin:provider];
+			urlKey = kAuth0ProviderInfo_Key_SigninURL;
+			break;
 
-        case Auth0ProviderIconType_Signin:
-            cacheKey = [self keyPrefixForIconSignin:provider];
-            urlKey = kAuth0ProviderInfo_Key_SigninURL;
-            break;
-
-        default:
-
-            ZDCLogError(@"%@: Invalid Auth0ProviderIconType requested: %ld", THIS_METHOD, type);
-            return nil;
-            break;
-    }
+		default:
+			ZDCLogError(@"%@: Invalid Auth0ProviderIconType requested: %ld", THIS_METHOD, (long)type);
+			return nil;
+	}
 
     dispatch_sync(cacheQueue, ^{
 #pragma clang diagnostic push

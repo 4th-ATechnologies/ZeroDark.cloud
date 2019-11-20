@@ -507,20 +507,19 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 
 - (NSString *)badgeTextWithCount:(NSUInteger)count
 {
-    NSString* result = nil;
+	NSString *result = nil;
     
-    if(count == 0)
-    {
-        result = @"";
-    }
-    else if (count > 99)
-    {
-        result = @"99+";
-    }
-    else
-        result = [NSString stringWithFormat:@"%ld", count];
-        
-        return result;
+	if (count == 0) {
+		result = @"";
+	}
+	else if (count > 99) {
+		result = @"99+";
+	}
+	else {
+		result = [NSString stringWithFormat:@"%lu", (unsigned long)count];
+	}
+	
+	return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -433,8 +433,8 @@ typedef NS_ENUM(NSInteger, BackupSocialViewController_Page) {
 	}];
 	
 	cell.uuid = splitID;
-	cell.lblSplit.text  = [NSString stringWithFormat:@"(%ld/%ld)",
-								  splitKey.threshold, splitKey.totalShares ];
+	cell.lblSplit.text  = [NSString stringWithFormat:@"(%lu/%lu)",
+								  (unsigned long)splitKey.threshold, (unsigned long)splitKey.totalShares ];
 	
 	NSData* data = [[NSData alloc] initWithBase64EncodedString:splitKey.ownerID options:0];
 	NSString* shareIDb58  = [NSString base58WithData:data];
