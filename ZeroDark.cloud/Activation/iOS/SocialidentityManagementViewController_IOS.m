@@ -852,7 +852,7 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 		#if DEBUG
 			message = error.localizedDescription;
 		#else
-			message = @"Check internet connection."
+			message = @"Check internet connection.";
 		#endif
 			
 			[strongSelf.accountSetupVC showError: @"Could not contact server."
