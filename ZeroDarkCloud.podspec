@@ -21,7 +21,6 @@ Pod::Spec.new do |s|
 
 	s.dependency 'AFNetworking'
 	s.dependency 'CocoaLumberjack'
-	s.dependency 'JWT'
 	s.dependency 'S4Crypto', '>= 2.2.9'
 	s.dependency 'XMLDictionary'
 	s.dependency 'YapDatabase/SQLCipher-ObjC', '>= 4.0'

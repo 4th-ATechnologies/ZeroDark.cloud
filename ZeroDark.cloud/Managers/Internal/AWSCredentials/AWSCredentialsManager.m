@@ -1,6 +1,7 @@
 #import "AWSCredentialsManager.h"
 
 #import "AWSDate.h"
+#import "JWTUtilities.h"
 #import "ZDCConstants.h"
 #import "ZDCConstantsPrivate.h"
 #import "ZDCDatabaseManager.h"
@@ -13,7 +14,6 @@
 #import "NSDate+ZeroDark.h"
 #import "NSError+Auth0API.h"
 #import "NSError+ZeroDark.h"
-#import "NSString+JWT.h"
 
 
 @implementation AWSCredentialsManager
@@ -202,7 +202,7 @@
 		//
 		if (auth.auth0_idToken)
 		{
-			NSDate *expiration = [NSString expireDateFromJWTString:auth.auth0_idToken withError:nil];
+			NSDate *expiration = [JWTUtilities expireDateFromJWTString:auth.auth0_idToken error:nil];
 			if (expiration && [expiration isAfter:nowPlusBuffer])
 			{
 				needsRefreshIDToken = NO;

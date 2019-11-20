@@ -14,7 +14,6 @@ PODS:
   - AFNetworking/Serialization (3.2.1)
   - AFNetworking/UIKit (3.2.1):
     - AFNetworking/NSURLSession
-  - Base64 (1.1.2)
   - CocoaLumberjack (3.5.3):
     - CocoaLumberjack/Core (= 3.5.3)
   - CocoaLumberjack/Core (3.5.3)
@@ -22,8 +21,6 @@ PODS:
     - CocoaLumberjack/Core
   - ImageScrollView (1.8)
   - JGProgressView (1.2.1)
-  - JWT (2.2.0):
-    - Base64 (~> 1.1.2)
   - KGHitTestingViews (0.9.5)
   - S4Crypto (2.2.10)
   - SCLAlertView-Objective-C (1.1.6)
@@ -162,11 +159,10 @@ PODS:
     - YapDatabase/SQLCipher/Core
   - ZDCSyncable (1.0.2)
   - ZDCSyncableObjC (1.0.1)
-  - ZeroDarkCloud/Core (0.9.0):
+  - ZeroDarkCloud/Core (0.9.1):
     - AFNetworking
     - CocoaLumberjack
     - JGProgressView
-    - JWT
     - KGHitTestingViews
     - NSColor-Crayola
     - S4Crypto (>= 2.2.9)
@@ -177,11 +173,10 @@ PODS:
     - YapDatabase/SQLCipher-ObjC (>= 4.0)
     - ZDCSyncableObjC
     - zipzap
-  - ZeroDarkCloud/Swift (0.9.0):
+  - ZeroDarkCloud/Swift (0.9.1):
     - AFNetworking
     - CocoaLumberjack
     - JGProgressView
-    - JWT
     - KGHitTestingViews
     - NSColor-Crayola
     - S4Crypto (>= 2.2.9)
@@ -207,11 +202,9 @@ DEPENDENCIES:
 SPEC REPOS:
   https://github.com/CocoaPods/Specs.git:
     - AFNetworking
-    - Base64
     - CocoaLumberjack
     - ImageScrollView
     - JGProgressView
-    - JWT
     - KGHitTestingViews
     - S4Crypto
     - SCLAlertView-Objective-C
@@ -231,11 +224,9 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   AFNetworking: b6f891fdfaed196b46c7a83cf209e09697b94057
-  Base64: cecfb41a004124895a7bcee567a89bae5a89d49b
   CocoaLumberjack: 2f44e60eb91c176d471fdba43b9e3eae6a721947
   ImageScrollView: 82912273486297285682bdb2a806742f0d39940c
   JGProgressView: 6f3dfda0de2d7c49b249f3075553d09f39e42bd5
-  JWT: cf73c0ab0dac762df3de8a3f1164352089d97780
   KGHitTestingViews: 34a1c05a3ec0778ca8c46fadf994c9292c56f374
   S4Crypto: 6f563ee3bd08f02791508717c58f14fff83cfe2d
   SCLAlertView-Objective-C: 2bb9be204bffaf24762a0e33fe6ca9645819b3b7
@@ -247,7 +238,7 @@ SPEC CHECKSUMS:
   YapDatabase: 260b1b0b3e6ae6775383edc923e19813586615eb
   ZDCSyncable: 12256222acfc1eda4a03b9c3f7ae8766bac4d027
   ZDCSyncableObjC: 0866ef66fc5be67e0b6df713cff9b9b84eed9967
-  ZeroDarkCloud: eb3fa992865939bda86dca650b2017c4d58a94f9
+  ZeroDarkCloud: 66de3410a66c8c17d7912659be2bcc7289635a70
   zipzap: 940162d9c9c60472c2eab341385e4214da0fdf1c
 
 PODFILE CHECKSUM: 5f1f54c5e1b2998e74adc823a67ceb6c8e42fed4
