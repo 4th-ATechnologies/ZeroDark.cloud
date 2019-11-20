@@ -1137,7 +1137,7 @@ static NSUInteger const kMaxFailCount = 8;
 	if (requestingMetadata)
 	{
 		byteOffset_data_start = headerSize;
-		byteOffset_data_end = byteOffset_data_start + header.metadataSize;
+		byteOffset_data_end = byteOffset_data_start + (NSUInteger)header.metadataSize;
 		
 		if (requestingThumbnail) {
 			byteOffset_data_end += header.thumbnailSize;
@@ -1145,8 +1145,8 @@ static NSUInteger const kMaxFailCount = 8;
 	}
 	else
 	{
-		byteOffset_data_start = headerSize + header.metadataSize;
-		byteOffset_data_end = byteOffset_data_start + header.thumbnailSize;
+		byteOffset_data_start = headerSize + (NSUInteger)header.metadataSize;
+		byteOffset_data_end = byteOffset_data_start + (NSUInteger)header.thumbnailSize;
 	}
 	
 	// In order to decrypt the data, we need to follow the following rules:
@@ -1617,9 +1617,9 @@ static NSUInteger const kMaxFailCount = 8;
 			if (requestingMetadata && (header.metadataSize > 0))
 			{
 				NSRange range = (NSRange){
-					.location = (headerSize + header.metadataSize)
+					.location = (NSUInteger)(headerSize + header.metadataSize)
 					          - context.range_request.location,
-					.length = context.header.metadataSize
+					.length = (NSUInteger)header.metadataSize
 				};
 				
 				metadata = [decryptedData subdataWithRange:range];
@@ -1627,9 +1627,9 @@ static NSUInteger const kMaxFailCount = 8;
 			if (requestingThumbnail && (header.thumbnailSize > 0))
 			{
 				NSRange range = (NSRange){
-					.location = (headerSize + header.metadataSize + header.thumbnailSize)
+					.location = (NSUInteger)(headerSize + header.metadataSize + header.thumbnailSize)
 					          - context.range_request.location,
-					.length = header.thumbnailSize
+					.length = (NSUInteger)header.thumbnailSize
 				};
 				
 				thumbnail = [decryptedData subdataWithRange:range];

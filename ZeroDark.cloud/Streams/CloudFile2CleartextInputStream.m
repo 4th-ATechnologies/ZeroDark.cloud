@@ -1607,7 +1607,7 @@ done:
 	}
 	else
 	{
-		return [NSData dataWithBytesNoCopy:outBuffer length:outBufferMallocSize freeWhenDone:YES];
+		return [NSData dataWithBytesNoCopy:outBuffer length:(NSUInteger)outBufferMallocSize freeWhenDone:YES];
 	}
 }
 

@@ -328,8 +328,8 @@
 		bufferSize = (1024 * 32); // Pick a sane default chunk size
 	}
 	
-	if (fileSize > 0) { // Don't over-allocate buffer
-		bufferSize = MIN(bufferSize, fileSize);
+	if (fileSize > 0 && fileSize < NSUIntegerMax) { // Don't over-allocate buffer
+		bufferSize = MIN(bufferSize, (NSUInteger)fileSize);
 	}
 	
 #pragma clang diagnostic push
@@ -954,8 +954,8 @@ done:
 		bufferSize = (1024 * 32); // Pick a sane default chunk size
 	}
 	
-	if (fileSize > 0) { // Don't over-allocate buffer
-		bufferSize = MIN(bufferSize, fileSize);
+	if (fileSize > 0 && fileSize < NSUIntegerMax) { // Don't over-allocate buffer
+		bufferSize = MIN(bufferSize, (NSUInteger)fileSize);
 	}
 	
 #pragma clang diagnostic push
@@ -2783,7 +2783,7 @@ done:
 						{
 						#pragma clang diagnostic push
 						#pragma clang diagnostic ignored "-Wambiguous-macro"
-							sectionBufferMallocSize = MAX(header.metadataSize, header.thumbnailSize);
+							sectionBufferMallocSize = (NSUInteger)MAX(header.metadataSize, header.thumbnailSize);
 						#pragma clang diagnostic pop
 							
 							// Protect against rogue header sections
@@ -3252,7 +3252,7 @@ done:
 				
 				memmove(readBuffer, (readBuffer + readBufferOffset - leftover), leftover);
 				
-				readBufferOffset = leftover;
+				readBufferOffset = (NSUInteger)leftover;
 			}
 			else
 			{
