@@ -659,8 +659,6 @@ static Auth0APIManager *sharedInstance = nil;
 
 	NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
 	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
-
-#if 1
 	
 	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
 	urlComponents.scheme = @"https";
@@ -729,15 +727,6 @@ static Auth0APIManager *sharedInstance = nil;
 	}];
 
 	[task resume];
-	
-#else
-	
-	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
-	urlComponents.scheme = @"https";
-	urlComponents.host = kAuth04thADomain;
-	urlComponents.path = @"/delegation";
-	
-#endif
 }
 
 - (void)getUserProfileWithAccessToken:(NSString *)accessToken
@@ -1015,6 +1004,18 @@ static Auth0APIManager *sharedInstance = nil;
 	NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
 	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
 
+#if 0
+	
+	// IMPORTANT:
+	//
+	// Even though this is the recommended API, it doens't work with all flows:
+	//
+	// - It works if the user logged in via Auth0 database (with username & password)
+	// - It does NOT work if the user logged in via social (e.g. with LinkedIn)
+	//
+	// In discussing the manner with Auth0 support,
+	// the told us to use the delegation API (even though it's technically deprecated).
+	
 	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
 	urlComponents.scheme = @"https";
 	urlComponents.host = kAuth04thADomain;
@@ -1097,6 +1098,94 @@ static Auth0APIManager *sharedInstance = nil;
 	}];
 
 	[task resume];
+	
+#else
+	
+	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
+	urlComponents.scheme = @"https";
+	urlComponents.host = kAuth04thADomain;
+	urlComponents.path = @"/delegation";
+
+	NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:5];
+	jsonDict[A0ParameterClientID]     = kAuth04thA_AppClientID;
+	jsonDict[A0ParameterGrantType]    = @"urn:ietf:params:oauth:grant-type:jwt-bearer";
+	jsonDict[A0ParameterScope]        = @"openid profile";
+	jsonDict[A0ParameterAPIType]      = @"id_token";
+	jsonDict[A0ParameterRefreshToken] = refreshToken;
+
+	NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:nil];
+
+	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
+	request.HTTPMethod = @"POST";
+	request.HTTPBody = jsonData;
+
+	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+
+	NSURLSessionDataTask *task =
+	  [session dataTaskWithRequest: request
+	             completionHandler:^(NSData *responseObject, NSURLResponse *response, NSError *error)
+	{
+		if (error)
+		{
+			Fail(error);
+			return;
+		}
+
+		NSInteger statusCode = response.httpStatusCode;
+		if ((statusCode != 200) &&
+		    (statusCode != 401) &&
+		    (statusCode != 403))
+		{
+			error = [self errorWithStatusCode:statusCode description:@"Bad Status response"];
+			
+			Fail(error);
+			return;
+		}
+		  
+		NSDictionary *jsonDict = nil;
+		NSString *idToken = nil;
+
+		if ([responseObject isKindOfClass:[NSData class]] && (responseObject.length > 0))
+		{
+			jsonDict = [NSJSONSerialization JSONObjectWithData:(NSData *)responseObject options:0 error:&error];
+			
+			if (![jsonDict isKindOfClass:[NSDictionary class]]) {
+				jsonDict = nil;
+			}
+		}
+
+		if (jsonDict)
+		{
+			NSString *error_code = jsonDict[@"error"];
+			if (error_code)
+			{
+				NSString *error_description = jsonDict[@"error_description"];
+				
+				error = [self errorWithDescription:error_description a0Code:error_code];
+			}
+			else
+			{
+				idToken = jsonDict[@"id_token"];
+				
+				if (![idToken isKindOfClass:[NSString class]]) {
+					idToken = nil;
+				}
+			}
+		}
+		  
+		if (idToken)
+		{
+			Succeed(idToken);
+		}
+		else
+		{
+			Fail(error ?: [self errorWithStatusCode:500 description:@"Invalid response from server"]);
+		}
+	}];
+
+	[task resume];
+	
+#endif
 }
 
 - (void)getIDTokenWithRefreshToken:(NSString *)auth0_refreshToken
@@ -1230,64 +1319,40 @@ static Auth0APIManager *sharedInstance = nil;
 	return dict;
 }
 
--(BOOL) decodeSocialQueryString:(NSString*)queryString
-						a0Token:(A0Token * _Nullable*) a0TokenOut
-						CSRFState:(NSString * _Nullable*) CSRFStateOut
-						  error:(NSError ** _Nullable)errorOut
+/**
+ * See header file for description.
+ */
+- (BOOL)decodeSocialQueryResult:(NSDictionary *)queryResult
+                        a0Token:(A0Token *_Nullable *_Nullable)a0TokenOut
+                      csrfState:(NSString *_Nullable *_Nullable)csrfStateOut
+                          error:(NSError *_Nullable *_Nullable)errorOut
 {
 	BOOL success = NO;
 
-	NSError * error = nil;
-	A0Token* a0Token = nil;
-	NSString* stateStr = nil;
+	A0Token *a0Token = nil;
+	NSString *csrfState = nil;
+	NSError *error = nil;
 
-	NSString *urlStr;
-	if ([queryString hasPrefix:@"?"]) {
-		urlStr = [NSString stringWithFormat:@"http://www.apple.com%@", queryString];
-	}
-	else {
-		urlStr = [NSString stringWithFormat:@"http://www.apple.com?%@", queryString];
-	}
+	NSString *q_error = queryResult[@"error"];
+	NSString *q_error_description = queryResult[@"error_description"];
 	
-	NSURLComponents *components = [NSURLComponents componentsWithString:urlStr];
-	NSArray<NSURLQueryItem *> *queryItems = components.queryItems;
-
-	NSURLQueryItem *item_error = nil;
-	NSURLQueryItem *item_error_description = nil;
-	
-	NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:queryItems.count];
-	
-	for (NSURLQueryItem *item in queryItems)
+	if (q_error)
 	{
-		if ([item.name isEqualToString:@"error"])
-		{
-			item_error = item;
-		}
-		else if ([item.name isEqualToString:@"error_description"])
-		{
-			item_error_description = item;
-		}
-		
-		dict[item.name] = item.value ?: @"";
-	}
-	
-	if (item_error)
-	{
-		NSString *description = item_error_description.value ?: item_error.value;
+		NSString *description = (q_error_description.length > 0) ? q_error_description : q_error;
 		error = [self errorWithDescription:description];
 	}
 	else
 	{
-		a0Token = [A0Token tokenFromDictionary:dict];
+		a0Token = [A0Token tokenFromDictionary:queryResult];
 		if (a0Token) {
 			success = YES;
 		}
 		
-		stateStr = dict[A0ParameterState];
+		csrfState = queryResult[A0ParameterState];
 	}
 
-	if (CSRFStateOut) *CSRFStateOut = stateStr;
 	if (a0TokenOut) *a0TokenOut = a0Token;
+	if (csrfStateOut) *csrfStateOut = csrfState;
 	if (errorOut) *errorOut = error;
 	
 	return success;

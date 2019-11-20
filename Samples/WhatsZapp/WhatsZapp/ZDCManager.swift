@@ -736,7 +736,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 		
 		databaseManager.roDatabaseConnection.asyncRead { (transaction) in
 			
-			guard let localUserID = localUserManager.anyLocalUserID(transaction) else {
+			guard let localUser = localUserManager.anyLocalUser(transaction) else {
 				// The user isn't logged into any account yet
 				return
 			}
@@ -765,7 +765,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 			// - ~/convoB/msg4
 			
 			guard
-				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
+				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUser.uuid),
 				let homeNode = cloudTransaction.trunkNode(.home),
 				let inboxNode = cloudTransaction.trunkNode(.inbox)
 			else {
@@ -858,13 +858,13 @@ class ZDCManager: ZeroDarkCloudDelegate {
 		
 		databaseManager.roDatabaseConnection.asyncRead { (transaction) in
 			
-			guard let localUserID = localUserManager.anyLocalUserID(transaction) else {
+			guard let localUser = localUserManager.anyLocalUser(transaction) else {
 				// The user isn't logged into any account yet
 				return
 			}
 			
 			guard
-				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
+				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUser.uuid),
 				let convoNode = cloudTransaction.linkedNode(forKey: convo.uuid, inCollection: kCollection_Conversations)
 			else {
 				return

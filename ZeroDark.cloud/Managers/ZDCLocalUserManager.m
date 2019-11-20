@@ -75,13 +75,13 @@ static NSString *const k_displayName = @"displayName";
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCLocalUserManager.html
  */
-- (nullable NSString *)anyLocalUserID:(YapDatabaseReadTransaction *)transaction
+- (nullable ZDCLocalUser *)anyLocalUser:(YapDatabaseReadTransaction *)transaction
 {
-	__block NSString *result = nil;
-	[self enumerateLocalUserIDsWithTransaction: transaction
-	                                usingBlock:^(NSString *localUserID, BOOL *stop)
+	__block ZDCLocalUser *result = nil;
+	[self enumerateLocalUsersWithTransaction: transaction
+	                              usingBlock:^(ZDCLocalUser *localUser, BOOL *stop)
 	{
-		result = localUserID;
+		result = localUser;
 		*stop = YES;
 	}];
 	

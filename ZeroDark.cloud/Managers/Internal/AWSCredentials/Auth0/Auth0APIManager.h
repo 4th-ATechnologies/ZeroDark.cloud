@@ -95,10 +95,14 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (NSDictionary *)parseQueryString:(NSString *)queryString;
 
--(BOOL) decodeSocialQueryString:(NSString*)queryString
-						a0Token:(A0Token * _Nullable*_Nullable) a0TokenOut
-					  CSRFState:(NSString * _Nullable*_Nullable) CSRFStateOut
-						  error:(NSError ** _Nullable)errorOut;
+/**
+ * Processing of a social login query.
+ */
+- (BOOL)decodeSocialQueryResult:(NSDictionary *)queryResult
+                        a0Token:(A0Token *_Nullable *_Nullable)a0TokenOut
+                      csrfState:(NSString *_Nullable *_Nullable)csrfStateOut
+                          error:(NSError *_Nullable *_Nullable)errorOut;
+
 @end
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

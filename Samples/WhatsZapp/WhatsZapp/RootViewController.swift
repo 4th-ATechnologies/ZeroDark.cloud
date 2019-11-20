@@ -32,7 +32,12 @@ class RootViewController: UIViewController {
 		var localUserID: String? = nil
 		uiDatabaseConnection.read { (transaction) in
 			
-			localUserID = zdc.localUserManager?.anyLocalUserID(transaction)
+			if let localUser = zdc.localUserManager?.anyLocalUser(transaction) {
+			
+				if localUser.hasCompletedSetup {
+					localUserID = localUser.uuid
+				}
+			}
 		}
 		
 		if let localUserID = localUserID {

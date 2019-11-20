@@ -471,14 +471,16 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	Auth0APIManager *auth0APIManager = [Auth0APIManager sharedInstance];
 	AWSCredentialsManager *awsCredentialsManager = accountSetupVC.zdc.awsCredentialsManager;
 	
+	NSDictionary *queryResult = [auth0APIManager parseQueryString:queryString];
+	
 	A0Token *a0Token = nil;
-	NSString *stateString = nil;
+	NSString *csrfResult = nil;
 	NSError *error = nil;
 	
 	BOOL decodeSuccess =
-	  [auth0APIManager decodeSocialQueryString: queryString
+	  [auth0APIManager decodeSocialQueryResult: queryResult
 	                                   a0Token: &a0Token
-	                                 CSRFState: &stateString
+	                                 csrfState: &csrfResult
 	                                     error: &error];
 	
 	if (!decodeSuccess)
@@ -490,7 +492,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 		return;
 	}
 	
-	if (![stateString isEqualToString:csrfState])
+	if (![csrfResult isEqualToString:csrfState])
 	{
 		NSString *err_title = @"Social Login Failed";
 		NSString *err_msg = error ? error.localizedDescription : @"Possible cross-site request forgery attack";

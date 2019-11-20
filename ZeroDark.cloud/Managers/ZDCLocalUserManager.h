@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * @note If there are multiple logged in users, the returned localUser is not guaranteed to be consistent.
  */
-- (nullable NSString *)anyLocalUserID:(YapDatabaseReadTransaction *)transaction;
+- (nullable ZDCLocalUser *)anyLocalUser:(YapDatabaseReadTransaction *)transaction;
 
 #pragma mark List & Enumerate
 
