@@ -394,180 +394,33 @@
 
 - (ZDCLocalUser *)createLocalUserFromProfile:(ZDCUserProfile *)profile
 {
-	NSAssert(NO, @"Not implemented"); // finish refactoring
-	return nil;
-	
-/*
-	NSDictionary *app_metadata = profile.extraInfo[@"app_metadata"];
-	
-	NSString *aws_id = app_metadata[@"aws_id"];
-	if (aws_id == nil)
+	NSString *userID = profile.appMetadata_awsID;
+	if (userID == nil)
 	{
 		ZDCLogWarn(@"profile is missing required info: app_metadata.aws_id");
 		return nil;
 	}
 	
-	ZDCLocalUser *user = [[ZDCLocalUser alloc] initWithUUID:aws_id];
+	ZDCLocalUser *user = [[ZDCLocalUser alloc] initWithUUID:userID];
 	
-	NSString * bucket = app_metadata[@"bucket"];
-	NSString * regionName = app_metadata[@"region"];
-	NSDate  * auth0_updated_at = nil;
+	AWSRegion region = [AWSRegions regionForName:profile.appMetadata_region];
+	NSString *bucket = profile.appMetadata_bucket;
 	
-	//	if([profile.extraInfo objectForKey:@"updated_at"])
-	//		auth0_updated_at = [NSDate dateFromRfc3339String:[profile.extraInfo objectForKey:@"updated_at"]];
-	
-	user.aws_bucket = bucket;
-	user.aws_region = [AWSRegions regionForName:regionName];
-	user.lastRefresh_profile = [NSDate date];
-	
-	NSMutableDictionary* identities = [NSMutableDictionary dictionary];
-	
-	for (id item in profile.identities)
+	if (region == AWSRegion_Invalid || bucket.length == 0)
 	{
-		// Sanity check
-		if (![item isKindOfClass:[ZDCUserIdentity class]]) {
-			continue;
-		}
-		
-		ZDCUserIdentity *ident = (ZDCUserIdentity *)item;
-		NSString *auth0ID = ident.identityID;
-		
-		NSMutableDictionary* entry = [NSMutableDictionary dictionary];
-		NSString *displayName = nil;
-		
-		if (ident.profileData)
-		{
-			[entry addEntriesFromDictionary:ident.profileData];
-			entry[@"connection"] = ident.connection;
-			
-			// fix for weird providers
-			NSString *name = entry[@"name"];
-			if ([name isKindOfClass:[NSNull class]]) {
-				name = nil;
-			}
-			
-			if (!name.length)
-			{
-				name = [Auth0Utilities correctUserNameForA0Strategy: ident.connection
-																		  profile: entry];
-				if (name.length) {
-					entry[@"name"]= name;
-				}
-			}
-			
-			displayName = entry[@"displayName"];
-			if (!displayName)  displayName = entry[@"name"];
-			if (!displayName)  displayName = entry[@"nickname"];
-			if (!displayName)
-			{
-				displayName = entry[@"email"];
-				if (displayName)
-				{
-					if ([Auth0Utilities is4thAEmail:displayName]) {
-						displayName = [Auth0Utilities usernameFrom4thAEmail:displayName];
-					}
-					else if ([Auth0Utilities is4thARecoveryEmail:displayName]) {
-						displayName = kAuth0DBConnection_Recovery;
-					}
-				}
-			}
-			
-			if (displayName) {
-				entry[@"displayName"] = displayName;
-			}
-			
-			NSString *picture =
-			  [Auth0Utilities correctPictureForAuth0ID: auth0ID
-			                               profileData: ident.profileData
-			                                    region: user.aws_region
-			                                    bucket: user.aws_bucket];
-			
-			if (picture) {
-				entry[@"picture"] = picture;
-			}
-			
-			identities[ident.identityID] = [entry copy];
-		}
-		else if ([ident.identityID isEqualToString:profile.userID])
-		{
-			entry[@"name"]             = profile.name;
-			entry[@"nickname"]         = profile.nickname;
-			entry[@"email"]            = profile.email;
-			entry[@"isPrimaryProfile"] = @(YES);
-			entry[@"connection"]       = ident.connection;
-			
-			if ([ident.provider isEqualToString:A0StrategyNameAuth0])
-			{
-				if ([ident.connection isEqualToString:kAuth0DBConnection_UserAuth]
-					 && [Auth0Utilities is4thAEmail:profile.email])
-				{
-					displayName = [Auth0Utilities usernameFrom4thAEmail:profile.email];
-				}
-				else if ([ident.connection isEqualToString:kAuth0DBConnection_Recovery])
-				{
-					displayName = kAuth0DBConnection_Recovery;
-				}
-			}
-			
-			if (!displayName && profile.name.length)
-				displayName =  profile.name;
-			
-			if (!displayName && profile.email.length)
-				displayName =  profile.email;
-			
-			if (!displayName && profile.nickname.length)
-				displayName =  profile.nickname;
-			
-			if (displayName)
-				entry[@"displayName"]    = displayName;
-			
-			identities[ident.identityID] = [entry copy];
-		}
-		else
-		{
-			// No joy here
-		}
+		ZDCLogWarn(@"profile is missing required info: region, bucket");
+		return nil;
 	}
 	
-	user.auth0_profiles = identities;
+	user.aws_region = region;
+	user.aws_bucket = bucket;
+	user.lastRefresh_profile = [NSDate date];
+	
+	user.identities = profile.identities;
 	user.auth0_primary = profile.userID;
 	
 	return user;
-*/
 }
-
-- (nullable NSString *)closestMatchingAuth0IDFromProfile:(ZDCUserProfile *)profile
-                                                provider:(NSString *)provider
-                                                username:(nullable NSString *)username
-{
-	NSString *auth0ID = nil;
-	
-	// walk the list of identities and find closest match
-	for (id item in profile.identities)
-	{
-		if ([item isKindOfClass:[ZDCUserIdentity class]])
-		{
-			ZDCUserIdentity *ident = item;
-			NSDictionary *profileData = ident.profileData;
-			
-			// ignore recovery token
-			if([ident.connection  isEqualToString:kAuth0DBConnection_Recovery]) continue;
-			
-			if([ident.provider isEqualToString:provider])
-			{
-				auth0ID = ident.identityID;
-				
-				// if storm4 account and username matches - stop looking, you found it.
-				if( [ident.connection isEqualToString:kAuth0DBConnection_UserAuth]
-					&& [username isEqualToString:profileData[@"username"]])
-					break;
-			}
-		}
-	}
-	
-	return auth0ID;
-}
-
 
 // MARK: database login
 // for an existing account - attempt to login to database account
@@ -830,14 +683,6 @@
 			
 			NSDictionary *app_metadata = result.profile.extraInfo[@"user_metadata"];
 			NSString *preferredAuth0ID = app_metadata[@"preferredAuth0ID"];
-			
-			if (!preferredAuth0ID)
-			{
-				preferredAuth0ID =
-				  [strongSelf closestMatchingAuth0IDFromProfile: result.profile
-				                                       provider: A0StrategyNameAuth0
-				                                       username: username];
-			}
 			
 			if (strongSelf.identityMode == IdenititySelectionMode_NewAccount)
 			{

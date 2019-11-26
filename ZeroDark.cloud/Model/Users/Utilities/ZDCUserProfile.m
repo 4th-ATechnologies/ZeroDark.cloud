@@ -8,6 +8,7 @@
 **/
 
 #import "ZDCUserProfile.h"
+#import "ZDCUserIdentityPrivate.h"
 
 static NSString *const k_userID     = @"userID";
 static NSString *const k_name       = @"name";
@@ -30,11 +31,16 @@ static NSString *const k_extraInfo  = @"extraInfo";
 @synthesize identities = _identities;
 @synthesize extraInfo = _extraInfo;
 
-@dynamic userMetadata;
 @dynamic appMetadata;
+@dynamic userMetadata;
+
+@dynamic appMetadata_awsID;
+@dynamic appMetadata_region;
+@dynamic appMetadata_bucket;
+
+@dynamic userMetadata_preferredIdentityID;
 
 @dynamic isUserBucketSetup;
-@dynamic preferredIdentityID;
 
 
 NSDate *DateFromISO8601String(NSString *string) {
@@ -109,6 +115,57 @@ NSDate *DateFromISO8601String(NSString *string) {
 		[extraInfo removeObjectsForKeys:@[
 			@"user_id", @"name", @"nickname", @"email", @"picture", @"created_at", @"identities"
 		]];
+		
+		// Auth0 removes the profileData from the first identity for some reason.
+		// So we restore that information.
+		
+		ZDCUserIdentity *primaryIdentity = [_identities firstObject];
+		if (primaryIdentity)
+		{
+			NSMutableDictionary *profileData = [primaryIdentity.profileData mutableCopy];
+			
+			if (_name && !profileData[@"name"]) {
+				profileData[@"name"] = _name;
+			}
+			
+			if (_nickname && !profileData[@"nickname"]) {
+				profileData[@"nickname"] = _nickname;
+			}
+			
+			if (_email && !profileData[@"email"]) {
+				profileData[@"email"] = _email;
+			}
+			
+			if (_picture && !profileData[@"picture"]) {
+				profileData[@"picture"] = _picture;
+			}
+			
+			primaryIdentity.profileData = profileData;
+		}
+		
+		// Auth0 flattens the app_metadata & user_metadata sections for some reason.
+		// So we remove this extra noise.
+		
+		value = extraInfo[@"app_metadata"];
+		if ([value isKindOfClass:[NSDictionary class]])
+		{
+			NSDictionary *appMetadata = (NSDictionary *)value;
+			
+			for (id key in appMetadata)
+			{
+				value = appMetadata[key];
+				if ([value isKindOfClass:[NSString class]] || [value isKindOfClass:[NSNumber class]])
+				{
+					id meta_value = value;
+					id flat_value = extraInfo[key];
+					
+					if (flat_value && [flat_value isEqual:meta_value])
+					{
+						extraInfo[key] = nil;
+					}
+				}
+			}
+		}
 		
 		_extraInfo = [extraInfo copy];
 	}
@@ -196,16 +253,6 @@ NSDate *DateFromISO8601String(NSString *string) {
 #pragma mark Public API
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (NSDictionary *)userMetadata
-{
-	id value = _extraInfo[@"user_metadata"];
-	if ([value isKindOfClass:[NSDictionary class]]) {
-		return (NSDictionary *)value;
-	} else {
-		return @{};
-	}
-}
-
 - (NSDictionary *)appMetadata
 {
 	id value = _extraInfo[@"app_metadata"];
@@ -216,37 +263,50 @@ NSDate *DateFromISO8601String(NSString *string) {
 	}
 }
 
-- (BOOL)isUserBucketSetup
+- (NSDictionary *)userMetadata
 {
-	BOOL isSetup = NO;
-
-	NSDictionary *app_metadata = self.appMetadata;
-	if (app_metadata.count > 0)
-	{
-		NSString *bucket = nil;
-		NSString *region = nil;
-		id value;
-		
-		value = app_metadata[@"bucket"];
-		if ([value isKindOfClass:[NSString class]]) {
-			bucket = (NSString *)value;
-		}
-		
-		value = app_metadata[@"region"];
-		if ([value isKindOfClass:[NSString class]]) {
-			region = (NSString *)value;
-		}
-		
-		if ((bucket.length > 0) && (region.length > 0))
-		{
-			isSetup = YES;
-		}
+	id value = _extraInfo[@"user_metadata"];
+	if ([value isKindOfClass:[NSDictionary class]]) {
+		return (NSDictionary *)value;
+	} else {
+		return @{};
 	}
-
-	return isSetup;
 }
 
-- (nullable NSString *)preferredIdentityID
+- (nullable NSString *)appMetadata_awsID
+{
+	id value = self.appMetadata[@"aws_id"];
+	
+	if ([value isKindOfClass:[NSString class]]) {
+		return (NSString *)value;
+	} else {
+		return nil;
+	}
+}
+
+- (nullable NSString *)appMetadata_region
+{
+	id value = self.appMetadata[@"region"];
+	
+	if ([value isKindOfClass:[NSString class]]) {
+		return (NSString *)value;
+	} else {
+		return nil;
+	}
+}
+
+- (nullable NSString *)appMetadata_bucket
+{
+	id value = self.appMetadata[@"bucket"];
+	
+	if ([value isKindOfClass:[NSString class]]) {
+		return (NSString *)value;
+	} else {
+		return nil;
+	}
+}
+
+- (nullable NSString *)userMetadata_preferredIdentityID
 {
 	id value = self.userMetadata[@"preferredAuth0ID"];
 	
@@ -255,6 +315,21 @@ NSDate *DateFromISO8601String(NSString *string) {
 	} else {
 		return nil;
 	}
+}
+
+- (BOOL)isUserBucketSetup
+{
+	NSString *region = self.appMetadata_region;
+	if (region.length == 0) {
+		return NO;
+	}
+	
+	NSString *bucket = self.appMetadata_bucket;
+	if (bucket.length == 0) {
+		return NO;
+	}
+	
+	return YES;
 }
 
 - (nullable ZDCUserIdentity *)identityWithID:(NSString *)identityID

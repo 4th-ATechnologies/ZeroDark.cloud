@@ -145,10 +145,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 -(void) handleInternalError:(NSError*)error;
 
-- (nullable NSString *)closestMatchingAuth0IDFromProfile:(ZDCUserProfile *)profile
-                                                provider:(NSString *)provider
-                                                username:(nullable NSString *)username;
-
 // for an existing account - attempt to login to database account
 - (void)databaseAccountLoginWithUsername:(NSString *)username
                                 password:(NSString *)password

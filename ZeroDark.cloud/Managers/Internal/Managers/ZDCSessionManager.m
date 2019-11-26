@@ -901,8 +901,6 @@ done:
                  withContext:(ZDCObject *)inContext
                  sessionInfo:(ZDCSessionInfo *)sessionInfo
 {
-	NSAssert(NO, @"Not implemented");
-	
 	dispatch_async(sessionInfo.queue, ^{ @autoreleasepool {
 		
 		if ([inContext isKindOfClass:[ZDCDownloadContext class]])

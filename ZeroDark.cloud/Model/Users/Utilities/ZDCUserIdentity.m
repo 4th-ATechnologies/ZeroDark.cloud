@@ -7,7 +7,7 @@
  * API Reference : https://apis.zerodark.cloud
 **/
 
-#import "ZDCUserIdentity.h"
+#import "ZDCUserIdentityPrivate.h"
 
 #import "Auth0Constants.h"
 #import "Auth0Utilities.h"
@@ -77,10 +77,10 @@ static NSString *const k_profileData = @"profileData";
 
 - (BOOL)isValidIdentity
 {
-	if (!_provider   || _provider.length == 0)   return NO;
-	if (!_userID     || _userID.length == 0)     return NO;
-	if (!_connection || _connection.length == 0) return NO;
-	if (!_profileData)                           return NO;
+	if (_provider.length == 0)   return NO;
+	if (_userID.length == 0)     return NO;
+	if (_connection.length == 0) return NO;
+	if (!_profileData)           return NO;
 	
 	return YES;
 }
@@ -155,7 +155,7 @@ static NSString *const k_profileData = @"profileData";
 				displayName = (NSString *)value;
 			}
 		}
-		else if ([_provider isEqualToString:kAuth0DBConnection_UserAuth])
+		else if ([_connection isEqualToString:kAuth0DBConnection_UserAuth])
 		{
 			// Auth0 database connections use the term "username"
 	
@@ -197,8 +197,10 @@ static NSString *const k_profileData = @"profileData";
 		}
 	}
 
-	displayName = self.identityID;
-	
+	if (displayName.length == 0)
+	{
+		displayName = self.identityID;
+	}
 	if (displayName.length == 0)
 	{
 		displayName= @"<Unknown>"; // This code-path should (theoretically) be unreachable
@@ -211,6 +213,36 @@ static NSString *const k_profileData = @"profileData";
 {
 	return [_provider isEqualToString:A0StrategyNameAuth0] &&
 	       [_connection isEqualToString:kAuth0DBConnection_Recovery];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Debugging
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (NSString *)description
+{
+	if ([_provider isEqualToString:A0StrategyNameAuth0])
+	{
+		return [NSString stringWithFormat:
+			@"<%@: %p (\n\tprovider: %@ (%@) \n\tuserID: %@ \n\tprofileData: %@\n)>",
+			NSStringFromClass([self class]),
+			self,
+			_provider, _connection,
+			_userID,
+			_profileData
+		];
+	}
+	else
+	{
+		return [NSString stringWithFormat:
+			@"<%@: %p (\n\tprovider: %@ \n\tuserID: %@ \n\tprofileData: %@\n)>",
+			NSStringFromClass([self class]),
+			self,
+			_provider,
+			_userID,
+			_profileData
+		];
+	}
 }
 
 @end

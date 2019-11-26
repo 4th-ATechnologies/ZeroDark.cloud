@@ -649,14 +649,7 @@
 {
 	__weak typeof(self) weakSelf = self;
 
-	NSString *preferredAuth0ID = profile.preferredIdentityID;
-	if (!preferredAuth0ID)
-	{
-		preferredAuth0ID =
-		  [accountSetupVC closestMatchingAuth0IDFromProfile: profile
-		                                           provider: provider
-		                                           username: nil];
-	}
+	NSString *preferredAuth0ID = profile.userMetadata_preferredIdentityID;
 
 	[accountSetupVC socialAccountLoginWithAuth: auth
 	                                   profile: profile

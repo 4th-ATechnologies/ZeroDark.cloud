@@ -56,23 +56,34 @@ NS_ASSUME_NONNULL_BEGIN
 /** Extra user information stored in Auth0. */
 @property (nonatomic, readonly) NSDictionary *extraInfo;
 
-/** Values stored under `user_metadata`. */
-@property (nonatomic, readonly) NSDictionary *userMetadata;
-
 /** Values stored under `app_metadata` */
 @property (nonatomic, readonly) NSDictionary *appMetadata;
 
-#pragma mark Convenience Properties
+/** Values stored under `user_metadata`. */
+@property (nonatomic, readonly) NSDictionary *userMetadata;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Convenience
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/** As specified in appMetadata. */
+@property (nonatomic, readonly, nullable) NSString *appMetadata_awsID;
+
+/** As specified in appMetadata. */
+@property (nonatomic, readonly, nullable) NSString *appMetadata_region;
+
+/** As specified in appMetadata. */
+@property (nonatomic, readonly, nullable) NSString *appMetadata_bucket;
+
+/**
+ * As specified in userMetadata.
+ */
+@property (nonatomic, readonly, nullable) NSString *userMetadata_preferredIdentityID;
 
 /**
  * Utility to test if the given user profile indicates that the user has been set up or not
  */
 @property (nonatomic, readonly) BOOL isUserBucketSetup;
-
-/**
- * As specified in userMetadata.
- */
-@property (nonatomic, readonly, nullable) NSString *preferredIdentityID;
 
 /**
  * Returns the identity (from within the identities array) that matches the given ID.

@@ -19,24 +19,29 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithDictionary:(NSDictionary *)dict;
 
 /**
- *  Identity id for Auth0 api. It has the format `provider|userId`
+ *  The identityID is the unique identifier for this identity,
+ *  which encodes both the provider_name & provider_userID.
  */
 @property (nonatomic, readonly) NSString *identityID;
 
 /**
- *  Name of the connection used to link this account
- */
-@property (nonatomic, readonly) NSString *connection;
-
-/**
- *  Name of the identity provider
+ *  Name of the identity provider. (e.g. "facebook", "github", ...)
  */
 @property (nonatomic, readonly) NSString *provider;
 
 /**
- *  User Id in the identity provider
+ * The userID within the context of the provider/connection.
+ *
+ * For example, if the provider is facebook, then the userID will be the unique facebookUserID.
+ *
+ * @important This is NOT the same as ZDCUser.uuid.
  */
 @property (nonatomic, readonly) NSString *userID;
+
+/**
+ *  If the provider_name is "auth0", this value stores the database connection being used.
+ */
+@property (nonatomic, readonly) NSString *connection;
 
 /**
  *  Flag that indicates if the identity is `Social`. e.g: Facebook

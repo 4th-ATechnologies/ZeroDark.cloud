@@ -737,7 +737,7 @@ done:
 			
 			localUser.lastRefresh_profile = [NSDate date];
 			localUser.identities = profile.identities;
-			localUser.preferredIdentityID = profile.preferredIdentityID;
+			localUser.preferredIdentityID = profile.userMetadata_preferredIdentityID;
 
 			[transaction setObject: localUser
 			                forKey: localUser.uuid
