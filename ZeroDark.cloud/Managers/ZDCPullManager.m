@@ -2002,7 +2002,7 @@ static NSUInteger const kMaxFailCount = 8;
 		localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
 	}];
 	
-	ZDCDiskExport *export = [zdc.diskManager userAvatar:localUser forAuth0ID:auth0_id];
+	ZDCDiskExport *export = [zdc.diskManager userAvatar:localUser forIdentityID:auth0_id];
 	ZDCCryptoFile *cryptoFile = export.cryptoFile;
 	
 	if (cryptoFile == nil)
@@ -2024,7 +2024,7 @@ static NSUInteger const kMaxFailCount = 8;
 	if (error || !data)
 	{
 		// File is corrupt — delete it.
-		[zdc.diskManager deleteUserAvatar:localUserID forAuth0ID:auth0_id];
+		[zdc.diskManager deleteUserAvatar:localUserID forIdentityID:auth0_id];
 		
 		// Avatar isn't stored in the DiskManager (anymore), so we're done here.
 		[self skipPendingChange: change
@@ -2078,7 +2078,7 @@ static NSUInteger const kMaxFailCount = 8;
 	
 	if (!hasPotentialMatch)
 	{
-		[zdc.diskManager deleteUserAvatar:localUserID forAuth0ID:auth0_id];
+		[zdc.diskManager deleteUserAvatar:localUserID forIdentityID:auth0_id];
 	}
 	
 	[self skipPendingChange: change
@@ -3127,10 +3127,10 @@ static NSUInteger const kMaxFailCount = 8;
 		// Attempt to fetch the user from the database.
 		// If missing, the remoteUserManager will automatically download the user for us.
 		//
-		[zdc.remoteUserManager fetchRemoteUserWithID: ownerID
-		                                 requesterID: pullState.localUserID
-		                             completionQueue: concurrentQueue
-		                             completionBlock:^(ZDCUser *remoteUser, NSError *error)
+		[zdc.userManager fetchUserWithID: ownerID
+		                     requesterID: pullState.localUserID
+		                 completionQueue: concurrentQueue
+		                 completionBlock:^(ZDCUser *remoteUser, NSError *error)
 		{
 			if (error)
 			{
@@ -5194,10 +5194,10 @@ static NSUInteger const kMaxFailCount = 8;
 {
 	for (NSString *remoteUserID in pullState.unknownUserIDs)
 	{
-		[zdc.remoteUserManager fetchRemoteUserWithID: remoteUserID
-		                                 requesterID: pullState.localUserID
-		                             completionQueue: concurrentQueue
-		                             completionBlock:^(ZDCUser *remoteUser, NSError *error)
+		[zdc.userManager fetchUserWithID: remoteUserID
+		                     requesterID: pullState.localUserID
+		                 completionQueue: concurrentQueue
+		                 completionBlock:^(ZDCUser *remoteUser, NSError *error)
 		{
 			// Ignore...
 		}];

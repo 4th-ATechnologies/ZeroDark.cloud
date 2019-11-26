@@ -130,7 +130,7 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * The ZDCUser instance may be nil if the the owner is a non-local-user and
  * the system hasn't downloaded the remote user yet.
- * You can always use the `ZDCRemoteUserManager` to download the user.
+ * You can always use the `ZDCUserManager` to download the user.
  */
 - (nullable ZDCUser *)ownerForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction;
 

@@ -122,7 +122,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 
 @property (nonatomic, copy, readwrite) NSString *nodeID;
 @property (nonatomic, copy, readwrite) NSString *userID;
-@property (nonatomic, copy, readwrite) NSString *auth0ID;
+@property (nonatomic, copy, readwrite) NSString *identityID;
 
 @property (nonatomic, assign, readwrite) uint64_t fileSize;
 @property (nonatomic, strong, readwrite) NSDate *lastModified;
@@ -148,7 +148,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 - (BOOL)matchesMode:(ZDCStorageMode)mode
                type:(ZDCFileType)type
              format:(ZDCCryptoFileFormat)format
-            auth0ID:(NSString *)auth0ID;
+         identityID:(NSString *)identityID;
 
 /**
  * Similar to a copy, but does NOT include fileRetainCount or pendingDelete.
@@ -166,7 +166,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 
 @synthesize nodeID = nodeID;
 @synthesize userID = userID;
-@synthesize auth0ID = auth0ID;
+@synthesize identityID = identityID;
 
 @synthesize fileSize = fileSize;
 @synthesize lastModified = lastModified;
@@ -242,22 +242,22 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 - (BOOL)matchesMode:(ZDCStorageMode)inMode
                type:(ZDCFileType)inType
              format:(ZDCCryptoFileFormat)inFormat
-            auth0ID:(NSString *)inAuth0ID
+         identityID:(NSString *)inIdentityID
 {
 	if (mode != inMode) return NO;
 	if (type != inType) return NO;
 	if (format != inFormat) return NO;
 	
-	if (auth0ID)
+	if (identityID)
 	{
-		if (inAuth0ID)
-			return [auth0ID isEqualToString:inAuth0ID];
+		if (inIdentityID)
+			return [identityID isEqualToString:inIdentityID];
 		else
 			return NO;
 	}
 	else
 	{
-		if (inAuth0ID)
+		if (inIdentityID)
 			return NO;
 		else
 			return YES;
@@ -270,7 +270,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	
 	dup->nodeID = self->nodeID;
 	dup->userID = self->userID;
-	dup->auth0ID = self->auth0ID;
+	dup->identityID = self->identityID;
 	
 	dup->fileSize = self->fileSize;
 	dup->lastModified = self->lastModified;
@@ -746,11 +746,13 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 					ZDCUser *user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
 					if (user)
 					{
-						NSDictionary *profiles = user.auth0_profiles;
-						if (profiles)
+						NSMutableArray *identityIDs = [NSMutableArray arrayWithCapacity:user.identities.count];
+						for (ZDCUserIdentity *ident in user.identities)
 						{
-							auth0IDs[userID] = [NSSet setWithArray:[profiles allKeys]];
+							[identityIDs addObject:ident.identityID];
 						}
+						
+						auth0IDs[userID] = [NSSet setWithArray:identityIDs];
 					}
 				}
 				
@@ -1325,7 +1327,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 				}
 				
 				info.userID = userID;
-				info.auth0ID = auth0ID;
+				info.identityID = auth0ID;
 				
 				usersDict[auth0ID] = info;
 			}
@@ -1352,29 +1354,29 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 				dict[userID] = cachedInfos;
 			}
 			
-			NSMutableSet<NSString*> *unprocessedAuth0IDs = [NSMutableSet set];
+			NSMutableSet<NSString*> *unprocessedIdentityIDs = [NSMutableSet set];
 			for (ZDCFileInfo *cachedInfo in cachedInfos)
 			{
-				if ([cachedInfo matchesMode:mode type:type format:format] && cachedInfo.auth0ID)
+				if ([cachedInfo matchesMode:mode type:type format:format] && cachedInfo.identityID)
 				{
-					[unprocessedAuth0IDs addObject:cachedInfo.auth0ID];
+					[unprocessedIdentityIDs addObject:cachedInfo.identityID];
 				}
 			}
 			
-			for (NSString *auth0ID in onDiskInfosDict[userID])
+			for (NSString *identityID in onDiskInfosDict[userID])
 			{
-				[unprocessedAuth0IDs removeObject:auth0ID];
+				[unprocessedIdentityIDs removeObject:identityID];
 				
 				ZDCFileInfo *matchingInfo = nil;
 				for (ZDCFileInfo *cachedInfo in cachedInfos)
 				{
-					if ([cachedInfo matchesMode:mode type:type format:format auth0ID:auth0ID])
+					if ([cachedInfo matchesMode:mode type:type format:format identityID:identityID])
 					{
 						matchingInfo = cachedInfo;
 					}
 				}
 				
-				ZDCFileInfo *onDiskInfo = onDiskInfosDict[userID][auth0ID];
+				ZDCFileInfo *onDiskInfo = onDiskInfosDict[userID][identityID];
 				
 				// If matchingInfo exists, then leave it be.
 				// We need to preserve the following:
@@ -1396,14 +1398,14 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 				}
 			}
 			
-			for (NSString *unprocessedAuth0ID in unprocessedAuth0IDs)
+			for (NSString *unprocessedIdentityID in unprocessedIdentityIDs)
 			{
 				NSUInteger matchingIndex = NSNotFound;
 				NSUInteger i = 0;
 				
 				for (ZDCFileInfo *cachedInfo in cachedInfos)
 				{
-					if ([cachedInfo matchesMode:mode type:type format:format auth0ID:unprocessedAuth0ID])
+					if ([cachedInfo matchesMode:mode type:type format:format identityID:unprocessedIdentityID])
 					{
 						matchingIndex = i;
 						break;
@@ -1497,14 +1499,14 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 			ZDCStorageMode mode = infoToDecrement.mode;
 			ZDCFileType type = infoToDecrement.type;
 			ZDCCryptoFileFormat format = infoToDecrement.format;
-			NSString *auth0ID = infoToDecrement.auth0ID;
+			NSString *identityID = infoToDecrement.identityID;
 			
 			NSUInteger matchingIndex = NSNotFound;
 			NSUInteger i = 0;
 			
 			for (ZDCFileInfo *info in infos)
 			{
-				if ([info matchesMode:mode type:type format:format auth0ID:auth0ID])
+				if ([info matchesMode:mode type:type format:format identityID:identityID])
 				{
 					matchingIndex = i;
 					break;
@@ -1605,33 +1607,13 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
                            forUser:(ZDCUser *)user
                            withMap:(NSMutableDictionary<NSString*, NSString*> *)map_auth0ID
 {
-	// 99% of the time we're storing the preferred auth0ID
-	
-	NSString *preferredAuth0ID = user.auth0_preferredID;
-	
-	if (preferredAuth0ID)
+	for (ZDCUserIdentity *identity in user.identities)
 	{
-		NSString *hash = [self hashAuth0ID:preferredAuth0ID forUser:user];
+		NSString *identityID = identity.identityID;
+		NSString *hash = [self hashIdentityID:identityID forUser:user];
 		if ([hashes containsObject:hash])
 		{
-			map_auth0ID[hash] = preferredAuth0ID;
-			
-			[hashes removeObject:hash];
-			if (hashes.count == 0) return;
-		}
-	}
-	
-	for (NSString *auth0ID in user.auth0_profiles)
-	{
-		if ([auth0ID isEqual:preferredAuth0ID]) {
-			// Already checked this one
-			continue;
-		}
-		
-		NSString *hash = [self hashAuth0ID:auth0ID forUser:user];
-		if ([hashes containsObject:hash])
-		{
-			map_auth0ID[hash] = auth0ID;
+			map_auth0ID[hash] = identityID;
 			
 			[hashes removeObject:hash];
 			if (hashes.count == 0) return;
@@ -1639,7 +1621,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	}
 }
 
-- (NSString *)hashAuth0ID:(NSString *)auth0ID forUser:(ZDCUser *)user
+- (NSString *)hashIdentityID:(NSString *)identityID forUser:(ZDCUser *)user
 {
 	// Purpose:
 	//
@@ -1647,11 +1629,11 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	// But we don't want to leak any information concerning who the user may be communicating with.
 	
 	NSData *encryptionKey = user.random_encryptionKey;
-	NSData *auth0IDBytes = [auth0ID dataUsingEncoding:NSUTF8StringEncoding];
+	NSData *identityIDBytes = [identityID dataUsingEncoding:NSUTF8StringEncoding];
 	
-	NSMutableData *hashMe = [NSMutableData dataWithCapacity:(encryptionKey.length + auth0IDBytes.length)];
+	NSMutableData *hashMe = [NSMutableData dataWithCapacity:(encryptionKey.length + identityIDBytes.length)];
 	[hashMe appendData:encryptionKey];
-	[hashMe appendData:auth0IDBytes];
+	[hashMe appendData:identityIDBytes];
 	
 	NSData *hashedData = [hashMe hashWithAlgorithm:kHASH_Algorithm_SHA256 error:nil];
 	
@@ -1723,7 +1705,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	
 	// Step 2 of 5:
 	//
-	// Collect the list of <userID, auth0ID> tuples for which we currently have files cached on disk.
+	// Collect the list of <userID, identityID> tuples for which we currently have files cached on disk.
 	
 	NSMutableDictionary<NSString*, NSMutableSet<NSString*> *> *cachedAvatars =
 	  [NSMutableDictionary dictionaryWithCapacity:dict_userAvatars.count];
@@ -1731,16 +1713,16 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	[dict_userAvatars enumerateKeysAndObjectsUsingBlock:
 		^(NSString *userID, NSMutableArray<ZDCFileInfo *> *infos, BOOL *stop)
 	{
-		NSMutableSet<NSString*> *cachedAuth0IDs = [NSMutableSet set];
+		NSMutableSet<NSString*> *cachedIdentityIDs = [NSMutableSet set];
 		
 		for (ZDCFileInfo *info in infos)
 		{
-			if (info.auth0ID) {
-				[cachedAuth0IDs addObject:info.auth0ID];
+			if (info.identityID) {
+				[cachedIdentityIDs addObject:info.identityID];
 			}
 		}
 		
-		cachedAvatars[userID] = cachedAuth0IDs;
+		cachedAvatars[userID] = cachedIdentityIDs;
 	}];
 	
 	// Step 3 of 5:
@@ -1772,7 +1754,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 				NSSet *cachedAuth0IDs = cachedAvatars[userID];
 				for (NSString *auth0ID in cachedAuth0IDs)
 				{
-					if (user.auth0_profiles[auth0ID] == nil)
+					if ([user identityWithID:auth0ID] == nil)
 					{
 						[missingTuples addObject:YapCollectionKeyCreate(userID, auth0ID)];
 					}
@@ -3879,7 +3861,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
  */
 - (nullable ZDCCryptoFile *)importUserAvatar:(ZDCDiskImport *)import
                                      forUser:(ZDCUser *)user
-                                     auth0ID:(NSString *)auth0ID
+                                  identityID:(NSString *)identityID
                                        error:(NSError *_Nullable *_Nullable)outError
 {
 	NSError *error = nil;
@@ -3894,8 +3876,8 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		NSString *msg = @"Bad parameter: user.random_encryptionKey is nil";
 		error = [NSError errorWithClass:[self class] code:400 description:msg];
 	}
-	else if (auth0ID == nil) {
-		error = [NSError errorWithClass:[self class] code:400 description:@"Bad parameter: auth0ID is nil"];
+	else if (identityID == nil) {
+		error = [NSError errorWithClass:[self class] code:400 description:@"Bad parameter: identityID is nil"];
 	}
 	else if (import.cleartextFileURL || import.cryptoFile)
 	{
@@ -3992,7 +3974,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	
 	NSString *filename = [NSString stringWithFormat:@"%@.%@",
 	  user.random_uuid,
-	  [self hashAuth0ID:auth0ID forUser:user]];
+	  [self hashIdentityID:identityID forUser:user]];
 	
 	NSURL *dir = [self URLForMode:mode type:type format:format];
 	NSURL *dstURL = [dir URLByAppendingPathComponent:filename isDirectory:NO];
@@ -4038,7 +4020,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		{
 			ZDCFileInfo *info = infos[i];
 			
-			if ([info matchesMode:mode type:type format:format auth0ID:auth0ID])
+			if ([info matchesMode:mode type:type format:format identityID:identityID])
 			{
 				matchingInfo = info;
 				i++;
@@ -4076,7 +4058,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		{
 			matchingInfo = [[ZDCFileInfo alloc] initWithMode:mode type:type format:format fileURL:dstURL];
 			matchingInfo.userID = user.uuid;
-			matchingInfo.auth0ID = auth0ID;
+			matchingInfo.identityID = identityID;
 			
 			[infos addObject:matchingInfo];
 		}
@@ -4135,16 +4117,20 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDiskManager.html
  */
 - (BOOL)hasUserAvatar:(NSString *)userID
 {
-	return [self hasUserAvatar:userID forAuth0ID:nil];
+	return [self hasUserAvatar:userID forIdentityID:nil];
 }
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDiskManager.html
  */
-- (BOOL)hasUserAvatar:(NSString *)userID forAuth0ID:(nullable NSString *)auth0ID
+- (BOOL)hasUserAvatar:(NSString *)userID forIdentityID:(nullable NSString *)identityID
 {
 	ZDCLogAutoTrace();
 	
@@ -4161,7 +4147,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		{
 			if (!info.pendingDelete)
 			{
-				if (auth0ID == nil || [info.auth0ID isEqualToString:auth0ID])
+				if (identityID == nil || [info.identityID isEqualToString:identityID])
 				{
 					result = YES;
 					break;
@@ -4182,16 +4168,20 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDiskManager.html
  */
 - (nullable ZDCDiskExport *)userAvatar:(ZDCUser *)user
 {
-	return [self userAvatar:user forAuth0ID:nil];
+	return [self userAvatar:user forIdentityID:nil];
 }
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDiskManager.html
  */
-- (nullable ZDCDiskExport *)userAvatar:(ZDCUser *)user forAuth0ID:(nullable NSString *)auth0ID
+- (nullable ZDCDiskExport *)userAvatar:(ZDCUser *)user forIdentityID:(nullable NSString *)identityID
 {
 	ZDCLogAutoTrace();
 	
@@ -4211,9 +4201,13 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	// If auth0ID is nil, we should attempt to return the ZDCFileInfo that matches user.auth0_preferredID.
 	// If we fail to find it, then return none. This will force us to look it up.
 	//
-	if (auth0ID == nil)
+	if (identityID == nil)
 	{
-		auth0ID = user.auth0_preferredID;
+		identityID = user.displayIdentity.identityID;
+	}
+	if (identityID == nil)
+	{
+		return nil;
 	}
 	
 	dispatch_block_t block = ^{ @autoreleasepool {
@@ -4229,7 +4223,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 			
 			for (ZDCFileInfo *info in infos)
 			{
-				if (!info.pendingDelete && [info.auth0ID isEqualToString:auth0ID])
+				if (!info.pendingDelete && [info.identityID isEqualToString:identityID])
 				{
 					matchingInfo = info;
 					break;
@@ -4380,12 +4374,12 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 /**
  * See header file for description.
  */
-- (void)deleteUserAvatar:(NSString *)userID forAuth0ID:(NSString *)auth0ID
+- (void)deleteUserAvatar:(NSString *)userID forIdentityID:(NSString *)identityID
 {
 	if (userID == nil) return;
-	if (auth0ID == nil) return;
+	if (identityID == nil) return;
 	
-	[self deleteUserAvatarsForTuples:@[ YapCollectionKeyCreate(userID, auth0ID) ]];
+	[self deleteUserAvatarsForTuples:@[ YapCollectionKeyCreate(userID, identityID) ]];
 }
 
 /**
@@ -4409,7 +4403,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		for (YapCollectionKey *tuple in tuples)
 		{
 			NSString *userID = tuple.collection;
-			NSString *auth0ID = tuple.key;
+			NSString *identityID = tuple.key;
 			
 			NSMutableArray<ZDCFileInfo *> *infos = dict[userID];
 		
@@ -4418,7 +4412,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 			{
 				ZDCFileInfo *info = infos[i];
 				
-				if ([info.auth0ID isEqualToString:auth0ID])
+				if ([info.identityID isEqualToString:identityID])
 				{
 					if (info.fileRetainCount == 0)
 					{
@@ -4464,7 +4458,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
  *
  * @see `databaseModified:`
  */
-- (void)deleteUserAvatars:(NSString *)userID excluding:(NSSet<NSString*> *)auth0IDs
+- (void)deleteUserAvatars:(NSString *)userID excluding:(NSSet<NSString*> *)identityIDs
 {
 	dispatch_block_t block = ^{ @autoreleasepool {
 	#pragma clang diagnostic push
@@ -4482,7 +4476,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		{
 			ZDCFileInfo *info = infos[i];
 			
-			if (info.auth0ID && ![auth0IDs containsObject:info.auth0ID])
+			if (info.identityID && ![identityIDs containsObject:info.identityID])
 			{
 				if (info.fileRetainCount == 0)
 				{

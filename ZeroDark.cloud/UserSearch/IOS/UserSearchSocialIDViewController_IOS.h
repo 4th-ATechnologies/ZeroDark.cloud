@@ -8,32 +8,34 @@
  **/
 
 #import <UIKit/UIKit.h>
+
 @class ZeroDarkCloud;
+@class ZDCSearchResult;
+@protocol UserSearchSocialIDViewControllerDelegate;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class UserSearchSocialIDViewController_IOS;
-@class ZDCSearchUserResult;
+@interface UserSearchSocialIDViewController_IOS : UIViewController
+
+- (instancetype)initWithDelegate:(nullable id<UserSearchSocialIDViewControllerDelegate>)delegate
+                           owner:(ZeroDarkCloud *)inOwner
+                     localUserID:(NSString *)localUserID
+                    searchResult:(ZDCSearchResult *)searchResult;
+
+@property (nonatomic, weak) id<UserSearchSocialIDViewControllerDelegate> delegate;
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 @protocol UserSearchSocialIDViewControllerDelegate <NSObject>
 @optional
 
-
-- (void) userSearchSocialIDViewController:(UserSearchSocialIDViewController_IOS *)sender
-                            didSelectAuth0ID:(NSString*)auth0ID
-                                   forUserID:(NSString*)userID;
-
-@end
-
-
-@interface UserSearchSocialIDViewController_IOS : UIViewController
-
-@property (nonatomic, weak) id<UserSearchSocialIDViewControllerDelegate>    delegate;
-
-- (instancetype)initWithDelegate:(nullable id <UserSearchSocialIDViewControllerDelegate>)inDelegate
-                           owner:(ZeroDarkCloud*)inOwner
-                     localUserID:(NSString* __nonnull)inLocalUserID
-                searchResultInfo:(ZDCSearchUserResult* __nonnull)searchResultInfo;
+- (void)userSearchSocialIDViewController:(UserSearchSocialIDViewController_IOS *)sender
+                     didSelectIdentityID:(NSString *)identityID
+                               forUserID:(NSString *)userID;
 
 @end
 

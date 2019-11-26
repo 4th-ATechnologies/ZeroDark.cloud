@@ -1,33 +1,36 @@
-//
-//  SocialIdentityAuthenticationViewController_IOS.m
-//  ZeroDarkCloud
-//
-//  Created by vinnie on 3/14/19.
-//
+/**
+ * ZeroDark.cloud
+ *
+ * Homepage      : https://www.zerodark.cloud
+ * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
+ * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
+ * API Reference : https://apis.zerodark.cloud
+**/
 
 #import "SocialIdentityAuthenticationViewController_IOS.h"
-#import "ZeroDarkCloud.h"
-#import "ZeroDarkCloudPrivate.h"
-
-#import "ZDCLogging.h"
 
 #import "Auth0ProviderManager.h"
 #import "Auth0Utilities.h"
 
+#import "ZDCUserProfile.h"
+#import "ZDCLogging.h"
+#import "ZeroDarkCloud.h"
+#import "ZeroDarkCloudPrivate.h"
 
-#import "SCLAlertView.h"
-#import "SCLAlertViewStyleKit.h"
-
-// Libraries
+// Apple Libraries
 #import <AudioToolbox/AudioToolbox.h>
 #import <WebKit/WebKit.h>
+
+// 3rd Party Libraries
+#import <SCLAlertView_Objective_C/SCLAlertView.h>
+#import <SCLAlertView_Objective_C/SCLAlertViewStyleKit.h>
 
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
 #if DEBUG
-static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 #pragma unused(zdcLogLevel)
 
@@ -507,7 +510,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	[auth0APIManager getUserProfileWithAccessToken: a0Token.accessToken
 	                               completionQueue: nil
 	                               completionBlock:
-	^(A0UserProfile *profile, NSError *error)
+	^(ZDCUserProfile *profile, NSError *error)
 	{
 		if (error)
 		{
@@ -640,18 +643,13 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 
 }
 
-
-
--(void) authenticateUserWithAuth:(ZDCLocalUserAuth *)auth
-						  profile:(A0UserProfile *)profile
-						 provider:(NSString*)provider
+- (void)authenticateUserWithAuth:(ZDCLocalUserAuth *)auth
+                         profile:(ZDCUserProfile *)profile
+                        provider:(NSString *)provider
 {
-
 	__weak typeof(self) weakSelf = self;
 
-	NSDictionary  *app_metadata = profile.extraInfo[kZDCUser_metadataKey];
-	NSString    	*preferredAuth0ID = app_metadata[kZDCUser_metadata_preferredAuth0ID];
-
+	NSString *preferredAuth0ID = profile.preferredIdentityID;
 	if (!preferredAuth0ID)
 	{
 		preferredAuth0ID =
@@ -717,8 +715,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 
 }
 
-
--(void) linkUserWithProfile:(A0UserProfile *)profile
+- (void)linkUserWithProfile:(ZDCUserProfile *)profile
 {
 	__weak typeof(self) weakSelf = self;
 

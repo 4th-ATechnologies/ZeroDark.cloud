@@ -317,33 +317,39 @@ static NSString *const k_deprecated_accountDeleted      = @"accountDeleted";
 	     && !self.accountNeedsA0Token);
 }
 
--(BOOL)hasRecoveryConnection
+- (BOOL)hasRecoveryConnection
 {
-	__block BOOL hasRecovery = NO;
-
-	[self.auth0_profiles enumerateKeysAndObjectsUsingBlock:^(NSString* auth0_userID, NSDictionary* profile, BOOL* stop) {
-
-		NSString* connection = profile[@"connection"];
-
-		if([connection isEqualToString:kAuth0DBConnection_Recovery])
-		{
-			hasRecovery = YES;
-			*stop = YES;
+	BOOL result = NO;
+	
+	for (ZDCUserIdentity *ident in self.identities)
+	{
+		if (ident.isRecoveryAccount) {
+			result = YES;
+			break;
 		}
-	}];
-
-	return hasRecovery;
+	}
+	
+	return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark user metdata updater
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)setAuth0_preferedID:(NSString *)in_auth0_preferredID
+- (void)setPreferredIdentityID:(NSString *)newPreferredIdentityID
 {
-	if (![self.auth0_preferredID isEqualToString:in_auth0_preferredID])
+	BOOL isChange = NO;
+	
+	if (self.preferredIdentityID) {
+		isChange = ![self.preferredIdentityID isEqual:newPreferredIdentityID];
+	}
+	else {
+		isChange = (newPreferredIdentityID != nil);
+	}
+	
+	if (isChange)
 	{
-		[super setAuth0_preferredID:in_auth0_preferredID];
+		[super setPreferredIdentityID:newPreferredIdentityID];
 		needsUserMetadataUpload = YES;
 	}
 }

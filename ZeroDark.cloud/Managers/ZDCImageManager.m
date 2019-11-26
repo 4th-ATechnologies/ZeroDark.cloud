@@ -536,14 +536,16 @@
 #pragma mark User Avatars
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (NSString *)cacheKeyForUserID:(NSString *)userID auth0ID:(NSString *)auth0ID
+- (NSString *)cacheKeyForUserID:(NSString *)userID identityID:(NSString *)identityID
 {
-	return [NSString stringWithFormat:@"%@|%@", userID, auth0ID];
+	return [NSString stringWithFormat:@"%@|%@", userID, identityID];
 }
 
-- (NSString *)cacheKeyForUserID:(NSString *)userID auth0ID:(NSString *)auth0ID processingID:(NSString *)processingID
+- (NSString *)cacheKeyForUserID:(NSString *)userID
+                     identityID:(NSString *)identityID
+                   processingID:(NSString *)processingID
 {
-	return [NSString stringWithFormat:@"%@|%@|%@", userID, auth0ID, processingID];
+	return [NSString stringWithFormat:@"%@|%@|%@", userID, identityID, processingID];
 }
 
 - (BOOL)getUserID:(NSString **)outUserID fromCacheKey:(NSString *)cacheKey
@@ -591,18 +593,15 @@
 {
 	ZDCLogAutoTrace();
 	
-	NSString *auth0ID = options.auth0ID;
-	if (!auth0ID) {
-		auth0ID = user.auth0_preferredID;
-	}
-	if (!auth0ID) {
-		auth0ID = [Auth0Utilities firstAvailableAuth0IDFromProfiles:user.auth0_profiles];
+	NSString *identityID = options.identityID;
+	if (identityID == nil) {
+		identityID = user.displayIdentity.identityID;
 	}
 	
-	NSString *cacheKey = [self cacheKeyForUserID:user.uuid auth0ID:auth0ID];
+	NSString *cacheKey = [self cacheKeyForUserID:user.uuid identityID:identityID];
 	
 	return [self _fetchUserAvatar: user
-	                      auth0ID: auth0ID
+	                   identityID: identityID
 	                     cacheKey: cacheKey
 	              processingBlock: nil
 	                preFetchBlock: preFetchBlock
@@ -624,21 +623,18 @@
 {
 	ZDCLogAutoTrace();
 	
-	NSString *auth0ID = options.auth0ID;
-	if (!auth0ID) {
-		auth0ID = user.auth0_preferredID;
-	}
-	if (!auth0ID) {
-		auth0ID = [Auth0Utilities firstAvailableAuth0IDFromProfiles:user.auth0_profiles];
+	NSString *identityID = options.identityID;
+	if (identityID == nil) {
+		identityID = user.displayIdentity.identityID;
 	}
 	
 	NSString *cacheKey = nil;
 	if (processingID) {
-		cacheKey = [self cacheKeyForUserID:user.uuid auth0ID:auth0ID processingID:processingID];
+		cacheKey = [self cacheKeyForUserID:user.uuid identityID:identityID processingID:processingID];
 	}
 	
 	return [self _fetchUserAvatar: user
-	                      auth0ID: auth0ID
+	                   identityID: identityID
 	                     cacheKey: cacheKey
 	              processingBlock: imageProcessingBlock
 	                preFetchBlock: preFetchBlock
@@ -647,7 +643,7 @@
 
 - (nullable ZDCDownloadTicket *)
         _fetchUserAvatar:(ZDCUser *)user
-                 auth0ID:(nullable NSString *)auth0ID
+              identityID:(nullable NSString *)identityID
                 cacheKey:(nullable NSString *)cacheKey
          processingBlock:(nullable ZDCImageProcessingBlock)imageProcessingBlock
            preFetchBlock:(void(^)(OSImage *_Nullable image, BOOL willFetch))preFetchBlock
@@ -663,7 +659,7 @@
 		}
 	}
 	
-	ZDCDiskExport *export = [zdc.diskManager userAvatar:user forAuth0ID:auth0ID];
+	ZDCDiskExport *export = [zdc.diskManager userAvatar:user forIdentityID:identityID];
 	if (export.isNilPlaceholder)
 	{
 		preFetchBlock(nil, NO);
@@ -735,10 +731,10 @@
 		} else {
 			opts.cacheToDiskManager = YES;
 		}
+		opts.identityID = identityID;
 		
 		ZDCDownloadTicket *ticket =
 		  [zdc.downloadManager downloadUserAvatar: user
-		                                  auth0ID: auth0ID
 		                                  options: opts
 		                          completionQueue: processingQueue
 		                          completionBlock:^(NSData *avatar, NSError *error)
@@ -752,7 +748,6 @@
 
 - (nullable ZDCDownloadTicket *)
         fetchUserAvatar:(NSString *)userID
-                auth0ID:(NSString *)auth0ID
                 fromURL:(NSURL *)url
                 options:(nullable ZDCDownloadOptions *)options
            processingID:(nullable NSString *)processingID
@@ -760,9 +755,11 @@
           preFetchBlock:(void(^)(OSImage *_Nullable image))preFetchBlock
          postFetchBlock:(void(^)(OSImage *_Nullable image, NSError *_Nullable error))postFetchBlock
 {
+	NSString *identityID = options.identityID;
+	
 	NSString *cacheKey = nil;
-	if (processingID) {
-		cacheKey = [self cacheKeyForUserID:userID auth0ID:auth0ID processingID:processingID];
+	if (identityID && processingID) {
+		cacheKey = [self cacheKeyForUserID:userID identityID:identityID processingID:processingID];
 	}
 	
 	if (cacheKey)
@@ -823,7 +820,6 @@
 	
 	ZDCDownloadTicket *ticket =
 	  [zdc.downloadManager downloadUserAvatar: userID
-	                                  auth0ID: auth0ID
 	                                  fromURL: url
 	                                  options: options
 	                          completionQueue: processingQueue
@@ -976,14 +972,14 @@
 @implementation ZDCFetchOptions
 
 @synthesize downloadIfMarkedAsNeedsDownload = _downloadIfMarkedAsNeedsDownload;
-@synthesize auth0ID = _auth0ID;
+@synthesize identityID = _identityID;
 
 - (instancetype)init
 {
 	if ((self = [super init]))
 	{
 		_downloadIfMarkedAsNeedsDownload = YES;
-		_auth0ID = nil;
+		_identityID = nil;
 	}
 	return self;
 }
@@ -992,7 +988,7 @@
 {
 	ZDCFetchOptions *copy = [[ZDCFetchOptions alloc] init];
 	copy->_downloadIfMarkedAsNeedsDownload = _downloadIfMarkedAsNeedsDownload;
-	copy->_auth0ID = _auth0ID;
+	copy->_identityID = _identityID;
 	
 	return copy;
 }

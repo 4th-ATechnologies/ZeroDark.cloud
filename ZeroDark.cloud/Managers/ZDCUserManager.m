@@ -7,14 +7,14 @@
  * API Reference : https://apis.zerodark.cloud
 **/
 
-#import "ZDCRemoteUserManagerPrivate.h"
+#import "ZDCUserManagerPrivate.h"
 
-#import "Auth0API.h"
 #import "Auth0Utilities.h"
 #import "ZDCAsyncCompletionDispatch.h"
 #import "ZDCConstants.h"
 #import "ZDCDatabaseManagerPrivate.h"
 #import "ZDCLogging.h"
+#import "ZDCUserPrivate.h"
 #import "ZeroDarkCloudPrivate.h"
 
 // Categories
@@ -35,7 +35,32 @@
 #pragma unused(zdcLogLevel)
 
 
-@implementation ZDCRemoteUserManager
+@interface ZDCUserDisplay ()
+@property (nonatomic, readwrite, copy) NSString *displayName;
+@end
+
+@implementation ZDCUserDisplay
+
+@synthesize userID = _userID;
+@synthesize displayName = _displayName;
+
+- (instancetype)initWithUserID:(NSString *)userID displayName:(NSString *)displayName
+{
+	if ((self = [super init]))
+	{
+		_userID = [userID copy];
+		_displayName = [_displayName copy];
+	}
+	return self;
+}
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+@implementation ZDCUserManager
 {
 	__weak ZeroDarkCloud *zdc;
 	
@@ -63,12 +88,12 @@
 /**
  * See header file for description.
  * Or view the api's online (for both Swift & Objective-C):
- * https://apis.zerodark.cloud/Classes/ZDCRemoteUserManager.html
+ * https://apis.zerodark.cloud/Classes/ZDCUserManager.html
  */
-- (void)fetchRemoteUserWithID:(NSString *)remoteUserID
-                  requesterID:(NSString *)localUserID
-              completionQueue:(nullable dispatch_queue_t)completionQueue
-              completionBlock:(nullable void (^)(ZDCUser *remoteUser, NSError *error))completionBlock
+- (void)fetchUserWithID:(NSString *)remoteUserID
+            requesterID:(NSString *)localUserID
+        completionQueue:(nullable dispatch_queue_t)completionQueue
+        completionBlock:(nullable void (^)(ZDCUser *remoteUser, NSError *error))completionBlock
 {
 	ZDCLogAutoTrace();
 	
@@ -252,7 +277,7 @@
 		[weakSelf _fetchFilteredAuth0Profile: user
 		                         requesterID: localUserID
 		                     completionQueue: concurrentQueue
-		                     completionBlock:^(NSDictionary *profiles, NSString *preferredAuth0ID, NSError *error)
+		                     completionBlock:^(ZDCUserProfile *profile, NSError *error)
 		{
 			if (error)
 			{
@@ -260,9 +285,12 @@
 				return;
 			}
 			
-			user.auth0_profiles = profiles;
-			user.auth0_preferredID = preferredAuth0ID;
-			user.auth0_lastUpdated = [NSDate date];
+			// TODO: Finish Refactoring
+			NSAssert(NO, @"Unfinished refactoring!");
+			
+		//	user.auth0_profiles = profiles;
+		//	user.auth0_preferredID = preferredAuth0ID;
+		//	user.auth0_lastUpdated = [NSDate date];
 			
 			fetchPubKey(user);
 		}];
@@ -549,7 +577,7 @@
 		{
 			// Got a bad response from the server ?
 	
-			error = [ZDCRemoteUserManager errorWithStatusCode:500 description:@"Unreadable response from server"];
+			error = [ZDCUserManager errorWithStatusCode:500 description:@"Unreadable response from server"];
 			
 			completionBlock(nil, error);
 			return;
@@ -574,9 +602,7 @@
 - (void)_fetchFilteredAuth0Profile:(ZDCUser *)remoteUser
                        requesterID:(NSString *)localUserID
                    completionQueue:(dispatch_queue_t)completionQueue
-                   completionBlock:(void (^)(NSDictionary *auth0_profiles,
-                                             NSString *preferredAuth0ID,
-                                             NSError *error))completionBlock
+                   completionBlock:(void (^)(ZDCUserProfile *profile, NSError *error))completionBlock
 {
 	[zdc.restManager fetchFilteredAuth0Profile: remoteUser.uuid
 	                               requesterID: localUserID
@@ -585,20 +611,20 @@
 	{
 		if (error)
 		{
-			completionBlock(nil, nil, error);
+			completionBlock(nil, error);
 			return;
 		}
 		
 		NSInteger statusCode = urlResponse.httpStatusCode;
 		if (statusCode != 200)
 		{
-			error = [ZDCRemoteUserManager errorWithStatusCode:statusCode description:@"Unexpected statusCode"];
+			error = [ZDCUserManager errorWithStatusCode:statusCode description:@"Unexpected statusCode"];
 			
-			completionBlock(nil, nil, error);
+			completionBlock(nil, error);
 			return;
 		}
 		
-		NSDictionary *info = nil;
+		NSDictionary *dict = nil;
 		
 		if ([responseObject isKindOfClass:[NSArray class]])
 		{
@@ -606,116 +632,33 @@
 			NSDictionary *result = [resultsArray firstObject];
 			
 			if ([result isKindOfClass:[NSDictionary class]]) {
-				info = (NSDictionary *)result;
+				dict = (NSDictionary *)result;
 			}
 		}
 		else if ([responseObject isKindOfClass:[NSDictionary class]])
 		{
-			NSDictionary *dict = (NSDictionary *)responseObject;
+			dict = (NSDictionary *)responseObject;
 			NSString *errMsg = dict[@"errorMessage"];
 			
 			if (errMsg)
 			{
-				error = [ZDCRemoteUserManager errorWithStatusCode:0 description:errMsg];
+				error = [ZDCUserManager errorWithStatusCode:0 description:errMsg];
 				
-				completionBlock(nil, nil, error);
+				completionBlock(nil, error);
 				return;
-			}
-			else
-			{
-				info = dict;
 			}
 		}
 		else
 		{
-			error = [ZDCRemoteUserManager errorWithStatusCode:0 description:@"Bad responseObject"];
+			error = [ZDCUserManager errorWithStatusCode:0 description:@"Bad responseObject"];
 			
-			completionBlock(nil, nil, error);
+			completionBlock(nil, error);
 			return;
 		}
-
-		NSMutableDictionary *auth0_profiles = [NSMutableDictionary dictionary];
-		NSArray *identities = info[@"identities"];
 		
-		NSDictionary *user_metadata = info[@"user_metadata"];
-		NSString *preferredAuth0ID = user_metadata[@"preferredAuth0ID"];
+		ZDCUserProfile *profile = [[ZDCUserProfile alloc] initWithDictionary:dict];
 		
-		for (NSDictionary* item in identities)
-		{
-			NSString *connection = item[@"connection"];
-			NSString *provider   = item[@"provider"];
-			NSString *user_id    = item[@"user_id"];
-			
-			NSString *auth0ID = [NSString stringWithFormat:@"%@|%@", provider, user_id];
-			
-			if ([connection isEqualToString:kAuth0DBConnection_Recovery]) {
-				continue;
-			}
-			
-			NSDictionary *profile = item[@"profileData"];
-			NSString *nickname = profile[@"nickname"];
-			NSString *email    = profile[@"email"];
-			NSString *name     = profile[@"name"];
-
-			if ([name isKindOfClass:[NSNull class]]) {
-				name = nil;
-			}
-			if ([nickname isKindOfClass:[NSNull class]]) {
-				nickname = nil;
-			}
-			if ([email isKindOfClass:[NSNull class]]) {
-				email = nil;
-			}
-			
-			NSMutableDictionary *updatedProfile = [NSMutableDictionary dictionaryWithDictionary:profile];
-			
-			// fix for weird providers
-			if (!name.length)
-			{
-				name = [Auth0Utilities correctUserNameForA0Strategy:connection profile:profile];
-				if (name.length) {
-					updatedProfile[@"name"] = name;
-				}
-			}
-			
-			// Calculate displayName
-			NSString *displayName = nil;
-			
-			if ([provider isEqualToString:A0StrategyNameAuth0])
-			{
-				if ([Auth0Utilities is4thAEmail:email]) {
-					displayName = [Auth0Utilities usernameFrom4thAEmail:email];
-				}
-			}
-
-			if (!displayName && name.length)
-				displayName = name;
-			
-			if (!displayName && email.length)
-				displayName = email;
-			
-			if (!displayName && nickname.length)
-				displayName = nickname;
-			
-			if (displayName)
-				updatedProfile[@"displayName"] = displayName;
-
-			if (connection)
-				updatedProfile[@"connection"] = connection;
-			
-			NSString *picture =
-				[Auth0Utilities correctPictureForAuth0ID: auth0ID
-				                             profileData: profile
-				                                  region: remoteUser.aws_region
-				                                  bucket: remoteUser.aws_bucket];
-				
-			if (picture)
-				updatedProfile[@"picture"] = picture;
-			
-			[auth0_profiles setObject:updatedProfile forKey:auth0ID];
-		}
-		
-		completionBlock(auth0_profiles, preferredAuth0ID, nil);
+		completionBlock(profile, nil);
 	}];
 }
 
@@ -763,7 +706,7 @@
 			
 		if (![pubKey checkKeyValidityWithError:nil])
 		{
-			error = [ZDCRemoteUserManager errorWithStatusCode:0 description:@"Unreadable pubKey for user"];
+			error = [ZDCUserManager errorWithStatusCode:0 description:@"Unreadable pubKey for user"];
 				
 			completionBlock(nil, error);
 			return;
@@ -786,6 +729,127 @@
 	
 	NSString *domain = NSStringFromClass([self class]);
 	return [NSError errorWithDomain:domain code:statusCode userInfo:userInfo];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Sorting
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (NSArray<ZDCUserDisplay*> *)sortedUnambiguousNamesForUsers:(NSArray<ZDCUser*> *)users
+{
+	NSString *const k_userID      = @"userID";
+	NSString *const k_displayName = @"displayName";
+	NSString *const k_provider    = @"provider";
+	
+	NSMutableDictionary *sorted = [NSMutableDictionary dictionary]; // key=displayName, value=NSMutableArray<info>
+	
+	for (ZDCLocalUser *user in users)
+	{
+		NSString *displayName = user.displayName;
+		
+		ZDCUserIdentity *displayIdentity = user.displayIdentity;
+		NSString *provider = displayIdentity ? displayIdentity.provider : @"";
+		
+		NSDictionary *info = @{
+			k_userID      : user.uuid,
+			k_displayName : displayName,
+			k_provider    : provider
+		};
+		
+		NSMutableArray *list = sorted[displayName];
+		if (list == nil)
+		{
+			list = [NSMutableArray arrayWithCapacity:1];
+			sorted[displayName] = list;
+		}
+		
+		[list addObject:info];
+	}
+	
+	NSMutableArray<ZDCUserDisplay *> *results = [NSMutableArray arrayWithCapacity:users.count];
+	
+	for (NSString *displayName in sorted)
+	{
+		NSArray *list = sorted[displayName];
+		
+		if (list.count == 1)
+		{
+			// No conflicts
+			
+			NSDictionary *info = list[0];
+			NSString *userID      = info[k_userID];
+			NSString *displayName = info[k_displayName];
+			
+			ZDCUserDisplay *result = [[ZDCUserDisplay alloc] initWithUserID:userID displayName:displayName];
+			[results addObject:result];
+		}
+		else
+		{
+			// The displayName needs disambiguation
+			
+			NSMutableDictionary *byProvider = [NSMutableDictionary dictionaryWithCapacity:list.count];
+	
+			for (NSDictionary *info in list)
+			{
+				NSString *provider = info[k_provider];
+	
+				NSMutableArray *subList = byProvider[provider];
+				if (subList == nil)
+				{
+					subList = [NSMutableArray arrayWithCapacity:1];
+					byProvider[provider] = subList;
+				}
+	
+				[subList addObject:info];
+			}
+			
+			for (NSString *provider in byProvider)
+			{
+				NSArray *subList = byProvider[provider];
+		
+				if (subList.count == 1)
+				{
+					// Append the provider: "John Doe (GitHub)"
+		
+					NSDictionary *info = subList[0];
+					NSString *userID      = info[k_userID];
+					NSString *displayName = info[k_displayName];
+					NSString *provider    = info[k_provider];
+					
+					displayName = [displayName stringByAppendingFormat:@" (%@)", provider];
+					
+					ZDCUserDisplay *result = [[ZDCUserDisplay alloc] initWithUserID:userID displayName:displayName];
+					[results addObject:result];
+				}
+				else
+				{
+					// Append the provider & count: "John Doe (GitHub-1)"
+					
+					[subList enumerateObjectsUsingBlock:^(NSDictionary *info, NSUInteger idx, BOOL *stop) {
+						
+						NSString *userID      = info[k_userID];
+						NSString *displayName = info[k_displayName];
+						NSString *provider    = info[k_provider];
+						
+						displayName = [displayName stringByAppendingFormat:@" (%@-%lu)", provider, (unsigned long)(idx+1)];
+						
+						ZDCUserDisplay *result = [[ZDCUserDisplay alloc] initWithUserID:userID displayName:displayName];
+						[results addObject:result];
+					}];
+				}
+			}
+		}
+	}
+	
+	[results sortUsingComparator:^NSComparisonResult(ZDCUserDisplay *item1, ZDCUserDisplay *item2) {
+		
+		NSString *name1 = item1.displayName;
+		NSString *name2 = item2.displayName;
+		
+		return [name1 localizedStandardCompare:name2];
+	}];
+	
+	return results;
 }
 
 @end

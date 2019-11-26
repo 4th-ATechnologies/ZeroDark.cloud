@@ -1,9 +1,9 @@
-#import "ZDCSearchUserManager.h"
+#import "ZDCUserSearchManager.h"
 #import "ZeroDarkCloud.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ZDCSearchUserManager (Private)
+@interface ZDCUserSearchManager (Private)
 
 - (instancetype)initWithOwner:(ZeroDarkCloud *)owner;
 

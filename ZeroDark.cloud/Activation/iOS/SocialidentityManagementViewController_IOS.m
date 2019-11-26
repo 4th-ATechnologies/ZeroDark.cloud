@@ -46,7 +46,7 @@
 @property (nonatomic, assign, readwrite) BOOL isPrimaryProfile;
 @property (nonatomic, assign, readwrite) BOOL isPreferredProfile;
 
-@property (nonatomic, copy, readwrite) NSString *auth0ID;
+@property (nonatomic, copy, readwrite) NSString *identityID;
 @property (nonatomic, copy, readwrite) NSString *provider;
 @property (nonatomic, copy, readwrite) NSString *providerName;
 @property (nonatomic, copy, readwrite) NSString *connection;
@@ -62,7 +62,7 @@
 @synthesize isPrimaryProfile;
 @synthesize isPreferredProfile;
 
-@synthesize auth0ID;
+@synthesize identityID;
 @synthesize provider;
 @synthesize providerName;
 @synthesize connection;
@@ -333,7 +333,10 @@
 		[self reloadTable];
 		return;
 	}
-
+	
+	NSAssert(NO, @"Not implemented"); // finish refactoring
+	
+/*
 	Auth0ProviderManager *auth0ProviderManager = zdc.auth0ProviderManager;
 	
 	NSMutableArray<SocialIdentityManagementVC_RowItem *> *newRowItems = [NSMutableArray array];
@@ -410,6 +413,7 @@
 
 	rowItems = [newRowItems copy];
 	[self reloadTable];
+*/
 }
 
 - (void)reloadTable
@@ -481,7 +485,7 @@
 	cell.delegate = (id <SocialIDUITableViewCellDelegate>)self;
 	
 	cell.uuid = localUserID;
-	cell.Auth0ID = rowItem.auth0ID;
+	cell.Auth0ID = rowItem.identityID;
 	
 	cell.lblUserName.hidden = NO;
 	cell.lblUserName.textColor = [UIColor blackColor];
@@ -546,14 +550,14 @@
 		if (image)
 		{
 			// Check that the cell hasn't been recycled (is still being used for this auth0ID)
-			if (cell.Auth0ID == rowItem.auth0ID) {
+			if (cell.Auth0ID == rowItem.identityID) {
 				cell.imgAvatar.image =  image;
 			}
 		}
 	};
 	
 	ZDCFetchOptions *options = [[ZDCFetchOptions alloc] init];
-	options.auth0ID = rowItem.auth0ID;
+	options.identityID = rowItem.identityID;
 	
 	[zdc.imageManager fetchUserAvatar: localUser
 	                      withOptions: options
@@ -699,7 +703,7 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 	}
 
 	NSString *_localUserID = [localUserID copy];
-	NSString *selectedAuth0ID = rowItem.auth0ID;
+	NSString *selectedAuth0ID = rowItem.identityID;
 	
 	YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
 	[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
@@ -708,7 +712,7 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 		if (updatedUser)
 		{
 			updatedUser = [updatedUser copy];
-			updatedUser.auth0_preferredID = selectedAuth0ID;
+			updatedUser.preferredIdentityID = selectedAuth0ID;
 			
 			[transaction setObject:updatedUser forKey:updatedUser.uuid inCollection:kZDCCollection_Users];
 		}
@@ -803,7 +807,7 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 	{
 		SocialIdentityManagementVC_RowItem *currentRowItem = rowItems[i];
 		
-		if ([currentRowItem.auth0ID isEqualToString:rowItem.auth0ID])
+		if ([currentRowItem.identityID isEqualToString:rowItem.identityID])
 		{
 			index = i;
 			break;
@@ -835,7 +839,7 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 
 	__weak typeof(self) weakSelf = self;
 	
-	[self.accountSetupVC unlinkAuth0ID: rowItem.auth0ID
+	[self.accountSetupVC unlinkAuth0ID: rowItem.identityID
 	                   fromLocalUserID: localUserID
 	                   completionQueue: dispatch_get_main_queue()
 	                   completionBlock:^(NSError *error)

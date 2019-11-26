@@ -15,26 +15,29 @@
 
 // NSCoding constants
 
-static int const kZDCUser_CurrentVersion = 1;
+static int const kZDCUser_CurrentVersion = 2;
 #pragma unused(kZDCUser_CurrentVersion)
 
-static NSString *const k_version_user          = @"version_user";
-static NSString *const k_uuid                  = @"uuid";
-static NSString *const k_publicKeyID           = @"publicKeyID";
-static NSString *const k_blockchainTransaction = @"blockchainTransaction";
-static NSString *const k_random_uuid           = @"random_uuid";
-static NSString *const k_random_encryptionKey  = @"random_encryptionKey";
-static NSString *const k_aws_regionStr         = @"aws_regionStr";
-static NSString *const k_aws_bucket            = @"aws_bucket";
-static NSString *const k_accountDeleted        = @"accountDeleted";
-static NSString *const k_lastUpdated           = @"lastUpdated";
-static NSString *const k_auth0_profiles        = @"auth0_profiles";
-static NSString *const k_auth0_preferredID     = @"preferedAuth0ID";  // historical spelling
-static NSString *const k_auth0_lastUpdated     = @"auth0_updated_at"; // historical spelling - matches auth0 property
+static NSString *const k_version_user           = @"version_user";
+static NSString *const k_uuid                   = @"uuid";
+static NSString *const k_publicKeyID            = @"publicKeyID";
+static NSString *const k_blockchainTransaction  = @"blockchainTransaction";
+static NSString *const k_random_uuid            = @"random_uuid";
+static NSString *const k_random_encryptionKey   = @"random_encryptionKey";
+static NSString *const k_aws_regionStr          = @"aws_regionStr";
+static NSString *const k_aws_bucket             = @"aws_bucket";
+static NSString *const k_accountDeleted         = @"accountDeleted";
+static NSString *const k_lastRefresh_profile    = @"lastRefresh_profile";
+static NSString *const k_lastRefresh_blockchain = @"lastRefresh_blockchain";
+static NSString *const k_identities             = @"identities";
+static NSString *const k_preferredIdentityID    = @"preferedAuth0ID";  // historical spelling
+
+
+static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 
 // Extern constants
 
-/* extern */ NSString *const kZDCAnonymousUserID = @"anonymoususerid1"; // must 16 characters & zBase32
+/* extern */ NSString *const kZDCAnonymousUserID = @"anonymoususerid1"; // must be 16 characters & zBase32
 /* extern */ NSString *const kZDCUser_metadataKey =  @"user_metadata";
 /* extern */ NSString *const kZDCUser_metadata_preferredAuth0ID =  @"preferredAuth0ID";
 
@@ -53,13 +56,13 @@ static NSString *const k_auth0_lastUpdated     = @"auth0_updated_at"; // histori
 @synthesize aws_bucket = aws_bucket;
 
 @synthesize accountDeleted = accountDeleted;
-@synthesize lastUpdated = lastUpdated;
+@synthesize lastRefresh_profile = lastRefresh_profile;
+@synthesize lastRefresh_blockchain = lastRefresh_blockchain;
 
-@synthesize auth0_profiles = auth0_profiles;
-@synthesize auth0_preferredID = auth0_preferredID;
-@synthesize auth0_lastUpdated = auth0_lastUpdated;
+@synthesize identities = identities;
+@synthesize preferredIdentityID = preferredIdentityID;
 
-@dynamic preferredProfile;
+@dynamic displayIdentity;
 @dynamic displayName;
 
 @dynamic isLocal;
@@ -85,7 +88,8 @@ static NSString *const k_auth0_lastUpdated     = @"auth0_updated_at"; // histori
 		
 		aws_region = AWSRegion_Invalid; // <- not zero
 		
-		lastUpdated = [NSDate date];
+		lastRefresh_profile = [NSDate date];
+		lastRefresh_blockchain = [NSDate dateWithTimeIntervalSinceReferenceDate:0];
 	}
 	return self;
 }
@@ -99,13 +103,18 @@ static NSString *const k_auth0_lastUpdated     = @"auth0_updated_at"; // histori
 // v1:
 //	- Moved accountDeleted from S4LocalUser to ZDCUser
 //
+// v2:
+// - Moved from `auth0_profiles` to `identities`
+// - Renamed auth0_preferredID to preferredIdentityID
+// - Changing to lastUpdated_profile & lastUpdated_blockchain
+//
 
 - (id)initWithCoder:(NSCoder *)decoder
 {
 	if ((self = [super init]))
 	{
 		// Uncomment me when version handling is needed
-	//	int version = [decoder decodeIntForKey:k_version_user];
+		int version = [decoder decodeIntForKey:k_version_user];
 		
 		uuid = [decoder decodeObjectForKey:k_uuid];
 		
@@ -119,15 +128,43 @@ static NSString *const k_auth0_lastUpdated     = @"auth0_updated_at"; // histori
 		aws_bucket = [decoder decodeObjectForKey:k_aws_bucket];
 		
 		accountDeleted = [decoder decodeBoolForKey:k_accountDeleted];
-		lastUpdated = [decoder decodeObjectForKey:k_lastUpdated];
+		lastRefresh_profile = [decoder decodeObjectForKey:k_lastRefresh_profile];
+		lastRefresh_blockchain = [decoder decodeObjectForKey:k_lastRefresh_blockchain];
 		
-		auth0_profiles = [decoder decodeObjectForKey:k_auth0_profiles];
-		auth0_preferredID = [decoder decodeObjectForKey:k_auth0_preferredID];
-		auth0_lastUpdated = [decoder decodeObjectForKey:k_auth0_lastUpdated];
-		
-		if (!auth0_preferredID)
+		if (version >= 2)
 		{
-			auth0_preferredID = [Auth0Utilities firstAvailableAuth0IDFromProfiles:auth0_profiles];
+			identities = [decoder decodeObjectForKey:k_identities];
+		}
+		else
+		{
+			NSDictionary *auth0_profiles = [decoder decodeObjectForKey:kDeprecated_auth0_profiles];
+			
+			// Todo: convert this to a profile ?
+		}
+		
+		preferredIdentityID = [decoder decodeObjectForKey:k_preferredIdentityID];
+		
+		// Sanitation
+		
+		if (!lastRefresh_profile)
+		{
+			lastRefresh_profile = [NSDate dateWithTimeIntervalSinceReferenceDate:0];
+		}
+		
+		if (!lastRefresh_blockchain)
+		{
+			lastRefresh_blockchain = [NSDate dateWithTimeIntervalSinceReferenceDate:0];
+		}
+		
+		if (!preferredIdentityID)
+		{
+			for (ZDCUserIdentity *ident in identities)
+			{
+				if (!ident.isRecoveryAccount) {
+					preferredIdentityID = ident.identityID;
+					break;
+				}
+			}
 		}
  	}
 	return self;
@@ -151,11 +188,11 @@ static NSString *const k_auth0_lastUpdated     = @"auth0_updated_at"; // histori
 	[coder encodeObject:aws_bucket forKey:k_aws_bucket];
 	
 	[coder encodeBool:accountDeleted forKey:k_accountDeleted];
-	[coder encodeObject:lastUpdated forKey:k_lastUpdated];
+	[coder encodeObject:lastRefresh_profile forKey:k_lastRefresh_profile];
+	[coder encodeObject:lastRefresh_blockchain forKey:k_lastRefresh_blockchain];
 	
-	[coder encodeObject:auth0_profiles    forKey:k_auth0_profiles];
-	[coder encodeObject:auth0_preferredID forKey:k_auth0_preferredID];
-	[coder encodeObject:auth0_lastUpdated forKey:k_auth0_lastUpdated];
+	[coder encodeObject:identities          forKey:k_identities];
+	[coder encodeObject:preferredIdentityID forKey:k_preferredIdentityID];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -184,113 +221,83 @@ static NSString *const k_auth0_lastUpdated     = @"auth0_updated_at"; // histori
 	copy->aws_bucket = aws_bucket;
 	
 	copy->accountDeleted = accountDeleted;
-	copy->lastUpdated = lastUpdated;
+	copy->lastRefresh_profile = lastRefresh_profile;
+	copy->lastRefresh_blockchain = lastRefresh_blockchain;
 	
-	copy->auth0_profiles = auth0_profiles;
-	copy->auth0_preferredID = auth0_preferredID;
-	copy->auth0_lastUpdated = auth0_lastUpdated;
+	copy->identities = [identities copy];
+	copy->preferredIdentityID = preferredIdentityID;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Auth0
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (NSDictionary *)preferredProfile
+- (nullable ZDCUserIdentity *)displayIdentity
 {
-	return auth0_profiles[auth0_preferredID];
+	if (identities.count == 0) return nil;
+	
+	if (preferredIdentityID)
+	{
+		ZDCUserIdentity *result = [self identityWithID:preferredIdentityID];
+		if (result) {
+			return result;
+		}
+	}
+	
+	// Prefer a non-recovery-account identity
+	//
+	for (ZDCUserIdentity *identity in identities)
+	{
+		if (identity.isRecoveryAccount){
+			continue;
+		}
+	
+		return identity;
+	}
+		
+	return identities[0];
 }
 
 - (NSString *)displayName
 {
-	NSString *name = [self displayNameForAuth0ID:nil];
-	return name;
+	ZDCUserIdentity *displayIdentity = [self displayIdentity];
+	if (displayIdentity) {
+		return displayIdentity.displayName;
+	}
+	else {
+		return uuid;
+	}
 }
 
-- (NSString *)displayNameForAuth0ID:(NSString *)profileID
+- (nullable ZDCUserIdentity *)identityWithID:(NSString *)identityID
 {
-	NSString *displayName = nil;
-	NSDictionary *profile = nil;
-	
-	if (profileID.length)
+	ZDCUserIdentity *match = nil;
+	if (identityID)
 	{
-		profile = auth0_profiles[profileID];
-	}
-	else
-	{
-		profile = self.preferredProfile;
-	}
-
-	if (profile)
-	{
-		NSString * email      = profile[@"email"];
-		NSString * name       = profile[@"name"];
-		NSString * username   = profile[@"username"];
-		NSString * nickname   = profile[@"nickname"];
-		NSString * connection = profile[@"connection"];
-		
-		// process nsdictionary issues
-		if ([username isKindOfClass:[NSNull class]]) {
-			username = nil;
-		}
-		if ([email isKindOfClass:[NSNull class]]) {
-			email = nil;
-		}
-		if ([name isKindOfClass:[NSNull class]]) {
-			name = nil;
-		}
-		if ([nickname isKindOfClass:[NSNull class]]) {
-			nickname = nil;
-		}
-
-		if (![connection isEqualToString:kAuth0DBConnection_Recovery])
+		for (ZDCUserIdentity *identity in identities)
 		{
-			if ([connection isEqualToString:kAuth0DBConnection_UserAuth])
+			if ([identity.identityID isEqualToString:identityID])
 			{
-				if ([Auth0Utilities is4thAEmail:email])
-				{
-					displayName = [Auth0Utilities usernameFrom4thAEmail:email];
-					email = nil;
-				}
-			}
-
-			// fix for weird providers
-			if (!name)
-			{
-				name = [Auth0Utilities correctUserNameForA0Strategy:connection profile:profile];
-			}
-			
-			if (!displayName && name.length) {
-				displayName =  name;
-			}
-			if (!displayName && username.length) {
-				displayName =  username;
-			}
-			if (!displayName && email.length) {
-				displayName =  email;
-			}
-			if (!displayName && nickname.length) {
-				displayName =  nickname;
+				match = identity;
+				break;
 			}
 		}
 	}
-
-	if (!displayName) {
-		displayName = [NSString stringWithFormat:@"<%@>", uuid];
-	}
 	
-	return displayName;
+	return match;
 }
 
 - (NSUInteger)nonRecoveryProfileCount
 {
-	__block NSUInteger count = 0;
-	[auth0_profiles enumerateKeysAndObjectsUsingBlock:^(NSString* auth0ID, NSDictionary* profile, BOOL *stop) {
-
-		if (![Auth0Utilities isRecoveryProfile:profile]) {
+	NSUInteger count = 0;
+	
+	for (ZDCUserIdentity *ident in identities)
+	{
+		if (!ident.isRecoveryAccount) {
 			count++;
 		}
-	}];
-
+	}
+	
 	return count;
 }
 

@@ -246,10 +246,11 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	NSString* displayName = keyBackupVC.user.displayName;
 	_lblDisplayName.text = displayName;
 
-	NSArray* comps = [keyBackupVC.user.auth0_preferredID componentsSeparatedByString:@"|"];
-	NSString* provider = comps.firstObject;
+	
+	ZDCUserIdentity *displayIdentity = keyBackupVC.user.displayIdentity;
+	NSString *provider = displayIdentity.provider;
 
-	OSImage* providerImage = [[providerManager providerIcon:Auth0ProviderIconType_Signin forProvider:provider] scaledToHeight:_imgProvider.frame.size.height];
+	OSImage *providerImage = [[providerManager providerIcon:Auth0ProviderIconType_Signin forProvider:provider] scaledToHeight:_imgProvider.frame.size.height];
 	
 	if(providerImage)
 	{

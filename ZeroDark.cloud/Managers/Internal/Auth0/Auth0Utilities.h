@@ -9,9 +9,9 @@
 
 #import <Foundation/Foundation.h>
 
-#import "Auth0API.h"
-#import "A0UserIdentity.h"
+#import "Auth0Constants.h"
 #import "AWSRegions.h"
+#import "ZDCUserIdentity.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -20,11 +20,6 @@ NS_ASSUME_NONNULL_BEGIN
  * This class provides various utility methods to assist in the translation between their system & ours.
  */
 @interface Auth0Utilities : NSObject
-
-/**
- * Auto-healing missing preferred auth0 ID.
- */
-+ (nullable NSString *)firstAvailableAuth0IDFromProfiles:(NSDictionary *)profiles;
 
 /**
  * Returns YES if the username matches the general ruleset for usernames in our system.
@@ -48,28 +43,9 @@ NS_ASSUME_NONNULL_BEGIN
 + (BOOL)isUserAuthProfile:(NSDictionary *)profile;
 
 /**
- * Returns YES if the profile represents a recovery profile.
- *
- * Every user has a recovery identity which can be used to assist the user
- * if they get locked out of their account.
- * Of course, without their access key, they won't be able to read any data...
- *
- * However, there's always the chance a user becomes unable to login to their social identity.
- * (Either because they forgot a password, or because they got booted from the platform for thought crimes.)
- */
-+ (BOOL)isRecoveryProfile:(NSDictionary *)profile;
-
-/**
  * Returns YES if the identity is a username/password (database) identity.
  */
-+ (BOOL)isUserAuthIdentity:(A0UserIdentity *)identity;
-
-/**
- * Returns YES if the identity is a recovery identity.
- *
- * @see `-isRecoveryProfile:`
- */
-+ (BOOL)isRecoveryIdentity:(A0UserIdentity *)identity;
++ (BOOL)isUserAuthIdentity:(ZDCUserIdentity *)identity;
 
 /**
  * Returns YES if email domain is "users.4th-a.com".
@@ -115,21 +91,11 @@ NS_ASSUME_NONNULL_BEGIN
 + (nullable NSString *)correctUserNameForA0Strategy:(NSString *)strategy profile:(NSDictionary *)profile;
 
 /**
- * Handles weird providers.
- */
-+ (NSString *)correctDisplayNameForA0Strategy:(NSString *)strategy profile:(NSDictionary *)profile;
-
-/**
  * Returns the picture URL for the given auth0ID.
  */
-+ (nullable NSString *)correctPictureForAuth0ID:(NSString *)auth0ID
-                                    profileData:(NSDictionary *)profileData
-                                         region:(AWSRegion)region
-                                         bucket:(NSString *)bucket;
-
-
-
-+(NSDictionary*)excludeRecoveryProfile:(NSDictionary*)profilesIn;
++ (nullable NSURL *)pictureUrlForIdentity:(ZDCUserIdentity *)identity
+                                   region:(AWSRegion)region
+                                   bucket:(NSString *)bucket;
 
 @end
 

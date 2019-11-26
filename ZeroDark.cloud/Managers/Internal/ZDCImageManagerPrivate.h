@@ -18,7 +18,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable ZDCDownloadTicket *)
         fetchUserAvatar:(NSString *)userID
-                auth0ID:(NSString *)auth0ID
                 fromURL:(NSURL *)url
                 options:(nullable ZDCDownloadOptions *)options
            processingID:(nullable NSString *)processingID

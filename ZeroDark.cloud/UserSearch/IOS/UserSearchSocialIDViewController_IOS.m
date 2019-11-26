@@ -43,26 +43,23 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
     NSTimer *       showWaitBoxTimer;
     SCLAlertView *  errorAlert;
  
-    ZeroDarkCloud*                   owner;
-    Auth0ProviderManager*            providerManager;
-    ZDCImageManager*                 imageManager;
+	ZeroDarkCloud *zdc;
+	
+	NSString *localUserID;
+	ZDCSearchResult *searchResult;
+	NSArray *auth0IDs;
     
-    NSString*                       localUserID;
-    ZDCSearchUserResult*            searchResultInfo;
-    NSArray*                        auth0IDs;
+	UIImage *defaultUserImage;
     
-    UIImage*                        defaultUserImage;
-    
-    UISwipeGestureRecognizer*       swipeRight;
+	UISwipeGestureRecognizer *swipeRight;
 }
 
 @synthesize delegate = delegate;
 
-
-- (instancetype)initWithDelegate:(nullable id <UserSearchSocialIDViewControllerDelegate>)inDelegate
-                           owner:(ZeroDarkCloud*)inOwner
-                     localUserID:(NSString* __nonnull)inLocalUserID
-                searchResultInfo:(ZDCSearchUserResult* __nonnull)inSearchResultInfo
+- (instancetype)initWithDelegate:(id<UserSearchSocialIDViewControllerDelegate>)inDelegate
+                           owner:(ZeroDarkCloud *)inOwner
+                     localUserID:(NSString *)inLocalUserID
+                    searchResult:(ZDCSearchResult *)inSearchResult
 {
   
     NSBundle *bundle = [ZeroDarkCloud frameworkBundle];
@@ -70,11 +67,11 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
     self = [storyboard instantiateViewControllerWithIdentifier:@"UserSearchSocialIDViewController"];
     if (self)
     {
-        owner = inOwner;
+        zdc = inOwner;
         delegate = inDelegate;
-        localUserID = inLocalUserID;
-        searchResultInfo = inSearchResultInfo;
-        auth0IDs = searchResultInfo.auth0_profiles.allKeys;
+        localUserID = [inLocalUserID copy];
+        searchResult = inSearchResult;
+     //   auth0IDs = searchResultInfo.auth0_profiles.allKeys;
       }
     return self;
 }
@@ -86,13 +83,9 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	_tblSocialID.separatorInset = UIEdgeInsetsMake(0, 78, 0, 0); // top, left, bottom, right
 	_tblSocialID.tableFooterView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, _tblSocialID.frame.size.width, 1)];
 	
-	defaultUserImage = [imageManager.defaultUserAvatar imageWithMaxSize:[SocialIDUITableViewCell avatarSize]];
+	defaultUserImage = [zdc.imageManager.defaultUserAvatar imageWithMaxSize:[SocialIDUITableViewCell avatarSize]];
 		
 	[SocialIDUITableViewCell registerViewsforTable:_tblSocialID bundle:[ZeroDarkCloud frameworkBundle]];
-	
-	providerManager = owner.auth0ProviderManager;
-	imageManager =  owner.imageManager;
-	
 }
 
 -(void)viewWillAppear:(BOOL)animated
@@ -253,24 +246,27 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 
 
 - (UITableViewCell *)tableView:(UITableView *)tv cellForRowAtIndexPath:(NSIndexPath *)indexPath
-
 {
+	NSAssert(NO, @"Not implemented"); // finish refactoring
+	return nil;
+/*
     SocialIDUITableViewCell *cell = (SocialIDUITableViewCell *)[tv dequeueReusableCellWithIdentifier:kSocialIDCellIdentifier];
     
     __weak typeof(self) weakSelf = self;
     
     NSString* auth0ID = [auth0IDs objectAtIndex:indexPath.row];
-    NSDictionary* auth0Info = [searchResultInfo.auth0_profiles objectForKey:auth0ID];
+    NSDictionary* auth0Info = [searchResult.auth0_profiles objectForKey:auth0ID];
     
-    BOOL isPreferredProfile = [searchResultInfo.auth0_preferredID isEqualToString:auth0ID];
+    BOOL isPreferredProfile = [searchResult.auth0_preferredID isEqualToString:auth0ID];
  
     NSString* displayName   = auth0Info[@"displayName"];
     
-    NSURL * pictureURL = nil;
-    NSString* picture  = [Auth0ProviderManager correctPictureForAuth0ID:auth0ID
-                                                            profileData:auth0Info
-                                                                 region:searchResultInfo.aws_region
-                                                                 bucket:searchResultInfo.aws_bucket];
+    NSURL *pictureURL = nil;
+    NSString *picture =
+	  [Auth0Utilities correctPictureForAuth0ID: auth0ID
+	                               profileData: auth0Info
+	                                    region: searchResultInfo.aws_region
+	                                    bucket: searchResultInfo.aws_bucket];
     if(picture)
         pictureURL = [NSURL URLWithString:picture];
    
@@ -319,8 +315,8 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
     {
         CGSize avatarSize = [SocialIDUITableViewCell avatarSize];
         
-         [ imageManager fetchUserAvatar:localUserID
-                                auth0ID: auth0ID
+         [imageManager fetchUserAvatar:localUserID
+                            identityID: auth0ID
                                 fromURL: pictureURL
 			                       options: nil
                            processingID: pictureURL.absoluteString
@@ -362,7 +358,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
     }
 
     return cell;
-
+*/
 }
 
 
@@ -387,79 +383,40 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
     
     NSString* auth0ID = [auth0IDs objectAtIndex:indexPath.row];
     
-    if([self.delegate respondsToSelector:@selector(userSearchSocialIDViewController:
-                                                   didSelectAuth0ID:forUserID:)])
-    {
-        
-        [self.delegate userSearchSocialIDViewController:self
-                                           didSelectAuth0ID:auth0ID
-                                                  forUserID:searchResultInfo.uuid];
-    }
-    
-    [[self navigationController] popViewControllerAnimated:YES];
+	SEL selector = @selector(userSearchSocialIDViewController:didSelectIdentityID:forUserID:);
+	if ([self.delegate respondsToSelector:selector])
+	{
+		[self.delegate userSearchSocialIDViewController: self
+		                            didSelectIdentityID: auth0ID
+		                                      forUserID: searchResult.userID];
+	}
+	
+	[[self navigationController] popViewControllerAnimated:YES];
 }
 
 #pragma - actions
 
--(void) createRemoteUserIfNeeded:(NSString*)remoteUserID
-                 completionBlock:(void (^)(ZDCUser *remoteUser, NSError *error))completionBlock
+- (IBAction)btnVerifyPubKeyHit:(id)sender
 {
- 
-     __block ZDCUser*    user    = nil;
-    
-    // SELECT A USERID for doing searches
-    [owner.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-        user = [transaction objectForKey:remoteUserID inCollection:kZDCCollection_Users];
-    }];
-    
-    if(!user)
-    {
-        dispatch_queue_t concurrentQueue
-        = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-        
-        
-        [owner.remoteUserManager fetchRemoteUserWithID: remoteUserID
-                                           requesterID: localUserID
-                                       completionQueue: concurrentQueue
-                                       completionBlock:^(ZDCUser *remoteUser, NSError *error)
-         {
-             
-             dispatch_async(dispatch_get_main_queue(), ^{ @autoreleasepool {
-                 
-                 if(completionBlock)
-                     completionBlock(remoteUser,error);
-             }});
-             
-         }];
-    }
-    else
-    {
-        if(completionBlock)
-            completionBlock(user,nil);
-      }
-}
-
-
--(IBAction)btnVerifyPubKeyHit:(id)sender
-{
-    __weak typeof(self) weakSelf = self;
-
-    [self createRemoteUserIfNeeded:searchResultInfo.uuid
-                   completionBlock:^(ZDCUser *remoteUser, NSError *error)
-     {
-         __strong typeof(self) strongSelf = weakSelf;
-         if (strongSelf)
-         {
-             VerifyPublicKey_IOS* vc = [[VerifyPublicKey_IOS alloc]
-                                        initWithOwner:strongSelf->owner
-                                        remoteUserID:remoteUser.uuid
-                                        localUserID:strongSelf->localUserID];
-             
-             strongSelf.navigationController.navigationBarHidden = NO;
-             //    [self.tabBarController.tabBar setHidden:YES];
-             [strongSelf.navigationController pushViewController:vc animated:YES];
-         }
-     }];  
+	__weak typeof(self) weakSelf = self;
+	
+	[zdc.userManager fetchUserWithID: searchResult.userID
+	                     requesterID: localUserID
+	                 completionQueue: dispatch_get_main_queue()
+	                 completionBlock:^(ZDCUser *remoteUser, NSError *error)
+	{
+		__strong typeof(self) strongSelf = weakSelf;
+		if (strongSelf == nil) return;
+		
+		VerifyPublicKey_IOS *vc =
+		  [[VerifyPublicKey_IOS alloc] initWithOwner: strongSelf->zdc
+		                                remoteUserID: remoteUser.uuid
+		                                 localUserID: strongSelf->localUserID];
+		
+		strongSelf.navigationController.navigationBarHidden = NO;
+	//	[self.tabBarController.tabBar setHidden:YES];
+		[strongSelf.navigationController pushViewController:vc animated:YES];
+	}];  
 }
 
 

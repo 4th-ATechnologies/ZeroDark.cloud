@@ -17,9 +17,6 @@
 #import "NSString+ZeroDark.h"
 #import "OSImage+ZeroDark.h"
 
-static NSString *const k_userID      = @"userID";
-static NSString *const k_displayName = @"displayName";
-
 @interface LocalUserListUITableViewCell : UITableViewCell
 
 @property (nonatomic, weak) IBOutlet UIImageView		*userAvatar;
@@ -167,8 +164,11 @@ static NSString *const k_displayName = @"displayName";
 
 // MARK: Tableview
 
--(void) reloadUserTable
+- (void)reloadUserTable
 {
+	NSAssert(NO, @"Not implemented"); // finish refactoring
+	
+/*
 	__weak typeof(self) weakSelf = self;
 
 	__block NSMutableArray <ZDCLocalUser *> * _localUsers = NSMutableArray.array;
@@ -238,6 +238,8 @@ static NSString *const k_displayName = @"displayName";
 		}
 	}];
 	[CATransaction commit];
+ 
+*/
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
@@ -249,6 +251,10 @@ static NSString *const k_displayName = @"displayName";
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
+	NSAssert(NO, @"Not implemented"); // finish refactoring
+	return nil;
+	
+/*
 	__weak typeof(self) weakSelf = self;
 	
 	LocalUserListUITableViewCell *cell =   [tableView dequeueReusableCellWithIdentifier:@"LocalUserListUITableViewCell"];
@@ -307,6 +313,7 @@ static NSString *const k_displayName = @"displayName";
 	}
 
 	return cell;
+*/
 }
 
 
@@ -321,6 +328,9 @@ static NSString *const k_displayName = @"displayName";
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPathIn
 {
+	NSAssert(NO, @"Not implemented"); // finish refactoring
+	
+/*
 //	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 	
 	NSDictionary<NSString *, NSString *> *localUserInfo = [sortedLocalUserInfo objectAtIndex:indexPathIn.row];
@@ -339,6 +349,7 @@ static NSString *const k_displayName = @"displayName";
 	{
 		[self.delegate localUserListViewController:self didSelectUserID:userID];
 	}
+*/
 }
 
 

@@ -1,6 +1,5 @@
 #import "Auth0Utilities.h"
 
-#import "Auth0API.h"
 #import "AWSRegions.h"
 #import "S3Request.h"
 #import "ZDCConstants.h"
@@ -9,32 +8,6 @@
 
 
 @implementation Auth0Utilities
-
-/**
- * See header file for description.
- */
-+ (NSString *)firstAvailableAuth0IDFromProfiles:(NSDictionary *)profiles
-{
-	__block NSString *result = nil;
-
-	// Just get the first non-recovery connection.
-	//
-	// Note:
-	//   Every profile has an internal "recovery" connection that's reserved
-	//   for resetting login access to an account. (User still needs their private key to decrypt data.)
-	//   Since this recovery connection isn't a real connection, we ignore it here.
-	//
-	[profiles enumerateKeysAndObjectsUsingBlock:^(NSString* auth0_userID, NSDictionary* profile, BOOL* stop) {
-
-		if (![Auth0Utilities isRecoveryProfile:profile])
-		{
-			result = auth0_userID;
-			*stop = YES;
-		}
-	}];
-
-	return result;
-}
 
 /**
  * See header file for description.
@@ -80,33 +53,10 @@
 /**
  * See header file for description.
  */
-+ (BOOL)isRecoveryIdentity:(A0UserIdentity *)identity
-{
-	BOOL result = [identity.connection isEqualToString:kAuth0DBConnection_Recovery];
-	return result;
-}
-
-/**
- * See header file for description.
- */
-+ (BOOL)isUserAuthIdentity:(A0UserIdentity *)identity
++ (BOOL)isUserAuthIdentity:(ZDCUserIdentity *)identity
 {
 	BOOL result = [identity.connection isEqualToString:kAuth0DBConnection_UserAuth];
 	return result;
-}
-
-/**
- * See header file for description.
- */
-+ (BOOL)isRecoveryProfile:(NSDictionary *)profile
-{
-	NSString *connection = profile[@"connection"];
-	if ([connection isKindOfClass:[NSString class]])
-	{
-		return ([connection isEqualToString:kAuth0DBConnection_Recovery]);
-	}
-	
-	return NO;
 }
 
 /**
@@ -249,67 +199,28 @@
 /**
  * See header file for description.
  */
-+ (NSString *)correctDisplayNameForA0Strategy:(NSString *)strategy profile:(NSDictionary *)profile
++ (nullable NSURL *)pictureUrlForIdentity:(ZDCUserIdentity *)identity
+                                   region:(AWSRegion)aws_region
+                                   bucket:(NSString *)aws_bucket
 {
-	NSString *displayName = nil;
-
-	displayName = profile[@"displayName"];
-	if(!displayName)
-	{
-		displayName = [Auth0Utilities correctUserNameForA0Strategy: strategy
-														   profile: profile];
-
+	if (identity == nil) {
+		return nil;
 	}
-	if (!displayName)
+	if (identity.isRecoveryAccount) {
+		return nil;
+	}
+	
+	NSString *provider_name   = identity.provider;
+	NSString *provider_userID = identity.userID;
+	
+	if ([provider_name isEqualToString:A0StrategyNameAuth0])
 	{
-		displayName = profile[@"email"];
-		if (displayName)
+		if (aws_region == AWSRegion_Invalid || aws_bucket.length == 0)
 		{
-			if ([Auth0Utilities is4thAEmail:displayName]) {
-				displayName = [Auth0Utilities usernameFrom4thAEmail:displayName];
-			}
-			else if ([Auth0Utilities is4thARecoveryEmail:displayName]) {
-				displayName = kAuth0DBConnection_Recovery;
-			}
+			return nil;
 		}
-	}
-
-	if (!displayName)
-		displayName = profile[@"nickname"];
-
-	if (!displayName)
-		displayName= @"<Unknown>";
-	
-	return displayName;
-}
-
-/**
- * See header file for description.
- */
-+ (NSString *)correctPictureForAuth0ID:(NSString *)auth0ID
-                           profileData:(NSDictionary *)profileData
-                                region:(AWSRegion)aws_region
-                                bucket:(NSString *)aws_bucket
-{
-	NSParameterAssert(auth0ID != nil);
-	
-	if ([self isRecoveryProfile:profileData]) {
-		return nil;
-	}
-	
-	NSArray *comps = [auth0ID componentsSeparatedByString:@"|"];
-	if (comps.count != 2) {
-		return nil;
-	}
-	
-	NSString* provider 		= comps[0];
-	NSString* providerID 	= comps[1];
-	
-	if ([provider isEqualToString:A0StrategyNameAuth0]
-	  && (aws_bucket.length > 0)
-	  && (aws_region != AWSRegion_Invalid))
-	{
-		NSString *avatarPath = [NSString stringWithFormat:@"avatar/%@", providerID];
+		
+		NSString *avatarPath = [NSString stringWithFormat:@"avatar/%@", provider_userID];
 
 		NSMutableURLRequest *request =
 		  [S3Request getObject: avatarPath
@@ -317,11 +228,11 @@
 		                region: aws_region
 		      outUrlComponents: nil];
 		
-		return request.URL.absoluteString;
+		return request.URL;
 	}
 	else
 	{
-		NSString *picture = profileData[@"picture"];
+		NSString *picture = identity.profileData[@"picture"];
 		if (![picture isKindOfClass:[NSString class]]) {
 			return nil;
 		}
@@ -336,11 +247,11 @@
 		NSURLComponents *components = [[NSURLComponents alloc] initWithURL:url resolvingAgainstBaseURL:NO];
 		if ([components.host containsString:@"gravatar.com"])
 		{
-			for (NSURLQueryItem * item in components.queryItems)
+			for (NSURLQueryItem* item in components.queryItems)
 			{
 				if ([item.name isEqualToString:@"d"])
 				{
-					NSString* str = item.value;
+					NSString *str = item.value;
 					if ([str containsString:@"cdn.auth0.com/avatars"])
 					{
 						return nil;
@@ -351,36 +262,20 @@
 		
 		// Do fixes for various providers
 		
-		if ([provider isEqualToString:@"bitbucket"])
+		if ([identity.provider isEqualToString:@"bitbucket"])
 		{
 			// bitbucket needs icon size fix
-			return [picture stringByReplacingOccurrencesOfString:@"/32/" withString:@"/128/"];
+			picture = [picture stringByReplacingOccurrencesOfString:@"/32/" withString:@"/128/"];
+			url = [NSURL URLWithString:picture];
 		}
-		else if ([provider isEqualToString:@"facebook"])
+		else if ([identity.provider isEqualToString:@"facebook"])
 		{
-			return [NSString stringWithFormat:@"https://graph.facebook.com/%@/picture", providerID];
+			picture = [NSString stringWithFormat:@"https://graph.facebook.com/%@/picture", provider_userID];
+			url = [NSURL URLWithString:picture];
 		}
-		else
-		{
-			return picture;
-		}
+		
+		return url;
 	}
-}
-
-+(NSDictionary*)excludeRecoveryProfile:(NSDictionary*)profilesIn
-{
-    NSMutableDictionary* profiles = NSMutableDictionary.dictionary;
-    
-    [profilesIn enumerateKeysAndObjectsUsingBlock:^(NSString* auth0_userID, NSDictionary* profile, BOOL* stop) {
-        
-        BOOL isRecoveryId =  [Auth0Utilities isRecoveryProfile:profile];
-        
-        if(!isRecoveryId)
-           [profiles setObject:profile forKey:auth0_userID];
-
-    }];
-    
-    return profiles;
 }
 
 @end

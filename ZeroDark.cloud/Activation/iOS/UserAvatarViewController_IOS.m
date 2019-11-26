@@ -222,6 +222,9 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 
 - (void)refreshUserNameAndIcon
 {
+	NSAssert(NO, @"Not implemented"); // finish refactoring
+	
+/*
 	__block ZDCLocalUser *localUser = nil;
 	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 	#pragma clang diagnostic push
@@ -302,6 +305,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 	                  processingBlock: processingBlock
 	                    preFetchBlock: preFetchBlock
 	                   postFetchBlock: postFetchBlock];
+*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -536,6 +540,9 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 
 - (IBAction)doneButtonTapped:(id)sender
 {
+	NSAssert(NO, @"Not implemented"); // finish refactoring
+	
+/*
 	ZDCLogAutoTrace();
 	
 	if (hasChanges)
@@ -585,6 +592,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 	}
 	
 	[self.navigationController popViewControllerAnimated:YES];
+*/
 }
 
 - (IBAction)removeButtonTapped:(id)sender

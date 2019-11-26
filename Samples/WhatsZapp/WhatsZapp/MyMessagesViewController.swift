@@ -197,10 +197,10 @@ class MyMessagesViewController: MessagesViewController,
 		// So if we make this request a hundred times, it will only do a single network request.
 		
 		let zdc = ZDCManager.zdc()
-		zdc.remoteUserManager?.fetchRemoteUser(withID: userID,
-		                                  requesterID: self.localUserID,
-		                              completionQueue: DispatchQueue.main,
-		                              completionBlock:
+		zdc.userManager?.fetchUser(withID: userID,
+		                      requesterID: self.localUserID,
+		                  completionQueue: DispatchQueue.main,
+		                  completionBlock:
 		{[weak self] (user: ZDCUser?, error: Error?) in
 			
 			if let user = user {

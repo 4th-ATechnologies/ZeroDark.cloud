@@ -390,7 +390,7 @@ typedef OSImage*_Nonnull (^ZDCImageProcessingBlock)(OSImage *image);
  *
  * If set to non-nil, will attempt to download a specific user avatar, associated with the specified identity.
  */
-@property (nonatomic, copy, readwrite, nullable) NSString *auth0ID;
+@property (nonatomic, copy, readwrite, nullable) NSString *identityID;
 
 @end
 

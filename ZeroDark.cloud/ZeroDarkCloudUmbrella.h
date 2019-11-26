@@ -39,9 +39,9 @@
 #import "ZDCProgressManager.h"
 #import "ZDCPullManager.h"
 #import "ZDCPushManager.h"
-#import "ZDCRemoteUserManager.h"
 #import "ZDCRestManager.h"
-#import "ZDCSearchUserManager.h"
+#import "ZDCUserManager.h"
+#import "ZDCUserSearchManager.h"
 #import "ZDCSyncManager.h"
 
 // Model

@@ -213,6 +213,9 @@ static NSString *const kLocalUserSettingsUICellIdentifier = @"LocalUserSettingsU
 
 - (void)refreshUserNameandIcon
 {
+	NSAssert(NO, @"Not implemented"); // finish refactoring
+	
+/*
 	if (!localUserID) return;
 
 	[databaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
@@ -269,6 +272,7 @@ static NSString *const kLocalUserSettingsUICellIdentifier = @"LocalUserSettingsU
 		_lblProvider.text = provider;
 		_lblProvider.hidden = NO;
 	}
+*/
 }
 
 //MARK  Buttons Tableview

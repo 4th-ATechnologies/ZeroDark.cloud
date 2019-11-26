@@ -105,9 +105,9 @@ NS_ASSUME_NONNULL_BEGIN
  * @param localUser
  *   A reference to the local user for which we're updating the avatar.
  *
- * @param auth0ID
+ * @param identityID
  *   A reference to the social identity for which we're updating the avatar.
- *   This is a string of the form "auth0|<some_identifier_here>"
+ *   This is a string of the form "<provider_name>|<provider_userID>"
  *
  * @param oldAvatarData
  *   Every single zApp shares the same user avatar.
@@ -118,7 +118,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)setNewAvatar:(nullable NSData *)avatarData
         forLocalUser:(ZDCLocalUser *)localUser
-             auth0ID:(NSString *)auth0ID
+          identityID:(NSString *)identityID
   replacingOldAvatar:(nullable NSData *)oldAvatarData;
 
 @end

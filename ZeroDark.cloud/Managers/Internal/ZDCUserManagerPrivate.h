@@ -7,12 +7,12 @@
  * API Reference : https://apis.zerodark.cloud
 **/
 
-#import "ZDCRemoteUserManager.h"
+#import "ZDCUserManager.h"
 #import "ZeroDarkCloud.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ZDCRemoteUserManager (Private)
+@interface ZDCUserManager (Private)
 
 /**
  * Standard initialization from ZeroDarkCloud, called during database unlock.

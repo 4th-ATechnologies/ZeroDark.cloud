@@ -53,37 +53,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)enumerateLocalUsersWithTransaction:(YapDatabaseReadTransaction *)transaction
                                 usingBlock:(void (^)(ZDCLocalUser *localUser, BOOL *stop))enumBlock;
 
-
-/**
- * Given an array of ZDCLocalUser's this will produce an array of unambiguous names
- and uuids  in the form  - useful for filling an NSMenu
- 
- <__NSArrayM 0x60000084d410>(
- {
- displayName = "Vinnie Moscaritolo (Amazon)";
- userID = 641ihdfw7qf5pj78pfxbunwkkwonu5rg;
- },
- {
- displayName = "Vinnie Moscaritolo (Facebook)";
- userID = 7gzeud1d9iam5b1d31j8sk6pnnktosut;
- },
- {
- displayName = "Vinnie Moscaritolo (GitHub)";
- userID = euf9kcc4sfqmwc6h5u66zguhxx78bmen;
- },
- {
- displayName = vinthewrench;
- userID = j1bhup8yts5wi81q4pdkdj9owzs1w5kh;
- },
- {
- displayName = xxx;
- userID = b3o8qh8gy4fzfiwrrho3wd9dtjypryue;
- }
- )
- **/
-
--(NSArray <NSDictionary*> *) sortedUnambiguousUserInfoWithLocalUsers:(NSArray <ZDCLocalUser *> *)usersIn;
-
 #pragma mark User Management
 
 /**

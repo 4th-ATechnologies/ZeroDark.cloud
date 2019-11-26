@@ -25,9 +25,9 @@
 #import "ZDCPullManagerPrivate.h"
 #import "ZDCPushInfo.h"
 #import "ZDCPushManagerPrivate.h"
-#import "ZDCRemoteUserManagerPrivate.h"
-#import "ZDCSearchUserManagerPrivate.h"
 #import "ZDCSyncManagerPrivate.h"
+#import "ZDCUserManagerPrivate.h"
+#import "ZDCUserSearchManagerPrivate.h"
 #import "ZDCTask_UnregisterPushToken.h"
 #import "ZDCUIToolsPrivate.h"
 #import "ZDCRestManagerPrivate.h"
@@ -77,12 +77,12 @@
 @property (nonatomic, readwrite, nullable) ZDCNetworkTools         * networkTools;
 @property (nonatomic, readwrite, nullable) ZDCPullManager          * pullManager;
 @property (nonatomic, readwrite, nullable) ZDCPushManager          * pushManager;
-@property (nonatomic, readwrite, nullable) ZDCSearchUserManager    * searchManager;
+@property (nonatomic, readwrite, nullable) ZDCUserSearchManager    * searchManager;
 @property (nonatomic, readwrite, nullable) ZDCSessionManager       * sessionManager;
 @property (nonatomic, readwrite, nullable) ZDCSharesManager  		 * sharesManager;
 @property (nonatomic, readwrite, nullable) ZDCSyncManager          * syncManager;
-@property (nonatomic, readwrite, nullable) ZDCRemoteUserManager    * remoteUserManager;
 @property (nonatomic, readwrite, nullable) ZDCRestManager          * restManager;
+@property (nonatomic, readwrite, nullable) ZDCUserManager          * userManager;
 @property (nonatomic, readwrite, nullable) ZDCUserAccessKeyManager * userAccessKeyManager;
 @property (nonatomic, readwrite, nullable) ZDCUITools        	    * uiTools;
 
@@ -122,7 +122,7 @@
 @synthesize pullManager;
 @synthesize pushManager;
 @synthesize sessionManager;
-@synthesize remoteUserManager;
+@synthesize userManager;
 @synthesize auth0ProviderManager;
 @synthesize searchManager;
 @synthesize sharesManager;
@@ -294,6 +294,11 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 #pragma mark Framework Unlock
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
+ */
 - (BOOL)unlockOrCreateDatabase:(ZDCDatabaseConfig *)config error:(NSError *_Nullable *_Nullable)outError
 {
 	ZDCLogAutoTrace();
@@ -354,7 +359,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 		self.imageManager = [[ZDCImageManager alloc] initWithOwner:self];
 		self.localUserManager = [[ZDCLocalUserManager alloc] initWithOwner:self];
 		self.sessionManager = [[ZDCSessionManager alloc] initWithOwner:self];
-		self.remoteUserManager = [[ZDCRemoteUserManager alloc] initWithOwner:self];
+		self.userManager = [[ZDCUserManager alloc] initWithOwner:self];
 		self.restManager  = [[ZDCRestManager alloc] initWithOwner:self];
 		
 		self.syncManager = [[ZDCSyncManager alloc] initWithOwner:self];
@@ -363,7 +368,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 		self.auth0ProviderManager = [[Auth0ProviderManager alloc] initWithOwner:self];
 		self.uiTools = [[ZDCUITools alloc] initWithOwner:self];
 		self.userAccessKeyManager = [[ZDCUserAccessKeyManager alloc] initWithOwner:self];
-		self.searchManager = [[ZDCSearchUserManager alloc] initWithOwner:self];
+		self.searchManager = [[ZDCUserSearchManager alloc] initWithOwner:self];
 		self.blockchainManager = [[ZDCBlockchainManager alloc] initWithOwner:self];
  		self.sharesManager = [[ZDCSharesManager alloc] initWithOwner:self];
 
@@ -387,6 +392,11 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 	return success;
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
+ */
 - (BOOL)isDatabaseUnlocked
 {
 	__block BOOL result = NO;
@@ -413,16 +423,31 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 #pragma mark Managers
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
+ */
 - (Auth0APIManager *)auth0APIManager
 {
 	return [Auth0APIManager sharedInstance];
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
+ */
 - (ZDCCloudPathManager *)cloudPathManager
 {
 	return [ZDCCloudPathManager sharedInstance];
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
+ */
 - (ZDCNodeManager *)nodeManager
 {
 	return [ZDCNodeManager sharedInstance];

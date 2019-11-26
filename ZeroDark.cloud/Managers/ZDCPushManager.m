@@ -6953,7 +6953,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	ZDCCryptoFile *cryptoFile = nil;
 	if (localUser.isLocal)
 	{
-		ZDCDiskExport *export = [zdc.diskManager userAvatar:localUser forAuth0ID:operation.avatar_auth0ID];
+		ZDCDiskExport *export = [zdc.diskManager userAvatar:localUser forIdentityID:operation.avatar_auth0ID];
 		cryptoFile = export.cryptoFile;
 	}
 	
@@ -8415,7 +8415,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	YapDatabaseCloudCorePipeline *pipeline = [self pipelineForOperation:operation];
 	
-	ZDCRemoteUserManager *remoteUserManager = zdc.remoteUserManager;
+	ZDCUserManager *userManager = zdc.userManager;
 	
 	NSDate *distantFuture = [NSDate distantFuture];
 	NSUUID *opUUID = operation.uuid;
@@ -8425,10 +8425,10 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	{
 		[pipeline setHoldDate:distantFuture forOperationWithUUID:opUUID context:ctx];
 		
-		[remoteUserManager fetchRemoteUserWithID: userID
-		                             requesterID: operation.localUserID
-		                         completionQueue: concurrentQueue
-		                         completionBlock:^(ZDCUser *remoteUser, NSError *error)
+		[userManager fetchUserWithID: userID
+		                 requesterID: operation.localUserID
+		             completionQueue: concurrentQueue
+		             completionBlock:^(ZDCUser *remoteUser, NSError *error)
 		{
 			[pipeline setHoldDate:nil forOperationWithUUID:opUUID context:ctx];
 		}];

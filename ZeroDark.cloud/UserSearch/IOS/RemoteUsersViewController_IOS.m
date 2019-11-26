@@ -349,6 +349,10 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 
 - (UITableViewCell *)tableView:(UITableView *)tv remoteUserCellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
+	NSAssert(NO, @"Not implemented"); // finish refactoring
+	return nil;
+	
+/*
 	__weak typeof(self) weakSelf = self;
 	
 	RemoteUserTableViewCell *cell = (RemoteUserTableViewCell *)[tv dequeueReusableCellWithIdentifier:kRemoteUserTableViewCellIdentifier];
@@ -398,10 +402,11 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 			cell.lblProvider.hidden = NO;
 		}
 		
-		NSString* picture  = [Auth0ProviderManager correctPictureForAuth0ID:auth0ID
-																				  profileData:user.auth0_profiles[auth0ID]
-																						 region:user.aws_region
-																						 bucket:user.aws_bucket];
+		NSString *picture =
+		  [Auth0Utilities correctPictureForAuth0ID: auth0ID
+		                               profileData: user.auth0_profiles[auth0ID]
+		                                    region: user.aws_region
+		                                    bucket: user.aws_bucket];
 		if(picture)
 			pictureURL = [NSURL URLWithString:picture];
 		
@@ -514,6 +519,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 								  } ];
 	cell.selectionStyle = UITableViewCellSelectionStyleNone;
 	return cell;
+*/
 }
 
 
@@ -575,7 +581,9 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 
 - (void)tableView:(UITableView * _Nonnull)tableView disclosureButtonTappedAtCell:(RemoteUserTableViewCell* _Nonnull)cell
 {
+	NSAssert(NO, @"Not implemented"); // finish refactoring
 	
+/*
 	NSString*  remoteUserID = cell.userID;
 	__block ZDCUser*    user    = nil;
 	
@@ -585,7 +593,7 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 	
 	if(user)
 	{
-		ZDCSearchUserResult* info = [[ZDCSearchUserResult alloc] initWithUser:user];
+		ZDCSearchResult* info = [[ZDCSearchResult alloc] initWithUser:user];
 		
 		if([preferedAuth0IDs objectForKey: user.uuid])
 			info.auth0_preferredID  = [preferedAuth0IDs objectForKey: user.uuid];
@@ -602,13 +610,17 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 		level++;
 		[self.navigationController pushViewController:remoteSRVC animated:YES];
 	}
+*/
 }
 #pragma mark -  UserSearchSocialIDViewControllerDelegate
 
-- (void) userSearchSocialIDViewController:(UserSearchSocialIDViewController_IOS *)sender
-								 didSelectAuth0ID:(NSString*)selectedAuth0ID
-										  forUserID:(NSString*)userID
+- (void)userSearchSocialIDViewController:(UserSearchSocialIDViewController_IOS *)sender
+						 didSelectAuth0ID:(NSString*)selectedAuth0ID
+			 forUserID:(NSString*)userID
 {
+	NSAssert(NO, @"Not implemented"); // finish refactoring
+	
+/*
 	__weak typeof(self) weakSelf = self;
 	
 	[owner.databaseManager.rwDatabaseConnection
@@ -630,7 +642,7 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 		 [strongSelf->owner.internalPreferences setPreferedAuth0ID:selectedAuth0ID userID:userID];
 		 //        [strongSelf->_tblUsers reloadData];
 	 }];
-	
+*/
 }
 
 #pragma mark -  UserSearchViewControllerDelegate

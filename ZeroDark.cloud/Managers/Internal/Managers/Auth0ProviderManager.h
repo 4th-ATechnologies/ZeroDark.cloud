@@ -58,11 +58,6 @@ typedef NS_ENUM(NSInteger, Auth0ProviderType) {
 
 -(NSUInteger) numberOfMatchingProviders:(NSDictionary*)profile provider:(NSString*)provider;
 
-+(NSString*)correctPictureForAuth0ID:(NSString*)auth0ID
-						 profileData:(NSDictionary*)profileData
-							  region:(AWSRegion)region
-							  bucket:(NSString *)bucket;
-
 + (NSURL *)avatarUrlForUserForAuth0ID:(NSString *)auth0ID
 										 region:(AWSRegion)region
 										 bucket:(NSString *)bucket;

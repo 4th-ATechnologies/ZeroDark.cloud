@@ -1472,9 +1472,11 @@ API_AVAILABLE(ios(10.0)){
 	_tagViewHeightConstraint.constant = _tagView.contentSize.height;
 }
 
--(void) refreshViewWithCompletion:(dispatch_block_t __nullable)completionBlock;
-
+- (void)refreshViewWithCompletion:(dispatch_block_t)completionBlock
 {
+	NSAssert(NO, @"Not implemented"); // finish refactoring
+	
+/*
 	__weak typeof(self) weakSelf = self;
 	
 	ZDCLocalUser* localUser = self.backupSocialVC.keyBackupVC.user;
@@ -1521,8 +1523,8 @@ API_AVAILABLE(ios(10.0)){
 	NSString* displayName = localUser.displayName;
 	_lblDisplayName.text = displayName;
 	
-	NSArray* comps = [localUser.auth0_preferredID componentsSeparatedByString:@"|"];
-	NSString* provider = comps.firstObject;
+//	NSArray* comps = [localUser.auth0_preferredID componentsSeparatedByString:@"|"];
+//	NSString* provider = comps.firstObject;
 	
 	Auth0ProviderManager	 * providerManager= self.backupSocialVC.keyBackupVC.owner.auth0ProviderManager;
 	OSImage* providerImage = [[providerManager providerIcon:Auth0ProviderIconType_Signin
@@ -1572,6 +1574,7 @@ API_AVAILABLE(ios(10.0)){
 	                  withOptions: nil
 						 preFetchBlock: preFetchBlock
 						postFetchBlock: postFetchBlock];
+*/
 }
 
 -(void)createShareDocumentWithCompletionBlock:(void (^)(NSURL *_Nullable url,

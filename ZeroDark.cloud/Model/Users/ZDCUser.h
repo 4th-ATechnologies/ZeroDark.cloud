@@ -11,6 +11,8 @@
 
 #import "AWSRegions.h"
 #import "ZDCConstants.h"
+#import "ZDCUserProfile.h"
+#import "ZDCUserIdentity.h"
 
 #import <YapDatabase/YapDatabaseRelationship.h>
 #import <ZDCSyncableObjC/ZDCObject.h>
@@ -26,9 +28,6 @@ NS_ASSUME_NONNULL_BEGIN
  * @note Anonymous users can be enabled via the ZeroDark.cloud dashboard.
  */
 extern NSString *const kZDCAnonymousUserID;
-
-extern NSString *const kZDCUser_metadataKey;
-extern NSString *const kZDCUser_metadata_preferredAuth0ID;
 
 /**
  * Represents a user in the system.
@@ -77,7 +76,9 @@ extern NSString *const kZDCUser_metadata_preferredAuth0ID;
  */
 @property (nonatomic, copy, readwrite, nullable) NSString *blockchainTransaction;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark AWS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Every user account is tied to a specific region where their data is stored.
@@ -85,15 +86,17 @@ extern NSString *const kZDCUser_metadata_preferredAuth0ID;
  * @note Users are allowed to reside in different regions.
  *       There are no problems communicating between users in different regions.
  */
-@property (nonatomic, assign, readwrite) AWSRegion aws_region;
+@property (nonatomic, assign, readonly) AWSRegion aws_region;
 
 /**
  * The name of a user's AWS S3 bucket.
  * This has the form: "com.4th-a.user.{userID}-{a few chars of randomness}"
  */
-@property (nonatomic, copy, readwrite, nullable) NSString *aws_bucket;
+@property (nonatomic, copy, readonly, nullable) NSString *aws_bucket;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Status
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * If the user's account gets deleted, this value gets set to YES.
@@ -105,25 +108,50 @@ extern NSString *const kZDCUser_metadata_preferredAuth0ID;
 @property (nonatomic, assign, readwrite) BOOL accountDeleted;
 
 /**
- * A marker used to refresh the user's information from the server periodically.
+ * A marker used to refresh the user's information periodically.
  */
-@property (nonatomic, strong, readwrite) NSDate *lastUpdated;
-
-#pragma mark Auth0
+@property (nonatomic, strong, readwrite) NSDate *lastRefresh_profile;
 
 /**
- * Contains information about the social identities linked to the user's account.
-**/
-@property (nonatomic, copy, readwrite) NSDictionary * auth0_profiles;
-@property (nonatomic, copy, readwrite, nullable) NSString * auth0_preferredID;
-@property (nonatomic, copy, readwrite, nullable) NSDate   * auth0_lastUpdated;
+* A marker used to refresh the user's information periodically.
+*/
+@property (nonatomic, strong, readwrite) NSDate *lastRefresh_blockchain;
 
-@property (nonatomic, readonly) NSDictionary * preferredProfile;
-@property (nonatomic, readonly) NSString     * displayName;
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Profile
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (nullable NSString *)displayNameForAuth0ID:(nullable NSString *)auth0ID;
+/**
+ * Contains the list of social identities that the user has linked to their account.
+ */
+@property (nonatomic, copy, readwrite) NSArray<ZDCUserIdentity*> *identities;
 
+/**
+ * If a user has multiple identities linked to their account, this property specifies their preferred identity.
+ * The preferred identity is generally used to display information about the user wihtin the UI.
+ */
+@property (nonatomic, copy, readwrite, nullable) NSString * preferredIdentityID;
+
+/**
+ * Extracts an identity for the user from their list of linked identities.
+ * The preferredIdentity is used, if configured.
+ * Otherwise, an identity is selected from the list of identities.
+ */
+@property (nonatomic, readonly, nullable) ZDCUserIdentity * displayIdentity;
+
+/**
+ * Extracts a name for the user from their list of linked identities.
+ */
+@property (nonatomic, readonly) NSString *displayName;
+
+/**
+ * Returns the corresponding identity (from the identities array) if it exists.
+ */
+- (nullable ZDCUserIdentity *)identityWithID:(NSString *)identityID;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Convenience properties
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /** Shorthand way to check if this is an instance of ZDCLocalUser. */
 @property (nonatomic, readonly) BOOL isLocal;
@@ -134,14 +162,18 @@ extern NSString *const kZDCUser_metadata_preferredAuth0ID;
 /** Shorthand way to check if there's a valid aws_region & aws_bucket property.  */
 @property (nonatomic, readonly) BOOL hasRegionAndBucket;
 
-/// Alternative copy methods
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Copy
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Used when migrating between ZDCUser and ZDCLocalUser.
  */
 - (void)copyTo:(ZDCUser *)copy;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Class Utilities
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Returns YES if the given string is:

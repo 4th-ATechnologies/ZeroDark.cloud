@@ -8,33 +8,32 @@
  **/
 
 #import "AccountSetup_Base.h"
-#import "ZeroDarkCloudPrivate.h"
+
 #import "AWSCredentialsManager.h"
-#import "A0UserIdentity.h"
+#import "Auth0Utilities.h"
+#import "ZDCLocalUser.h"
 #import "ZDCLocalUserAuth.h"
 #import "ZDCLocalUserPrivate.h"
-#import "Auth0Utilities.h"
 #import "ZDCLocalUserManagerPrivate.h"
-
-#import "ZDCLocalUser.h"
-
-#import "NSDate+ZeroDark.h"
-
 #import "ZDCLogging.h"
+#import "ZDCUserPrivate.h"
+#import "ZeroDarkCloudPrivate.h"
+
+// Categories
+#import "NSDate+ZeroDark.h"
 
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
 #if DEBUG
-static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
-
-#define MUST_IMPLEMENT  \
-@throw [NSException exceptionWithName:NSInternalInconsistencyException \
-reason:[NSString stringWithFormat:@"You must override %@ in a subclass", \
-NSStringFromSelector(_cmd)]  userInfo:nil];
+#define MUST_IMPLEMENT_IN_SUBCLASS                                                                                    \
+ @throw [NSException exceptionWithName: NSInternalInconsistencyException                                  \
+                                reason: [NSString stringWithFormat:@"You must override %@ in a subclass", \
+                                          NSStringFromSelector(_cmd)] userInfo:nil];
 
 
 #if TARGET_OS_IPHONE
@@ -155,19 +154,19 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 			message:(NSString* __nullable)message
  completionBlock:(dispatch_block_t __nullable)completionBlock
 {
-	MUST_IMPLEMENT
+	MUST_IMPLEMENT_IN_SUBCLASS
 	
 }
 
 -(void) cancelWait
 {
-	MUST_IMPLEMENT
+	MUST_IMPLEMENT_IN_SUBCLASS
 	
 }
 
 -(void) popFromCurrentView
 {
-	MUST_IMPLEMENT
+	MUST_IMPLEMENT_IN_SUBCLASS
 	
 }
 
@@ -175,7 +174,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 			 message:(NSString* __nullable)message
   completionBlock:(dispatch_block_t __nullable)completionBlock
 {
-	MUST_IMPLEMENT
+	MUST_IMPLEMENT_IN_SUBCLASS
 	
 }
 
@@ -239,7 +238,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 		[localUserManager enumerateLocalUsersWithTransaction: transaction
 		                                          usingBlock:^(ZDCLocalUser *localUser, BOOL *stop)
 		{
-			if (localUser.auth0_profiles[auth0ID] != nil)
+			if ([localUser identityWithID:auth0ID] != nil)
 			{
 				result = localUser;
 				*stop = YES;
@@ -279,19 +278,19 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 			
 			// Merge values from _user
 			
-			existingUser.aws_bucket        = _user.aws_bucket;
-			existingUser.aws_region        = _user.aws_region;
-			existingUser.activationDate    = _user.activationDate;
-			existingUser.syncedSalt        = _user.syncedSalt;
-			existingUser.aws_stage         = _user.aws_stage;
-			existingUser.isPayingCustomer  = _user.isPayingCustomer;
-			existingUser.auth0_profiles    = _user.auth0_profiles;
-			existingUser.auth0_primary     = _user.auth0_primary;
-			existingUser.auth0_lastUpdated = _user.auth0_lastUpdated;
+			existingUser.aws_bucket          = _user.aws_bucket;
+			existingUser.aws_region          = _user.aws_region;
+			existingUser.activationDate      = _user.activationDate;
+			existingUser.syncedSalt          = _user.syncedSalt;
+			existingUser.aws_stage           = _user.aws_stage;
+			existingUser.isPayingCustomer    = _user.isPayingCustomer;
+			existingUser.lastRefresh_profile = _user.lastRefresh_profile;
+			existingUser.identities          = _user.identities;
 			
 			// copy the preferred if it isnt set yet
-			if(!existingUser.auth0_preferredID && _user.auth0_preferredID)
-				existingUser.auth0_preferredID = _user.auth0_preferredID;
+			if (!existingUser.preferredIdentityID && _user.preferredIdentityID) {
+				existingUser.preferredIdentityID = _user.preferredIdentityID;
+			}
 		}
 		else
 		{
@@ -393,8 +392,12 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	}];
 }
 
-- (ZDCLocalUser *)createLocalUserFromProfile:(A0UserProfile *)profile
+- (ZDCLocalUser *)createLocalUserFromProfile:(ZDCUserProfile *)profile
 {
+	NSAssert(NO, @"Not implemented"); // finish refactoring
+	return nil;
+	
+/*
 	NSDictionary *app_metadata = profile.extraInfo[@"app_metadata"];
 	
 	NSString *aws_id = app_metadata[@"aws_id"];
@@ -415,20 +418,19 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	
 	user.aws_bucket = bucket;
 	user.aws_region = [AWSRegions regionForName:regionName];
-	user.auth0_lastUpdated = auth0_updated_at;
-	//	user.auth0_lastUpdated = [NSDate date];
+	user.lastRefresh_profile = [NSDate date];
 	
 	NSMutableDictionary* identities = [NSMutableDictionary dictionary];
 	
 	for (id item in profile.identities)
 	{
 		// Sanity check
-		if (![item isKindOfClass:[A0UserIdentity class]]) {
+		if (![item isKindOfClass:[ZDCUserIdentity class]]) {
 			continue;
 		}
 		
-		A0UserIdentity *ident = (A0UserIdentity *)item;
-		NSString* auth0ID = [NSString stringWithFormat:@"%@|%@", ident.provider, ident.userId];
+		ZDCUserIdentity *ident = (ZDCUserIdentity *)item;
+		NSString *auth0ID = ident.identityID;
 		
 		NSMutableDictionary* entry = [NSMutableDictionary dictionary];
 		NSString *displayName = nil;
@@ -475,18 +477,18 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 			}
 			
 			NSString *picture =
-			[Auth0ProviderManager correctPictureForAuth0ID: auth0ID
-														  profileData: ident.profileData
-																 region: user.aws_region
-																 bucket: user.aws_bucket];
+			  [Auth0Utilities correctPictureForAuth0ID: auth0ID
+			                               profileData: ident.profileData
+			                                    region: user.aws_region
+			                                    bucket: user.aws_bucket];
 			
 			if (picture) {
 				entry[@"picture"] = picture;
 			}
 			
-			identities[ident.identityId] = [entry copy];
+			identities[ident.identityID] = [entry copy];
 		}
-		else if ([ident.identityId isEqualToString:profile.userId])
+		else if ([ident.identityID isEqualToString:profile.userID])
 		{
 			entry[@"name"]             = profile.name;
 			entry[@"nickname"]         = profile.nickname;
@@ -519,7 +521,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 			if (displayName)
 				entry[@"displayName"]    = displayName;
 			
-			identities[ident.identityId] = [entry copy];
+			identities[ident.identityID] = [entry copy];
 		}
 		else
 		{
@@ -528,12 +530,13 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	}
 	
 	user.auth0_profiles = identities;
-	user.auth0_primary = profile.userId;
+	user.auth0_primary = profile.userID;
 	
 	return user;
+*/
 }
 
-- (nullable NSString *)closestMatchingAuth0IDFromProfile:(A0UserProfile *)profile
+- (nullable NSString *)closestMatchingAuth0IDFromProfile:(ZDCUserProfile *)profile
                                                 provider:(NSString *)provider
                                                 username:(nullable NSString *)username
 {
@@ -542,9 +545,9 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	// walk the list of identities and find closest match
 	for (id item in profile.identities)
 	{
-		if([item isKindOfClass: [A0UserIdentity class]])
+		if ([item isKindOfClass:[ZDCUserIdentity class]])
 		{
-			A0UserIdentity* ident = item;
+			ZDCUserIdentity *ident = item;
 			NSDictionary *profileData = ident.profileData;
 			
 			// ignore recovery token
@@ -552,7 +555,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 			
 			if([ident.provider isEqualToString:provider])
 			{
-				auth0ID = ident.identityId;
+				auth0ID = ident.identityID;
 				
 				// if storm4 account and username matches - stop looking, you found it.
 				if( [ident.connection isEqualToString:kAuth0DBConnection_UserAuth]
@@ -825,8 +828,8 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 				return;
 			}
 			
-			NSDictionary *app_metadata = result.profile.extraInfo[kZDCUser_metadataKey];
-			NSString *preferredAuth0ID = app_metadata[kZDCUser_metadata_preferredAuth0ID];
+			NSDictionary *app_metadata = result.profile.extraInfo[@"user_metadata"];
+			NSString *preferredAuth0ID = app_metadata[@"preferredAuth0ID"];
 			
 			if (!preferredAuth0ID)
 			{
@@ -879,7 +882,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 // MARK: social account login
 // entrypoint for 
 - (void)socialAccountLoginWithAuth:(ZDCLocalUserAuth *)localUserAuth
-                           profile:(A0UserProfile *)profile
+                           profile:(ZDCUserProfile *)profile
                   preferredAuth0ID:(NSString *)preferredAuth0ID
                    completionBlock:(void (^)(AccountState accountState, NSError * error))completionBlock
 {
@@ -1182,7 +1185,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 }
 
 - (void)startUserCreationWithAuth:(ZDCLocalUserAuth *)localUserAuth
-                          profile:(A0UserProfile *)profile
+                          profile:(ZDCUserProfile *)profile
                  preferredAuth0ID:(NSString *)preferredAuth0ID
                   completionBlock:(void (^)(AccountState accountState, NSError *error))completionBlock
 {
@@ -1212,7 +1215,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	BOOL wasSetup = profile.isUserBucketSetup;
 	
 	// check if the userID that matches an existing account
-	ZDCLocalUser* existingAccount = [self localUserForAuth0ID: profile.userId];
+	ZDCLocalUser* existingAccount = [self localUserForAuth0ID: profile.userID];
 	
 	// check if this is reauthorize
 	if(existingAccount
@@ -1239,7 +1242,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	if (preferredAuth0ID)
 	{
 		user = [user copy];
-		user.auth0_preferredID = preferredAuth0ID;
+		user.preferredIdentityID = preferredAuth0ID;
 	}
 	
 	[self saveLocalUserAndAuthWithCompletion:^{
@@ -1428,78 +1431,78 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 
 -(void)pushCreateAccount
 {
-	MUST_IMPLEMENT
+	MUST_IMPLEMENT_IN_SUBCLASS
 }
 
 -(void)pushSignInToAccount
 {
-	MUST_IMPLEMENT
+	MUST_IMPLEMENT_IN_SUBCLASS
 }
  
 - (void)pushIntro
 {
-	MUST_IMPLEMENT
+	MUST_IMPLEMENT_IN_SUBCLASS
 }
 
 - (void)pushResumeActivationForUserID:(NSString*)userID
 {
-	MUST_IMPLEMENT
+	MUST_IMPLEMENT_IN_SUBCLASS
 }
 
 - (void)pushIdentity
 {
-	MUST_IMPLEMENT
+	MUST_IMPLEMENT_IN_SUBCLASS
 }
 
 - (void)pushDataBaseAuthenticate
 {
-	MUST_IMPLEMENT
+	MUST_IMPLEMENT_IN_SUBCLASS
 }
 
 - (void)pushSocialAuthenticate
 {
-	MUST_IMPLEMENT
+	MUST_IMPLEMENT_IN_SUBCLASS
 }
 
 - (void)pushDataBaseAccountCreate
 {
-	MUST_IMPLEMENT
+	MUST_IMPLEMENT_IN_SUBCLASS
 }
 
 - (void)pushAccountReady
 {
-	MUST_IMPLEMENT
+	MUST_IMPLEMENT_IN_SUBCLASS
 }
 
 - (void)pushScanClodeCode
 {
-	MUST_IMPLEMENT
+	MUST_IMPLEMENT_IN_SUBCLASS
 }
 
 - (void)pushUnlockCloneCode:(NSString*)cloneString
 {
-	MUST_IMPLEMENT
+	MUST_IMPLEMENT_IN_SUBCLASS
 }
 
 - (void)pushRegionSelection
 {
-	MUST_IMPLEMENT
+	MUST_IMPLEMENT_IN_SUBCLASS
 }
 
 
 - (void)pushReauthenticateWithUserID:(NSString* __nonnull)userID
 {
-	MUST_IMPLEMENT
+	MUST_IMPLEMENT_IN_SUBCLASS
 	
 }
 
 
 #pragma mark - token management
 
-- (void)linkProfile:(A0UserProfile *)profile
-		toLocalUserID:(NSString *)localUserID
-	 completionQueue:(nullable dispatch_queue_t)completionQueue
-	 completionBlock:(nullable void (^)(NSError *error))completionBlock
+- (void)linkProfile:(ZDCUserProfile *)profile
+      toLocalUserID:(NSString *)localUserID
+    completionQueue:(nullable dispatch_queue_t)completionQueue
+    completionBlock:(nullable void (^)(NSError *error))completionBlock
 {
 	ZDCLogAutoTrace();
 	
@@ -1540,7 +1543,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 	
 	user = [self localUserForUserID:localUserID];
 	
-	[zdc.restManager linkAuth0ID: profile.userId
+	[zdc.restManager linkAuth0ID: profile.userID
 	                     forUser: user
 	             completionQueue: nil
 	             completionBlock:^(NSURLResponse *urlResponse, id linkResoponse, NSError *error)
@@ -1649,7 +1652,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 		 
 		 /* Do we own that profile */
 		 
-		 if(![strongSelf->user.auth0_profiles.allKeys containsObject:auth0ID])
+		 if(![strongSelf->user identityWithID:auth0ID])
 		 {
 			 NSString *failText = NSLocalizedString(
 																 @"The identity you selected was not linked.",
@@ -1718,6 +1721,9 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 {
 	ZDCLogAutoTrace();
 	
+	NSAssert(NO, @"Not implemented"); // finish refactoring
+	
+/*
 	void (^InvokeCompletionBlock)(NSError *) = ^(NSError * error){
 		
 		if (completionBlock)
@@ -1850,6 +1856,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 		//		[S4ThumbnailManager unCacheAvatarForUserID:updatedUser.uuid];
 		InvokeCompletionBlock(nil);
 	}];
+*/
 }
 
 @end

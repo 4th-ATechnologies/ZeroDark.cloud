@@ -24,10 +24,12 @@ NS_ASSUME_NONNULL_BEGIN
                           error:(NSError *)error
               downloadedFileURL:(NSURL *)downloadedFileURL;
 
+/**
+ * Note: `options.identityID` must be non-nil
+ */
 - (ZDCDownloadTicket *)downloadUserAvatar:(NSString *)userID
-                                  auth0ID:(NSString *)auth0ID
                                   fromURL:(NSURL *)url
-                                   options:(nullable ZDCDownloadOptions *)options
+                                  options:(ZDCDownloadOptions *)options
                           completionQueue:(nullable dispatch_queue_t)completionQueue
                           completionBlock:(UserAvatarDownloadCompletionBlock)completionBlock;
 

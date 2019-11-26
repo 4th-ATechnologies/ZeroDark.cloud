@@ -367,6 +367,9 @@ typedef enum {
 
 - (void)refreshView
 {
+	NSAssert(NO, @"Not implemented"); // finish refactoring
+	
+/*
 	ZDCLogAutoTrace();
 	
 	NSString *const localUserID = accountSetupVC.user.uuid;
@@ -393,17 +396,17 @@ typedef enum {
 	_lblCloneWordsDisplayName.text = displayName;
 	_lblCloneWordsDisplayName.hidden = NO;
 	
-	NSString *auth0_preferredID = localUser.auth0_preferredID;
-	NSDictionary *auth0_preferredProfile = localUser.auth0_profiles[auth0_preferredID];
+	NSString *auth0_preferredID = localUser.preferredIdentityID;
+	NSDictionary *auth0_preferredProfile = localUser.preferredIdentity;
 	
 	NSArray *comps = [auth0_preferredID componentsSeparatedByString:@"|"];
 	NSString *provider = comps.firstObject;
 	
 	NSString *pictureStr =
-	  [Auth0ProviderManager correctPictureForAuth0ID: auth0_preferredID
-	                                     profileData: auth0_preferredProfile
-	                                          region: localUser.aws_region
-	                                          bucket: localUser.aws_bucket];
+	  [Auth0Utilities correctPictureForAuth0ID: auth0_preferredID
+	                               profileData: auth0_preferredProfile
+	                                    region: localUser.aws_region
+	                                    bucket: localUser.aws_bucket];
 	
 	NSURL *pictureURL = pictureStr ? [NSURL URLWithString:pictureStr] : nil;
 	
@@ -489,6 +492,7 @@ typedef enum {
 		_imgCloneCodeAvatar.image = defaultUserImage;
 		_imgCloneWordsAvatar.image = defaultUserImage;
 	}
+*/
 }
 
 

@@ -68,6 +68,9 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 							completion:(void (^)(NSError *_Nullable error ))completionBlock
 
 {
+	NSAssert(NO, @"Not implemented"); // finish refactoring
+	
+/*
 	__weak typeof(self) weakSelf = self;
 	
 	Auth0ProviderManager	 * providerManager= self.keyBackupVC.owner.auth0ProviderManager;
@@ -149,6 +152,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	                  withOptions: nil
 	                preFetchBlock: preFetchBlock
 	               postFetchBlock: postFetchBlock];
+*/
 }
 
 -(void)createBackupDocumentWithQRCodeString:(NSString * _Nullable)qrCodeString

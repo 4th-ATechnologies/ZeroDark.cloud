@@ -14,7 +14,7 @@
 #import "ZDCDateFormatterCache.h"
 #import "ZDCImageManagerPrivate.h"
 #import "ZDCLogging.h"
-#import "ZDCRemoteUserManagerPrivate.h"
+#import "ZDCUserManagerPrivate.h"
 
 #import "TCCopyableLabel.h"
 
@@ -243,21 +243,21 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	__block ZDCUser* remoteUser = nil;
 	__block ZDCUser* localUser = nil;
 	[databaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
 		localUser = [transaction objectForKey:_localUserID inCollection:kZDCCollection_Users];
 		remoteUser = [transaction objectForKey:_remoteUserID inCollection:kZDCCollection_Users];
 		
-		if (! _preferedAuth0ID || ![remoteUser.auth0_profiles.allKeys containsObject:_preferedAuth0ID])
+		if (!_preferedAuth0ID || ![remoteUser identityWithID:_preferedAuth0ID])
 		{
-			_preferedAuth0ID = remoteUser.auth0_preferredID;
+			_preferedAuth0ID = remoteUser.preferredIdentityID;
 		}
 		
-#pragma clang diagnostic pop
+	#pragma clang diagnostic pop
 	}];
 	
-	NSString* displayName = [remoteUser displayNameForAuth0ID:_preferedAuth0ID];
+	NSString *displayName = [[remoteUser identityWithID:_preferedAuth0ID] displayName];
 	if (!displayName) {
 		displayName = remoteUser.displayName;
 	}
@@ -419,14 +419,13 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	_cnstPubKeyServerBottom.constant = 20;
 	[_actPubKeyServer startAnimating];
 	
-	[owner.remoteUserManager fetchPublicKeyForRemoteUserID:_remoteUserID
-															 requesterID:_localUserID
-														completionQueue:nil
-														completionBlock:^(ZDCPublicKey * serverPubKey,
-																				NSError * _Nullable error)
-	 {
-		 __strong typeof(self) strongSelf = weakSelf;
-		 if (!strongSelf) return;
+	[owner.userManager fetchPublicKeyForRemoteUserID: _remoteUserID
+	                                     requesterID: _localUserID
+	                                 completionQueue: nil
+	                                 completionBlock:^(ZDCPublicKey *serverPubKey, NSError *error)
+	{
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
 		 
 		 [strongSelf->_actPubKeyServer stopAnimating];
 		 strongSelf->_actPubKeyServer.hidden = YES;
