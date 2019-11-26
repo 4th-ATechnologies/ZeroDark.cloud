@@ -8,19 +8,18 @@
 **/
 
 #import "SocialidentityManagementViewController_IOS.h"
-#import "ZeroDarkCloud.h"
-#import "ZeroDarkCloudPrivate.h"
-#import "ZDCConstantsPrivate.h"
-#import "ZDCLocalUserManagerPrivate.h"
-#import "ZDCImageManagerPrivate.h"
-
-#import "ZDCLogging.h"
-
-#import "SocialIDUITableViewCell.h"
 
 #import "Auth0ProviderManager.h"
 #import "Auth0Utilities.h"
 #import "IdentityProviderTableViewCell.h"
+#import "SocialIDUITableViewCell.h"
+#import "ZDCConstantsPrivate.h"
+#import "ZDCLocalUserManagerPrivate.h"
+#import "ZDCLocalUserPrivate.h"
+#import "ZDCImageManagerPrivate.h"
+#import "ZDCLogging.h"
+#import "ZeroDarkCloudPrivate.h"
+
 #import "SCLAlertView.h"
 #import "SCLAlertViewStyleKit.h"
 
@@ -42,15 +41,11 @@
 @interface SocialIdentityManagementVC_RowItem: NSObject
 
 @property (nonatomic, assign, readwrite) BOOL isRealCell;
-@property (nonatomic, assign, readwrite) BOOL isUserAuthProfile;
-@property (nonatomic, assign, readwrite) BOOL isPrimaryProfile;
-@property (nonatomic, assign, readwrite) BOOL isPreferredProfile;
+@property (nonatomic, assign, readwrite) BOOL isPrimaryIdentity;
+@property (nonatomic, assign, readwrite) BOOL isPreferredIdentity;
 
-@property (nonatomic, copy, readwrite) NSString *identityID;
-@property (nonatomic, copy, readwrite) NSString *provider;
+@property (nonatomic, strong, readwrite) ZDCUserIdentity *identity;
 @property (nonatomic, copy, readwrite) NSString *providerName;
-@property (nonatomic, copy, readwrite) NSString *connection;
-@property (nonatomic, copy, readwrite) NSString *displayName;
 
 @end
 
@@ -58,15 +53,11 @@
 @implementation SocialIdentityManagementVC_RowItem
 
 @synthesize isRealCell;
-@synthesize isUserAuthProfile;
-@synthesize isPrimaryProfile;
-@synthesize isPreferredProfile;
+@synthesize isPrimaryIdentity;
+@synthesize isPreferredIdentity;
 
-@synthesize identityID;
-@synthesize provider;
+@synthesize identity;
 @synthesize providerName;
-@synthesize connection;
-@synthesize displayName;
 
 @end
 
@@ -87,7 +78,7 @@
 	UIImage *_defaultUserImage_mustUseLazyGetter;
     
 	BOOL hasInternet;
-	BOOL isViewVisible;
+	BOOL viewDidLoad;
 	
 	SCLAlertView * warningAlert;
 }
@@ -98,7 +89,7 @@
 - (void)setLocalUserID:(NSString *)inLocalUserID
 {
 	localUserID = [inLocalUserID copy];
-	if (isViewVisible)
+	if (viewDidLoad)
 	{
 		[self refreshView];
 	}
@@ -110,8 +101,9 @@
 
 - (void)viewDidLoad
 {
+	ZDCLogAutoTrace();
 	[super viewDidLoad];
-
+	
 	zdc = accountSetupVC.zdc;
 	uiDatabaseConnection = zdc.databaseManager.uiDatabaseConnection;
 
@@ -128,21 +120,25 @@
 	
 	hasInternet = zdc.reachability.isReachable;
 
-	[[NSNotificationCenter defaultCenter] addObserver: self
-	                                         selector: @selector(reachabilityChanged:)
-	                                             name: AFNetworkingReachabilityDidChangeNotification
-	                                           object: nil /* notification doesn't assign object ! */];
+	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 	
-	[[NSNotificationCenter defaultCenter] addObserver: self
-	                                         selector: @selector(databaseConnectionDidUpdate:)
-	                                             name: UIDatabaseConnectionDidUpdateNotification
-	                                           object: nil];
+	[nc addObserver: self
+	       selector: @selector(reachabilityChanged:)
+	           name: AFNetworkingReachabilityDidChangeNotification
+	         object: nil /* notification doesn't assign object ! */];
+	
+	[nc addObserver: self
+	       selector: @selector(databaseConnectionDidUpdate:)
+	           name: UIDatabaseConnectionDidUpdateNotification
+	         object: nil];
 	
 	[self refreshView];
+	viewDidLoad = YES;
 }
 
 - (void)viewWillAppear:(BOOL)animated
 {
+	ZDCLogAutoTrace();
 	[super viewWillAppear:animated];
 	accountSetupVC.btnBack.hidden = YES;
   
@@ -170,17 +166,10 @@
 
 - (void)viewDidAppear:(BOOL)animated
 {
+	ZDCLogAutoTrace();
 	[super viewDidAppear:animated];
-	isViewVisible = YES;
 	
 	[self refreshProviders];
-}
-
-
-- (void)viewDidDisappear:(BOOL)animated
-{
-	[super viewDidDisappear:animated];
-	isViewVisible = NO;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -260,7 +249,7 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: Actions
+#pragma mark Actions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)handleNavigationBack:(UIButton *)backButton
@@ -275,7 +264,9 @@
 	[self addProviderforUserID:localUserID];
 }
 
-// MARK: Refresh
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Refresh
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)refreshProviders
 {
@@ -334,52 +325,29 @@
 		return;
 	}
 	
-	NSAssert(NO, @"Not implemented"); // finish refactoring
-	
-/*
-	Auth0ProviderManager *auth0ProviderManager = zdc.auth0ProviderManager;
-	
 	NSMutableArray<SocialIdentityManagementVC_RowItem *> *newRowItems = [NSMutableArray array];
-	NSDictionary *profiles = localUser.auth0_profiles;
 
-	for (NSString *auth0ID in profiles)
+	for (ZDCUserIdentity *identity in localUser.identities)
 	{
-		NSDictionary *profile = profiles[auth0ID];
-
-		if ([Auth0Utilities isRecoveryProfile:profile])
+		if (identity.isRecoveryAccount)
 		{
 			// Skip the recovery identity
 			continue;
 		}
 		
-		NSArray *comps = [auth0ID componentsSeparatedByString:@"|"];
-		NSString *provider = comps.firstObject;
-
-		NSDictionary *providerInfo = auth0ProviderManager.providersInfo[provider];
-		if (providerInfo == nil)
-		{
-			continue;
-		}
+		NSString *identityID = identity.identityID;
 		
-		NSString *providerName = providerInfo[kAuth0ProviderInfo_Key_DisplayName];
-		NSString *connection = profile[@"connection"];
-
-		BOOL isUserAuthProfile = [Auth0Utilities isUserAuthProfile:profile];
-		NSString *displayName = [localUser displayNameForAuth0ID:auth0ID];
-            
+		BOOL isPrimary = [localUser.auth0_primary isEqualToString:identityID];
+		BOOL isPreferred = [localUser.preferredIdentityID isEqualToString:identityID];
+		
 		SocialIdentityManagementVC_RowItem *rowItem = [[SocialIdentityManagementVC_RowItem alloc] init];
 		
 		rowItem.isRealCell = YES;
-		rowItem.isUserAuthProfile = isUserAuthProfile;
+		rowItem.isPrimaryIdentity = isPrimary;
+		rowItem.isPreferredIdentity = isPreferred;
 		
-		rowItem.auth0ID = auth0ID;
-		rowItem.provider = provider;
-		rowItem.providerName = providerName;
-		rowItem.connection = connection ?: @"";
-		rowItem.displayName = displayName;
-		
-		rowItem.isPrimaryProfile = [profile[@"isPrimaryProfile"] boolValue];
-		rowItem.isPreferredProfile = [auth0ID isEqualToString:localUser.auth0_preferredID];
+		rowItem.identity = identity;
+		rowItem.providerName = [zdc.auth0ProviderManager displayNameforProvider:identity.provider];
 		
 		[newRowItems addObject:rowItem];
 	}
@@ -413,21 +381,20 @@
 
 	rowItems = [newRowItems copy];
 	[self reloadTable];
-*/
 }
 
 - (void)reloadTable
 {
 	[_tblProviders reloadData];
-	[self scrollToPreferedProvider];
+	[self scrollToPreferredProvider];
 }
 
-- (void)scrollToPreferedProvider
+- (void)scrollToPreferredProvider
 {
 	for (NSUInteger row = 0; row < rowItems.count; row++)
 	{
 		SocialIdentityManagementVC_RowItem *rowItem = rowItems[row];
-		if (rowItem.isPreferredProfile)
+		if (rowItem.isPreferredIdentity)
 		{
 			NSIndexPath *indexPath = [NSIndexPath indexPathForRow:row inSection:0];
 			
@@ -484,35 +451,38 @@
 	
 	cell.delegate = (id <SocialIDUITableViewCellDelegate>)self;
 	
+	ZDCUserIdentity *identity = rowItem.identity;
+	
 	cell.uuid = localUserID;
-	cell.Auth0ID = rowItem.identityID;
+	cell.Auth0ID = identity.identityID;
 	
 	cell.lblUserName.hidden = NO;
 	cell.lblUserName.textColor = [UIColor blackColor];
-	cell.lblUserName.text = rowItem.displayName;
+	cell.lblUserName.text = identity.displayName;
 	
 	cell.lbLeftTag.textColor = self.view.tintColor;
-	if (rowItem.isPreferredProfile) {
+	if (rowItem.isPreferredIdentity) {
 		cell.lbLeftTag.text = @"✓";
 	}
-	else if (rowItem.isPrimaryProfile) {
+	else if (rowItem.isPrimaryIdentity) {
 		cell.lbLeftTag.text = @"⚬";
 	}
 	else {
 		cell.lbLeftTag.text = @"";
 	}
 	
-	if (rowItem.isUserAuthProfile) {
+	if ([identity.provider isEqualToString:A0StrategyNameAuth0]) {
 		[cell showRightButton:YES];
 	}
 	else {
 		[cell showRightButton:NO];
 	}
 	
+	NSString *provider = rowItem.identity.provider;
 	OSImage *providerImage =
-	  [[zdc.auth0ProviderManager providerIcon: Auth0ProviderIconType_Signin
-	                              forProvider: rowItem.provider]
-	                           scaledToHeight: [SocialIDUITableViewCell imgProviderHeight]];
+	  [[zdc.auth0ProviderManager iconForProvider: provider
+	                                        type: Auth0ProviderIconType_Signin]
+	                              scaledToHeight: [SocialIDUITableViewCell imgProviderHeight]];
 		
 	if (providerImage)
 	{
@@ -522,7 +492,7 @@
 	}
 	else
 	{
-		cell.lbProvider.text = rowItem.provider;
+		cell.lbProvider.text = rowItem.providerName;
 		cell.lbProvider.hidden = NO;
 		cell.imgProvider.hidden = YES;
 	}
@@ -550,14 +520,14 @@
 		if (image)
 		{
 			// Check that the cell hasn't been recycled (is still being used for this auth0ID)
-			if (cell.Auth0ID == rowItem.identityID) {
+			if (cell.Auth0ID == rowItem.identity.identityID) {
 				cell.imgAvatar.image =  image;
 			}
 		}
 	};
 	
 	ZDCFetchOptions *options = [[ZDCFetchOptions alloc] init];
-	options.identityID = rowItem.identityID;
+	options.identityID = rowItem.identity.identityID;
 	
 	[zdc.imageManager fetchUserAvatar: localUser
 	                      withOptions: options
@@ -698,12 +668,12 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 	// Don't allow selection of recovery.
 	// This shouldn't be in the list anyway, but just in case.
 	//
-	if ([rowItem.connection isEqualToString:kAuth0DBConnection_Recovery]) {
+	if (rowItem.identity.isRecoveryAccount) {
 		return;
 	}
 
 	NSString *_localUserID = [localUserID copy];
-	NSString *selectedAuth0ID = rowItem.identityID;
+	NSString *selectedIdentityID = rowItem.identity.identityID;
 	
 	YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
 	[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
@@ -712,7 +682,8 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 		if (updatedUser)
 		{
 			updatedUser = [updatedUser copy];
-			updatedUser.preferredIdentityID = selectedAuth0ID;
+			updatedUser.preferredIdentityID = selectedIdentityID;
+			updatedUser.needsUserMetadataUpload = YES;
 			
 			[transaction setObject:updatedUser forKey:updatedUser.uuid inCollection:kZDCCollection_Users];
 		}
@@ -740,12 +711,15 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 {
 	ZDCLogAutoTrace();
 	
+	NSString *provider = rowItem.identity.provider;
+	NSString *providerName = [zdc.auth0ProviderManager displayNameforProvider:provider];
+	
 	NSString *warningText = [NSString stringWithFormat:
 	  @"Are you sure you wish to unlink the social identity with %@?",
-	  rowItem.provider
+	  providerName
 	];
 
-	if (rowItem.isPrimaryProfile)
+	if (rowItem.isPrimaryIdentity)
 	{
 		// This is only the case if we don't have a recovery identity setup for the user.
 		// Which should only happen due to a bug.
@@ -802,12 +776,14 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 
 - (void)deleteProviderItem:(SocialIdentityManagementVC_RowItem *)rowItem
 {
+	NSString *identityID = rowItem.identity.identityID;
+	
 	NSUInteger index = rowItems.count;
 	for (NSUInteger i = 0; i < rowItems.count; i++)
 	{
 		SocialIdentityManagementVC_RowItem *currentRowItem = rowItems[i];
 		
-		if ([currentRowItem.identityID isEqualToString:rowItem.identityID])
+		if ([currentRowItem.identity.identityID isEqualToString:identityID])
 		{
 			index = i;
 			break;
@@ -839,7 +815,7 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 
 	__weak typeof(self) weakSelf = self;
 	
-	[self.accountSetupVC unlinkAuth0ID: rowItem.identityID
+	[self.accountSetupVC unlinkAuth0ID: identityID
 	                   fromLocalUserID: localUserID
 	                   completionQueue: dispatch_get_main_queue()
 	                   completionBlock:^(NSError *error)
@@ -865,7 +841,7 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 		}
 		else
 		{
-			if (rowItem.isPrimaryProfile)
+			if (rowItem.isPrimaryIdentity)
 			{
 				[strongSelf.navigationController popToRootViewControllerAnimated:YES];
 			}

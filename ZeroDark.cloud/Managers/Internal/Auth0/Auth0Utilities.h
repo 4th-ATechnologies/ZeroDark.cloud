@@ -38,16 +38,6 @@ NS_ASSUME_NONNULL_BEGIN
 + (nullable NSString *)create4thAEmailForUsername:(NSString *)username;
 
 /**
- * Returns YES if the profile represents a username/password (database) account.
- */
-+ (BOOL)isUserAuthProfile:(NSDictionary *)profile;
-
-/**
- * Returns YES if the identity is a username/password (database) identity.
- */
-+ (BOOL)isUserAuthIdentity:(ZDCUserIdentity *)identity;
-
-/**
  * Returns YES if email domain is "users.4th-a.com".
  *
  * This indicates the identity is a username/password (database) user identity.
@@ -57,8 +47,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Returns YES if email domain is "recovery.4th-a.com".
- *
- * @see `-isRecoveryProfile:`
  */
 + (BOOL)is4thARecoveryEmail:(NSString *)email;
 
@@ -81,14 +69,6 @@ NS_ASSUME_NONNULL_BEGIN
  * @see `-isRecoveryProfile:`
  */
 + (nullable NSString *)usernameFrom4thARecoveryEmail:(NSString *)email;
-
-/**
- * Handles weird providers (like wordpress)
- *
- * The term 'strategy' comes from the constants in Auth0's Lock framework.
- * E.g. `A0StrategyNameWordpress`
- */
-+ (nullable NSString *)correctUserNameForA0Strategy:(NSString *)strategy profile:(NSDictionary *)profile;
 
 /**
  * Returns the picture URL for the given auth0ID.

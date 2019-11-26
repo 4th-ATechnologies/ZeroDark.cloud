@@ -9,7 +9,6 @@
 
 #import "ZeroDarkCloudPrivate.h"
 
-#import "Auth0ProviderManagerPrivate.h"
 #import "ZDCAuditPrivate.h"
 #import "ZDCBlockchainManagerPrivate.h"
 #import "ZDCDatabaseKeyManagerPrivate.h"

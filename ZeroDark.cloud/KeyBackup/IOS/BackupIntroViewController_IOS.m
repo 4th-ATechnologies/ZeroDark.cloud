@@ -245,14 +245,16 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	
 	NSString* displayName = keyBackupVC.user.displayName;
 	_lblDisplayName.text = displayName;
-
 	
 	ZDCUserIdentity *displayIdentity = keyBackupVC.user.displayIdentity;
-	NSString *provider = displayIdentity.provider;
-
-	OSImage *providerImage = [[providerManager providerIcon:Auth0ProviderIconType_Signin forProvider:provider] scaledToHeight:_imgProvider.frame.size.height];
 	
-	if(providerImage)
+	NSString *provider = displayIdentity.provider;
+	OSImage *providerImage =
+	  [[providerManager iconForProvider: provider
+	                              type: Auth0ProviderIconType_Signin]
+	                    scaledToHeight: _imgProvider.frame.size.height];
+	
+	if (providerImage)
 	{
 		_imgProvider.hidden = NO;
 		_imgProvider.image = providerImage;
@@ -260,8 +262,10 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	}
 	else
 	{
+		NSString *providerName = [providerManager displayNameforProvider:provider];
+		
 		_imgProvider.hidden = YES;
-		_lblProvider.text = provider;
+		_lblProvider.text = providerName;
 		_lblProvider.hidden = NO;
 	}
 }

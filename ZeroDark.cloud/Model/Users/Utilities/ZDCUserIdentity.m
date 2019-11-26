@@ -164,6 +164,10 @@ static NSString *const k_profileData = @"profileData";
 				displayName = (NSString *)value;
 			}
 		}
+		else if ([_connection isEqualToString:kAuth0DBConnection_Recovery])
+		{
+			displayName = @"Recovery";
+		}
 		else
 		{
 			value = _profileData[@"name"];
@@ -182,9 +186,6 @@ static NSString *const k_profileData = @"profileData";
 			
 			if ([Auth0Utilities is4thAEmail:email]) {
 				displayName = [Auth0Utilities usernameFrom4thAEmail:email];
-			}
-			else if ([Auth0Utilities is4thARecoveryEmail:email]) {
-				displayName = @"Recovery";
 			}
 		}
 	}

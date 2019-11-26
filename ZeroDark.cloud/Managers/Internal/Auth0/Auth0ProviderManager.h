@@ -2,6 +2,7 @@
 
 #import "AWSRegions.h"
 #import "OSPlatform.h"
+#import "ZeroDarkCloud.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -18,9 +19,8 @@ extern NSString *const kAuth0ProviderInfo_Key_64x64Etag;
 
 
 typedef NS_ENUM(NSInteger, Auth0ProviderIconType) {
-    Auth0ProviderIconType_Unknown   = 0,
     Auth0ProviderIconType_64x64,
-    Auth0ProviderIconType_Signin,
+    Auth0ProviderIconType_Signin
  };
 
 typedef NS_ENUM(NSInteger, Auth0ProviderType) {
@@ -43,32 +43,33 @@ typedef NS_ENUM(NSInteger, Auth0ProviderType) {
 
 @interface Auth0ProviderManager : NSObject
 
-@property (nonatomic, copy, readonly) NSDictionary *providersInfo;
-@property (nonatomic, copy, readonly) NSArray      *ordererdProviderKeys;
-@property (nonatomic, readonly) BOOL  isUpdated;
+- (instancetype)initWithOwner:(ZeroDarkCloud *)owner;
+
+@property (nonatomic, readonly) NSDictionary *providersInfo;
+@property (nonatomic, readonly) NSArray      *ordererdProviderKeys;
+
+@property (nonatomic, readonly) BOOL isUpdated;
 
 #if !TARGET_EXTENSION
 - (void)updateProviderCache:(BOOL)forceUpdate;
 #endif
 
--(OSImage*) providerIcon:(Auth0ProviderIconType)type forProvider:(NSString*) provider;
+- (OSImage *)iconForProvider:(NSString *)provider type:(Auth0ProviderIconType)type;
 
-// convenience property
--(NSString*) displayNameforProvider:(NSString*) provider;
+/**
+ * Converts from provider key name ("google-oauth") to appropriate displayName ("Google").
+ *
+ * If the given provider is unknown, returns the given provider parameter.
+ */
+- (NSString *)displayNameforProvider:(NSString *)provider;
 
--(NSUInteger) numberOfMatchingProviders:(NSDictionary*)profile provider:(NSString*)provider;
+- (NSUInteger)numberOfMatchingProviders:(NSDictionary*)profile provider:(NSString*)provider;
 
-+ (NSURL *)avatarUrlForUserForAuth0ID:(NSString *)auth0ID
-										 region:(AWSRegion)region
-										 bucket:(NSString *)bucket;
-
--(void) fetchSupportedProvidersWithCompletion:(void (^)( NSArray  <NSString*> * _Nullable providerKeys,
-													   NSError *_Nullable error))completionBlock;
-
-/* version of fetchSupportedProvidersWithCompletion where the keys are sorted alpha to provider display name */
-
--(void) fetchSortedProvidersWithCompletion:(void (^)( NSArray  <NSString*> * _Nullable providerKeys,
-													 NSError *_Nullable error))completionBlock;
+/**
+ *
+ */
+- (void)fetchSupportedProviders:(void (^)(NSArray<NSString*> *_Nullable providerKeys,
+                                          NSError *_Nullable error))completionBlock;
 
 @end
 

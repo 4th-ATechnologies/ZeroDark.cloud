@@ -409,10 +409,11 @@ typedef enum {
 	                                 region: localUser.aws_region
 	                                 bucket: localUser.aws_bucket];
 	
+	NSString *provider = displayIdentity.provider;
 	OSImage *providerImage =
-	  [[zdc.auth0ProviderManager providerIcon: Auth0ProviderIconType_Signin
-	                              forProvider: displayIdentity.provider]
-	                           scaledToHeight: _imgCloneWordsProvider.frame.size.height];
+	  [[zdc.auth0ProviderManager iconForProvider: provider
+	                                        type: Auth0ProviderIconType_Signin]
+	                              scaledToHeight: _imgCloneWordsProvider.frame.size.height];
 	
 	if (providerImage)
 	{
@@ -426,12 +427,14 @@ typedef enum {
 	}
 	else
 	{
+		NSString *providerName = [zdc.auth0ProviderManager displayNameforProvider:provider];
+		
 		_imgCloneCodeProvider.hidden = YES;
-		_lblCloneWordsProvider.text = displayIdentity.provider;
+		_lblCloneWordsProvider.text = providerName;
 		_lblCloneWordsProvider.hidden = NO;
 		
 		_imgCloneCodeProvider.hidden = YES;
-		_lblCloneCodeProvider.text = displayIdentity.provider;
+		_lblCloneCodeProvider.text = providerName;
 		_lblCloneCodeProvider.hidden = NO;
 	}
 	

@@ -280,9 +280,9 @@ typedef NS_ENUM(NSInteger, TblRow) {
 	
 	ZDCUserIdentity *displayIdentity = localUser.displayIdentity;
 	OSImage *providerImage =
-	  [[zdc.auth0ProviderManager providerIcon: Auth0ProviderIconType_Signin
-	                              forProvider: displayIdentity.provider]
-	                           scaledToHeight: _imgProvider.frame.size.height];
+	  [[zdc.auth0ProviderManager iconForProvider: displayIdentity.provider
+	                                        type: Auth0ProviderIconType_Signin]
+	                              scaledToHeight: _imgProvider.frame.size.height];
 	
 	if (providerImage)
 	{

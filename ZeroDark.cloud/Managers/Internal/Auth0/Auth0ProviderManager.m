@@ -1,4 +1,4 @@
-#import "Auth0ProviderManagerPrivate.h"
+#import "Auth0ProviderManager.h"
 #import "ZeroDarkCloudPrivate.h"
 
 #import "Auth0Utilities.h"
@@ -140,28 +140,32 @@ static Auth0ProviderManager *sharedInstance = nil;
 #if TARGET_OS_IPHONE
 - (void)didReceiveMemoryWarning:(NSNotification *)notification
 {
-    dispatch_sync(cacheQueue, ^{
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-        [iconCache removeAllObjects];
-#pragma clang diagnostic pop
-      });
+	dispatch_sync(cacheQueue, ^{
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		 
+		[iconCache removeAllObjects];
+		 
+	#pragma clang diagnostic pop
+	});
 }
 #endif
 
-
 #pragma mark - accessors
 
--(BOOL)isUpdated
+- (BOOL)isUpdated
 {
 	__block BOOL hasKeys = NO;
 
 	dispatch_sync(cacheQueue, ^{
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
 		hasKeys = _supportedProviderKeys != nil;
-#pragma clang diagnostic pop
+		
+	#pragma clang diagnostic pop
 	});
+	
 	return hasKeys;
 }
 
@@ -195,18 +199,18 @@ static Auth0ProviderManager *sharedInstance = nil;
 
 
 
--(NSString*) keyPrefixForIconSignin:(NSString *)provider
+- (NSString *)keyPrefixForIconSignin:(NSString *)provider
 {
-    return [NSString stringWithFormat:@"signin:%@", provider];
+	return [NSString stringWithFormat:@"signin:%@", provider];
 }
 
--(NSString*) keyPrefixForIcon64x64:(NSString *)provider
+- (NSString *)keyPrefixForIcon64x64:(NSString *)provider
 {
-    return [NSString stringWithFormat:@"64x64:%@", provider];
+	return [NSString stringWithFormat:@"64x64:%@", provider];
 }
 
 
-- (OSImage *)providerIcon:(Auth0ProviderIconType)type forProvider:(NSString *)provider
+- (OSImage *)iconForProvider:(NSString *)provider type:(Auth0ProviderIconType)type
 {
 	__block OSImage *thumbnail = nil;
 
@@ -236,55 +240,53 @@ static Auth0ProviderManager *sharedInstance = nil;
 #pragma clang diagnostic pop
     });
 
-    if (thumbnail == nil)
-    {
-        __block NSDictionary* dict = nil;
-        dispatch_sync(cacheQueue, ^{
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+	if (thumbnail == nil)
+	{
+		__block NSDictionary* dict = nil;
+		dispatch_sync(cacheQueue, ^{
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+			
 			dict = _providersInfo[provider];
-#pragma clang diagnostic pop
-        });
+			
+		#pragma clang diagnostic pop
+		});
+		
+		NSURL *url = dict ? dict[urlKey] : nil;
+		NSData *data = url ? [NSData dataWithContentsOfURL:url] : nil;
+		
+		thumbnail = data ? [OSImage imageWithData:data] : nil;
+		if (thumbnail)
+		{
+			dispatch_sync(cacheQueue, ^{
+			#pragma clang diagnostic push
+			#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+				
+				[iconCache setObject:thumbnail forKey:cacheKey];
+				
+			#pragma clang diagnostic pop
+			});
+		}
+	}
 
-        if(dict)
-        {
-            NSURL* url = dict[urlKey];
-            if(url)
-            {
-                NSData* data = [NSData dataWithContentsOfURL:url];
-                if(data)
-                {
-                    thumbnail = [OSImage imageWithData:data];
-                    if(thumbnail)
-                    {
-                        dispatch_sync(cacheQueue, ^{
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-                            [iconCache setObject:thumbnail forKey:cacheKey];
-#pragma clang diagnostic pop
-                        });
-                    }
-                }
-            }
-        }
-    }
-
-    return  thumbnail;
-
+	return thumbnail;
 }
 
-// convenience property
--(NSString*) displayNameforProvider:(NSString*) provider
+- (NSString *)displayNameforProvider:(NSString *)provider
 {
-    NSString* name = nil;
+	NSString *displayName = nil;
 
-    NSDictionary* providerInfo = _providersInfo[provider];
-    if(providerInfo)
-    {
-        name =  providerInfo[kAuth0ProviderInfo_Key_DisplayName];
-    }
+	NSDictionary *providerInfo = _providersInfo[provider];
+	if (providerInfo)
+	{
+		displayName = providerInfo[kAuth0ProviderInfo_Key_DisplayName];
+	}
 
-    return name;
+	if (displayName.length > 0) {
+		return displayName;
+	} else {
+		return provider;
+	}
 }
 
 #pragma mark - unpack and load cache
@@ -333,45 +335,11 @@ done:
 }
 
 
+
 #pragma mark - create Provider dictionary
 
--(void) fetchSortedProvidersWithCompletion:(void (^)( NSArray  <NSString*> * _Nullable providerKeys,
-														NSError *_Nullable error))completionBlock
-{
-	[self fetchSupportedProvidersWithCompletion:^(NSArray<NSString *> * _Nullable providerKeys, NSError * _Nullable error) {
-
-		if(error)
-		{
-			completionBlock(NULL, error);
-		}
-		else
-		{
-			NSArray *_alphaSortedKeys =
-			[providerKeys sortedArrayUsingComparator:^NSComparisonResult(NSString *key1, NSString *key2) {
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-				NSDictionary* providerInfo1 = _providersInfo[key1];
-				NSDictionary* providerInfo2 = _providersInfo[key2];
-#pragma clang diagnostic pop
-
-				NSString* name1 = providerInfo1[kAuth0ProviderInfo_Key_DisplayName];
-				NSString* name2 = providerInfo2[kAuth0ProviderInfo_Key_DisplayName];
-
-
-				return [name1 localizedCaseInsensitiveCompare:name2];
-			}];
-
-			completionBlock(_alphaSortedKeys, NULL);
-
-		}
-	}] ;
-
-}
-
-
--(void) fetchSupportedProvidersWithCompletion:(void (^)( NSArray  <NSString*> * _Nullable providerKeys,
-													   NSError *_Nullable error))completionBlock
+- (void)fetchSupportedProviders:(void (^)(NSArray<NSString*> *_Nullable providerKeys,
+                                          NSError *_Nullable error))completionBlock
 {
 
 	__block NSArray* supportedKeys =  nil;
@@ -926,41 +894,6 @@ done:
 	}];
 	
 	return count;
-}
-
-
-#pragma mark - correct some Auth0 anomolies
-
-+(NSURL*)avatarUrlForUserForAuth0ID:(NSString*)auth0ID
-							 region:(AWSRegion)region
-							 bucket:(NSString *)bucket
-{
- 	NSURL* result = nil;
-
-	NSAssert(bucket != nil, @"bucket must not be nil");
-	NSAssert(region != AWSRegion_Invalid, @"aws region must not be AWSRegion_Invalid");
-	NSAssert(auth0ID != nil, @"auth0ID must not be nil");
-
-	NSArray* comps = [auth0ID componentsSeparatedByString:@"|"];
-	if(comps.count == 2)
-	{
-		NSString* provider 	= comps[0];
-		NSString* auth0UserID  	= comps[1];
-
-		if([provider isEqualToString:A0StrategyNameAuth0])
-		{
-			NSString* avatarPath = [NSString stringWithFormat:@"avatar/%@", auth0UserID];
-
-			NSMutableURLRequest *request = [S3Request getObject:avatarPath
-													   inBucket:bucket
-														 region:region
-											   outUrlComponents:nil];
-			if(request && request.URL)
-				result = request.URL;
-		}
-	}
-
-	return result;
 }
 
 @end

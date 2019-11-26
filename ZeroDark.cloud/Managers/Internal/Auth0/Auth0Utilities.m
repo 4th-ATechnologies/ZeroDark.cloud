@@ -53,29 +53,6 @@
 /**
  * See header file for description.
  */
-+ (BOOL)isUserAuthIdentity:(ZDCUserIdentity *)identity
-{
-	BOOL result = [identity.connection isEqualToString:kAuth0DBConnection_UserAuth];
-	return result;
-}
-
-/**
- * See header file for description.
- */
-+ (BOOL)isUserAuthProfile:(NSDictionary *)profile
-{
-	NSString *connection = profile[@"connection"];
-	if ([connection isKindOfClass:[NSString class]])
-	{
-		return ([connection isEqualToString:kAuth0DBConnection_UserAuth]);
-	}
-	
-	return NO;
-}
-
-/**
- * See header file for description.
- */
 + (BOOL)is4thAEmail:(NSString *)email
 {
 	NSArray *components = [email componentsSeparatedByString:@"@"];
@@ -131,69 +108,6 @@
 	}
 	
 	return username;
-}
-
-/**
- * Handles weird providers (like wordpress)
- *
- * The term 'strategy' comes from the constants in Auth0's Lock framework.
- * E.g. `A0StrategyNameWordpress`
- */
-+ (NSString *)correctUserNameForA0Strategy:(NSString *)strategy profile:(NSDictionary *)profile
-{
-	NSString *result = nil;
-	NSString *name = profile[@"name"];
-
-	// process dictionary issues
-	if ([name isKindOfClass:[NSNull class]]) {
-		name = nil;
-	}
-
-	if ([strategy isEqualToString:A0StrategyNameWordpress])
-	{
-		// wordpress uses the term display_name
-		
-		NSString *display_name = profile[@"display_name"];
-		if ([display_name isKindOfClass:[NSNull class]]) {
-			display_name = nil;
-		}
-
-		if (!result && display_name.length) {
-			result = display_name;
-		}
-	}
-	else if ([strategy isEqualToString:A0StrategyNameEvernote])
-	{
-		// evernote has a username
-		
-		NSString *username = profile[@"username"];
-		if ([username isKindOfClass:[NSNull class]]) {
-			username = nil;
-		}
-		
-		if (!result && username.length) {
-			result = username;
-		}
-	}
-	else if ([strategy isEqualToString:kAuth0DBConnection_UserAuth])
-	{
-		// Auth0 database connections use the term "username"
-		
-		NSString *display_name = profile[@"username"];
-		if ([display_name isKindOfClass:[NSNull class]]) {
-			display_name = nil;
-		}
-
-		if (!result && display_name.length) {
-			result = display_name;
-		}
-	}
-	else
-	{
-		result = name;
-	}
-
-	return result;
 }
 
 /**
