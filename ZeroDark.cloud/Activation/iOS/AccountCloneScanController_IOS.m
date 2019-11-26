@@ -346,7 +346,23 @@ typedef enum {
 
 - (void)databaseConnectionDidUpdate:(NSNotification *)notification
 {
-	[self refreshView];
+	NSArray *notifications = [notification.userInfo objectForKey:kNotificationsKey];
+
+	BOOL hasUserChanges = NO;
+	
+	NSString *const localUserID = accountSetupVC.user.uuid;
+	if (localUserID)
+	{
+		hasUserChanges =
+		  [uiDatabaseConnection hasChangeForKey: localUserID
+		                           inCollection: kZDCCollection_Users
+		                        inNotifications: notifications];
+	}
+
+	if (hasUserChanges)
+	{
+		[self refreshView];
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

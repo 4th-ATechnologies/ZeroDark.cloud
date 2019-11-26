@@ -681,14 +681,10 @@
 				return;
 			}
 			
-			NSDictionary *app_metadata = result.profile.extraInfo[@"user_metadata"];
-			NSString *preferredAuth0ID = app_metadata[@"preferredAuth0ID"];
-			
 			if (strongSelf.identityMode == IdenititySelectionMode_NewAccount)
 			{
 				[strongSelf startUserCreationWithAuth: newAuth
 				                              profile: result.profile
-				                     preferredAuth0ID: preferredAuth0ID
 				                      completionBlock: completionBlock];
 			}
 			else if (strongSelf.identityMode == IdenititySelectionMode_ExistingAccount)
@@ -728,12 +724,10 @@
 // entrypoint for 
 - (void)socialAccountLoginWithAuth:(ZDCLocalUserAuth *)localUserAuth
                            profile:(ZDCUserProfile *)profile
-                  preferredAuth0ID:(NSString *)preferredAuth0ID
                    completionBlock:(void (^)(AccountState accountState, NSError * error))completionBlock
 {
 	[self startUserCreationWithAuth: localUserAuth
 	                        profile: profile
-	               preferredAuth0ID: preferredAuth0ID
 	                completionBlock: completionBlock];
 }
 
@@ -1031,7 +1025,6 @@
 
 - (void)startUserCreationWithAuth:(ZDCLocalUserAuth *)localUserAuth
                           profile:(ZDCUserProfile *)profile
-                 preferredAuth0ID:(NSString *)preferredAuth0ID
                   completionBlock:(void (^)(AccountState accountState, NSError *error))completionBlock
 {
 	
@@ -1083,12 +1076,6 @@
 	userProfile = profile;
 	auth        = localUserAuth;
 	user        = existingAccount ?existingAccount :[self createLocalUserFromProfile:profile];
-	
-	if (preferredAuth0ID)
-	{
-		user = [user copy];
-		user.preferredIdentityID = preferredAuth0ID;
-	}
 	
 	[self saveLocalUserAndAuthWithCompletion:^{
 		

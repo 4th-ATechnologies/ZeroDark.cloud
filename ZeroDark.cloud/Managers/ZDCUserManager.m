@@ -285,12 +285,9 @@
 				return;
 			}
 			
-			// TODO: Finish Refactoring
-			NSAssert(NO, @"Unfinished refactoring!");
-			
-		//	user.auth0_profiles = profiles;
-		//	user.auth0_preferredID = preferredAuth0ID;
-		//	user.auth0_lastUpdated = [NSDate date];
+			user.identities = profile.identities;
+			user.preferredIdentityID = profile.userMetadata_preferredIdentityID;
+			user.lastRefresh_profile = [NSDate date];
 			
 			fetchPubKey(user);
 		}];

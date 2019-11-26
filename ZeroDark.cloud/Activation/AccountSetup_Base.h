@@ -160,7 +160,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)socialAccountLoginWithAuth:(ZDCLocalUserAuth *)localUserAuth
                            profile:(ZDCUserProfile *)profile
-                  preferredAuth0ID:(NSString *)preferedAuth0ID
                    completionBlock:(void (^)(AccountState accountState, NSError *_Nullable error))completionBlock;
 
 // resume activation given any state

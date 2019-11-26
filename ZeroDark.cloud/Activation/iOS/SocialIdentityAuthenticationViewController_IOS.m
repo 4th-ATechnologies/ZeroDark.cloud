@@ -649,11 +649,8 @@
 {
 	__weak typeof(self) weakSelf = self;
 
-	NSString *preferredAuth0ID = profile.userMetadata_preferredIdentityID;
-
 	[accountSetupVC socialAccountLoginWithAuth: auth
 	                                   profile: profile
-	                          preferredAuth0ID: preferredAuth0ID
 	                           completionBlock:^(AccountState accountState, NSError * _Nonnull error)
 	{
 		__strong typeof(self) strongSelf = weakSelf;
