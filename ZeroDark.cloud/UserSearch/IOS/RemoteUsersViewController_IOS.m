@@ -118,8 +118,10 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	_tblUsers.estimatedSectionFooterHeight = 0;
 	//  _tblUsers.touchDelegate    =  (id <UITableViewTouchDelegate>) self;
 	
-	defaultUserImage = [imageManager.defaultUserAvatar imageWithMaxSize:[RemoteUserTableViewCell avatarSize]];
- 
+	defaultUserImage =
+	  [imageManager.defaultUserAvatar scaledToSize: [RemoteUserTableViewCell avatarSize]
+	                                   scalingMode: ScalingMode_AspectFill];
+	
 	providerManager = owner.auth0ProviderManager;
 	imageManager =  owner.imageManager;
 	databaseConnection = owner.databaseManager.uiDatabaseConnection;

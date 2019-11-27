@@ -92,7 +92,7 @@ typedef NS_ENUM(NSInteger, ScalingMode) {
  * - the height will not be less than size.height
  * - the width or height may be greater than the given size
  */
-- (OSImage *)zdc_scaledToSize:(CGSize)size scalingMode:(ScalingMode)mode;
+- (OSImage *)scaledToSize:(CGSize)size scalingMode:(ScalingMode)mode;
 
 /**
  * Scales the image UP or DOWN (proportionally) to fit within the given target size.

@@ -167,7 +167,7 @@
 /**
  * See header file for documentation.
  */
-- (OSImage *)zdc_scaledToSize:(CGSize)targetSize scalingMode:(ScalingMode)mode
+- (OSImage *)scaledToSize:(CGSize)targetSize scalingMode:(ScalingMode)mode
 {
 	CGSize selfSize = self.size;
 	
@@ -203,7 +203,7 @@
 	
 	float screenScale = [[UIScreen mainScreen] scale];
 	
-	UIGraphicsBeginImageContextWithOptions(targetRect.size, NO, screenScale);
+	UIGraphicsBeginImageContextWithOptions(targetSize, NO, screenScale);
 	{
 		[self drawInRect:targetRect];
 		newImage = UIGraphicsGetImageFromCurrentImageContext();

@@ -440,30 +440,30 @@ typedef enum {
 	
 	if (pictureURL)
 	{
-		__weak typeof(self) weakSelf = self;
-		
 		CGSize avatarSize = _imgCloneWordsAvatar.frame.size;
 		
 		UIImage* (^processingBlock)(UIImage *) = ^(UIImage *image){
 			
-			return [image imageWithMaxSize: avatarSize];
+			return [image scaledToSize:avatarSize scalingMode:ScalingMode_AspectFill];
 		};
 		void (^preFetchBlock)(UIImage *_Nullable, BOOL) = ^(UIImage *image, BOOL willFetch){
 			
-			__strong typeof(self) strongSelf = weakSelf;
-			if (!strongSelf) return;
+			// The preFetchBlock is invoked BEFORE the `fetchUserAvatar` method returns.
 			
-			image = image ?: strongSelf->defaultUserImage;
+			image = image ?: self->defaultUserImage;
 			
-			strongSelf->_imgCloneCodeAvatar.hidden = NO;
-			strongSelf->_imgCloneCodeAvatar.image = image;
+			self->_imgCloneCodeAvatar.hidden = NO;
+			self->_imgCloneCodeAvatar.image = image;
 			
-			strongSelf->_imgCloneWordsAvatar.hidden = NO;
-			strongSelf->_imgCloneWordsAvatar.image = image;
+			self->_imgCloneWordsAvatar.hidden = NO;
+			self->_imgCloneWordsAvatar.image = image;
 		};
+		
+		__weak typeof(self) weakSelf = self;
 		void (^postFetchBlock)(UIImage *_Nullable, NSError *_Nullable) = ^(UIImage *image, NSError *error){
 			
 			// The postFetchBlock is invoked LATER, possibly after downloading the avatar.
+			
 			__strong typeof(self) strongSelf = weakSelf;
 			if (!strongSelf) return;
 			

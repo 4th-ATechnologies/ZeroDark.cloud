@@ -156,11 +156,11 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 		let processing = {(image: UIImage) in
 			return image.scaled(to: size, scalingMode: .aspectFill)
 		}
-		let preFetch = {[weak self] (image: UIImage?, willFetch: Bool) -> Void in
+		let preFetch = {(image: UIImage?, willFetch: Bool) -> Void in
 			
 			// This closure is invoked BEFORE the fetchUserAvatar() function returns.
-			
-			self?.navTitleButton?.setImage(image ?? defaultImage(), for: .normal)
+			//
+			self.navTitleButton?.setImage(image ?? defaultImage(), for: .normal)
 		}
 		let postFetch = {[weak self] (image: UIImage?, error: Error?) -> Void in
 			
@@ -168,8 +168,10 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 			//
 			// The image may be cached on disk, in which case it's invoked shortly.
 			// Or the image may need to be downloaded, which takes longer.
-			
-			self?.navTitleButton?.setImage(image ?? defaultImage(), for: .normal)
+			//
+			if let image = image {
+				self?.navTitleButton?.setImage(image, for: .normal)
+			}
 		}
 		
 		imageManager.fetchUserAvatar( localUser,

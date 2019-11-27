@@ -155,7 +155,8 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	_imgAvatar.layer.cornerRadius = 50 / 2;
 	_imgAvatar.clipsToBounds = YES;
 
-	defaultUserImage = [imageManager.defaultUserAvatar imageWithMaxSize:_imgAvatar.frame.size];
+	defaultUserImage = [imageManager.defaultUserAvatar scaledToSize: _imgAvatar.frame.size
+																		 scalingMode: ScalingMode_AspectFill];
 		
 	okImage =  [UIImage imageNamed:@"roundedGreenCheck"
 								 inBundle:[ZeroDarkCloud frameworkBundle]

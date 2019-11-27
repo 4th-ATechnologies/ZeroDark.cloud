@@ -2,7 +2,7 @@
 import UIKit
 
 extension UIImage {
-
+/*
 	/// Represents a scaling mode
 	enum ScalingMode {
 		case aspectFill
@@ -59,7 +59,7 @@ extension UIImage {
 
 		return scaledImage!
 	}
-
+*/
 	func correctOrientation() -> UIImage {
 
 		if self.imageOrientation == .up {

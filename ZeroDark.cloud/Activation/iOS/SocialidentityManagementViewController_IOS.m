@@ -257,7 +257,8 @@
 	if (_defaultUserImage_mustUseLazyGetter == nil)
 	{
 		_defaultUserImage_mustUseLazyGetter =
-		  [zdc.imageManager.defaultUserAvatar imageWithMaxSize:[SocialIDUITableViewCell avatarSize]];
+		  [zdc.imageManager.defaultUserAvatar scaledToSize: [SocialIDUITableViewCell avatarSize]
+		                                       scalingMode: ScalingMode_AspectFill];
 	}
 	
 	return _defaultUserImage_mustUseLazyGetter;
@@ -514,7 +515,7 @@
 	
 	ZDCImageProcessingBlock processingBlock = ^OSImage* (OSImage *image) {
 		
-		return [image imageWithMaxSize:avatarSize];
+		return [image scaledToSize:avatarSize scalingMode:ScalingMode_AspectFill];
 	};
 	
 	void (^preFetch)(OSImage*, BOOL) = ^(OSImage *image, BOOL willFetch) {
