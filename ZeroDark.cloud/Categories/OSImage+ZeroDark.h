@@ -12,6 +12,28 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
+ * Rules for scaling an image.
+ */
+typedef NS_ENUM(NSInteger, ScalingMode) {
+	
+	/**
+	 * AspectFit:
+	 * - the width will not exceed size.width
+	 * - the height will not exceed size.height
+	 * - the width or height may be less than the given size
+	 */
+	ScalingMode_AspectFit,
+	
+	/**
+	 * AspectFill:
+	 * - the width will not be less than size.width
+	 * - the height will not be less than size.height
+	 * - the width or height may be greater than the given size
+	 */
+	ScalingMode_AspectFill
+};
+
+/**
  * OSImage is defined as either NSImage or UIImage, depending on which platform we're compiling for.
  */
 @interface OSImage (ZeroDark)
@@ -56,6 +78,21 @@ NS_ASSUME_NONNULL_BEGIN
  * @note The original image is not modified, but rather a new (scaled) image is returned.
  */
 - (OSImage *)scaledToHeight:(float)requestedHeight;
+
+/**
+ * Scales the image UP or DOWN (proportionally) to the given size, using the given scaling mode:
+ *
+ * AspectFit:
+ * - the width will not exceed size.width
+ * - the height will not exceed size.height
+ * - the width or height may be less than the given size
+ *
+ * AspectFill:
+ * - the width will not be less than size.width
+ * - the height will not be less than size.height
+ * - the width or height may be greater than the given size
+ */
+- (OSImage *)zdc_scaledToSize:(CGSize)size scalingMode:(ScalingMode)mode;
 
 /**
  * Scales the image UP or DOWN (proportionally) to fit within the given target size.

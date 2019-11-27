@@ -73,7 +73,6 @@ typedef NS_ENUM(NSInteger, TblRow) {
 	IBOutlet __weak UIImageView* 		_imgProvider;
 	IBOutlet __weak UILabel*			_lblProvider;
 	IBOutlet __weak UITableView* 		_tblButtons;
-	IBOutlet __weak NSLayoutConstraint* 		_cnstTblButtonsHeight;
 
 	YapDatabaseConnection *uiDatabaseConnection;
 	ZDCLocalUser *localUser;
@@ -114,7 +113,8 @@ typedef NS_ENUM(NSInteger, TblRow) {
 {
 	[super viewDidLoad];
 	
-	_imgAvatar.layer.cornerRadius = 50 / 2;
+	CGSize avatarSize = _imgAvatar.frame.size;
+	_imgAvatar.layer.cornerRadius = avatarSize.width / 2;
 	_imgAvatar.clipsToBounds = YES;
 	
 	_tblButtons.estimatedSectionHeaderHeight = 0;
@@ -201,7 +201,6 @@ typedef NS_ENUM(NSInteger, TblRow) {
 - (void)viewDidLayoutSubviews
 {
 	[super viewDidLayoutSubviews];
-	_cnstTblButtonsHeight.constant = _tblButtons.contentSize.height;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

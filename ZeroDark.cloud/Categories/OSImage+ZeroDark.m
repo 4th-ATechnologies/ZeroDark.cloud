@@ -167,6 +167,73 @@
 /**
  * See header file for documentation.
  */
+- (OSImage *)zdc_scaledToSize:(CGSize)targetSize scalingMode:(ScalingMode)mode
+{
+	CGSize selfSize = self.size;
+	
+	if (CGSizeEqualToSize(selfSize, targetSize)) {
+		// No scaling needed
+		return self;
+	}
+	
+	CGFloat aspectWidth = targetSize.width / selfSize.width;
+	CGFloat aspectHeight = targetSize.height / selfSize.height;
+
+	CGFloat aspectRatio;
+	if (mode == ScalingMode_AspectFit) {
+		aspectRatio = MIN(aspectWidth, aspectHeight);
+	} else {
+		aspectRatio = MAX(aspectWidth, aspectHeight);
+	}
+	
+	CGSize newSize = (CGSize){
+		.width = selfSize.width * aspectRatio,
+		.height = selfSize.height * aspectRatio
+	};
+	
+	CGRect targetRect = (CGRect){
+		.origin.x = (targetSize.width - newSize.width) / 2.0,
+		.origin.y = (targetSize.height - newSize.height) / 2.0,
+		.size = newSize
+	};
+	
+	OSImage *newImage = nil;
+	
+#if TARGET_OS_IPHONE
+	
+	float screenScale = [[UIScreen mainScreen] scale];
+	
+	UIGraphicsBeginImageContextWithOptions(targetRect.size, NO, screenScale);
+	{
+		[self drawInRect:targetRect];
+		newImage = UIGraphicsGetImageFromCurrentImageContext();
+	}
+	UIGraphicsEndImageContext();
+
+#else
+	
+	if (![self isValid]) {
+		return self;
+	}
+	
+	newImage = [[NSImage alloc] initWithSize:targetRect.size];
+	[newImage lockFocus];
+	{
+		[self drawInRect: targetRect
+		        fromRect: NSZeroRect
+		       operation: NSCompositingOperationSourceOver
+		        fraction: 1.0];
+	}
+	[newImage unlockFocus];
+	
+#endif
+	
+	return newImage;
+}
+
+/**
+ * See header file for documentation.
+ */
 - (OSImage *)imageByScalingProportionallyToSize:(CGSize)requestedSize
 {
 	OSImage *newImage = nil;

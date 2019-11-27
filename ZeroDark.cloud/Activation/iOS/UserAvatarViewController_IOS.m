@@ -185,7 +185,8 @@ typedef NS_ENUM(NSInteger, TblRow) {
 	if (_defaultUserImage_mustUseLazyGetter == nil)
 	{
 		_defaultUserImage_mustUseLazyGetter =
-		  [zdc.imageManager.defaultUserAvatar imageWithMaxSize:_imgAvatar.frame.size];
+		  [zdc.imageManager.defaultUserAvatar zdc_scaledToSize: _imgAvatar.frame.size
+		                                       scalingMode: ScalingMode_AspectFill];
 	}
 	
 	return _defaultUserImage_mustUseLazyGetter;
@@ -241,11 +242,11 @@ typedef NS_ENUM(NSInteger, TblRow) {
 	NSString *displayName = identity.displayName;
 	_lblDisplayName.text = displayName;
 	
-	CGSize avatarSize = _imgAvatar.image.size;
+	CGSize avatarSize = _imgAvatar.frame.size;
 	
 	UIImage* (^processingBlock)(UIImage *_Nonnull) = ^(UIImage *image) {
 		
-		return [image imageWithMaxSize:avatarSize];
+		return [image zdc_scaledToSize:avatarSize scalingMode:ScalingMode_AspectFill];
 	};
 	
 	void (^preFetchBlock)(UIImage*, BOOL) = ^(UIImage *image, BOOL willFetch){
