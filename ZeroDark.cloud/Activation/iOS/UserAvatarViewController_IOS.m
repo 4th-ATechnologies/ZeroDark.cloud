@@ -510,15 +510,15 @@ typedef NS_ENUM(NSInteger, TblRow) {
 
 - (IBAction)doneButtonTapped:(id)sender
 {
-	NSAssert(NO, @"Not implemented"); // finish refactoring
-	
-/*
 	ZDCLogAutoTrace();
 	
 	if (hasChanges)
 	{
-		ZDCDiskManager *diskManager = accountSetupVC.zdc.diskManager;
-		ZDCLocalUserManager *localUserManager = accountSetupVC.zdc.localUserManager;
+		ZDCDiskManager *diskManager = zdc.diskManager;
+		ZDCLocalUserManager *localUserManager = zdc.localUserManager;
+		
+		NSString *_localUserID = self.localUserID;
+		NSString *_identityID = self.identityID;
 		
 		NSData *jpegData = nil;
 		if (!deleteUserImage && newUserImage)
@@ -530,39 +530,36 @@ typedef NS_ENUM(NSInteger, TblRow) {
 		__block ZDCLocalUser *localUser = nil;
 		[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction * _Nonnull transaction) {
 			
-			localUser = [transaction objectForKey:self.localUserID inCollection:kZDCCollection_Users];
+			localUser = [transaction objectForKey:_localUserID inCollection:kZDCCollection_Users];
 		}];
 		
 		// Now we need to get the previous eTag
 		
-		ZDCDiskExport *export = [diskManager userAvatar:localUser forAuth0ID:self.auth0ID];
+		ZDCDiskExport *export = [diskManager userAvatar:localUser forIdentityID:_identityID];
 		if (export.cryptoFile)
 		{
-			NSString *_auth0ID = [self.auth0ID copy];
-			
 			[ZDCFileConversion decryptCryptoFileIntoMemory: export.cryptoFile
 													 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
 													 completionBlock:^(NSData *cleartext, NSError *error)
-			 {
-				 if (error || !cleartext) return;
-				 
-				 [localUserManager setNewAvatar: jpegData
-										 forLocalUser: localUser
-												auth0ID: _auth0ID
-								 replacingOldAvatar: cleartext];
-			 }];
+			{
+				if (error || !cleartext) return;
+				
+				[localUserManager setNewAvatar: jpegData
+				                  forLocalUser: localUser
+				                    identityID: _identityID
+				            replacingOldAvatar: cleartext];
+			}];
 		}
 		else
 		{
 			[localUserManager setNewAvatar: jpegData
-									forLocalUser: localUser
-										  auth0ID: self.auth0ID
-							replacingOldAvatar: nil];
+			                  forLocalUser: localUser
+			                    identityID: _identityID
+			            replacingOldAvatar: nil];
 		}
 	}
 	
 	[self.navigationController popViewControllerAnimated:YES];
-*/
 }
 
 - (IBAction)removeButtonTapped:(id)sender

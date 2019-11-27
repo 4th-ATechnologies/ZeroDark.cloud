@@ -78,6 +78,7 @@
 	UIImage *_defaultUserImage_mustUseLazyGetter;
     
 	BOOL hasInternet;
+	BOOL needsRefreshProviders;
 	BOOL viewDidLoad;
 	
 	SCLAlertView * warningAlert;
@@ -117,8 +118,6 @@
 	_tblProviders.tableFooterView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, _tblProviders.frame.size.width, 1)];
 
 	self.navigationItem.hidesBackButton = YES;
-	
-	hasInternet = zdc.reachability.isReachable;
 
 	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 	
@@ -132,7 +131,17 @@
 	           name: UIDatabaseConnectionDidUpdateNotification
 	         object: nil];
 	
+	[nc addObserver: self
+		    selector: @selector(diskManagerChanged:)
+		        name: ZDCDiskManagerChangedNotification
+		      object: zdc.diskManager];
+	
+	hasInternet = zdc.reachability.isReachable;
+	needsRefreshProviders = YES;
+	
 	[self refreshView];
+	[self refreshProviders];
+	
 	viewDidLoad = YES;
 }
 
@@ -164,14 +173,6 @@
 	self.navigationItem.rightBarButtonItem = addItem;
 }
 
-- (void)viewDidAppear:(BOOL)animated
-{
-	ZDCLogAutoTrace();
-	[super viewDidAppear:animated];
-	
-	[self refreshProviders];
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark AccountSetupViewController_IOS_Child_Delegate
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -184,6 +185,36 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Notifications
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Invoked when the reachability changes.
+ * That is, when the circumstances of our Internet access has changed.
+ */
+- (void)reachabilityChanged:(NSNotification *)notification
+{
+	ZDCLogAutoTrace();
+	NSAssert([NSThread isMainThread], @"Notification invoked on non-main thread !");
+	
+	BOOL oldHasInternet = hasInternet;
+	hasInternet = zdc.reachability.isReachable;
+	
+	if (!oldHasInternet && hasInternet)
+	{
+		// Refresh the visible tableView cells.
+		//
+		// This is because they're showing avatars, which may need to be downloaded.
+		// The download would have previously failed, but now it may succeed.
+		
+		[_tblProviders reloadRowsAtIndexPaths: [_tblProviders indexPathsForVisibleRows]
+		                     withRowAnimation: UITableViewRowAnimationNone];
+		
+	}
+	
+	if (hasInternet && needsRefreshProviders)
+	{
+		[self refreshProviders];
+	}
+}
 
 - (void)databaseConnectionDidUpdate:(NSNotification *)notification
 {
@@ -204,32 +235,16 @@
 	}
 }
 
-/**
- * Invoked when the reachability changes.
- * That is, when the circumstances of our Internet access has changed.
- */
-- (void)reachabilityChanged:(NSNotification *)notification
+- (void)diskManagerChanged:(NSNotification *)notification
 {
-	ZDCLogAutoTrace();
-	NSAssert([NSThread isMainThread], @"Notification invoked on non-main thread !");
+	ZDCDiskManagerChanges *changes = notification.userInfo[kZDCDiskManagerChanges];
 	
-	BOOL newHasInternet = zdc.reachability.isReachable;
-	
-	BOOL needsUpdateUI = NO;
-	if (!hasInternet && newHasInternet)
+	if ([changes.changedUsersIDs containsObject:localUserID])
 	{
-		hasInternet = YES;
-		needsUpdateUI = YES;
-	}
-	else if (hasInternet && !newHasInternet)
-	{
-		hasInternet = NO;
-		needsUpdateUI = YES;
-	}
-	
-	if (needsUpdateUI)
-	{
-		[self refreshView];
+		// Stored avatar(s) may have changed
+		
+		[_tblProviders reloadRowsAtIndexPaths: [_tblProviders indexPathsForVisibleRows]
+		                     withRowAnimation: UITableViewRowAnimationNone];
 	}
 }
 
@@ -270,37 +285,31 @@
 
 - (void)refreshProviders
 {
-	__weak typeof(self) weakSelf = self;
+	ZDCLogAutoTrace();
 
 	if (!hasInternet) {
 		return;
 	}
 	
-	[accountSetupVC showWait: @"Please Wait…"
-	                 message: @"Checking with server"
-	          viewController: self
-	         completionBlock: nil];
-
+	__weak typeof(self) weakSelf = self;
+	
 	ZDCLocalUserManager *localUserManager = accountSetupVC.zdc.localUserManager;
 	[localUserManager refreshAuth0ProfilesForLocalUserID: localUserID
 	                                     completionQueue: dispatch_get_main_queue()
-	                                     completionBlock:^(NSError *error)
+													 completionBlock:^(NSError *error)
 	{
 		__strong typeof(self) strongSelf = weakSelf;
 		if (!strongSelf) return;
-
-		[strongSelf.accountSetupVC cancelWait];
-		if (error)
-		{
-			[strongSelf.accountSetupVC showError: @"Could not get social identity"
-			                              message: error.localizedDescription
-			                       viewController: strongSelf
-			                      completionBlock: nil];
+		
+		if (!error) {
+			strongSelf->needsRefreshProviders = NO;
 		}
-		else
-		{
-			[strongSelf refreshView];
-		}
+		
+		// UI refresh not needed because:
+		//
+		// - the `refreshAuth0Profiles` method will update the localUser in the database
+		// - this will trigger a databaseDidUpdate notification
+		// - which we listen for, and automatically refresh the tableView as needed
 	}];
 }
 
@@ -517,10 +526,12 @@
 	
 	void (^postFetch)(OSImage*, NSError*) = ^(OSImage *image, NSError *error) {
 		
+		// The postFetch is invoked LATER, possibly after downloading the image.
+		
 		if (image)
 		{
-			// Check that the cell hasn't been recycled (is still being used for this auth0ID)
-			if (cell.identityID == rowItem.identity.identityID) {
+			// Check that the cell hasn't been recycled (is still being used for this identityID)
+			if ([cell.identityID isEqual:rowItem.identity.identityID]) {
 				cell.imgAvatar.image =  image;
 			}
 		}
