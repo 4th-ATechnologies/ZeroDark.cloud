@@ -272,7 +272,7 @@ static Auth0ProviderManager *sharedInstance = nil;
 	return thumbnail;
 }
 
-- (NSString *)displayNameforProvider:(NSString *)provider
+- (NSString *)displayNameForProvider:(NSString *)provider
 {
 	NSString *displayName = nil;
 

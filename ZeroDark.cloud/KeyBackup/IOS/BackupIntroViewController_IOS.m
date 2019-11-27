@@ -262,7 +262,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	}
 	else
 	{
-		NSString *providerName = [providerManager displayNameforProvider:provider];
+		NSString *providerName = [providerManager displayNameForProvider:provider];
 		
 		_imgProvider.hidden = YES;
 		_lblProvider.text = providerName;

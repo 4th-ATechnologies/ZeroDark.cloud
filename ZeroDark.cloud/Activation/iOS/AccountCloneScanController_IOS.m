@@ -427,7 +427,7 @@ typedef enum {
 	}
 	else
 	{
-		NSString *providerName = [zdc.auth0ProviderManager displayNameforProvider:provider];
+		NSString *providerName = [zdc.auth0ProviderManager displayNameForProvider:provider];
 		
 		_imgCloneCodeProvider.hidden = YES;
 		_lblCloneWordsProvider.text = providerName;

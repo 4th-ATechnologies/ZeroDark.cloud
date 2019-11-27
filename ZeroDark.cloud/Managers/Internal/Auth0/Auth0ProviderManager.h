@@ -61,7 +61,7 @@ typedef NS_ENUM(NSInteger, Auth0ProviderType) {
  *
  * If the given provider is unknown, returns the given provider parameter.
  */
-- (NSString *)displayNameforProvider:(NSString *)provider;
+- (NSString *)displayNameForProvider:(NSString *)provider;
 
 - (NSUInteger)numberOfMatchingProviders:(NSDictionary*)profile provider:(NSString*)provider;
 

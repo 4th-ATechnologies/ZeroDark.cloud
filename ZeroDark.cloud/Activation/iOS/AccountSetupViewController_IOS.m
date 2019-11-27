@@ -1083,13 +1083,12 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 	vc_SocialidMgmt.localUserID = userID;
 }
 
-
--(void)pushUserAvatarWithUserID:(NSString* __nonnull)userID
-								auth0ID:(NSString * __nullable )auth0ID
-		 withNavigationController:(UINavigationController*)navigationController
+- (void)pushUserAvatarWithUserID:(NSString *)userID
+                      identityID:(NSString *)identityID
+            navigationController:(UINavigationController *)navigationController
 {
-	NSError* error = NULL;
-	if(! [self commonInitWithUserID:userID error:&error])
+	NSError *error = nil;
+	if (![self commonInitWithUserID:userID error:&error])
 	{
 		[self handleInternalError:error];
 		return;
@@ -1098,7 +1097,7 @@ shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherG
 	self.identityMode = IdenititySelectionMode_ExistingAccount;
 	[self viewControllerForViewID:AccountSetupViewID_UserAvatar];
 	vc_UserAvatar.localUserID = userID;
-	vc_UserAvatar.auth0ID = auth0ID;
+	vc_UserAvatar.identityID = identityID;
 	
 	[navigationController pushViewController:vc_UserAvatar animated:YES];
 }

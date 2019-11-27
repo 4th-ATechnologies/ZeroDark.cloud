@@ -347,7 +347,7 @@
 		rowItem.isPreferredIdentity = isPreferred;
 		
 		rowItem.identity = identity;
-		rowItem.providerName = [zdc.auth0ProviderManager displayNameforProvider:identity.provider];
+		rowItem.providerName = [zdc.auth0ProviderManager displayNameForProvider:identity.provider];
 		
 		[newRowItems addObject:rowItem];
 	}
@@ -454,7 +454,7 @@
 	ZDCUserIdentity *identity = rowItem.identity;
 	
 	cell.uuid = localUserID;
-	cell.Auth0ID = identity.identityID;
+	cell.identityID = identity.identityID;
 	
 	cell.lblUserName.hidden = NO;
 	cell.lblUserName.textColor = [UIColor blackColor];
@@ -520,7 +520,7 @@
 		if (image)
 		{
 			// Check that the cell hasn't been recycled (is still being used for this auth0ID)
-			if (cell.Auth0ID == rowItem.identity.identityID) {
+			if (cell.identityID == rowItem.identity.identityID) {
 				cell.imgAvatar.image =  image;
 			}
 		}
@@ -699,8 +699,8 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 	ZDCLogAutoTrace();
 	
 	[self.accountSetupVC pushUserAvatarWithUserID: cell.uuid
-	                                      auth0ID: cell.Auth0ID
-	                     withNavigationController: self.navigationController];
+	                                   identityID: cell.identityID
+	                         navigationController: self.navigationController];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -712,7 +712,7 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 	ZDCLogAutoTrace();
 	
 	NSString *provider = rowItem.identity.provider;
-	NSString *providerName = [zdc.auth0ProviderManager displayNameforProvider:provider];
+	NSString *providerName = [zdc.auth0ProviderManager displayNameForProvider:provider];
 	
 	NSString *warningText = [NSString stringWithFormat:
 	  @"Are you sure you wish to unlink the social identity with %@?",
