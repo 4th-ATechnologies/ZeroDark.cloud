@@ -1,20 +1,19 @@
 /**
- * ZeroDark.cloud
- * 
+ * ZeroDark.cloud Framework
+ *
  * Homepage      : https://www.zerodark.cloud
  * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
  * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
  * API Reference : https://apis.zerodark.cloud
 **/
 
-#import "ZDCImageManager.h"
-#import "ZeroDarkCloud.h"
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ZDCImageManager (Private)
+@interface SearchBarWithLoading : UISearchBar
 
-- (instancetype)initWithOwner:(ZeroDarkCloud *)owner;
+@property(nonatomic) BOOL isLoading;
 
 @end
 

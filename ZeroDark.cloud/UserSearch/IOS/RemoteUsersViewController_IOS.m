@@ -20,7 +20,6 @@
 #import "EmptyTableViewCell.h"
 
 #import "Auth0ProviderManager.h"
-#import "ZDCBadgedBarButtonItem.h"
 
 #import "ZDCLogging.h"
 
@@ -186,18 +185,18 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 // MARK: Notifications
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
--(void)prefsChanged:(NSNotification *)notification
+- (void)prefsChanged:(NSNotification *)notification
 {
 	ZDCLogAutoTrace();
 	
-	NSString *prefs_key = [notification.userInfo objectForKey:ZDCLocalPreferencesChanged_UserInfo_Key];
-	
-	if ([prefs_key isEqualToString:ZDCprefs_preferedAuth0IDs])
-	{
-		preferedAuth0IDs =  owner.internalPreferences.preferedAuth0IDs;
-		[_tblUsers reloadData];
-		
-	}
+//	NSString *prefs_key = [notification.userInfo objectForKey:ZDCLocalPreferencesChanged_UserInfo_Key];
+//
+//	if ([prefs_key isEqualToString:ZDCprefs_preferedAuth0IDs])
+//	{
+//		preferedAuth0IDs =  owner.internalPreferences.preferedAuth0IDs;
+//		[_tblUsers reloadData];
+//
+//	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -14,30 +14,32 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-extern NSString *const ZDCprefs_recentRecipients;
-extern NSString *const ZDCprefs_preferedAuth0IDs;
-
 @interface ZDCInternalPreferences : ZDCLocalPreferences
 
 - (instancetype)initWithOwner:(ZeroDarkCloud *)owner;
 
+/**
+ * Used by the activity monitor.
+ * Keeps track of the last selected type: uploads, downloads, both, raw
+ */
+@property (atomic) NSInteger activityMonitor_lastActivityType;
+
+/**
+ * What is this ?
+ */
 @property (atomic) NSDate *lastProviderTableUpdate;
 
-//TODO: we probably have to move recentRecipients to shared prefs
+/**
+ * Keeps track of the most recenlty selected userID's
+ */
+@property (atomic, nullable) NSArray<NSString *> *recentRecipients;
 
-// this keeps N of the most recent shared Ids
-@property (atomic, nullable) NSArray<NSArray *> *recentRecipients;
-- (void)setRecentRecipient:(NSString *)recipientID auth0ID:(NSString * __nullable)auth0ID;
-- (void)removeRecentRecipient:(NSString *)recipientID;
+- (void)addRecentRecipient:(NSString *)userID;
+- (void)removeRecentRecipient:(NSString *)userID;
 
 // this keeps a map of prefered Auth0/SocialIDs for userIDS
 @property (atomic, nullable, readonly) NSDictionary<NSString *,NSString *> * preferedAuth0IDs;
 - (void)setPreferedAuth0ID:(NSString *__nullable )auth0ID userID:(NSString *)userID;
-
-
-// the last type of activity the user asked to look at
-@property (atomic) NSInteger  activityMonitor_lastActivityType;
-
 
 @end
 

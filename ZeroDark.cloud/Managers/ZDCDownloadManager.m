@@ -19,6 +19,7 @@
 #import "ZDCNodePrivate.h"
 #import "ZDCProgressManagerPrivate.h"
 #import "ZDCNetworkTools.h"
+#import "ZDCUserSearchManager.h"
 #import "ZeroDarkCloudPrivate.h"
 
 #import "NSError+Auth0API.h"
@@ -2461,21 +2462,44 @@ static NSUInteger const kMaxFailCount = 8;
 }
 
 /**
- * Internal method.
- * Exposed via ZDCDownloadManagerPrivate.
+ * See header file for documentation.
  */
-- (ZDCDownloadTicket *)downloadUserAvatar:(NSString *)userID
-                                  fromURL:(NSURL *)url
-                                  options:(ZDCDownloadOptions *)options
+- (ZDCDownloadTicket *)downloadUserAvatar:(ZDCSearchResult *)searchResult
                           completionQueue:(nullable dispatch_queue_t)completionQueue
                           completionBlock:(UserAvatarDownloadCompletionBlock)completionBlock
 {
-	NSParameterAssert(options != nil);
-	NSParameterAssert(options.identityID != nil);
+	ZDCLogAutoTrace();
+	
+	ZDCUserIdentity *displayIdentity = searchResult.displayIdentity;
+	
+	NSString *userID = searchResult.userID;
+	NSString *identityID = displayIdentity.identityID;
+	
+	NSURL *pictureURL =
+	  [Auth0Utilities pictureUrlForIdentity: displayIdentity
+	                                 region: searchResult.aws_region
+	                                 bucket: searchResult.aws_bucket];
+	
+	if (pictureURL == nil)
+	{
+		if (completionBlock)
+		{
+			dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+				
+				completionBlock(nil, nil);
+			}});
+		}
+		return [[ZDCDownloadTicket alloc] init];
+	}
+	
+	ZDCDownloadOptions *options = [[ZDCDownloadOptions alloc] init];
+	options.cacheToDiskManager = NO;
+	options.savePersistentlyToDiskManager = NO;
+	options.identityID = identityID;
 	
 	return [self _downloadUserAvatar: userID
-	                      identityID: options.identityID
-	                         fromURL: url
+	                      identityID: identityID
+	                         fromURL: pictureURL
 	                         options: options
 	                 completionQueue: completionQueue
 	                 completionBlock: completionBlock];
@@ -2498,7 +2522,7 @@ static NSUInteger const kMaxFailCount = 8;
 		user = (ZDCUser *)userOrUserID;
 		userID = user.uuid;
 	}
-	else if ([userID isKindOfClass:[NSString class]])
+	else if ([userOrUserID isKindOfClass:[NSString class]])
 	{
 		userID = [(NSString *)userOrUserID copy]; // mutable string protection
 	}

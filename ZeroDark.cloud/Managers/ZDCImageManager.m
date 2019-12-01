@@ -746,16 +746,22 @@
 	}
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCImageManager.html
+ */
 - (nullable ZDCDownloadTicket *)
-        fetchUserAvatar:(NSString *)userID
-                fromURL:(NSURL *)url
-                options:(nullable ZDCDownloadOptions *)options
+        fetchUserAvatar:(ZDCSearchResult *)searchResult
            processingID:(nullable NSString *)processingID
         processingBlock:(ZDCImageProcessingBlock)imageProcessingBlock
-          preFetchBlock:(void(^)(OSImage *_Nullable image))preFetchBlock
+          preFetchBlock:(void(NS_NOESCAPE^)(OSImage *_Nullable image, BOOL willFetch))preFetchBlock
          postFetchBlock:(void(^)(OSImage *_Nullable image, NSError *_Nullable error))postFetchBlock
 {
-	NSString *identityID = options.identityID;
+	ZDCUserIdentity *displayIdentity = searchResult.displayIdentity;
+	
+	NSString *userID = searchResult.userID;
+	NSString *identityID = displayIdentity.identityID;
 	
 	NSString *cacheKey = nil;
 	if (identityID && processingID) {
@@ -767,12 +773,12 @@
 		ZDCCachedImageItem *cachedItem = [userAvatarsCache objectForKey:cacheKey];
 		if (cachedItem)
 		{
-			preFetchBlock(cachedItem.image);
+			preFetchBlock(cachedItem.image, NO);
 			return nil;
 		}
 	}
 	
-	preFetchBlock(nil);
+	preFetchBlock(nil, YES);
 	
 	__weak typeof(self) weakSelf = self;
 	void (^processingBlock)(NSData*, NSError*) =
@@ -819,11 +825,9 @@
 	}};
 	
 	ZDCDownloadTicket *ticket =
-	  [zdc.downloadManager downloadUserAvatar: userID
-	                                  fromURL: url
-	                                  options: options
+	  [zdc.downloadManager downloadUserAvatar: searchResult
 	                          completionQueue: processingQueue
-	                          completionBlock:^(NSData *avatar, NSError *error)
+									  completionBlock:^(NSData *avatar, NSError *error)
 	{
 		processingBlock(avatar, error);
 	}];
@@ -832,7 +836,9 @@
 }
 
 /**
- * See header file fro description.
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCImageManager.html
  */
 - (void)flushUserAvatarsCache:(NSString *)userID
 {

@@ -5,32 +5,41 @@
  * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
  * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
  * API Reference : https://apis.zerodark.cloud
- **/
+**/
 
 #import "RemoteUserTableViewCell.h"
 
+/* extern */ NSString *const kRemoteUserTableViewCellIdentifier = @"RemoteUserTableViewCell";
+
 @implementation RemoteUserTableViewCell
 
-NSString *const kRemoteUserTableViewCellIdentifier = @"RemoteUserTableViewCell";
+@synthesize delegate;
+
+@synthesize checkMark;
+@synthesize cnstAvatarLeadingWidth;
+
+@synthesize imgAvatar;
+
+@synthesize lblUserName;
+@synthesize imgProvider;
+@synthesize lblProvider;
+@synthesize progress;
+@synthesize btnDisclose;
+@synthesize lblBadge;
+@synthesize cnstlblBadgeWidth;
 
 @synthesize showCheckMark;
 @synthesize checked;
 @synthesize enableCheck;
 
-@synthesize lblUserName;
-@synthesize imgAvatar;
-@synthesize actAvatar;
-@synthesize imgProvider;
-@synthesize auth0ID;
 @synthesize userID;
-@synthesize lblBadge;
-@synthesize btnDisclose;
-@synthesize cnstlblBadgeWidth;
+@synthesize identityID;
 
-+(void) registerViewsforTable:(UITableView*)tableView bundle:(nullable NSBundle *)bundle
+
++ (void)registerViewsforTable:(UITableView*)tableView bundle:(nullable NSBundle *)bundle
 {
-    UINib *buttonCellNib = [UINib nibWithNibName:@"RemoteUserTableViewCell" bundle:bundle];
-    [tableView registerNib:buttonCellNib forCellReuseIdentifier:kRemoteUserTableViewCellIdentifier];
+	UINib *buttonCellNib = [UINib nibWithNibName:@"RemoteUserTableViewCell" bundle:bundle];
+	[tableView registerNib:buttonCellNib forCellReuseIdentifier:kRemoteUserTableViewCellIdentifier];
 }
  
 + (CGFloat)heightForCell
@@ -48,7 +57,6 @@ NSString *const kRemoteUserTableViewCellIdentifier = @"RemoteUserTableViewCell";
 	return CGSizeMake(38, 38);
 }
 
-
 - (UITableView *)tableView
 {
 	UIView *tableView = self.superview;
@@ -64,24 +72,23 @@ NSString *const kRemoteUserTableViewCellIdentifier = @"RemoteUserTableViewCell";
 	return nil;
 }
 
--(void)setShowCheckMark:(BOOL)showCheckMarkIn
+- (void)setShowCheckMark:(BOOL)showCheckMarkIn
 {
 	showCheckMark = showCheckMarkIn;
 	[self.checkMark setHidden:!showCheckMark];
 
-    self.cnstAvatarLeadingWidth.constant = showCheckMark?20:0;
+	self.cnstAvatarLeadingWidth.constant = showCheckMark?20:0;
 }
 
--(void)setChecked:(BOOL)isCheckedIn
+- (void)setChecked:(BOOL)isCheckedIn
 {
 	self.checkMark.checked = isCheckedIn;
 }
 
--(void)setEnableCheck:(BOOL)enabled
+- (void)setEnableCheck:(BOOL)enabled
 {
-    self.checkMark.checkMarkStyle = enabled ? ZDCCheckMarkStyleOpenCircle: ZDCCheckMarkStyleGrayedOut;
+	self.checkMark.checkMarkStyle = enabled ? ZDCCheckMarkStyleOpenCircle: ZDCCheckMarkStyleGrayedOut;
 }
-
 
 - (IBAction)disclosureButtonTapped:(id)sender
 {
@@ -94,21 +101,8 @@ NSString *const kRemoteUserTableViewCellIdentifier = @"RemoteUserTableViewCell";
     }
 }
 
-- (void)awakeFromNib {
-	[super awakeFromNib];
-}
-
-
 - (BOOL)canBecomeFirstResponder {
 	return YES;
 }
-
-
-- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
-	[super setSelected:selected animated:animated];
-
-	// Configure the view for the selected state
-}
-
 
 @end

@@ -16,6 +16,7 @@
 
 @class ZDCDownloadOptions;
 @class ZDCDownloadTicket;
+@class ZDCSearchResult;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -224,12 +225,33 @@ typedef void (^UserAvatarDownloadCompletionBlock)(NSData *_Nullable avatar, NSEr
  *
  * @return A ticket that can be used to track the download.
  *         The ticket includes a NSProgress item that can be used for tracking.
- *         The progress item is also registered with the `ZDCProgressManager`,
- *         and can be fetched from there as well. (Meaning you also get throughput
- *         & estimated time remaining for this progress item.)
  */
 - (ZDCDownloadTicket *)downloadUserAvatar:(ZDCUser *)user
                                   options:(nullable ZDCDownloadOptions *)options
+                          completionQueue:(nullable dispatch_queue_t)completionQueue
+                          completionBlock:(UserAvatarDownloadCompletionBlock)completionBlock;
+
+/**
+ * Downloads the avatar for a user.
+ *
+ * @note This method doesn't support background downloads (on iOS).
+ *
+ * @param searchResult
+ *   A search result from ZDCUserSearchManager.
+ *   You can control which identityID is downloaded by setting searchResult.preferredIdentityID.
+ *
+ * @param completionQueue
+ *   The GCD dispatch queue in which you'd like the completionBlock to be invoked.
+ *   If not specified (nil), the main thread will automatically be used.
+ *
+ * @param completionBlock
+ *   The block to invoke upon download completion.
+ *   This block will be invoked asynchronously on the completionQueue.
+ *
+ * @return A ticket that can be used to track the download.
+ *         The ticket includes a NSProgress item that can be used for tracking.
+ */
+- (ZDCDownloadTicket *)downloadUserAvatar:(ZDCSearchResult *)searchResult
                           completionQueue:(nullable dispatch_queue_t)completionQueue
                           completionBlock:(UserAvatarDownloadCompletionBlock)completionBlock;
 

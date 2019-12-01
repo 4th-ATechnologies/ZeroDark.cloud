@@ -878,22 +878,4 @@ done:
     return eTag;
 }
 
--(NSUInteger) numberOfMatchingProviders:(NSDictionary*)profile provider:(NSString*)provider
-{
-	__block NSUInteger count = 0;
-
-	[profile enumerateKeysAndObjectsUsingBlock:^(NSString* key, NSDictionary* profile,
-																   BOOL * _Nonnull stop) {
-
-		// skip recovery profile
-
-		NSString* connection = profile[@"connection"];
-		if([connection isEqualToString:provider])
-			count++;
-
-	}];
-	
-	return count;
-}
-
 @end

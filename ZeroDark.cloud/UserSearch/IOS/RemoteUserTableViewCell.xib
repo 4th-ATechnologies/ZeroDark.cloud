@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
-    <device id="retina4_7" orientation="portrait">
-        <adaptation id="fullscreen"/>
-    </device>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14490.49"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15510"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -16,34 +14,27 @@
             <rect key="frame" x="0.0" y="0.0" width="362" height="60"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
             <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
-                <rect key="frame" x="0.0" y="0.0" width="362" height="59.5"/>
+                <rect key="frame" x="0.0" y="0.0" width="362" height="60"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Name" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="Qce-Mh-hR4" userLabel="lblName">
-                        <rect key="frame" x="78" y="7" width="250" height="20"/>
+                        <rect key="frame" x="77" y="7" width="251" height="20"/>
                         <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
                         <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <color key="highlightedColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                     </label>
                     <progressView hidden="YES" opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="zjK-E7-fwr" customClass="JGProgressView">
-                        <rect key="frame" x="82" y="29" width="242" height="2"/>
+                        <rect key="frame" x="81" y="29" width="243" height="2"/>
                     </progressView>
                     <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="default_user" translatesAutoresizingMaskIntoConstraints="NO" id="Jzw-l5-V6S">
-                        <rect key="frame" x="36" y="11" width="38" height="38"/>
+                        <rect key="frame" x="35" y="11" width="38" height="38"/>
                         <constraints>
                             <constraint firstAttribute="height" constant="38" id="CTc-g2-D0m"/>
                             <constraint firstAttribute="width" constant="38" id="F8w-Yc-gqe"/>
                         </constraints>
                     </imageView>
-                    <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="uVt-LI-ENQ">
-                        <rect key="frame" x="36" y="11" width="38" height="38"/>
-                        <constraints>
-                            <constraint firstAttribute="height" constant="38" id="Tlx-xe-pQu"/>
-                            <constraint firstAttribute="width" constant="38" id="U5r-4d-zfA"/>
-                        </constraints>
-                    </activityIndicatorView>
                     <imageView userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="WTz-E2-Nci">
-                        <rect key="frame" x="80" y="34" width="248" height="12"/>
+                        <rect key="frame" x="79" y="34.5" width="249" height="12"/>
                         <constraints>
                             <constraint firstAttribute="height" constant="12" id="L5N-zE-0Ak"/>
                         </constraints>
@@ -85,7 +76,7 @@
                         <nil key="highlightedColor"/>
                     </label>
                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="provider" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="oT1-g3-Jod">
-                        <rect key="frame" x="80" y="33" width="248" height="14.5"/>
+                        <rect key="frame" x="79" y="33" width="249" height="14.5"/>
                         <fontDescription key="fontDescription" style="UICTFontTextStyleCaption1"/>
                         <color key="textColor" white="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <nil key="highlightedColor"/>
@@ -109,11 +100,9 @@
                     <constraint firstItem="oT1-g3-Jod" firstAttribute="trailing" secondItem="WTz-E2-Nci" secondAttribute="trailing" id="NaZ-jo-0N8"/>
                     <constraint firstItem="KOJ-Y2-ABE" firstAttribute="leading" secondItem="Qce-Mh-hR4" secondAttribute="trailing" constant="8" id="Oh8-At-me5"/>
                     <constraint firstItem="zjK-E7-fwr" firstAttribute="trailing" secondItem="Qce-Mh-hR4" secondAttribute="trailing" constant="-4" id="SeB-jf-qI0"/>
-                    <constraint firstItem="uVt-LI-ENQ" firstAttribute="centerX" secondItem="Jzw-l5-V6S" secondAttribute="centerX" id="Wjj-sU-Lds"/>
                     <constraint firstItem="KOJ-Y2-ABE" firstAttribute="centerY" secondItem="H2p-sc-9uM" secondAttribute="centerY" id="aJ7-Di-HfX"/>
                     <constraint firstItem="Qce-Mh-hR4" firstAttribute="top" secondItem="Jzw-l5-V6S" secondAttribute="top" constant="-4" id="bJn-VT-S3D"/>
                     <constraint firstItem="zjK-E7-fwr" firstAttribute="centerY" secondItem="H2p-sc-9uM" secondAttribute="centerY" id="bgf-FQ-Gcs"/>
-                    <constraint firstItem="uVt-LI-ENQ" firstAttribute="centerY" secondItem="Jzw-l5-V6S" secondAttribute="centerY" id="bwm-28-3tR"/>
                     <constraint firstAttribute="trailing" secondItem="KOJ-Y2-ABE" secondAttribute="trailing" constant="4" id="cZo-HB-rqZ"/>
                     <constraint firstItem="zjK-E7-fwr" firstAttribute="leading" secondItem="Qce-Mh-hR4" secondAttribute="leading" constant="4" id="fIX-jw-isI"/>
                     <constraint firstItem="VY8-Zz-PCs" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="8" id="fpI-3h-ObI"/>
@@ -128,10 +117,8 @@
             </tableViewCellContentView>
             <viewLayoutGuide key="safeArea" id="aW0-zy-SZf"/>
             <connections>
-                <outlet property="actAvatar" destination="uVt-LI-ENQ" id="cvQ-KU-f6k"/>
                 <outlet property="btnDisclose" destination="KOJ-Y2-ABE" id="e4M-Th-ls6"/>
                 <outlet property="checkMark" destination="VY8-Zz-PCs" id="dgg-yu-j4e"/>
-                <outlet property="cnstAvatarLeadingWidth" destination="gN5-xi-hQv" id="y8X-ks-umB"/>
                 <outlet property="cnstlblBadgeWidth" destination="OMb-Tb-A8f" id="OSJ-nw-H4u"/>
                 <outlet property="imgAvatar" destination="Jzw-l5-V6S" id="Es6-HJ-R6s"/>
                 <outlet property="imgProvider" destination="WTz-E2-Nci" id="56C-VX-AD9"/>

@@ -18,20 +18,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithOwner:(ZeroDarkCloud *)owner;
 
+/** Forwarded from ZDCSessionManager. */
 - (void)downloadTaskDidComplete:(NSURLSessionDownloadTask *)task
                       inSession:(NSURLSession *)session
                     withContext:(ZDCDownloadContext *)context
                           error:(NSError *)error
               downloadedFileURL:(NSURL *)downloadedFileURL;
-
-/**
- * Note: `options.identityID` must be non-nil
- */
-- (ZDCDownloadTicket *)downloadUserAvatar:(NSString *)userID
-                                  fromURL:(NSURL *)url
-                                  options:(ZDCDownloadOptions *)options
-                          completionQueue:(nullable dispatch_queue_t)completionQueue
-                          completionBlock:(UserAvatarDownloadCompletionBlock)completionBlock;
 
 @end
 

@@ -54,16 +54,17 @@ typedef NS_ENUM(NSInteger, Auth0ProviderType) {
 - (void)updateProviderCache:(BOOL)forceUpdate;
 #endif
 
-- (OSImage *)iconForProvider:(NSString *)provider type:(Auth0ProviderIconType)type;
+/**
+ * Returns the proper image for the given {provider, type}.
+ */
+- (nullable OSImage *)iconForProvider:(NSString *)provider type:(Auth0ProviderIconType)type;
 
 /**
  * Converts from provider key name ("google-oauth") to appropriate displayName ("Google").
  *
- * If the given provider is unknown, returns the given provider parameter.
+ * If the given provider is unknown, returns the parameter.
  */
 - (NSString *)displayNameForProvider:(NSString *)provider;
-
-- (NSUInteger)numberOfMatchingProviders:(NSDictionary*)profile provider:(NSString*)provider;
 
 /**
  *

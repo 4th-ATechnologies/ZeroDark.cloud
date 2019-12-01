@@ -5,7 +5,7 @@
  * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
  * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
  * API Reference : https://apis.zerodark.cloud
- **/
+**/
 
 #import <UIKit/UIKit.h>
 
@@ -32,8 +32,4 @@ typedef NS_ENUM(NSInteger, ZDCBadgedBarButtonItem_Offset)
 	   actionBlock:(ZDCBadgedBarButtonItemActionBlock)actionBlock;
 
 
-@end
-
-@interface ZDCBadgedBarLabel : UILabel
-@property (nonatomic, assign) UIEdgeInsets edgeInsets;
 @end

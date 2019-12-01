@@ -5,25 +5,22 @@
  * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
  * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
  * API Reference : https://apis.zerodark.cloud
- **/
+**/
 
 #import "UserSearchViewController_IOS.h"
-#import "ZeroDarkCloud.h"
-#import "ZeroDarkCloudPrivate.h"
-#import "ZDCConstantsPrivate.h"
-#import "ZDCImageManagerPrivate.h"
+
 #import "Auth0Utilities.h"
-
-#import "ZDCBadgedBarButtonItem.h"
-#import "UITableViewTouch.h"
-#import "ZDCPopoverTransition.h"
-
+#import "IdentityProviderFilterViewController.h"
 #import "RemoteUserTableViewCell.h"
+#import "UITableViewTouch.h"
 #import "UserSearchTableViewHeaderCell.h"
 #import "UserSearchSocialIDViewController_IOS.h"
-#import "IdentityProviderFilterViewController.h"
-
+#import "SearchBarWithLoading.h"
+#import "ZDCConstantsPrivate.h"
+#import "ZDCImageManagerPrivate.h"
 #import "ZDCLogging.h"
+#import "ZDCPopoverTransition.h"
+#import "ZeroDarkCloudPrivate.h"
 
 // Categories
 #import "OSImage+ZeroDark.h"
@@ -38,148 +35,63 @@
 #endif
 
 
-@interface SearchBarWithloading : UISearchBar
-@property(nonatomic) BOOL isLoading;
-@end
-
-@implementation SearchBarWithloading
-{
-	UIActivityIndicatorView *_activityIndicatorView;
-	UIImage *_searchIcon;
-}
-
-@synthesize isLoading;
-
-- (NSMutableArray*)allSubViewsForView:(UIView*)viewIn
-{
-    NSMutableArray *array = NSMutableArray.array;
-    [array addObject:viewIn];
-    for (UIView *subview in viewIn.subviews)
-    {
-        [array addObjectsFromArray:[self allSubViewsForView:subview]];
-    }
-    return array;
-}
-
--(UIActivityIndicatorView*) activityIndicatorView
-{
-    if (!_activityIndicatorView)
-    {
-        UITextField *searchField = nil;
-        
-        for(UIView* view in [self allSubViewsForView:self])
-        {
-            if([view isKindOfClass:[UITextField class]]){
-                searchField= (UITextField *)view;
-                break;
-            }
-        }
-  
-        if(searchField)
-        {
-            // save old search icon
-            _searchIcon =  [((UIImageView*) searchField.leftView) image];
-            
-            // create an activity view
-            UIActivityIndicatorView *taiv = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
-            taiv.backgroundColor = UIColor.clearColor;
-            
-            taiv.center = CGPointMake(searchField.leftView.bounds.origin.x + searchField.leftView.bounds.size.width/2,
-                                      searchField.leftView.bounds.origin.y + searchField.leftView.bounds.size.height/2);
-            taiv.hidesWhenStopped = YES;
-            _activityIndicatorView = taiv;
-            [searchField.leftView addSubview:_activityIndicatorView];
-        }
-        
-    }
-    return _activityIndicatorView;
-}
-
--(void)setIsLoading:(BOOL)isLoading
-{
-    if (isLoading)
-    {
-        [self.activityIndicatorView startAnimating];
-        [self setImage:[[UIImage alloc] init]
-                forSearchBarIcon:UISearchBarIconSearch state:UIControlStateNormal];
-    }
-    else
-    {
-        [self.activityIndicatorView stopAnimating];
-        [self setImage:_searchIcon  forSearchBarIcon:UISearchBarIconSearch state:UIControlStateNormal];
-    }
-    [self layoutSubviews];
-}
-
-@end
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 @interface UserSearchViewController_IOS () <IdentityProviderFilterViewControllerDelegate>
 @end
 
 @implementation UserSearchViewController_IOS
 {
-    ZeroDarkCloud *zdc;
+	IBOutlet __weak SearchBarWithLoading * _searchBar;
+	IBOutlet __weak UILabel              * _lblSearchPrompt;
     
-    IBOutlet __weak SearchBarWithloading*   _searchBar;
-    IBOutlet __weak UILabel*                _lblSearchPrompt;
-    
-    NSTimer *                               showSearchingTimer;    // so we dont fire a seacrh right away while user is typing
-    NSTimer *                               importingTimer;        // used to remove the keyboard durring a long import
-    
-    IBOutlet __weak UIButton*               _btnFilter;
-    
-    IBOutlet __weak UITableViewTouch*       _tblUsers;
-    IBOutlet __weak NSLayoutConstraint*     _cnstTbleUserBottomOffset;
-    
-    IBOutlet __weak UIView*                 _vwInfo;
-    IBOutlet __weak UILabel*                _lblInfo;
-    
-    ZDCBadgedBarButtonItem*                 _bbtnBack;
-    UISwipeGestureRecognizer*               swipeGesture;
-    
-    UIViewController*                       remoteSRVC;
+	IBOutlet __weak UIButton             * _btnFilter;
+	
+	IBOutlet __weak UITableViewTouch     * _tblUsers;
+	IBOutlet __weak NSLayoutConstraint   * _cnstTbleUserBottomOffset;
+	
+	IBOutlet __weak UIView*                _vwInfo;
+	IBOutlet __weak UILabel*               _lblInfo;
+	
+	ZeroDarkCloud *zdc;
+	
+	NSString *localUserID;
+	NSSet<NSString *> *sharedUserIDs;
+	
+	NSTimer * showSearchingTimer;    // So we don't fire a search right away while user is typing.
+	NSTimer * importingTimer;        // Used to remove the keyboard during a long import.
+	
+	UISwipeGestureRecognizer * swipeGesture;
+	
+	UIViewController * remoteSRVC;
  
-    NSTimer*                                queryStartTimer;
-    NSInteger                               searchId;  // track searches
-    NSInteger                               displayedSearchId  ;
-    
-    dispatch_queue_t                        searchResultsQueue;
-    void *                                  IsOnSearchResultsQueue;
-    
-    dispatch_queue_t                        dataQueue;
-    void *                                  IsOnDataQueue;
+	NSTimer   * queryStartTimer;
+	NSInteger   searchId;  // track searches
+	NSInteger   displayedSearchId;
+	
+	dispatch_queue_t dataQueue;
+	void *           IsOnDataQueue;
 
-    NSArray <ZDCSearchResult*> *            searchResults;
-    NSDictionary<NSString *,NSString *> *   preferedAuth0IDs;      // map of selected Auth0ID for userID;
+	NSArray<ZDCSearchResult *> *searchResults;
+	NSMutableDictionary<NSString *,NSString *> *preferredIdentityIDs; // Map: userID => selected identityID
     
-    NSArray*                                recentRecipients;
-    UIImage*                                defaultUserImage;
-    
-    NSArray*                                remoteUserIDs;
-    NSString*                               localUserID;
-    NSString *                              filterProvider;
-    NSArray*                                importingUserIDs;        // used when animating the import of users
- 
-    NSSet*                                  sharedUserIDs;
-    
-    ZDCPopoverTransition *                  popoverTransition;
-    
-    BOOL                                    isImportingUsers;
-    UIImage*                                threeDots;
-    BOOL                                    awake;
-
+	UIImage * defaultUserImage;
+	UIImage * threeDots;
+	
+	NSString *filterProvider;
+	
+	NSArray *recentRecipients;
+	
+	NSArray<NSString *> *remoteUserIDs;
+	NSArray<NSString *> *importingUserIDs;        // used when animating the import of users
+	
+	ZDCPopoverTransition *popoverTransition;
 }
 
 @synthesize delegate = delegate;
 
-- (instancetype)initWithDelegate:(nullable id <UserSearchViewControllerDelegate>)inDelegate
+- (instancetype)initWithDelegate:(id<UserSearchViewControllerDelegate>)inDelegate
                            owner:(ZeroDarkCloud*)inOwner
-                     localUserID:(NSString* __nonnull)inLocalUserID
-                   sharedUserIDs:(NSArray <NSString* /* [userID */> *)inSharedUserIDs
+                     localUserID:(NSString *)inLocalUserID
+                   sharedUserIDs:(NSArray<NSString*> *)inSharedUserIDs
 
 {
 	NSBundle *bundle = [ZeroDarkCloud frameworkBundle];
@@ -188,36 +100,22 @@
 	self = [storyboard instantiateViewControllerWithIdentifier:@"UserSearchViewController"];
 	if (self)
 	{
-		zdc = inOwner;
 		delegate = inDelegate;
-		localUserID = inLocalUserID;
+		zdc = inOwner;
+		
+		localUserID = [inLocalUserID copy];
 		sharedUserIDs = [NSSet setWithArray:inSharedUserIDs];
 		
-		[self commonInit];
+		dataQueue = dispatch_queue_create("UserSearchViewController.dataQueue", DISPATCH_QUEUE_SERIAL);
+		IsOnDataQueue = &IsOnDataQueue;
+		dispatch_queue_set_specific(dataQueue, IsOnDataQueue, IsOnDataQueue, NULL);
 	}
 	return self;
 }
 
-- (void)commonInit
-{
-    awake = NO;
-    importingUserIDs = nil;
-    
-    searchResultsQueue     = dispatch_queue_create("UserSearchViewController.searchResultsQueue", DISPATCH_QUEUE_SERIAL);
-    IsOnSearchResultsQueue = &IsOnSearchResultsQueue;
-    dispatch_queue_set_specific(searchResultsQueue, IsOnSearchResultsQueue, IsOnSearchResultsQueue, NULL);
-    
-    dataQueue     = dispatch_queue_create("UserSearchViewController.dataQueue", DISPATCH_QUEUE_SERIAL);
-    IsOnDataQueue = &IsOnDataQueue;
-    dispatch_queue_set_specific(dataQueue, IsOnDataQueue, IsOnDataQueue, NULL);
-
-    threeDots = [[UIImage imageNamed:@"3dots"
-                            inBundle:[ZeroDarkCloud frameworkBundle]
-       compatibleWithTraitCollection:nil]
-                 maskWithColor: self.view.tintColor];
-    
-    [_btnFilter setImage:threeDots  forState:UIControlStateNormal];
-}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark View Lifecycle
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)viewDidLoad
 {
@@ -226,15 +124,10 @@
 	
 	self.navigationItem.title = @"Add Recipients";
 	
-	[RemoteUserTableViewCell registerViewsforTable:_tblUsers
-														 bundle:[ZeroDarkCloud frameworkBundle]];
-	
-	
-	[UserSearchTableViewHeaderCell registerViewsforTable:_tblUsers
-																 bundle:[ZeroDarkCloud frameworkBundle]];
+	[RemoteUserTableViewCell registerViewsforTable:_tblUsers bundle:[ZeroDarkCloud frameworkBundle]];
+	[UserSearchTableViewHeaderCell registerViewsforTable:_tblUsers bundle:[ZeroDarkCloud frameworkBundle]];
 	
 	_tblUsers.separatorInset = UIEdgeInsetsMake(0, 78, 0, 0); // top, left, bottom, right
-	//    _tblUsers.tableFooterView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, _tblUsers.frame.size.width, 1)];
 	
 	_tblUsers.allowsSelection = YES;
 	_tblUsers.estimatedRowHeight = 0;
@@ -246,14 +139,17 @@
 	_lblSearchPrompt.text =  NSLocalizedString(@"Type at least 2 characters",
 															 @"Type at least 2 characters");
 	
-	remoteSRVC = nil;
-	
 	defaultUserImage = [zdc.imageManager.defaultUserAvatar imageWithMaxSize:[RemoteUserTableViewCell avatarSize]];
 	
+	threeDots = [[UIImage imageNamed: @"3dots"
+	                        inBundle: [ZeroDarkCloud frameworkBundle]
+	   compatibleWithTraitCollection: nil]
+	                   maskWithColor: self.view.tintColor];
+	
+	[_btnFilter setImage:threeDots  forState:UIControlStateNormal];
+	
 	_searchBar.text = @"";
-	searchResults = nil;
-	preferedAuth0IDs =  nil;
-	//    preferedAuth0IDs =  owner.internalPreferences.preferedAuth0IDs;
+	
 	searchId = 0;
 	displayedSearchId = -1;
 	
@@ -261,118 +157,82 @@
 	_vwInfo.layer.masksToBounds = YES;
 	_vwInfo.hidden = YES;
 	
-	//    [self.view addKeyboardPanningWithFrameBasedActionHandler:^(CGRect keyboardFrameInView, BOOL opening, BOOL closing) {
-	//
-	//    } constraintBasedActionHandler:nil];
-	//
-	[self cancelSearching];
+//	[self.view addKeyboardPanningWithFrameBasedActionHandler:^(CGRect keyboardFrameInView, BOOL opening, BOOL closing) {
+//
+//	} constraintBasedActionHandler:nil];
+	
+	[self cancelSearching]; // why ?
 }
 
 - (void)viewWillAppear:(BOOL)animated
 {
-    [super viewWillAppear:animated];
-    
-    
-    // the swipe gesture fights with table editing
-    
-    //    swipeGesture = [[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(gestureFired:)];
-    //    [self.view addGestureRecognizer:swipeGesture];
-    
-//    [[NSNotificationCenter defaultCenter] addObserver: self
-//                                             selector: @selector(prefsChanged:)
-//                                                 name: ZDCLocalPreferencesChangedNotification
-//                                               object: nil];
-//
-//    [[NSNotificationCenter defaultCenter] addObserver:self
-//                                             selector:@selector(databaseConnectionDidUpdate:)
-//                                                 name:UIDatabaseConnectionDidUpdateNotification
-//                                               object:S4DatabaseManager];
-//
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(keyboardWillShow:)
-                                                 name:UIKeyboardWillShowNotification
-                                               object:nil];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(keyboardWillHide:)
-                                                 name:UIKeyboardWillHideNotification
-                                               object:nil];
-    
-    recentRecipients = zdc.internalPreferences.recentRecipients;
-  
-    if (!awake)
-    {
-        awake = YES;
-        
-    }
-    
-    
-    [self.tabBarController.tabBar setHidden:YES];
-    [self.navigationController setNavigationBarHidden:NO];
-    
-    self.navigationItem.title = NSLocalizedString(@"Select Recipients", @"Select Recipients");
-    
-    [self reloadResults];
-    
-    [_searchBar becomeFirstResponder];
-    [self cancelSearching];
-    
+	ZDCLogAutoTrace();
+	[super viewWillAppear:animated];
+	
+	// The swipe gesture fights with table editing.
+//	swipeGesture = [[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(gestureFired:)];
+//	[self.view addGestureRecognizer:swipeGesture];
+	
+	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+	
+	[nc addObserver: self
+	       selector: @selector(keyboardWillShow:)
+	           name: UIKeyboardWillShowNotification
+	         object: nil];
+	
+	[nc addObserver: self
+	       selector: @selector(keyboardWillHide:)
+	           name: UIKeyboardWillHideNotification
+	         object: nil];
+	
+	recentRecipients = zdc.internalPreferences.recentRecipients;
+	
+	[self.tabBarController.tabBar setHidden:YES];
+	[self.navigationController setNavigationBarHidden:NO];
+	
+	self.navigationItem.title = NSLocalizedString(@"Select Recipients", @"Select Recipients");
+	
+	[self reloadResults];
+	
+	[_searchBar becomeFirstResponder];
+	[self cancelSearching];
 }
 
-
--(void) viewWillDisappear:(BOOL)animated
+- (void)viewWillDisappear:(BOOL)animated
 {
-    [super viewWillDisappear:animated];
-    
-    [self.view removeGestureRecognizer:swipeGesture];
-    swipeGesture = nil;
-    
-    [[NSNotificationCenter defaultCenter]  removeObserver:self];
-    
+	ZDCLogAutoTrace();
+	[super viewWillDisappear:animated];
+	
+	[self.view removeGestureRecognizer:swipeGesture];
+	swipeGesture = nil;
+	
+	[[NSNotificationCenter defaultCenter]  removeObserver:self];
 }
 
-//
-//-(void)gestureFired:(UISwipeGestureRecognizer *)gesture {
-//    if (gesture.direction == UISwipeGestureRecognizerDirectionRight)
-//    {
-//        [self.navigationController popViewControllerAnimated:YES];
-//    }
-//}
-//
-
-
--(void) updateViewConstraints
+- (void)fadeView:(UIView *)theView
+      shouldHide:(BOOL)shouldHide
 {
-    [super updateViewConstraints];
-    
-}
-
-
-
--(void)fadeView:(UIView*)theView
-     shouldHide:(BOOL)shouldHide
-{
-    if(theView.isHidden != shouldHide)
-    {
-        
-        if(shouldHide)
-        {
-            [UIView animateWithDuration:0.3 animations:^{
-                theView.alpha = 0;
-            } completion: ^(BOOL finished) {
-                theView.hidden = finished;
-            }];
-            
-        }
-        else
-        {
-            theView.alpha = 0;
-            theView.hidden = NO;
-            [UIView animateWithDuration:0.7 animations:^{
-                theView.alpha = 1;
-            }];
-        }
-    }
+	if (theView.isHidden == shouldHide) {
+		// Nothing to do
+		return;
+	}
+	
+	if (shouldHide)
+	{
+		[UIView animateWithDuration:0.3 animations:^{
+			theView.alpha = 0;
+		} completion: ^(BOOL finished) {
+			theView.hidden = finished;
+		}];
+	}
+	else
+	{
+		theView.alpha = 0;
+		theView.hidden = NO;
+		[UIView animateWithDuration:0.7 animations:^{
+			theView.alpha = 1;
+		}];
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -387,69 +247,69 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 
 - (void)keyboardWillShow:(NSNotification *)notification
 {
-    ZDCLogAutoTrace();
-    
-    __weak typeof(self) weakSelf = self;
-    
-    // With multitasking on iPad, all visible apps are notified when the keyboard appears and disappears.
-    // The value of [UIKeyboardIsLocalUserInfoKey] is YES for the app that caused the keyboard to appear
-    // and NO for any other apps.
-    
-    BOOL isKeyboardForOurApp = [notification.userInfo[UIKeyboardIsLocalUserInfoKey] boolValue];
-    if (!isKeyboardForOurApp)
-    {
-        return;
-    }
-    
-    // Extract info from notification
-    
-    CGRect keyboardEndFrame = [notification.userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
-    
-    NSTimeInterval animationDuration = [notification.userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue];
-    UIViewAnimationCurve animationCurve = [notification.userInfo[UIKeyboardAnimationCurveUserInfoKey] intValue];
-    
-    // Perform animation
-    
-    CGFloat keyboardHeight = keyboardEndFrame.size.height;
-    
-    [UIView animateWithDuration:animationDuration
-                          delay:0.2
-                        options:AnimationOptionsFromCurve(animationCurve)
-                     animations:
-     ^{
-         __strong typeof(self) strongSelf = weakSelf;
-         if (strongSelf == nil) return;
-         
-         strongSelf->_cnstTbleUserBottomOffset.constant =   - keyboardHeight;
-         
-         [strongSelf.view layoutIfNeeded]; // animate constraint change
-         
-     } completion:^(BOOL finished) {
-     }];
+	ZDCLogAutoTrace();
+	
+	// With multitasking on iPad, all visible apps are notified when the keyboard appears and disappears.
+	// The value of [UIKeyboardIsLocalUserInfoKey] is YES for the app that caused the keyboard to appear
+	// and NO for any other apps.
+	//
+	BOOL isKeyboardForOurApp = [notification.userInfo[UIKeyboardIsLocalUserInfoKey] boolValue];
+	if (!isKeyboardForOurApp)
+	{
+		return;
+	}
+	
+	// Extract info from notification
+	
+	CGRect keyboardEndFrame = [notification.userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
+	
+	NSTimeInterval animationDuration = [notification.userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+	UIViewAnimationCurve animationCurve = [notification.userInfo[UIKeyboardAnimationCurveUserInfoKey] intValue];
+	
+	// Perform animation
+	
+	CGFloat keyboardHeight = keyboardEndFrame.size.height;
+	
+	__weak typeof(self) weakSelf = self;
+	[UIView animateWithDuration: animationDuration
+	                      delay: 0.2
+	                    options: AnimationOptionsFromCurve(animationCurve)
+	                 animations:
+	^{
+		__strong typeof(self) strongSelf = weakSelf;
+		if (strongSelf == nil) return;
+		
+		strongSelf->_cnstTbleUserBottomOffset.constant = -keyboardHeight;
+		[strongSelf.view layoutIfNeeded]; // animate constraint change
+	
+	} completion:^(BOOL finished){
+		
+		// Nothing to do here
+	}];
 }
 
 - (void)keyboardWillHide:(NSNotification *)notification
 {
-    ZDCLogAutoTrace();
-    
-    // With multitasking on iPad, all visible apps are notified when the keyboard appears and disappears.
-    // The value of [UIKeyboardIsLocalUserInfoKey] is YES for the app that caused the keyboard to appear
-    // and NO for any other apps.
-    
-    BOOL isKeyboardForOurApp = [notification.userInfo[UIKeyboardIsLocalUserInfoKey] boolValue];
-    if (!isKeyboardForOurApp)
-    {
-        return;
-    }
-    
-    // Extract info from notification
-    
-    NSTimeInterval animationDuration = [notification.userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue];
-    UIViewAnimationCurve animationCurve = [notification.userInfo[UIKeyboardAnimationCurveUserInfoKey] intValue];
-    
-    // Perform animation
-    
-    [self _keyboardWillHideWithAnimationDuration:animationDuration animationCurve:animationCurve];
+	ZDCLogAutoTrace();
+	
+	// With multitasking on iPad, all visible apps are notified when the keyboard appears and disappears.
+	// The value of [UIKeyboardIsLocalUserInfoKey] is YES for the app that caused the keyboard to appear
+	// and NO for any other apps.
+	//
+	BOOL isKeyboardForOurApp = [notification.userInfo[UIKeyboardIsLocalUserInfoKey] boolValue];
+	if (!isKeyboardForOurApp)
+	{
+		return;
+	}
+	
+	// Extract info from notification
+	
+	NSTimeInterval animationDuration = [notification.userInfo[UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+	UIViewAnimationCurve animationCurve = [notification.userInfo[UIKeyboardAnimationCurveUserInfoKey] intValue];
+	
+	// Perform animation
+	
+	[self _keyboardWillHideWithAnimationDuration:animationDuration animationCurve:animationCurve];
 }
 
 - (void)_keyboardWillHideWithAnimationDuration:(NSTimeInterval)animationDuration
@@ -476,7 +336,10 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
          // Nothing to do
      }];
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark UIViewControllerTransitioningDelegate
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (id<UIViewControllerAnimatedTransitioning>)animationControllerForPresentedController:(UIViewController *)presented
                                                                   presentingController:(UIViewController *)presenting
@@ -549,29 +412,18 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 }
 
 
-// Handles the dismissal of a self presented detailVC with custom Back button
+/**
+ * Handles the dismissal of a self presented detailVC with custom Back button
+ */
 - (void)handleNavigationBack:(UIButton *)backButton
 {
-    //    if ([self isEditing])
-    //    {
-    //        [self endEditing:NULL];
-    //    }
-    
-    [[self navigationController] popViewControllerAnimated:YES];
-}
-
-
--(void)resetSearch
-{
-    _searchBar.text = @"";
-    
-    searchResults = nil;
-    preferedAuth0IDs =  nil;
-//    preferedAuth0IDs =  owner.internalPreferences.preferedAuth0IDs;
-    searchId = 0;
-    displayedSearchId = -1;
-    
-    [self reloadResults];
+	ZDCLogAutoTrace();
+	
+//	if ([self isEditing]) {
+//		[self endEditing:NULL];
+//	}
+	
+	[[self navigationController] popViewControllerAnimated:YES];
 }
 
 -(void)reloadResults
@@ -583,68 +435,76 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 #pragma mark Recipient Management
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
--(void) setPreferedAuth0ID:(NSString*)auth0ID forUserID:(NSString*)userID
+- (void)setPreferredIdentityID:(NSString *)identityID forUserID:(NSString *)userID
 {
-    NSMutableDictionary* ppTable = [NSMutableDictionary dictionaryWithDictionary:preferedAuth0IDs];
-    [ppTable setObject:auth0ID forKey:userID];
-    preferedAuth0IDs = ppTable;
+	ZDCLogAutoTrace();
+	NSAssert([NSThread isMainThread], @"Invoked on incorrect thread");
+	
+	if (preferredIdentityIDs == nil) {
+		preferredIdentityIDs = [[NSMutableDictionary alloc] init];
+	}
+	
+	preferredIdentityIDs[userID] = identityID;
 }
 
--(void)removeUserFromSharedList:(NSString * _Nonnull)userID
+- (void)removeUserFromSharedList:(NSString *)userID
 {
-    NSMutableSet* _sharedUserIDs = [NSMutableSet setWithSet:sharedUserIDs];
-    [_sharedUserIDs removeObject:userID];
-    sharedUserIDs = _sharedUserIDs;
-
-    // deselect
-    if([delegate respondsToSelector:@selector(userSearchUserViewController:removedRecipients:)])
-    {
-        [delegate userSearchUserViewController:self
-                             removedRecipients:@[userID]];
-    }
-
+	ZDCLogAutoTrace();
+	
+	NSMutableSet *_sharedUserIDs = [NSMutableSet setWithSet:sharedUserIDs];
+	[_sharedUserIDs removeObject:userID];
+	sharedUserIDs = [_sharedUserIDs copy];
+	
+	SEL selector = @selector(userSearchViewController:removedRecipients:);
+	if ([delegate respondsToSelector:selector])
+	{
+		[delegate userSearchViewController: self
+		                 removedRecipients: @[userID]];
+	}
 }
 
 
 - (void)addUserToSharedList:(NSString *)userID
-                    auth0ID:(NSString *)auth0ID
+                 identityID:(NSString *)identityID
 {
-	NSMutableSet* _sharedUserIDs = [NSMutableSet setWithSet:sharedUserIDs];
-	[_sharedUserIDs addObject:userID];
-	sharedUserIDs = _sharedUserIDs;
- 
+	ZDCLogAutoTrace();
+	NSAssert([NSThread isMainThread], @"Invoked on wrong thread");
+	
 	// never select yourself
 	if ([localUserID isEqualToString:userID]) {
 		return;
 	}
 	
-	
-    __block ZDCUser*    user    = nil;
+	NSMutableSet *newSharedUserIDs = [NSMutableSet setWithSet:sharedUserIDs];
+	[newSharedUserIDs addObject:userID];
+	sharedUserIDs = [newSharedUserIDs copy];
  
-	YapDatabaseConnection *roConnection = zdc.databaseManager.roDatabaseConnection;
-	[roConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	__block ZDCUser *user = nil;
+ 
+	YapDatabaseConnection *uiConnection = zdc.databaseManager.uiDatabaseConnection;
+	[uiConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
 		user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
 	}];
 
-	[zdc.internalPreferences setRecentRecipient:userID auth0ID:auth0ID];
-	[self setPreferedAuth0ID:auth0ID forUserID:userID];
+	[zdc.internalPreferences addRecentRecipient:userID];
+	[self setPreferredIdentityID:identityID forUserID:userID];
   
-    // if the new prefered ID doesnt match the user.auth0_preferredID then update the pref
-    if ([user.preferredIdentityID isEqualToString:auth0ID])
-    {
-        [zdc.internalPreferences setPreferedAuth0ID:NULL userID:userID];
-    }
-    else
-    {
-        [zdc.internalPreferences setPreferedAuth0ID:auth0ID userID:userID];
-    }
-
-    if([delegate respondsToSelector:@selector(userSearchUserViewController:selectedRecipients:)])
-    {
-        [delegate userSearchUserViewController:self
-                            selectedRecipients:@[@[userID, auth0ID]]];
-    }
+	// if the new prefered ID doesnt match the user.auth0_preferredID then update the pref
+//	if ([user.preferredIdentityID isEqualToString:auth0ID])
+//	{
+//		[zdc.internalPreferences setPreferedAuth0ID:NULL userID:userID];
+//	}
+//	else
+//	{
+//		[zdc.internalPreferences setPreferedAuth0ID:auth0ID userID:userID];
+//	}
+	
+	SEL selector = @selector(userSearchViewController:selectedRecipients:);
+	if ([delegate respondsToSelector:selector])
+	{
+		[delegate userSearchViewController:self selectedRecipients:@[@[userID, identityID]]];
+	}
 }
 
 -(BOOL)shouldShowRecentRecipients
@@ -669,36 +529,6 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
     [_tblUsers endUpdates];
     [self.view setNeedsUpdateConstraints];
     
-}
-
-
--(NSString*)firstMatchedProfileFromMatches:(NSArray<ZDCSearchMatch*>*)matches
-{
-	NSAssert(NO, @"Not implemented"); // finish refactoring
-	return nil;
-	
-/*
-    __block NSString* filteredKey = NULL;
-    
-    if(matches.count && filterProvider)
-    {
-        [matches enumerateObjectsUsingBlock:^(ZDCSearchUserMatching * match, NSUInteger idx, BOOL * _Nonnull stop) {
-            
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-            
-            NSArray* comps = [match.auth0_profileID componentsSeparatedByString:@"|"];
-            NSString* provider = comps.firstObject;
-            if([provider isEqualToString:filterProvider])
-            {
-                filteredKey = match.auth0_profileID;
-                *stop = YES;
-            }
-#pragma clang diagnostic pop
-        }];
-    }
-    return filteredKey;
-*/
 }
 
 
@@ -745,478 +575,295 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 
 // this timer prevents the user typing from firing off a search for each char, we delay just a bit
 
--(void)startSearching
+- (void)startSearching
 {
-    [self cancelSearching];
-    showSearchingTimer =  [NSTimer scheduledTimerWithTimeInterval:.3
-                                                           target:self
-                                                         selector:@selector(showSearching:)
-                                                         userInfo:nil
-                                                          repeats:NO];
+	ZDCLogAutoTrace();
+	
+	[self cancelSearching];
+	showSearchingTimer =
+	  [NSTimer scheduledTimerWithTimeInterval: 0.3
+	                                   target: self
+	                                 selector: @selector(showSearching:)
+	                                 userInfo: nil
+	                                  repeats: NO];
 }
 
--(void)cancelSearching
+- (void)cancelSearching
 {
-    if(showSearchingTimer) {
-        [showSearchingTimer invalidate];
-    }
+	ZDCLogAutoTrace();
+	
+	if (showSearchingTimer) {
+		[showSearchingTimer invalidate];
+	}
    
-    //    UISearchBar+Ext.swift
-    _searchBar.isLoading = NO;
+	_searchBar.isLoading = NO;
 }
 
 - (void)showSearching:(NSTimer*)sender
 {
-    //    UISearchBar+Ext.swift
-    _searchBar.isLoading = YES;
-    
+	ZDCLogAutoTrace();
+	
+	_searchBar.isLoading = YES;
 }
 
-//MARK: UISearchBarDelegate
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark UISearchBarDelegate
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
--(void) updateSearchPrompt
+- (void)updateSearchPrompt
 {
-    __weak typeof(self) weakSelf = self;
+	ZDCLogAutoTrace();
     
-    if(_searchBar.text.length ==1)
-    {
-        _lblSearchPrompt.hidden = NO;
-        _lblSearchPrompt.alpha = 0;
+	if (_searchBar.text.length == 1)
+	{
+		_lblSearchPrompt.hidden = NO;
+		_lblSearchPrompt.alpha = 0;
         
-        [UIView animateWithDuration:0.5 animations:^{
-            
-            __strong typeof(self) strongSelf = weakSelf;
-            if(strongSelf == nil) return;
-            strongSelf->_lblSearchPrompt.alpha = 1;
-            
-        } completion:^(BOOL finished) {
-            
-        }];
-    }
-    else
-        _lblSearchPrompt.hidden = YES;
+		[UIView animateWithDuration:0.5 animations:^{
+			
+			self->_lblSearchPrompt.alpha = 1;
+			
+		} completion:^(BOOL finished) {
+      
+			// Nothing to do here
+		}];
+	}
+	else
+   {
+		_lblSearchPrompt.hidden = YES;
+	}
     
 }
 
 - (void)searchBarCancelButtonClicked:(UISearchBar *)sender
 {
-    _lblSearchPrompt.hidden = YES;
-    
+	ZDCLogAutoTrace();
+	
+	_lblSearchPrompt.hidden = YES;
 }
 
 - (void)searchBarTextDidEndEditing:(UISearchBar *)sender
 {
-    _lblSearchPrompt.hidden = YES;
-    
-    // only fire a search when the bar is enabled.
-    if(sender.userInteractionEnabled)
-        [self startNewSearchQuery:nil];
+	ZDCLogAutoTrace();
+	
+	_lblSearchPrompt.hidden = YES;
+	
+	// only fire a search when the bar is enabled.
+	if (sender.userInteractionEnabled) {
+		[self startNewSearchQuery:nil];
+	}
 }
 
 - (void)searchBar:(UISearchBar *)sender textDidChange:(NSString *)searchText
 {
-    const NSTimeInterval kQueryDelay = 0.25;
-    [self updateSearchPrompt];
-    
-    if (queryStartTimer)
-    {
-        [queryStartTimer setFireDate:[NSDate dateWithTimeIntervalSinceNow:kQueryDelay]];
-    }
-    else
-    {
-        queryStartTimer = [NSTimer scheduledTimerWithTimeInterval:kQueryDelay target:self selector:@selector(startNewSearchQuery:) userInfo:nil repeats:NO];
-    }
-    
-}
-
-
-
-#pragma mark search queries
-
-- (void)startNewSearchQuery:(NSTimer*)theTimer
-{
-    [self queryForUsersByName:_searchBar.text];
-    [queryStartTimer invalidate];
-    queryStartTimer = NULL;
-    _vwInfo.hidden = YES;
-}
-
-
-- (void)queryForUsersByName:(NSString *)name
-{
-	NSAssert(NO, @"Not implemented"); // finish refactoring
-/*
-    __weak typeof(self) weakSelf = self;
-    
-    NSInteger curSearchId = searchId;
-    
-    //    if ([name length] == 0)
-    //    {
-    //        searchResults = nil;
-    //        preferedAuth0IDs = nil;
-    //        [self reloadResults];
-    //        return;
-    //    }
-    
-    if (name.length < 2)
-    {
-        searchResults = nil;
-        preferedAuth0IDs =  nil;
-//        preferedAuth0IDs =  owner.internalPreferences.preferedAuth0IDs;
-        [self cancelSearching];
-        [self reloadResults];
-        return;
-    }
-    
-//	NSString* searchString = name;
-//
-// searchResults = nil;
-    // start search indicator;
+	ZDCLogAutoTrace();
 	
+	const NSTimeInterval kQueryDelay = 0.25;
+	[self updateSearchPrompt];
+	
+	if (queryStartTimer)
+	{
+		[queryStartTimer setFireDate:[NSDate dateWithTimeIntervalSinceNow:kQueryDelay]];
+	}
+	else
+	{
+		queryStartTimer =
+		  [NSTimer scheduledTimerWithTimeInterval: kQueryDelay
+		                                   target: self
+		                                 selector: @selector(startNewSearchQuery:)
+		                                 userInfo: nil
+		                                  repeats: NO];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Search Queries
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)startNewSearchQuery:(NSTimer *)sender
+{
+	ZDCLogAutoTrace();
+	
+	[self queryForUsersByName:_searchBar.text];
+	
+	[queryStartTimer invalidate];
+	queryStartTimer = nil;
+	
+	_vwInfo.hidden = YES;
+}
+
+- (void)queryForUsersByName:(NSString *)queryString
+{
+	ZDCLogAutoTrace();
+    
+	if (queryString.length < 2)
+	{
+		searchResults = nil;
+	//	preferredIdentityIDs = nil;
+		[self cancelSearching];
+		[self reloadResults];
+		return;
+	}
+	
+	NSInteger currentSearchId = searchId;
 	[self startSearching];
-	[zdc.searchManager queryForUsersWithString:searchString
-                                       forUserID:localUserID
-                                 providerFilters:filterProvider?@[filterProvider]:nil
-                                 localSearchOnly:NO
-                                 completionQueue:nil
-                                    resultsBlock:^(ZDCSearchUserManagerResultStage stage,
-                                                   NSArray<ZDCSearchUserResult*>* results,
-                                                   NSError * _Nonnull error)
-      {
+	
+	ZDCSearchOptions *options = [[ZDCSearchOptions alloc] init];
+	options.providerToSearch = filterProvider;
+	options.searchLocalDatabase = YES;
+	options.searchLocalCache = YES;
+	options.searchRemoteServer = YES;
+	
+	__weak typeof(self) weakSelf = self;
+	[zdc.searchManager searchForUsersWithQuery: queryString
+	                                    treeID: zdc.primaryTreeID
+	                               requesterID: localUserID
+	                                   options: options
+	                           completionQueue: dispatch_get_main_queue()
+	                              resultsBlock:
+	^(ZDCSearchResultStage stage, NSArray<ZDCSearchResult *> *_Nullable results, NSError *_Nullable error)
+	{
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
+		if (currentSearchId <= strongSelf->displayedSearchId) {
+			return; // Newest query already displayed
+		}
           
-          __strong typeof(self) strongSelf = weakSelf;
-          if(strongSelf == nil) return;
-          
-          if (curSearchId <= strongSelf->displayedSearchId)
-              return; // Newest query already displayed
-          
-          if(error)
-          {
-              
-              [strongSelf cancelSearching];
-              
-              //                                            [strongSelf.container showError:@"User Search Failed"
-              //                                                                    message:error.localizedDescription
-              //                                                            completionBlock:^{
-              //
-              //                                                                [strongSelf.container popFromCurrentView];
-              //
-              //                                                            }];
-              
-              return;
-          }
-          
-          [strongSelf updateSearchResults:results];
-          [strongSelf reloadResults];
-          
-          if(stage == ZDCSearchUserManagerResultStage_Done)
-          {
-              // end search indicator;
-              
-              [strongSelf cancelSearching];
-              strongSelf->displayedSearchId = curSearchId;
-              
-              if(strongSelf->searchResults.count == 0)
-              {
-					  [strongSelf fadeView:strongSelf->_vwInfo shouldHide:NO];
-              }
-          }
+		if (error)
+		{
+			[strongSelf cancelSearching];
+			return;
+		}
+		
+		[strongSelf updateSearchResults:results fromStage:stage];
+		[strongSelf reloadResults];
+		
+		if (stage == ZDCSearchResultStage_Done)
+		{
+			// end search indicator;
+			
+			[strongSelf cancelSearching];
+			strongSelf->displayedSearchId = currentSearchId;
+			
+			if (strongSelf->searchResults.count == 0)
+			{
+				[strongSelf fadeView:strongSelf->_vwInfo shouldHide:NO];
+			}
+		}
 	}];
 	
-	++searchId;
-*/
+	searchId++;
 }
 
--(void) updateSearchResults:(NSArray<ZDCSearchResult*>*) newResults
+- (void)updateSearchResults:(NSArray<ZDCSearchResult*> *)newResults fromStage:(ZDCSearchResultStage)stage
 {
-	NSAssert(NO, @"Not implemented"); // finish refactoring
+	ZDCLogAutoTrace();
+	NSAssert([NSThread isMainThread], @"Must be invoked on main thread: `searchResults` isn't thread-safe");
 	
-/*
-    dispatch_sync(searchResultsQueue, ^{
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-        
-        __block NSMutableDictionary<NSString*, ZDCSearchResult*>* searchDict = NSMutableDictionary.dictionary;
-        
-        // create a dictionary with existing search results
-        [searchResults enumerateObjectsUsingBlock:^(ZDCSearchResult* entry, NSUInteger idx, BOOL * _Nonnull stop) {
-            NSString*  userID = entry.userID;
-            [searchDict setObject:entry forKey:userID];
-        }];
-        
-        // update the dictionary with new results
-        [newResults enumerateObjectsUsingBlock:^(ZDCSearchUserResult* entry, NSUInteger idx, BOOL * _Nonnull stop) {
-            
-            NSString*  userID = entry.uuid;
-            NSDate*   auth0_lastUpdated = entry.auth0_lastUpdated;
-            
-            ZDCSearchUserResult* existingEntry = [searchDict objectForKey:userID];
-            NSDate*   existingDate = existingEntry.auth0_lastUpdated;
-    
-            // dont update if there is  newer entry
-            if(!existingDate || [existingDate isBefore:auth0_lastUpdated])
-            {
-                [searchDict setObject:entry forKey:userID];
-            }
-        }];
-        
-        // update the searchResults
-        __block NSMutableArray<ZDCSearchUserResult*>* _searchResults = NSMutableArray.array;
-        [searchDict enumerateKeysAndObjectsUsingBlock:^(NSString *userID ,ZDCSearchUserResult* entry, BOOL * _Nonnull stop) {
-            [_searchResults addObject:entry];
-        }];
-        searchResults =  _searchResults;
-#pragma clang diagnostic pop
-    });
-*/
+	NSMutableDictionary<NSString*, ZDCSearchResult*> *searchDict = [NSMutableDictionary dictionary];
+	
+	// create a dictionary with existing search results
+	for (ZDCSearchResult *entry in searchResults)
+	{
+		NSString *userID = entry.userID;
+		searchDict[userID] = entry;
+	}
+	
+	// update the dictionary with new results
+	for (ZDCSearchResult *entry in newResults)
+	{
+		NSString *userID = entry.userID;
+		ZDCSearchResult *existingEntry = searchDict[userID];
+		
+		if (!existingEntry || stage == ZDCSearchResultStage_Server)
+		{
+			searchDict[userID] = entry;
+		}
+	}
+	
+	// update the searchResults
+	searchResults =  [searchDict.allValues copy];
 }
 
--(ZDCSearchResult *)searchResultsForUserID:(NSString*) userIDIn
+- (ZDCSearchResult *)searchResultsForUserID:(NSString *)userID
 {
-	NSAssert(NO, @"Not implemented"); // finish refactoring
-	return nil;
+	ZDCLogAutoTrace();
+	NSAssert([NSThread isMainThread], @"Must be invoked on main thread: `searchResults` isn't thread-safe");
 	
-/*
-    __block ZDCSearchUserResult* result = nil;
-    
-    dispatch_sync(searchResultsQueue, ^{
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-        
-        [searchResults enumerateObjectsUsingBlock:^(ZDCSearchUserResult* entry, NSUInteger idx, BOOL * _Nonnull stop) {
-            NSString*  userID = entry.uuid;
-             if([userID isEqualToString:userIDIn])
-            {
-                result = entry;
-                *stop = YES;
-            }
-        }];
-        
-#pragma clang diagnostic pop
-        
-    });
-    return result;
-*/
+	if (userID == nil) {
+		return nil;
+	}
+	ZDCSearchResult *match = nil;
+	
+	for (ZDCSearchResult *entry in searchResults)
+	{
+		if ([entry.userID isEqualToString:userID])
+		{
+			match = entry;
+			break;
+		}
+	}
+	
+	return match;
 }
 
-
--(NSDictionary*)profileInfoFromSearchResults:(ZDCSearchResult*)item
-{
-	NSAssert(NO, @"Not implemented"); // finish refactoring
-	return nil;
-	
-/*
-    NSDictionary* auth0_profiles                = item.auth0_profiles;
-    NSString* preferedAuth0ID                   = item.auth0_preferredID;
-    NSArray<ZDCSearchUserMatching*>* matches    = item.matches;
-    NSString*  userID                           = item.uuid;
- 
-    NSDictionary* auth0_profile    = nil;
-     // result values in dict
-    NSString* auth0ID               = nil;
-    NSString* provider              = nil;
-    NSURL* pictureURL               = nil;
-    NSAttributedString* displayAttr = nil;
-    
-    if(matches.count)
-    {
-        NSString* matchedProfileID          = nil;
-        __block ZDCSearchUserMatching*      matchedProfile = nil;
-        NSString* displayName               = nil;
-        NSArray*  matchRanges               = nil;
-        
-        // find the uuid of the matched profile
-        matchedProfileID = [self firstMatchedProfileFromMatches:matches];
-        if(!matchedProfileID)
-        {
-            matchedProfileID = [preferedAuth0IDs objectForKey:userID];
-            if(!matchedProfileID)
-                matchedProfileID = matches.firstObject.auth0_profileID;
-        }
-        
-        
-        // get actual result.
-        [matches enumerateObjectsUsingBlock:^(ZDCSearchUserMatching * entry,
-                                              NSUInteger idx, BOOL * _Nonnull stop)
-         {
-             if([entry.auth0_profileID isEqualToString:matchedProfileID])
-             {
-                 matchedProfile = entry;
-                 *stop = YES;
-             }
-         }];
-        
-        NSArray* comps = [matchedProfileID componentsSeparatedByString:@"|"];
-        provider = comps.firstObject;
-        
-        displayName = matchedProfile.matchingString;
-        matchRanges = matchedProfile.matchingRanges;
-        
-        auth0_profile = auth0_profiles[matchedProfileID];
-        if(auth0_profile)
-            auth0ID = matchedProfileID;
-        
-        if(!auth0_profile)
-        {
-            if(preferedAuth0ID)
-            {
-                NSArray* comps = [preferedAuth0ID componentsSeparatedByString:@"|"];
-                provider = comps.firstObject;
-                auth0_profile = [auth0_profiles objectForKey:preferedAuth0ID];
-                if(auth0_profile)
-                    auth0ID = preferedAuth0ID;
-            }
-        }
-        
-        if(!auth0_profile)
-        {
-            NSString* thisAuth0ID = auth0_profiles.allKeys.firstObject;
-            NSArray* comps = [thisAuth0ID componentsSeparatedByString:@"|"];
-            provider = comps.firstObject;
-            auth0_profile = [auth0_profiles objectForKey:thisAuth0ID];
-            if(auth0_profile)
-                auth0ID = thisAuth0ID;
-        }
-        
-        if(!displayName)
-        {
-            NSString* email          = [auth0_profile objectForKey:@"email"];
-            NSString* name           = [auth0_profile objectForKey:@"name"];
-            NSString* username       = [auth0_profile objectForKey:@"username"];
-            NSString* nickname       = [auth0_profile objectForKey:@"nickname"];
-            
-            // process nsdictionary issues
-            if([username isKindOfClass:[NSNull class]])
-                username = nil;
-            if([email isKindOfClass:[NSNull class]])
-                email = nil;
-            if([name isKindOfClass:[NSNull class]])
-                name = nil;
-            if([nickname isKindOfClass:[NSNull class]])
-                nickname = nil;
-            
-            if(!displayName && name.length)
-                displayName =  name;
-            
-            if(!displayName && username.length)
-                displayName =  username;
-            
-            if(!displayName && email.length)
-                displayName =  email;
-            
-            if(!displayName && nickname.length)
-                displayName =  nickname;
-            
-        }
-        
-        if(displayName)
-        {
-            NSMutableAttributedString *attrString = [[NSMutableAttributedString alloc] initWithString:displayName];
-            
-            UIFontDescriptor *descriptor = [UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleBody];
-            /// Add the bold trait
-            descriptor = [descriptor fontDescriptorWithSymbolicTraits:UIFontDescriptorTraitBold];
-            /// Pass 0 to keep the same font size
-            UIFont *boldFont = [UIFont fontWithDescriptor:descriptor size:0];
-            
-            if(matchRanges.count)
-            {
-                [attrString beginEditing];
-                
-                for(NSValue* matchRange in matchRanges)
-                {
-                    [attrString addAttribute:NSFontAttributeName
-                                       value:boldFont
-                                       range:matchRange.rangeValue];
-                }
-                [attrString endEditing];
-            }
-            
-            displayAttr = attrString;
-        }
-        
-        if([auth0_profile objectForKey:@"picture"])
-            pictureURL = [NSURL URLWithString:[auth0_profile objectForKey:@"picture"]];
-    }
-
-    NSMutableDictionary* info = NSMutableDictionary.dictionary;
-
-    if(auth0ID)
-        info[@"auth0ID"] = auth0ID;
-
-    if(provider)
-        info[@"provider"] = provider;
-
-    if(pictureURL)
-        info[@"pictureURL"] = pictureURL;
-
-    if(displayAttr)
-        info[@"displayAttr"] = displayAttr;
-
-    return info;
-*/
-}
-
-//MARK: tableview header
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark UITableView Header
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (CGFloat)tableView:(UITableView *)tv heightForHeaderInSection:(NSInteger)section
 {
-    CGFloat height = [UserSearchTableViewHeaderCell heightForCell];
-    
-    if(!self.shouldShowRecentRecipients &&  searchResults == 0)
-        height = 0;
-    
-    return height;
+	if (!self.shouldShowRecentRecipients && searchResults == 0) {
+		return 0;
+	}
+	else {
+		return [UserSearchTableViewHeaderCell heightForCell];
+	}
 }
 
 - (CGFloat)tableView:(UITableView *)tv heightForFooterInSection:(NSInteger)section
 {
-    CGFloat height = 0;
-    return height;
+	return 0;
 }
-
-
 
 - (UIView *)tableView:(UITableView *)tv viewForHeaderInSection:(NSInteger)section
 {
-    
-    UserSearchTableViewHeaderCell *cell = (UserSearchTableViewHeaderCell *)
-    [tv dequeueReusableCellWithIdentifier:kUserSearchTableViewHeaderCellIdentifier];
-    
-    if(self.shouldShowRecentRecipients)
-    {
-        // show recents
-        cell.lblText.text = @"Recent Recipients";
-    }
-    else if(searchResults)
-    {
-        // show results
-        cell.lblText.text = @"Search Results";
-    }
-    
-    return cell;
+	UserSearchTableViewHeaderCell *cell = (UserSearchTableViewHeaderCell *)
+	  [tv dequeueReusableCellWithIdentifier:kUserSearchTableViewHeaderCellIdentifier];
+	
+	if (self.shouldShowRecentRecipients)
+	{
+		// show recents
+		cell.lblText.text = @"Recent Recipients";
+	}
+	else if (searchResults)
+	{
+		// show results
+		cell.lblText.text = @"Search Results";
+	}
+	
+	return cell;
 }
 
-
-//MARK: tableview
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark UITableViewDataSource
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (NSInteger)tableView:(UITableView *)tv numberOfRowsInSection:(NSInteger)section
 {
-    NSInteger result = 0;
-    
-    if(tv == _tblUsers)
-    {
-        if(self.shouldShowRecentRecipients)
-            result = recentRecipients.count;
-        else
-            result = searchResults.count;
-    }
-    
-    return result;
+	NSInteger result = 0;
+	
+	if (tv == _tblUsers)
+	{
+		if (self.shouldShowRecentRecipients)
+			result = recentRecipients.count;
+		else
+			result = searchResults.count;
+	}
+	
+	return result;
 }
-
-
 
 - (CGFloat)tableView:(UITableView *)tv heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
@@ -1232,392 +879,331 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 
 - (UITableViewCell *)tableView:(UITableView *)tv cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    UITableViewCell* cell = nil;
-    
-    if(tv == _tblUsers)
-    {
-        if(self.shouldShowRecentRecipients)
-            cell = [self tableView:tv  recentUserCellForRowAtIndexPath:indexPath];
-        else
-            cell = [self tableView:tv  remoteUserCellForRowAtIndexPath:indexPath];
-    }
-    
-    return cell;
+	UITableViewCell *cell = nil;
+	if (tv == _tblUsers)
+	{
+		if (self.shouldShowRecentRecipients)
+			cell = [self tableView:tv  recentUserCellForRowAtIndexPath:indexPath];
+		else
+			cell = [self tableView:tv  remoteUserCellForRowAtIndexPath:indexPath];
+	}
+	
+	return cell;
 }
 
-
--(RemoteUserTableViewCell*)tableView:(UITableView *)tv
-     recentUserCellForRowAtIndexPath:(NSIndexPath *)indexPath
+- (RemoteUserTableViewCell *)tableView:(UITableView *)tv
+       recentUserCellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	NSAssert(NO, @"Not implemented"); // finish refactoring
-	return nil;
+	RemoteUserTableViewCell *cell = (RemoteUserTableViewCell *)
+	  [tv dequeueReusableCellWithIdentifier:kRemoteUserTableViewCellIdentifier];
 	
-/*
-    RemoteUserTableViewCell *cell = (RemoteUserTableViewCell *)[tv dequeueReusableCellWithIdentifier:kRemoteUserTableViewCellIdentifier];
+	NSString *userID = [recentRecipients objectAtIndex:indexPath.row];
+	
+	BOOL isAlreadyImported = [sharedUserIDs containsObject:userID];
+	BOOL isMyUserID = [userID isEqualToString:localUserID];
+	
+	__block ZDCUser *user = nil;
+	[zdc.databaseManager.uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+		
+		user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+	}];
+	
+	cell.userID = userID;
+	cell.delegate = (id <RemoteUserTableViewCellDelegate>)self;
+	
+	cell.lblUserName.text = user.displayName;
 
-    __weak typeof(self) weakSelf = self;
-    
-    NSArray* item = [recentRecipients objectAtIndex: indexPath.row ];
-    NSString* userID = item[0];
-    NSString* auth0ID = item.count>1?item[1]:@"";
-    NSString* provider = nil;
-    
-    BOOL isAlreadyImported = [sharedUserIDs containsObject:userID];
-    BOOL isMyUserID = [userID isEqualToString:localUserID];
-                   
-    if(auth0ID.length == 0)
-        auth0ID = nil;
-    
-    if(auth0ID)
-    {
-        NSArray* comps = [auth0ID componentsSeparatedByString:@"|"];
-        provider = comps.firstObject;
-    }
-    
-    __block ZDCUser *user = nil;
-    [databaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-        user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
-    }];
-    
-    cell.userID = userID;
-    cell.auth0ID = auth0ID;
-    cell.delegate = (id <RemoteUserTableViewCellDelegate>)self;
-    
-    NSString* displayName  = [user displayNameForAuth0ID:auth0ID];
-    cell.lblUserName.text = displayName;
-    
-	NSURL *pictureURL = nil;
-	NSString *picture =
-	  [Auth0ProviderManager correctPictureForAuth0ID: auth0ID
-	                                     profileData: user.auth0_profiles[auth0ID]
-	                                          region: user.aws_region
-	                                          bucket: user.aws_bucket];
-    if(picture)
-        pictureURL = [NSURL URLWithString:picture];
+	if (isMyUserID) {
+		cell.lblUserName.textColor = UIColor.darkGrayColor;
+	}
+	else {
+		cell.lblUserName.textColor = UIColor.blackColor;
+	}
+	
+	ZDCUserIdentity *displayIdentity = user.displayIdentity;
+	
+	OSImage *providerImage =
+	  [[zdc.auth0ProviderManager iconForProvider: displayIdentity.provider
+	                                        type: Auth0ProviderIconType_Signin]
+	                              scaledToHeight: [RemoteUserTableViewCell imgProviderHeight]];
+	
+	if(providerImage)
+	{
+		cell.imgProvider.image = providerImage;
+		cell.imgProvider.layer.opacity = isMyUserID ? 0.4 : 1.0;
+		cell.imgProvider.hidden = NO;
+		cell.lblProvider.hidden = YES;
+	}
+	else
+	{
+		NSString *providerName = [zdc.auth0ProviderManager displayNameForProvider:displayIdentity.provider];
+		
+		cell.lblProvider.text = providerName;
+		cell.imgProvider.hidden = YES;
+		cell.lblProvider.hidden = NO;
+	}
 
-    if(isMyUserID)
-    {
-        cell.lblUserName.textColor = UIColor.darkGrayColor;
-    }
-    else
-    {
-        cell.lblUserName.textColor = UIColor.blackColor;
-    }
+	NSUInteger nonRecoveryIdentityCount = 0;
+	for (ZDCUserIdentity *ident in user.identities)
+	{
+		if (!ident.isRecoveryAccount) {
+			nonRecoveryIdentityCount++;
+		}
+	}
     
-    OSImage* providerImage = [[providerManager providerIcon:Auth0ProviderIconType_Signin forProvider:provider] scaledToHeight:[RemoteUserTableViewCell imgProviderHeight]];
-    
-    if(providerImage)
-    {
-        cell.imgProvider.image =  providerImage;
-        cell.imgProvider.layer.opacity   = isMyUserID?.4:1.0;
-        cell.imgProvider.hidden = NO;
-        cell.lblProvider.hidden = YES;
-    }
-    else
-    {
-        NSString* providerName =  [providerManager displayNameforProvider:provider];
-        if(!providerName)
-            providerName = provider;
-        cell.lblProvider.text = providerName;
-        cell.imgProvider.hidden = YES;
-        cell.lblProvider.hidden = NO;
-    }
+	if (nonRecoveryIdentityCount < 2)
+	{
+		cell.lblBadge.hidden = YES;
+	}
+	else
+	{
+		// a lot of work to make the badge look pretty
+		cell.lblBadge.hidden = NO;
+		cell.lblBadge.backgroundColor = isMyUserID ? UIColor.lightGrayColor : self.view.tintColor;
+		cell.lblBadge.clipsToBounds = YES;
+		cell.lblBadge.font = [UIFont systemFontOfSize:14];
+		cell.lblBadge.layer.cornerRadius = cell.lblBadge.frame.size.height/2;
+		cell.lblBadge.textAlignment = NSTextAlignmentCenter;
+		cell.lblBadge.edgeInsets = (UIEdgeInsets){
+			.top = 0,
+			.left = 4,
+			.bottom = 0,
+			.right = 3
+		};
+		
+		cell.lblBadge.text = [self badgeTextWithCount: nonRecoveryIdentityCount];
+		CGSize newSize = [cell.lblBadge sizeThatFits:CGSizeMake(cell.lblBadge.frame.size.width, 18)];
+		newSize.width += 8;
+		cell.cnstlblBadgeWidth.constant = MAX(18,newSize.width);
+	}
+	
+	cell.imgAvatar.layer.cornerRadius = RemoteUserTableViewCell.avatarSize.height / 2;
+	cell.imgAvatar.clipsToBounds = YES;
+	cell.imgAvatar.layer.opacity = isMyUserID ? 0.4 : 1.0;
 
-    NSDictionary * auth0_profiles = [Auth0Utilities excludeRecoveryProfile:user.auth0_profiles];
-    
-    if(auth0_profiles.count  < 2)
-    {
-        cell.lblBadge.hidden = YES;
-    }
-    else
-    {
-        // a lot of work to make the badge look pretty
-        cell.lblBadge.hidden = NO;
-        cell.lblBadge.backgroundColor = isMyUserID?UIColor.lightGrayColor:self.view.tintColor;
-        cell.lblBadge.clipsToBounds = YES;
-        cell.lblBadge.font = [UIFont systemFontOfSize:14];
-        cell.lblBadge.layer.cornerRadius = cell.lblBadge.frame.size.height/2;
-        cell.lblBadge.textAlignment = NSTextAlignmentCenter;
-        cell.lblBadge.edgeInsets = (UIEdgeInsets) {    .top = 0,
-            .left = 4,
-            .bottom = 0,
-            .right = 3};
+	cell.imgAvatar.hidden = NO;
         
-        cell.lblBadge.text =  [self badgeTextWithCount: auth0_profiles.count];
-        CGSize newSize = [cell.lblBadge sizeThatFits:CGSizeMake(cell.lblBadge.frame.size.width, 18)];
-        newSize.width += 8;
-        cell.cnstlblBadgeWidth.constant  = MAX(18,newSize.width);
-        
-    }
-    
-    cell.imgAvatar.layer.cornerRadius =  RemoteUserTableViewCell.avatarSize.height / 2;
-    cell.imgAvatar.clipsToBounds = YES;
-    cell.imgAvatar.layer.opacity   = isMyUserID?.4:1.0;
-//    cell.imgAvatar.image = defaultUserImage;
-
-
-    if(pictureURL)
-    {
-        cell.imgAvatar.hidden = YES;
-        [cell.actAvatar startAnimating];
-        cell.actAvatar.hidden = NO;
-        
-        CGSize avatarSize = [RemoteUserTableViewCell avatarSize];
-        
-        [ imageManager fetchUserAvatar:userID
-                               auth0ID:auth0ID
-                               fromURL:pictureURL
-			                      options: nil
-                      processingID:pictureURL.absoluteString
-                       processingBlock:^UIImage * _Nonnull(UIImage * _Nonnull image)
-         {
-             return [image imageWithMaxSize:avatarSize];
-         }
-                         preFetchBlock:^(UIImage * _Nullable image)
-         {
-             if(image)
-             {
-                 cell.imgAvatar.hidden = NO;
-                 cell.actAvatar.hidden = YES;
-                 [cell.actAvatar stopAnimating];
-                 cell.imgAvatar.image = image;
-             }
-         }
-                        postFetchBlock:^(UIImage * _Nullable image, NSError * _Nullable error)
-         {
-             
-             __strong typeof(self) strongSelf = weakSelf;
-             if(strongSelf == nil) return;
-             
-             // check that the cell is still being used for this user
-             
-             
-             if( [cell.userID isEqualToString: userID])
-             {
-                 cell.imgAvatar.hidden = NO;
-                 cell.actAvatar.hidden = YES;
-                 [cell.actAvatar stopAnimating];
-                 
-                 if(image)
-                 {
-                     cell.imgAvatar.image = image;
-                 }
-                 else
-                 {
-                     cell.imgAvatar.image = strongSelf->defaultUserImage;
-                 }
-             }
-         }];
-        
-        
-    }
-    else
-    {
-        [cell.actAvatar stopAnimating];
-        cell.actAvatar.hidden = YES;
-        cell.imgAvatar.image = defaultUserImage;
-        cell.imgAvatar.hidden = NO;
-    }
+	CGSize avatarSize = [RemoteUserTableViewCell avatarSize];
+	
+	UIImage* (^processingBlock)(UIImage*) = ^(UIImage *image) {
+		
+		return [image scaledToSize:avatarSize scalingMode:ScalingMode_AspectFill];
+	};
+	
+	void (^preFetchBlock)(UIImage*, BOOL) = ^(UIImage *image, BOOL willFetch){
+		
+		// The preFetchBlock is invoked BEFORE the `fetchUserAvatar` method returns.
+		
+		cell.imgAvatar.image = image ?: self->defaultUserImage;
+	};
+	
+	void (^postFetchBlock)(UIImage*, NSError*) = ^(UIImage *image, NSError *error){
+		
+		// The postFetchBlock is invoked LATER, possibly after downloading the image.
+		
+		if (image && [cell.userID isEqualToString:userID])
+		{
+			cell.imgAvatar.image = image;
+		}
+	};
+	
+	[zdc.imageManager fetchUserAvatar: user
+	                      withOptions: nil
+	                     processingID: NSStringFromClass([self class])
+	                  processingBlock: processingBlock
+	                    preFetchBlock: preFetchBlock
+	                   postFetchBlock: postFetchBlock];
  
-    cell.progress.hidden = YES;
-    [cell.actAvatar stopAnimating];
-    cell.actAvatar.hidden = YES;
-    
-    cell.showCheckMark     = !isMyUserID;
-    cell.enableCheck     = !isMyUserID;
-    cell.checked         = isAlreadyImported;
-    
-    cell.accessoryView  = [[UIView alloc]initWithFrame: (CGRect)
-                           {
-                               .origin.x = 0,
-                               .origin.y = 0,
-                               .size.width = 4,
-                               .size.height = 0
-                           } ];
-    cell.selectionStyle = UITableViewCellSelectionStyleNone;
-    return cell;
-*/
+	cell.progress.hidden = YES;
+	
+	cell.showCheckMark = YES; // !isMyUserID;
+	cell.enableCheck   = !isMyUserID;
+	cell.checked       = !isMyUserID && isAlreadyImported;
+	
+	cell.accessoryView = [[UIView alloc] initWithFrame:(CGRect){
+		.origin.x = 0,
+		.origin.y = 0,
+		.size.width = 4,
+		.size.height = 0
+	}];
+	
+	cell.selectionStyle = UITableViewCellSelectionStyleNone;
+	return cell;
 }
 
 
 - (RemoteUserTableViewCell*)tableView:(UITableView *)tv
       remoteUserCellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	NSAssert(NO, @"Not implemented"); // finish refactoring
-	return nil;
+	RemoteUserTableViewCell *cell = (RemoteUserTableViewCell *)
+	  [tv dequeueReusableCellWithIdentifier:kRemoteUserTableViewCellIdentifier];
 	
-/*
-    RemoteUserTableViewCell *cell = (RemoteUserTableViewCell *)[tv dequeueReusableCellWithIdentifier:kRemoteUserTableViewCellIdentifier];
+	ZDCSearchResult *item = searchResults[indexPath.row];
+	ZDCUserIdentity *displayIdentity = item.displayIdentity;
+	
+	NSString *userID = item.userID;
+	NSString *identityID = displayIdentity.identityID;
+	
+	cell.delegate = (id <RemoteUserTableViewCellDelegate>)self;
+	cell.userID  = userID;
+	cell.identityID = identityID;
+	
+	BOOL isAlreadyImported = [sharedUserIDs containsObject:userID];
+	BOOL isMyUserID = [userID isEqualToString:localUserID];
+	
+	{ // Scoping
+		
+		NSString *displayName = displayIdentity.displayName;
+		NSMutableAttributedString *attrString = [[NSMutableAttributedString alloc] initWithString:displayName];
+		
+		if (item.matches.count)
+		{
+			UIFontDescriptor *descriptor = [UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleBody];
+			/// Add the bold trait
+			descriptor = [descriptor fontDescriptorWithSymbolicTraits:UIFontDescriptorTraitBold];
+			/// Pass 0 to keep the same font size
+			UIFont *boldFont = [UIFont fontWithDescriptor:descriptor size:0];
+			
+			[attrString beginEditing];
+		 	for (ZDCSearchMatch *match in item.matches)
+			{
+				if (![match.identityID isEqual:identityID]) {
+					continue;
+				}
+				
+				for (NSValue *matchRange in match.matchingRanges)
+				{
+					[attrString addAttribute: NSFontAttributeName
+					                   value: boldFont
+					                   range: matchRange.rangeValue];
+				}
+		 	}
+		 	[attrString endEditing];
+		}
+		
+		if (isMyUserID)
+		{
+			// make the text appear in gray
+			[attrString addAttribute: NSForegroundColorAttributeName
+			                   value: [OSColor lightGrayColor]
+			                   range: NSMakeRange(0, [attrString length])];
+		}
+		
+		cell.lblUserName.attributedText = attrString;
+	}
+		
+	NSString *provider = displayIdentity.provider;
+	OSImage *providerImage =
+	  [[zdc.auth0ProviderManager iconForProvider: provider
+														 type: Auth0ProviderIconType_Signin]
+	                              scaledToHeight: [RemoteUserTableViewCell imgProviderHeight]];
+	
+	if (providerImage)
+	{
+		cell.imgProvider.image = providerImage;
+		cell.imgProvider.layer.opacity = isMyUserID ? 0.4 : 1.0;
+		cell.imgProvider.hidden = NO;
+		cell.lblProvider.hidden = YES;
+	}
+	else
+	{
+		NSString *providerName =  [zdc.auth0ProviderManager displayNameForProvider:provider];
+		
+		cell.lblProvider.text = providerName;
+		cell.imgProvider.hidden = YES;
+		cell.lblProvider.hidden = NO;
+	}
     
-    __weak typeof(self) weakSelf = self;
-    
-    ZDCSearchUserResult* item   = [searchResults objectAtIndex: indexPath.row ];
-    NSString*      userID       = item.uuid;
-    NSDictionary* auth0_profiles     = item.auth0_profiles;
-    
-    BOOL isAlreadyImported = [sharedUserIDs containsObject:userID];
-    BOOL isMyUserID = [userID isEqualToString:localUserID];
+	if (item.identities.count  < 2)
+	{
+		cell.lblBadge.hidden = YES;
+	}
+	else
+	{
+		// a lot of work to make the badge look pretty
+		cell.lblBadge.hidden = NO;
+		cell.lblBadge.backgroundColor = isMyUserID?UIColor.lightGrayColor:self.view.tintColor;
+		cell.lblBadge.clipsToBounds = YES;
+		cell.lblBadge.font = [UIFont systemFontOfSize:14];
+		cell.lblBadge.layer.cornerRadius = cell.lblBadge.frame.size.height/2;
+		cell.lblBadge.textAlignment = NSTextAlignmentCenter;
+		cell.lblBadge.edgeInsets = (UIEdgeInsets){
+			.top = 0,
+			.left = 4,
+			.bottom = 0,
+			.right = 3
+		};
+		
+		cell.lblBadge.text = [self badgeTextWithCount: item.identities.count];
+		
+		CGSize newSize = [cell.lblBadge sizeThatFits:CGSizeMake(cell.lblBadge.frame.size.width, 18)];
+		newSize.width += 8;
+		
+		cell.cnstlblBadgeWidth.constant = MAX(18, newSize.width);
+	}
+	
+	cell.imgAvatar.layer.cornerRadius = RemoteUserTableViewCell.avatarSize.height / 2;
+	cell.imgAvatar.clipsToBounds = YES;
+	cell.imgAvatar.layer.opacity = isMyUserID ? 0.4 : 1.0;
+	
+	CGSize avatarSize = [RemoteUserTableViewCell avatarSize];
+	
+	UIImage* (^processingBlock)(UIImage*) = ^(UIImage *image){
+		
+		return [image scaledToSize:avatarSize scalingMode:ScalingMode_AspectFill];
+	};
+	
+	void (^preFetchBlock)(UIImage*, BOOL) = ^(UIImage *image, BOOL willFetch){
+		
+		// The preFetchBlock is invoked BEFORE the `fetchUserAvatar` method returns.
+		
+		cell.imgAvatar.image = image ?: self->defaultUserImage;
+	};
+	
+	void (^postFetchBlock)(UIImage*, NSError*) = ^(UIImage *image, NSError *error){
+		
+		// The postFetchBlock is invoked LATER, possibly after downloading the image.
+		
+		if (image && [cell.identityID isEqualToString:identityID])
+		{
+			cell.imgAvatar.image = image;
+		}
+	};
+	
+	[zdc.imageManager fetchUserAvatar: item
+	                     processingID: NSStringFromClass([self class])
+	                  processingBlock: processingBlock
+	                    preFetchBlock: preFetchBlock
+	                   postFetchBlock: postFetchBlock];
+	
+	if ([importingUserIDs containsObject:userID])
+	{
+		cell.progress.indeterminate = YES;
+		cell.progress.hidden = NO;
+	}
+	else
+	{
+		cell.progress.hidden = YES;
+	}
+	
+	cell.showCheckMark = YES; // !isMyUserID;
+	cell.enableCheck   = !isMyUserID;
+	cell.checked       = !isMyUserID && isAlreadyImported;
 
-    NSDictionary* info = [self profileInfoFromSearchResults:item];
-    NSAttributedString* attrString      = info[@"displayAttr"];
-    NSURL* pictureURL                   = info[@"pictureURL"];
-    NSString* provider                  = info[@"provider"];
-    
-    cell.userID                         = userID;
-    cell.auth0ID                        = info[@"auth0ID"];
-    if(isMyUserID)
-    {
-        // make the text appear in gray
-         NSMutableAttributedString *attrStr1 = attrString.mutableCopy;
-        [attrStr1 beginEditing];
-        [attrStr1 addAttribute:NSForegroundColorAttributeName
-                         value:[OSColor lightGrayColor]
-                         range:NSMakeRange(0, [attrStr1 length])];
-        [attrStr1 endEditing];
-        attrString = attrStr1;
-    }
-  
-    cell.lblUserName.attributedText     = attrString;
-    cell.delegate = (id <RemoteUserTableViewCellDelegate>)self;
-    
-    OSImage* providerImage = [[providerManager providerIcon:Auth0ProviderIconType_Signin forProvider:provider] scaledToHeight:[RemoteUserTableViewCell imgProviderHeight]];
-    if(providerImage)
-    {
-        cell.imgProvider.image =  providerImage;
-        cell.imgProvider.layer.opacity   = isMyUserID?.4:1.0;
-        cell.imgProvider.hidden = NO;
-        cell.lblProvider.hidden = YES;
-    }
-    else
-    {
-        NSString* providerName =  [providerManager displayNameforProvider:provider];
-        if(!providerName)
-            providerName = provider;
-        cell.lblProvider.text = providerName;
-        cell.imgProvider.hidden = YES;
-        cell.lblProvider.hidden = NO;
-    }
-    
-    if(auth0_profiles.count  < 2)
-    {
-        cell.lblBadge.hidden = YES;
-    }
-    else
-    {
-        // a lot of work to make the badge look pretty
-        cell.lblBadge.hidden = NO;
-        cell.lblBadge.backgroundColor = isMyUserID?UIColor.lightGrayColor:self.view.tintColor;
-        cell.lblBadge.clipsToBounds = YES;
-        cell.lblBadge.font = [UIFont systemFontOfSize:14];
-        cell.lblBadge.layer.cornerRadius = cell.lblBadge.frame.size.height/2;
-        cell.lblBadge.textAlignment = NSTextAlignmentCenter;
-        cell.lblBadge.edgeInsets = (UIEdgeInsets) {    .top = 0,
-            .left = 4,
-            .bottom = 0,
-            .right = 3};
-        
-        cell.lblBadge.text =  [self badgeTextWithCount: auth0_profiles.count];
-        CGSize newSize = [cell.lblBadge sizeThatFits:CGSizeMake(cell.lblBadge.frame.size.width, 18)];
-        newSize.width += 8;
-        cell.cnstlblBadgeWidth.constant  = MAX(18,newSize.width);
-        
-    }
-    
-    cell.imgAvatar.layer.cornerRadius =  RemoteUserTableViewCell.avatarSize.height / 2;
-    cell.imgAvatar.clipsToBounds = YES;
-    cell.imgAvatar.layer.opacity   = isMyUserID?.4:1.0;
-    cell.imgAvatar.image = defaultUserImage;
-
-    if(pictureURL)
-    {
-        cell.imgAvatar.hidden = YES;
-        [cell.actAvatar startAnimating];
-        cell.actAvatar.hidden = NO;
-        
-        CGSize avatarSize = [RemoteUserTableViewCell avatarSize];
-        
-        [ imageManager fetchUserAvatar:userID
-                               auth0ID:info[@"auth0ID"]
-                               fromURL:pictureURL
-			                      options: nil
-                      processingID:pictureURL.absoluteString
-                       processingBlock:^UIImage * _Nonnull(UIImage * _Nonnull image)
-         {
-             return [image imageWithMaxSize:avatarSize];
-         }
-                         preFetchBlock:^(UIImage * _Nullable image)
-         {
-             if(image)
-             {
-                 cell.imgAvatar.hidden = NO;
-                 cell.actAvatar.hidden = YES;
-                 [cell.actAvatar stopAnimating];
-                 cell.imgAvatar.image = image;
-             }
-         }
-                        postFetchBlock:^(UIImage * _Nullable image, NSError * _Nullable error)
-         {
-             
-             __strong typeof(self) strongSelf = weakSelf;
-             if(strongSelf == nil) return;
-             
-             // check that the cell is still being used for this user
-             
-             
-             if( [cell.userID isEqualToString: userID])
-             {
-                 cell.imgAvatar.hidden = NO;
-                 cell.actAvatar.hidden = YES;
-                 [cell.actAvatar stopAnimating];
-                 
-                 if(image)
-                 {
-                     cell.imgAvatar.image = image;
-                 }
-                 else
-                 {
-                     cell.imgAvatar.image = strongSelf->defaultUserImage;
-                 }
-             }
-           }];
-    }
-    else
-    {
-        [cell.actAvatar stopAnimating];
-        cell.actAvatar.hidden = YES;
-        cell.imgAvatar.image = defaultUserImage;
-        cell.imgAvatar.hidden = NO;
-    }
-    
-    if([importingUserIDs containsObject:userID])
-    {
-        cell.progress.indeterminate = YES;
-        cell.progress.hidden = NO;
-    }
-    else
-    {
-        cell.progress.hidden = YES;
-    }
-    
-    cell.showCheckMark     = !isMyUserID;
-    cell.enableCheck     = !isMyUserID;
-    cell.checked         = isAlreadyImported;
-   
-    cell.accessoryView  = [[UIView alloc]initWithFrame: (CGRect)
-                             {
-                                 .origin.x = 0,
-                                 .origin.y = 0,
-                                 .size.width = 4,
-                                 .size.height = 0
-                             } ];
-
-    cell.selectionStyle = UITableViewCellSelectionStyleNone;
-    return cell;
-*/
+	cell.accessoryView = [[UIView alloc] initWithFrame:(CGRect){
+		.origin.x = 0,
+		.origin.y = 0,
+		.size.width = 4,
+		.size.height = 0
+	}];
+	
+	cell.selectionStyle = UITableViewCellSelectionStyleNone;
+	return cell;
 }
 
-// MARK: tableview Swipe
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark TableView Swipe
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if __IPHONE_11_0
 - (UISwipeActionsConfiguration *)tableView:(UITableView *)tv
@@ -1788,7 +1374,7 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
     }
     else  // select
     {
-        [self addUserToSharedList:userID auth0ID:auth0ID];
+        [self addUserToSharedList:userID identityID:auth0ID];
         [tv reloadRowsAtIndexPaths:@[indexPath]
                   withRowAnimation:UITableViewRowAnimationNone];
     }
@@ -1877,53 +1463,48 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 */
 }
 
-//MARK:  UserSearchSocialIDViewControllerDelegate
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark UserSearchSocialIDViewControllerDelegate
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void) userSearchSocialIDViewController:(UserSearchSocialIDViewController_IOS *)sender
-                         didSelectAuth0ID:(NSString*)auth0ID
-                                forUserID:(NSString*)userID
+- (void)userSearchSocialIDViewController:(UserSearchSocialIDViewController_IOS *)sender
+                        didSelectAuth0ID:(NSString *)auth0ID
+                               forUserID:(NSString *)userID
 {
-    
- 
-    BOOL isAlreadyImported = [sharedUserIDs containsObject:userID];
-    
-    [self setPreferedAuth0ID:auth0ID forUserID:userID];
-    
-    // if the user is already selected
-    if(isAlreadyImported)
-    {
-        // update our copy and recents if needed
-        [self addUserToSharedList:userID auth0ID:auth0ID];
-    }
-    
-  }
-
-//MARK:  IdentityProviderFilterViewControllerDelegate
-
-- (void)identityProviderFilter:(IdentityProviderFilterViewController * _Nonnull)sender
-              selectedProvider:(NSString* _Nullable )provider
-{
-	NSAssert(NO, @"Not implemented"); // finish refactoring
+	BOOL isAlreadyImported = [sharedUserIDs containsObject:userID];
 	
-/*
-    filterProvider = provider;
-    
-    OSImage* image = nil;
-    
-    if(provider  != nil)
-    {
-        image = [providerManager providerIcon:Auth0ProviderIconType_64x64
-                                  forProvider:provider];
-    }
-    
-    if(!image)
-    {
-        image = threeDots;
-    }
-    
-    [_btnFilter setImage:image  forState:UIControlStateNormal];
-    [self startNewSearchQuery:nil];
-*/
+	[self setPreferredIdentityID:auth0ID forUserID:userID];
+	
+	// if the user is already selected
+	if (isAlreadyImported)
+	{
+		// update our copy and recents if needed
+		[self addUserToSharedList:userID identityID:auth0ID];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark IdentityProviderFilterViewControllerDelegate
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)identityProviderFilter:(IdentityProviderFilterViewController *)sender
+              selectedProvider:(NSString *)provider
+{
+	filterProvider = provider;
+	
+	OSImage *image = nil;
+	if (provider != nil)
+	{
+		image = [zdc.auth0ProviderManager iconForProvider:provider type:Auth0ProviderIconType_64x64];
+	}
+	
+	if (!image)
+	{
+		image = threeDots;
+	}
+	
+	[_btnFilter setImage:image  forState:UIControlStateNormal];
+	[self startNewSearchQuery:nil];
 }
 
 @end
