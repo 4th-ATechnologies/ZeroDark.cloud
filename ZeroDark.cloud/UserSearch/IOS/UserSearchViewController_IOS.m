@@ -29,7 +29,7 @@
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
 #if DEBUG
-  static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelVerbose | ZDCLogFlagTrace;
 #else
   static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
@@ -65,6 +65,7 @@
  
 	NSTimer   * queryStartTimer;
 	NSInteger   searchId;  // track searches
+	NSInteger   activeSearchId;
 	NSInteger   displayedSearchId;
 	
 	dispatch_queue_t dataQueue;
@@ -151,6 +152,7 @@
 	_searchBar.text = @"";
 	
 	searchId = 0;
+	activeSearchId = -1;
 	displayedSearchId = -1;
 	
 	_vwInfo.layer.cornerRadius = 5;
@@ -531,8 +533,9 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
     
 }
 
-
-//MARK: UISearchBar activity
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark UISearchBar Activity
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // this timer prevents the ketboard from hiding/appearing durring an import unless we are taking to long
 
@@ -610,31 +613,6 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 #pragma mark UISearchBarDelegate
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)updateSearchPrompt
-{
-	ZDCLogAutoTrace();
-    
-	if (_searchBar.text.length == 1)
-	{
-		_lblSearchPrompt.hidden = NO;
-		_lblSearchPrompt.alpha = 0;
-        
-		[UIView animateWithDuration:0.5 animations:^{
-			
-			self->_lblSearchPrompt.alpha = 1;
-			
-		} completion:^(BOOL finished) {
-      
-			// Nothing to do here
-		}];
-	}
-	else
-   {
-		_lblSearchPrompt.hidden = YES;
-	}
-    
-}
-
 - (void)searchBarCancelButtonClicked:(UISearchBar *)sender
 {
 	ZDCLogAutoTrace();
@@ -658,15 +636,35 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 {
 	ZDCLogAutoTrace();
 	
-	const NSTimeInterval kQueryDelay = 0.25;
-	[self updateSearchPrompt];
+	// Hide/show prompt
+	if (_searchBar.text.length == 1)
+	{
+		_lblSearchPrompt.hidden = NO;
+		_lblSearchPrompt.alpha = 0;
+        
+		[UIView animateWithDuration:0.5 animations:^{
+			
+			self->_lblSearchPrompt.alpha = 1;
+			
+		} completion:^(BOOL finished) {
+      
+			// Nothing to do here
+		}];
+	}
+	else
+   {
+		_lblSearchPrompt.hidden = YES;
+	}
 	
+	const NSTimeInterval kQueryDelay = 0.25;
 	if (queryStartTimer)
 	{
+		ZDCLogVerbose(@"queryStartTimer: changing fire date");
 		[queryStartTimer setFireDate:[NSDate dateWithTimeIntervalSinceNow:kQueryDelay]];
 	}
 	else
 	{
+		ZDCLogVerbose(@"queryStartTimer: initializing");
 		queryStartTimer =
 		  [NSTimer scheduledTimerWithTimeInterval: kQueryDelay
 		                                   target: self
@@ -710,7 +708,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	
 	ZDCSearchOptions *options = [[ZDCSearchOptions alloc] init];
 	options.providerToSearch = filterProvider;
-	options.searchLocalDatabase = YES;
+	options.searchLocalDatabase = NO;
 	options.searchLocalCache = YES;
 	options.searchRemoteServer = YES;
 	
@@ -723,43 +721,44 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	                              resultsBlock:
 	^(ZDCSearchResultStage stage, NSArray<ZDCSearchResult *> *_Nullable results, NSError *_Nullable error)
 	{
-		__strong typeof(self) strongSelf = weakSelf;
-		if (!strongSelf) return;
+		ZDCLogVerbose(@"Search results: stage(%ld) count(%lu)", (long)stage, (unsigned long)results.count);
 		
-		if (currentSearchId <= strongSelf->displayedSearchId) {
-			return; // Newest query already displayed
-		}
-          
-		if (error)
-		{
-			[strongSelf cancelSearching];
-			return;
-		}
-		
-		[strongSelf updateSearchResults:results fromStage:stage];
-		[strongSelf reloadResults];
-		
-		if (stage == ZDCSearchResultStage_Done)
-		{
-			// end search indicator;
-			
-			[strongSelf cancelSearching];
-			strongSelf->displayedSearchId = currentSearchId;
-			
-			if (strongSelf->searchResults.count == 0)
-			{
-				[strongSelf fadeView:strongSelf->_vwInfo shouldHide:NO];
-			}
-		}
+		[weakSelf handleSearchResults: results
+		                        stage: stage
+		                        error: error
+		              currentSearchId: currentSearchId];
 	}];
 	
 	searchId++;
 }
 
-- (void)updateSearchResults:(NSArray<ZDCSearchResult*> *)newResults fromStage:(ZDCSearchResultStage)stage
+- (void)handleSearchResults:(NSArray<ZDCSearchResult*> *)newResults
+                      stage:(ZDCSearchResultStage)stage
+                      error:(NSError *)error
+            currentSearchId:(NSInteger)currentSearchId
 {
 	ZDCLogAutoTrace();
 	NSAssert([NSThread isMainThread], @"Must be invoked on main thread: `searchResults` isn't thread-safe");
+	
+	if (currentSearchId <= displayedSearchId) {
+		return; // Newer query already displayed
+	}
+	
+	if (activeSearchId < currentSearchId) {
+		activeSearchId = currentSearchId; // New query
+		searchResults = nil;
+	} else if (activeSearchId == currentSearchId) {
+		// Continuing newest query
+	}
+	else { // activeSearchId > currentSearchId
+		return; // Newer query already displayed
+	}
+		 
+	if (error)
+	{
+		[self cancelSearching];
+		return;
+	}
 	
 	NSMutableDictionary<NSString*, ZDCSearchResult*> *searchDict = [NSMutableDictionary dictionary];
 	
@@ -784,6 +783,20 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	
 	// update the searchResults
 	searchResults =  [searchDict.allValues copy];
+	[self reloadResults];
+	
+	if (stage == ZDCSearchResultStage_Done)
+	{
+		// end search indicator;
+		
+		[self cancelSearching];
+		displayedSearchId = currentSearchId;
+		
+		if (searchResults.count == 0)
+		{
+			[self fadeView:_vwInfo shouldHide:NO];
+		}
+	}
 }
 
 - (ZDCSearchResult *)searchResultsForUserID:(NSString *)userID
@@ -1016,9 +1029,9 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
  
 	cell.progress.hidden = YES;
 	
-	cell.showCheckMark = YES; // !isMyUserID;
-	cell.enableCheck   = !isMyUserID;
-	cell.checked       = !isMyUserID && isAlreadyImported;
+	cell.showCheckMark = YES;
+	cell.checkMark.checkMarkStyle = isMyUserID ? ZDCCheckMarkStyleGrayedOut : ZDCCheckMarkStyleOpenCircle;
+	cell.checkMark.checked = !isMyUserID && isAlreadyImported;
 	
 	cell.accessoryView = [[UIView alloc] initWithFrame:(CGRect){
 		.origin.x = 0,
@@ -1186,9 +1199,9 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 		cell.progress.hidden = YES;
 	}
 	
-	cell.showCheckMark = YES; // !isMyUserID;
-	cell.enableCheck   = !isMyUserID;
-	cell.checked       = !isMyUserID && isAlreadyImported;
+	cell.showCheckMark = YES;
+	cell.checkMark.checkMarkStyle = isMyUserID ? ZDCCheckMarkStyleGrayedOut : ZDCCheckMarkStyleOpenCircle;
+	cell.checkMark.checked = !isMyUserID && isAlreadyImported;
 
 	cell.accessoryView = [[UIView alloc] initWithFrame:(CGRect){
 		.origin.x = 0,

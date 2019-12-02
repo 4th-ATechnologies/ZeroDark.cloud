@@ -24,6 +24,7 @@
 
 // Libraries
 #import <YapDatabase/YapCache.h>
+#import <stdatomic.h>
 
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
@@ -137,6 +138,8 @@
 @property (nonatomic, copy, readwrite) NSArray<ZDCUserIdentity*> *identities;
 @property (nonatomic, copy, readwrite) NSArray<ZDCSearchMatch*> *matches;
 
+- (instancetype)copyWithMatches:(NSArray<ZDCSearchMatch*> *)matches;
+
 @end
 
 @implementation ZDCSearchResult
@@ -176,6 +179,20 @@
 	copy->_aws_bucket = _aws_bucket;
 	copy->_identities = _identities;
 	copy->_matches = _matches;
+	copy->_preferredIdentityID = _preferredIdentityID;
+	
+	return copy;
+}
+
+- (instancetype)copyWithMatches:(NSArray<ZDCSearchMatch*> *)matches
+{
+	ZDCSearchResult *copy = [[[self class] alloc] init];
+	
+	copy->_userID = _userID;
+	copy->_aws_region = _aws_region;
+	copy->_aws_bucket = _aws_bucket;
+	copy->_identities = _identities;
+	copy->_matches = [matches copy];
 	copy->_preferredIdentityID = _preferredIdentityID;
 	
 	return copy;
@@ -295,11 +312,11 @@
 /**
  * See header file for description.
  */
-- (void)searchForUsersWithQuery:(NSString *)inQueryString
+- (void)searchForUsersWithQuery:(NSString *)inQuery
                          treeID:(NSString *)inTreeID
                     requesterID:(NSString *)localUserID
                         options:(nullable ZDCSearchOptions *)inOptions
-                completionQueue:(nullable dispatch_queue_t)completionQueue
+                completionQueue:(nullable dispatch_queue_t)inCompletionQueue
                    resultsBlock:(void (^)(ZDCSearchResultStage stage,
                                           NSArray<ZDCSearchResult*> *_Nullable results,
                                           NSError *_Nullable error))resultsBlock
@@ -309,17 +326,41 @@
 	if (!resultsBlock) {
 		return;
 	}
+	dispatch_queue_t completionQueue = inCompletionQueue ?: dispatch_get_main_queue();
 	
-	NSString *queryString = [inQueryString copy]; // mutable string protection
-	NSString *treeID      = [inTreeID copy];      // mutable string protection
+	NSString *query  = [inQuery copy];  // mutable string protection
+	NSString *treeID = [inTreeID copy]; // mutable string protection
 	
 	ZDCSearchOptions *options = inOptions ? [inOptions copy] : [[ZDCSearchOptions alloc] init];
 	
+	__block atomic_uint pendingCount = 3;
+	if (!options.searchLocalDatabase) pendingCount--;
+	if (!options.searchLocalCache)    pendingCount--;
+	if (!options.searchRemoteServer)  pendingCount--;
+	
+	if (pendingCount == 0) // sanity check
+	{
+		NSString *msg = @"Options specified don't allow searching of any domains";
+		NSError *error = [NSError errorWithClass:[self class] code:400 description:msg];
+		
+		dispatch_async(completionQueue, ^{ @autoreleasepool {
+			resultsBlock(ZDCSearchResultStage_Done, nil, error);
+		}});
+		return;
+	}
+	
 	void (^InvokeResultsBlock)(ZDCSearchResultStage, NSArray<ZDCSearchResult*>*, NSError*) =
-		^(ZDCSearchResultStage stage, NSArray<ZDCSearchResult*> *results, NSError *error) {
-        
-		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+		^(ZDCSearchResultStage stage, NSArray<ZDCSearchResult*> *results, NSError *error)
+	{
+		dispatch_async(completionQueue, ^{ @autoreleasepool {
+			
 			resultsBlock(stage, results, error);
+			
+			uint remaining = atomic_fetch_sub(&pendingCount, 1) - 1;
+			if (remaining == 0)
+			{
+				resultsBlock(ZDCSearchResultStage_Done, @[], nil);
+			}
 		}});
 	};
     
@@ -329,7 +370,7 @@
 		[roConnection asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 			
 			NSArray<ZDCSearchResult*> *results =
-			  [self searchLocalDatabase: queryString
+			  [self searchLocalDatabase: query
 			                withOptions: options
 			                transaction: transaction];
 			
@@ -342,7 +383,7 @@
 		dispatch_async(cacheQueue, ^{ @autoreleasepool {
 			
 			NSArray<ZDCSearchResult*> *results =
-			  [self searchLocalCache: queryString
+			  [self searchLocalCache: query
 				               treeID: treeID
 				          withOptions: options];
 			
@@ -352,44 +393,15 @@
 	
 	if (options.searchRemoteServer)
 	{
-	/*
-        [self searchServerForQuery:queryString
-                         forUserID:userID
-                   providerFilters:providers
-                   completionQueue:inCompletionQueue
-                   completionBlock:^(NSArray<ZDCSearchUserResult*> *serverResults, NSError *error) {
-                       
-                       if(error)
-                       {
-                           foundResultsBlock(ZDCSearchUserManagerResultStage_Server, nil, error);
-                       }
-                       else if(serverResults.count)
-                       {
-                           [serverResults enumerateObjectsUsingBlock:^(ZDCSearchUserResult* result, NSUInteger idx, BOOL * _Nonnull stop) {
-                               
-                               NSString*  userID = result.uuid;
-                               NSDate*   auth0_lastUpdated = result.auth0_lastUpdated;
-                               NSDate*   lastDate = [updatedUserIDs objectForKey:userID];
-                               
-                               if(!lastDate || [lastDate isBefore:auth0_lastUpdated])
-                               {
-                                  [searchResults addObject:result];
-                                   
-                                   [updatedUserIDs setObject:auth0_lastUpdated?auth0_lastUpdated:NSDate.distantPast
-                                                      forKey:userID];
-                               }
-                               
-                           }];
-                           
-                           foundResultsBlock(ZDCSearchUserManagerResultStage_Server, searchResults.copy, nil);
-                       }
-                       
-                       // call this when server search is done
-                       
-                       foundResultsBlock(ZDCSearchUserManagerResultStage_Done, nil, nil);
-                       
-                   }];
-	*/
+		[self searchRemoteServer: query
+		                  treeID: treeID
+		             requesterID: localUserID
+		                 options: options
+		         completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+		         completionBlock:^(NSArray<ZDCSearchResult *> *results, NSError *error)
+		{
+			InvokeResultsBlock(ZDCSearchResultStage_Server, results, nil);
+		}];
 	}
 }
 
@@ -434,7 +446,7 @@
 #pragma mark Search: Local Cache
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (NSArray<ZDCSearchResult*> *)searchLocalCache:(NSString *)queryString
+- (NSArray<ZDCSearchResult*> *)searchLocalCache:(NSString *)query
                                          treeID:(NSString *)treeID
                                     withOptions:(ZDCSearchOptions *)options
 {
@@ -442,101 +454,20 @@
 	
 	NSMutableArray<ZDCSearchResult*> *results = [NSMutableArray array];
 	
-//	YapCache *cache = cacheDict[treeID];
-/*
+	YapCache *cache = cacheDict[treeID];
 	[cache enumerateKeysAndObjectsWithBlock:^(NSString *key, ZDCSearchResult *result, BOOL *stop) {
 		
-		__block BOOL hasMatch = NO;
+		NSArray<ZDCSearchMatch*> *matches =
+		  [self matches:query fromIdentities:result.identities withOptions:options];
 		
-             [auth0_profiles enumerateKeysAndObjectsUsingBlock:^(NSString* profileID, NSDictionary* profile, BOOL * _Nonnull stop2)
-              {
-                  NSString* email          = [profile objectForKey:@"email"];
-                  NSString* name              = [profile objectForKey:@"name"];
-                  NSString* username          = [profile objectForKey:@"username"];
-                  NSString* nickname       = [profile objectForKey:@"nickname"];
-                  BOOL isRecoveryId =  [Auth0Utilities isRecoveryProfile:profile];
-                  
-                  // process nsdictionary issues
-                  if([username isKindOfClass:[NSNull class]])
-                      username = nil;
-                  if([email isKindOfClass:[NSNull class]])
-                      email = nil;
-                  if([name isKindOfClass:[NSNull class]])
-                      name = nil;
-                  if([nickname isKindOfClass:[NSNull class]])
-                      nickname = nil;
-                  
-                  if(!isRecoveryId)
-                  {
-                      NSArray* comps = [profileID componentsSeparatedByString:@"|"];
-                      NSString* provider = comps[0];
-                      
-                      if(!providers.count || [providers containsObject:provider])
-                      {
-                          NSString* displayName = nil;
-                          
-                          if([provider isEqualToString:A0StrategyNameAuth0])
-                          {
-                              if([Auth0Utilities is4thAEmail:email])
-                              {
-                                  displayName = [Auth0Utilities usernameFrom4thAEmail:email];
-                                  email = nil;
-                              }
-                          }
-                          
-                          if(email.length)
-                          {
-                              email = [email substringToIndex:[email rangeOfString:@"@"].location];
-                          }
-                          
-                          if(!displayName && name.length)
-                              displayName =  name;
-                          
-                          if(!displayName && username.length)
-                              displayName =  username;
-                          
-                          if(!displayName && email.length)
-                              displayName =  email;
-                          
-                          if(!displayName && nickname.length)
-                              displayName =  nickname;
-                          
-                          NSArray *words = [queryString componentsSeparatedByCharactersInSet: [NSCharacterSet whitespaceCharacterSet]];
-                          
-                          if(!hasMatch)
-                          {
-                              if([self matchesFromString:displayName query:queryString].count == words.count)
-                                  hasMatch = YES;
-                              else if([self matchesFromString:name query:queryString].count == words.count)
-                                  hasMatch = YES;
-                              else if([self matchesFromString:username query:queryString].count == words.count)
-                                  hasMatch = YES;
-                              else if([self matchesFromString:nickname query:queryString].count == words.count)
-                                  hasMatch = YES;
-                              else if([self matchesFromString:email query:queryString].count == words.count)
-                                  hasMatch = YES;
-                          }
-                          
-                          if(hasMatch)
-                          {
-                              NSArray<ZDCSearchUserMatching*>* matches = [self createMatchingFromProfiles:auth0_profiles
-                                                                                              queryString:queryString];
-                              if(matches.count)
-                              {
-                                  result.matches = matches;
-                                  [searchResults addObject:result];
-                                  *stop2 = YES;
-                              }
-                          }
-                          
-                      }
-                  };
-              }];
-             
-         }]
-        
-    });
-*/
+		if (matches.count > 0)
+		{
+			ZDCSearchResult *newResult = [result copyWithMatches:matches];
+			
+			[results addObject:newResult];
+		}
+	}];
+	
 	return [results copy];
 }
 
@@ -544,7 +475,7 @@
 #pragma mark Search: Remote Server
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)searchRemoteServer:(NSString *)queryString
+- (void)searchRemoteServer:(NSString *)query
                     treeID:(NSString *)treeID
                requesterID:(NSString *)localUserID
                    options:(ZDCSearchOptions *)options
@@ -562,7 +493,7 @@
 		}});
 	};
 	
-  	[zdc.restManager searchUserMatch: queryString
+  	[zdc.restManager searchUserMatch: query
 	                        provider: options.providerToSearch
 	                          treeID: treeID
 	                     requesterID: localUserID
@@ -607,10 +538,12 @@
 		
 		[self cacheServerResults:results forTreeID:treeID];
 		
-		// Todo: Finish refactoring
-		NSAssert(NO, @"not finished refactoring");
+		for (ZDCSearchResult *result in results)
+		{
+			result.matches = [self matches:query fromIdentities:result.identities withOptions:options];
+		}
 		
-	//	InvokeCompletionBlock(results, serverError);
+		InvokeCompletionBlock(results, nil);
 	}];
 }
 
@@ -742,8 +675,10 @@
 #pragma mark Utilities
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)cacheServerResults:(NSArray<ZDCSearchResult*> *)results forTreeID:(NSString *)treeID
+- (void)cacheServerResults:(NSArray<ZDCSearchResult*> *)inResults forTreeID:(NSString *)treeID
 {
+	NSArray *results = [[NSArray alloc] initWithArray:inResults copyItems:YES];
+	
 	dispatch_async(cacheQueue, ^{
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
@@ -774,6 +709,17 @@
                        fromIdentities:(NSArray<ZDCUserIdentity*> *)identities
                           withOptions:(ZDCSearchOptions *)options
 {
+	NSArray<NSString*> *possibleQueryWords =
+	  [query componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+	
+	NSMutableArray *queryWords = [NSMutableArray arrayWithCapacity:possibleQueryWords.count];
+	for (NSString *queryWord in possibleQueryWords)
+	{
+		if (queryWord.length > 0) {
+			[queryWords addObject:queryWord];
+		}
+	}
+	
 	NSMutableArray<ZDCSearchMatch*> *matches = [NSMutableArray array];
 	
 	for (ZDCUserIdentity *identity in identities)
@@ -787,7 +733,7 @@
 			continue;
 		}
 		
-		NSMutableArray *stringsToSearch = [NSMutableArray arrayWithCapacity:5];
+		NSMutableSet *stringsToSearch = [NSMutableSet setWithCapacity:5];
 		
 		[stringsToSearch addObject:identity.displayName];
 		
@@ -826,12 +772,10 @@
 			[stringsToSearch addObject:nickname];
 		}
 		
-		NSArray *words = [query componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-		
 		for (NSString *string in stringsToSearch)
 		{
-			NSArray<NSValue*> *ranges = [self matchingRanges:query fromString:string];
-			if (ranges.count == words.count)
+			NSArray<NSValue*> *ranges = [self matchingRanges:queryWords fromString:string];
+			if (ranges.count == queryWords.count)
 			{
 				ZDCSearchMatch *match =
 				  [[ZDCSearchMatch alloc] initWithIdentityID: identity.identityID
@@ -843,34 +787,23 @@
 		}
 	}
 	
-	return matches;
+	return [matches copy];
 }
 
-- (NSArray<NSValue*> *)matchingRanges:(NSString *)query fromString:(NSString *)input
+- (NSArray<NSValue*> *)matchingRanges:(NSArray<NSString*> *)queryWords fromString:(NSString *)string
 {
-	NSArray<NSString*> *possibleWords =
-	  [query componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-	
-	NSMutableArray *words = [NSMutableArray arrayWithCapacity:possibleWords.count];
-	for (NSString *word in possibleWords)
-	{
-		if (word.length > 0) {
-			[words addObject:word];
-		}
-	}
-	
 	NSMutableArray<NSValue*> *results = nil;
 	
-	for (NSString *word in words)
+	for (NSString *queryWord in queryWords)
 	{
-		NSRange range = [word rangeOfString: word
-		                            options: NSCaseInsensitiveSearch | NSDiacriticInsensitiveSearch
-		                              range: NSMakeRange(0, word.length)];
+		NSRange range = [string rangeOfString: queryWord
+		                              options: NSCaseInsensitiveSearch | NSDiacriticInsensitiveSearch
+		                                range: NSMakeRange(0, string.length)];
         
 		if (range.location != NSNotFound)
 		{
 			if (results == nil) {
-				results = [NSMutableArray arrayWithCapacity:words.count];
+				results = [NSMutableArray arrayWithCapacity:queryWords.count];
 			}
 			[results addObject: [NSValue valueWithRange:range]];
 		}

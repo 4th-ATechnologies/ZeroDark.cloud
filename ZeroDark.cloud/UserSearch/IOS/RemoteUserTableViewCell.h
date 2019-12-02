@@ -46,8 +46,6 @@ extern NSString *const kRemoteUserTableViewCellIdentifier;
 @property (nonatomic, weak) IBOutlet NSLayoutConstraint * cnstlblBadgeWidth;
 
 @property (nonatomic, assign, readwrite) BOOL showCheckMark;
-@property (nonatomic, assign, readwrite) BOOL checked;
-@property (nonatomic, assign, readwrite) BOOL enableCheck;
 
 @property (nonatomic, copy, readwrite) NSString *userID;
 @property (nonatomic, copy, readwrite, nullable) NSString *identityID;

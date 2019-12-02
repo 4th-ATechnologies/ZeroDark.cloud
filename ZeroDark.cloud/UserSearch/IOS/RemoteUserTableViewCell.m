@@ -11,7 +11,9 @@
 
 /* extern */ NSString *const kRemoteUserTableViewCellIdentifier = @"RemoteUserTableViewCell";
 
-@implementation RemoteUserTableViewCell
+@implementation RemoteUserTableViewCell {
+	BOOL _showCheckMark;
+}
 
 @synthesize delegate;
 
@@ -28,12 +30,10 @@
 @synthesize lblBadge;
 @synthesize cnstlblBadgeWidth;
 
-@synthesize showCheckMark;
-@synthesize checked;
-@synthesize enableCheck;
-
 @synthesize userID;
 @synthesize identityID;
+
+@dynamic showCheckMark;
 
 
 + (void)registerViewsforTable:(UITableView*)tableView bundle:(nullable NSBundle *)bundle
@@ -72,24 +72,27 @@
 	return nil;
 }
 
-- (void)setShowCheckMark:(BOOL)showCheckMarkIn
-{
-	showCheckMark = showCheckMarkIn;
-	[self.checkMark setHidden:!showCheckMark];
-
-	self.cnstAvatarLeadingWidth.constant = showCheckMark?20:0;
+- (BOOL)showCheckMark {
+	return _showCheckMark;
 }
 
-- (void)setChecked:(BOOL)isCheckedIn
+- (void)setShowCheckMark:(BOOL)flag
 {
-	self.checkMark.checked = isCheckedIn;
+	_showCheckMark = flag;
+	self.checkMark.hidden = !_showCheckMark;
+	self.cnstAvatarLeadingWidth.constant = _showCheckMark ? 20 : 0;
+}
+/*
+- (void)setEnableCheck:(BOOL)flag
+{
+	self.checkMark.checkMarkStyle = flag ? ZDCCheckMarkStyleOpenCircle: ZDCCheckMarkStyleGrayedOut;
 }
 
-- (void)setEnableCheck:(BOOL)enabled
+- (void)setChecked:(BOOL)flag
 {
-	self.checkMark.checkMarkStyle = enabled ? ZDCCheckMarkStyleOpenCircle: ZDCCheckMarkStyleGrayedOut;
+	self.checkMark.checked = flag;
 }
-
+*/
 - (IBAction)disclosureButtonTapped:(id)sender
 {
     if ([self.delegate respondsToSelector:@selector(tableView:disclosureButtonTappedAtCell:)])
