@@ -701,6 +701,78 @@ done:
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
  */
+- (BOOL)canUseFaceID
+{
+	BOOL    result = NO;
+	NSError *error = NULL;
+	
+	if (@available(iOS 11.0, *)) {
+		
+		LAContext *context = [[LAContext alloc] init];
+		
+		// test if we can evaluate the policy, this test will tell us if Touch ID is available and enrolled
+		if (context)
+		{
+#if TARGET_OS_IPHONE
+			result = [context canEvaluatePolicy: LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&error];
+#else
+			result = [context canEvaluatePolicy: LAPolicyDeviceOwnerAuthentication error:&error];
+#endif
+			
+			if (result && error) result = NO;
+			
+			if (@available(iOS 11.0, *)) {
+				if(result && (context.biometryType != LABiometryTypeFaceID)) result = NO;
+			}
+			else
+			{
+				result = NO;
+			}
+			
+			if(result && (context.biometryType == LABiometryTypeFaceID))
+				result = YES;
+		}
+	}
+	return result;
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
+ */
+- (BOOL)canUseTouchID
+{
+	BOOL    result = NO;
+	NSError *error = NULL;
+	
+	LAContext *context = [[LAContext alloc] init];
+	
+	// test if we can evaluate the policy, this test will tell us if Touch ID is available and enrolled
+	if (context)
+	{
+#if TARGET_OS_IPHONE
+		result = [context canEvaluatePolicy: LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&error];
+#else
+		result = [context canEvaluatePolicy: LAPolicyDeviceOwnerAuthentication error:&error];
+#endif
+		
+		if (result && error) result = NO;
+		
+		if (@available(iOS 11.0, *)) {
+			if(result && (context.biometryType != LABiometryTypeTouchID)) result = NO;
+		}
+		
+	}
+	
+	return result;
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDatabaseKeyManager.html
+ */
 - (BOOL)createBiometricEntry:(NSError *_Nullable *_Nullable) outError
 {
 	NSError *error = nil;

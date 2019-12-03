@@ -92,6 +92,17 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (atomic, readonly) BOOL canUseBioMetrics;
 
+/**
+ * Returns YES/true if TouchID is available on the current device.
+ */
+@property (atomic, readonly) BOOL canUseTouchID;
+
+/**
+ * Returns YES/true if FaceID is available on the current device.
+ */
+@property (atomic, readonly) BOOL canUseFaceID;
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Keychain
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

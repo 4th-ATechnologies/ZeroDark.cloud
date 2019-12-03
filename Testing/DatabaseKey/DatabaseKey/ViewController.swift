@@ -61,7 +61,20 @@ class ViewController: UIViewController, UITabBarDelegate, UITextFieldDelegate, Z
 	}
 	
 	func refresh(){
+		let canUseFaceID = zdc.databaseKeyManager.canUseFaceID;
+		let canUseTouchID = zdc.databaseKeyManager.canUseTouchID;
 		
+		if(canUseFaceID) {
+					_btnUseTouchID.setTitle("Use FaceID", for: .normal)
+				} else if(canUseTouchID)
+				{
+					_btnUseTouchID.setTitle("Use TouchID", for: .normal)
+				}
+			else {
+				_btnUseTouchID.setTitle("No Biometrics", for: .normal)
+			}
+		_btnUseTouchID.isEnabled = false;
+
 		if(dbEncryptionKey != nil) {
 			
 			let keyData = dbEncryptionKey! as NSData
@@ -95,8 +108,13 @@ class ViewController: UIViewController, UITabBarDelegate, UITextFieldDelegate, Z
 				}
 				else {
 					_btnUseTouchID.isEnabled = true;
-					_btnUseTouchID.setTitle("Use TouchID", for: .normal)
 					
+					if(canUseFaceID) {
+						_btnUseTouchID.setTitle("Use FaceID", for: .normal)
+					} else if(canUseTouchID)
+					{
+						_btnUseTouchID.setTitle("Use TouchID", for: .normal)
+					}
 					_btnRemoveTouchID.isEnabled = false;
 				}
 			}
@@ -108,7 +126,6 @@ class ViewController: UIViewController, UITabBarDelegate, UITextFieldDelegate, Z
 			_btnLock.isEnabled = false;
 		 	_btnLock.setTitle("Locked", for: .normal)
 			
-			
 			_btnRemovePassphrase.isEnabled = false;
 			_btnRemoveTouchID.isEnabled = false;
 
@@ -118,11 +135,16 @@ class ViewController: UIViewController, UITabBarDelegate, UITextFieldDelegate, Z
 			}
 
 			if(zdc.databaseKeyManager.usesBioMetrics){
-				_btnUseTouchID.setTitle("Unlock with TouchID", for: .normal)
+				
+				if(canUseFaceID) {
+					_btnUseTouchID.setTitle("Unlock FaceID", for: .normal)
+				} else if(canUseFaceID)
+				{
+					_btnUseTouchID.setTitle("Unlock TouchID", for: .normal)
+				}
+
 				_btnUseTouchID.isEnabled = true;
-			}
-			else {
-				_btnUseTouchID.setTitle("Use TouchID", for: .normal)
+			} else{
 				_btnUseTouchID.isEnabled = false;
 			}
 			
