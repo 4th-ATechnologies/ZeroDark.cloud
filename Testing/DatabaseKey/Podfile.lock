@@ -14,13 +14,10 @@ PODS:
   - AFNetworking/Serialization (3.2.1)
   - AFNetworking/UIKit (3.2.1):
     - AFNetworking/NSURLSession
-  - Base64 (1.1.2)
   - CocoaLumberjack (3.6.0):
     - CocoaLumberjack/Core (= 3.6.0)
   - CocoaLumberjack/Core (3.6.0)
   - JGProgressView (1.2.1)
-  - JWT (2.2.0):
-    - Base64 (~> 1.1.2)
   - KGHitTestingViews (0.9.5)
   - S4Crypto (2.2.10)
   - SCLAlertView-Objective-C (1.1.6)
@@ -88,11 +85,10 @@ PODS:
   - YapDatabase/SQLCipher-ObjC/Extensions/View (4.0):
     - YapDatabase/SQLCipher-ObjC/Core
   - ZDCSyncableObjC (1.0.1)
-  - ZeroDarkCloud/Core (1.0.0):
+  - ZeroDarkCloud/Core (0.9.1):
     - AFNetworking
     - CocoaLumberjack
     - JGProgressView
-    - JWT
     - KGHitTestingViews
     - NSColor-Crayola
     - S4Crypto (>= 2.2.9)
@@ -103,11 +99,10 @@ PODS:
     - YapDatabase/SQLCipher-ObjC (>= 4.0)
     - ZDCSyncableObjC
     - zipzap
-  - ZeroDarkCloud/Swift (1.0.0):
+  - ZeroDarkCloud/Swift (0.9.1):
     - AFNetworking
     - CocoaLumberjack
     - JGProgressView
-    - JWT
     - KGHitTestingViews
     - NSColor-Crayola
     - S4Crypto (>= 2.2.9)
@@ -125,12 +120,10 @@ DEPENDENCIES:
   - ZeroDarkCloud/Swift (from `../../`)
 
 SPEC REPOS:
-  https://github.com/CocoaPods/Specs.git:
+  https://github.com/cocoapods/specs.git:
     - AFNetworking
-    - Base64
     - CocoaLumberjack
     - JGProgressView
-    - JWT
     - KGHitTestingViews
     - S4Crypto
     - SCLAlertView-Objective-C
@@ -148,10 +141,8 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   AFNetworking: b6f891fdfaed196b46c7a83cf209e09697b94057
-  Base64: cecfb41a004124895a7bcee567a89bae5a89d49b
   CocoaLumberjack: 78b0c238666f4f58db069738ec176f4519557516
   JGProgressView: 6f3dfda0de2d7c49b249f3075553d09f39e42bd5
-  JWT: cf73c0ab0dac762df3de8a3f1164352089d97780
   KGHitTestingViews: 34a1c05a3ec0778ca8c46fadf994c9292c56f374
   S4Crypto: 6f563ee3bd08f02791508717c58f14fff83cfe2d
   SCLAlertView-Objective-C: 2bb9be204bffaf24762a0e33fe6ca9645819b3b7
@@ -161,9 +152,9 @@ SPEC CHECKSUMS:
   XMLDictionary: fa07b6ff422b3a91d47a5de9bc82e3fc04fbd167
   YapDatabase: 260b1b0b3e6ae6775383edc923e19813586615eb
   ZDCSyncableObjC: 0866ef66fc5be67e0b6df713cff9b9b84eed9967
-  ZeroDarkCloud: e4ec57ce70e07023dba95b0b65626fca1407bf6a
+  ZeroDarkCloud: 66de3410a66c8c17d7912659be2bcc7289635a70
   zipzap: 940162d9c9c60472c2eab341385e4214da0fdf1c
 
 PODFILE CHECKSUM: 259a2908f95d55e1a08d77584da04321bafc9533
 
-COCOAPODS: 1.8.4
+COCOAPODS: 1.7.2
