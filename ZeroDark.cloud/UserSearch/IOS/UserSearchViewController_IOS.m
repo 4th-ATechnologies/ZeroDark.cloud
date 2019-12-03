@@ -20,6 +20,7 @@
 #import "ZDCImageManagerPrivate.h"
 #import "ZDCLogging.h"
 #import "ZDCPopoverTransition.h"
+#import "ZDCUserManagerPrivate.h"
 #import "ZeroDarkCloudPrivate.h"
 
 // Categories
@@ -56,34 +57,25 @@
 	NSString *localUserID;
 	NSSet<NSString *> *sharedUserIDs;
 	
-	NSTimer * showSearchingTimer;    // So we don't fire a search right away while user is typing.
-	NSTimer * importingTimer;        // Used to remove the keyboard during a long import.
-	
-	UISwipeGestureRecognizer * swipeGesture;
-	
-	UIViewController * remoteSRVC;
- 
-	NSTimer   * queryStartTimer;
-	NSInteger   searchId;  // track searches
-	NSInteger   activeSearchId;
-	NSInteger   displayedSearchId;
-	
-	dispatch_queue_t dataQueue;
-	void *           IsOnDataQueue;
-
-	NSArray<ZDCSearchResult *> *searchResults;
-	NSMutableDictionary<NSString *,NSString *> *preferredIdentityIDs; // Map: userID => selected identityID
-    
 	UIImage * defaultUserImage;
 	UIImage * threeDots;
 	
-	NSString *filterProvider;
+	NSTimer * queryStartTimer; // So we don't fire a search right away while user is typing.
 	
-	NSArray *recentRecipients;
+	NSInteger searchId;  // track searches
+	NSInteger activeSearchId;
+	NSInteger displayedSearchId;
+
+	NSArray<NSString *> *recentRecipients;     // data for _tblUsers (when shouldShowRecentRecipients == YES)
+	NSArray<ZDCSearchResult *> *searchResults; // data for _tblUsers (when shouldShowRecentRecipients == NO)
 	
-	NSArray<NSString *> *remoteUserIDs;
-	NSArray<NSString *> *importingUserIDs;        // used when animating the import of users
+	NSMutableDictionary<NSString *,NSString *> *preferredIdentityIDs; // Map: userID => selected identityID
 	
+	NSString *providerToSearch;
+	
+	NSSet<NSString *> *importingUserIDs;        // used when animating the import of users
+	
+	UIViewController *remoteSRVC;
 	ZDCPopoverTransition *popoverTransition;
 }
 
@@ -106,10 +98,6 @@
 		
 		localUserID = [inLocalUserID copy];
 		sharedUserIDs = [NSSet setWithArray:inSharedUserIDs];
-		
-		dataQueue = dispatch_queue_create("UserSearchViewController.dataQueue", DISPATCH_QUEUE_SERIAL);
-		IsOnDataQueue = &IsOnDataQueue;
-		dispatch_queue_set_specific(dataQueue, IsOnDataQueue, IsOnDataQueue, NULL);
 	}
 	return self;
 }
@@ -147,7 +135,7 @@
 	   compatibleWithTraitCollection: nil]
 	                   maskWithColor: self.view.tintColor];
 	
-	[_btnFilter setImage:threeDots  forState:UIControlStateNormal];
+	[_btnFilter setImage:threeDots forState:UIControlStateNormal];
 	
 	_searchBar.text = @"";
 	
@@ -158,22 +146,12 @@
 	_vwInfo.layer.cornerRadius = 5;
 	_vwInfo.layer.masksToBounds = YES;
 	_vwInfo.hidden = YES;
-	
-//	[self.view addKeyboardPanningWithFrameBasedActionHandler:^(CGRect keyboardFrameInView, BOOL opening, BOOL closing) {
-//
-//	} constraintBasedActionHandler:nil];
-	
-	[self cancelSearching]; // why ?
 }
 
 - (void)viewWillAppear:(BOOL)animated
 {
 	ZDCLogAutoTrace();
 	[super viewWillAppear:animated];
-	
-	// The swipe gesture fights with table editing.
-//	swipeGesture = [[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(gestureFired:)];
-//	[self.view addGestureRecognizer:swipeGesture];
 	
 	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 	
@@ -194,10 +172,8 @@
 	
 	self.navigationItem.title = NSLocalizedString(@"Select Recipients", @"Select Recipients");
 	
-	[self reloadResults];
-	
+	[_tblUsers reloadData];
 	[_searchBar becomeFirstResponder];
-	[self cancelSearching];
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -205,36 +181,7 @@
 	ZDCLogAutoTrace();
 	[super viewWillDisappear:animated];
 	
-	[self.view removeGestureRecognizer:swipeGesture];
-	swipeGesture = nil;
-	
-	[[NSNotificationCenter defaultCenter]  removeObserver:self];
-}
-
-- (void)fadeView:(UIView *)theView
-      shouldHide:(BOOL)shouldHide
-{
-	if (theView.isHidden == shouldHide) {
-		// Nothing to do
-		return;
-	}
-	
-	if (shouldHide)
-	{
-		[UIView animateWithDuration:0.3 animations:^{
-			theView.alpha = 0;
-		} completion: ^(BOOL finished) {
-			theView.hidden = finished;
-		}];
-	}
-	else
-	{
-		theView.alpha = 0;
-		theView.hidden = NO;
-		[UIView animateWithDuration:0.7 animations:^{
-			theView.alpha = 1;
-		}];
-	}
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -384,6 +331,34 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	return result;
 }
 
+- (void)fadeView:(UIView *)targetView
+      shouldHide:(BOOL)shouldHide
+{
+	ZDCLogAutoTrace();
+	
+	if (targetView.isHidden == shouldHide) {
+		// Nothing to do
+		return;
+	}
+	
+	if (shouldHide)
+	{
+		[UIView animateWithDuration:0.3 animations:^{
+			targetView.alpha = 0;
+		} completion: ^(BOOL finished) {
+			targetView.hidden = finished;
+		}];
+	}
+	else
+	{
+		targetView.alpha = 0;
+		targetView.hidden = NO;
+		[UIView animateWithDuration:0.7 animations:^{
+			targetView.alpha = 1;
+		}];
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Actions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -394,25 +369,24 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	
 	UIButton* btn = sender;
 
-	IdentityProviderFilterViewController *iPvc =
+	IdentityProviderFilterViewController *ipvc =
 	  [[IdentityProviderFilterViewController alloc] initWithDelegate:self owner:zdc];
 
-    iPvc.provider = filterProvider;
+    ipvc.provider = providerToSearch;
     // this is best presented as a popover on both Iphone and iPad
-    iPvc.modalPresentationStyle = UIModalPresentationPopover;
+    ipvc.modalPresentationStyle = UIModalPresentationPopover;
     CGFloat height =  self.view.frame.size.height - btn.frame.origin.y - btn.frame.size.height;
 
-    iPvc.preferredContentSize = (CGSize){ .width = iPvc.preferredWidth, .height = height };
+    ipvc.preferredContentSize = (CGSize){ .width = ipvc.preferredWidth, .height = height };
 
-    UIPopoverPresentationController *popover =  iPvc.popoverPresentationController;
-    popover.delegate = iPvc;
+    UIPopoverPresentationController *popover =  ipvc.popoverPresentationController;
+    popover.delegate = ipvc;
     popover.sourceView = self.view;
     popover.sourceRect = btn.frame;
     popover.permittedArrowDirections = UIPopoverArrowDirectionUp;
 
-    [self presentViewController:iPvc animated:YES completion:nil];
+    [self presentViewController:ipvc animated:YES completion:nil];
 }
-
 
 /**
  * Handles the dismissal of a self presented detailVC with custom Back button
@@ -426,11 +400,6 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 //	}
 	
 	[[self navigationController] popViewControllerAnimated:YES];
-}
-
--(void)reloadResults
-{
-    [_tblUsers reloadData];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -453,15 +422,14 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 {
 	ZDCLogAutoTrace();
 	
-	NSMutableSet *_sharedUserIDs = [NSMutableSet setWithSet:sharedUserIDs];
-	[_sharedUserIDs removeObject:userID];
-	sharedUserIDs = [_sharedUserIDs copy];
+	NSMutableSet *newSharedUserIDs = [NSMutableSet setWithSet:sharedUserIDs];
+	[newSharedUserIDs removeObject:userID];
+	sharedUserIDs = [newSharedUserIDs copy];
 	
-	SEL selector = @selector(userSearchViewController:removedRecipients:);
+	SEL selector = @selector(userSearchViewController:removedRecipient:);
 	if ([delegate respondsToSelector:selector])
 	{
-		[delegate userSearchViewController: self
-		                 removedRecipients: @[userID]];
+		[delegate userSearchViewController:self removedRecipient:userID];
 	}
 }
 
@@ -502,111 +470,63 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 //		[zdc.internalPreferences setPreferedAuth0ID:auth0ID userID:userID];
 //	}
 	
-	SEL selector = @selector(userSearchViewController:selectedRecipients:);
+	SEL selector = @selector(userSearchViewController:addedRecipient:);
 	if ([delegate respondsToSelector:selector])
 	{
-		[delegate userSearchViewController:self selectedRecipients:@[@[userID, identityID]]];
+	//	[delegate userSearchViewController:self selectedRecipient:@[@[userID, identityID]]];
 	}
 }
 
--(BOOL)shouldShowRecentRecipients
+- (BOOL)shouldShowRecentRecipients
 {
-    BOOL result = NO;
-    
-    result = (_searchBar.text.length == 0) && recentRecipients.count > 0;
-    
-    return result;
-}
-
--(void)removeRecipientAtIndexPath:(NSIndexPath *)indexPath
-{
-    NSMutableArray* newUsers = [NSMutableArray arrayWithArray:remoteUserIDs];
-    
-    NSUInteger index = indexPath.row;
-    [newUsers removeObjectAtIndex:index];
-    remoteUserIDs = newUsers;
-    
-    [_tblUsers beginUpdates];
-    [_tblUsers deleteRowsAtIndexPaths:@[indexPath]  withRowAnimation:YES];
-    [_tblUsers endUpdates];
-    [self.view setNeedsUpdateConstraints];
-    
+	BOOL result = (_searchBar.text.length == 0) && (recentRecipients.count > 0);
+	return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark UISearchBar Activity
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// this timer prevents the ketboard from hiding/appearing durring an import unless we are taking to long
-
--(void)startImporting
-{
-    [self completedImport];
-    importingTimer =  [NSTimer scheduledTimerWithTimeInterval:.3
-                                                       target:self
-                                                     selector:@selector(importIsTakingToLong:)
-                                                     userInfo:nil
-                                                      repeats:NO];
-    
-}
-
--(void)completedImport
-{
-    if(importingTimer) {
-        [importingTimer invalidate];
-    }
-    
-    if(!_searchBar.userInteractionEnabled)
-    {
-        [_searchBar setUserInteractionEnabled:YES];
-        
-        [UIView animateWithDuration:0.3 animations:^{
-			  self->_searchBar.alpha= 1;
-        } completion:nil];
-    }
-}
-
-- (void)importIsTakingToLong:(NSTimer*)sender
-{
-    [_searchBar setUserInteractionEnabled:NO];
-    
-    [UIView animateWithDuration:0.3 animations:^{
-		 self->_searchBar.alpha= .5;
-    } completion:nil];
-}
-
-
-// this timer prevents the user typing from firing off a search for each char, we delay just a bit
-
-- (void)startSearching
+- (void)importUser:(ZDCSearchResult *)searchResult
 {
 	ZDCLogAutoTrace();
+	NSAssert([NSThread isMainThread], @"Must be invoked on the main thread: non-thread-safe variables ahead");
 	
-	[self cancelSearching];
-	showSearchingTimer =
-	  [NSTimer scheduledTimerWithTimeInterval: 0.3
-	                                   target: self
-	                                 selector: @selector(showSearching:)
-	                                 userInfo: nil
-	                                  repeats: NO];
-}
-
-- (void)cancelSearching
-{
-	ZDCLogAutoTrace();
-	
-	if (showSearchingTimer) {
-		[showSearchingTimer invalidate];
+	if ([importingUserIDs containsObject:searchResult.userID])
+	{
+		// Already in-progress
+		return;
 	}
-   
-	_searchBar.isLoading = NO;
+	
+	NSString *userID = searchResult.userID;
+	
+	{ // scoping
+		
+		NSMutableSet<NSString *> *newImportingUserIDs =
+		  importingUserIDs ? [importingUserIDs mutableCopy] : [NSMutableSet setWithCapacity:1];
+		[newImportingUserIDs addObject:userID];
+		importingUserIDs = [newImportingUserIDs copy];
+	}
+	
+	__weak typeof(self) weakSelf = self;
+	[zdc.userManager createUserFromResult: searchResult
+	                          requesterID: localUserID
+	                      completionQueue: dispatch_get_main_queue()
+	                      completionBlock:^(ZDCUser *user, NSError *error)
+	{
+		[weakSelf finishImport:userID];
+	}];
 }
 
-- (void)showSearching:(NSTimer*)sender
+- (void)finishImport:(NSString *)userID
 {
 	ZDCLogAutoTrace();
+	NSAssert([NSThread isMainThread], @"Must be invoked on the main thread: non-thread-safe variables ahead");
 	
-	_searchBar.isLoading = YES;
+	NSMutableSet<NSString *> *newImportingUserIDs = [importingUserIDs mutableCopy];
+	[newImportingUserIDs removeObject:userID];
+	
+	importingUserIDs = [newImportingUserIDs copy];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -696,18 +616,17 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
     
 	if (queryString.length < 2)
 	{
+		_searchBar.isLoading = NO;
 		searchResults = nil;
-	//	preferredIdentityIDs = nil;
-		[self cancelSearching];
-		[self reloadResults];
+		[_tblUsers reloadData];
 		return;
 	}
 	
+	_searchBar.isLoading = YES;
 	NSInteger currentSearchId = searchId;
-	[self startSearching];
 	
 	ZDCSearchOptions *options = [[ZDCSearchOptions alloc] init];
-	options.providerToSearch = filterProvider;
+	options.providerToSearch = providerToSearch;
 	options.searchLocalDatabase = NO;
 	options.searchLocalCache = YES;
 	options.searchRemoteServer = YES;
@@ -756,7 +675,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 		 
 	if (error)
 	{
-		[self cancelSearching];
+		_searchBar.isLoading = NO;
 		return;
 	}
 	
@@ -782,14 +701,14 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	}
 	
 	// update the searchResults
-	searchResults =  [searchDict.allValues copy];
-	[self reloadResults];
+	searchResults = [searchDict.allValues copy];
+	[_tblUsers reloadData];
 	
 	if (stage == ZDCSearchResultStage_Done)
 	{
 		// end search indicator;
 		
-		[self cancelSearching];
+		_searchBar.isLoading = NO;
 		displayedSearchId = currentSearchId;
 		
 		if (searchResults.count == 0)
@@ -867,39 +786,27 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 {
 	NSInteger result = 0;
 	
-	if (tv == _tblUsers)
-	{
-		if (self.shouldShowRecentRecipients)
-			result = recentRecipients.count;
-		else
-			result = searchResults.count;
-	}
+	if (self.shouldShowRecentRecipients)
+		result = recentRecipients.count;
+	else
+		result = searchResults.count;
 	
 	return result;
 }
 
 - (CGFloat)tableView:(UITableView *)tv heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    CGFloat result = 0;
-    
-    if(tv == _tblUsers)
-    {
-        result =  [RemoteUserTableViewCell heightForCell];
-    }
-    
-    return result;
+	CGFloat result = result =  [RemoteUserTableViewCell heightForCell];
+	return result;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tv cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
 	UITableViewCell *cell = nil;
-	if (tv == _tblUsers)
-	{
-		if (self.shouldShowRecentRecipients)
-			cell = [self tableView:tv  recentUserCellForRowAtIndexPath:indexPath];
-		else
-			cell = [self tableView:tv  remoteUserCellForRowAtIndexPath:indexPath];
-	}
+	if (self.shouldShowRecentRecipients)
+		cell = [self tableView:tv recentUserCellForRowAtIndexPath:indexPath];
+	else
+		cell = [self tableView:tv remoteUserCellForRowAtIndexPath:indexPath];
 	
 	return cell;
 }
@@ -1215,7 +1122,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark TableView Swipe
+#pragma mark UITableView Swipe
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if __IPHONE_11_0
@@ -1282,28 +1189,39 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 
 #endif
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark UITableView Select/Deselect
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//MARK: tableview select/deselect
+- (nullable NSIndexPath *)tableView:(UITableView *)tv willSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+	ZDCLogAutoTrace();
+	
+	// Don't allow selection of localUserID
+	
+	NSString *userID = recentRecipients[indexPath.row];
+	
+	if ([userID isEqualToString:localUserID]) {
+		return nil;
+	} else {
+		return indexPath;
+	}
+}
 
 - (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    
-    if(tv == _tblUsers)
-    {
-        if(self.shouldShowRecentRecipients)
-            [self tableView:tv  didSelectRecentUserCellForRowAtIndexPath:indexPath];
-        else
-            [self tableView:tv  didSelectRemoteUserCellForRowAtIndexPath:indexPath];
-    }
+	ZDCLogAutoTrace();
+	
+	if (self.shouldShowRecentRecipients)
+		[self tableView:tv didSelectRecentUserCellForRowAtIndexPath:indexPath];
+	else
+		[self tableView:tv didSelectRemoteUserCellForRowAtIndexPath:indexPath];
 }
 
 
 - (void)tableView:(UITableView *)tv didSelectRemoteUserCellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	NSAssert(NO, @"Not implemented"); // finish refactoring
-	
-/*
-	__weak typeof(self) weakSelf = self;
+	ZDCLogAutoTrace();
 
 	ZDCSearchResult *item = [searchResults objectAtIndex:indexPath.row];
 	NSString *userID = item.userID;
@@ -1324,6 +1242,10 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 	}
 	else  // select
 	{
+		// What do we need to do here ?
+		//
+		// -
+	/*
 		// Signal that we are importing this user.
 		dispatch_sync(dataQueue, ^{
 		#pragma clang diagnostic push
@@ -1367,13 +1289,14 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
              
              
          }];
-        
-    }
-*/
+   */
+	}
 }
 
 - (void)tableView:(UITableView *)tv didSelectRecentUserCellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
+	NSAssert(NO, @"Not implemented");
+/*
     NSArray* item = [recentRecipients objectAtIndex: indexPath.row ];
     NSString* userID = item[0];
     NSString* auth0ID = item.count>1?item[1]:@"";
@@ -1391,40 +1314,19 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
         [tv reloadRowsAtIndexPaths:@[indexPath]
                   withRowAnimation:UITableViewRowAnimationNone];
     }
+*/
 }
 
-// prevent deselection - in effect we have radio buttons
 - (nullable NSIndexPath *)tableView:(UITableView *)tableView willDeselectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    return nil;
+	// Prevent deselection - in effect we have radio buttons
+	
+	return nil;
 }
 
-- (nullable NSIndexPath *)tableView:(UITableView *)tv willSelectRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    NSIndexPath* newIndexPath = nil;
-    if(tv == _tblUsers)
-    {
-        NSString* userID = nil;
-        if(self.shouldShowRecentRecipients)
-        {
-            NSArray* item = [recentRecipients objectAtIndex: indexPath.row ];
-            userID = item[0];
-        }
-        else
-        {
-            ZDCSearchResult *item = [searchResults objectAtIndex:indexPath.row];
-            userID = item.userID;
-        }
-        
-        if(![localUserID isEqualToString:userID])
-            newIndexPath = indexPath;
-     }
-    
-    return newIndexPath;
-}
-
-
-// MARK: RemoteUserTableViewCellDelegate
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark RemoteUserTableViewCellDelegate
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)tableView:(UITableView * _Nonnull)tv disclosureButtonTappedAtCell:(RemoteUserTableViewCell* _Nonnull)cell
 {
@@ -1503,7 +1405,7 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 - (void)identityProviderFilter:(IdentityProviderFilterViewController *)sender
               selectedProvider:(NSString *)provider
 {
-	filterProvider = provider;
+	providerToSearch = provider;
 	
 	OSImage *image = nil;
 	if (provider != nil)

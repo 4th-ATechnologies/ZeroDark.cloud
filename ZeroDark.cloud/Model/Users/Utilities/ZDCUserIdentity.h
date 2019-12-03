@@ -11,7 +11,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ZDCUserIdentity : NSObject
+@interface ZDCUserIdentity : NSObject <NSSecureCoding, NSCopying>
 
 /**
  * Standard initializer
@@ -39,9 +39,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSString *userID;
 
 /**
- *  If the provider_name is "auth0", this value stores the database connection being used.
+ * If the provider_name is "auth0", this value stores the database connection being used.
+ * Otherwise the value is nil.
  */
-@property (nonatomic, readonly) NSString *connection;
+@property (nonatomic, readonly, nullable) NSString *connection;
 
 /**
  *  Flag that indicates if the identity is `Social`. e.g: Facebook
@@ -49,9 +50,34 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) BOOL isSocial;
 
 /**
- *  User's profile data in the Identity Provider
+ * The owner-preferred flag may be set by the owner of this identity.
+ *
+ * For example, Alice might link multiple identities to her account:
+ * - Facebook (for friends & family)
+ * - LinkedIn (for work colleagues)
+ *
+ * Alice might set her LinkedIn profile as her preferred identity.
+ * This means that, all else being equal, her LinkedIn name & avatar will be shown to other people.
+ *
+ * However, this can be overridden by other users.
+ * For example, Bob (Alice's friend) may prefer to see Alice's Facebook name & avatar.
+ * So Bob can set Alice's ZDCUser.preferredIdentityID to override this value.
+ *
+ * In other words:
+ * - Alice's LinkedIn ZDCUserIdentity.isOwnerPerferredIdentity is TRUE
+ * - But Bob has set Alice's ZDCUser.preferredIdentityID to point at her Facebook ZDCUserIdentity
+ * - Thus on Bob's system, we display Alice using her Facebook identity
+ */
+@property (nonatomic, readonly) BOOL isOwnerPreferredIdentity;
+
+/**
+ * User's profile data, which comes from the identity provider.
  */
 @property (nonatomic, readonly) NSDictionary *profileData;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Convenience Properties
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Returns the proper display name, taking into consideration many different things,

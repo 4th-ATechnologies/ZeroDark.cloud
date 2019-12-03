@@ -23,14 +23,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithDictionary:(NSDictionary *)dictionary;
 
 /**
- * Attempts to parse the given (filtered) dictionary into a ZDCUserProfile instance.
- *
- * A filtered profile is what the ZeroDark.cloud servers return.
- * It strips any potentially sensitive information from the user's profile info.
- */
-//- (instancetype)initWithFilteredProfileDictionary:(NSDictionary *)dict;
-
-/**
  * A unique identifier for the profile.
  */
 @property (nonatomic, readonly) NSString *userID;
@@ -56,15 +48,12 @@ NS_ASSUME_NONNULL_BEGIN
 /** Extra user information stored in Auth0. */
 @property (nonatomic, readonly) NSDictionary *extraInfo;
 
-/** Values stored under `app_metadata` */
-@property (nonatomic, readonly) NSDictionary *appMetadata;
-
-/** Values stored under `user_metadata`. */
-@property (nonatomic, readonly) NSDictionary *userMetadata;
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Convenience
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/** Values stored under `app_metadata` */
+@property (nonatomic, readonly) NSDictionary *appMetadata;
 
 /** As specified in appMetadata. */
 @property (nonatomic, readonly, nullable) NSString *appMetadata_awsID;
@@ -75,9 +64,10 @@ NS_ASSUME_NONNULL_BEGIN
 /** As specified in appMetadata. */
 @property (nonatomic, readonly, nullable) NSString *appMetadata_bucket;
 
-/**
- * As specified in userMetadata.
- */
+/** Values stored under `user_metadata`. */
+@property (nonatomic, readonly) NSDictionary *userMetadata;
+
+/** * As specified in userMetadata. */
 @property (nonatomic, readonly, nullable) NSString *userMetadata_preferredIdentityID;
 
 /**

@@ -12,5 +12,6 @@
 @interface ZDCUserIdentity ()
 
 @property (nonatomic, readwrite, copy) NSDictionary *profileData;
+@property (nonatomic, readwrite, assign) BOOL isOwnerPreferredIdentity;
 
 @end

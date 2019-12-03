@@ -8373,42 +8373,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	}];
 }
 
-- (void)fixMissingKeysForMessageID:(NSString *)messageID operation:(ZDCCloudOperation *)operation
-{
-	ZDCLogAutoTrace();
-	
-//	YapDatabaseCloudCorePipeline *pipeline = [self pipelineForOperation:operation];
-//	
-//	NSDate *distantFuture = [NSDate distantFuture];
-//	NSUUID *opUUID = operation.uuid;
-//	NSString *ctx = @"fix-missing-keys";
-//	
-//	[pipeline setHoldDate:distantFuture forOperationWithUUID:opUUID context:ctx];
-//	[pipeline setStatusAsPendingForOperationWithUUID:opUUID];
-//	
-//	__weak ZeroDarkCloud *zdc = owner;
-//	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
-//		
-//		ZDCOutgoingMessage *message = [transaction objectForKey:messageID inCollection:kZDCCollection_Messages];
-//		if (message)
-//		{
-//			message = [message copy];
-//			NSUInteger changeCount =
-//			  [zdc.cryptoTools fixMissingKeysForShareList: message.shareList
-//			                                encryptionKey: message.encryptionKey
-//			                                  transaction: transaction];
-//			
-//			if (changeCount > 0) {
-//				[transaction setObject:message forKey:message.uuid inCollection:kZDCCollection_Messages];
-//			}
-//		}
-//		
-//	} completionQueue:concurrentQueue completionBlock:^{
-//		
-//		[pipeline setHoldDate:nil forOperationWithUUID:opUUID context:ctx];
-//	}];
-}
-
 - (void)fetchMissingUsers:(NSArray<NSString*> *)missingUserIDs forOperation:(ZDCCloudOperation *)operation
 {
 	ZDCLogAutoTrace();

@@ -168,46 +168,17 @@ NSDate *DateFromISO8601String(NSString *string) {
 		}
 		
 		_extraInfo = [extraInfo copy];
-	}
-	return self;
-}
-
-- (instancetype)initWithFilteredProfileDictionary:(NSDictionary *)dict
-{
-	if ((self = [self init]))
-	{
-		id value;
 		
-		value = dict[@"identities"];
-		if ([value isKindOfClass:[NSArray class]])
+		// Find & set ZDCUserIdentity.isOwnerPreferredIdentity
+		
+		NSString *preferredIdentityID = self.userMetadata_preferredIdentityID;
+		if (preferredIdentityID)
 		{
-			NSArray *list_unparsed = (NSArray *)value;
-			NSMutableArray<ZDCUserIdentity *> *list_parsed = [NSMutableArray arrayWithCapacity:list_unparsed.count];
-			
-			for (id json in list_unparsed)
-			{
-				if ([json isKindOfClass:[NSDictionary class]])
-				{
-					ZDCUserIdentity *identity = [[ZDCUserIdentity alloc] initWithDictionary:(NSDictionary *)json];
-					if (identity) {
-						[list_parsed addObject:identity];
-					}
-				}
+			ZDCUserIdentity *identity = [self identityWithID:preferredIdentityID];
+			if (identity) {
+				identity.isOwnerPreferredIdentity = YES;
 			}
-			
-			_identities = [list_parsed copy];
 		}
-		else {
-			_identities = [[NSArray alloc] init];
-		}
-		
-		NSMutableDictionary *extraInfo = [NSMutableDictionary dictionaryWithCapacity:3];
-		
-		extraInfo[@"user_metadata"] = [dict[@"user_metadata"] copy];
-		extraInfo[@"app_metadata"]  = [dict[@"app_metadata"]  copy];
-		extraInfo[@"updated_at"]    = [dict[@"updated_at"]    copy];
-		
-		_extraInfo = [extraInfo copy];
 	}
 	return self;
 }
@@ -263,16 +234,6 @@ NSDate *DateFromISO8601String(NSString *string) {
 	}
 }
 
-- (NSDictionary *)userMetadata
-{
-	id value = _extraInfo[@"user_metadata"];
-	if ([value isKindOfClass:[NSDictionary class]]) {
-		return (NSDictionary *)value;
-	} else {
-		return @{};
-	}
-}
-
 - (nullable NSString *)appMetadata_awsID
 {
 	id value = self.appMetadata[@"aws_id"];
@@ -303,6 +264,16 @@ NSDate *DateFromISO8601String(NSString *string) {
 		return (NSString *)value;
 	} else {
 		return nil;
+	}
+}
+
+- (NSDictionary *)userMetadata
+{
+	id value = _extraInfo[@"user_metadata"];
+	if ([value isKindOfClass:[NSDictionary class]]) {
+		return (NSDictionary *)value;
+	} else {
+		return @{};
 	}
 }
 

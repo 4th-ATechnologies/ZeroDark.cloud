@@ -74,6 +74,11 @@ static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 	return [self initWithUUID:nil];
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCUser.html
+ */
 - (instancetype)initWithUUID:(nullable NSString *)inUUID
 {
 	if ((self = [super init]))
@@ -139,7 +144,16 @@ static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 		{
 			NSDictionary *auth0_profiles = [decoder decodeObjectForKey:kDeprecated_auth0_profiles];
 			
-			// Todo: convert this to a profile ?
+			NSMutableArray *_identities = [NSMutableArray arrayWithCapacity:auth0_profiles.count];
+			for (NSDictionary *dict in auth0_profiles.objectEnumerator)
+			{
+				ZDCUserIdentity *ident = [[ZDCUserIdentity alloc] initWithDictionary:dict];
+				if (ident) {
+					[_identities addObject:ident];
+				}
+			}
+			
+			identities = [_identities copy];
 		}
 		
 		preferredIdentityID = [decoder decodeObjectForKey:k_preferredIdentityID];
@@ -232,6 +246,11 @@ static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 #pragma mark Auth0
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCUser.html
+ */
 - (nullable ZDCUserIdentity *)displayIdentity
 {
 	if (identities.count == 0) return nil;
@@ -244,20 +263,32 @@ static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 		}
 	}
 	
+	// Look for `isOwnerPreferredIdentity`
+	//
+	for (ZDCUserIdentity *identity in identities)
+	{
+		if (identity.isOwnerPreferredIdentity) {
+			return identity;
+		}
+	}
+	
 	// Prefer a non-recovery-account identity
 	//
 	for (ZDCUserIdentity *identity in identities)
 	{
-		if (identity.isRecoveryAccount){
-			continue;
+		if (!identity.isRecoveryAccount){
+			return identity;
 		}
-	
-		return identity;
 	}
-		
+	
 	return identities[0];
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCUser.html
+ */
 - (NSString *)displayName
 {
 	ZDCUserIdentity *displayIdentity = [self displayIdentity];
@@ -269,6 +300,11 @@ static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 	}
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCUser.html
+ */
 - (nullable ZDCUserIdentity *)identityWithID:(NSString *)identityID
 {
 	ZDCUserIdentity *match = nil;
@@ -307,6 +343,8 @@ static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCUser.html
  */
 - (BOOL)isLocal
 {
@@ -316,12 +354,19 @@ static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCUser.html
  */
 - (BOOL)isRemote
 {
 	return (self.isLocal == NO);
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCUser.html
+ */
 - (BOOL)hasRegionAndBucket
 {
 	return (self.aws_region != AWSRegion_Invalid) && (self.aws_bucket.length > 0);
@@ -356,6 +401,8 @@ static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCUser.html
  */
 + (BOOL)isUserID:(NSString *)str
 {
@@ -364,6 +411,8 @@ static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCUser.html
  */
 + (BOOL)isAnonymousID:(NSString *)str
 {

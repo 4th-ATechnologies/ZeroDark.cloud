@@ -82,17 +82,7 @@
 	self.checkMark.hidden = !_showCheckMark;
 	self.cnstAvatarLeadingWidth.constant = _showCheckMark ? 20 : 0;
 }
-/*
-- (void)setEnableCheck:(BOOL)flag
-{
-	self.checkMark.checkMarkStyle = flag ? ZDCCheckMarkStyleOpenCircle: ZDCCheckMarkStyleGrayedOut;
-}
 
-- (void)setChecked:(BOOL)flag
-{
-	self.checkMark.checked = flag;
-}
-*/
 - (IBAction)disclosureButtonTapped:(id)sender
 {
     if ([self.delegate respondsToSelector:@selector(tableView:disclosureButtonTappedAtCell:)])

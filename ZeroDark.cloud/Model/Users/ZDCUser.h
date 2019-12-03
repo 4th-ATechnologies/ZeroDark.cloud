@@ -123,19 +123,43 @@ extern NSString *const kZDCAnonymousUserID;
 
 /**
  * Contains the list of social identities that the user has linked to their account.
+ *
+ * For example, Alice might link multiple identities to her account:
+ * - Facebook
+ * - LinkedIn
+ * - GitHub
  */
 @property (nonatomic, copy, readwrite) NSArray<ZDCUserIdentity*> *identities;
 
 /**
- * If a user has multiple identities linked to their account, this property specifies their preferred identity.
- * The preferred identity is generally used to display information about the user wihtin the UI.
+ * Allows a user to control which identity is displayed within the UI.
+ *
+ * For example, Alice might link multiple identities to her account:
+ * - Facebook (for friends & family)
+ * - LinkedIn (for work colleagues)
+ *
+ * Alice might set her LinkedIn profile as her preferred identity.
+ * This means that, all else being equal, her LinkedIn name & avatar will be shown to other people.
+ *
+ * However, this can be overridden by other users.
+ * For example, Bob (Alice's friend) may prefer to see Alice's Facebook name & avatar.
+ * So Bob can set Alice's ZDCUser.preferredIdentityID to override this value.
+ *
+ * In other words:
+ * - Alice's LinkedIn ZDCUserIdentity.isOwnerPerferredIdentity is TRUE
+ * - But Bob has set Alice's ZDCUser.preferredIdentityID to point at her Facebook ZDCUserIdentity
+ * - Thus on Bob's system, we display Alice using her Facebook identity
  */
 @property (nonatomic, copy, readwrite, nullable) NSString * preferredIdentityID;
 
 /**
  * Extracts an identity for the user from their list of linked identities.
- * The preferredIdentity is used, if configured.
- * Otherwise, an identity is selected from the list of identities.
+ *
+ * The following rules are followed, in order:
+ * - If the `preferredIdentityID` is set, returns that identity (if non-nil)
+ * - Returns the first ZDCUserIdentity with it's `isOwnerPreferredIdentity` set to true
+ * - Returns the first ZDCUserIdentity with it's `isRecoveryAccount` set to false
+ * - Returns the first ZDCUserIdentity in the list
  */
 @property (nonatomic, readonly, nullable) ZDCUserIdentity * displayIdentity;
 

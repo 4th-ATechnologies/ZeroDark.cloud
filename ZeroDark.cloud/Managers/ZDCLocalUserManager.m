@@ -732,13 +732,11 @@ done:
 		[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 
 			ZDCLocalUser *localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
-
-			localUser = [localUser copy];
 			
-			localUser.lastRefresh_profile = [NSDate date];
+			localUser = [localUser copy];
 			localUser.identities = profile.identities;
-			localUser.preferredIdentityID = profile.userMetadata_preferredIdentityID;
-
+			localUser.lastRefresh_profile = [NSDate date];
+			
 			[transaction setObject: localUser
 			                forKey: localUser.uuid
 			          inCollection: kZDCCollection_Users];

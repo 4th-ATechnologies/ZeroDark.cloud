@@ -571,7 +571,6 @@ done:
 	copy->uuid 		  = uuid;
 	copy->userID 	  = userID;
 	copy->pubKeyJSON = pubKeyJSON;
-	privKeyJSON = nil;
 }
 
 @end

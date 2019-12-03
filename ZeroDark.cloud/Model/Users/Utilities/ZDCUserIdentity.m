@@ -17,6 +17,7 @@ static NSString *const k_provider    = @"provider";
 static NSString *const k_userID      = @"userID";
 static NSString *const k_connection  = @"connection";
 static NSString *const k_isSocial    = @"isSocial";
+static NSString *const k_isPreferred = @"isPreferred";
 static NSString *const k_profileData = @"profileData";
 
 @implementation ZDCUserIdentity
@@ -27,6 +28,7 @@ static NSString *const k_profileData = @"profileData";
 @synthesize userID = _userID;
 @synthesize connection = _connection;
 @synthesize isSocial = _isSocial;
+@synthesize isOwnerPreferredIdentity = _isPreferred;
 @synthesize profileData = _profileData;
 
 @dynamic displayName;
@@ -50,8 +52,6 @@ static NSString *const k_profileData = @"profileData";
 		value = dict[@"connection"];
 		if ([value isKindOfClass:[NSString class]]) {
 			_connection = [(NSString *)value copy];
-		} else {
-			_connection = _provider;
 		}
 		
 		value = dict[@"isSocial"];
@@ -68,6 +68,8 @@ static NSString *const k_profileData = @"profileData";
 			_profileData = [[NSDictionary alloc] init];
 		}
 		
+		_isPreferred = NO; // _isPreferred is set by ZDCUserProfile; that info isn't in the given dict
+		
 		if (![self isValidIdentity]) {
 			return nil;
 		}
@@ -79,8 +81,11 @@ static NSString *const k_profileData = @"profileData";
 {
 	if (_provider.length == 0)   return NO;
 	if (_userID.length == 0)     return NO;
-	if (_connection.length == 0) return NO;
 	if (!_profileData)           return NO;
+	
+	if ([_provider isEqualToString:A0StrategyNameAuth0]) {
+		if (_connection.length == 0) return NO;
+	}
 	
 	return YES;
 }
@@ -102,6 +107,7 @@ static NSString *const k_profileData = @"profileData";
 		_userID      = [decoder decodeObjectOfClass:[NSString class] forKey:k_userID];
 		_connection  = [decoder decodeObjectOfClass:[NSString class] forKey:k_connection];
 		_isSocial    = [decoder decodeBoolForKey:k_isSocial];
+		_isPreferred = [decoder decodeBoolForKey:k_isPreferred];
 		_profileData = [decoder decodeObjectOfClass:[NSDictionary class] forKey:k_profileData];
 	}
 	return self;
@@ -113,7 +119,26 @@ static NSString *const k_profileData = @"profileData";
 	[coder encodeObject:_userID      forKey:k_userID];
 	[coder encodeObject:_connection  forKey:k_connection];
 	[coder encodeBool:_isSocial      forKey:k_isSocial];
+	[coder encodeBool:_isPreferred   forKey:k_isPreferred];
 	[coder encodeObject:_profileData forKey:k_profileData];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark NSCopying
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (instancetype)copyWithZone:(NSZone *)zone
+{
+	ZDCUserIdentity *copy = [[ZDCUserIdentity alloc] init];
+	
+	copy->_provider    = [_provider copy];
+	copy->_userID      = [_userID copy];
+	copy->_connection  = [_connection copy];
+	copy->_isSocial    = _isSocial;
+	copy->_isPreferred = _isPreferred;
+	copy->_profileData = [_profileData copy];
+	
+	return copy;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

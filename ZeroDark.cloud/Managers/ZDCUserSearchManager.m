@@ -628,7 +628,7 @@
 			{
 				if ([identityDict isKindOfClass:[NSDictionary class]])
 				{
-					ZDCUserIdentity *parsed = [[ZDCUserIdentity alloc] initWithDictionary:identityDict];
+					ZDCUserIdentity *parsed = [[ZDCUserIdentity alloc] initWithDictionary:(NSDictionary *)identityDict];
 					if (parsed)
 					{
 						[identities addObject:parsed];

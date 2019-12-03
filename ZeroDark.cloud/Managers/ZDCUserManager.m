@@ -14,6 +14,7 @@
 #import "ZDCConstants.h"
 #import "ZDCDatabaseManagerPrivate.h"
 #import "ZDCLogging.h"
+#import "ZDCUserSearchManager.h"
 #import "ZDCUserPrivate.h"
 #import "ZeroDarkCloudPrivate.h"
 
@@ -84,6 +85,10 @@
 	}
 	return self;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark External API
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * See header file for description.
@@ -157,6 +162,134 @@
 			                 completionBlock: nil];
 		}
 	}];
+}
+
+- (void)createUserFromResult:(ZDCSearchResult *)inSearchResult
+                 requesterID:(NSString *)inLocalUserID
+             completionQueue:(nullable dispatch_queue_t)completionQueue
+             completionBlock:(nullable void (^)(ZDCUser *_Nullable remoteUser, NSError *_Nullable error))completionBlock
+{
+	ZDCLogAutoTrace();
+	
+	NSParameterAssert(inSearchResult != nil);
+	NSParameterAssert(inLocalUserID != nil);
+	
+	ZDCSearchResult *searchResult = [inSearchResult copy];
+	NSString *remoteUserID = searchResult.userID;
+	NSString *localUserID = [inLocalUserID copy];
+	
+	void (^InvokeCompletionBlock)(ZDCUser*, NSError*) = ^(ZDCUser *user, NSError *error){
+		
+		if (completionBlock == nil) return;
+		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+			
+			completionBlock(user, error);
+		}});
+	};
+	
+	ZDCUser *user = [[ZDCUser alloc] initWithUUID:remoteUserID];
+	user.aws_region = searchResult.aws_region;
+	user.aws_bucket = searchResult.aws_bucket;
+	
+	user.identities = searchResult.identities;
+	user.preferredIdentityID = searchResult.preferredIdentityID;
+	user.lastRefresh_profile = [NSDate date];
+	
+	__weak typeof(self) weakSelf = self;
+	
+	__block void (^fetchPubKey)(void);
+	__block void (^storeInfoInDatabase)(ZDCPublicKey *pubKey);
+	
+	dispatch_queue_t concurrentQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	
+	// STEP 1 of 2:
+	//
+	// Fetch pubKey, which we deem as required information about the user.
+	//
+	fetchPubKey = ^void (){ @autoreleasepool {
+		
+		ZDCLogVerbose(@"fetchPubKey() - %@", remoteUserID);
+		NSAssert(user != nil, @"Bad state");
+		
+		[weakSelf _fetchPubKey: user
+		           requesterID: localUserID
+		       completionQueue: concurrentQueue
+		       completionBlock:^(ZDCPublicKey *publicKey, NSError *error)
+		{
+			if (error)
+			{
+				InvokeCompletionBlock(nil, error);
+				return;
+			}
+			
+			user.publicKeyID = publicKey.uuid;
+			
+			storeInfoInDatabase(publicKey);
+		}];
+	}};
+	
+	// STEP 2 of 2:
+	//
+	// Store the user & pubKey in the database (if needed).
+	//
+	storeInfoInDatabase = ^void (ZDCPublicKey *pubKey){ @autoreleasepool {
+		
+		ZDCLogVerbose(@"storeUserInDatabase() - %@", remoteUserID);
+		
+		ZDCDatabaseManager *databaseManager = nil;
+		{
+			__strong typeof(self) strongSelf = weakSelf;
+			if (strongSelf) {
+				databaseManager = strongSelf->zdc.databaseManager;
+			}
+		}
+		
+		__block ZDCUser *databaseUser = nil;
+		
+		[databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+			
+			ZDCUser *existingUser = [transaction objectForKey:remoteUserID inCollection:kZDCCollection_Users];
+			if (existingUser)
+			{
+				databaseUser = existingUser;
+			}
+			else
+			{
+				[transaction setObject:user forKey:user.uuid inCollection:kZDCCollection_Users];
+				databaseUser = user;
+			}
+			
+			ZDCPublicKey *existingPubKey =
+			  [transaction objectForKey: databaseUser.publicKeyID
+			               inCollection: kZDCCollection_PublicKeys];
+			
+			if (!existingPubKey && pubKey)
+			{
+				[transaction setObject:pubKey forKey:pubKey.uuid inCollection:kZDCCollection_PublicKeys];
+				
+				if (![pubKey.uuid isEqualToString:databaseUser.publicKeyID])
+				{
+					// Two possibilities here:
+					// - databaseUser.publicKey is nil
+					// - databaseUser.publicKey is invalid
+					
+					databaseUser = [databaseUser copy];
+					databaseUser.publicKeyID = pubKey.uuid;
+					
+					[transaction setObject: databaseUser
+					                forKey: databaseUser.uuid
+					          inCollection: kZDCCollection_Users];
+				}
+			}
+			
+		} completionQueue:concurrentQueue completionBlock:^{
+
+			InvokeCompletionBlock(databaseUser, nil);
+		}];
+	}};
+	
+	// Start process
+	fetchPubKey();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -286,7 +419,6 @@
 			}
 			
 			user.identities = profile.identities;
-			user.preferredIdentityID = profile.userMetadata_preferredIdentityID;
 			user.lastRefresh_profile = [NSDate date];
 			
 			fetchPubKey(user);

@@ -10,6 +10,7 @@
 #import <UIKit/UIKit.h>
 
 @class ZeroDarkCloud;
+@class ZDCUser;
 @protocol UserSearchViewControllerDelegate;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -32,11 +33,9 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol UserSearchViewControllerDelegate <NSObject>
 @optional
 
-- (void)userSearchViewController:(id)sender
-              selectedRecipients:(NSArray<NSArray* /* [userID , auth0ID ]>*/> * )recipients;
+- (void)userSearchViewController:(id)sender addedRecipient:(ZDCUser *)recipient;
 
-- (void)userSearchViewController:(id)sender
-               removedRecipients:(NSArray <NSString* /* [userID */> * )recipients;
+- (void)userSearchViewController:(id)sender removedRecipient:(NSString *)userID;
 
 @end
 
