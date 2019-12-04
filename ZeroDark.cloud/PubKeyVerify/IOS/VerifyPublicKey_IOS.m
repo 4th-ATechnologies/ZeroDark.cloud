@@ -411,6 +411,8 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 
 -(void) refreshServerCopy
 {
+	NSAssert(NO, @"Not implemented");
+/*
 	__weak typeof(self) weakSelf = self;
 	
 	_txtPubKeyServer.text = @"Verifying KeyServer Copy…";
@@ -475,9 +477,8 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 			 [strongSelf->_btnPubKeyServer setImage: strongSelf->okImage forState:UIControlStateNormal];
 		 }
 		 strongSelf->_btnPubKeyServer.hidden = NO;
-	 }];
-	
-	
+	 }];	
+*/
 }
 
 

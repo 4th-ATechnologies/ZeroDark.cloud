@@ -507,7 +507,9 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 		[newImportingUserIDs addObject:userID];
 		importingUserIDs = [newImportingUserIDs copy];
 	}
-	
+
+	NSAssert(NO, @"Not implemented");
+/*
 	__weak typeof(self) weakSelf = self;
 	[zdc.userManager createUserFromResult: searchResult
 	                          requesterID: localUserID
@@ -516,6 +518,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	{
 		[weakSelf finishImport:userID];
 	}];
+*/
 }
 
 - (void)finishImport:(NSString *)userID

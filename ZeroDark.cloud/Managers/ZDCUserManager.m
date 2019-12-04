@@ -87,7 +87,7 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark External API
+#pragma mark Fetch API
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -128,9 +128,6 @@
 		
 	} completionQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) completionBlock:^{
 		
-		BOOL needsDownload = NO;
-		BOOL needsRefresh = NO;
-		
 		if (user)
 		{
 			if (completionBlock)
@@ -139,157 +136,127 @@
 					completionBlock(user, nil);
 				}});
 			}
-			
-			// Todo: add logic for needsRefresh
-		}
-		else
-		{
-			needsDownload = YES;
+			return;
 		}
 		
-		if (needsDownload)
-		{
-			[weakSelf _fetchRemoteUserWithID: remoteUserID
-			                     requesterID: localUserID
-			                 completionQueue: completionQueue
-			                 completionBlock: completionBlock];
-		}
-		else if (needsRefresh)
-		{
-			[weakSelf _fetchRemoteUserWithID: remoteUserID
-			                     requesterID: localUserID
-			                 completionQueue: nil
-			                 completionBlock: nil];
-		}
+		[weakSelf _fetchRemoteUserWithID: remoteUserID
+		                     requesterID: localUserID
+		                 completionQueue: completionQueue
+		                 completionBlock: completionBlock];
 	}];
 }
 
-- (void)createUserFromResult:(ZDCSearchResult *)inSearchResult
-                 requesterID:(NSString *)inLocalUserID
-             completionQueue:(nullable dispatch_queue_t)completionQueue
-             completionBlock:(nullable void (^)(ZDCUser *_Nullable remoteUser, NSError *_Nullable error))completionBlock
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCUserManager.html
+ */
+- (void)fetchPublicKey:(ZDCUser *)remoteUser
+           requesterID:(NSString *)inLocalUserID
+       completionQueue:(nullable dispatch_queue_t)completionQueue
+       completionBlock:(nullable void (^)(ZDCUser *_Nullable remoteUser, NSError *_Nullable error))completionBlock
 {
 	ZDCLogAutoTrace();
 	
-	NSParameterAssert(inSearchResult != nil);
+	NSParameterAssert(remoteUser != nil);
 	NSParameterAssert(inLocalUserID != nil);
 	
-	ZDCSearchResult *searchResult = [inSearchResult copy];
-	NSString *remoteUserID = searchResult.userID;
 	NSString *localUserID = [inLocalUserID copy];
 	
-	void (^InvokeCompletionBlock)(ZDCUser*, NSError*) = ^(ZDCUser *user, NSError *error){
-		
-		if (completionBlock == nil) return;
-		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
-			
-			completionBlock(user, error);
-		}});
-	};
-	
-	ZDCUser *user = [[ZDCUser alloc] initWithUUID:remoteUserID];
-	user.aws_region = searchResult.aws_region;
-	user.aws_bucket = searchResult.aws_bucket;
-	
-	user.identities = searchResult.identities;
-	user.preferredIdentityID = searchResult.preferredIdentityID;
-	user.lastRefresh_profile = [NSDate date];
-	
-	__weak typeof(self) weakSelf = self;
-	
-	__block void (^fetchPubKey)(void);
-	__block void (^storeInfoInDatabase)(ZDCPublicKey *pubKey);
-	
-	dispatch_queue_t concurrentQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-	
-	// STEP 1 of 2:
-	//
-	// Fetch pubKey, which we deem as required information about the user.
-	//
-	fetchPubKey = ^void (){ @autoreleasepool {
-		
-		ZDCLogVerbose(@"fetchPubKey() - %@", remoteUserID);
-		NSAssert(user != nil, @"Bad state");
-		
-		[weakSelf _fetchPubKey: user
-		           requesterID: localUserID
-		       completionQueue: concurrentQueue
-		       completionBlock:^(ZDCPublicKey *publicKey, NSError *error)
+	if (remoteUser.publicKeyID || [ZDCUser isAnonymousID:remoteUser.uuid])
+	{
+		// Nothing to fetch:
+		// - user already has a public key, or
+		// - anonymous users don't have a public key
+		//
+		if (completionBlock)
 		{
-			if (error)
-			{
-				InvokeCompletionBlock(nil, error);
-				return;
-			}
-			
-			user.publicKeyID = publicKey.uuid;
-			
-			storeInfoInDatabase(publicKey);
-		}];
-	}};
-	
-	// STEP 2 of 2:
-	//
-	// Store the user & pubKey in the database (if needed).
-	//
-	storeInfoInDatabase = ^void (ZDCPublicKey *pubKey){ @autoreleasepool {
-		
-		ZDCLogVerbose(@"storeUserInDatabase() - %@", remoteUserID);
-		
-		ZDCDatabaseManager *databaseManager = nil;
-		{
-			__strong typeof(self) strongSelf = weakSelf;
-			if (strongSelf) {
-				databaseManager = strongSelf->zdc.databaseManager;
-			}
+			dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+				completionBlock(remoteUser, nil);
+			}});
 		}
-		
-		__block ZDCUser *databaseUser = nil;
-		
-		[databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
-			
-			ZDCUser *existingUser = [transaction objectForKey:remoteUserID inCollection:kZDCCollection_Users];
-			if (existingUser)
-			{
-				databaseUser = existingUser;
-			}
-			else
-			{
-				[transaction setObject:user forKey:user.uuid inCollection:kZDCCollection_Users];
-				databaseUser = user;
-			}
-			
-			ZDCPublicKey *existingPubKey =
-			  [transaction objectForKey: databaseUser.publicKeyID
-			               inCollection: kZDCCollection_PublicKeys];
-			
-			if (!existingPubKey && pubKey)
-			{
-				[transaction setObject:pubKey forKey:pubKey.uuid inCollection:kZDCCollection_PublicKeys];
-				
-				if (![pubKey.uuid isEqualToString:databaseUser.publicKeyID])
-				{
-					// Two possibilities here:
-					// - databaseUser.publicKey is nil
-					// - databaseUser.publicKey is invalid
-					
-					databaseUser = [databaseUser copy];
-					databaseUser.publicKeyID = pubKey.uuid;
-					
-					[transaction setObject: databaseUser
-					                forKey: databaseUser.uuid
-					          inCollection: kZDCCollection_Users];
-				}
-			}
-			
-		} completionQueue:concurrentQueue completionBlock:^{
-
-			InvokeCompletionBlock(databaseUser, nil);
-		}];
-	}};
+		return;
+	}
 	
-	// Start process
-	fetchPubKey();
+	[self _fetchPublicKey: remoteUser
+	          requesterID: localUserID
+	      completionQueue: completionQueue
+	      completionBlock: completionBlock];
+}
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCUserManager.html
+ */
+- (void)refreshIdentities:(ZDCUser *)remoteUser
+              requesterID:(NSString *)inLocalUserID
+          completionQueue:(nullable dispatch_queue_t)completionQueue
+          completionBlock:(nullable void (^)(ZDCUser *_Nullable remoteUser, NSError *_Nullable error))completionBlock
+{
+	ZDCLogAutoTrace();
+	
+	NSParameterAssert(remoteUser != nil);
+	NSParameterAssert(inLocalUserID != nil);
+	
+	NSString *remoteUserID = remoteUser.uuid;
+	NSString *localUserID = [inLocalUserID copy];
+	
+	if ([ZDCUser isAnonymousID:remoteUserID])
+	{
+		// Nothing to refresh:
+		// - anonymous users don't have any linked identities
+		//
+		if (completionBlock)
+		{
+			dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+				completionBlock(remoteUser, nil);
+			}});
+		}
+		return;
+	}
+	
+	[self _refreshIdentities: remoteUserID
+	             requesterID: localUserID
+	         completionQueue: completionQueue
+	         completionBlock: completionBlock];
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCUserManager.html
+ */
+- (void)recheckBlockchain:(ZDCUser *)remoteUser
+              requesterID:(NSString *)inLocalUserID
+          completionQueue:(nullable dispatch_queue_t)completionQueue
+          completionBlock:(nullable void (^)(ZDCUser *_Nullable remoteUser, NSError *_Nullable error))completionBlock
+{
+	ZDCLogAutoTrace();
+	
+	NSParameterAssert(remoteUser != nil);
+	NSParameterAssert(inLocalUserID != nil);
+	
+	NSString *remoteUserID = remoteUser.uuid;
+	NSString *localUserID = [inLocalUserID copy];
+	
+	if ([ZDCUser isAnonymousID:remoteUserID])
+	{
+		// Nothing to check:
+		// - anonymous users don't have a publicKey
+		//
+		if (completionBlock)
+		{
+			dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+				completionBlock(remoteUser, nil);
+			}});
+		}
+		return;
+	}
+	
+	[self _recheckBlockchain: remoteUser
+	             requesterID: localUserID
+	         completionQueue: completionQueue
+	         completionBlock: completionBlock];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -299,18 +266,15 @@
 /**
  * Internal method that handles the download flow.
  */
-- (void)_fetchRemoteUserWithID:(NSString *)inRemoteUserID
-                   requesterID:(NSString *)inLocalUserID
+- (void)_fetchRemoteUserWithID:(NSString *)remoteUserID
+                   requesterID:(NSString *)localUserID
                completionQueue:(nullable dispatch_queue_t)inCompletionQueue
                completionBlock:(nullable void (^)(ZDCUser *remoteUser, NSError *error))inCompletionBlock
 {
 	ZDCLogAutoTrace();
 	
-	NSParameterAssert(inRemoteUserID != nil);
-	NSParameterAssert(inLocalUserID != nil);
-	
-	NSString *remoteUserID = [inRemoteUserID copy];
-	NSString *localUserID = [inLocalUserID copy];
+	NSParameterAssert(remoteUserID != nil);
+	NSParameterAssert(localUserID != nil);
 	
 	// Convert from any random anonymous userID to the standardized anonymous userID
 	// we use for the ZDCUser in the database.
@@ -329,7 +293,7 @@
 		inCompletionBlock = ^(ZDCUser *user, NSError *error){};
 	}
 	
-	NSString *const requestKey = [NSString stringWithFormat:@"createUser|%@", remoteUserID];
+	NSString *const requestKey = [NSString stringWithFormat:@"%@|%@", NSStringFromSelector(_cmd), remoteUserID];
 	
 	NSUInteger requestCount =
 	  [asyncCompletionDispatch pushCompletionQueue: inCompletionQueue
@@ -407,7 +371,7 @@
 		ZDCLogVerbose(@"fetchAuth0Info() - %@", remoteUserID);
 		NSAssert(user != nil, @"Bad state");
 		
-		[weakSelf _fetchFilteredAuth0Profile: user
+		[weakSelf _fetchFilteredAuth0Profile: remoteUserID
 		                         requesterID: localUserID
 		                     completionQueue: concurrentQueue
 		                     completionBlock:^(ZDCUserProfile *profile, NSError *error)
@@ -530,24 +494,27 @@
 	}
 }
 
-/**
- * Internal method that handles the download flow.
- */
-- (void)fetchPublicKeyForRemoteUserID:(NSString *)inRemoteUserID
-                          requesterID:(NSString *)inLocalUserID
-                      completionQueue:(dispatch_queue_t)inCompletionQueue
-                      completionBlock:(void (^)(ZDCPublicKey *_Nullable pubKey, NSError *_Nullable error))inCompletionBlock
+- (void)_fetchPublicKey:(ZDCUser *)inRemoteUser
+            requesterID:(NSString *)localUserID
+        completionQueue:(nullable dispatch_queue_t)inCompletionQueue
+        completionBlock:(nullable void (^)(ZDCUser *remoteUser, NSError *error))inCompletionBlock
 {
 	ZDCLogAutoTrace();
 	
-	NSParameterAssert(inRemoteUserID != nil);
-	NSParameterAssert(inLocalUserID != nil);
-    
-	NSString *remoteUserID = [inRemoteUserID copy];
-	NSString *localUserID = [inLocalUserID copy];
+	ZDCUser *remoteUser = [inRemoteUser copy];
+	NSString *remoteUserID = remoteUser.uuid;
 	
-	NSString *requestKey = [NSString stringWithFormat:@"fetchKey|%@", remoteUserID];
-	ZDCAsyncCompletionDispatch *asyncCompletionDispatch = self->asyncCompletionDispatch;
+	NSParameterAssert(remoteUser != nil);
+	NSParameterAssert(remoteUserID != nil);
+	NSParameterAssert(localUserID != nil);
+	
+	NSParameterAssert(![ZDCUser isAnonymousID:remoteUserID]);
+	
+	if (inCompletionBlock == nil) {
+		inCompletionBlock = ^(ZDCUser *user, NSError *error){};
+	}
+	
+	NSString *const requestKey = [NSString stringWithFormat:@"%@|%@", NSStringFromSelector(_cmd), remoteUserID];
 	
 	NSUInteger requestCount =
 	  [asyncCompletionDispatch pushCompletionQueue: inCompletionQueue
@@ -557,13 +524,13 @@
 	if (requestCount > 1)
 	{
 		// There's a previous request currently in-flight.
-		// The <inCompletionQueue, inCompletionBlock> have been added to the existing request's list.
+		// The {inCompletionQueue, inCompletionBlock} tuple have been added to the existing request's list.
 		return;
 	}
 	
 	__weak typeof(self) weakSelf = self;
 	
-	void (^InvokeCompletionBlocks)(ZDCPublicKey*, NSError*) = ^(ZDCPublicKey *pubKey, NSError *error) {
+	void (^InvokeCompletionBlocks)(ZDCUser*, NSError*) = ^(ZDCUser *user, NSError *error){ @autoreleasepool {
 		
 		__strong typeof(self) strongSelf = weakSelf;
 		if (strongSelf == nil) return;
@@ -577,50 +544,25 @@
 		for (NSUInteger i = 0; i < completionBlocks.count; i++)
 		{
 			dispatch_queue_t completionQueue = completionQueues[i];
-			void (^completionBlock)(ZDCPublicKey*, NSError*) = completionBlocks[i];
+			void (^completionBlock)(ZDCUser*, NSError*) = completionBlocks[i];
 			
 			dispatch_async(completionQueue, ^{ @autoreleasepool {
-				completionBlock(pubKey, error);
+				completionBlock(user, error);
 			}});
 		}
-	};
-    
-	__block void (^fetchBasicInfo)(void);
+	}};
+
 	__block void (^fetchPubKey)(ZDCUser *user);
-    
+	__block void (^updateUserInfoInDatabase)(ZDCPublicKey *pubKey);
+	
 	dispatch_queue_t concurrentQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
 	// STEP 1 of 2:
 	//
-	// Fetch basic info about the user including:
-	// - region
-	// - bucket
-	//
-	fetchBasicInfo = ^{ @autoreleasepool {
-		
-		ZDCLogVerbose(@"fetchBasicInfo() - %@", remoteUserID);
-		
-		[weakSelf _fetchRemoteUser: remoteUserID
-		               requesterID: localUserID
-		           completionQueue: concurrentQueue
-		           completionBlock:^(ZDCUser *user, NSError *error)
-		{
-			if (error)
-			{
-				InvokeCompletionBlocks(nil, error);
-				return;
-			}
-			
-			fetchPubKey(user);
-		}];
-	}};
-    
-	// STEP 2 of 2:
-	//
-	// Fetch the requested publicKey.
+	// Fetch pubKey, which we deem as required information about the user.
 	//
 	fetchPubKey = ^void (ZDCUser *user){ @autoreleasepool {
-        
+		
 		ZDCLogVerbose(@"fetchPubKey() - %@", remoteUserID);
 		NSAssert(user != nil, @"Bad state");
 		
@@ -629,11 +571,200 @@
 		       completionQueue: concurrentQueue
 		       completionBlock:^(ZDCPublicKey *publicKey, NSError *error)
 		{
-			InvokeCompletionBlocks(publicKey, error);
+			if (error)
+			{
+				InvokeCompletionBlocks(nil, error);
+				return;
+			}
+			
+			updateUserInfoInDatabase(publicKey);
 		}];
 	}};
 	
-	fetchBasicInfo();
+	// STEP 2 of 2:
+	//
+	// Store the user & pubKey in the database (if needed).
+	//
+	updateUserInfoInDatabase = ^void (ZDCPublicKey *pubKey){ @autoreleasepool {
+		
+		ZDCLogVerbose(@"storeUserInDatabase() - %@", remoteUserID);
+		
+		ZDCDatabaseManager *databaseManager = nil;
+		{
+			__strong typeof(self) strongSelf = weakSelf;
+			if (strongSelf) {
+				databaseManager = strongSelf->zdc.databaseManager;
+			}
+		}
+		
+		__block ZDCUser *user = nil;
+		
+		[databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+			
+			user = [transaction objectForKey:remoteUserID inCollection:kZDCCollection_Users];
+			
+			ZDCPublicKey *existingPubKey =
+			  [transaction objectForKey: user.publicKeyID
+			               inCollection: kZDCCollection_PublicKeys];
+			
+			if (user && !existingPubKey && pubKey)
+			{
+				[transaction setObject:pubKey forKey:pubKey.uuid inCollection:kZDCCollection_PublicKeys];
+				
+				if (![pubKey.uuid isEqualToString:user.publicKeyID])
+				{
+					// Two possibilities here:
+					// - databaseUser.publicKey is nil
+					// - databaseUser.publicKey is invalid
+					
+					user = [user copy];
+					user.publicKeyID = pubKey.uuid;
+					
+					[transaction setObject: user
+					                forKey: user.uuid
+					          inCollection: kZDCCollection_Users];
+				}
+			}
+			
+		} completionQueue:concurrentQueue completionBlock:^{
+
+			InvokeCompletionBlocks(user, nil);
+		}];
+	}};
+	
+	// Start process
+	fetchPubKey(remoteUser);
+}
+
+- (void)_refreshIdentities:(NSString *)remoteUserID
+               requesterID:(NSString *)localUserID
+           completionQueue:(nullable dispatch_queue_t)inCompletionQueue
+           completionBlock:(nullable void (^)(ZDCUser *remoteUser, NSError *error))inCompletionBlock
+{
+	ZDCLogAutoTrace();
+	
+	NSParameterAssert(remoteUserID != nil);
+	NSParameterAssert(localUserID != nil);
+	
+	NSParameterAssert(![ZDCUser isAnonymousID:remoteUserID]);
+	
+	if (inCompletionBlock == nil) {
+		inCompletionBlock = ^(ZDCUser *user, NSError *error){};
+	}
+	
+	NSString *const requestKey = [NSString stringWithFormat:@"%@|%@", NSStringFromSelector(_cmd), remoteUserID];
+	
+	NSUInteger requestCount =
+	  [asyncCompletionDispatch pushCompletionQueue: inCompletionQueue
+	                               completionBlock: inCompletionBlock
+	                                        forKey: requestKey];
+	
+	if (requestCount > 1)
+	{
+		// There's a previous request currently in-flight.
+		// The {inCompletionQueue, inCompletionBlock} tuple have been added to the existing request's list.
+		return;
+	}
+	
+	__weak typeof(self) weakSelf = self;
+	
+	void (^InvokeCompletionBlocks)(ZDCUser*, NSError*) = ^(ZDCUser *user, NSError *error){ @autoreleasepool {
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (strongSelf == nil) return;
+		
+		NSArray<dispatch_queue_t> * completionQueues = nil;
+		NSArray<id>               * completionBlocks = nil;
+		[strongSelf->asyncCompletionDispatch popCompletionQueues: &completionQueues
+		                                        completionBlocks: &completionBlocks
+		                                                  forKey: requestKey];
+		
+		for (NSUInteger i = 0; i < completionBlocks.count; i++)
+		{
+			dispatch_queue_t completionQueue = completionQueues[i];
+			void (^completionBlock)(ZDCUser*, NSError*) = completionBlocks[i];
+			
+			dispatch_async(completionQueue, ^{ @autoreleasepool {
+				completionBlock(user, error);
+			}});
+		}
+	}};
+	
+	__block void (^fetchAuth0Info)(void);
+	__block void (^updateUserInfoInDatabase)(ZDCUserProfile *profile);
+	
+	dispatch_queue_t concurrentQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	
+	// STEP 1 of 2:
+	//
+	// Fetch auth0 user profiles
+	//
+	fetchAuth0Info = ^void (){ @autoreleasepool {
+
+		ZDCLogVerbose(@"fetchAuth0Info() - %@", remoteUserID);
+		
+		[weakSelf _fetchFilteredAuth0Profile: remoteUserID
+		                         requesterID: localUserID
+		                     completionQueue: concurrentQueue
+		                     completionBlock:^(ZDCUserProfile *profile, NSError *error)
+		{
+			if (error)
+			{
+				InvokeCompletionBlocks(nil, error);
+				return;
+			}
+			
+			updateUserInfoInDatabase(profile);
+		}];
+	}};
+	
+	// STEP 2 of 2:
+	//
+	// Updated the user's info in the database.
+	//
+	updateUserInfoInDatabase = ^void (ZDCUserProfile *profile){ @autoreleasepool {
+		
+		ZDCLogVerbose(@"storeUserInDatabase() - %@", remoteUserID);
+		
+		ZDCDatabaseManager *databaseManager = nil;
+		{
+			__strong typeof(self) strongSelf = weakSelf;
+			if (strongSelf) {
+				databaseManager = strongSelf->zdc.databaseManager;
+			}
+		}
+		
+		__block ZDCUser *user = nil;
+		
+		[databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+			
+			user = [transaction objectForKey:remoteUserID inCollection:kZDCCollection_Users];
+			if (user)
+			{
+				user = [user copy];
+				
+				user.identities = profile.identities;
+				user.lastRefresh_profile = [NSDate date];
+				
+				[transaction setObject:user forKey:user.uuid inCollection:kZDCCollection_Users];
+			}
+			
+		} completionQueue:concurrentQueue completionBlock:^{
+
+			InvokeCompletionBlocks(user, nil);
+		}];
+	}};
+	
+	// Start process
+	fetchAuth0Info();
+}
+
+- (void)_recheckBlockchain:(ZDCUser *)remoteUser
+               requesterID:(NSString *)localUserID
+           completionQueue:(nullable dispatch_queue_t)completionQueue
+           completionBlock:(nullable void (^)(ZDCUser *_Nullable remoteUser, NSError *_Nullable error))completionBlock
+{
+	// Todo...
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -728,12 +859,12 @@
 	}];
 }
 
-- (void)_fetchFilteredAuth0Profile:(ZDCUser *)remoteUser
+- (void)_fetchFilteredAuth0Profile:(NSString *)remoteUserID
                        requesterID:(NSString *)localUserID
                    completionQueue:(dispatch_queue_t)completionQueue
                    completionBlock:(void (^)(ZDCUserProfile *profile, NSError *error))completionBlock
 {
-	[zdc.restManager fetchFilteredAuth0Profile: remoteUser.uuid
+	[zdc.restManager fetchFilteredAuth0Profile: remoteUserID
 	                               requesterID: localUserID
 	                           completionQueue: completionQueue
 	                           completionBlock:^(NSURLResponse *urlResponse, id responseObject, NSError *error)

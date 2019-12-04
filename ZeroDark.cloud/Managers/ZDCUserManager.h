@@ -26,10 +26,11 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Fetches the ZDCUser from the database. If missing, automatically downloads the user.
  *
- * The download involves several steps:
- * - Fetching the general user information from the ZeroDark servers
- * - Fetching the user's profile (linked social identity information)
+ * The download involves the following steps:
+ * - Fetching the user's general information (region & bucket)
+ * - Fetching the user's linked identities
  * - Fetching the user's public key
+ * - Checking the user's public key against the blockchain
  *
  * @param remoteUserID
  *   The userID of the user to fetch.
@@ -49,6 +50,45 @@ NS_ASSUME_NONNULL_BEGIN
             requesterID:(NSString *)localUserID
         completionQueue:(nullable dispatch_queue_t)completionQueue
         completionBlock:(nullable void (^)(ZDCUser *_Nullable remoteUser, NSError *_Nullable error))completionBlock;
+
+/**
+ * In some situations, a user's public key may be missing.
+ *
+ * In general, the framework handles this aspect for you automatically.
+ * That is, if the framework needs the user's publicKey, it will fetch it automatically.
+ * However, you can use this method to fetch it manually as needed.
+ *
+ * The download involves the following steps:
+ * - Fetching the user's public key
+ * - Checking the user's public key against the blockchain
+ */
+- (void)fetchPublicKey:(ZDCUser *)remoteUser
+           requesterID:(NSString *)localUserID
+       completionQueue:(nullable dispatch_queue_t)completionQueue
+       completionBlock:(nullable void (^)(ZDCUser *_Nullable remoteUser, NSError *_Nullable error))completionBlock;
+
+/**
+ * Refreshes the user's list of linked identities.
+ */
+- (void)refreshIdentities:(ZDCUser *)remoteUser
+              requesterID:(NSString *)localUserID
+          completionQueue:(nullable dispatch_queue_t)completionQueue
+          completionBlock:(nullable void (^)(ZDCUser *_Nullable remoteUser, NSError *_Nullable error))completionBlock;
+
+/**
+ * Checks the blockchain for proof of the user's publicKey.
+ *
+ * If the blockchain contains a proof for this user,
+ * the system performs the calculations to verify the validity of the locally stored publicKey.
+ */
+- (void)recheckBlockchain:(ZDCUser *)remoteUser
+              requesterID:(NSString *)localUserID
+          completionQueue:(nullable dispatch_queue_t)completionQueue
+          completionBlock:(nullable void (^)(ZDCUser *_Nullable remoteUser, NSError *_Nullable error))completionBlock;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Utilities
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Given an array of ZDCUser's, this will produce an array of unambiguous displayNames.
