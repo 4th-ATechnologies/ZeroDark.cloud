@@ -13,6 +13,8 @@
 #import "ZDCCloudLocator.h"
 #import "ZDCLocalUser.h"
 #import "ZDCLocalUserAuth.h"
+#import "ZDCPublicKey.h"
+#import "ZDCUser.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -170,6 +172,27 @@ NS_ASSUME_NONNULL_BEGIN
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Priv/Pub Key
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Downloads & parses the given user's publicKey file from the server.
+ *
+ * @param user
+ *   The user whose publicKey you wish to fetch.
+ *
+ * @param localUserID
+ *   The localUser with which to perform the HTTP request.
+ *
+ * @param completionQueue
+ *   The dispatch_queue to use when invoking the completionBlock
+ *   If you pass nil, the main thread will automatically be used.
+ *
+ * @param completionBlock
+ *   Invoked with the result of the request.
+ */
+- (void)fetchPubKeyForUser:(ZDCUser *)user
+               requesterID:(NSString *)localUserID
+           completionQueue:(nullable dispatch_queue_t)completionQueue
+           completionBlock:(void (^)(ZDCPublicKey *_Nullable pubKey, NSError *_Nullable error))completionBlock;
 
 /**
  * Attempts to set the user's privateKey/publicKey pair.

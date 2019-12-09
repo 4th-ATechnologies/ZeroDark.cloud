@@ -15,6 +15,12 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface EthereumRPC : NSObject
 
+/**
+ * Queries the blockchain for the given user's value, which is a merkleTreeRoot.
+ * 
+ * Detailed information about the smart contract can be found here:
+ * https://zerodarkcloud.readthedocs.io/en/latest/overview/ethereum/
+ */
 +  (void)fetchMerkleTreeRootForUserID:(NSString *)userID
                       completionQueue:(nullable dispatch_queue_t)completionQueue
                       completionBlock:(void (^)(NSError *error, NSString *merkleTreeRoot))completionBlock;

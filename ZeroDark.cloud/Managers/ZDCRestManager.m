@@ -1067,6 +1067,67 @@
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
+- (void)fetchPubKeyForUser:(ZDCUser *)user
+               requesterID:(NSString *)localUserID
+           completionQueue:(nullable dispatch_queue_t)completionQueue
+           completionBlock:(void (^)(ZDCPublicKey *_Nullable pubKey, NSError *_Nullable error))completionBlock
+{
+	ZDCLogAutoTrace();
+	
+	[zdc.networkTools downloadDataAtPath: kZDCCloudFileName_PublicKey
+	                            inBucket: user.aws_bucket
+	                              region: user.aws_region
+	                            withETag: nil
+	                               range: nil
+	                         requesterID: localUserID
+	                       canBackground: NO
+	                     completionQueue: completionQueue
+	                     completionBlock:^(NSURLResponse *response, id responseObject, NSError *error)
+	{
+		if (error)
+		{
+			completionBlock(nil, error);
+			return;
+		}
+
+		ZDCPublicKey *pubKey = nil;
+		
+		if ([responseObject isKindOfClass:[NSString class]])
+		{
+			NSString *pubKeyJSON = (NSString *)responseObject;
+			pubKey = [[ZDCPublicKey alloc] initWithUserID:user.uuid pubKeyJSON:pubKeyJSON];
+		}
+		else if ([responseObject isKindOfClass:[NSData class]])
+		{
+			NSData *data = (NSData *)responseObject;
+			NSString *pubKeyJSON = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+			pubKey = [[ZDCPublicKey alloc] initWithUserID:user.uuid pubKeyJSON:pubKeyJSON];
+		}
+		else if ([responseObject isKindOfClass:[NSDictionary class]])
+		{
+			NSDictionary *pubKeyDict = (NSDictionary *)responseObject;
+			pubKey = [[ZDCPublicKey alloc] initWithUserID: user.uuid
+			                                   pubKeyDict: pubKeyDict
+			                                  privKeyDict: nil];
+		}
+			
+		if (![pubKey checkKeyValidityWithError:nil])
+		{
+			error = [NSError errorWithClass:[self class] code:0 description:@"Unreadable pubKey for user"];
+				
+			completionBlock(nil, error);
+			return;
+		}
+		
+		completionBlock(pubKey, nil);
+	}];
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
+ */
 - (void)uploadPrivKey:(NSData *)privKey
                pubKey:(NSData *)pubKey
          forLocalUser:(ZDCLocalUser *)user

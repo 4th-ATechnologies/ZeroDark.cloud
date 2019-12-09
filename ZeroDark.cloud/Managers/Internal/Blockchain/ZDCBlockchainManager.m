@@ -1,28 +1,21 @@
-#import "ZDCBlockchainManagerPrivate.h"
-
-#import "ZeroDarkCloud.h"
-#import "ZeroDarkCloudPrivate.h"
-#import "ZDCConstantsPrivate.h"
-
-#import "ZDCLogging.h"
-#import "ZDCPublicKey.h"
-
-#import "ZDCUser.h"
-
+#import "ZDCBlockchainManager.h"
 
 #import "EthereumRPC.h"
+#import "ZDCConstantsPrivate.h"
+#import "ZDCLogging.h"
+#import "ZDCPublicKey.h"
+#import "ZDCUser.h"
+#import "ZeroDarkCloudPrivate.h"
 
 // Categories
 #import "NSArray+S4.h"
 #import "NSData+S4.h"
-//#import "NSData+Utilities.h"
 #import "NSError+S4.h"
 #import "NSString+S4.h"
 #import "NSURLResponse+ZeroDark.h"
 
 // Libraries
 #import <stdatomic.h>
-//#import <S4/s4.h>
 
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
@@ -49,24 +42,24 @@ goto done;  \
 #endif
 
  
-@implementation ZDCBlockchainManager
-{
-    __weak ZeroDarkCloud         *owner;
+@implementation ZDCBlockchainManager {
+	
+	__weak ZeroDarkCloud *owner;
 }
 
 
 - (instancetype)init
 {
-    return nil; // To access this class use: ZeroDarkCloud.directoryManager (or use class methods)
+    return nil; // To access this class use: ZeroDarkCloud.blockchainManager (or use class methods)
 }
 
 - (instancetype)initWithOwner:(ZeroDarkCloud *)inOwner
 {
-    if ((self = [super init]))
-    {
-        owner = inOwner;
-    }
-    return self;
+	if ((self = [super init]))
+	{
+		owner = inOwner;
+	}
+	return self;
 }
 
 - (NSError *)errorWithDescription:(NSString *)description
@@ -79,10 +72,14 @@ goto done;  \
     return [NSError errorWithDomain:domain code:0 userInfo:userInfo];
 }
 
-- (void)_fetchMerkleTreeFile:(NSString *)root
-                 requesterID:(NSString *)requesterID
-             completionQueue:(dispatch_queue_t)completionQueue
-             completionBlock:(void (^)(NSDictionary * info, NSError *error))completionBlock
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Internal API
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)fetchMerkleTreeFile:(NSString *)root
+                requesterID:(NSString *)requesterID
+            completionQueue:(dispatch_queue_t)completionQueue
+            completionBlock:(void (^)(NSDictionary * info, NSError *error))completionBlock
 {
 	ZDCLogAutoTrace();
 	
@@ -109,9 +106,9 @@ goto done;  \
 	}
 	
 	[owner.restManager fetchMerkleTreeFile: root
-	                      requesterID: requesterID
-	                  completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                  completionBlock:
+	                           requesterID: requesterID
+	                       completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                       completionBlock:
 	^(NSURLResponse *urlResponse, id responseObject, NSError *error)
 	{
 		NSInteger statusCode = [urlResponse httpStatusCode];
@@ -136,7 +133,6 @@ goto done;  \
 		InvokeCompletionBlock(jsonDict, error);
 	}];
 }
-
 
 
 - (BOOL)checkBlockEntry:(NSDictionary*)entry
@@ -212,7 +208,6 @@ done:
 
     return result;
 }
-
 
 
 - (BOOL)verifyMerkleTree:(NSDictionary*)treeDict
@@ -332,13 +327,14 @@ done:
 
 };
 
-
-#pragma mark - public entry point
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Public API
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)fetchBlockchainRootForUserID:(NSString *)remoteUserID
-						 requesterID:(NSString *)localUserID
-							completionQueue:(dispatch_queue_t)completionQueue
-							completionBlock:(void (^)(NSString *merkleTreeRoot, NSError *error))completionBlock
+                         requesterID:(NSString *)localUserID
+                     completionQueue:(dispatch_queue_t)completionQueue
+                     completionBlock:(void (^)(NSString *merkleTreeRoot, NSError *error))completionBlock
 {
 
 	void (^InvokeCompletionBlock)(NSString*, NSError *) = ^(NSString *merkleTreeRoot, NSError *error){
@@ -378,66 +374,39 @@ done:
 
 	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 
-	[EthereumRPC fetchMerkleTreeRootForUserID:remoteUserID
-							  completionQueue:bgQueue
-							  completionBlock:^(NSError *error, NSString *merkleTreeRoot) {
-
-		  if (error || merkleTreeRoot.length == 0)
-		  {
-			  InvokeCompletionBlock(nil, error);
-			  return;
-		  }
-
-
-		  [self _fetchMerkleTreeFile: merkleTreeRoot
-						 requesterID: localUserID
-					 completionQueue: bgQueue
-					 completionBlock:
-		   ^(NSDictionary *treeDict, NSError *error)
-		   {
-			   if (error)
-			   {
-				   InvokeCompletionBlock(nil, error );
-				   return;
-			   }
-
-			   [self verifyMerkleTree: treeDict
-							 withRoot: merkleTreeRoot
-							usingHash: @"sha256"
-							forUserID: targetUser.uuid
-							 pubKeyID: pubKeyKeyIDData
-							   pubKey: pubData
-								error: &error];
-
-			   InvokeCompletionBlock(merkleTreeRoot, error);
-		   }];
-
-	  }];
-}
-
-- (void)updateBlockChainRoot:(NSString *)blockchainTransaction
-				   forUserID:(NSString *)userID
-			 completionQueue:(nullable dispatch_queue_t)completionQueue
-			 completionBlock:(nullable dispatch_block_t)completionBlock
-{
-
-	[owner.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
-
-		ZDCUser* user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
-		if (user)
+	[EthereumRPC fetchMerkleTreeRootForUserID: remoteUserID
+	                          completionQueue: bgQueue
+	                          completionBlock:^(NSError *error, NSString *merkleTreeRoot)
+	{
+		if (error || merkleTreeRoot.length == 0)
 		{
-			user = user.copy;
-			user.blockchainTransaction  = blockchainTransaction;
-
-			[transaction setObject:user
-							forKey:user.uuid
-					  inCollection:kZDCCollection_Users];
-
+			InvokeCompletionBlock(nil, error);
+			return;
 		}
-	}
-		completionQueue:completionQueue
-		completionBlock:completionBlock];
+		
+		[self fetchMerkleTreeFile: merkleTreeRoot
+		              requesterID: localUserID
+		          completionQueue: bgQueue
+		          completionBlock:
+		^(NSDictionary *treeDict, NSError *error)
+		{
+			if (error)
+			{
+				InvokeCompletionBlock(nil, error);
+				return;
+			}
+			
+			[self verifyMerkleTree: treeDict
+			              withRoot: merkleTreeRoot
+			             usingHash: @"sha256"
+			             forUserID: targetUser.uuid
+			              pubKeyID: pubKeyKeyIDData
+			                pubKey: pubData
+			                 error: &error];
 
+			InvokeCompletionBlock(merkleTreeRoot, error);
+		}];
+	}];
 }
 
 @end
