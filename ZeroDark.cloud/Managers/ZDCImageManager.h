@@ -337,7 +337,10 @@ typedef OSImage*_Nonnull (^ZDCImageProcessingBlock)(OSImage *image);
  *
  * @param searchResult
  *   A search result from ZDCUserSearchManager.
- *   You can control which identityID is downloaded by setting searchResult.preferredIdentityID.
+ *
+ * @param identityID
+ *   Allows you to specifiy which identityID to download.
+ *   If nil, automatically uses the displayIdentity.
  *
  * @param processingID
  *   A unique identifier that distinguishes the results of this imageProcessingBlock from
@@ -366,6 +369,7 @@ typedef OSImage*_Nonnull (^ZDCImageProcessingBlock)(OSImage *image);
  */
 - (nullable ZDCDownloadTicket *)
         fetchUserAvatar:(ZDCSearchResult *)searchResult
+             identityID:(nullable NSString *)identityID
            processingID:(nullable NSString *)processingID
         processingBlock:(ZDCImageProcessingBlock)imageProcessingBlock
           preFetchBlock:(void(NS_NOESCAPE^)(OSImage *_Nullable image, BOOL willFetch))preFetchBlock

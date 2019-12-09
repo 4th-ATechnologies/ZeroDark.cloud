@@ -753,15 +753,20 @@
  */
 - (nullable ZDCDownloadTicket *)
         fetchUserAvatar:(ZDCSearchResult *)searchResult
+             identityID:(nullable NSString *)inIdentityID
            processingID:(nullable NSString *)processingID
         processingBlock:(ZDCImageProcessingBlock)imageProcessingBlock
           preFetchBlock:(void(NS_NOESCAPE^)(OSImage *_Nullable image, BOOL willFetch))preFetchBlock
          postFetchBlock:(void(^)(OSImage *_Nullable image, NSError *_Nullable error))postFetchBlock
 {
-	ZDCUserIdentity *displayIdentity = searchResult.displayIdentity;
-	
 	NSString *userID = searchResult.userID;
-	NSString *identityID = displayIdentity.identityID;
+	
+	NSString *identityID = [inIdentityID copy];
+	if (identityID == nil)
+	{
+		ZDCUserIdentity *displayIdentity = searchResult.displayIdentity;
+		identityID = displayIdentity.identityID;
+	}
 	
 	NSString *cacheKey = nil;
 	if (identityID && processingID) {

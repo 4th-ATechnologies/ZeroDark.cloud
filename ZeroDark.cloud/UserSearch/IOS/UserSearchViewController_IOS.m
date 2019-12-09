@@ -1094,6 +1094,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	};
 	
 	[zdc.imageManager fetchUserAvatar: item
+	                       identityID: nil
 	                     processingID: NSStringFromClass([self class])
 	                  processingBlock: processingBlock
 	                    preFetchBlock: preFetchBlock
