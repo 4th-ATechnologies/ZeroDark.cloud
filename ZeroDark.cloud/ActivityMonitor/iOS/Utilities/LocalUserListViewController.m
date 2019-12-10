@@ -9,30 +9,38 @@
 
 #import "LocalUserListViewController.h"
 
-#import "ZeroDarkCloud.h"
-#import "ZeroDarkCloudPrivate.h"
 #import "ZDCConstantsPrivate.h"
+#import "ZDCLogging.h"
+#import "ZeroDarkCloudPrivate.h"
 
 // Categories
 #import "NSString+ZeroDark.h"
 #import "OSImage+ZeroDark.h"
 
+// Log Levels: off, error, warn, info, verbose
+// Log Flags : trace
+#if DEBUG
+  static const int zdcLogLevel = ZDCLogLevelWarning;
+#else
+  static const int zdcLogLevel = ZDCLogLevelWarning;
+#endif
+
 @interface LocalUserListUITableViewCell : UITableViewCell
 
-@property (nonatomic, weak) IBOutlet UIImageView		*userAvatar;
-@property (nonatomic, weak) IBOutlet UILabel        	*lblTitle;
-@property (nonatomic, copy) NSString *uuid;	// optional value
-
+@property (nonatomic, weak) IBOutlet UIImageView * userAvatar;
+@property (nonatomic, weak) IBOutlet UILabel     * lblTitle;
+@property (nonatomic, copy) NSString *userID;
 
 + (CGFloat)heightForCell;
 + (CGSize)avatarSize;
+
 @end
 
 @implementation LocalUserListUITableViewCell
+
 @synthesize userAvatar;
 @synthesize lblTitle;
-@synthesize uuid;
-
+@synthesize userID;
 
 + (CGSize)avatarSize
 {
@@ -46,42 +54,50 @@
 
 @end
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 @implementation LocalUserListViewController_IOS
 {
 	IBOutlet __weak UITableView             *_tblButtons;
 	IBOutlet __weak NSLayoutConstraint      *_cnstTblButtonsHeight;
-
-	NSString								* currentUserID;
-	NSArray <NSDictionary*> 		* sortedLocalUserInfo;
-	ZeroDarkCloud*              	owner;
-	ZDCImageManager         *imageManager;
-	YapDatabaseConnection 	*databaseConnection;
-
-
+	
+	ZeroDarkCloud *zdc;
+	YapDatabaseConnection *uiDatabaseConnection;
+	
+	NSString *selectedUserID;
+	NSArray<ZDCUserDisplay *> *sorted;
 }
+
 @synthesize delegate = delegate;
 
-- (instancetype)initWithOwner:(ZeroDarkCloud*)inOwner
-							delegate:(nullable id <LocalUserListViewController_Delegate>)inDelegate
-					 currentUserID:(NSString*)currentUserIDIn
+- (instancetype)initWithOwner:(ZeroDarkCloud *)owner
+                     delegate:(nullable id <LocalUserListViewController_Delegate>)inDelegate
+               selectedUserID:(NSString *)inSelectedUserID
 {
 	NSBundle *bundle = [ZeroDarkCloud frameworkBundle];
 	UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"LocalUserListViewController_IOS" bundle:bundle];
 	self = [storyboard instantiateViewControllerWithIdentifier:@"LocalUserListViewController"];
 	if (self)
 	{
-		owner = inOwner;
+		zdc = owner;
 		delegate = inDelegate;
-		currentUserID = currentUserIDIn?:@"";
+		selectedUserID = [inSelectedUserID copy];
 	}
 	return self;
-
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark View Lifecycle
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)viewDidLoad {
+- (void)viewDidLoad
+{
+	ZDCLogAutoTrace();
 	[super viewDidLoad];
- 	_tblButtons.estimatedSectionHeaderHeight = 0;
+	
+	_tblButtons.estimatedSectionHeaderHeight = 0;
 	_tblButtons.estimatedSectionFooterHeight = 0;
 	_tblButtons.estimatedRowHeight = 0;
 	_tblButtons.rowHeight = UITableViewAutomaticDimension;
@@ -91,19 +107,18 @@
 	//
 	_tblButtons.separatorInset = UIEdgeInsetsMake(0, 80, 0, 0); // top, left, bottom, right
 	
-	imageManager = owner.imageManager;
-	databaseConnection = owner.databaseManager.uiDatabaseConnection;
-
-	sortedLocalUserInfo = NULL;
+	uiDatabaseConnection = zdc.databaseManager.uiDatabaseConnection;
 }
 
--(void)viewWillAppear:(BOOL)animated
+- (void)viewWillAppear:(BOOL)animated
 {
+	ZDCLogAutoTrace();
 	[super viewWillAppear:animated];
+	
 	[self reloadUserTable];
 }
 
--(void) updateViewConstraints
+- (void)updateViewConstraints
 {
 	[super updateViewConstraints];
  	_cnstTblButtonsHeight.constant = _tblButtons.contentSize.height;
@@ -117,16 +132,17 @@
 		.width = self.preferedWidth,
 		.height = _tblButtons.frame.origin.y + _tblButtons.contentSize.height -1
 	};
-	
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Public API
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
--(CGFloat) preferedWidth
+- (CGFloat)preferedWidth
 {
 	CGFloat width = 250.0f;	// use default
 	
-	if([ZDCConstants isIPad])
+	if ([ZDCConstants isIPad])
 	{
 		width = 300.0f;
 	}
@@ -134,7 +150,9 @@
 	return width;
 }
 
-#pragma mark - UIPresentationController Delegate methods
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark UIPresentationController Delegate methods
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (UIModalPresentationStyle)adaptivePresentationStyleForPresentationController:(UIPresentationController *)controller
 																					traitCollection:(UITraitCollection *)traitCollection {
@@ -162,50 +180,38 @@
 	//	}
 }
 
-// MARK: Tableview
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Refresh
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)reloadUserTable
 {
-	NSAssert(NO, @"Not implemented"); // finish refactoring
+	ZDCLogAutoTrace();
+	
+	NSMutableArray *localUsers = [NSMutableArray array];
+	
+	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction * _Nonnull transaction) {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		[zdc.localUserManager enumerateLocalUsersWithTransaction: transaction
+		                                              usingBlock:^(ZDCLocalUser *localUser, BOOL *stop)
+		{
+			if (localUser.hasCompletedSetup
+			 && !localUser.accountDeleted
+			 && !localUser.accountSuspended
+			 && !localUser.accountNeedsA0Token)
+			{
+				[localUsers addObject:localUser];
+			}
+		 }];
+	#pragma clang diagnostic pop
+	}];
+	
+	sorted = [zdc.userManager sortedUnambiguousNamesForUsers:localUsers];
+	[_tblButtons reloadData];
 	
 /*
-	__weak typeof(self) weakSelf = self;
-
-	__block NSMutableArray <ZDCLocalUser *> * _localUsers = NSMutableArray.array;
-	
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-
-	[owner.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction * _Nonnull transaction) {
-		
-		[self->owner.localUserManager enumerateLocalUsersWithTransaction:transaction
-																				usingBlock:^(ZDCLocalUser * _Nonnull localUser, BOOL * _Nonnull stop)
-		 {
-			 if (localUser.hasCompletedSetup
-				  && !localUser.accountDeleted
-				  && !localUser.accountSuspended
-				  && !localUser.accountNeedsA0Token)
-				 [_localUsers addObject:localUser];
-			 
-		 }];
-	}];
-#pragma clang diagnostic pop
-	
-	NSMutableArray <NSDictionary*>  * _sortedLocalUserInfo = NSMutableArray.array;
-	
-	if(_localUsers.count > 1)
-	{
-		[_sortedLocalUserInfo addObject:@{
-			k_userID      : @"",
-			k_displayName : NSLocalizedString( @"All Users", @"All Users")
-		}];
-	}
-	
-	[_sortedLocalUserInfo addObjectsFromArray:
-	 [owner.localUserManager sortedUnambiguousUserInfoWithLocalUsers:_localUsers]];
-	
-	sortedLocalUserInfo = _sortedLocalUserInfo;
-	
 	[CATransaction begin];
 	[_tblButtons reloadData];
 	
@@ -238,118 +244,110 @@
 		}
 	}];
 	[CATransaction commit];
- 
 */
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark UITableViewDelegate
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-	return sortedLocalUserInfo.count;
+	return sorted.count;
 }
-
-
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	NSAssert(NO, @"Not implemented"); // finish refactoring
-	return nil;
-	
-/*
-	__weak typeof(self) weakSelf = self;
-	
-	LocalUserListUITableViewCell *cell =   [tableView dequeueReusableCellWithIdentifier:@"LocalUserListUITableViewCell"];
+	LocalUserListUITableViewCell *cell = (LocalUserListUITableViewCell *)
+	  [tableView dequeueReusableCellWithIdentifier:@"LocalUserListUITableViewCell"];
 
-	cell.userAvatar.layer.cornerRadius =  LocalUserListUITableViewCell.avatarSize.height / 2;
+	cell.userAvatar.layer.cornerRadius = LocalUserListUITableViewCell.avatarSize.height / 2;
 	cell.userAvatar.clipsToBounds = YES;
 
-	NSDictionary<NSString *, NSString *> *localUserInfo = [sortedLocalUserInfo objectAtIndex:indexPath.row];
+	ZDCUserDisplay *userDisplay = sorted[indexPath.row];
 	
-	NSString* displayName = localUserInfo[k_displayName];
-	NSString* uuid = localUserInfo[k_userID];
+	NSString *userID = userDisplay.userID;
+	NSString *displayName = userDisplay.displayName;
 	
-	if ([uuid isEqualToString:@""])
-	{
-		cell.lblTitle.text = displayName;
-		cell.lblTitle.textColor = self.view.tintColor;
-		cell.uuid = uuid;
-		cell.userAvatar.image  = [imageManager defaultMultiUserAvatar];
-	}
-	else
-	{
-		__block ZDCLocalUser *user = nil;
-		[databaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-		#pragma clang diagnostic push
-		#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-			
-			user = [transaction objectForKey:uuid inCollection:kZDCCollection_Users];
-			
-		#pragma clang diagnostic pop
-		}];
+	__block ZDCLocalUser *user = nil;
+	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
-		cell.lblTitle.text = displayName;
-		cell.lblTitle.textColor = UIColor.blackColor;
-		cell.uuid = uuid;
- 
-		void (^preFetchBlock)(UIImage*, BOOL) = ^(UIImage *image, BOOL willFetch){
-			
-			__strong typeof(self) strongSelf = weakSelf;
-			if (!strongSelf) return;
-			
-			cell.userAvatar.image  = image ?: [strongSelf->imageManager defaultUserAvatar];
-		};
+		user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
 		
-		void (^postFetchBlock)(UIImage*, NSError*) = ^(UIImage *image, NSError *error){
-			
-			__strong typeof(self) strongSelf = weakSelf;
-			if (!strongSelf) return;
-			
-			cell.userAvatar.image = image ?: [strongSelf->imageManager defaultUserAvatar];
-		};
+	#pragma clang diagnostic pop
+	}];
+	
+	cell.lblTitle.text = displayName;
+	cell.lblTitle.textColor = UIColor.blackColor;
+	cell.userID = userID;
+	
+	void (^preFetchBlock)(UIImage*, BOOL) = ^(UIImage *image, BOOL willFetch){
 		
-		[imageManager fetchUserAvatar: user
-		                  withOptions: nil
-							 preFetchBlock: preFetchBlock
-							postFetchBlock: postFetchBlock];
-	}
+		// The preFetchBlock is invoked BEFORE the `fetchUserAvatar` method returns
+		
+		if (image) {
+			cell.userAvatar.image = image;
+		} else {
+			cell.userAvatar.image = [self->zdc.imageManager defaultUserAvatar];
+		}
+	};
+	
+	void (^postFetchBlock)(UIImage*, NSError*) = ^(UIImage *image, NSError *error){
+		
+		// The postFetchBlock is invoked LATER, possibly after downloading.
+		
+		if (image)
+		{
+			// Ensure the cell hasn't been recycled
+			if ([cell.userID isEqualToString:userID]) {
+				cell.userAvatar.image = image;
+			}
+		}
+	};
+		
+	[zdc.imageManager fetchUserAvatar: user
+		                   withOptions: nil
+	                    preFetchBlock: preFetchBlock
+	                   postFetchBlock: postFetchBlock];
 
 	return cell;
-*/
 }
 
-
-#define UITableViewCellEditingStyleMultiSelect (3)
-
--(UITableViewCellEditingStyle)tableView:(UITableView*)tv editingStyleForRowAtIndexPath:(NSIndexPath*)indexPath {
+- (UITableViewCellEditingStyle)tableView:(UITableView*)tv editingStyleForRowAtIndexPath:(NSIndexPath*)indexPath {
 	
-	// apple doesnt support this and might reject it, but the alternative  style UITableViewCellEditingStyleDelete is ugly
-	return UITableViewCellEditingStyleMultiSelect;
+	// Apple doesn't support this, but the alternative style UITableViewCellEditingStyleDelete is ugly.
+	//
+	// UITableViewCellEditingStyleMultiSelect = 3
+	//
+	return (UITableViewCellEditingStyle)(3);
 }
 
 
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPathIn
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	NSAssert(NO, @"Not implemented"); // finish refactoring
+	ZDCLogAutoTrace();
 	
-/*
-//	[tableView deselectRowAtIndexPath:indexPath animated:YES];
+	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 	
-	NSDictionary<NSString *, NSString *> *localUserInfo = [sortedLocalUserInfo objectAtIndex:indexPathIn.row];
-	NSString *userID = localUserInfo[k_userID];
+	ZDCUserDisplay *userDisplay = sorted[indexPath.row];
+	NSString *userID = userDisplay.userID;
 
-	currentUserID = userID;
+	selectedUserID = userID;
 	
 	NSArray<NSIndexPath *>* indexPaths = tableView.indexPathsForSelectedRows;
 	[indexPaths enumerateObjectsUsingBlock:^(NSIndexPath * iPath, NSUInteger idx, BOOL * _Nonnull stop) {
 		
-		if(![iPath isEqual:indexPathIn])
+		if (![iPath isEqual:indexPath]) {
 			[tableView deselectRowAtIndexPath:iPath animated:NO];
+		}
 	}];
 
-	if ([self.delegate  respondsToSelector:@selector(localUserListViewController:didSelectUserID:)])
+	if ([self.delegate respondsToSelector:@selector(localUserListViewController:didSelectUserID:)])
 	{
 		[self.delegate localUserListViewController:self didSelectUserID:userID];
 	}
-*/
 }
 
 
