@@ -460,12 +460,14 @@ static NSString *const kActionStatus   = @"action";
 }
 
 
--(void) navTitleButtonClicked:(UIButton*) sender
+- (void)navTitleButtonClicked:(UIButton*) sender
 {
-	LocalUserListViewController_IOS* uVC = [[LocalUserListViewController_IOS alloc]
-													initWithOwner:owner
-													delegate:(id<LocalUserListViewController_Delegate>)self
-													currentUserID:selectedLocalUserID];
+	ZDCLogAutoTrace();
+	
+	LocalUserListViewController_IOS* uVC =
+	  [[LocalUserListViewController_IOS alloc] initWithOwner: owner
+	                                                delegate: (id<LocalUserListViewController_Delegate>)self
+	                                          selectedUserID: selectedLocalUserID];
 	
 	
 	uVC.modalPresentationStyle = UIModalPresentationPopover;

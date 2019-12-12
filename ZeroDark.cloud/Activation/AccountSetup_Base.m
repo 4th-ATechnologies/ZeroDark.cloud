@@ -1442,12 +1442,10 @@
 	};
 	
 	NSError *error = nil;
-	
-	if ( ! [self commonInitWithUserID:localUserID error:&error])
+	if (![self commonInitWithUserID:localUserID error:&error])
 	{
 		InvokeCompletionBlock(error);
 	}
-	
 	
 	/** update the localuser to to server truth  */
 	

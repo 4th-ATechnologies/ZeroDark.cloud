@@ -21,6 +21,7 @@
 #import "ZDCLogging.h"
 #import "ZDCPopoverTransition.h"
 #import "ZDCUserManagerPrivate.h"
+#import "ZDCUserPrivate.h"
 #import "ZeroDarkCloudPrivate.h"
 
 // Categories
@@ -72,8 +73,6 @@
 	NSMutableDictionary<NSString *,NSString *> *preferredIdentityIDs; // Map: userID => selected identityID
 	
 	NSString *providerToSearch;
-	
-	NSSet<NSString *> *importingUserIDs;        // used when animating the import of users
 	
 	UIViewController *remoteSRVC;
 	ZDCPopoverTransition *popoverTransition;
@@ -490,46 +489,42 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 - (void)importUser:(ZDCSearchResult *)searchResult
 {
 	ZDCLogAutoTrace();
-	NSAssert([NSThread isMainThread], @"Must be invoked on the main thread: non-thread-safe variables ahead");
 	
-	if ([importingUserIDs containsObject:searchResult.userID])
-	{
-		// Already in-progress
-		return;
-	}
-	
-	NSString *userID = searchResult.userID;
-	
-	{ // scoping
-		
-		NSMutableSet<NSString *> *newImportingUserIDs =
-		  importingUserIDs ? [importingUserIDs mutableCopy] : [NSMutableSet setWithCapacity:1];
-		[newImportingUserIDs addObject:userID];
-		importingUserIDs = [newImportingUserIDs copy];
-	}
-
-	NSAssert(NO, @"Not implemented");
-/*
+	__block ZDCUser *user = nil;
 	__weak typeof(self) weakSelf = self;
-	[zdc.userManager createUserFromResult: searchResult
-	                          requesterID: localUserID
-	                      completionQueue: dispatch_get_main_queue()
-	                      completionBlock:^(ZDCUser *user, NSError *error)
-	{
-		[weakSelf finishImport:userID];
+	
+	YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
+	[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+		
+		user = [transaction objectForKey:searchResult.userID inCollection:kZDCCollection_Users];
+		if (user == nil)
+		{
+			user = [[ZDCUser alloc] initWithUUID:searchResult.userID];
+			
+			user.aws_region = searchResult.aws_region;
+			user.aws_bucket = searchResult.aws_bucket;
+			user.identities = searchResult.identities;
+			user.preferredIdentityID = searchResult.preferredIdentityID;
+			
+			[transaction setObject:user forKey:user.uuid inCollection:kZDCCollection_Users];
+		}
+		
+	} completionQueue:dispatch_get_main_queue() completionBlock:^{
+		
+		[weakSelf finishImport:user];
 	}];
-*/
 }
 
-- (void)finishImport:(NSString *)userID
+- (void)finishImport:(ZDCUser *)user
 {
 	ZDCLogAutoTrace();
-	NSAssert([NSThread isMainThread], @"Must be invoked on the main thread: non-thread-safe variables ahead");
+	NSAssert([NSThread isMainThread], @"Incorrect thread");
 	
-	NSMutableSet<NSString *> *newImportingUserIDs = [importingUserIDs mutableCopy];
-	[newImportingUserIDs removeObject:userID];
-	
-	importingUserIDs = [newImportingUserIDs copy];
+	SEL selector = @selector(userSearchViewController:addedRecipient:);
+	if ([delegate respondsToSelector:selector])
+	{
+		[delegate userSearchViewController:self addedRecipient:user];
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1100,15 +1095,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	                    preFetchBlock: preFetchBlock
 	                   postFetchBlock: postFetchBlock];
 	
-	if ([importingUserIDs containsObject:userID])
-	{
-		cell.progress.indeterminate = YES;
-		cell.progress.hidden = NO;
-	}
-	else
-	{
-		cell.progress.hidden = YES;
-	}
+	cell.progress.hidden = YES;
 	
 	cell.showCheckMark = YES;
 	cell.checkMark.checkMarkStyle = isMyUserID ? ZDCCheckMarkStyleGrayedOut : ZDCCheckMarkStyleOpenCircle;

@@ -1503,9 +1503,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		__block NSError *error = nil;
 		__block ZDCNode *node = nil;
 		__block NSData *rcrdData = nil;
-		__block NSArray<NSString*> *missingKeys = nil;
-		__block NSArray<NSString*> *missingUserIDs = nil;
-		__block NSArray<NSString*> *missingServerIDs = nil;
+		__block ZDCMissingInfo *missingInfo = nil;
 		
 		ZDCCryptoTools *cryptoTools = zdc.cryptoTools;
 		
@@ -1518,9 +1516,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			{
 				rcrdData = [cryptoTools cloudRcrdForNode: node
 				                             transaction: transaction
-				                             missingKeys: &missingKeys
-				                          missingUserIDs: &missingUserIDs
-				                        missingServerIDs: &missingServerIDs
+				                             missingInfo: &missingInfo
 				                                   error: &error];
 			}
 			
@@ -1564,13 +1560,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			
 			[self skipOperationWithContext:context];
 		}
-		else if (missingKeys.count > 0)
+		else if (missingInfo)
 		{
-			[self fixMissingKeysForNodeID:operation.nodeID operation:operation];
-		}
-		else if (missingUserIDs.count > 0)
-		{
-			[self fetchMissingUsers:missingUserIDs forOperation:operation];
+			if (missingInfo.missingKeys.count > 0) {
+				[self fixMissingKeysForNodeID:operation.nodeID operation:operation];
+			}
+			else {
+				[self fetchMissingInfo:missingInfo forOperation:operation];
+			}
 		}
 		else
 		{
@@ -3577,10 +3574,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	__block NSError *error = nil;
 	__block ZDCNode *node = nil;
 	__block NSData *rcrdData = nil;
-	
-	__block NSArray<NSString*> *missingKeys = nil;
-	__block NSArray<NSString*> *missingUserIDs = nil;
-	__block NSArray<NSString*> *missingServerIDs = nil;
+	__block ZDCMissingInfo *missingInfo = nil;
 	
 	ZDCCryptoTools *cryptoTools = zdc.cryptoTools;
 	
@@ -3590,9 +3584,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		rcrdData = [cryptoTools cloudRcrdForNode: node
 		                             transaction: transaction
-		                             missingKeys: &missingKeys
-		                          missingUserIDs: &missingUserIDs
-		                        missingServerIDs: &missingServerIDs
+		                             missingInfo: &missingInfo
 		                                   error: &error];
 		
 		// The current cloudPath of the node may not match this operation.
@@ -3617,13 +3609,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		[self skipOperationWithContext:context];
 	}
-	else if (missingKeys.count > 0)
+	else if (missingInfo)
 	{
-		[self fixMissingKeysForNodeID:operation.nodeID operation:operation];
-	}
-	else if (missingUserIDs.count > 0)
-	{
-		[self fetchMissingUsers:missingUserIDs forOperation:operation];
+		if (missingInfo.missingKeys.count > 0) {
+			[self fixMissingKeysForNodeID:operation.nodeID operation:operation];
+		}
+		else {
+			[self fetchMissingInfo:missingInfo forOperation:operation];
+		}
 	}
 	else
 	{
@@ -5111,9 +5104,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	__block ZDCNode *srcNode = nil;
 	__block ZDCNode *dstNode = nil;
 	__block NSData *rcrdData = nil;
-	__block NSArray<NSString*> *missingKeys = nil;
-	__block NSArray<NSString*> *missingUserIDs = nil;
-	__block NSArray<NSString*> *missingServerIDs = nil;
+	__block ZDCMissingInfo *missingInfo = nil;
 	
 	ZDCCryptoTools *cryptoTools = zdc.cryptoTools;
 	
@@ -5125,9 +5116,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		{
 			rcrdData = [cryptoTools cloudRcrdForNode: dstNode
 			                             transaction: transaction
-			                             missingKeys: &missingKeys
-			                          missingUserIDs: &missingUserIDs
-			                        missingServerIDs: &missingServerIDs
+			                             missingInfo: &missingInfo
 			                                   error: &error];
 		}
 		
@@ -5148,13 +5137,13 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		[self skipOperationWithContext:context];
 	}
-	else if (missingKeys.count > 0)
+	else if (missingInfo)
 	{
-		[self fixMissingKeysForNodeID:operation.dstNodeID operation:operation];
-	}
-	else if (missingUserIDs.count > 0)
-	{
-		[self fetchMissingUsers:missingUserIDs forOperation:operation];
+		if (missingInfo.missingKeys.count > 0) {
+			[self fixMissingKeysForNodeID:operation.dstNodeID operation:operation];
+		} else {
+			[self fetchMissingInfo:missingInfo forOperation:operation];
+		}
 	}
 	else
 	{
@@ -8373,7 +8362,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	}];
 }
 
-- (void)fetchMissingUsers:(NSArray<NSString*> *)missingUserIDs forOperation:(ZDCCloudOperation *)operation
+- (void)fetchMissingInfo:(ZDCMissingInfo *)missingInfo forOperation:(ZDCCloudOperation *)operation
 {
 	ZDCLogAutoTrace();
 	
@@ -8385,7 +8374,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	NSUUID *opUUID = operation.uuid;
 	NSString *ctx = @"fetch-missing-user";
 	
-	for (NSString *userID in missingUserIDs)
+	for (NSString *userID in missingInfo.missingUserIDs)
 	{
 		[pipeline setHoldDate:distantFuture forOperationWithUUID:opUUID context:ctx];
 		
@@ -8393,6 +8382,19 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		                 requesterID: operation.localUserID
 		             completionQueue: concurrentQueue
 		             completionBlock:^(ZDCUser *remoteUser, NSError *error)
+		{
+			[pipeline setHoldDate:nil forOperationWithUUID:opUUID context:ctx];
+		}];
+	}
+	
+	for (ZDCUser *user in missingInfo.missingUserPubKeys)
+	{
+		[pipeline setHoldDate:distantFuture forOperationWithUUID:opUUID context:ctx];
+		
+		[userManager fetchPublicKey: user
+		                requesterID: operation.localUserID
+		            completionQueue: concurrentQueue
+		            completionBlock:^(ZDCUser *remoteUser, NSError *error)
 		{
 			[pipeline setHoldDate:nil forOperationWithUUID:opUUID context:ctx];
 		}];

@@ -18,6 +18,8 @@
 #import "ZDCSymmetricKey.h"
 #import "ZDCTrunkNode.h"
 
+@class ZDCMissingInfo;
+
 NS_ASSUME_NONNULL_BEGIN
 
 /**
@@ -71,17 +73,9 @@ NS_ASSUME_NONNULL_BEGIN
  * @param transaction
  *   A database transaction - used to read from the database in atomic fashion.
  *
- * @param outMissingKeys
- *   If there are 1 or more ZDCShareItem's with an empty key,
- *   and there's a ZDCPublicKey that can be used to fill in the key,
- *   then this parameter will provide the list of keys that are missing (and required).
- *   You'll need to use the `-fixMissingKeysForNode::` method to fix the problem.
- *
- * @param outMissingUserIDs
- *   If there are 1 or more user's for which we require their publicKey,
- *   then this parameter will provide the list of userID's that are missing (and required).
- *   It's then the responsibility of the push manager to delay the upload operation,
- *   and use the RemoteUserManager to request a download for each user.
+ * @param outMissingInfo
+ *   If the database is missing required information,
+ *   then this parameter will detail the list of missing items.
  *
  * @param outError
  *   In case something goes wrong.
@@ -92,9 +86,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (nullable NSData *)cloudRcrdForNode:(ZDCNode *)node
                           transaction:(YapDatabaseReadTransaction *)transaction
-                          missingKeys:(NSArray<NSString*> *_Nullable *_Nonnull)outMissingKeys
-                       missingUserIDs:(NSArray<NSString*> *_Nullable *_Nonnull)outMissingUserIDs
-                     missingServerIDs:(NSArray<NSString*> *_Nullable *_Nonnull)outMissingServerIDs
+                          missingInfo:(ZDCMissingInfo *_Nullable *_Nonnull)outMissingInfo
                                 error:(NSError *_Nullable *_Nonnull)outError;
 
 /**
@@ -265,6 +257,21 @@ NS_ASSUME_NONNULL_BEGIN
                                    label:(NSString *)label
                                     salt:(NSData *)salt
                                    error:(NSError *_Nullable *_Nullable)errorOut;
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+@interface ZDCMissingInfo : NSObject
+
+@property (nonatomic, readonly) NSArray<NSString*> *missingKeys;
+
+@property (nonatomic, readonly) NSArray<NSString*> *missingUserIDs;
+@property (nonatomic, readonly) NSArray<ZDCUser*> *missingUserPubKeys;
+
+@property (nonatomic, readonly) NSArray<NSString*> *missingServerIDs;
 
 @end
 
