@@ -68,9 +68,8 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 							completion:(void (^)(NSError *_Nullable error ))completionBlock
 
 {
-	NSAssert(NO, @"Not implemented"); // finish refactoring
+//	NSAssert(NO, @"Not implemented"); // finish refactoring
 	
-/*
 	__weak typeof(self) weakSelf = self;
 	
 	Auth0ProviderManager	 * providerManager= self.keyBackupVC.owner.auth0ProviderManager;
@@ -87,7 +86,8 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	_imgQRCode.image = [OSImage QRImageWithString:qrCodeString
 													 withSize:CGSizeMake(400, 400)];
 	
-	//TODO: code here to inform user that there is a passode
+
+ //TODO: code here to inform user that there is a passode
 	if(hasPassCode)
 	{
 		_lblPasscodeInfo.hidden = NO;
@@ -103,12 +103,12 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	
 	NSString* displayName = localUser.displayName;
 	_lblDisplayName.text = displayName;
-	
-	NSArray* comps = [localUser.auth0_preferredID componentsSeparatedByString:@"|"];
-	NSString* provider = comps.firstObject;
-	
-	OSImage* providerImage = [[providerManager providerIcon:Auth0ProviderIconType_Signin
-															  forProvider:provider] scaledToHeight:_imgProvider.frame.size.height];
+
+	NSString *provider = localUser.displayIdentity.provider;
+		
+	OSImage* providerImage = [[providerManager iconForProvider:provider
+																			type:Auth0ProviderIconType_Signin] scaledToHeight:_imgProvider.frame.size.height];
+ 	
 	if(providerImage)
 	{
 		_imgProvider.hidden = NO;
@@ -152,7 +152,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	                  withOptions: nil
 	                preFetchBlock: preFetchBlock
 	               postFetchBlock: postFetchBlock];
-*/
+ 
 }
 
 -(void)createBackupDocumentWithQRCodeString:(NSString * _Nullable)qrCodeString
