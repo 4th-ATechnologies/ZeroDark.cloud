@@ -67,9 +67,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 									 hasPassCode:(BOOL)hasPassCode
 							completion:(void (^)(NSError *_Nullable error ))completionBlock
 
-{
-//	NSAssert(NO, @"Not implemented"); // finish refactoring
-	
+{	
 	__weak typeof(self) weakSelf = self;
 	
 	Auth0ProviderManager	 * providerManager= self.keyBackupVC.owner.auth0ProviderManager;

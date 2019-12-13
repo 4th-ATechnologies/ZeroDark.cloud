@@ -1474,9 +1474,8 @@ API_AVAILABLE(ios(10.0)){
 
 - (void)refreshViewWithCompletion:(dispatch_block_t)completionBlock
 {
-	NSAssert(NO, @"Not implemented"); // finish refactoring
-	
-/*
+//	NSAssert(NO, @"Not implemented"); // finish refactoring
+ 
 	__weak typeof(self) weakSelf = self;
 	
 	ZDCLocalUser* localUser = self.backupSocialVC.keyBackupVC.user;
@@ -1523,12 +1522,12 @@ API_AVAILABLE(ios(10.0)){
 	NSString* displayName = localUser.displayName;
 	_lblDisplayName.text = displayName;
 	
-//	NSArray* comps = [localUser.auth0_preferredID componentsSeparatedByString:@"|"];
-//	NSString* provider = comps.firstObject;
-	
 	Auth0ProviderManager	 * providerManager= self.backupSocialVC.keyBackupVC.owner.auth0ProviderManager;
-	OSImage* providerImage = [[providerManager providerIcon:Auth0ProviderIconType_Signin
-															  forProvider:provider] scaledToHeight:_imgProvider.frame.size.height];
+	NSString *provider = localUser.displayIdentity.provider;
+		
+	OSImage* providerImage = [[providerManager iconForProvider:provider
+																			type:Auth0ProviderIconType_Signin] scaledToHeight:_imgProvider.frame.size.height];
+
 	if(providerImage)
 	{
 		_imgProvider.hidden = NO;
@@ -1574,7 +1573,7 @@ API_AVAILABLE(ios(10.0)){
 	                  withOptions: nil
 						 preFetchBlock: preFetchBlock
 						postFetchBlock: postFetchBlock];
-*/
+
 }
 
 -(void)createShareDocumentWithCompletionBlock:(void (^)(NSURL *_Nullable url,
