@@ -1473,9 +1473,7 @@ API_AVAILABLE(ios(10.0)){
 }
 
 - (void)refreshViewWithCompletion:(dispatch_block_t)completionBlock
-{
-//	NSAssert(NO, @"Not implemented"); // finish refactoring
- 
+{ 
 	__weak typeof(self) weakSelf = self;
 	
 	ZDCLocalUser* localUser = self.backupSocialVC.keyBackupVC.user;
