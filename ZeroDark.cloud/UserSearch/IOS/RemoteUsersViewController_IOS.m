@@ -700,102 +700,31 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 										 forUserID:(NSString *)userID;
 
 {
-	
-		__weak typeof(self) weakSelf = self;
-		
-		[owner.databaseManager.rwDatabaseConnection
-		 asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
-			 
-			 ZDCLocalUser *updatedUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
-			 
-			 if(updatedUser)
-			 {
-				 updatedUser                 		= updatedUser.copy;
-				 updatedUser.preferredIdentityID	= identityID;
-				 [transaction setObject:updatedUser forKey:updatedUser.uuid inCollection:kZDCCollection_Users];
-			 }
-			 
-		 }completionBlock:^{
-			 __strong typeof(self) strongSelf = weakSelf;
-			 if (strongSelf == nil) return;
-			 
-			 //        [strongSelf->_tblUsers reloadData];
-		 }];
-	 
-
-}
-
-
-- (void)userSearchSocialIDViewController:(UserSearchSocialIDViewController_IOS *)sender
-						 didSelectAuth0ID:(NSString*)selectedAuth0ID
-			 forUserID:(NSString*)userID
-{
-	NSAssert(NO, @"Not implemented"); // finish refactoring
-	
-/*
 	__weak typeof(self) weakSelf = self;
 	
 	[owner.databaseManager.rwDatabaseConnection
 	 asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
-		 
-		 ZDCLocalUser *updatedUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
-		 
-		 if(updatedUser)
-		 {
-			 updatedUser                 = updatedUser.copy;
-			 updatedUser.auth0_preferredID = selectedAuth0ID;
-			 [transaction setObject:updatedUser forKey:updatedUser.uuid inCollection:kZDCCollection_Users];
-		 }
-		 
-	 }completionBlock:^{
-		 __strong typeof(self) strongSelf = weakSelf;
-		 if (strongSelf == nil) return;
-		 
-		 [strongSelf->owner.internalPreferences setPreferedAuth0ID:selectedAuth0ID userID:userID];
-		 //        [strongSelf->_tblUsers reloadData];
-	 }];
-*/
+		
+		ZDCLocalUser *updatedUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+		
+		if(updatedUser)
+		{
+			updatedUser                 		= updatedUser.copy;
+			updatedUser.preferredIdentityID	= identityID;
+			[transaction setObject:updatedUser forKey:updatedUser.uuid inCollection:kZDCCollection_Users];
+		}
+		
+	}completionBlock:^{
+		__strong typeof(self) strongSelf = weakSelf;
+		if (strongSelf == nil) return;
+		
+		//        [strongSelf->_tblUsers reloadData];
+	}];
+	
 }
 
+
 #pragma mark -  UserSearchViewControllerDelegate
-//
-//- (void)userSearchUserViewController:(id)sender
-//						selectedRecipients:(NSArray <NSArray* /* [userID , auth0ID ]>*/> * )recipientsIn
-//{
-//	NSMutableSet* _recipSet = [NSMutableSet setWithArray:remoteUserIDs];
-//	NSMutableDictionary* _preferedAuth0IDs = [NSMutableDictionary dictionaryWithDictionary:preferedAuth0IDs];
-//
-//	[recipientsIn enumerateObjectsUsingBlock:^(NSArray * entry, NSUInteger idx, BOOL * _Nonnull stop) {
-//		NSString *userID = entry[0];
-//		NSString *auth0ID = entry[1];
-//		[_recipSet addObject:userID];
-//
-//		if(auth0ID)
-//			[_preferedAuth0IDs setObject:auth0ID forKey:userID];
-//	}];
-//
-//	// update the prefered dictionary here.
-//	preferedAuth0IDs = _preferedAuth0IDs;
-//
-//	remoteUserIDs = _recipSet.allObjects;
-//	didModifyRecipents = YES;
-//	bbnSave.enabled = didModifyRecipents;
-//
-//}
-//
-
-//- (void)userSearchUserViewController:(id)sender
-//						 removedRecipients:(NSArray <NSString* /* [userID */> * )recipients
-//{
-//	NSMutableArray* _remoteUserIDs = [NSMutableArray arrayWithArray:remoteUserIDs];
-//	[_remoteUserIDs removeObjectsInArray:recipients];
-//	remoteUserIDs = _remoteUserIDs;
-//
-//	didModifyRecipents = YES;
-//	bbnSave.enabled = didModifyRecipents;
-//
-//}
-
 
  - (void)userSearchViewController:(id)sender addedRecipient:(ZDCUser *)recipient
 {

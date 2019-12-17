@@ -1308,8 +1308,26 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 	if(tv != _tblUsers)
 		return;
 	
+	ZDCSearchResult* item = nil;
 	NSString*  userID = cell.userID;
-	ZDCSearchResult* item  = [self searchResultsForUserID:userID];
+	
+	if (self.shouldShowRecentRecipients)
+	{
+		__block ZDCUser*    user    = nil;
+		
+		[zdc.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+			user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+		}];
+		
+		if(user)
+		{
+			item = [[ZDCSearchResult alloc] initWithUser:user];
+		}
+	}
+	else
+	{
+		item  = [self searchResultsForUserID:userID];
+	}
 	
 	if(!item) return;
 	
@@ -1323,7 +1341,6 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 	
 	self.navigationController.navigationBarHidden = NO;
 	[self.navigationController pushViewController:remoteSRVC animated:YES];
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1335,7 +1352,31 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 										 forUserID:(NSString *)userID;
 
 {
-	NSAssert(NO, @"Not implemented");
+	
+	// fix this code...
+	//	NSAssert(NO, @"Not implemented");
+
+	__weak typeof(self) weakSelf = self;
+	
+	[zdc.databaseManager.rwDatabaseConnection
+	 asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+		
+		ZDCLocalUser *updatedUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+		
+		if(updatedUser)
+		{
+			updatedUser                 		= updatedUser.copy;
+			updatedUser.preferredIdentityID	= identityID;
+			[transaction setObject:updatedUser forKey:updatedUser.uuid inCollection:kZDCCollection_Users];
+		}
+		
+	}completionBlock:^{
+		__strong typeof(self) strongSelf = weakSelf;
+		if (strongSelf == nil) return;
+		
+		//        [strongSelf->_tblUsers reloadData];
+	}];
+
 
 }
 
