@@ -448,32 +448,34 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	[newSharedUserIDs addObject:userID];
 	sharedUserIDs = [newSharedUserIDs copy];
  
-	__block ZDCUser *user = nil;
- 
-	YapDatabaseConnection *uiConnection = zdc.databaseManager.uiDatabaseConnection;
-	[uiConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-		
-		user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
-	}];
-
 	[zdc.internalPreferences addRecentRecipient:userID];
-	[self setPreferredIdentityID:identityID forUserID:userID];
-  
-	// if the new prefered ID doesnt match the user.auth0_preferredID then update the pref
-//	if ([user.preferredIdentityID isEqualToString:auth0ID])
-//	{
-//		[zdc.internalPreferences setPreferedAuth0ID:NULL userID:userID];
-//	}
-//	else
-//	{
-//		[zdc.internalPreferences setPreferedAuth0ID:auth0ID userID:userID];
-//	}
 	
-	SEL selector = @selector(userSearchViewController:addedRecipient:);
-	if ([delegate respondsToSelector:selector])
-	{
-	//	[delegate userSearchViewController:self selectedRecipient:@[@[userID, identityID]]];
-	}
+//	__block ZDCUser *user = nil;
+//
+//	YapDatabaseConnection *uiConnection = zdc.databaseManager.uiDatabaseConnection;
+//	[uiConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+//
+//		user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+//	}];
+//
+//	[zdc.internalPreferences addRecentRecipient:userID];
+//	[self setPreferredIdentityID:identityID forUserID:userID];
+//
+//	// if the new prefered ID doesnt match the user.auth0_preferredID then update the pref
+////	if ([user.preferredIdentityID isEqualToString:auth0ID])
+////	{
+////		[zdc.internalPreferences setPreferedAuth0ID:NULL userID:userID];
+////	}
+////	else
+////	{
+////		[zdc.internalPreferences setPreferedAuth0ID:auth0ID userID:userID];
+////	}
+//
+//	SEL selector = @selector(userSearchViewController:addedRecipient:);
+//	if ([delegate respondsToSelector:selector])
+//	{
+//	//	[delegate userSearchViewController:self selectedRecipient:@[@[userID, identityID]]];
+//	}
 }
 
 - (BOOL)shouldShowRecentRecipients
@@ -487,11 +489,11 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)importUser:(ZDCSearchResult *)searchResult
+	completionBlock:(void (^)(ZDCUser *user))completionHandler
 {
 	ZDCLogAutoTrace();
 	
 	__block ZDCUser *user = nil;
-	__weak typeof(self) weakSelf = self;
 	
 	YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
 	[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
@@ -509,23 +511,14 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 			[transaction setObject:user forKey:user.uuid inCollection:kZDCCollection_Users];
 		}
 		
-	} completionQueue:dispatch_get_main_queue() completionBlock:^{
-		
-		[weakSelf finishImport:user];
-	}];
+	} 	completionQueue:dispatch_get_main_queue()
+								 completionBlock:^{
+		if(completionHandler)
+		{
+			(completionHandler)(user);
+		}}];
 }
 
-- (void)finishImport:(ZDCUser *)user
-{
-	ZDCLogAutoTrace();
-	NSAssert([NSThread isMainThread], @"Incorrect thread");
-	
-	SEL selector = @selector(userSearchViewController:addedRecipient:);
-	if ([delegate respondsToSelector:selector])
-	{
-		[delegate userSearchViewController:self addedRecipient:user];
-	}
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark UISearchBarDelegate
@@ -1120,19 +1113,13 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 - (UISwipeActionsConfiguration *)tableView:(UITableView *)tv
 trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_AVAILABLE_IOS(11.0)
 {
-	NSAssert(NO, @"Not implemented"); // finish refactoring
-	return nil;
-	
-/*
-    UISwipeActionsConfiguration* config = nil;
+     UISwipeActionsConfiguration* config = nil;
 
     __weak typeof(self) weakSelf = self;
     if(self.shouldShowRecentRecipients)
     {
-  
-        NSArray* item = [recentRecipients objectAtIndex: indexPath.row ];
-        NSString* userID = item[0];
-        
+		 NSString *userID  = [recentRecipients objectAtIndex: indexPath.row ];
+      
         if (@available(iOS 11.0, *)) {
 
             NSMutableArray* actions =  NSMutableArray.array;
@@ -1142,23 +1129,23 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
                                                     title:NSLocalizedString(@"Remove", @"Remove action")
                                                   handler:
              ^(UIContextualAction *action, UIView *sourceView, void (^completionHandler)(BOOL))
-             {
-                 __strong typeof(self) strongSelf = weakSelf;
-                 if (strongSelf == nil) return;
-          
-                 [strongSelf->owner.internalPreferences removeRecentRecipient:userID];
-					 strongSelf->recentRecipients  = strongSelf->owner.internalPreferences.recentRecipients;
-
-//                 // select or deselect?
-//                 if([sharedUserIDs containsObject:userID])
-//                 {
-//                     [self removeUserFromSharedList:userID];
-//                 }
-
-                 [strongSelf->_tblUsers reloadData];
-
-                 completionHandler(YES);
-             }];
+				 {
+					__strong typeof(self) strongSelf = weakSelf;
+					if (strongSelf == nil) return;
+					
+					[strongSelf->zdc.internalPreferences removeRecentRecipient:userID];
+					strongSelf->recentRecipients  = strongSelf->zdc.internalPreferences.recentRecipients;
+					
+					//                 // select or deselect?
+					//                 if([sharedUserIDs containsObject:userID])
+					//                 {
+					//                     [self removeUserFromSharedList:userID];
+					//                 }
+					
+					[strongSelf->_tblUsers reloadData];
+					
+					completionHandler(YES);
+				}];
             deleteAction.backgroundColor = UIColor.redColor;
             [actions addObject:deleteAction];
 
@@ -1175,7 +1162,7 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
     }
     
     return config;
-*/
+ 
 }
 
 #endif
@@ -1189,8 +1176,18 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 	ZDCLogAutoTrace();
 	
 	// Don't allow selection of localUserID
+	NSString *userID = nil;
 	
-	NSString *userID = recentRecipients[indexPath.row];
+	if (self.shouldShowRecentRecipients)
+	{
+		userID = [recentRecipients objectAtIndex: indexPath.row ];
+	}
+ 	else
+	{
+		ZDCSearchResult *item = [searchResults objectAtIndex:indexPath.row];
+		userID = item.userID;
+	}
+ 
 	
 	if ([userID isEqualToString:localUserID]) {
 		return nil;
@@ -1233,79 +1230,66 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 	}
 	else  // select
 	{
-		// What do we need to do here ?
-		//
-		// -
-	/*
-		// Signal that we are importing this user.
-		dispatch_sync(dataQueue, ^{
-		#pragma clang diagnostic push
-		#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-			
-			NSMutableArray *temp = [importingUserIDs mutableCopy];
-			[temp addObject:userID];
-			importingUserIDs = [temp copy];
-			
-		#pragma clang diagnostic pop
-		});
-		
-		[_tblUsers reloadRowsAtIndexPaths: @[indexPath]
-		                 withRowAnimation: UITableViewRowAnimationNone];
-		
-		// Disable the searchbar
-		[self startImporting];
-		
-		
-        [self createRemoteUserIfNeeded:userID // replace with zdc.userManager fetchUserWith
-                       completionBlock:^(ZDCUser *remoteUser, NSError *error)
-         {
-				__strong typeof(self) strongSelf = weakSelf;
-				if (!strongSelf) return;
+		__weak typeof(self) weakSelf = self;
 
-            [strongSelf addUserToSharedList:userID auth0ID:auth0ID];
-             
-             // we should reload the recents list in this view
-             strongSelf->recentRecipients  = strongSelf->owner.internalPreferences.recentRecipients;
+		[self importUser:item
+		 completionBlock:^(ZDCUser *user) {
+	
+	 		__strong typeof(self) strongSelf = weakSelf;
+			if (strongSelf == nil) return;
 
-             [strongSelf completedImport];
-             // signal that we completed the import
-             dispatch_sync(strongSelf->dataQueue, ^{
-					 NSMutableArray* temp = [NSMutableArray arrayWithArray:strongSelf->importingUserIDs];
-                 [temp removeObject:userID];
-                 strongSelf->importingUserIDs = temp;
-             });
-             
-             [tv reloadRowsAtIndexPaths:@[indexPath]
-                       withRowAnimation:UITableViewRowAnimationNone];
-             
-             
-         }];
-   */
+	 		SEL selector = @selector(userSearchViewController:addedRecipient:);
+			if ([strongSelf->delegate respondsToSelector:selector])
+			{
+				[strongSelf->delegate userSearchViewController:self addedRecipient:user];
+			}
+			
+			[strongSelf addUserToSharedList:userID
+									identityID:item.preferredIdentityID];
+
+				[strongSelf->_tblUsers reloadRowsAtIndexPaths: @[indexPath]
+										  withRowAnimation: UITableViewRowAnimationNone];
+
+
+		}];
 	}
 }
 
 - (void)tableView:(UITableView *)tv didSelectRecentUserCellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	NSAssert(NO, @"Not implemented");
-/*
-    NSArray* item = [recentRecipients objectAtIndex: indexPath.row ];
-    NSString* userID = item[0];
-    NSString* auth0ID = item.count>1?item[1]:@"";
-    
-    // select or deselect?
-    if([sharedUserIDs containsObject:userID])
-    {
-        [self removeUserFromSharedList:userID];
-        [tv reloadRowsAtIndexPaths:@[indexPath]
-                  withRowAnimation:UITableViewRowAnimationNone];
-    }
-    else  // select
-    {
-        [self addUserToSharedList:userID identityID:auth0ID];
-        [tv reloadRowsAtIndexPaths:@[indexPath]
-                  withRowAnimation:UITableViewRowAnimationNone];
-    }
-*/
+	NSString *userID = [recentRecipients objectAtIndex: indexPath.row ];
+
+	// Select or deselect?
+	if ([sharedUserIDs containsObject:userID])
+	{
+		[self removeUserFromSharedList:userID];
+        
+		[tv reloadRowsAtIndexPaths: @[indexPath]
+		          withRowAnimation: UITableViewRowAnimationNone];
+	}
+	else  // select
+	{
+		__block ZDCUser *user = nil;
+		[zdc.databaseManager.uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+			
+			user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+		}];
+		
+		if(!user)
+			return;
+		
+		SEL selector = @selector(userSearchViewController:addedRecipient:);
+		if ([delegate respondsToSelector:selector])
+		{
+			[delegate userSearchViewController:self addedRecipient:user];
+		}
+
+		[self addUserToSharedList:user.uuid
+								identityID:user.preferredIdentityID];
+		
+		[tv reloadRowsAtIndexPaths: @[indexPath]
+		          withRowAnimation: UITableViewRowAnimationNone];
+	}
 }
 
 - (nullable NSIndexPath *)tableView:(UITableView *)tableView willDeselectRowAtIndexPath:(NSIndexPath *)indexPath
@@ -1321,57 +1305,39 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 
 - (void)tableView:(UITableView * _Nonnull)tv disclosureButtonTappedAtCell:(RemoteUserTableViewCell* _Nonnull)cell
 {
-	NSAssert(NO, @"Not implemented"); // finish refactoring
+	if(tv != _tblUsers)
+		return;
 	
-/*
-    if(tv != _tblUsers)
-        return;
-    
-    NSString*  userID = cell.userID;
-    NSString*  auth0ID = cell.auth0ID;
-    ZDCSearchUserResult* info = nil;
-    
-    if(self.shouldShowRecentRecipients)
-    {
-        __block ZDCUser*    user    = nil;
-        [owner.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-            user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
-        }];
-        
-        if(user)
-        {
-            info = [[ZDCSearchUserResult alloc] initWithUser:user];
-            info.auth0_preferredID = auth0ID;
-        }
-    }
-    else
-    {
-        info = [self searchResultsForUserID:userID];
-        info.auth0_preferredID = auth0ID;
-        
-    }
-    
-    
-    if(info)
-    {
-        UserSearchSocialIDViewController_IOS*  remoteSRVC = nil;
-        
-        remoteSRVC = [[UserSearchSocialIDViewController_IOS alloc]
-                      initWithDelegate:(id<UserSearchSocialIDViewControllerDelegate>)self
-                      owner:owner
-                      localUserID:localUserID
-                      searchResultInfo:info];
-        
-        self.navigationController.navigationBarHidden = NO;
-        [self.navigationController pushViewController:remoteSRVC animated:YES];
-        
-    }
-*/
+	NSString*  userID = cell.userID;
+	ZDCSearchResult* item  = [self searchResultsForUserID:userID];
+	
+	if(!item) return;
+	
+	UserSearchSocialIDViewController_IOS*  remoteSRVC = nil;
+	
+	remoteSRVC = [[UserSearchSocialIDViewController_IOS alloc]
+					  initWithDelegate:(id<UserSearchSocialIDViewControllerDelegate>)self
+					  owner:zdc
+					  localUserID:localUserID
+					  searchResult:item];
+	
+	self.navigationController.navigationBarHidden = NO;
+	[self.navigationController pushViewController:remoteSRVC animated:YES];
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark UserSearchSocialIDViewControllerDelegate
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)userSearchSocialIDViewController:(UserSearchSocialIDViewController_IOS *)sender
+							didSelectIdentityID:(NSString *)identityID
+										 forUserID:(NSString *)userID;
+
+{
+	NSAssert(NO, @"Not implemented");
+
+}
 
 - (void)userSearchSocialIDViewController:(UserSearchSocialIDViewController_IOS *)sender
                         didSelectAuth0ID:(NSString *)auth0ID

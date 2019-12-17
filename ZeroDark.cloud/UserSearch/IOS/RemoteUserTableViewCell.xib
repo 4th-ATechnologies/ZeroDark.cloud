@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="15702" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15510"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15704"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -18,13 +18,13 @@
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Name" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="Qce-Mh-hR4" userLabel="lblName">
-                        <rect key="frame" x="77" y="7" width="251" height="20"/>
+                        <rect key="frame" x="77" y="7" width="243" height="20"/>
                         <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
                         <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <color key="highlightedColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                     </label>
                     <progressView hidden="YES" opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="zjK-E7-fwr" customClass="JGProgressView">
-                        <rect key="frame" x="81" y="29" width="243" height="2"/>
+                        <rect key="frame" x="81" y="29" width="235" height="2"/>
                     </progressView>
                     <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="default_user" translatesAutoresizingMaskIntoConstraints="NO" id="Jzw-l5-V6S">
                         <rect key="frame" x="35" y="11" width="38" height="38"/>
@@ -34,13 +34,13 @@
                         </constraints>
                     </imageView>
                     <imageView userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="WTz-E2-Nci">
-                        <rect key="frame" x="79" y="34.5" width="249" height="12"/>
+                        <rect key="frame" x="79" y="34.5" width="241" height="12"/>
                         <constraints>
                             <constraint firstAttribute="height" constant="12" id="L5N-zE-0Ak"/>
                         </constraints>
                     </imageView>
                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="KOJ-Y2-ABE" userLabel="Button - disclose" customClass="KGHitTestingButton">
-                        <rect key="frame" x="336" y="19" width="22" height="22"/>
+                        <rect key="frame" x="328" y="19" width="22" height="22"/>
                         <accessibility key="accessibilityConfiguration" label="Add account"/>
                         <constraints>
                             <constraint firstAttribute="height" constant="22" id="Gzt-6u-UVr"/>
@@ -65,7 +65,7 @@
                         </connections>
                     </button>
                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="25" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zHU-c3-v31" customClass="ZDCBadgedBarLabel">
-                        <rect key="frame" x="348" y="11" width="18" height="18"/>
+                        <rect key="frame" x="340" y="11" width="18" height="18"/>
                         <color key="backgroundColor" name="systemBlueColor" catalog="System" colorSpace="catalog"/>
                         <constraints>
                             <constraint firstAttribute="height" constant="18" id="KDh-m7-R35"/>
@@ -76,7 +76,7 @@
                         <nil key="highlightedColor"/>
                     </label>
                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="provider" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="oT1-g3-Jod">
-                        <rect key="frame" x="79" y="33" width="249" height="14.5"/>
+                        <rect key="frame" x="79" y="33" width="241" height="14.5"/>
                         <fontDescription key="fontDescription" style="UICTFontTextStyleCaption1"/>
                         <color key="textColor" white="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <nil key="highlightedColor"/>
@@ -103,7 +103,7 @@
                     <constraint firstItem="KOJ-Y2-ABE" firstAttribute="centerY" secondItem="H2p-sc-9uM" secondAttribute="centerY" id="aJ7-Di-HfX"/>
                     <constraint firstItem="Qce-Mh-hR4" firstAttribute="top" secondItem="Jzw-l5-V6S" secondAttribute="top" constant="-4" id="bJn-VT-S3D"/>
                     <constraint firstItem="zjK-E7-fwr" firstAttribute="centerY" secondItem="H2p-sc-9uM" secondAttribute="centerY" id="bgf-FQ-Gcs"/>
-                    <constraint firstAttribute="trailing" secondItem="KOJ-Y2-ABE" secondAttribute="trailing" constant="4" id="cZo-HB-rqZ"/>
+                    <constraint firstAttribute="trailing" secondItem="KOJ-Y2-ABE" secondAttribute="trailing" constant="12" id="cZo-HB-rqZ"/>
                     <constraint firstItem="zjK-E7-fwr" firstAttribute="leading" secondItem="Qce-Mh-hR4" secondAttribute="leading" constant="4" id="fIX-jw-isI"/>
                     <constraint firstItem="VY8-Zz-PCs" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="8" id="fpI-3h-ObI"/>
                     <constraint firstItem="Jzw-l5-V6S" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leadingMargin" constant="20" id="gN5-xi-hQv"/>

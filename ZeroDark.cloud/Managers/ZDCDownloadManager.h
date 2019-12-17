@@ -238,7 +238,10 @@ typedef void (^UserAvatarDownloadCompletionBlock)(NSData *_Nullable avatar, NSEr
  *
  * @param searchResult
  *   A search result from ZDCUserSearchManager.
- *   You can control which identityID is downloaded by setting searchResult.preferredIdentityID.
+ *
+ *@param identityID
+ *   Allows you to specifiy which identityID to download.
+ *   If nil, automatically uses the displayIdentity.
  *
  * @param completionQueue
  *   The GCD dispatch queue in which you'd like the completionBlock to be invoked.
@@ -252,8 +255,9 @@ typedef void (^UserAvatarDownloadCompletionBlock)(NSData *_Nullable avatar, NSEr
  *         The ticket includes a NSProgress item that can be used for tracking.
  */
 - (ZDCDownloadTicket *)downloadUserAvatar:(ZDCSearchResult *)searchResult
-                          completionQueue:(nullable dispatch_queue_t)completionQueue
-                          completionBlock:(UserAvatarDownloadCompletionBlock)completionBlock;
+										 identityID:(nullable NSString *)identityID
+								  completionQueue:(nullable dispatch_queue_t)completionQueue
+								  completionBlock:(UserAvatarDownloadCompletionBlock)completionBlock;
 
 @end
 

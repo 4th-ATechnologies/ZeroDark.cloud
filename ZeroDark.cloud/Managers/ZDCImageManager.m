@@ -830,9 +830,10 @@
 	}};
 	
 	ZDCDownloadTicket *ticket =
-	  [zdc.downloadManager downloadUserAvatar: searchResult
-	                          completionQueue: processingQueue
-									  completionBlock:^(NSData *avatar, NSError *error)
+	[zdc.downloadManager downloadUserAvatar: searchResult
+										  identityID: identityID
+									completionQueue: processingQueue
+									completionBlock:^(NSData *avatar, NSError *error)
 	{
 		processingBlock(avatar, error);
 	}];
