@@ -29,8 +29,6 @@ NS_ASSUME_NONNULL_BEGIN
  * The download involves the following steps:
  * - Fetching the user's general information (region & bucket)
  * - Fetching the user's linked identities
- * - Fetching the user's public key
- * - Checking the user's public key against the blockchain
  *
  * @param remoteUserID
  *   The userID of the user to fetch.

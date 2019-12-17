@@ -333,19 +333,18 @@
 
 	__block void (^fetchBasicInfo)(void);
 	__block void (^fetchAuth0Info)(ZDCUser *user);
-	__block void (^fetchPubKey)(ZDCUser *user);
-	__block void (^storeInfoInDatabase)(ZDCUser *user, ZDCPublicKey *pubKey);
+	__block void (^storeUserInDatabase)(ZDCUser *user);
 	__block void (^createAnonymousUser)(void);
 	
 	dispatch_queue_t concurrentQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
-	// STEP 1 of 4:
+	// STEP 1 of 3:
 	//
 	// Fetch basic info about the user including:
 	// - region
 	// - bucket
 	//
-	fetchBasicInfo = ^(){ @autoreleasepool {
+	fetchBasicInfo = ^void (){ @autoreleasepool {
 		
 		[weakSelf _fetchRemoteUser: remoteUserID
 		               requesterID: localUserID
@@ -362,7 +361,7 @@
 		}];
 	}};
 
-	// STEP 2 of 4:
+	// STEP 2 of 3:
 	//
 	// Fetch auth0 user profiles
 	//
@@ -385,41 +384,15 @@
 			user.identities = profile.identities;
 			user.lastRefresh_profile = [NSDate date];
 			
-			fetchPubKey(user);
+			storeUserInDatabase(user);
 		}];
 	}};
 
-	// STEP 3 of 4:
+	// STEP 3 of 3:
 	//
-	// Fetch pubKey, which we deem as required information about the user.
+	// Store the user in the database (if needed).
 	//
-	fetchPubKey = ^void (ZDCUser *user){ @autoreleasepool {
-		
-		ZDCLogVerbose(@"fetchPubKey() - %@", remoteUserID);
-		NSAssert(user != nil, @"Bad state");
-		
-		[weakSelf _fetchPubKey: user
-		           requesterID: localUserID
-		       completionQueue: concurrentQueue
-		       completionBlock:^(ZDCPublicKey *publicKey, NSError *error)
-		{
-			if (error)
-			{
-				InvokeCompletionBlocks(nil, error);
-				return;
-			}
-			
-			user.publicKeyID = publicKey.uuid;
-			
-			storeInfoInDatabase(user, publicKey);
-		}];
-	}};
-
-	// STEP 4 of 4:
-	//
-	// Store the user & pubKey in the database (if needed).
-	//
-	storeInfoInDatabase = ^void (ZDCUser *user, ZDCPublicKey *pubKey){ @autoreleasepool {
+	storeUserInDatabase = ^void (ZDCUser *user){ @autoreleasepool {
 		
 		ZDCLogVerbose(@"storeUserInDatabase() - %@", remoteUserID);
 		NSAssert(user != nil, @"Bad state");
@@ -447,7 +420,7 @@
 				databaseUser = user;
 			}
 			
-			ZDCPublicKey *existingPubKey =
+		/*	ZDCPublicKey *existingPubKey =
 			  [transaction objectForKey: databaseUser.publicKeyID
 			               inCollection: kZDCCollection_PublicKeys];
 			
@@ -469,6 +442,7 @@
 					          inCollection: kZDCCollection_Users];
 				}
 			}
+		*/
 			
 		} completionQueue:concurrentQueue completionBlock:^{
 
@@ -483,7 +457,7 @@
 		ZDCUser *user = [[ZDCUser alloc] initWithUUID:kZDCAnonymousUserID];
 		
 		// Next step
-		storeInfoInDatabase(user, nil);
+		storeUserInDatabase(user);
 	}};
 	
 	if (isAnonymousUser) {
@@ -502,7 +476,7 @@
 	ZDCLogAutoTrace();
 	
 	ZDCUser *remoteUser = [inRemoteUser copy];
-	NSString *remoteUserID = remoteUser.uuid;
+	NSString *remoteUerID = user.uuid;
 	
 	NSParameterAssert(remoteUser != nil);
 	NSParameterAssert(remoteUserID != nil);
@@ -552,21 +526,22 @@
 		}
 	}};
 
-	__block void (^fetchPubKey)(ZDCUser *user);
-	__block void (^updateUserInfoInDatabase)(ZDCPublicKey *pubKey);
+	__block void (^fetchPubKey)();
+	__block void (^verifyPubKey)(ZDCPublicKey *pubKey);
+	__block void (^updateDatabase)(ZDCPublicKey *pubKey);
 	
 	dispatch_queue_t concurrentQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
-	// STEP 1 of 2:
+	// STEP 1 of 3:
 	//
 	// Fetch pubKey, which we deem as required information about the user.
 	//
-	fetchPubKey = ^void (ZDCUser *user){ @autoreleasepool {
+	fetchPubKey = ^void (){ @autoreleasepool {
 		
 		ZDCLogVerbose(@"fetchPubKey() - %@", remoteUserID);
-		NSAssert(user != nil, @"Bad state");
+		NSAssert(remoteUser != nil, @"Bad state");
 		
-		[weakSelf _fetchPubKey: user
+		[weakSelf _fetchPubKey: remoteUser
 		           requesterID: localUserID
 		       completionQueue: concurrentQueue
 		       completionBlock:^(ZDCPublicKey *publicKey, NSError *error)
@@ -577,29 +552,43 @@
 				return;
 			}
 			
-			updateUserInfoInDatabase(publicKey);
+			verifyPubKey(publicKey);
 		}];
 	}};
+	
+	// STEP 2 of 3:
+	//
+	// Attempt to verify the pubKey against the blockchain information.
+	//
+	verifyPubKey = ^void (ZDCPublicKey *pubKey){ @autoreleasepool {
+		
+		ZDCLogVerbose(@"verifyPubKey() - %@", remoteUserID);
+		NSAssert(pubKey != nil, @"Bad state");
+		
+		
+	}};
+	
 	
 	// STEP 2 of 2:
 	//
 	// Store the user & pubKey in the database (if needed).
 	//
-	updateUserInfoInDatabase = ^void (ZDCPublicKey *pubKey){ @autoreleasepool {
+	updateDatabase = ^void (ZDCPublicKey *pubKey){ @autoreleasepool {
 		
-		ZDCLogVerbose(@"storeUserInDatabase() - %@", remoteUserID);
+		ZDCLogVerbose(@"updateDatabase() - %@", remoteUserID);
+		NSAssert(pubKey != nil, @"Bad state");
 		
-		ZDCDatabaseManager *databaseManager = nil;
+		YapDatabaseConnection *rwConnection = nil;
 		{
 			__strong typeof(self) strongSelf = weakSelf;
 			if (strongSelf) {
-				databaseManager = strongSelf->zdc.databaseManager;
+				rwConnection = strongSelf->zdc.databaseManager.rwDatabaseConnection;
 			}
 		}
 		
 		__block ZDCUser *user = nil;
 		
-		[databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+		[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 			
 			user = [transaction objectForKey:remoteUserID inCollection:kZDCCollection_Users];
 			
@@ -633,7 +622,7 @@
 	}};
 	
 	// Start process
-	fetchPubKey(remoteUser);
+	fetchPubKey();
 }
 
 - (void)_refreshIdentities:(NSString *)remoteUserID
@@ -973,6 +962,20 @@
 		}
 		
 		completionBlock(pubKey, nil);
+	}];
+}
+
+- (void)_verifyPubKey:(ZDCPublicKey *)pubKey
+          requesterID:(NSString *)localUserID
+      completionQueue:(dispatch_queue_t)completionQueue
+      completionBlock:(void (^)(ZDCPublicKey *publicKey, NSError *error))completionBlock
+{
+	[zdc.blockchainManager fetchBlockchainInfoForUserID: pubKey.userID
+	                                        requesterID: localUserID
+	                                    completionQueue: completionQueue
+	                                    completionBlock:^(NSError * _Nonnull error)
+	{
+		// Todo...
 	}];
 }
 

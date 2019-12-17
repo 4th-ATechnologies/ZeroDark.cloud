@@ -506,14 +506,14 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	[_actVerifyBlockChain startAnimating];
 	blockchainTransaction = nil;
 	
-	__weak typeof(self) weakSelf = self;
-	[zdc.blockchainManager fetchBlockchainRootForUserID: _remoteUserID
-	                                        requesterID: _localUserID
-	                                    completionQueue: nil
-	                                    completionBlock:^(NSString *merkleTreeRoot, NSError *error)
-	{
-		[weakSelf didFetchBlockchainInfo:merkleTreeRoot error:error];
-	}];
+//	__weak typeof(self) weakSelf = self;
+//	[zdc.blockchainManager fetchBlockchainRootForUserID: _remoteUserID
+//	                                        requesterID: _localUserID
+//	                                    completionQueue: nil
+//	                                    completionBlock:^(NSString *merkleTreeRoot, NSError *error)
+//	{
+//		[weakSelf didFetchBlockchainInfo:merkleTreeRoot error:error];
+//	}];
 }
 
 - (void)didFetchBlockchainInfo:(NSString *)merkleTreeRoot error:(NSError *)error

@@ -22,13 +22,22 @@
 + (NSData *)dataFromZBase32String:(NSString *)inString;
 
 /**
- * xxHash is a fast non-cryptographic hashing algorithm.
-**/
+ * Returns a 32 bit hash using the xxHash algorithm.
+ * (xxHash is a fast non-cryptographic hashing algorithm)
+ */
 - (uint32_t)xxHash32;
+
+/**
+ * Returns a 64 bit hash using the xxHash algorithm.
+ * (xxHash is a fast non-cryptographic hashing algorithm)
+ */
 - (uint64_t)xxHash64;
 
 + (instancetype)allocSecureDataWithLength:(NSUInteger)length;
 
+/**
+ * Convenience function for hashing data.
+ */
 - (NSData *)hashWithAlgorithm:(HASH_Algorithm)hashAlgor error:(NSError **)errorOut;
 
 @end

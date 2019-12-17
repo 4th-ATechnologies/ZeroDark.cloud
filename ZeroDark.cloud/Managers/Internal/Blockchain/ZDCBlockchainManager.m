@@ -28,113 +28,31 @@
 #endif
 #pragma unused(zdcLogLevel)
 
-#ifdef ZDCLogError
-#define CKERROR                                                                     \
-if(error) {                                                                       \
-ZDCLogError(@"ERROR %@ %@:%d", error.localizedDescription, THIS_FILE, __LINE__); \
-goto done;                                                                      \
-}
-#else
-#define CKERROR \
-if (error) {  \
-goto done;  \
-}
-#endif
-
  
 @implementation ZDCBlockchainManager {
 	
-	__weak ZeroDarkCloud *owner;
+	__weak ZeroDarkCloud *zdc;
 }
 
 
 - (instancetype)init
 {
-    return nil; // To access this class use: ZeroDarkCloud.blockchainManager (or use class methods)
+	return nil; // To access this class use: ZeroDarkCloud.blockchainManager (or use class methods)
 }
 
-- (instancetype)initWithOwner:(ZeroDarkCloud *)inOwner
+- (instancetype)initWithOwner:(ZeroDarkCloud *)owner
 {
 	if ((self = [super init]))
 	{
-		owner = inOwner;
+		zdc = owner;
 	}
 	return self;
 }
 
-- (NSError *)errorWithDescription:(NSString *)description
-{
-    NSDictionary *userInfo = nil;
-    if (description)
-        userInfo = @{ NSLocalizedDescriptionKey: description };
-    
-    NSString *domain = NSStringFromClass([self class]);
-    return [NSError errorWithDomain:domain code:0 userInfo:userInfo];
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Internal API
+#pragma mark Undocumented Code
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-- (void)fetchMerkleTreeFile:(NSString *)root
-                requesterID:(NSString *)requesterID
-            completionQueue:(dispatch_queue_t)completionQueue
-            completionBlock:(void (^)(NSDictionary * info, NSError *error))completionBlock
-{
-	ZDCLogAutoTrace();
-	
-	void (^InvokeCompletionBlock)(NSDictionary*, NSError*) = ^(NSDictionary *info, NSError *error){
-		
-		if (completionBlock)
-		{
-			dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
-				completionBlock(info, error);
-			}});
-		}
-	};
-	
-	if (!root)
-	{
-		InvokeCompletionBlock(nil, [self errorWithDescription:@"Bad parameter: root is nil"]);
-		return;
-	}
-	
-	if (!requesterID)
-	{
-		InvokeCompletionBlock(nil, [self errorWithDescription:@"Bad parameter: requesterID is nil"]);
-		return;
-	}
-	
-	[owner.restManager fetchMerkleTreeFile: root
-	                           requesterID: requesterID
-	                       completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                       completionBlock:
-	^(NSURLResponse *urlResponse, id responseObject, NSError *error)
-	{
-		NSInteger statusCode = [urlResponse httpStatusCode];
-		NSDictionary *jsonDict = nil;
-		
-		if (statusCode != 200)
-		{
-			error = [self errorWithDescription:@"Bad Status response"];
-		}
-		else if (!error)
-		{
-			if ([responseObject isKindOfClass:[NSData class]])
-			{
-				jsonDict = [NSJSONSerialization JSONObjectWithData:responseObject options:0 error:&error];
-			}
-			else if ([responseObject isKindOfClass:[NSDictionary class]])
-			{
-				jsonDict = (NSDictionary *)responseObject;
-			}
-		}
-		
-		InvokeCompletionBlock(jsonDict, error);
-	}];
-}
-
-
+/*
 - (BOOL)checkBlockEntry:(NSDictionary*)entry
                 forPubKey:(ZDCPublicKey *)pubKey
                   error:(NSError**)errorOut
@@ -208,8 +126,9 @@ done:
 
     return result;
 }
+*/
 
-
+/*
 - (BOOL)verifyMerkleTree:(NSDictionary*)treeDict
                 withRoot:(NSString*)rootIn
                usingHash:(NSString*)hashName
@@ -226,7 +145,7 @@ done:
     NSArray* values = nil;
     NSMutableArray* valueHashes = nil;
 
-    /* verify we support the hash*/
+    // verify we support the hash
     HASH_Algorithm hashAlgor = kHASH_Algorithm_Invalid;
    if([hashName isEqualToString:@"sha512"])
     {
@@ -244,7 +163,7 @@ done:
 
     }
 
-    /* paramater check the dictionary */
+    // paramater check the dictionary
     item = [treeDict objectForKey:@"values"];
     if(![item isKindOfClass:[NSArray class]])
     {
@@ -253,7 +172,7 @@ done:
     }
     values = (NSArray*) item;
 
-    /* check merkle tree */
+    // check merkle tree
     for(id obj in values )
     {
         NSDictionary *info = nil;
@@ -265,7 +184,7 @@ done:
                 info = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
             if(error)break;
 
-            /* check if there is a key tha matches our pubkey */
+            // check if there is a key tha matches our pubkey
             NSString* entryUserID = info[@"userID"];
             if([userIDIn isEqualToString:entryUserID])
             {
@@ -297,7 +216,7 @@ done:
     }
     CKERROR;
 
-    /* check merkle tree against root hash */
+    // check merkle tree against root hash
     {
         NSString* rootHash =  [valueHashes merkleHashWithAlgorithm:kHASH_Algorithm_SHA256
                                                              error:&error];
@@ -324,13 +243,13 @@ done:
         *errorOut = error;
 
     return result;
-
-};
+}
+*/
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Public API
+#pragma mark Undocumented Code
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/*
 - (void)fetchBlockchainRootForUserID:(NSString *)remoteUserID
                          requesterID:(NSString *)localUserID
                      completionQueue:(dispatch_queue_t)completionQueue
@@ -407,6 +326,201 @@ done:
 			InvokeCompletionBlock(merkleTreeRoot, error);
 		}];
 	}];
+}
+*/
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Errors
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (NSError *)errorWithCode:(BlockchainErrorCode)code description:(nullable NSString *)description
+{
+	NSDictionary *userInfo = nil;
+	if (description) {
+		userInfo = @{ NSLocalizedDescriptionKey: description };
+	}
+	
+	NSString *domain = NSStringFromClass([self class]);
+	return [NSError errorWithDomain:domain code:code userInfo:userInfo];
+}
+
+- (NSError *)errorWithCode:(BlockchainErrorCode)code underlyingError:(nullable NSError *)underlyingError
+{
+	NSDictionary *userInfo = nil;
+	if (underlyingError) {
+		userInfo = @{ NSUnderlyingErrorKey: underlyingError };
+	}
+	
+	NSString *domain = NSStringFromClass([self class]);
+	return [NSError errorWithDomain:domain code:code userInfo:userInfo];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Logic
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)fetchMerkleTreeFile:(NSString *)root
+                requesterID:(NSString *)requesterID
+            completionQueue:(dispatch_queue_t)completionQueue
+            completionBlock:(void (^)(NSDictionary *file, NSError *error))completionBlock
+{
+	ZDCLogAutoTrace();
+	
+	NSParameterAssert(root != nil);
+	NSParameterAssert(requesterID != nil);
+	NSParameterAssert(completionQueue != nil);
+	NSParameterAssert(completionBlock != nil);
+	
+	void (^InvokeCompletionBlock)(NSDictionary*, NSError*) = ^(NSDictionary *file, NSError *error){
+		
+		dispatch_async(completionQueue, ^{ @autoreleasepool {
+			completionBlock(file, error);
+		}});
+	};
+	
+	__weak typeof(self) weakSelf = self;
+	
+	[zdc.restManager fetchMerkleTreeFile: root
+	                         requesterID: requesterID
+	                     completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                     completionBlock:^(NSURLResponse *urlResponse, id responseObject, NSError *networkError)
+	{
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
+		if (networkError)
+		{
+			NSError *error = [strongSelf errorWithCode:BlockchainErrorCode_NetworkError underlyingError:networkError];
+			
+			InvokeCompletionBlock(nil, error);
+			return;
+		}
+		
+		NSInteger statusCode = [urlResponse httpStatusCode];
+		if (statusCode != 200)
+		{
+			NSString *msg = [NSString stringWithFormat:@"Server returned status code %ld", (long)statusCode];
+			NSError *error = [strongSelf errorWithCode:BlockchainErrorCode_MissingMerkleTreeFile description:msg];
+			
+			InvokeCompletionBlock(nil, error);
+			return;
+		}
+		
+		NSDictionary *jsonDict = nil;
+		if ([responseObject isKindOfClass:[NSDictionary class]])
+		{
+			jsonDict = (NSDictionary *)responseObject;
+		}
+		else if ([responseObject isKindOfClass:[NSData class]])
+		{
+			jsonDict = [NSJSONSerialization JSONObjectWithData:responseObject options:0 error:nil];
+		}
+		
+		if (jsonDict)
+		{
+			InvokeCompletionBlock(jsonDict, nil);
+		}
+		else
+		{
+			NSString *msg = @"Server returned non-json-dictionary response";
+			NSError *error = [strongSelf errorWithCode:BlockchainErrorCode_MissingMerkleTreeFile description:msg];
+			
+			InvokeCompletionBlock(nil, error);
+		}
+	}];
+}
+
+- (nullable NSError *)verifyMerkleTreeFile:(NSDictionary *)file
+{
+	
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Public API
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)fetchBlockchainInfoForUserID:(NSString *)remoteUserID
+                         requesterID:(NSString *)localUserID
+                     completionQueue:(nullable dispatch_queue_t)completionQueue
+                     completionBlock:(void (^)(NSError *error))completionBlock
+{
+	void (^InvokeCompletionBlock)(NSString*, NSError *) = ^(NSString *merkleTreeRoot, NSError *error){
+
+		if (!completionBlock) return;
+		
+		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+			completionBlock(error);
+		}});
+	};
+	
+	__weak typeof(self) weakSelf = self;
+	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	
+	__block void (^queryBlockchain)(void);
+	__block void (^fetchMerkleTreeFile)(NSString *merkleTreeRoot);
+	
+	queryBlockchain = ^void (){ @autoreleasepool {
+		
+		[EthereumRPC fetchMerkleTreeRootForUserID: remoteUserID
+		                          completionQueue: bgQueue
+		                          completionBlock:^(NSError *networkError, NSString *merkleTreeRoot)
+		{
+			__strong typeof(self) strongSelf = weakSelf;
+			if (!strongSelf) return;
+	
+			if (networkError)
+			{
+				NSError *error = [strongSelf errorWithCode:BlockchainErrorCode_NetworkError underlyingError:networkError];
+	
+				InvokeCompletionBlock(nil, error);
+				return;
+			}
+	
+			if (merkleTreeRoot.length == 0)
+			{
+				NSError *error = [strongSelf errorWithCode:BlockchainErrorCode_NoBlockchainEntry description:nil];
+	
+				InvokeCompletionBlock(nil, error);
+				return;
+			}
+	
+			// Next step
+			fetchMerkleTreeFile(merkleTreeRoot);
+		}];
+	}};
+	
+	fetchMerkleTreeFile = ^void (NSString *merkleTreeRoot){ @autoreleasepool {
+		
+		[weakSelf fetchMerkleTreeFile: merkleTreeRoot
+		                  requesterID: localUserID
+		              completionQueue: bgQueue
+		              completionBlock:^(NSDictionary *file, NSError *error)
+		{
+			__strong typeof(self) strongSelf = weakSelf;
+			if (!strongSelf) return;
+			
+			if (error)
+			{
+				// The error already has BlockchainErrorCode set
+				
+				InvokeCompletionBlock(nil, error);
+				return;
+			}
+			
+			error = [strongSelf verifyMerkleTreeFile:file];
+			if (error)
+			{
+				// The error already has BlockchainErrorCode set
+				
+				InvokeCompletionBlock(nil, error);
+				return;
+			}
+			
+			
+		}];
+	}};
+	
+	queryBlockchain();
 }
 
 @end
