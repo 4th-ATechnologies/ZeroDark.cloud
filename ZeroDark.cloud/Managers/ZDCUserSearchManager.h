@@ -165,6 +165,11 @@ typedef NS_ENUM(NSInteger, ZDCSearchResultStage) {
  */
 - (nullable ZDCUserIdentity *)identityWithID:(NSString *)identityID;
 
+/**
+ * create a ZDCSearchResult from an existing ZDCUser
+ */
+- (instancetype)initWithUser:(ZDCUser *)user;
+
 @end
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

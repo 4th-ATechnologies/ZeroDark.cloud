@@ -17,7 +17,6 @@
 NSString *const k_activityMonitor_lastActivityType  = @"lastActivityType";
 NSString *const k_lastProviderTableUpdate           = @"lastProviderTableUpdate";
 NSString *const k_recentRecipients                  = @"recentRecipients_2";
-NSString *const k_preferedAuth0IDs                  = @"preferedAuth0IDs";
 
 - (instancetype)init
 {
@@ -131,33 +130,6 @@ NSString *const k_preferedAuth0IDs                  = @"preferedAuth0IDs";
 	[newRecents removeObjectAtIndex:idx];
 	
 	[self setObject:[newRecents copy] forKey:k_recentRecipients];
-}
-
-// this keeps a map of prefered Auth0/SocialIDs for userIDS
-
-
-// this keeps N of the most recent recipients
-
-- (NSDictionary<NSString *,NSString *> * )preferedAuth0IDs
-{
-     return [self objectForKey:k_preferedAuth0IDs];
-}
-
-- (void)setPreferedAuth0ID:(NSString *__nullable )auth0ID userID:(NSString *)userID;
-{
-    NSMutableDictionary<NSString *,NSString *> *
-        _preferedAuth0IDs = [NSMutableDictionary dictionaryWithDictionary:[self preferedAuth0IDs]];
-    
-    if(auth0ID)
-    {
-        [_preferedAuth0IDs setObject:auth0ID forKey:userID];
-    }
-    else
-    {
-        [_preferedAuth0IDs removeObjectForKey:userID];
-    }
-  
-    [self setObject:_preferedAuth0IDs forKey:k_preferedAuth0IDs];
 }
 
 

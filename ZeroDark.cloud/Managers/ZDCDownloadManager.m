@@ -2465,18 +2465,23 @@ static NSUInteger const kMaxFailCount = 8;
  * See header file for documentation.
  */
 - (ZDCDownloadTicket *)downloadUserAvatar:(ZDCSearchResult *)searchResult
+									identityID:(nullable NSString *)inIdentityID
                           completionQueue:(nullable dispatch_queue_t)completionQueue
                           completionBlock:(UserAvatarDownloadCompletionBlock)completionBlock
 {
 	ZDCLogAutoTrace();
 	
-	ZDCUserIdentity *displayIdentity = searchResult.displayIdentity;
 	
 	NSString *userID = searchResult.userID;
-	NSString *identityID = displayIdentity.identityID;
-	
+ 
+	ZDCUserIdentity* identity = [searchResult identityWithID:inIdentityID];
+	if(!identity)
+	{
+		identity = searchResult.displayIdentity;
+	}
+ 
 	NSURL *pictureURL =
-	  [Auth0Utilities pictureUrlForIdentity: displayIdentity
+	  [Auth0Utilities pictureUrlForIdentity: identity
 	                                 region: searchResult.aws_region
 	                                 bucket: searchResult.aws_bucket];
 	
@@ -2495,10 +2500,10 @@ static NSUInteger const kMaxFailCount = 8;
 	ZDCDownloadOptions *options = [[ZDCDownloadOptions alloc] init];
 	options.cacheToDiskManager = NO;
 	options.savePersistentlyToDiskManager = NO;
-	options.identityID = identityID;
+	options.identityID = identity.identityID;
 	
 	return [self _downloadUserAvatar: userID
-	                      identityID: identityID
+	                      identityID: identity.identityID
 	                         fromURL: pictureURL
 	                         options: options
 	                 completionQueue: completionQueue

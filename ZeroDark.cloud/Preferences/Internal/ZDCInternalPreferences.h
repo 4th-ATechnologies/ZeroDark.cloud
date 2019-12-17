@@ -37,10 +37,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addRecentRecipient:(NSString *)userID;
 - (void)removeRecentRecipient:(NSString *)userID;
 
-// this keeps a map of prefered Auth0/SocialIDs for userIDS
-@property (atomic, nullable, readonly) NSDictionary<NSString *,NSString *> * preferedAuth0IDs;
-- (void)setPreferedAuth0ID:(NSString *__nullable )auth0ID userID:(NSString *)userID;
-
 @end
 
 NS_ASSUME_NONNULL_END
