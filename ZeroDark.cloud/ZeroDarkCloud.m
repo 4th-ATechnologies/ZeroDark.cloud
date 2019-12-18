@@ -383,7 +383,17 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 	BOOL success = (error == nil);
 	if (success)
 	{
-		[self resumePushQueues];
+		// Resume all re-registered ZDCCloud extensions.
+		
+		NSArray<YapCollectionKey*> *tuples = self.databaseManager.previouslyRegisteredTuples;
+		for (YapCollectionKey *tuple in tuples)
+		{
+			NSString *localUserID = tuple.collection;
+			NSString *treeID = tuple.key;
+			
+			[[self.databaseManager cloudExtForUserID:localUserID treeID:treeID] resume];
+		}
+		
 		[auth0ProviderManager updateProviderCache:NO];  // update provider cache if needed
 	}
 	
@@ -978,18 +988,6 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
            forPipeline:(YapDatabaseCloudCorePipeline *)pipeline
 {
 	[self.pushManager startOperation:op forPipeline:pipeline];
-}
-
-- (void)resumePushQueues
-{
-	NSArray<YapCollectionKey*> *tuples = self.databaseManager.previouslyRegisteredTuples;
-	for (YapCollectionKey *tuple in tuples)
-	{
-		NSString *localUserID = tuple.collection;
-		NSString *treeID = tuple.key;
-		
-		[[self.databaseManager cloudExtForUserID:localUserID treeID:treeID] resume];
-	}
 }
 
 @end
