@@ -476,7 +476,7 @@
 	ZDCLogAutoTrace();
 	
 	ZDCUser *remoteUser = [inRemoteUser copy];
-	NSString *remoteUerID = user.uuid;
+	NSString *remoteUserID = remoteUser.uuid;
 	
 	NSParameterAssert(remoteUser != nil);
 	NSParameterAssert(remoteUserID != nil);
@@ -526,7 +526,7 @@
 		}
 	}};
 
-	__block void (^fetchPubKey)();
+	__block void (^fetchPubKey)(void);
 	__block void (^verifyPubKey)(ZDCPublicKey *pubKey);
 	__block void (^updateDatabase)(ZDCPublicKey *pubKey);
 	
@@ -565,7 +565,13 @@
 		ZDCLogVerbose(@"verifyPubKey() - %@", remoteUserID);
 		NSAssert(pubKey != nil, @"Bad state");
 		
-		
+		[weakSelf _verifyPubKey: pubKey
+		            requesterID: localUserID
+		        completionQueue: concurrentQueue
+		        completionBlock:^(ZDCPublicKey *publicKey, NSError *error)
+		{
+			// Todo...
+		}];
 	}};
 	
 	
