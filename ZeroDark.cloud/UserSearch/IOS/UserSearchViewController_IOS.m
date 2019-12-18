@@ -449,33 +449,6 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	sharedUserIDs = [newSharedUserIDs copy];
  
 	[zdc.internalPreferences addRecentRecipient:userID];
-	
-//	__block ZDCUser *user = nil;
-//
-//	YapDatabaseConnection *uiConnection = zdc.databaseManager.uiDatabaseConnection;
-//	[uiConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-//
-//		user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
-//	}];
-//
-//	[zdc.internalPreferences addRecentRecipient:userID];
-//	[self setPreferredIdentityID:identityID forUserID:userID];
-//
-//	// if the new prefered ID doesnt match the user.auth0_preferredID then update the pref
-////	if ([user.preferredIdentityID isEqualToString:auth0ID])
-////	{
-////		[zdc.internalPreferences setPreferedAuth0ID:NULL userID:userID];
-////	}
-////	else
-////	{
-////		[zdc.internalPreferences setPreferedAuth0ID:auth0ID userID:userID];
-////	}
-//
-//	SEL selector = @selector(userSearchViewController:addedRecipient:);
-//	if ([delegate respondsToSelector:selector])
-//	{
-//	//	[delegate userSearchViewController:self selectedRecipient:@[@[userID, identityID]]];
-//	}
 }
 
 - (BOOL)shouldShowRecentRecipients
@@ -609,6 +582,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	{
 		_searchBar.isLoading = NO;
 		searchResults = nil;
+		preferredIdentityIDs = nil;
 		[_tblUsers reloadData];
 		return;
 	}
@@ -950,9 +924,17 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	  [tv dequeueReusableCellWithIdentifier:kRemoteUserTableViewCellIdentifier];
 	
 	ZDCSearchResult *item = searchResults[indexPath.row];
-	ZDCUserIdentity *displayIdentity = item.displayIdentity;
-	
 	NSString *userID = item.userID;
+	ZDCUserIdentity *displayIdentity = item.displayIdentity;
+
+	// check if the user selected an alternate ID
+	NSString* alternateID = [preferredIdentityIDs objectForKey:userID];
+	if(alternateID)
+	{
+		ZDCUserIdentity *alternateIdentity = [item identityWithID:alternateID];
+		displayIdentity = alternateIdentity;
+ 	}
+	
 	NSString *identityID = displayIdentity.identityID;
 	
 	cell.delegate = (id <RemoteUserTableViewCellDelegate>)self;
@@ -982,6 +964,10 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 					continue;
 				}
 				
+				if(![match.matchingString isEqualToString:displayName]){
+					continue;
+				}
+
 				for (NSValue *matchRange in match.matchingRanges)
 				{
 					[attrString addAttribute: NSFontAttributeName
@@ -1082,7 +1068,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	};
 	
 	[zdc.imageManager fetchUserAvatar: item
-	                       identityID: nil
+	                       identityID: identityID
 	                     processingID: NSStringFromClass([self class])
 	                  processingBlock: processingBlock
 	                    preFetchBlock: preFetchBlock
@@ -1331,6 +1317,13 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 	
 	if(!item) return;
 	
+	// check if the user selected an alternate ID
+	NSString* alternateID = [preferredIdentityIDs objectForKey:userID];
+	if(alternateID)
+	{
+		item.preferredIdentityID = alternateID;
+ 	}
+
 	UserSearchSocialIDViewController_IOS*  remoteSRVC = nil;
 	
 	remoteSRVC = [[UserSearchSocialIDViewController_IOS alloc]
@@ -1352,12 +1345,11 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 										 forUserID:(NSString *)userID;
 
 {
-	
-	// fix this code...
-	//	NSAssert(NO, @"Not implemented");
-
 	__weak typeof(self) weakSelf = self;
 	
+	[self setPreferredIdentityID:identityID forUserID:userID];
+	
+	// if its already imported then we need to update the database
 	[zdc.databaseManager.rwDatabaseConnection
 	 asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
@@ -1367,33 +1359,18 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 		{
 			updatedUser                 		= updatedUser.copy;
 			updatedUser.preferredIdentityID	= identityID;
-			[transaction setObject:updatedUser forKey:updatedUser.uuid inCollection:kZDCCollection_Users];
+			[transaction setObject:updatedUser
+								 forKey:updatedUser.uuid
+						 inCollection:kZDCCollection_Users];
 		}
 		
 	}completionBlock:^{
 		__strong typeof(self) strongSelf = weakSelf;
 		if (strongSelf == nil) return;
-		
-		//        [strongSelf->_tblUsers reloadData];
+	 		[strongSelf->_tblUsers reloadData];
 	}];
-
-
-}
-
-- (void)userSearchSocialIDViewController:(UserSearchSocialIDViewController_IOS *)sender
-                        didSelectAuth0ID:(NSString *)auth0ID
-                               forUserID:(NSString *)userID
-{
-	BOOL isAlreadyImported = [sharedUserIDs containsObject:userID];
 	
-	[self setPreferredIdentityID:auth0ID forUserID:userID];
 	
-	// if the user is already selected
-	if (isAlreadyImported)
-	{
-		// update our copy and recents if needed
-		[self addUserToSharedList:userID identityID:auth0ID];
-	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
