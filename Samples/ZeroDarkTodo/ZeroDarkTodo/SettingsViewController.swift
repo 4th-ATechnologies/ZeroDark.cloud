@@ -447,9 +447,10 @@ SettingsTableHeaderViewDelegate {
 			
 			let warningMessage = NSLocalizedString("You have not backed up your Access Key!\n If you delete this user you might lose access to your data!\n We recommend you backup your Access Key before proceeding.",
 																comment: "You have not backed up your Access Key! If you delete this user you might lose access to your data!\n We recommend you backup your Access Key before proceeding.");
-			
-			let message = localUser.hasBackedUpAccessCode ? nil: warningMessage
-			
+				
+			let message = (localUser.hasCompletedSetup && !localUser.hasBackedUpAccessCode)
+				?warningMessage :nil;
+				
 			let alert =
 				UIAlertController(title: title,
 										message: message,
@@ -486,7 +487,7 @@ SettingsTableHeaderViewDelegate {
 			
 			alert.addAction(deleteAction)
 			
-			if(!localUser.hasBackedUpAccessCode){
+			if(localUser.hasCompletedSetup && !localUser.hasBackedUpAccessCode){
 				alert.addAction(backupAction)
 			}
 			
