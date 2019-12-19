@@ -414,7 +414,10 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 		preferredIdentityIDs = [[NSMutableDictionary alloc] init];
 	}
 	
-	preferredIdentityIDs[userID] = identityID;
+	if(identityID == nil)
+		[preferredIdentityIDs removeObjectForKey:userID];
+	else
+		[preferredIdentityIDs setObject:identityID forKey:userID];
 }
 
 - (void)removeUserFromSharedList:(NSString *)userID
@@ -481,6 +484,12 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 			user.identities = searchResult.identities;
 			user.preferredIdentityID = searchResult.preferredIdentityID;
 			
+			[transaction setObject:user forKey:user.uuid inCollection:kZDCCollection_Users];
+		}
+		else if(![user.preferredIdentityID isEqualToString:searchResult.preferredIdentityID])
+		{
+			user = user.copy;
+			user.preferredIdentityID = searchResult.preferredIdentityID;
 			[transaction setObject:user forKey:user.uuid inCollection:kZDCCollection_Users];
 		}
 		
@@ -784,7 +793,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	
 	NSString *userID = [recentRecipients objectAtIndex:indexPath.row];
 	
-	BOOL isAlreadyImported = [sharedUserIDs containsObject:userID];
+	BOOL isAlreadyShared= [sharedUserIDs containsObject:userID];
 	BOOL isMyUserID = [userID isEqualToString:localUserID];
 	
 	__block ZDCUser *user = nil;
@@ -903,7 +912,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	
 	cell.showCheckMark = YES;
 	cell.checkMark.checkMarkStyle = isMyUserID ? ZDCCheckMarkStyleGrayedOut : ZDCCheckMarkStyleOpenCircle;
-	cell.checkMark.checked = !isMyUserID && isAlreadyImported;
+	cell.checkMark.checked = !isMyUserID && isAlreadyShared;
 	
 	cell.accessoryView = [[UIView alloc] initWithFrame:(CGRect){
 		.origin.x = 0,
@@ -939,7 +948,6 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	
 	cell.delegate = (id <RemoteUserTableViewCellDelegate>)self;
 	cell.userID  = userID;
-	cell.identityID = identityID;
 	
 	BOOL isAlreadyImported = [sharedUserIDs containsObject:userID];
 	BOOL isMyUserID = [userID isEqualToString:localUserID];
@@ -948,7 +956,8 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 		
 		NSString *displayName = displayIdentity.displayName;
 		NSMutableAttributedString *attrString = [[NSMutableAttributedString alloc] initWithString:displayName];
-		
+		ZDCSearchMatch *foundMatch = nil;
+
 		if (item.matches.count)
 		{
 			UIFontDescriptor *descriptor = [UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleBody];
@@ -958,24 +967,65 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 			UIFont *boldFont = [UIFont fontWithDescriptor:descriptor size:0];
 			
 			[attrString beginEditing];
-		 	for (ZDCSearchMatch *match in item.matches)
+			
+			// find the matching string
+			
+			// check if the prefered on is correct
+			for (ZDCSearchMatch *match in item.matches)
 			{
-				if (![match.identityID isEqual:identityID]) {
-					continue;
+				if([match.identityID isEqual:identityID]
+					&& [match.matchingString isEqualToString:displayName])
+				{
+					foundMatch = match;
+					break;
 				}
-				
-				if(![match.matchingString isEqualToString:displayName]){
-					continue;
-				}
-
-				for (NSValue *matchRange in match.matchingRanges)
+			}
+			
+			// check if it's another identity
+			for (ZDCSearchMatch *match in item.matches)
+			{
+				// we have to fix things up to use the matching identity
+				displayName = match.matchingString;
+				attrString = [[NSMutableAttributedString alloc] initWithString:displayName];
+				identityID = match.identityID;
+				displayIdentity = [item identityWithID:identityID];
+				[self setPreferredIdentityID:identityID forUserID:userID];
+				foundMatch = match;
+				break;
+			}
+			
+			if(foundMatch)
+			{
+				for (NSValue *matchRange in foundMatch.matchingRanges)
 				{
 					[attrString addAttribute: NSFontAttributeName
-					                   value: boldFont
-					                   range: matchRange.rangeValue];
+											 value: boldFont
+											 range: matchRange.rangeValue];
 				}
-		 	}
-		 	[attrString endEditing];
+			}
+			
+			
+			
+			//				if (![match.identityID isEqual:identityID]) {
+			//					continue;
+			//				}
+			//
+			//				if(![match.matchingString isEqualToString:displayName]){
+			//					continue;
+			//				}
+			//
+			//				foundMatch = match;
+			//			}
+			//				for (NSValue *matchRange in match.matchingRanges)
+			//				{
+			//					[attrString addAttribute: NSFontAttributeName
+			//					                   value: boldFont
+			//					                   range: matchRange.rangeValue];
+			//				}
+			//		 	}
+			
+			
+			[attrString endEditing];
 		}
 		
 		if (isMyUserID)
@@ -989,6 +1039,8 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 		cell.lblUserName.attributedText = attrString;
 	}
 		
+	cell.identityID = identityID;
+
 	NSString *provider = displayIdentity.provider;
 	OSImage *providerImage =
 	  [[zdc.auth0ProviderManager iconForProvider: provider
@@ -1217,26 +1269,30 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 	else  // select
 	{
 		__weak typeof(self) weakSelf = self;
+		
+		// check if the user selected an alternate ID
+		NSString* useIdentity = [preferredIdentityIDs objectForKey:item.userID];
+		if(useIdentity) {
+			item.preferredIdentityID = useIdentity;
+		}
 
 		[self importUser:item
 		 completionBlock:^(ZDCUser *user) {
-	
-	 		__strong typeof(self) strongSelf = weakSelf;
+			
+			__strong typeof(self) strongSelf = weakSelf;
 			if (strongSelf == nil) return;
-
-	 		SEL selector = @selector(userSearchViewController:addedRecipient:);
+				
+			SEL selector = @selector(userSearchViewController:addedRecipient:);
 			if ([strongSelf->delegate respondsToSelector:selector])
 			{
 				[strongSelf->delegate userSearchViewController:self addedRecipient:user];
 			}
 			
-			[strongSelf addUserToSharedList:userID
-									identityID:item.preferredIdentityID];
-
-				[strongSelf->_tblUsers reloadRowsAtIndexPaths: @[indexPath]
-										  withRowAnimation: UITableViewRowAnimationNone];
-
-
+			[strongSelf addUserToSharedList:user.uuid
+										identityID:item.preferredIdentityID];
+			
+			[strongSelf->_tblUsers reloadRowsAtIndexPaths: @[indexPath]
+												  withRowAnimation: UITableViewRowAnimationNone];
 		}];
 	}
 }

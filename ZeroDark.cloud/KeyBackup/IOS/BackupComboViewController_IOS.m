@@ -535,8 +535,9 @@
 		qrCodeString = [self.keyBackupVC accessKeyStringWithPasscode:keyBackupVC.user.syncedSalt
 																 p2kAlgorithm:p2kAlgorithm
 																		  error:&error];
+	}else {
+		qrCodeString = nil;
 	}
-	
 	
 	if(qrCodeString)
 	{
