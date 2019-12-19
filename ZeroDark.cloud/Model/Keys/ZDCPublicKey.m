@@ -43,8 +43,9 @@ static NSString *const k_pubKeyJSON   = @"k_pubKeyJSON";
 @synthesize cachedKeyDict = _cachedKeyDict_atomic_property_must_use_selfDot_syntax;
 
 @dynamic keyDict;
+@dynamic pubKey;
 @dynamic keyID;
-@dynamic eTag;
+//@dynamic eTag;
 
 static BOOL MakeSigningKey(Cipher_Algorithm    keyAlgorithm,
                            NSString          * userID, // optional
@@ -349,11 +350,27 @@ done:
 	return keyDict;
 }
 
-- (NSString *)keyID
+- (nullable NSString *)pubKey
 {
-	return self.keyDict[@(kS4KeyProp_KeyID)];
+	id value = self.keyDict[@"pubKey"]; // We forget to export `kS4KeyProp_PubKey` in S4
+	if ([value isKindOfClass:[NSString class]]) {
+		return (NSString *)value;
+	} else {
+		return nil;
+	}
 }
 
+- (nullable NSString *)keyID
+{
+	id value = self.keyDict[@(kS4KeyProp_KeyID)];
+	if ([value isKindOfClass:[NSString class]]) {
+		return (NSString *)value;
+	} else {
+		return nil;
+	}
+}
+
+/*
 - (NSString *)eTag
 {
 	NSString* keyID = self.keyID;
@@ -361,6 +378,7 @@ done:
 	
 	return data.lowercaseHexString;
 }
+*/
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Utility functions
@@ -541,6 +559,7 @@ done:
 		self.privKeyJSON = privKeyStr; // don't change this code - see comment above
 		//
 		// See comment above
+		self.cachedKeyDict = nil; // cached version is now outdated
 		success = YES;
 	}
      

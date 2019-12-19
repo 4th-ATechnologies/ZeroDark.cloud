@@ -484,7 +484,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	}];
 	
 	// once the merkleTreeRoot is cached, it's immutable.  dont look it up again.
-	if(remoteUser.blockchainTransaction)
+	if(remoteUser.blockchainProof)
 	{
 		_txtVerifyBlockChain.text = @"Blockchain Entry Verified";
 		[_btnVerifyBlockChain setImage: okImage forState:UIControlStateNormal];
@@ -492,7 +492,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 		_actVerifyBlockChain.hidden = YES;
 		
 		//        _btnShowTransaction.hidden = NO;
-		blockchainTransaction = remoteUser.blockchainTransaction   ;
+		blockchainTransaction = remoteUser.blockchainProof.merkleTreeRoot;
 		return;
 	}
 	
@@ -570,22 +570,6 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 		
 		blockchainTransaction = merkleTreeRoot;
 	//	_btnShowTransaction.hidden = NO;
-		
-		// Cache the merkleTreeRoot — it's immutable
-		NSString *remoteUserID = _remoteUserID;
-		
-		YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
-		[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
-			
-			ZDCUser *remoteUser = [transaction objectForKey:remoteUserID inCollection:kZDCCollection_Users];
-			if (remoteUser)
-			{
-				remoteUser = [remoteUser copy];
-				remoteUser.blockchainTransaction = merkleTreeRoot;
-				
-				[transaction setObject:remoteUser forKey:remoteUserID inCollection:kZDCCollection_Users];
-			}
-		}];
 	}
 	
 	_btnVerifyBlockChain.hidden = NO;

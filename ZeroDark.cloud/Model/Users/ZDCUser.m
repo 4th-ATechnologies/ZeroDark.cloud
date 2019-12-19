@@ -21,11 +21,12 @@ static int const kZDCUser_CurrentVersion = 2;
 static NSString *const k_version_user           = @"version_user";
 static NSString *const k_uuid                   = @"uuid";
 static NSString *const k_publicKeyID            = @"publicKeyID";
-static NSString *const k_blockchainTransaction  = @"blockchainTransaction";
+static NSString *const k_blockchainProof        = @"blockchainProof";
 static NSString *const k_random_uuid            = @"random_uuid";
 static NSString *const k_random_encryptionKey   = @"random_encryptionKey";
 static NSString *const k_aws_regionStr          = @"aws_regionStr";
 static NSString *const k_aws_bucket             = @"aws_bucket";
+static NSString *const k_accountBlocked         = @"accountBlocked";
 static NSString *const k_accountDeleted         = @"accountDeleted";
 static NSString *const k_lastRefresh_profile    = @"lastRefresh_profile";
 static NSString *const k_lastRefresh_blockchain = @"lastRefresh_blockchain";
@@ -38,8 +39,6 @@ static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 // Extern constants
 
 /* extern */ NSString *const kZDCAnonymousUserID = @"anonymoususerid1"; // must be 16 characters & zBase32
-/* extern */ NSString *const kZDCUser_metadataKey =  @"user_metadata";
-/* extern */ NSString *const kZDCUser_metadata_preferredAuth0ID =  @"preferredAuth0ID";
 
 
 @implementation ZDCUser
@@ -47,7 +46,7 @@ static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 @synthesize uuid = uuid;
 
 @synthesize publicKeyID = publicKeyID;
-@synthesize blockchainTransaction = blockchainTransaction;
+@synthesize blockchainProof = blockchainProof;
 
 @synthesize random_uuid = random_uuid;
 @synthesize random_encryptionKey = random_encryptionKey;
@@ -55,6 +54,7 @@ static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 @synthesize aws_region = aws_region;
 @synthesize aws_bucket = aws_bucket;
 
+@synthesize accountBlocked = accountBlocked;
 @synthesize accountDeleted = accountDeleted;
 @synthesize lastRefresh_profile = lastRefresh_profile;
 @synthesize lastRefresh_blockchain = lastRefresh_blockchain;
@@ -124,7 +124,7 @@ static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 		uuid = [decoder decodeObjectForKey:k_uuid];
 		
 		publicKeyID = [decoder decodeObjectForKey:k_publicKeyID];
-		blockchainTransaction = [decoder decodeObjectForKey:k_blockchainTransaction];
+		blockchainProof = [decoder decodeObjectForKey:k_blockchainProof];
 		
 		random_uuid = [decoder decodeObjectForKey:k_random_uuid];
 		random_encryptionKey = [decoder decodeObjectForKey:k_random_encryptionKey];
@@ -132,6 +132,7 @@ static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 		aws_region = [AWSRegions regionForName:[decoder decodeObjectForKey:k_aws_regionStr]];
 		aws_bucket = [decoder decodeObjectForKey:k_aws_bucket];
 		
+		accountBlocked = [decoder decodeBoolForKey:k_accountBlocked];
 		accountDeleted = [decoder decodeBoolForKey:k_accountDeleted];
 		lastRefresh_profile = [decoder decodeObjectForKey:k_lastRefresh_profile];
 		lastRefresh_blockchain = [decoder decodeObjectForKey:k_lastRefresh_blockchain];
@@ -160,25 +161,12 @@ static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 		
 		// Sanitation
 		
-		if (!lastRefresh_profile)
-		{
+		if (!lastRefresh_profile) {
 			lastRefresh_profile = [NSDate dateWithTimeIntervalSinceReferenceDate:0];
 		}
 		
-		if (!lastRefresh_blockchain)
-		{
+		if (!lastRefresh_blockchain) {
 			lastRefresh_blockchain = [NSDate dateWithTimeIntervalSinceReferenceDate:0];
-		}
-		
-		if (!preferredIdentityID)
-		{
-			for (ZDCUserIdentity *ident in identities)
-			{
-				if (!ident.isRecoveryAccount) {
-					preferredIdentityID = ident.identityID;
-					break;
-				}
-			}
 		}
  	}
 	return self;
@@ -193,7 +181,7 @@ static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 	[coder encodeObject:uuid forKey:k_uuid];
 	
 	[coder encodeObject:publicKeyID forKey:k_publicKeyID];
-	[coder encodeObject:blockchainTransaction forKey:k_blockchainTransaction];
+	[coder encodeObject:blockchainProof forKey:k_blockchainProof];
 	
 	[coder encodeObject:random_uuid          forKey:k_random_uuid];
 	[coder encodeObject:random_encryptionKey forKey:k_random_encryptionKey];
@@ -201,6 +189,7 @@ static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 	[coder encodeObject:[AWSRegions shortNameForRegion:aws_region] forKey:k_aws_regionStr];
 	[coder encodeObject:aws_bucket forKey:k_aws_bucket];
 	
+	[coder encodeBool:accountBlocked forKey:k_accountBlocked];
 	[coder encodeBool:accountDeleted forKey:k_accountDeleted];
 	[coder encodeObject:lastRefresh_profile forKey:k_lastRefresh_profile];
 	[coder encodeObject:lastRefresh_blockchain forKey:k_lastRefresh_blockchain];
@@ -226,7 +215,7 @@ static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 	copy->uuid = uuid;
 	
 	copy->publicKeyID = publicKeyID;
-	copy->blockchainTransaction = blockchainTransaction;
+	copy->blockchainProof = blockchainProof;
 	
 	copy->random_uuid = random_uuid;
 	copy->random_encryptionKey = random_encryptionKey;
@@ -234,6 +223,7 @@ static NSString *const kDeprecated_auth0_profiles = @"auth0_profiles";
 	copy->aws_region = aws_region;
 	copy->aws_bucket = aws_bucket;
 	
+	copy->accountBlocked = accountBlocked;
 	copy->accountDeleted = accountDeleted;
 	copy->lastRefresh_profile = lastRefresh_profile;
 	copy->lastRefresh_blockchain = lastRefresh_blockchain;

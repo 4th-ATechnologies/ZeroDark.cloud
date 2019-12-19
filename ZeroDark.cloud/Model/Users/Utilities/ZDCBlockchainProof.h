@@ -15,7 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
  * If the user's public key has been verified on the blockchain,
  * this class encompasses information about the proof.
  */
-@interface ZDCBlockchainProof : NSObject <NSCopying, NSSecureCoding>
+@interface ZDCBlockchainProof : NSObject <NSSecureCoding, NSCopying>
 
 @property (nonatomic, readonly) NSString *merkleTreeRoot;
 

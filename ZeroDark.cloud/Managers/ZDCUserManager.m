@@ -167,7 +167,7 @@
 	{
 		// Nothing to fetch:
 		// - user already has a public key, or
-		// - anonymous users don't have a public key
+		// - user is anonymous (and anonymous users don't have a public key)
 		//
 		if (completionBlock)
 		{
@@ -226,35 +226,32 @@
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCUserManager.html
  */
-- (void)recheckBlockchain:(ZDCUser *)remoteUser
-              requesterID:(NSString *)inLocalUserID
+- (void)recheckBlockchain:(ZDCUser *)user
           completionQueue:(nullable dispatch_queue_t)completionQueue
           completionBlock:(nullable void (^)(ZDCUser *_Nullable remoteUser, NSError *_Nullable error))completionBlock
 {
 	ZDCLogAutoTrace();
 	
-	NSParameterAssert(remoteUser != nil);
-	NSParameterAssert(inLocalUserID != nil);
+	NSParameterAssert(user != nil);
 	
-	NSString *remoteUserID = remoteUser.uuid;
-	NSString *localUserID = [inLocalUserID copy];
+	NSString *userID = user.uuid;
 	
-	if ([ZDCUser isAnonymousID:remoteUserID])
+	if (user.blockchainProof || [ZDCUser isAnonymousID:userID])
 	{
 		// Nothing to check:
-		// - anonymous users don't have a publicKey
+		// - we've already fetched the blockchain proof, or
+		// - user is anonymous (and anonymous users don't have a publicKey)
 		//
 		if (completionBlock)
 		{
 			dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
-				completionBlock(remoteUser, nil);
+				completionBlock(user, nil);
 			}});
 		}
 		return;
 	}
 	
-	[self _recheckBlockchain: remoteUser
-	             requesterID: localUserID
+	[self _recheckBlockchain: userID
 	         completionQueue: completionQueue
 	         completionBlock: completionBlock];
 }
@@ -397,17 +394,17 @@
 		ZDCLogVerbose(@"storeUserInDatabase() - %@", remoteUserID);
 		NSAssert(user != nil, @"Bad state");
 		
-		ZDCDatabaseManager *databaseManager = nil;
+		YapDatabaseConnection *rwConnection = nil;
 		{
 			__strong typeof(self) strongSelf = weakSelf;
 			if (strongSelf) {
-				databaseManager = strongSelf->zdc.databaseManager;
+				rwConnection = strongSelf->zdc.databaseManager.rwDatabaseConnection;
 			}
 		}
 		
 		__block ZDCUser *databaseUser = nil;
 		
-		[databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+		[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 			
 			ZDCUser *existingUser = [transaction objectForKey:remoteUserID inCollection:kZDCCollection_Users];
 			if (existingUser)
@@ -527,8 +524,8 @@
 	}};
 
 	__block void (^fetchPubKey)(void);
-	__block void (^verifyPubKey)(ZDCPublicKey *pubKey);
-	__block void (^updateDatabase)(ZDCPublicKey *pubKey);
+	__block void (^fetchBlockchainProof)(ZDCPublicKey *pubKey);
+	__block void (^updateDatabase)(ZDCPublicKey *pubKey, ZDCBlockchainProof *proof, NSError *blockchainError);
 	
 	dispatch_queue_t concurrentQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
@@ -539,12 +536,19 @@
 	fetchPubKey = ^void (){ @autoreleasepool {
 		
 		ZDCLogVerbose(@"fetchPubKey() - %@", remoteUserID);
-		NSAssert(remoteUser != nil, @"Bad state");
 		
-		[weakSelf _fetchPubKey: remoteUser
-		           requesterID: localUserID
-		       completionQueue: concurrentQueue
-		       completionBlock:^(ZDCPublicKey *publicKey, NSError *error)
+		ZDCRestManager *restManager = nil;
+		{
+			__strong typeof(self) strongSelf = weakSelf;
+			if (strongSelf) {
+				restManager = strongSelf->zdc.restManager;
+			}
+		}
+		
+		[restManager fetchPubKeyForUser: remoteUser
+		                    requesterID: localUserID
+		                completionQueue: concurrentQueue
+		                completionBlock:^(ZDCPublicKey *pubKey, NSError *error)
 		{
 			if (error)
 			{
@@ -552,7 +556,7 @@
 				return;
 			}
 			
-			verifyPubKey(publicKey);
+			fetchBlockchainProof(pubKey);
 		}];
 	}};
 	
@@ -560,29 +564,66 @@
 	//
 	// Attempt to verify the pubKey against the blockchain information.
 	//
-	verifyPubKey = ^void (ZDCPublicKey *pubKey){ @autoreleasepool {
+	fetchBlockchainProof = ^void (ZDCPublicKey *pubKey){ @autoreleasepool {
 		
-		ZDCLogVerbose(@"verifyPubKey() - %@", remoteUserID);
+		ZDCLogVerbose(@"fetchBlockchainProof() - %@", remoteUserID);
 		NSAssert(pubKey != nil, @"Bad state");
 		
-		[weakSelf _verifyPubKey: pubKey
-		            requesterID: localUserID
-		        completionQueue: concurrentQueue
-		        completionBlock:^(ZDCPublicKey *publicKey, NSError *error)
+		ZDCBlockchainManager *blockchainManager = nil;
 		{
-			// Todo...
+			__strong typeof(self) strongSelf = weakSelf;
+			if (strongSelf) {
+				blockchainManager = strongSelf->zdc.blockchainManager;
+			}
+		}
+		
+		[blockchainManager fetchBlockchainProofForUserID: remoteUserID
+		                                 completionQueue: concurrentQueue
+		                                 completionBlock:^(ZDCBlockchainProof *proof, NSError *error)
+		{
+			updateDatabase(pubKey, proof, error);
 		}];
 	}};
 	
 	
-	// STEP 2 of 2:
+	// STEP 3 of 3:
 	//
 	// Store the user & pubKey in the database (if needed).
 	//
-	updateDatabase = ^void (ZDCPublicKey *pubKey){ @autoreleasepool {
+	updateDatabase = ^void (ZDCPublicKey *pubKey, ZDCBlockchainProof *proof, NSError *blockchainError){ @autoreleasepool {
 		
 		ZDCLogVerbose(@"updateDatabase() - %@", remoteUserID);
 		NSAssert(pubKey != nil, @"Bad state");
+		
+		BOOL accountBlocked = NO;
+		BOOL didRefreshBlockchain = NO;
+		
+		if (blockchainError)
+		{
+			BlockchainErrorCode code = blockchainError.code;
+			switch (code)
+			{
+				case BlockchainErrorCode_NoBlockchainEntry     : didRefreshBlockchain = YES; break;
+				case BlockchainErrorCode_NetworkError          : break;
+				case BlockchainErrorCode_MissingMerkleTreeFile : break;
+				case BlockchainErrorCode_MerkleTreeTampering   : didRefreshBlockchain = accountBlocked = YES; break;
+			}
+		}
+		else
+		{
+			NSAssert(proof != nil, @"Bad state");
+			
+			didRefreshBlockchain = YES;
+			
+			NSString *pubKey_bits = pubKey.pubKey;
+			NSString *pubKey_keyID = pubKey.keyID;
+			
+			if (![pubKey_bits isEqual:proof.merkleTreeFile_pubKey] ||
+				 ![pubKey_keyID isEqual:proof.merkleTreeFile_keyID]  )
+			{
+				accountBlocked = YES;
+			}
+		}
 		
 		YapDatabaseConnection *rwConnection = nil;
 		{
@@ -598,28 +639,39 @@
 			
 			user = [transaction objectForKey:remoteUserID inCollection:kZDCCollection_Users];
 			
+			if (user.isLocal) // Sanity check
+			{
+				// Oops, we're not supposed to be here.
+				// Don't overwrite the localUser's privateKey with a publicKey !
+				
+				return; // from block/transaction
+			}
+			
 			ZDCPublicKey *existingPubKey =
 			  [transaction objectForKey: user.publicKeyID
 			               inCollection: kZDCCollection_PublicKeys];
 			
-			if (user && !existingPubKey && pubKey)
+			if (existingPubKey) // Sanity check
 			{
-				[transaction setObject:pubKey forKey:pubKey.uuid inCollection:kZDCCollection_PublicKeys];
+				// Oops, this is an unexpected situation.
+				// This method is designed for users without a publicKey.
 				
-				if (![pubKey.uuid isEqualToString:user.publicKeyID])
-				{
-					// Two possibilities here:
-					// - databaseUser.publicKey is nil
-					// - databaseUser.publicKey is invalid
-					
-					user = [user copy];
-					user.publicKeyID = pubKey.uuid;
-					
-					[transaction setObject: user
-					                forKey: user.uuid
-					          inCollection: kZDCCollection_Users];
-				}
+				return; // from block/transaction
 			}
+			
+			[transaction setObject:pubKey forKey:pubKey.uuid inCollection:kZDCCollection_PublicKeys];
+			
+			user = [user copy];
+			
+			user.publicKeyID = pubKey.uuid;
+			user.blockchainProof = proof;
+			user.accountBlocked = accountBlocked;
+			
+			if (didRefreshBlockchain) {
+				user.lastRefresh_blockchain = [NSDate date];
+			}
+			
+			[transaction setObject:user forKey:user.uuid inCollection:kZDCCollection_Users];
 			
 		} completionQueue:concurrentQueue completionBlock:^{
 
@@ -686,7 +738,7 @@
 	}};
 	
 	__block void (^fetchAuth0Info)(void);
-	__block void (^updateUserInfoInDatabase)(ZDCUserProfile *profile);
+	__block void (^updateDatabase)(ZDCUserProfile *profile);
 	
 	dispatch_queue_t concurrentQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
@@ -709,7 +761,7 @@
 				return;
 			}
 			
-			updateUserInfoInDatabase(profile);
+			updateDatabase(profile);
 		}];
 	}};
 	
@@ -717,21 +769,21 @@
 	//
 	// Updated the user's info in the database.
 	//
-	updateUserInfoInDatabase = ^void (ZDCUserProfile *profile){ @autoreleasepool {
+	updateDatabase = ^void (ZDCUserProfile *profile){ @autoreleasepool {
 		
-		ZDCLogVerbose(@"storeUserInDatabase() - %@", remoteUserID);
+		ZDCLogVerbose(@"updateDatabase() - %@", remoteUserID);
 		
-		ZDCDatabaseManager *databaseManager = nil;
+		YapDatabaseConnection *rwConnection = nil;
 		{
 			__strong typeof(self) strongSelf = weakSelf;
 			if (strongSelf) {
-				databaseManager = strongSelf->zdc.databaseManager;
+				rwConnection = strongSelf->zdc.databaseManager.rwDatabaseConnection;
 			}
 		}
 		
 		__block ZDCUser *user = nil;
 		
-		[databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+		[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 			
 			user = [transaction objectForKey:remoteUserID inCollection:kZDCCollection_Users];
 			if (user)
@@ -754,12 +806,171 @@
 	fetchAuth0Info();
 }
 
-- (void)_recheckBlockchain:(ZDCUser *)remoteUser
-               requesterID:(NSString *)localUserID
-           completionQueue:(nullable dispatch_queue_t)completionQueue
-           completionBlock:(nullable void (^)(ZDCUser *_Nullable remoteUser, NSError *_Nullable error))completionBlock
+- (void)_recheckBlockchain:(NSString *)userID
+           completionQueue:(nullable dispatch_queue_t)inCompletionQueue
+           completionBlock:(nullable void (^)(ZDCUser *_Nullable remoteUser, NSError *_Nullable error))inCompletionBlock
 {
-	// Todo...
+	NSParameterAssert(userID != nil);
+	NSParameterAssert(![ZDCUser isAnonymousID:userID]);
+	
+	if (inCompletionBlock == nil) {
+		inCompletionBlock = ^(ZDCUser *user, NSError *error){};
+	}
+	
+	NSString *const requestKey = [NSString stringWithFormat:@"%@|%@", NSStringFromSelector(_cmd), userID];
+	
+	NSUInteger requestCount =
+	  [asyncCompletionDispatch pushCompletionQueue: inCompletionQueue
+	                               completionBlock: inCompletionBlock
+	                                        forKey: requestKey];
+	
+	if (requestCount > 1)
+	{
+		// There's a previous request currently in-flight.
+		// The {inCompletionQueue, inCompletionBlock} tuple have been added to the existing request's list.
+		return;
+	}
+	
+	__weak typeof(self) weakSelf = self;
+	
+	void (^InvokeCompletionBlocks)(ZDCUser*, NSError*) = ^(ZDCUser *user, NSError *error){ @autoreleasepool {
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (strongSelf == nil) return;
+		
+		NSArray<dispatch_queue_t> * completionQueues = nil;
+		NSArray<id>               * completionBlocks = nil;
+		[strongSelf->asyncCompletionDispatch popCompletionQueues: &completionQueues
+		                                        completionBlocks: &completionBlocks
+		                                                  forKey: requestKey];
+		
+		for (NSUInteger i = 0; i < completionBlocks.count; i++)
+		{
+			dispatch_queue_t completionQueue = completionQueues[i];
+			void (^completionBlock)(ZDCUser*, NSError*) = completionBlocks[i];
+			
+			dispatch_async(completionQueue, ^{ @autoreleasepool {
+				completionBlock(user, error);
+			}});
+		}
+	}};
+	
+	__block void (^fetchBlockchainProof)(void);
+	__block void (^updateDatabase)(ZDCBlockchainProof *proof, NSError *blockchainError);
+	
+	dispatch_queue_t concurrentQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	
+	// STEP 1 of 2:
+	//
+	// Attempt to verify the pubKey against the blockchain information.
+	//
+	fetchBlockchainProof = ^void (){ @autoreleasepool {
+		
+		ZDCLogVerbose(@"fetchBlockchainProof() - %@", userID);
+		
+		ZDCBlockchainManager *blockchainManager = nil;
+		{
+			__strong typeof(self) strongSelf = weakSelf;
+			if (strongSelf) {
+				blockchainManager = strongSelf->zdc.blockchainManager;
+			}
+		}
+		
+		[blockchainManager fetchBlockchainProofForUserID: userID
+		                                 completionQueue: concurrentQueue
+		                                 completionBlock:^(ZDCBlockchainProof *proof, NSError *error)
+		{
+			updateDatabase(proof, error);
+		}];
+	}};
+	
+	// STEP 2 of 2:
+	//
+	// Update the user's info in the database.
+	//
+	updateDatabase = ^void (ZDCBlockchainProof *proof, NSError *blockchainError){ @autoreleasepool {
+		
+		ZDCLogVerbose(@"updateDatabase() - %@", userID);
+		
+		YapDatabaseConnection *rwConnection = nil;
+		{
+			__strong typeof(self) strongSelf = weakSelf;
+			if (strongSelf) {
+				rwConnection = strongSelf->zdc.databaseManager.rwDatabaseConnection;
+			}
+		}
+		
+		__block ZDCUser *user = nil;
+		
+		[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+			
+			user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+			
+			if (user.blockchainProof) // Sanity check
+			{
+				// Oops, we're not supposed to be here.
+				// This method assumes the user doen't have an existing proof.
+				
+				return; // from block/transaction
+			}
+			
+			ZDCPublicKey *pubKey = [transaction objectForKey:user.publicKeyID inCollection:kZDCCollection_PublicKeys];
+			
+			if (pubKey == nil) // Sanity check
+			{
+				return; // from block/transaction
+			}
+			
+			BOOL accountBlocked = NO;
+			BOOL didRefreshBlockchain = NO;
+			
+			if (blockchainError)
+			{
+				BlockchainErrorCode code = blockchainError.code;
+				switch (code)
+				{
+					case BlockchainErrorCode_NoBlockchainEntry     : didRefreshBlockchain = YES; break;
+					case BlockchainErrorCode_NetworkError          : break;
+					case BlockchainErrorCode_MissingMerkleTreeFile : break;
+					case BlockchainErrorCode_MerkleTreeTampering   : didRefreshBlockchain = accountBlocked = YES; break;
+				}
+			}
+			else
+			{
+				NSAssert(proof != nil, @"Bad state");
+				
+				didRefreshBlockchain = YES;
+				
+				NSString *pubKey_bits = pubKey.pubKey;
+				NSString *pubKey_keyID = pubKey.keyID;
+				
+				if (![pubKey_bits isEqual:proof.merkleTreeFile_pubKey] ||
+					 ![pubKey_keyID isEqual:proof.merkleTreeFile_keyID]  )
+				{
+					accountBlocked = YES;
+				}
+			}
+			
+			user = [user copy];
+			
+			user.blockchainProof = proof;
+			user.accountBlocked = accountBlocked;
+			
+			if (didRefreshBlockchain) {
+				user.lastRefresh_blockchain = [NSDate date];
+			}
+			
+			[transaction setObject:user forKey:user.uuid inCollection:kZDCCollection_Users];
+			
+		} completionQueue:concurrentQueue completionBlock:^{
+
+			InvokeCompletionBlocks(user, nil);
+		}];
+	}};
+	
+	
+	// Start
+	fetchBlockchainProof();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -914,73 +1125,6 @@
 		ZDCUserProfile *profile = [[ZDCUserProfile alloc] initWithDictionary:dict];
 		
 		completionBlock(profile, nil);
-	}];
-}
-
-- (void)_fetchPubKey:(ZDCUser *)remoteUser
-         requesterID:(NSString *)localUserID
-     completionQueue:(dispatch_queue_t)completionQueue
-     completionBlock:(void (^)(ZDCPublicKey *publicKey, NSError *error))completionBlock
-{
-	[zdc.networkTools downloadDataAtPath: kZDCCloudFileName_PublicKey
-	                            inBucket: remoteUser.aws_bucket
-	                              region: remoteUser.aws_region
-	                            withETag: nil
-	                               range: nil
-	                         requesterID: localUserID
-	                       canBackground: NO
-	                     completionQueue: completionQueue
-	                     completionBlock:^(NSURLResponse *response, id responseObject, NSError *error)
-	{
-		if (error)
-		{
-			completionBlock(nil, error);
-			return;
-		}
-
-		ZDCPublicKey *pubKey = nil;
-		
-		if ([responseObject isKindOfClass:[NSString class]])
-		{
-			NSString *pubKeyJSON = (NSString *)responseObject;
-			pubKey = [[ZDCPublicKey alloc] initWithUserID:remoteUser.uuid pubKeyJSON:pubKeyJSON];
-		}
-		else if ([responseObject isKindOfClass:[NSData class]])
-		{
-			NSData *data = (NSData *)responseObject;
-			NSString *pubKeyJSON = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-			pubKey = [[ZDCPublicKey alloc] initWithUserID:remoteUser.uuid pubKeyJSON:pubKeyJSON];
-		}
-		else if ([responseObject isKindOfClass:[NSDictionary class]])
-		{
-			NSDictionary *pubKeyDict = (NSDictionary *)responseObject;
-			pubKey = [[ZDCPublicKey alloc] initWithUserID: remoteUser.uuid
-			                                   pubKeyDict: pubKeyDict
-			                                  privKeyDict: nil];
-		}
-			
-		if (![pubKey checkKeyValidityWithError:nil])
-		{
-			error = [ZDCUserManager errorWithStatusCode:0 description:@"Unreadable pubKey for user"];
-				
-			completionBlock(nil, error);
-			return;
-		}
-		
-		completionBlock(pubKey, nil);
-	}];
-}
-
-- (void)_verifyPubKey:(ZDCPublicKey *)pubKey
-          requesterID:(NSString *)localUserID
-      completionQueue:(dispatch_queue_t)completionQueue
-      completionBlock:(void (^)(ZDCPublicKey *publicKey, NSError *error))completionBlock
-{
-	[zdc.blockchainManager fetchBlockchainProofForUserID: pubKey.userID
-	                                     completionQueue: completionQueue
-	                                     completionBlock:^(ZDCBlockchainProof *proof, NSError *error)
-	{
-		// Todo...
 	}];
 }
 

@@ -10,6 +10,7 @@
 #import <Foundation/Foundation.h>
 
 #import "AWSRegions.h"
+#import "ZDCBlockchainProof.h"
 #import "ZDCConstants.h"
 #import "ZDCUserProfile.h"
 #import "ZDCUserIdentity.h"
@@ -74,7 +75,7 @@ extern NSString *const kZDCAnonymousUserID;
  * If the user's publicKey has been verified using the Ethereum blockchain,
  * this value represents the corresponding transaction in which it was verified.
  */
-@property (nonatomic, copy, readwrite, nullable) NSString *blockchainTransaction;
+@property (nonatomic, copy, readwrite, nullable) ZDCBlockchainProof *blockchainProof;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark AWS
@@ -97,6 +98,15 @@ extern NSString *const kZDCAnonymousUserID;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Status
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * If we discover the user's publicKey has been tampered with, this value gets set to YES.
+ *
+ * All user's have a proof of their publicKey posted to the Ethereum blockchain.
+ * If we query the blockchain, and discover the user's publicKey doesn't match the blockchain,
+ * then we block the user, and refuse to give them access to nodes.
+ */
+@property (nonatomic, assign, readwrite) BOOL accountBlocked;
 
 /**
  * If the user's account gets deleted, this value gets set to YES.

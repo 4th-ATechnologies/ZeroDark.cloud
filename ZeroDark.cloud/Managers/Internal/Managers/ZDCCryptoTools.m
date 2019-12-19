@@ -503,8 +503,27 @@ done:
 				NSString *userID = [ZDCShareList userIDFromKey:key];
 				
 				ZDCUser *user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
-				if (user.accountDeleted)
+				
+				if (user.accountBlocked || user.accountDeleted)
 				{
+					// accountBlocked:
+					//   We've detected publicKey tampering for this user.
+					//   So we're going to refuse to give the user acccess to the data.
+					//
+					// accountDeleted:
+					//   The user account doesn't exist anymore.
+					//   It's been deleted from the server.
+					//
+					// In either case, we still want to add an item to the keys section,
+					// because the server might reject us without it.
+					// But the item is NOT going to have an associated key.
+					//
+					NSAssert(shareItem.key.length == 0, @"Logic bomb");
+					//
+					// That is, we're not giving the user access to the file encryption key.
+					// So they won't be able to decrypt the node.
+					
+					dict_keys[key] = shareItem.rawDictionary;
 					return; // from block; continue;
 				}
 				

@@ -129,14 +129,15 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSDictionary *keyDict;
 
 /**
- * Reads & returns the keyID from the keyDict.
+ * Reads & returns the pubKey value from the keyDict.
+ * This is the raw pubKey bits, encoded using base64.
  */
-@property (nonatomic, readonly, nullable) NSString * keyID;
+@property (nonatomic, readonly, nullable) NSString * pubKey;
 
 /**
- * Reads & returns the eTag from the keyDict.
+ * Reads & returns the keyID value from the keyDict.
  */
-@property (nonatomic, readonly, nullable) NSString * eTag;
+@property (nonatomic, readonly, nullable) NSString * keyID;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Methods

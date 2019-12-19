@@ -266,7 +266,7 @@
 				return;
 			}
 			
-			if ([merkleTreeRoot isEqual:merkleTree.rootHash])
+			if (![merkleTreeRoot isEqual:merkleTree.rootHash])
 			{
 				NSString *msg = @"Downloaded merkleTreeFile doesn't match merkleTreeRoot request.";
 				NSError *error = [strongSelf errorWithCode:BlockchainErrorCode_MerkleTreeTampering description:msg];
