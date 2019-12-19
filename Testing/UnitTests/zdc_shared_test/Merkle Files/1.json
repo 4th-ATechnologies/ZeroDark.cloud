@@ -1,0 +1,21 @@
+{
+  "merkle": {
+    "root": "2bfe9ef79c2dc20d86c6b73845d7f74d13036fb5e83b22362a66a52cc2e70e44",
+    "hashalgo": "sha256",
+    "leaves": 1,
+    "levels": 1,
+    "2bfe9ef79c2dc20d86c6b73845d7f74d13036fb5e83b22362a66a52cc2e70e44": {
+      "type": "root",
+      "level": 0,
+      "left": "data",
+      "right": "data",
+      "parent": "root"
+    }
+  },
+  "values": [
+    "{\"userID\":\"7g4jon8fea7pbmy68ezeaugdpukm5he7\",\"pubKey\":\"BChv2dSQaulfwuWVVT+ORz439du9bXbImcaPOmD7JH6ALF/DFyuTLm2yUwIp3amm7zV+vdsCBvZNgBQT2jByk1zyHDBXOC4eDlzDxiCLrj8pEOBKWM+NDGXGqwdgoTtfY0g7cuU2keW9\",\"keyID\":\"0LqILoNlYQXpXIn/XqzqtA==\"}"
+  ],
+  "lookup": {
+    "7g4jon8fea7pbmy68ezeaugdpukm5he7": 0
+  }
+}

@@ -176,7 +176,6 @@ done:
 {
 	NSError *error = nil;
 	NSString *errMsg = nil;
-	BOOL result = NO;
 	
 	NSDictionary *merkle = file[@"merkle"];
 	NSString *hashName = merkle[@"hashalgo"];
@@ -217,40 +216,49 @@ done:
 	
 	nextLevel = [NSMutableArray arrayWithCapacity:queue.count];
 	
-	while (queue.count > 1)
+	if (queue.count == 1)
 	{
-		NSString *left = [queue firstObject];
-		[queue removeObjectAtIndex:0];
+		// When there's only 1 value, the root hash is simply the hash of the single item
+	}
+	else
+	{
+		// When there's more than 1 value, we need to build the tree
 		
-		NSString *right = [queue firstObject];
-		if (right) {
-			[queue removeObjectAtIndex:0];
-		} else {
-			// If there are an odd number of leaves (only one left),
-			// concatenate it with itself, and hash that.
-			right = left;
-		}
-		
-		NSData *hash = [[left stringByAppendingString:right] hashWithAlgorithm:hashAlgo error:&error];
-		if (error) goto done;
-
-		[nextLevel insertObject:[hash lowercaseHexString] atIndex:0];
-		
-		// Maybe go to the next level of the tree.
-		//
-		if ((queue.count == 0) && (nextLevel.count >= 2))
+		while (queue.count > 0)
 		{
-			NSMutableArray *temp = queue;
-			[temp removeAllObjects];
+			NSString *left = [queue firstObject];
+			[queue removeObjectAtIndex:0];
+	
+			NSString *right = [queue firstObject];
+			if (right) {
+				[queue removeObjectAtIndex:0];
+			} else {
+				// If there are an odd number of leaves (only one left),
+				// concatenate it with itself, and hash that.
+				right = left;
+			}
+		
+			NSData *hash = [[left stringByAppendingString:right] hashWithAlgorithm:hashAlgo error:&error];
+			if (error) goto done;
 			
-			queue = nextLevel;
-			nextLevel = temp;
+			[nextLevel addObject:[hash lowercaseHexString]];
+		
+			// Maybe go to the next level of the tree.
+			//
+			if ((queue.count == 0) && (nextLevel.count >= 2))
+			{
+				NSMutableArray *temp = queue;
+				[temp removeAllObjects];
+		
+				queue = nextLevel;
+				nextLevel = temp;
+			}
 		}
 	}
 	
 	{ // scoping
 		
-		NSString *calculatedRoot = [nextLevel firstObject];
+		NSString *calculatedRoot = [nextLevel firstObject] ?: [queue firstObject];
 		NSString *reportedRoot = [self rootHash];
 		
 		if (![calculatedRoot isEqual:reportedRoot])
@@ -268,7 +276,7 @@ done:
 	}
 	
 	if (outError) *outError = error;
-	return result;
+	return (error == nil);
 }
 
 /**

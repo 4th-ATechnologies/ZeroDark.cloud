@@ -14,7 +14,7 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification
 {
-	[self setupZeroDarkCloud];
+//	[self setupZeroDarkCloud];
 	
 	dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5.0 * NSEC_PER_SEC));
 	dispatch_after(delay, dispatch_get_main_queue(), ^{
@@ -48,6 +48,7 @@
 	}
 	
 	ZDCConfig *config = [[ZDCConfig alloc] initWithPrimaryTreeID:@"com.4th-a.storm4"];
+	config.databaseName = dbName;
 	
 	zdc = [[ZeroDarkCloud alloc] initWithDelegate: delegate
 	                                       config: config];
@@ -65,7 +66,7 @@
 
 	ZDCDatabaseConfig *dbConfig = [[ZDCDatabaseConfig alloc] initWithEncryptionKey:databaseKey];
 	
-	error = [zdc unlockOrCreateDatabase:dbConfig];
+	[zdc unlockOrCreateDatabase:dbConfig error:&error];
 	if (error) {
 		NSLog(@"Error unlocking database: %@", error);
 		return NO;
@@ -90,7 +91,7 @@
 	NSLog(@"TestUser.json: %@", json);
 
 	__block ZDCLocalUser *newLocalUser = nil;
-	__block NSString *existingLocalUserID = nil;
+	__block ZDCLocalUser *existingLocalUser = nil;
 	
 	[zdc.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:
 	  ^(YapDatabaseReadWriteTransaction *transaction)
@@ -104,7 +105,7 @@
 		
 		if (newLocalUser == nil)
 		{
-			existingLocalUserID = [localUserManager anyLocalUserID:transaction];
+			existingLocalUser = [localUserManager anyLocalUser:transaction];
 		}
 		
 	} completionBlock:^{
@@ -116,12 +117,12 @@
 			//
 			// We're setup to receive a notification about this: ZDCPullStoppedNotification
 		}
-		else if (existingLocalUserID)
+		else if (existingLocalUser)
 		{
 			// The localUser already exists in the database.
 			// So we can explore their treesystem immediately.
 			
-			[self exploreTreesystem:existingLocalUserID];
+			[self exploreTreesystem:existingLocalUser.uuid];
 		}
 	}];
 }

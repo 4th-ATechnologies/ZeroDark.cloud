@@ -1,0 +1,37 @@
+{
+  "merkle": {
+    "root": "1d99447c07cd6396ccf4cdb456bbb7f451562068ab0c20d50ebd3fbc47d2a1a9",
+    "hashalgo": "sha256",
+    "leaves": 2,
+    "levels": 2,
+    "1ec4715678a1b6a4abfc1d8389ab6a72104868e40bf5cce66d29fb0dfa603905": {
+      "type": "leaf",
+      "level": 0,
+      "left": "data",
+      "right": "data",
+      "parent": "1d99447c07cd6396ccf4cdb456bbb7f451562068ab0c20d50ebd3fbc47d2a1a9"
+    },
+    "0eee63e6027e5592ea2ceeeb2ecd96e2ee5ea97b7e026ec1a9959d5381b4911d": {
+      "type": "leaf",
+      "level": 0,
+      "left": "data",
+      "right": "data",
+      "parent": "1d99447c07cd6396ccf4cdb456bbb7f451562068ab0c20d50ebd3fbc47d2a1a9"
+    },
+    "1d99447c07cd6396ccf4cdb456bbb7f451562068ab0c20d50ebd3fbc47d2a1a9": {
+      "type": "root",
+      "level": 1,
+      "left": "1ec4715678a1b6a4abfc1d8389ab6a72104868e40bf5cce66d29fb0dfa603905",
+      "right": "0eee63e6027e5592ea2ceeeb2ecd96e2ee5ea97b7e026ec1a9959d5381b4911d",
+      "parent": "root"
+    }
+  },
+  "values": [
+    "{\"userID\":\"641ihdfw7qf5pj78pfxbunwkkwonu5rg\",\"pubKey\":\"BC5QBnQORNum0aodHkUchqzw7OkC8OfiO/JPDG4BuP20182GHSQfAvO4cG+cyJgU51SRcyoQZ5hpa9BbIRB6mgOWxu3ev4NUbqcYWzJz99rhqXqUuRaImvdQ2YtqiEwKRxhpTPn2tlCJ\",\"keyID\":\"whjPnV3JhDgd2XSCFPB+0A==\"}",
+    "{\"userID\":\"ti4f8ze7pejm58rdkrap3y9bbh5i1jjz\",\"pubKey\":\"BCjrpXLqg11/UocfUTjqIiuNea5pbk6lef8g1U8hDblXbtsRzp9IHfDnFKt2mSIX6jolVQIuiu17uo8vZnBAL8+GZg/gRr/qD+9Cq42ASVnTQVaZIrrWZSD4T/4QO+Ys48TL2N/qgVEO\",\"keyID\":\"yh4UYB88Cu+aFPtMPeX1LA==\"}"
+  ],
+  "lookup": {
+    "641ihdfw7qf5pj78pfxbunwkkwonu5rg": 0,
+    "ti4f8ze7pejm58rdkrap3y9bbh5i1jjz": 1
+  }
+}

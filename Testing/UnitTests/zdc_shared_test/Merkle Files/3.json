@@ -1,0 +1,60 @@
+{
+  "merkle": {
+    "root": "cd59b7bda6dc1dd82cb173d0cdfa408db30e9a747d4366eb5b60597899eb69c1",
+    "hashalgo": "sha256",
+    "leaves": 3,
+    "levels": 3,
+    "4a6ceaf3f814800451dd3b907bc1a0a27503552615be3ed5b5f040df7f4e0c98": {
+      "type": "leaf",
+      "level": 0,
+      "left": "data",
+      "right": "data",
+      "parent": "174d1a20dd791e36cba6e4c5ce3933e4bfeeb894c0d77673c2dab6405332b468"
+    },
+    "724b0761a18362ead9b48ae1da67a5f6e1580db546871f6e6527d5294adb1d91": {
+      "type": "leaf",
+      "level": 0,
+      "left": "data",
+      "right": "data",
+      "parent": "174d1a20dd791e36cba6e4c5ce3933e4bfeeb894c0d77673c2dab6405332b468"
+    },
+    "21ac12d16f555b37276a2a8ec6c504fb302101102a89858286c77491d665ffc8": {
+      "type": "leaf",
+      "level": 0,
+      "left": "data",
+      "right": "data",
+      "parent": "71c4a93b3fd4898a2eb8794cd7f854a95360eedba29fc3986d0bb819448a42a8"
+    },
+    "174d1a20dd791e36cba6e4c5ce3933e4bfeeb894c0d77673c2dab6405332b468": {
+      "type": "node",
+      "level": 1,
+      "left": "4a6ceaf3f814800451dd3b907bc1a0a27503552615be3ed5b5f040df7f4e0c98",
+      "right": "724b0761a18362ead9b48ae1da67a5f6e1580db546871f6e6527d5294adb1d91",
+      "parent": "cd59b7bda6dc1dd82cb173d0cdfa408db30e9a747d4366eb5b60597899eb69c1"
+    },
+    "71c4a93b3fd4898a2eb8794cd7f854a95360eedba29fc3986d0bb819448a42a8": {
+      "type": "node",
+      "level": 1,
+      "left": "21ac12d16f555b37276a2a8ec6c504fb302101102a89858286c77491d665ffc8",
+      "right": "21ac12d16f555b37276a2a8ec6c504fb302101102a89858286c77491d665ffc8",
+      "parent": "cd59b7bda6dc1dd82cb173d0cdfa408db30e9a747d4366eb5b60597899eb69c1"
+    },
+    "cd59b7bda6dc1dd82cb173d0cdfa408db30e9a747d4366eb5b60597899eb69c1": {
+      "type": "root",
+      "level": 2,
+      "left": "174d1a20dd791e36cba6e4c5ce3933e4bfeeb894c0d77673c2dab6405332b468",
+      "right": "71c4a93b3fd4898a2eb8794cd7f854a95360eedba29fc3986d0bb819448a42a8",
+      "parent": "root"
+    }
+  },
+  "values": [
+    "{\"userID\":\"dpb6rdqdmiw5q9fawycrokrwrqfiq5kp\",\"pubKey\":\"BBOWJpL+t9ya8AVIV6mpymv8pXSvy2JC9aWutYPPrDoo7+YtF+LpKyYCAQb13DsfeGQ6aVodlAiZ4XZPHlSoFiuzjcBcT23sNEh4vsTfjLu2Si1qGnsY+2qhlJH5ffakm380tvKKBsgA\",\"keyID\":\"loKQlyqSK8rQq7RYhvuh1Q==\"}",
+    "{\"userID\":\"ir9y16sbj94euj7yeaxrknuzwehyomgn\",\"pubKey\":\"BDN5xU9xKeXKIGaKSwL2bxx2i58KEaDtj0ibNe8/MIkYoAhlXHfa93gKA52cv/LjDkmU+S4lrC3CuYk3ltAFByMaBqBRVOiaKQ2THOGxXb9CWny3WzbI+bzYVxTugdOCkZp7UOQx+sJA\",\"keyID\":\"heHiHlMWHg/j1t/i4Ewo+w==\"}",
+    "{\"userID\":\"x7axsid774yzttdxj5ugig1ughfg33is\",\"pubKey\":\"BCzJZc1QkGaOeRF5+yCgk3A6mvHj1e2A8OPNzO0ofUHsax5wIZAhVev48vdMSr86v8QUeDcZlS6vmI8ITNNhajP751qm/ODXmGuMkaRSs6tdviO+7YRYkspnS4T3izt5+UeEl6LQ+oey\",\"keyID\":\"8BCIJdaUuMzbfAdhxpsloA==\"}"
+  ],
+  "lookup": {
+    "dpb6rdqdmiw5q9fawycrokrwrqfiq5kp": 0,
+    "ir9y16sbj94euj7yeaxrknuzwehyomgn": 1,
+    "x7axsid774yzttdxj5ugig1ughfg33is": 2
+  }
+}
