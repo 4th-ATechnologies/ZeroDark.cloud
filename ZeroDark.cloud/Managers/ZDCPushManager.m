@@ -42,9 +42,9 @@
 
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
-#ifndef robbie_hanson
-#define robbie_hanson 1
-#endif
+//#ifndef robbie_hanson
+//#define robbie_hanson 1
+//#endif
 #if DEBUG
   static const int zdcLogLevel = ZDCLogLevelWarning;
 #else

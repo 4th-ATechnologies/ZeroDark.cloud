@@ -333,60 +333,76 @@ static NSString *const kRegions	      		= @"regions";
     [self selectRegion:region];
 }
 
--(void) selectRegion:(AWSRegion)region
+- (void)selectRegion:(AWSRegion)region
 {
-    __weak typeof(self) weakSelf = self;
-
-    [accountSetupVC selectRegionForUserID:accountSetupVC.user.uuid
-                                   region:region
-                          completionBlock:^(NSError * _Nonnull error)
-     {
-         __strong typeof(self) strongSelf = weakSelf;
-         if (!strongSelf) return;
+	ZDCLogAutoTrace();
+	
+	NSString *localUserID = accountSetupVC.user.uuid;
+	__weak typeof(self) weakSelf = self;
+	
+	[accountSetupVC selectRegionForUserID: localUserID
+	                               region: region
+	                      completionBlock:^(NSError *error)
+	{
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
          
-         if(error)
-         {
-             [strongSelf.accountSetupVC showError:NSLocalizedString(@"Could not set region",@"Could not set region")
-                                          message:error.localizedFailureReason?:error.localizedDescription
-                                  completionBlock:^{
-												 __strong typeof(self) strongSelf = weakSelf;
-												 if (!strongSelf) return;
-												 
-                                      [strongSelf->accountSetupVC popFromCurrentView   ];
-                                  }];
-         }
-         else
-         {
-             [strongSelf.accountSetupVC showWait:NSLocalizedString(@"Please Wait", @"Please Wait")
-                                         message:NSLocalizedString(@"Activating your account",@"Activating your account")
-                                 completionBlock:nil];
-             
-             [strongSelf.accountSetupVC resumeActivationForUserID:strongSelf->accountSetupVC.user.uuid
-                                              cancelOperationFlag:nil
-                                                  completionBlock:^(NSError * _Nonnull error)
-             {
-                 __strong typeof(self) strongSelf = weakSelf;
-                 if (!strongSelf) return;
-                 
-                 [strongSelf.accountSetupVC cancelWait];
-                 
-                 if(error)
-                 {
-                     [strongSelf.accountSetupVC showError:NSLocalizedString(@"Activation failed",@"Activation failed")
-                                                  message:error.localizedDescription
-                                          completionBlock:^{
-															__strong typeof(self) strongSelf = weakSelf;
-															if (!strongSelf) return;
-															
-															
-                                              [strongSelf->accountSetupVC popFromCurrentView   ];
-                                          }];
-                 }
-             }];
-             
-
-            }
-     }];
+		if (error)
+		{
+			NSString *title = NSLocalizedString(@"Could not set region", @"Could not set region");
+			NSString *msg = error.localizedFailureReason ?: error.localizedDescription;
+			
+			[strongSelf.accountSetupVC showError: title
+			                             message: msg
+			                     completionBlock:
+			^{
+				NSAssert([NSThread isMainThread], @"Bad API");
+				
+				__strong typeof(self) strongSelf = weakSelf;
+				if (!strongSelf) return;
+				
+				[strongSelf->accountSetupVC popFromCurrentView];
+			}];
+			
+			return;
+		}
+		
+		{ // Scoping
+		
+			NSString *title = NSLocalizedString(@"Please Wait", @"Please Wait");
+			NSString *msg = NSLocalizedString(@"Activating your account",@"Activating your account");
+			
+			[strongSelf.accountSetupVC showWait: title
+			                            message: msg
+			                    completionBlock: nil];
+		}
+		
+		[strongSelf.accountSetupVC resumeActivationForUserID: localUserID
+		                                 cancelOperationFlag: nil
+		                                     completionBlock:^(NSError *error)
+		{
+			__strong typeof(self) strongSelf = weakSelf;
+			if (!strongSelf) return;
+			
+			[strongSelf.accountSetupVC cancelWait];
+			
+			if (error)
+			{
+				NSString *title = NSLocalizedString(@"Activation failed",@"Activation failed");
+				NSString *msg = error.localizedDescription;
+				
+				[strongSelf.accountSetupVC showError: title
+				                             message: msg
+				                     completionBlock:
+				^{
+					__strong typeof(self) strongSelf = weakSelf;
+					if (!strongSelf) return;
+					
+					[strongSelf->accountSetupVC popFromCurrentView];
+				}];
+			}
+		}];
+	}];
 }
 
 #pragma mark - ping

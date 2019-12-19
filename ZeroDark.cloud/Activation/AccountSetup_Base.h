@@ -137,13 +137,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)handleFail;   // prototype method
 
 // utility functions
--(BOOL)commonInitWithUserID:(NSString* __nonnull)userID error:(NSError **)errorOut;
+- (BOOL)commonInitWithUserID:(NSString *)userID error:(NSError **)errorOut;
 
-- (ZDCLocalUser *)createLocalUserFromProfile:(ZDCUserProfile *)profile;
+- (BOOL)isAlreadyLinkedError:(NSError *)error;
 
--(BOOL)isAlreadyLinkedError:(NSError*)error;
-
--(void) handleInternalError:(NSError*)error;
+- (void)handleInternalError:(NSError *)error;
 
 // for an existing account - attempt to login to database account
 - (void)databaseAccountLoginWithUsername:(NSString *)username
@@ -163,18 +161,18 @@ NS_ASSUME_NONNULL_BEGIN
                    completionBlock:(void (^)(AccountState accountState, NSError *_Nullable error))completionBlock;
 
 // resume activation given any state
--(void) resumeActivationForUserID:(NSString*)userID
-			  cancelOperationFlag:(BOOL*_Nullable)cancelOperationFlag
-				  completionBlock:(void (^)(NSError *error))completionBlock;
+- (void)resumeActivationForUserID:(NSString*)userID
+              cancelOperationFlag:(BOOL *_Nullable)cancelOperationFlag
+                  completionBlock:(void (^)(NSError *_Nullable error))completionBlock;
 
 // unlocking the user with clone code
--(void)unlockUserWithAccessKey:(NSData *)accessKey
-					completionBlock:(void (^)(NSError *_Nullable error))completionBlock;
+- (void)unlockUserWithAccessKey:(NSData *)accessKey
+                completionBlock:(void (^)(NSError *_Nullable error))completionBlock;
 
 // region selection
--(void) selectRegionForUserID:(NSString*)userID
-						  region:(AWSRegion) region
-				  completionBlock:(void (^)(NSError *_Nullable error))completionBlock;
+- (void)selectRegionForUserID:(NSString *)userID
+                       region:(AWSRegion)region
+              completionBlock:(void (^)(NSError *_Nullable error))completionBlock;
 
 // profile link and unlink
 - (void)linkProfile:(ZDCUserProfile *)profile
