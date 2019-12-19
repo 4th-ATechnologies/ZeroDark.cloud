@@ -406,11 +406,7 @@
 	AWSRegion region = [AWSRegions regionForName:profile.appMetadata_region];
 	NSString *bucket = profile.appMetadata_bucket;
 	
-	if (region == AWSRegion_Invalid || bucket.length == 0)
-	{
-		ZDCLogWarn(@"profile is missing required info: region, bucket");
-		return nil;
-	}
+	// If we're creating a new users, the user won't have a region/bucket at this point.
 	
 	user.aws_region = region;
 	user.aws_bucket = bucket;
