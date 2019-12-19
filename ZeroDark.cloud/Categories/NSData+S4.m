@@ -31,13 +31,6 @@
 	return data;
 }
 
-- (NSString *)hexString
-{
-	// Just use NSData+AWSUtilities code
-	//
-	return self.lowercaseHexString;
-}
-
 + (NSData *)dataFromHexString:(NSString *)inString
 {
     NSMutableString *str = [inString mutableCopy];

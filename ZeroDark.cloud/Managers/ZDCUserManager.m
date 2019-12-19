@@ -976,10 +976,9 @@
       completionQueue:(dispatch_queue_t)completionQueue
       completionBlock:(void (^)(ZDCPublicKey *publicKey, NSError *error))completionBlock
 {
-	[zdc.blockchainManager fetchBlockchainInfoForUserID: pubKey.userID
-	                                        requesterID: localUserID
-	                                    completionQueue: completionQueue
-	                                    completionBlock:^(NSError * _Nonnull error)
+	[zdc.blockchainManager fetchBlockchainProofForUserID: pubKey.userID
+	                                     completionQueue: completionQueue
+	                                     completionBlock:^(ZDCBlockchainProof *proof, NSError *error)
 	{
 		// Todo...
 	}];

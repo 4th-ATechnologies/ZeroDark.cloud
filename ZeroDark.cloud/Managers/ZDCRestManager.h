@@ -552,17 +552,16 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * - Query the Ethereum blockchain for a specific userID
  * - If the response includes a merkleTreeRoot, then
- * - Download the corresponding merkleTree
+ * - Download the corresponding merkleTree file
  * - Verify the publicKey in the merkleTree matches what you expect
  * - Verify the merkleTree itself
  *
  * More detailed information on how this works can be found here:
- * https://medium.com/storm4/how-the-storm4-smart-contract-works-a3e242f1bf65
+ * https://zerodarkcloud.readthedocs.io/en/latest/overview/ethereum/
  */
 - (void)fetchMerkleTreeFile:(NSString *)root
-                requesterID:(NSString *)localUserID
             completionQueue:(nullable dispatch_queue_t)inCompletionQueue
-            completionBlock:(void (^)(NSURLResponse *response, id _Nullable responseObject, NSError *_Nullable error))inCompletionBlock;
+            completionBlock:(void (^)(NSURLResponse *response, NSData *_Nullable fileData, NSError *_Nullable error))inCompletionBlock;
 
 @end
 

@@ -8,6 +8,7 @@
 #import "ZDCLogging.h"
 
 // Categories
+#import "NSData+AWSUtilities.h"
 #import "NSData+S4.h"
 #import "NSDate+ZeroDark.h"
 #import "NSURL+ZeroDark.h"
@@ -869,7 +870,7 @@ done:
 	hashData =  [data hashWithAlgorithm:kHASH_Algorithm_MD5 error:&error];
 	if (error) goto done;
 
-    eTag = hashData.hexString;
+    eTag = hashData.lowercaseHexString;
 
 done:
     if(errorOut)

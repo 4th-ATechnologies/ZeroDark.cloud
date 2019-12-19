@@ -15,7 +15,6 @@
 
 + (NSData *)s4RandomBytes:(NSUInteger)length;
 
-- (NSString *)hexString;
 + (NSData *)dataFromHexString:(NSString *)inString;
 
 - (NSString *)zBase32String;
