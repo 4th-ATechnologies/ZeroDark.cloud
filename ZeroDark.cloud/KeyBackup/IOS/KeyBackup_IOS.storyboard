@@ -749,7 +749,7 @@ If you happen to be logged into the same account on a different device, you can 
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="F3H-7t-YEA">
-                                        <rect key="frame" x="190" y="56" width="300" height="48"/>
+                                        <rect key="frame" x="274" y="56" width="132" height="48"/>
                                         <subviews>
                                             <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="default_user" translatesAutoresizingMaskIntoConstraints="NO" id="qef-8X-SNQ">
                                                 <rect key="frame" x="0.0" y="0.0" width="48" height="48"/>
@@ -771,19 +771,19 @@ If you happen to be logged into the same account on a different device, you can 
                                                 </variation>
                                             </imageView>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="username" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="NDE-FE-fQz">
-                                                <rect key="frame" x="56" y="2" width="244" height="21"/>
+                                                <rect key="frame" x="56" y="2" width="76" height="21"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <imageView userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="ZZz-Eo-kdK">
-                                                <rect key="frame" x="56" y="28" width="244" height="16"/>
+                                                <rect key="frame" x="56" y="28" width="76" height="16"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="16" id="QAa-cJ-wbm"/>
                                                 </constraints>
                                             </imageView>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="provider" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Y4g-pr-PyX">
-                                                <rect key="frame" x="56" y="29" width="244" height="14.5"/>
+                                                <rect key="frame" x="56" y="29" width="76" height="14.5"/>
                                                 <fontDescription key="fontDescription" style="UICTFontTextStyleCaption1"/>
                                                 <color key="textColor" white="0.33333333329999998" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <nil key="highlightedColor"/>
@@ -803,7 +803,6 @@ If you happen to be logged into the same account on a different device, you can 
                                             <constraint firstItem="NDE-FE-fQz" firstAttribute="top" secondItem="qef-8X-SNQ" secondAttribute="top" constant="2" id="kvF-PD-q3K"/>
                                             <constraint firstItem="Y4g-pr-PyX" firstAttribute="trailing" secondItem="ZZz-Eo-kdK" secondAttribute="trailing" id="rkb-db-1v8"/>
                                             <constraint firstItem="qef-8X-SNQ" firstAttribute="leading" secondItem="F3H-7t-YEA" secondAttribute="leading" id="tXp-wp-4tW"/>
-                                            <constraint firstAttribute="width" constant="300" id="ve8-hJ-I00"/>
                                             <constraint firstItem="ZZz-Eo-kdK" firstAttribute="bottom" secondItem="qef-8X-SNQ" secondAttribute="bottom" constant="-4" id="yg9-EF-zkp"/>
                                         </constraints>
                                     </view>
