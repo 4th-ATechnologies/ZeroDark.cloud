@@ -17,6 +17,7 @@
 #import "OSImage+QRCode.h"
 #import "OSImage+ZeroDark.h"
 #import "NSString+ZeroDark.h"
+#import "RKTagsView.h"
 
 #import "ZDCLogging.h"
 
@@ -36,6 +37,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	
 	IBOutlet __weak UILabel 		*_lblTitle;
 	IBOutlet __weak UILabel 	 	*_lblInfo;
+	IBOutlet __weak UIView 			*_vwPassCode;
 	IBOutlet __weak UILabel 	 	*_lblPasscodeInfo;
 
 	IBOutlet __weak UIView  		*_vwUser;
@@ -46,7 +48,9 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	IBOutlet __weak UILabel     	*_lblProvider;
 	
 	IBOutlet __weak UIImageView 	*_imgQRCode;
-	
+	IBOutlet __weak RKTagsView  	*_tagView;
+	IBOutlet __weak NSLayoutConstraint *_tagViewHeightConstraint;
+ 
 	NSString*  lblPasscodeInfoText;
 }
 
@@ -57,9 +61,36 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	
 	_imgAvatar.layer.cornerRadius = 50 / 2;
 	_imgAvatar.clipsToBounds = YES;
+ 
+	_tagView.lineSpacing = 4;
+	_tagView.interitemSpacing = 4;
+	_tagView.allowCopy = NO;
+	
+	_tagView.layer.cornerRadius   = 8;
+	_tagView.layer.masksToBounds  = YES;
+	_tagView.layer.borderColor    = [UIColor lightGrayColor].CGColor;
+	_tagView.layer.borderWidth    = 1.0f;
+	//	_tagView.backgroundColor      = [UIColor colorWithWhite:.8 alpha:.4];//
+	
+	_tagView.tagsEdgeInsets  = UIEdgeInsetsMake(8, 8, 8, 8);
+	//	_tagView.userInteractionEnabled = NO;
+	_tagView.allowCopy = YES;
+	_tagView.editable = NO;
+	_tagView.selectable = NO;
+	_tagView.tintAdjustmentMode =  UIViewTintAdjustmentModeNormal;
+	_tagView.tintColor = UIColor.darkGrayColor;
+
+	_vwPassCode.layer.cornerRadius   = 8;
+	_vwPassCode.layer.masksToBounds  = YES;
 	
 	lblPasscodeInfoText = _lblPasscodeInfo.text;
 	
+}
+
+- (void)viewDidLayoutSubviews
+{
+	[super viewDidLayoutSubviews];
+	_tagViewHeightConstraint.constant = _tagView.contentSize.height;
 }
 
 
@@ -69,18 +100,27 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 
 {	
 	__weak typeof(self) weakSelf = self;
-	
+	NSError* error = nil;
+
 	Auth0ProviderManager	 * providerManager= self.keyBackupVC.owner.auth0ProviderManager;
 	ZDCImageManager  * imageManager= self.keyBackupVC.owner.imageManager;
 	ZDCLocalUser* localUser = self.keyBackupVC.user;
 	
-	NSData* data = [[NSData alloc] initWithBase64EncodedString:localUser.uuid options:0];
-	NSString* userIDb58  = [NSString base58WithData:data];
-	
 	_lblTitle.text = [NSString stringWithFormat:
-							NSLocalizedString(@"Key Backup for UserID: %@", @"Key Backup for UserID: %@"),
-							userIDb58];
+							NSLocalizedString(@"User ID: %@", @"User ID %@"),
+							localUser.uuid];
+
+	NSArray<NSString*> * wordList = [BIP39Mnemonic mnemonicFromKey:keyBackupVC.accessKeyData
+																		 passphrase:keyBackupVC.user.syncedSalt
+																		 languageID:keyBackupVC.currentLanguageId
+																		  algorithm:Mnemonic_Storm4
+																				error:&error];
 	
+	[_tagView removeAllTags];
+	
+	for(NSString* tag in wordList)
+		[_tagView addTag:tag];
+
 	_imgQRCode.image = [OSImage QRImageWithString:qrCodeString
 													 withSize:CGSizeMake(400, 400)];
 	
@@ -89,12 +129,14 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	if(hasPassCode)
 	{
 		_lblPasscodeInfo.hidden = NO;
+		_vwPassCode.hidden = NO;
 		_lblPasscodeInfo.text = lblPasscodeInfoText;
 	}
 	else
 	{
 		_lblPasscodeInfo.hidden = YES;
-		_lblPasscodeInfo.text = @"";;
+		_vwPassCode.hidden = YES;
+		_lblPasscodeInfo.text = @"";
 	}
 	
 	[_lblPasscodeInfo sizeToFit];

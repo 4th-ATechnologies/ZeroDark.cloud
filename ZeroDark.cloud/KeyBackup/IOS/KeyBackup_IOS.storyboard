@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15702" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15510"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15704"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -734,48 +734,22 @@ If you happen to be logged into the same account on a different device, you can 
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="QqY-45-CmW">
-                                <rect key="frame" x="86" y="0.0" width="540" height="699.5"/>
+                                <rect key="frame" x="16" y="40" width="680" height="926.5"/>
                                 <subviews>
                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="250" image="qrcode-default" translatesAutoresizingMaskIntoConstraints="NO" id="TZo-0S-2jn">
-                                        <rect key="frame" x="120" y="359.5" width="300" height="300"/>
+                                        <rect key="frame" x="214" y="124" width="252" height="252"/>
                                         <constraints>
                                             <constraint firstAttribute="width" secondItem="TZo-0S-2jn" secondAttribute="height" multiplier="1:1" id="FLj-6Y-Wju"/>
                                         </constraints>
                                     </imageView>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2Lp-ck-YB0">
-                                        <rect key="frame" x="20" y="116.5" width="500" height="122"/>
-                                        <constraints>
-                                            <constraint firstAttribute="width" constant="500" id="HIn-lW-t8h"/>
-                                        </constraints>
-                                        <string key="text">Save this access key to recover or duplicate this user to another device
-You can use this code to clone your storm4® account to another device.  In addition you should make a backup of  this code. If this device is lost, it is impossible to access your data withou this access key.  </string>
-                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                        <nil key="textColor"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Social Key Backup for user : 3287312842384138851835 " lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="k2H-3l-BOR">
-                                        <rect key="frame" x="20" y="86" width="500" height="20.5"/>
-                                        <fontDescription key="fontDescription" style="UICTFontTextStyleHeadline"/>
-                                        <nil key="textColor"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Some Title about Saving this Access Key" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="xNS-5D-nXi">
-                                        <rect key="frame" x="20" y="40" width="500" height="36"/>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="ZeroDark.coop " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="xNS-5D-nXi">
+                                        <rect key="frame" x="240.5" y="0.0" width="199" height="36"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="30"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="This backup requires a passcode to restore the key. You should  secure that passcode in a safe place." lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YGh-rm-37f">
-                                        <rect key="frame" x="20" y="242.5" width="500" height="41"/>
-                                        <constraints>
-                                            <constraint firstAttribute="width" constant="500" id="HLC-JA-x8X"/>
-                                        </constraints>
-                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                        <nil key="textColor"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="F3H-7t-YEA">
-                                        <rect key="frame" x="120" y="291.5" width="300" height="48"/>
+                                        <rect key="frame" x="190" y="56" width="300" height="48"/>
                                         <subviews>
                                             <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="default_user" translatesAutoresizingMaskIntoConstraints="NO" id="qef-8X-SNQ">
                                                 <rect key="frame" x="0.0" y="0.0" width="48" height="48"/>
@@ -833,35 +807,99 @@ You can use this code to clone your storm4® account to another device.  In addi
                                             <constraint firstItem="ZZz-Eo-kdK" firstAttribute="bottom" secondItem="qef-8X-SNQ" secondAttribute="bottom" constant="-4" id="yg9-EF-zkp"/>
                                         </constraints>
                                     </view>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="254" verticalCompressionResistancePriority="753" text="Instructions" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ze1-KS-Mdj">
+                                        <rect key="frame" x="284" y="552.5" width="112" height="26.5"/>
+                                        <fontDescription key="fontDescription" style="UICTFontTextStyleTitle2"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="252" verticalCompressionResistancePriority="751" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2Lp-ck-YB0">
+                                        <rect key="frame" x="40" y="599" width="600" height="218.5"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="600" id="N6e-WG-c5P"/>
+                                        </constraints>
+                                        <string key="text">If you need to login to your account again, or login on another device, your access key will be required. There are 2 ways to get your access key:
+
+1. An existing device, in which you're already logged into this account
+2. A backup of your access key (such as this one)
+
+It is impossible to access your data without your access key. With great privacy comes some responsibility. There's always the risk that your device can get stolen or stop working. So please save this access key in a safe place.
+</string>
+                                        <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="255" verticalCompressionResistancePriority="754" text="User ID : 3287312842384138851835 " textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="k2H-3l-BOR">
+                                        <rect key="frame" x="188" y="906" width="304" height="20.5"/>
+                                        <fontDescription key="fontDescription" style="UICTFontTextStyleHeadline"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Code words" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bNs-Ss-stw">
+                                        <rect key="frame" x="283" y="396" width="114.5" height="26.5"/>
+                                        <fontDescription key="fontDescription" style="UICTFontTextStyleTitle2"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bxk-Ys-YtT" customClass="RKTagsView">
+                                        <rect key="frame" x="90" y="432.5" width="500" height="100"/>
+                                        <color key="backgroundColor" red="0.83741801979999997" green="0.83743780850000005" blue="0.83742713930000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="500" id="2C1-24-nZk"/>
+                                            <constraint firstAttribute="height" constant="100" id="UM7-0Q-hVL"/>
+                                        </constraints>
+                                    </view>
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="OYj-G4-RxA">
+                                        <rect key="frame" x="40" y="827.5" width="600" height="58.5"/>
+                                        <subviews>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="253" verticalCompressionResistancePriority="752" text="Note: This backup also requires a passcode to restore the key. Be sure to secure the passcode in a safe place." textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="tmW-Uc-PpO">
+                                                <rect key="frame" x="8" y="8" width="584" height="42.5"/>
+                                                <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
+                                                <nil key="textColor"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                        </subviews>
+                                        <color key="backgroundColor" systemColor="systemYellowColor" red="1" green="0.80000000000000004" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                        <constraints>
+                                            <constraint firstAttribute="trailing" secondItem="tmW-Uc-PpO" secondAttribute="trailing" constant="8" id="9Wc-WD-tTy"/>
+                                            <constraint firstAttribute="bottom" secondItem="tmW-Uc-PpO" secondAttribute="bottom" constant="8" id="9dR-xm-QRJ"/>
+                                            <constraint firstItem="tmW-Uc-PpO" firstAttribute="top" secondItem="OYj-G4-RxA" secondAttribute="top" constant="8" id="Bb1-Yl-VbI"/>
+                                            <constraint firstItem="tmW-Uc-PpO" firstAttribute="leading" secondItem="OYj-G4-RxA" secondAttribute="leading" constant="8" id="lCB-rw-Jg1"/>
+                                        </constraints>
+                                    </view>
                                 </subviews>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
-                                    <constraint firstItem="TZo-0S-2jn" firstAttribute="top" secondItem="F3H-7t-YEA" secondAttribute="bottom" constant="20" id="29O-ji-Goi"/>
-                                    <constraint firstItem="YGh-rm-37f" firstAttribute="top" secondItem="2Lp-ck-YB0" secondAttribute="bottom" constant="4" id="4LS-VS-SSh"/>
-                                    <constraint firstItem="2Lp-ck-YB0" firstAttribute="leading" secondItem="QqY-45-CmW" secondAttribute="leading" constant="20" id="6P0-qv-gIB"/>
-                                    <constraint firstAttribute="bottom" secondItem="TZo-0S-2jn" secondAttribute="bottom" constant="40" id="8Hy-xh-RwW"/>
-                                    <constraint firstItem="TZo-0S-2jn" firstAttribute="trailing" secondItem="F3H-7t-YEA" secondAttribute="trailing" id="NDc-3v-yCh"/>
-                                    <constraint firstItem="xNS-5D-nXi" firstAttribute="top" secondItem="QqY-45-CmW" secondAttribute="top" constant="40" id="OXo-RR-3Tx"/>
-                                    <constraint firstItem="2Lp-ck-YB0" firstAttribute="top" secondItem="k2H-3l-BOR" secondAttribute="bottom" constant="10" id="Ru8-Sv-Euv"/>
-                                    <constraint firstItem="xNS-5D-nXi" firstAttribute="trailing" secondItem="2Lp-ck-YB0" secondAttribute="trailing" id="fnJ-y0-4q8"/>
-                                    <constraint firstItem="YGh-rm-37f" firstAttribute="leading" secondItem="2Lp-ck-YB0" secondAttribute="leading" id="fy3-wg-TSs"/>
-                                    <constraint firstItem="F3H-7t-YEA" firstAttribute="top" secondItem="YGh-rm-37f" secondAttribute="bottom" constant="8" id="gZq-73-0Yg"/>
-                                    <constraint firstAttribute="trailing" secondItem="2Lp-ck-YB0" secondAttribute="trailing" constant="20" id="iBl-xX-m0k"/>
-                                    <constraint firstItem="TZo-0S-2jn" firstAttribute="leading" secondItem="F3H-7t-YEA" secondAttribute="leading" id="oYB-oQ-XbV"/>
-                                    <constraint firstItem="xNS-5D-nXi" firstAttribute="leading" secondItem="2Lp-ck-YB0" secondAttribute="leading" id="olh-w8-MJj"/>
-                                    <constraint firstItem="k2H-3l-BOR" firstAttribute="leading" secondItem="2Lp-ck-YB0" secondAttribute="leading" id="pOA-dl-9MZ"/>
-                                    <constraint firstItem="TZo-0S-2jn" firstAttribute="centerX" secondItem="QqY-45-CmW" secondAttribute="centerX" id="pTB-sF-QdC"/>
-                                    <constraint firstItem="YGh-rm-37f" firstAttribute="trailing" secondItem="2Lp-ck-YB0" secondAttribute="trailing" id="s7o-ej-dhv"/>
-                                    <constraint firstItem="k2H-3l-BOR" firstAttribute="top" secondItem="xNS-5D-nXi" secondAttribute="bottom" constant="10" id="tIH-Lg-kkx"/>
-                                    <constraint firstItem="k2H-3l-BOR" firstAttribute="trailing" secondItem="2Lp-ck-YB0" secondAttribute="trailing" id="y5k-Zb-7q0"/>
-                                    <constraint firstItem="F3H-7t-YEA" firstAttribute="centerX" secondItem="QqY-45-CmW" secondAttribute="centerX" id="yjb-tu-o55"/>
+                                    <constraint firstItem="Ze1-KS-Mdj" firstAttribute="centerX" secondItem="F3H-7t-YEA" secondAttribute="centerX" id="0rM-tx-7Wz"/>
+                                    <constraint firstAttribute="bottom" secondItem="k2H-3l-BOR" secondAttribute="bottom" id="2Bp-w8-tpx"/>
+                                    <constraint firstItem="k2H-3l-BOR" firstAttribute="centerX" secondItem="F3H-7t-YEA" secondAttribute="centerX" id="4Ma-qC-LfQ"/>
+                                    <constraint firstItem="bNs-Ss-stw" firstAttribute="centerX" secondItem="bxk-Ys-YtT" secondAttribute="centerX" id="5O1-zj-h6f"/>
+                                    <constraint firstItem="k2H-3l-BOR" firstAttribute="top" secondItem="OYj-G4-RxA" secondAttribute="bottom" constant="20" id="7hD-TR-NsB"/>
+                                    <constraint firstItem="OYj-G4-RxA" firstAttribute="top" secondItem="2Lp-ck-YB0" secondAttribute="bottom" constant="10" id="ATn-KQ-411"/>
+                                    <constraint firstItem="2Lp-ck-YB0" firstAttribute="trailing" secondItem="OYj-G4-RxA" secondAttribute="trailing" id="JCZ-CP-Tk1"/>
+                                    <constraint firstItem="bNs-Ss-stw" firstAttribute="top" secondItem="TZo-0S-2jn" secondAttribute="bottom" constant="20" id="Jke-In-L2u"/>
+                                    <constraint firstItem="xNS-5D-nXi" firstAttribute="centerX" secondItem="QqY-45-CmW" secondAttribute="centerX" id="N46-Kb-1XU"/>
+                                    <constraint firstItem="TZo-0S-2jn" firstAttribute="top" secondItem="F3H-7t-YEA" secondAttribute="bottom" constant="20" id="ZOD-k3-hyE"/>
+                                    <constraint firstItem="xNS-5D-nXi" firstAttribute="centerX" secondItem="F3H-7t-YEA" secondAttribute="centerX" id="iLV-FK-jg8"/>
+                                    <constraint firstItem="2Lp-ck-YB0" firstAttribute="leading" secondItem="OYj-G4-RxA" secondAttribute="leading" id="j1R-l8-K3k"/>
+                                    <constraint firstItem="xNS-5D-nXi" firstAttribute="top" secondItem="QqY-45-CmW" secondAttribute="top" id="knM-6W-46K"/>
+                                    <constraint firstItem="bxk-Ys-YtT" firstAttribute="top" secondItem="bNs-Ss-stw" secondAttribute="bottom" constant="10" id="lyG-As-cTh"/>
+                                    <constraint firstItem="TZo-0S-2jn" firstAttribute="centerX" secondItem="F3H-7t-YEA" secondAttribute="centerX" id="nCR-Ee-d1e"/>
+                                    <constraint firstItem="F3H-7t-YEA" firstAttribute="top" secondItem="xNS-5D-nXi" secondAttribute="bottom" constant="20" id="ojc-Ha-jjd"/>
+                                    <constraint firstAttribute="trailing" secondItem="2Lp-ck-YB0" secondAttribute="trailing" constant="40" id="rlf-uf-ioo"/>
+                                    <constraint firstItem="2Lp-ck-YB0" firstAttribute="top" secondItem="Ze1-KS-Mdj" secondAttribute="bottom" constant="20" id="sYl-G6-bfz"/>
+                                    <constraint firstItem="Ze1-KS-Mdj" firstAttribute="top" secondItem="bxk-Ys-YtT" secondAttribute="bottom" constant="20" id="txv-Co-ki8"/>
+                                    <constraint firstItem="2Lp-ck-YB0" firstAttribute="leading" secondItem="QqY-45-CmW" secondAttribute="leading" constant="40" id="yAD-jI-SYc"/>
+                                    <constraint firstItem="bNs-Ss-stw" firstAttribute="centerX" secondItem="TZo-0S-2jn" secondAttribute="centerX" id="zif-3w-dz3"/>
                                 </constraints>
                             </view>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
-                            <constraint firstItem="QqY-45-CmW" firstAttribute="centerX" secondItem="Axy-7X-PlM" secondAttribute="centerX" id="LLf-Ob-Qv0"/>
-                            <constraint firstItem="QqY-45-CmW" firstAttribute="top" secondItem="Wza-XM-2il" secondAttribute="top" id="dHv-mO-5dG"/>
+                            <constraint firstItem="QqY-45-CmW" firstAttribute="centerY" secondItem="Axy-7X-PlM" secondAttribute="centerY" id="NaM-Kg-UPN"/>
+                            <constraint firstItem="Wza-XM-2il" firstAttribute="bottom" secondItem="QqY-45-CmW" secondAttribute="bottom" constant="40" id="k2d-z4-q0Q"/>
+                            <constraint firstItem="QqY-45-CmW" firstAttribute="top" secondItem="Wza-XM-2il" secondAttribute="top" constant="40" id="qaN-0F-f5S"/>
+                            <constraint firstItem="QqY-45-CmW" firstAttribute="centerX" secondItem="Axy-7X-PlM" secondAttribute="centerX" id="sWQ-sT-uTl"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="Wza-XM-2il"/>
                     </view>
@@ -875,10 +913,13 @@ You can use this code to clone your storm4® account to another device.  In addi
                         <outlet property="_imgQRCode" destination="TZo-0S-2jn" id="qQl-nP-rk9"/>
                         <outlet property="_lblDisplayName" destination="NDE-FE-fQz" id="2QC-iL-PQm"/>
                         <outlet property="_lblInfo" destination="2Lp-ck-YB0" id="sbf-qh-RKs"/>
-                        <outlet property="_lblPasscodeInfo" destination="YGh-rm-37f" id="uud-kb-u3p"/>
+                        <outlet property="_lblPasscodeInfo" destination="tmW-Uc-PpO" id="2U9-iM-fgC"/>
                         <outlet property="_lblProvider" destination="Y4g-pr-PyX" id="Jvr-e2-lGp"/>
                         <outlet property="_lblTitle" destination="k2H-3l-BOR" id="qhK-1s-aYh"/>
+                        <outlet property="_tagView" destination="bxk-Ys-YtT" id="MUP-FU-PLH"/>
+                        <outlet property="_tagViewHeightConstraint" destination="UM7-0Q-hVL" id="67K-Gb-ZrS"/>
                         <outlet property="_vwContainer" destination="QqY-45-CmW" id="ZIW-ym-SBf"/>
+                        <outlet property="_vwPassCode" destination="OYj-G4-RxA" id="32M-Zu-kaj"/>
                         <outlet property="_vwUser" destination="F3H-7t-YEA" id="QHy-AF-oad"/>
                     </connections>
                 </viewController>
