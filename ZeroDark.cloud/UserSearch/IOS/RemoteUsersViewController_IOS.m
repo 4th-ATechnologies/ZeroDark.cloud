@@ -153,6 +153,12 @@
 	self.navigationItem.rightBarButtonItems = @[bbnSave, addItem];
 	bbnSave.enabled = didModifyRecipents;
 	
+	[[NSNotificationCenter defaultCenter] addObserver: self
+														  selector: @selector(databaseConnectionDidUpdate:)
+																name: UIDatabaseConnectionDidUpdateNotification
+															 object: nil];
+	
+
 	[_tblUsers reloadData];
 }
 
@@ -160,12 +166,30 @@
 -(void) viewWillDisappear:(BOOL)animated
 {
 	[super viewWillDisappear:animated];
-	
+
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: Notifications
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)databaseConnectionDidUpdate:(NSNotification *)notification
+{
+	NSArray *notifications = [notification.userInfo objectForKey:kNotificationsKey];
+
+	BOOL hasUserChanges = NO;
+	
+	hasUserChanges	= [owner.databaseManager.uiDatabaseConnection
+							hasChangeForAnyKeys: [NSSet setWithArray:remoteUserIDs]
+							inCollection:kZDCCollection_Users inNotifications:notifications];
+	
+	if(hasUserChanges)
+	{
+		[_tblUsers reloadData];
+	}
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: Actions
@@ -340,32 +364,33 @@
 	if(user)
 	{
 		cell.userID = user.uuid;
-
+		
 		NSString* displayName  = [user displayName];
 		cell.lblUserName.text = displayName;
+		cell.lblUserName.textColor = UIColor.blackColor;
 
 		ZDCUserIdentity *displayIdentity = user.displayIdentity;
 		
 		NSString *provider = displayIdentity.provider;
 		
 		OSImage *providerImage =
-				  [[providerManager iconForProvider: provider
-																	type: Auth0ProviderIconType_Signin]
-													  scaledToHeight: cell.lblProvider.frame.size.height];
+		[[providerManager iconForProvider: provider
+											  type: Auth0ProviderIconType_Signin]
+		 scaledToHeight: cell.lblProvider.frame.size.height];
 		if(providerImage)
-			{
-				cell.imgProvider.image =  providerImage;
-				cell.imgProvider.hidden = NO;
-				cell.lblProvider.hidden = YES;
-			}
-			else
-			{
-				NSString* providerName =  [providerManager displayNameForProvider:provider];
-				cell.lblProvider.text = providerName;
-				cell.imgProvider.hidden = YES;
-				cell.lblProvider.hidden = NO;
-			}
-
+		{
+			cell.imgProvider.image =  providerImage;
+			cell.imgProvider.hidden = NO;
+			cell.lblProvider.hidden = YES;
+		}
+		else
+		{
+			NSString* providerName =  [providerManager displayNameForProvider:provider];
+			cell.lblProvider.text = providerName;
+			cell.imgProvider.hidden = YES;
+			cell.lblProvider.hidden = NO;
+		}
+		
 		ZDCImageProcessingBlock processingBlock = ^OSImage* (OSImage *image) {
 			
 			return [image scaledToSize:avatarSize scalingMode:ScalingMode_AspectFill];
@@ -380,8 +405,8 @@
 		void (^postFetch)(OSImage*, NSError*) = ^(OSImage *image, NSError *error) {
 			
 			// The postFetch is invoked LATER, possibly after downloading the image.
-				 __strong typeof(self) strongSelf = weakSelf;
-					 if(strongSelf == nil) return;
+			__strong typeof(self) strongSelf = weakSelf;
+			if(strongSelf == nil) return;
 			
 			if (image)
 			{
@@ -394,36 +419,44 @@
 		
 		
 		[imageManager fetchUserAvatar: user
-									 withOptions: nil
-									processingID: NSStringFromClass([self class])
-								processingBlock: processingBlock
-								  preFetchBlock: preFetch
-								 postFetchBlock: postFetch];
- 
-			if(user.identities.count  < 2)
-			{
-				cell.lblBadge.hidden = YES;
-			}
-			else
-			{
-				// a lot of work to make the badge look pretty
-				cell.lblBadge.hidden = NO;
-				cell.lblBadge.backgroundColor = self.view.tintColor;
-				cell.lblBadge.clipsToBounds = YES;
-				cell.lblBadge.font = [UIFont systemFontOfSize:14];
-				cell.lblBadge.layer.cornerRadius = cell.lblBadge.frame.size.height/2;
-				cell.lblBadge.textAlignment = NSTextAlignmentCenter;
-				cell.lblBadge.edgeInsets = (UIEdgeInsets) {    .top = 0,
-					.left = 4,
-					.bottom = 0,
-					.right = 3};
-				
-				cell.lblBadge.text =  [self badgeTextWithCount: user.identities.count];
-				CGSize newSize = [cell.lblBadge sizeThatFits:CGSizeMake(cell.lblBadge.frame.size.width, 18)];
-				newSize.width += 8;
-				cell.cnstlblBadgeWidth.constant  = MAX(18,newSize.width);
-				
-			}
+								withOptions: nil
+							  processingID: NSStringFromClass([self class])
+						  processingBlock: processingBlock
+							 preFetchBlock: preFetch
+							postFetchBlock: postFetch];
+		
+		if(user.identities.count  < 2)
+		{
+			cell.lblBadge.hidden = YES;
+		}
+		else
+		{
+			// a lot of work to make the badge look pretty
+			cell.lblBadge.hidden = NO;
+			cell.lblBadge.backgroundColor = self.view.tintColor;
+			cell.lblBadge.clipsToBounds = YES;
+			cell.lblBadge.font = [UIFont systemFontOfSize:14];
+			cell.lblBadge.layer.cornerRadius = cell.lblBadge.frame.size.height/2;
+			cell.lblBadge.textAlignment = NSTextAlignmentCenter;
+			cell.lblBadge.edgeInsets = (UIEdgeInsets) {    .top = 0,
+				.left = 4,
+				.bottom = 0,
+				.right = 3};
+			
+			cell.lblBadge.text =  [self badgeTextWithCount: user.identities.count];
+			CGSize newSize = [cell.lblBadge sizeThatFits:CGSizeMake(cell.lblBadge.frame.size.width, 18)];
+			newSize.width += 8;
+			cell.cnstlblBadgeWidth.constant  = MAX(18,newSize.width);
+			
+		}
+	}
+	else // user is not loaded yet..
+	{
+		cell.lblBadge.hidden = YES;
+		cell.imgProvider.hidden = YES;
+		cell.lblProvider.hidden = YES;
+		cell.lblUserName.text = @"loading…";
+		cell.lblUserName.textColor = UIColor.lightGrayColor;
 	}
 	
 	cell.accessoryView  = [[UIView alloc]initWithFrame: (CGRect)
