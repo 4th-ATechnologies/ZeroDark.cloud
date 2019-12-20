@@ -11,6 +11,7 @@ import Foundation
 import InputBarAccessoryView
 import MessageKit
 import ZeroDarkCloud
+import CocoaLumberjack
 
 struct MsgKitSender: MessageKit.SenderType {
 	

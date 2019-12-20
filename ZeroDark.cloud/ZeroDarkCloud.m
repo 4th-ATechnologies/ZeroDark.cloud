@@ -38,6 +38,7 @@
 #import "NSError+ZeroDark.h"
 
 // Libraries
+#import <os/log.h>
 #import <YapDatabase/YapDatabase.h>
 #import <YapDatabase/YapDatabaseAtomic.h>
 
@@ -50,6 +51,8 @@
 #else
   static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
+
+typedef void (^ZDCLogHandler)(ZDCLogMessage *);
 
 @interface ZeroDarkCloud () <YapDatabaseCloudCorePipelineDelegate>
 
@@ -132,6 +135,7 @@
 #pragma mark Class Utilities
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+static ZDCLogHandler logHandler = nil;
 static NSMutableSet<NSString*> *registeredDatabaseNames = nil;
 static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 
@@ -141,6 +145,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 	if (!initialized)
 	{
 		initialized = YES;
+		logHandler = [self defaultLogHandler];
 		registeredDatabaseNames = [[NSMutableSet alloc] initWithCapacity:1];
 		[self loadFontWithName:@"Exo2-Regular"];
 	}
@@ -181,6 +186,64 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 		}
 
 		CFRelease(provider);
+	}
+}
+
++ (ZDCLogHandler)defaultLogHandler
+{
+	NSString *subsystem = @"ZeroDark";
+	NSString *category = @"ZeroDark";
+	
+	os_log_t logger = os_log_create([subsystem UTF8String], [category UTF8String]);
+	
+	ZDCLogHandler handler = ^void (ZDCLogMessage *log){ @autoreleasepool {
+		
+		if (log.flag & ZDCLogFlagError) {
+			os_log_error(logger, "%{public}@ %{public}@", log.function, log.message);
+		}
+		else if (log.flag & ZDCLogFlagWarning) {
+			os_log_info(logger, "%{public}@ %{public}@", log.function, log.message);
+		}
+	}};
+	return handler;
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
+ */
++ (void)setLogHandler:(void (^)(ZDCLogMessage *))inLogHandler
+{
+	logHandler = inLogHandler ?: [self defaultLogHandler];
+}
+
+/**
+ * Used by the macros defined in ZDCLogging.h
+ */
++ (void)log:(ZDCLogLevel)level
+       flag:(ZDCLogFlag)flag
+       file:(const char *)file
+   function:(const char *)function
+       line:(NSUInteger)line
+     format:(NSString *)format, ...
+{
+	va_list args;
+	if (format)
+	{
+		va_start(args, format);
+		NSString *message = [[NSString alloc] initWithFormat:format arguments:args];
+      va_end(args);
+		
+		ZDCLogMessage *logMessage =
+		  [[ZDCLogMessage alloc] initWithMessage: message
+		                                   level: level
+		                                    flag: flag
+		                                    file: [NSString stringWithFormat:@"%s", file]
+		                                function: [NSString stringWithFormat:@"%s", function]
+		                                    line: line];
+		
+		logHandler(logMessage);
 	}
 }
 
@@ -239,6 +302,11 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 	return nil; // This is not the init method you're looking for.
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
+ */
 - (instancetype)initWithDelegate:(id<ZeroDarkCloudDelegate>)inDelegate
                           config:(ZDCConfig *)config
 {

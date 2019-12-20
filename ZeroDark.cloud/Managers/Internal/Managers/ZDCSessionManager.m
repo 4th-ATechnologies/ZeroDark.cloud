@@ -774,7 +774,7 @@ done:
                  inSession:(NSURLSession *)session
             forLocalUserID:(NSString *)localUserID
 {
-	ZDCLogTrace(@"%@ %@", THIS_METHOD, localUserID);
+	ZDCLogVerbose(@"%@", localUserID);
 	
 	ZDCSessionInfo *sessionInfo = [self sessionInfoForUserID:localUserID];
 	

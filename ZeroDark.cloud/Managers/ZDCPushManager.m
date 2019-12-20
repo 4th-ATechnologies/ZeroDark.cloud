@@ -943,7 +943,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			}
 			default:
 			{
-				ZDCLogError(@"%@ - Unsupported operation type: %lu", THIS_METHOD, (unsigned long)type);
+				ZDCLogError(@"Unsupported operation type: %lu", (unsigned long)type);
 			#if DEBUG
 				NSAssert(NO, @"Unsupported operation type: %lu", (unsigned long)type);
 			#endif
@@ -5570,8 +5570,8 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		operation.ephemeralInfo.continuation_data = nil;
 	}
 	
-	DDLogVerbose(@"continuation_rcrd: %@", operation.ephemeralInfo.continuation_rcrd);
-	DDLogVerbose(@"continuation_data: %@", operation.ephemeralInfo.continuation_data);
+	ZDCLogVerbose(@"continuation_rcrd: %@", operation.ephemeralInfo.continuation_rcrd);
+	ZDCLogVerbose(@"continuation_data: %@", operation.ephemeralInfo.continuation_data);
 	
 	operation.ephemeralInfo.pollContext = nil;
 	

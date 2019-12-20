@@ -25,10 +25,6 @@
 #endif
 
 #import <YapDatabase/YapCache.h>
-#import <ZipZap/ZZArchive.h>
-#import <ZipZap/ZZArchiveEntry.h>
-#import <ZipZap/ZZConstants.h>
-#import <ZipZap/ZZError.h>
 
 #import <stdatomic.h>
 
@@ -111,7 +107,7 @@ static Auth0ProviderManager *sharedInstance = nil;
 			[self decompressIconFileWithError:&error];
 
 			if (error) {
-				ZDCLogError(@"%@: Error decompressing icon files: %@", THIS_METHOD, error);
+				ZDCLogError(@"Error decompressing icon files: %@", error);
 			}
 		}
 
@@ -230,7 +226,7 @@ static Auth0ProviderManager *sharedInstance = nil;
 			break;
 
 		default:
-			ZDCLogError(@"%@: Invalid Auth0ProviderIconType requested: %ld", THIS_METHOD, (long)type);
+			ZDCLogError(@"Invalid Auth0ProviderIconType requested: %ld", (long)type);
 			return nil;
 	}
 

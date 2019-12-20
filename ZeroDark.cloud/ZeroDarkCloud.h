@@ -295,6 +295,17 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (NSBundle *)frameworkBundle;
 
+/**
+ * Allows you to configure a handler for log messages emitted from the framework.
+ *
+ * A custom log handler allows you to integrate framework-emitted log messages into your desired logging system.
+ *
+ * If you don't configure your own log handler, then a default handler is used, which:
+ * - only logs errors & warnings
+ * - uses os_log
+ */
++ (void)setLogHandler:(void (^)(ZDCLogMessage *))logHandler;
+
 @end
 
 NS_ASSUME_NONNULL_END

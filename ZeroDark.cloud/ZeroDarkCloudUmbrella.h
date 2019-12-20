@@ -56,8 +56,13 @@
 #import "ZDCLocalUser.h"
 #import "ZDCLocalUserAuth.h"
 
+// Logging
+#import "ZDCLogMessage.h"
+
 // YapDatabaseExtension
 #import "ZDCCloud.h"
+#import "ZDCCloudConnection.h"
+#import "ZDCCloudTransaction.h"
 
 // Streams
 #import "ZDCCacheFileHeader.h"

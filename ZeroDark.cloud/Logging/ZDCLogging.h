@@ -1,76 +1,46 @@
-@import CocoaLumberjack;
-//#import "LumberjackUser.h" // Required !!!
+#import <Foundation/Foundation.h>
 
-static const NSInteger ZDCLoggingContext = 2147483647; // ((2^31) - 1), largest 32-bit prime
+#import "ZeroDarkCloud.h"
+#import "ZDCLogMessage.h"
 
-// Fine grained logging.
-// The first 4 bits are being used by the standard log levels (0 - 3)
+/**
+ * Logging plays a very important role in open-source libraries.
+ *
+ * Good documentation and comments decrease the learning time required to use a library.
+ * But proper logging takes this futher by:
+ * - Providing a way to trace the execution of the library
+ * - Allowing developers to quickly identify subsets of the code that need analysis
+ * - Making it easier for developers to find potential bugs, either in their code or the library
+ * - Drawing attention to potential mis-configurations or mis-uses of the API
+ *
+ * Ultimately logging is an interactive extension to comments.
+ */
 
-typedef NS_OPTIONS(NSUInteger, ZDCLogFlag) {
-	ZDCLogFlagError      = (1 << 0), // 0...00000001
-	ZDCLogFlagWarning    = (1 << 1), // 0...00000010
-	ZDCLogFlagInfo       = (1 << 2), // 0...00000100
-	ZDCLogFlagDebug      = (1 << 3), // 0...00001000
-	ZDCLogFlagVerbose    = (1 << 4), // 0...00010000
-	ZDCLogFlagTrace      = (1 << 5), // 0...00100000
-	ZDCLogFlagColor      = (1 << 6)  // 0...01000000
-};
+@interface ZeroDarkCloud ()
 
-typedef NS_ENUM(NSUInteger, ZDCLogLevel){
-	ZDCLogLevelOff       = 0,
-	ZDCLogLevelError     = (ZDCLogFlagError),
-	ZDCLogLevelWarning   = (ZDCLogLevelError   | ZDCLogFlagWarning),
-	ZDCLogLevelInfo      = (ZDCLogLevelWarning | ZDCLogFlagInfo),
-	ZDCLogLevelDebug     = (ZDCLogLevelInfo    | ZDCLogFlagDebug),
-	ZDCLogLevelVerbose   = (ZDCLogLevelDebug   | ZDCLogFlagVerbose),
-	ZDCLogLevelAll       = NSUIntegerMax
-};
++ (void)log:(ZDCLogLevel)level
+       flag:(ZDCLogFlag)flag
+       file:(const char *)file
+   function:(const char *)function
+       line:(NSUInteger)line
+     format:(NSString *)format, ... NS_FORMAT_FUNCTION(6,7);
 
-// Customize asynchronous logging configuration.
+@end
 
-#undef LOG_ASYNC_ENABLED
-#ifdef DEBUG
-  #define LOG_ASYNC_ENABLED  NO
-#else
-  #define LOG_ASYNC_ENABLED  YES
-#endif
+#define ZDC_LOG_MACRO(lvl, flg, frmt, ...)           \
+        [ZeroDarkCloud log : lvl                     \
+                      flag : flg                     \
+                      file : __FILE__                \
+                  function : __PRETTY_FUNCTION__     \
+                      line : __LINE__                \
+                    format : (frmt), ## __VA_ARGS__]
 
-#define LOG_ASYNC_ERROR   (LOG_ASYNC_ENABLED && NO)
-#define LOG_ASYNC_WARN    (LOG_ASYNC_ENABLED && NO)
-#define LOG_ASYNC_INFO    (LOG_ASYNC_ENABLED && YES)
-#define LOG_ASYNC_DEBUG   (LOG_ASYNC_ENABLED && YES)
-#define LOG_ASYNC_VERBOSE (LOG_ASYNC_ENABLED && YES)
-#define LOG_ASYNC_TRACE   (LOG_ASYNC_ENABLED && YES)
-#define LOG_ASYNC_COLOR   (LOG_ASYNC_ENABLED && NO)
+#define ZDC_LOG_MAYBE(lvl, flg, frmt, ...) \
+        do { if(lvl & flg) ZDC_LOG_MACRO(lvl, flg, frmt, ##__VA_ARGS__); } while(0)
 
-
-#undef LOG_LEVEL_DEF
-#define LOG_LEVEL_DEF zdcLogLevel
-
-#define ZDCLogError(frmt, ...) \
-    LOG_MAYBE(LOG_ASYNC_ERROR, (DDLogLevel)LOG_LEVEL_DEF, (DDLogFlag)ZDCLogFlagError, ZDCLoggingContext, nil, \
-              __PRETTY_FUNCTION__, frmt, ##__VA_ARGS__)
-
-#define ZDCLogWarn(frmt, ...) \
-    LOG_MAYBE(LOG_ASYNC_WARN, (DDLogLevel)LOG_LEVEL_DEF, (DDLogFlag)ZDCLogFlagWarning, ZDCLoggingContext, nil, \
-              __PRETTY_FUNCTION__, frmt, ##__VA_ARGS__)
-
-#define ZDCLogInfo(frmt, ...) \
-    LOG_MAYBE(LOG_ASYNC_INFO, (DDLogLevel)LOG_LEVEL_DEF, (DDLogFlag)ZDCLogFlagInfo, ZDCLoggingContext, nil, \
-              __PRETTY_FUNCTION__, frmt, ##__VA_ARGS__)
-
-#define ZDCLogDebug(frmt, ...) \
-    LOG_MAYBE(LOG_ASYNC_DEBUG, (DDLogLevel)LOG_LEVEL_DEF, (DDLogFlag)ZDCLogFlagDebug, ZDCLoggingContext, nil, \
-              __PRETTY_FUNCTION__, frmt, ##__VA_ARGS__)
-
-#define ZDCLogVerbose(frmt, ...) \
-    LOG_MAYBE(LOG_ASYNC_VERBOSE, (DDLogLevel)LOG_LEVEL_DEF, (DDLogFlag)ZDCLogFlagVerbose, ZDCLoggingContext, nil, \
-              __PRETTY_FUNCTION__, frmt, ##__VA_ARGS__)
-
-#define ZDCLogTrace(frmt, ...) \
-    LOG_MAYBE(LOG_ASYNC_TRACE, (DDLogLevel)LOG_LEVEL_DEF, (DDLogFlag)ZDCLogFlagTrace, ZDCLoggingContext, nil, \
-              __PRETTY_FUNCTION__, frmt, ##__VA_ARGS__)
-
-#define ZDCLogAutoTrace() \
-    LOG_MAYBE(LOG_ASYNC_TRACE, (DDLogLevel)LOG_LEVEL_DEF, (DDLogFlag)ZDCLogFlagTrace, ZDCLoggingContext, nil, \
-              __PRETTY_FUNCTION__, @"%s", __PRETTY_FUNCTION__)
+#define ZDCLogError(frmt, ...)   ZDC_LOG_MAYBE(zdcLogLevel, ZDCLogFlagError,   frmt, ##__VA_ARGS__)
+#define ZDCLogWarn(frmt, ...)    ZDC_LOG_MAYBE(zdcLogLevel, ZDCLogFlagWarning, frmt, ##__VA_ARGS__)
+#define ZDCLogInfo(frmt, ...)    ZDC_LOG_MAYBE(zdcLogLevel, ZDCLogFlagInfo,    frmt, ##__VA_ARGS__)
+#define ZDCLogVerbose(frmt, ...) ZDC_LOG_MAYBE(zdcLogLevel, ZDCLogFlagVerbose, frmt, ##__VA_ARGS__)
+#define ZDCLogTrace(frmt, ...)   ZDC_LOG_MAYBE(zdcLogLevel, ZDCLogFlagTrace,   frmt, ##__VA_ARGS__)
+#define ZDCLogAutoTrace()        ZDC_LOG_MAYBE(zdcLogLevel, ZDCLogFlagTrace,   @"")

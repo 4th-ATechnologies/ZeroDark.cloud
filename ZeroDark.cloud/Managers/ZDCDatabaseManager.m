@@ -30,7 +30,7 @@
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
 #if DEBUG
-  static const int zdcLogLevel = ZDCLogLevelDebug;
+  static const int zdcLogLevel = ZDCLogLevelVerbose;
 #else
   static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
@@ -288,7 +288,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	[NSKeyedUnarchiver setClass:[ZDCTrunkNode class] forClassName:@"ZDCContainerNode"];
 	
 	NSURL *databaseURL = zdc.databasePath;
-	ZDCLogDebug(@"databaseURL = %@", databaseURL);
+	ZDCLogVerbose(@"databaseURL = %@", databaseURL);
 	
 	YapDatabaseOptions *options = [[YapDatabaseOptions alloc] init];
 	options.corruptAction = YapDatabaseCorruptAction_Rename;
@@ -1386,7 +1386,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		NSString *localUserID = key;
 		NSString *pushToken = localUser.pushToken;
 		
-		ZDCLogDebug(@"Registering push token for user: %@, token :%@", localUserID, pushToken);
+		ZDCLogVerbose(@"Registering push token for user: %@, token :%@", localUserID, pushToken);
 		
 		[restManager registerPushTokenForLocalUser: localUser
 		                           completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)

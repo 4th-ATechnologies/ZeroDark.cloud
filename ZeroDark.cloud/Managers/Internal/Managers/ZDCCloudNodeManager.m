@@ -64,7 +64,7 @@ static ZDCCloudNodeManager *sharedInstance = nil;
 		NSParameterAssert(localUserID != nil);
 		NSParameterAssert(transaction != nil);
 		
-		ZDCLogWarn(@"Method invoked with invalid parameter(s): %@", THIS_METHOD);
+		ZDCLogWarn(@"Method invoked with invalid parameter(s)!");
 		return nil;
 	}
 	

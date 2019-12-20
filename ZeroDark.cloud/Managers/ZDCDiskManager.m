@@ -891,7 +891,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		                                               error: &error];
 	
 		if (error) {
-			ZDCLogError(@"%@: Error creating directory: %@", THIS_METHOD, error);
+			ZDCLogError(@"Error creating directory: %@", error);
 		}
 	}
 }
@@ -1822,7 +1822,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		}
 		default:
 		{
-			NSAssert(NO, @"Invalid directory passed to %@", THIS_METHOD);
+			NSAssert(NO, @"Invalid ZDCFileType: %ld", (long)type);
 			break;
 		}
 	}
@@ -1925,7 +1925,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		}
 		default:
 		{
-			NSAssert(NO, @"Invalid directory passed to %@", THIS_METHOD);
+			NSAssert(NO, @"Invalid ZDCFileType: %ld", (long)type);
 			break;
 		}
 	}
@@ -2017,7 +2017,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		}
 		default:
 		{
-			NSAssert(NO, @"Invalid directory passed to %@", THIS_METHOD);
+			NSAssert(NO, @"Invalid ZDCFileType: %ld", (long)type);
 			break;
 		}
 	}
@@ -2395,7 +2395,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	if (result < 0)
 	{
 		if (errno != ENOATTR) {
-			ZDCLogError(@"%@: getxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"getxattr(%@): error = %s", [url path], strerror(errno));
 		}
 	}
 	
@@ -2415,7 +2415,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	int result = setxattr(path, name, &value, sizeof(value), 0, 0);
 	
 	if (result < 0) {
-		ZDCLogError(@"%@: setxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+		ZDCLogError(@"setxattr(%@): error = %s", [url path], strerror(errno));
 	}
 }
 
@@ -2429,7 +2429,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	if (result < 0)
 	{
 		if (errno != ENOATTR) {
-			ZDCLogError(@"%@: getxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"getxattr(%@): error = %s", [url path], strerror(errno));
 		}
 	}
 	
@@ -2448,7 +2448,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		int result = setxattr(path, name, &value, sizeof(value), 0, 0);
 		
 		if (result < 0) {
-			ZDCLogError(@"%@: setxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"setxattr(%@): error = %s", [url path], strerror(errno));
 		}
 	}
 	else
@@ -2456,7 +2456,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		int result = removexattr(path, name, 0);
 		
 		if (result < 0) {
-			ZDCLogError(@"%@: removexattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"removexattr(%@): error = %s", [url path], strerror(errno));
 		}
 	}
 }
@@ -2471,7 +2471,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	if (result < 0)
 	{
 		if (errno != ENOATTR) {
-			ZDCLogError(@"%@: getxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"getxattr(%@): error = %s", [url path], strerror(errno));
 		}
 	}
 	
@@ -2490,7 +2490,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		int result = setxattr(path, name, &value, sizeof(value), 0, 0);
 		
 		if (result < 0) {
-			ZDCLogError(@"%@: setxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"setxattr(%@): error = %s", [url path], strerror(errno));
 		}
 	}
 	else
@@ -2498,7 +2498,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		int result = removexattr(path, name, 0);
 		
 		if (result < 0) {
-			ZDCLogError(@"%@: removexattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"removexattr(%@): error = %s", [url path], strerror(errno));
 		}
 	}
 }
@@ -2514,7 +2514,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	if (result < 0)
 	{
 		if (errno != ENOATTR) {
-			ZDCLogError(@"%@: getxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"getxattr(%@): error = %s", [url path], strerror(errno));
 		}
 	}
 	
@@ -2543,7 +2543,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	int result = setxattr(path, name, &numMilliseconds, sizeof(numMilliseconds), 0, 0);
 	
 	if (result < 0) {
-		ZDCLogError(@"%@: setxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+		ZDCLogError(@"setxattr(%@): error = %s", [url path], strerror(errno));
 	}
 }
 
@@ -2566,7 +2566,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 			success = YES;
 		}
 		else {
-			ZDCLogError(@"%@: getxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"getxattr(%@): error = %s", [url path], strerror(errno));
 		}
 	}
 	else if (result == 0)
@@ -2581,7 +2581,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		NSData *decrypted = [encrypted decryptedDataWithSymmetricKey:encryptionKey error:&error];
 		
 		if (error) {
-			ZDCLogError(@"%@: decryption error: %@", THIS_METHOD, error);
+			ZDCLogError(@"decryption error: %@", error);
 		}
 		else {
 			eTag = [[NSString alloc] initWithData:decrypted encoding:NSUTF8StringEncoding];
@@ -2607,7 +2607,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		
 		if (error)
 		{
-			ZDCLogError(@"%@: encryption error: %@", THIS_METHOD, error);
+			ZDCLogError(@"encryption error: %@", error);
 		}
 		else if (encrypted)
 		{
@@ -2616,7 +2616,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 			int result = setxattr(path, name, buffer, encrypted.length, 0, 0);
 			
 			if (result < 0) {
-				ZDCLogError(@"%@: setxattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+				ZDCLogError(@"setxattr(%@): error = %s", [url path], strerror(errno));
 			}
 		}
 	}
@@ -2625,7 +2625,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		int result = removexattr(path, name, 0);
 		
 		if (result < 0) {
-			ZDCLogError(@"%@: removexattr(%@): error = %s", THIS_METHOD, [url path], strerror(errno));
+			ZDCLogError(@"removexattr(%@): error = %s", [url path], strerror(errno));
 		}
 	}
 }
@@ -2677,9 +2677,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	
 	void (^WarnIfMainThread)(void) = ^{
 		if ([NSThread isMainThread]) {
-			ZDCLogWarn(@"Performing synchronous disk IO (+encryption) on the main thread."
-			          @" This is NOT recommended."
-						 @" (via: [%@ %@]", THIS_FILE, THIS_METHOD);
+			ZDCLogWarn(@"Performing synchronous disk IO (+encryption) on the main thread. This is NOT recommended.");
 		}
 	};
 	
@@ -3297,9 +3295,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	
 	void (^WarnIfMainThread)(void) = ^{
 		if ([NSThread isMainThread]) {
-			ZDCLogWarn(@"Performing synchronous disk IO (+encryption) on the main thread."
-			          @" This is NOT recommended."
-						 @" (via: [%@ %@]", THIS_FILE, THIS_METHOD);
+			ZDCLogWarn(@"Performing synchronous disk IO (+encryption) on the main thread. This is NOT recommended.");
 		}
 	};
 	
@@ -3901,9 +3897,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	
 	void (^WarnIfMainThread)(void) = ^{
 		if ([NSThread isMainThread]) {
-			ZDCLogWarn(@"Performing synchronous disk IO (+encryption) on the main thread."
-			          @" This is NOT recommended."
-						 @" (via: [%@ %@]", THIS_FILE, THIS_METHOD);
+			ZDCLogWarn(@"Performing synchronous disk IO (+encryption) on the main thread. This is NOT recommended.");
 		}
 	};
 	
