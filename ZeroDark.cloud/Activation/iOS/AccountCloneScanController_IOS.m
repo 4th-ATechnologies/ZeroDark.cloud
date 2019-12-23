@@ -1251,9 +1251,14 @@ typedef enum {
 {
 	ZDCLogAutoTrace();
 	__weak typeof(self) weakSelf = self;
-
+	
 	UIImage *image = nil;
+	NSURL* imageURL = nil;
 	NSString *mediaType = [info objectForKey:UIImagePickerControllerMediaType];
+	
+	if (@available(iOS 11.0, *)) {
+		imageURL = [info objectForKey:UIImagePickerControllerImageURL];
+	}
 	
 	if (UTTypeConformsTo((__bridge CFStringRef)mediaType, kUTTypeImage))
 	{
@@ -1264,17 +1269,24 @@ typedef enum {
 		
 		__strong typeof(self) strongSelf = weakSelf;
 		if(!strongSelf) return;
-
+		
 		if (strongSelf->photoPicker == sender) {
 			strongSelf->photoPicker = nil;
 		}
 		
 		if (image)
 		{
-			[strongSelf setQRCodeWithImage:image];
-			
+			[strongSelf setQRCodeWithImage:image.copy];
 		}
+		
+		// rem
+		if(imageURL)
+		{
+			[[NSFileManager defaultManager] removeItemAtPath:imageURL.path error:nil];
+		}
+		
 	}];
+	
 }
 
 
