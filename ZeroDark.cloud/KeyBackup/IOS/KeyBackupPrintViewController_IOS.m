@@ -110,31 +110,31 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 							NSLocalizedString(@"User ID: %@", @"User ID %@"),
 							localUser.uuid];
 
-	NSArray<NSString*> * wordList = [BIP39Mnemonic mnemonicFromKey:keyBackupVC.accessKeyData
-																		 passphrase:keyBackupVC.user.syncedSalt
-																		 languageID:keyBackupVC.currentLanguageId
-																		  algorithm:Mnemonic_Storm4
-																				error:&error];
-	
-	[_tagView removeAllTags];
-	
-	for(NSString* tag in wordList)
-		[_tagView addTag:tag];
-
-	_imgQRCode.image = [OSImage QRImageWithString:qrCodeString
+ 	_imgQRCode.image = [OSImage QRImageWithString:qrCodeString
 													 withSize:CGSizeMake(400, 400)];
 	
+	[_tagView removeAllTags];
 
- //TODO: code here to inform user that there is a passode
-	if(hasPassCode)
+  	if(hasPassCode)
 	{
 		_lblPasscodeInfo.hidden = NO;
+		_tagView.hidden = YES;
 		_vwPassCode.hidden = NO;
 		_lblPasscodeInfo.text = lblPasscodeInfoText;
 	}
 	else
 	{
+		NSArray<NSString*> * wordList = [BIP39Mnemonic mnemonicFromKey:keyBackupVC.accessKeyData
+																			 passphrase:keyBackupVC.user.syncedSalt
+																			 languageID:keyBackupVC.currentLanguageId
+																			  algorithm:Mnemonic_Storm4
+																					error:&error];
+		
+		for(NSString* tag in wordList)
+			[_tagView addTag:tag];
+
 		_lblPasscodeInfo.hidden = YES;
+		_tagView.hidden = NO;
 		_vwPassCode.hidden = YES;
 		_lblPasscodeInfo.text = @"";
 	}

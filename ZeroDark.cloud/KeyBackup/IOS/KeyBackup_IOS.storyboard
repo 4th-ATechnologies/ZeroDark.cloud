@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15702" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
-    <device id="retina4_7" orientation="portrait" appearance="light"/>
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15704"/>
@@ -22,11 +22,11 @@
                         <viewControllerLayoutGuide type="bottom" id="sLh-om-dIa"/>
                     </layoutGuides>
                     <view key="view" contentMode="scaleToFill" id="u7Y-5y-Adr">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="StormCloudsBackground.jpg" translatesAutoresizingMaskIntoConstraints="NO" id="fOM-Nr-dIO">
-                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                                <rect key="frame" x="0.0" y="0.0" width="414" height="862"/>
                             </imageView>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -48,57 +48,57 @@
             <objects>
                 <viewController storyboardIdentifier="BackupIntroViewController_IOS" id="ZzW-Ic-FXj" customClass="BackupIntroViewController_IOS" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="iuK-7K-wZX">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="default_user" translatesAutoresizingMaskIntoConstraints="NO" id="VPR-uL-d8d" customClass="UIImageViewPasteable">
-                                <rect key="frame" x="8" y="8" width="64" height="64"/>
+                                <rect key="frame" x="8" y="52" width="64" height="64"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="64" id="rbH-Wz-e9d"/>
                                     <constraint firstAttribute="height" constant="64" id="z0b-dw-4Su"/>
                                 </constraints>
                             </imageView>
                             <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ez9-pz-z95" userLabel="ImgAvatar_CenterLine_Hidden">
-                                <rect key="frame" x="80" y="39.5" width="287" height="1"/>
+                                <rect key="frame" x="80" y="83.5" width="326" height="1"/>
                                 <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="1" id="rTm-up-Sw3"/>
                                 </constraints>
                             </view>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="username" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="kyb-pi-cj4">
-                                <rect key="frame" x="80" y="13.5" width="287" height="23"/>
+                                <rect key="frame" x="80" y="57.5" width="326" height="23"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="19"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <imageView userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="9Uf-TU-4Dy">
-                                <rect key="frame" x="80" y="44.5" width="287" height="18"/>
+                                <rect key="frame" x="80" y="88.5" width="326" height="18"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="18" id="yaD-v4-RWB"/>
                                 </constraints>
                             </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="provider" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="iYd-qu-G4j">
-                                <rect key="frame" x="80" y="46.5" width="287" height="14.5"/>
+                                <rect key="frame" x="80" y="90.5" width="326" height="14"/>
                                 <fontDescription key="fontDescription" style="UICTFontTextStyleCaption1"/>
                                 <color key="textColor" white="0.33333333329999998" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Zcg-hw-YKE" userLabel="Horizontal Line">
-                                <rect key="frame" x="0.0" y="80" width="375" height="1"/>
+                                <rect key="frame" x="0.0" y="124" width="414" height="1"/>
                                 <color key="backgroundColor" white="0.66666666669999997" alpha="1" colorSpace="calibratedWhite"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="1" id="FON-J6-79S"/>
                                 </constraints>
                             </view>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" bounces="NO" scrollEnabled="NO" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" bouncesZoom="NO" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="nDr-2d-tVE">
-                                <rect key="frame" x="0.0" y="81" width="375" height="586"/>
+                                <rect key="frame" x="0.0" y="125" width="414" height="737"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <prototypes>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="BackupIntroViewControllerCell" rowHeight="85" id="RCb-pC-TBJ" userLabel="UserPrivacyViewControllerCell" customClass="BackupIntroViewControllerCell">
-                                        <rect key="frame" x="0.0" y="28" width="375" height="85"/>
+                                        <rect key="frame" x="0.0" y="28" width="414" height="85"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="RCb-pC-TBJ" id="e3u-9Z-dLS">
-                                            <rect key="frame" x="0.0" y="0.0" width="375" height="85"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="414" height="85"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="a6c-Do-VQy">
@@ -109,12 +109,12 @@
                                                     </constraints>
                                                 </imageView>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsLetterSpacingToFitWidth="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="kfq-qC-OBa">
-                                                    <rect key="frame" x="52" y="12" width="308" height="20.5"/>
+                                                    <rect key="frame" x="52" y="12" width="342" height="20.5"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" verticalCompressionResistancePriority="751" text="Description" textAlignment="natural" lineBreakMode="wordWrap" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="kOd-pg-o3v">
-                                                    <rect key="frame" x="52" y="40.5" width="308" height="32.5"/>
+                                                    <rect key="frame" x="52" y="40.5" width="342" height="32.5"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="13"/>
                                                     <color key="textColor" white="0.33333333329999998" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                     <nil key="highlightedColor"/>
@@ -188,17 +188,17 @@
             <objects>
                 <viewController storyboardIdentifier="BackupAsImageViewController_IOS" id="cFM-nD-kyU" customClass="BackupAsImageViewController_IOS" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="VUH-lM-cmc">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="1000" verticalCompressionResistancePriority="999" text="Save the image below, or print it, or take a picture of the screen. Then click next to verify your backup." lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="i5g-1J-JUl">
-                                <rect key="frame" x="20" y="40" width="335" height="61"/>
+                                <rect key="frame" x="20" y="84" width="374" height="61"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="wu0-Sr-6kJ">
-                                <rect key="frame" x="0.0" y="623" width="375" height="44"/>
+                                <rect key="frame" x="0.0" y="813" width="414" height="49"/>
                                 <items>
                                     <barButtonItem systemItem="action" id="Lgv-HZ-2ev">
                                         <connections>
@@ -214,21 +214,21 @@
                                 </items>
                             </toolbar>
                             <imageView contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="249" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="4DM-xE-R9l" customClass="UIImageViewPasteable">
-                                <rect key="frame" x="28" y="109" width="319.5" height="319.5"/>
+                                <rect key="frame" x="-28.5" y="153" width="471" height="470.5"/>
                                 <color key="backgroundColor" red="0.83652299640000005" green="0.83652299640000005" blue="0.83652299640000005" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="4DM-xE-R9l" secondAttribute="height" multiplier="1:1" id="OxG-C2-yej"/>
                                 </constraints>
                             </imageView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="I7C-L2-Cjb" customClass="PasswordStrengthUIView">
-                                <rect key="frame" x="40" y="605" width="235.5" height="6"/>
+                                <rect key="frame" x="40" y="800" width="274.5" height="6"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="6" id="8nW-eL-CzM"/>
                                 </constraints>
                             </view>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ryL-a2-HUp">
-                                <rect key="frame" x="103" y="252" width="169.5" height="33.5"/>
+                                <rect key="frame" x="122.5" y="371.5" width="169.5" height="33.5"/>
                                 <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                                 <string key="text"> To create a access key, 
 please enter a passphrase </string>
@@ -237,7 +237,7 @@ please enter a passphrase </string>
                                 <nil key="highlightedColor"/>
                             </label>
                             <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Password" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="5lW-fD-onH" customClass="ZDCSecureTextField">
-                                <rect key="frame" x="40" y="569" width="295" height="30"/>
+                                <rect key="frame" x="40" y="764" width="334" height="30"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="30" id="aAe-1L-Lqu"/>
                                 </constraints>
@@ -245,7 +245,7 @@ please enter a passphrase </string>
                                 <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no" secureTextEntry="YES" smartDashesType="no" smartInsertDeleteType="no" smartQuotesType="no"/>
                             </textField>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="750" verticalCompressionResistancePriority="1000" lineBreakMode="tailTruncation" numberOfLines="11" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="Oio-QQ-t9T">
-                                <rect key="frame" x="20" y="436.5" width="335" height="124.5"/>
+                                <rect key="frame" x="20" y="631.5" width="374" height="124.5"/>
                                 <string key="text">You can use this code to clone your storm4® account to another device.  In addition you should make a backup of  this code. If this device is lost, it is impossible to access your data withou this acess key.  
 
 To ensure security, you must enter a passcode of your chosing before saving this code. Use this passcode later to unlock the access key.</string>
@@ -254,7 +254,7 @@ To ensure security, you must enter a passcode of your chosing before saving this
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Very Weak" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="X4i-wW-ZYr">
-                                <rect key="frame" x="279.5" y="601" width="55.5" height="14"/>
+                                <rect key="frame" x="318.5" y="796" width="55.5" height="14"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="14" id="Uw4-36-Kgh"/>
                                 </constraints>
@@ -312,17 +312,17 @@ To ensure security, you must enter a passcode of your chosing before saving this
             <objects>
                 <viewController storyboardIdentifier="BackupAsTextViewController_IOS" id="Fcg-z2-QQG" customClass="BackupAsTextViewController_IOS" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="XG1-Q8-NKN">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Write down or save the words below. Then click next to verify your backup." lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Xsf-Eh-T8r">
-                                <rect key="frame" x="20" y="40" width="335" height="41"/>
+                                <rect key="frame" x="20" y="84" width="374" height="41"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="DAP-xK-kmC" customClass="RKTagsView">
-                                <rect key="frame" x="20" y="101" width="335" height="200"/>
+                                <rect key="frame" x="20" y="145" width="374" height="200"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="200" id="HCn-dr-s1j"/>
@@ -335,7 +335,7 @@ To ensure security, you must enter a passcode of your chosing before saving this
                                 </variation>
                             </view>
                             <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="naQ-jO-btw">
-                                <rect key="frame" x="0.0" y="623" width="375" height="44"/>
+                                <rect key="frame" x="0.0" y="813" width="414" height="49"/>
                                 <items>
                                     <barButtonItem systemItem="action" id="RuJ-pS-Ymp">
                                         <connections>
@@ -381,17 +381,17 @@ To ensure security, you must enter a passcode of your chosing before saving this
             <objects>
                 <viewController storyboardIdentifier="VerifyTextViewController_IOS" id="7UD-NU-LYz" customClass="VerifyTextViewController_IOS" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="9xo-gZ-uCM">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Type or paste your backup below. (If pasting, be sure to paste from your backup source.)" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ae0-O9-Hwi">
-                                <rect key="frame" x="20" y="40" width="335" height="61"/>
+                                <rect key="frame" x="20" y="84" width="374" height="41"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="jLG-LK-fqH" customClass="RKTagsView">
-                                <rect key="frame" x="20" y="137" width="335" height="462"/>
+                                <rect key="frame" x="20" y="161" width="374" height="633"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="230" id="CQU-oR-LJD"/>
@@ -405,7 +405,7 @@ To ensure security, you must enter a passcode of your chosing before saving this
                                 </variation>
                             </view>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Q0j-Ns-iW8">
-                                <rect key="frame" x="87.5" y="607" width="200" height="40"/>
+                                <rect key="frame" x="107" y="802" width="200" height="40"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="200" id="CmK-jp-ey3"/>
                                     <constraint firstAttribute="height" constant="40" id="zm2-Bw-e7X"/>
@@ -417,7 +417,7 @@ To ensure security, you must enter a passcode of your chosing before saving this
                                 </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="languge" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eE3-OB-9Gz">
-                                <rect key="frame" x="20" y="117" width="335" height="16"/>
+                                <rect key="frame" x="20" y="141" width="374" height="16"/>
                                 <fontDescription key="fontDescription" style="UICTFontTextStyleFootnote"/>
                                 <color key="textColor" white="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
@@ -456,11 +456,11 @@ To ensure security, you must enter a passcode of your chosing before saving this
             <objects>
                 <viewController storyboardIdentifier="BackupSuccessViewController_IOS" id="cPS-z9-GpB" customClass="BackupSuccessViewController_IOS" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="W1b-Bx-FED">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="veV-Hd-bfB">
-                                <rect key="frame" x="20" y="40" width="335" height="223.5"/>
+                                <rect key="frame" x="20" y="84" width="374" height="223.5"/>
                                 <string key="text">Congratulations, your access key backup has been verified.
 
 Remember, if you lose this device (it stops working, gets stolen, etc) you will need your access key to re-gain access to your data. That's why this backup may be needed.
@@ -471,7 +471,7 @@ If you happen to be logged into the same account on a different device, you can 
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="q4H-JG-0ny">
-                                <rect key="frame" x="87.5" y="283.5" width="200" height="40"/>
+                                <rect key="frame" x="107" y="327.5" width="200" height="40"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="40" id="Lwk-C8-1bB"/>
                                     <constraint firstAttribute="width" constant="200" id="VcG-7K-oF2"/>
@@ -506,24 +506,24 @@ If you happen to be logged into the same account on a different device, you can 
             <objects>
                 <viewController storyboardIdentifier="VerifyImageViewController_IOS" id="mKe-jj-bAs" customClass="VerifyImageViewController_IOS" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="fNm-FJ-paQ">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Use the camera to scan your image, or paste the image below." textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xvK-FB-UM7">
-                                <rect key="frame" x="20" y="40" width="335" height="41"/>
+                                <rect key="frame" x="20" y="84" width="374" height="41"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Urs-Vp-1ub" userLabel="portal placeholder" customClass="UIImageViewPasteable" colorLabel="IBBuiltInLabel-Blue">
-                                <rect key="frame" x="20" y="139" width="335" height="335"/>
+                                <rect key="frame" x="20" y="183" width="374" height="374"/>
                                 <subviews>
                                     <view contentMode="scaleAspectFill" translatesAutoresizingMaskIntoConstraints="NO" id="OGe-mp-G8X">
-                                        <rect key="frame" x="20" y="20" width="295" height="295"/>
+                                        <rect key="frame" x="20" y="20" width="334" height="334"/>
                                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     </view>
                                     <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="no_camera" translatesAutoresizingMaskIntoConstraints="NO" id="iRy-Fg-EXH">
-                                        <rect key="frame" x="20" y="20" width="295" height="295"/>
+                                        <rect key="frame" x="20" y="20" width="334" height="334"/>
                                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     </imageView>
                                 </subviews>
@@ -542,12 +542,12 @@ If you happen to be logged into the same account on a different device, you can 
                                 </constraints>
                             </view>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="rRQ-CE-ebb" customClass="UIImageViewPasteable">
-                                <rect key="frame" x="20" y="139" width="335" height="335"/>
+                                <rect key="frame" x="20" y="183" width="374" height="374"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <color key="tintColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </imageView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" showsTouchWhenHighlighted="YES" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ahC-iR-yI7">
-                                <rect key="frame" x="127.5" y="482" width="40" height="40"/>
+                                <rect key="frame" x="147" y="565" width="40" height="40"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="40" id="SgZ-zC-guD"/>
                                     <constraint firstAttribute="width" constant="40" id="YyR-Ov-xqC"/>
@@ -558,7 +558,7 @@ If you happen to be logged into the same account on a different device, you can 
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" showsTouchWhenHighlighted="YES" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="UIA-EB-NRV">
-                                <rect key="frame" x="207.5" y="482" width="40" height="40"/>
+                                <rect key="frame" x="227" y="565" width="40" height="40"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="40" id="cif-GZ-8mB"/>
                                     <constraint firstAttribute="height" constant="40" id="ymv-Yd-6sX"/>
@@ -570,7 +570,7 @@ If you happen to be logged into the same account on a different device, you can 
                                 </connections>
                             </button>
                             <label hidden="YES" opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Place the code in the center of the screen. It will be scanned automatically." textAlignment="center" lineBreakMode="wordWrap" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="yH3-iY-Ufx">
-                                <rect key="frame" x="8" y="89" width="375" height="42"/>
+                                <rect key="frame" x="8" y="133" width="414" height="42"/>
                                 <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="42" id="gzs-Sj-fDz"/>
@@ -580,7 +580,7 @@ If you happen to be logged into the same account on a different device, you can 
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="wordWrap" translatesAutoresizingMaskIntoConstraints="NO" id="VJw-Kf-Yni">
-                                <rect key="frame" x="8" y="89" width="375" height="42"/>
+                                <rect key="frame" x="8" y="133" width="414" height="42"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="42" id="YEo-1l-49u"/>
                                 </constraints>
@@ -640,11 +640,11 @@ If you happen to be logged into the same account on a different device, you can 
             <objects>
                 <viewController storyboardIdentifier="UnlockAccessCodeViewController_IOS" id="Xos-ON-UG8" customClass="UnlockAccessCodeViewController_IOS" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Ofb-Sw-sxH">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="1000" text="Enter the access key passphrase to continue the verification process." textAlignment="center" lineBreakMode="wordWrap" numberOfLines="4" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="0Zk-h4-X55">
-                                <rect key="frame" x="20" y="40" width="335" height="41"/>
+                                <rect key="frame" x="20" y="84" width="374" height="41"/>
                                 <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="123" id="keF-Pb-e11"/>
@@ -659,19 +659,19 @@ If you happen to be logged into the same account on a different device, you can 
                                 </variation>
                             </label>
                             <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" verticalHuggingPriority="1000" verticalCompressionResistancePriority="1000" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="passphrase" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="GzO-ii-rif" customClass="ZDCSecureTextField">
-                                <rect key="frame" x="40" y="456" width="295" height="34"/>
+                                <rect key="frame" x="40" y="539" width="334" height="34"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no" keyboardType="emailAddress"/>
                             </textField>
                             <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="250" image="qrcode-default" translatesAutoresizingMaskIntoConstraints="NO" id="8qJ-9v-Su0">
-                                <rect key="frame" x="20" y="101" width="335" height="335"/>
+                                <rect key="frame" x="20" y="145" width="374" height="374"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="8qJ-9v-Su0" secondAttribute="height" multiplier="1:1" id="ehG-ly-fTj"/>
                                 </constraints>
                             </imageView>
                             <button opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="1000" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="UEi-ND-z8j">
-                                <rect key="frame" x="156" y="506" width="63" height="36"/>
+                                <rect key="frame" x="175.5" y="589" width="63" height="36"/>
                                 <fontDescription key="fontDescription" name="Exo2-Regular" family="Exo 2" pointSize="20"/>
                                 <state key="normal" title="Unlock"/>
                                 <userDefinedRuntimeAttributes>
@@ -682,7 +682,7 @@ If you happen to be logged into the same account on a different device, you can 
                                 </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="4 failed password attempts" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="4FG-9M-6Ze">
-                                <rect key="frame" x="40" y="505" width="295" height="38"/>
+                                <rect key="frame" x="40" y="588" width="334" height="38"/>
                                 <color key="backgroundColor" red="1" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="38" id="Swz-pK-SGM"/>
@@ -730,14 +730,14 @@ If you happen to be logged into the same account on a different device, you can 
             <objects>
                 <viewController storyboardIdentifier="KeyBackupPrintViewController_IOS" id="OHG-ct-cOt" customClass="KeyBackupPrintViewController_IOS" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Axy-7X-PlM">
-                        <rect key="frame" x="0.0" y="0.0" width="712" height="1006.5"/>
+                        <rect key="frame" x="0.0" y="0.0" width="792" height="1068"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="QqY-45-CmW">
-                                <rect key="frame" x="16" y="40" width="680" height="926.5"/>
+                                <rect key="frame" x="56" y="40" width="680" height="954"/>
                                 <subviews>
                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="250" image="qrcode-default" translatesAutoresizingMaskIntoConstraints="NO" id="TZo-0S-2jn">
-                                        <rect key="frame" x="214" y="124" width="252" height="252"/>
+                                        <rect key="frame" x="186.5" y="124" width="307.5" height="307.5"/>
                                         <constraints>
                                             <constraint firstAttribute="width" secondItem="TZo-0S-2jn" secondAttribute="height" multiplier="1:1" id="FLj-6Y-Wju"/>
                                         </constraints>
@@ -783,7 +783,7 @@ If you happen to be logged into the same account on a different device, you can 
                                                 </constraints>
                                             </imageView>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="provider" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Y4g-pr-PyX">
-                                                <rect key="frame" x="56" y="29" width="76" height="14.5"/>
+                                                <rect key="frame" x="56" y="28.5" width="76" height="15"/>
                                                 <fontDescription key="fontDescription" style="UICTFontTextStyleCaption1"/>
                                                 <color key="textColor" white="0.33333333329999998" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                 <nil key="highlightedColor"/>
@@ -807,13 +807,13 @@ If you happen to be logged into the same account on a different device, you can 
                                         </constraints>
                                     </view>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="254" verticalCompressionResistancePriority="753" text="Instructions" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ze1-KS-Mdj">
-                                        <rect key="frame" x="284" y="552.5" width="112" height="26.5"/>
+                                        <rect key="frame" x="284" y="628.5" width="112" height="26.5"/>
                                         <fontDescription key="fontDescription" style="UICTFontTextStyleTitle2"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="252" verticalCompressionResistancePriority="751" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2Lp-ck-YB0">
-                                        <rect key="frame" x="40" y="599" width="600" height="218.5"/>
+                                        <rect key="frame" x="40" y="675" width="600" height="218.5"/>
                                         <constraints>
                                             <constraint firstAttribute="width" constant="600" id="N6e-WG-c5P"/>
                                         </constraints>
@@ -829,30 +829,26 @@ It is impossible to access your data without your access key. With great privacy
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="255" verticalCompressionResistancePriority="754" text="User ID : 3287312842384138851835 " textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="k2H-3l-BOR">
-                                        <rect key="frame" x="188" y="906" width="304" height="20.5"/>
+                                        <rect key="frame" x="188" y="933.5" width="304" height="20.5"/>
                                         <fontDescription key="fontDescription" style="UICTFontTextStyleHeadline"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Code words" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bNs-Ss-stw">
-                                        <rect key="frame" x="283" y="396" width="114.5" height="26.5"/>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Access Key Words" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bNs-Ss-stw">
+                                        <rect key="frame" x="251.5" y="451.5" width="177" height="27"/>
                                         <fontDescription key="fontDescription" style="UICTFontTextStyleTitle2"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
-                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bxk-Ys-YtT" customClass="RKTagsView">
-                                        <rect key="frame" x="90" y="432.5" width="500" height="100"/>
-                                        <color key="backgroundColor" red="0.83741801979999997" green="0.83743780850000005" blue="0.83742713930000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                        <constraints>
-                                            <constraint firstAttribute="width" constant="500" id="2C1-24-nZk"/>
-                                            <constraint firstAttribute="height" constant="100" id="UM7-0Q-hVL"/>
-                                        </constraints>
-                                    </view>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="OYj-G4-RxA">
-                                        <rect key="frame" x="40" y="827.5" width="600" height="58.5"/>
+                                        <rect key="frame" x="40" y="488.5" width="600" height="102.5"/>
                                         <subviews>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="253" verticalCompressionResistancePriority="752" text="Note: This backup also requires a passcode to restore the key. Be sure to secure the passcode in a safe place." textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="tmW-Uc-PpO">
-                                                <rect key="frame" x="8" y="8" width="584" height="42.5"/>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="253" verticalCompressionResistancePriority="752" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="tmW-Uc-PpO">
+                                                <rect key="frame" x="8" y="8" width="584" height="86.5"/>
+                                                <string key="text">Note: Access Key words are not allowed when you use a passphrase. 
+
+Be sure to secure the passcode in a safe place.  
+</string>
                                                 <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
@@ -866,28 +862,37 @@ It is impossible to access your data without your access key. With great privacy
                                             <constraint firstItem="tmW-Uc-PpO" firstAttribute="leading" secondItem="OYj-G4-RxA" secondAttribute="leading" constant="8" id="lCB-rw-Jg1"/>
                                         </constraints>
                                     </view>
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bxk-Ys-YtT" customClass="RKTagsView">
+                                        <rect key="frame" x="90" y="488.5" width="500" height="100"/>
+                                        <color key="backgroundColor" red="0.83741801979999997" green="0.83743780850000005" blue="0.83742713930000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="500" id="2C1-24-nZk"/>
+                                            <constraint firstAttribute="height" constant="100" id="UM7-0Q-hVL"/>
+                                        </constraints>
+                                    </view>
                                 </subviews>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
                                     <constraint firstItem="Ze1-KS-Mdj" firstAttribute="centerX" secondItem="F3H-7t-YEA" secondAttribute="centerX" id="0rM-tx-7Wz"/>
-                                    <constraint firstAttribute="bottom" secondItem="k2H-3l-BOR" secondAttribute="bottom" id="2Bp-w8-tpx"/>
+                                    <constraint firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="k2H-3l-BOR" secondAttribute="bottom" id="2Bp-w8-tpx"/>
                                     <constraint firstItem="k2H-3l-BOR" firstAttribute="centerX" secondItem="F3H-7t-YEA" secondAttribute="centerX" id="4Ma-qC-LfQ"/>
                                     <constraint firstItem="bNs-Ss-stw" firstAttribute="centerX" secondItem="bxk-Ys-YtT" secondAttribute="centerX" id="5O1-zj-h6f"/>
-                                    <constraint firstItem="k2H-3l-BOR" firstAttribute="top" secondItem="OYj-G4-RxA" secondAttribute="bottom" constant="20" id="7hD-TR-NsB"/>
-                                    <constraint firstItem="OYj-G4-RxA" firstAttribute="top" secondItem="2Lp-ck-YB0" secondAttribute="bottom" constant="10" id="ATn-KQ-411"/>
                                     <constraint firstItem="2Lp-ck-YB0" firstAttribute="trailing" secondItem="OYj-G4-RxA" secondAttribute="trailing" id="JCZ-CP-Tk1"/>
                                     <constraint firstItem="bNs-Ss-stw" firstAttribute="top" secondItem="TZo-0S-2jn" secondAttribute="bottom" constant="20" id="Jke-In-L2u"/>
                                     <constraint firstItem="xNS-5D-nXi" firstAttribute="centerX" secondItem="QqY-45-CmW" secondAttribute="centerX" id="N46-Kb-1XU"/>
                                     <constraint firstItem="TZo-0S-2jn" firstAttribute="top" secondItem="F3H-7t-YEA" secondAttribute="bottom" constant="20" id="ZOD-k3-hyE"/>
+                                    <constraint firstItem="k2H-3l-BOR" firstAttribute="top" secondItem="2Lp-ck-YB0" secondAttribute="bottom" constant="40" id="cLh-le-EPm"/>
                                     <constraint firstItem="xNS-5D-nXi" firstAttribute="centerX" secondItem="F3H-7t-YEA" secondAttribute="centerX" id="iLV-FK-jg8"/>
                                     <constraint firstItem="2Lp-ck-YB0" firstAttribute="leading" secondItem="OYj-G4-RxA" secondAttribute="leading" id="j1R-l8-K3k"/>
                                     <constraint firstItem="xNS-5D-nXi" firstAttribute="top" secondItem="QqY-45-CmW" secondAttribute="top" id="knM-6W-46K"/>
                                     <constraint firstItem="bxk-Ys-YtT" firstAttribute="top" secondItem="bNs-Ss-stw" secondAttribute="bottom" constant="10" id="lyG-As-cTh"/>
                                     <constraint firstItem="TZo-0S-2jn" firstAttribute="centerX" secondItem="F3H-7t-YEA" secondAttribute="centerX" id="nCR-Ee-d1e"/>
                                     <constraint firstItem="F3H-7t-YEA" firstAttribute="top" secondItem="xNS-5D-nXi" secondAttribute="bottom" constant="20" id="ojc-Ha-jjd"/>
+                                    <constraint firstItem="Ze1-KS-Mdj" firstAttribute="top" secondItem="bxk-Ys-YtT" secondAttribute="bottom" constant="40" id="pvh-uH-GK1"/>
                                     <constraint firstAttribute="trailing" secondItem="2Lp-ck-YB0" secondAttribute="trailing" constant="40" id="rlf-uf-ioo"/>
                                     <constraint firstItem="2Lp-ck-YB0" firstAttribute="top" secondItem="Ze1-KS-Mdj" secondAttribute="bottom" constant="20" id="sYl-G6-bfz"/>
-                                    <constraint firstItem="Ze1-KS-Mdj" firstAttribute="top" secondItem="bxk-Ys-YtT" secondAttribute="bottom" constant="20" id="txv-Co-ki8"/>
+                                    <constraint firstItem="Ze1-KS-Mdj" firstAttribute="top" relation="greaterThanOrEqual" secondItem="bNs-Ss-stw" secondAttribute="bottom" constant="150" id="sxg-Lo-ZDc"/>
+                                    <constraint firstItem="OYj-G4-RxA" firstAttribute="top" secondItem="bxk-Ys-YtT" secondAttribute="top" id="utu-NL-NdD"/>
                                     <constraint firstItem="2Lp-ck-YB0" firstAttribute="leading" secondItem="QqY-45-CmW" secondAttribute="leading" constant="40" id="yAD-jI-SYc"/>
                                     <constraint firstItem="bNs-Ss-stw" firstAttribute="centerX" secondItem="TZo-0S-2jn" secondAttribute="centerX" id="zif-3w-dz3"/>
                                 </constraints>
@@ -895,7 +900,6 @@ It is impossible to access your data without your access key. With great privacy
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
-                            <constraint firstItem="QqY-45-CmW" firstAttribute="centerY" secondItem="Axy-7X-PlM" secondAttribute="centerY" id="NaM-Kg-UPN"/>
                             <constraint firstItem="Wza-XM-2il" firstAttribute="bottom" secondItem="QqY-45-CmW" secondAttribute="bottom" constant="40" id="k2d-z4-q0Q"/>
                             <constraint firstItem="QqY-45-CmW" firstAttribute="top" secondItem="Wza-XM-2il" secondAttribute="top" constant="40" id="qaN-0F-f5S"/>
                             <constraint firstItem="QqY-45-CmW" firstAttribute="centerX" secondItem="Axy-7X-PlM" secondAttribute="centerX" id="sWQ-sT-uTl"/>
@@ -931,23 +935,23 @@ It is impossible to access your data without your access key. With great privacy
             <objects>
                 <viewController storyboardIdentifier="BackupComboViewController_IOS" id="VBS-Jw-q7E" customClass="BackupComboViewController_IOS" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="w2Z-jf-EXz">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalCompressionResistancePriority="100" verticalCompressionResistancePriority="100" ambiguous="YES" image="qrcode-default" translatesAutoresizingMaskIntoConstraints="NO" id="AIT-cg-b95" customClass="UIImageViewPasteable">
-                                <rect key="frame" x="10" y="78.5" width="355" height="335.5"/>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalCompressionResistancePriority="100" verticalCompressionResistancePriority="100" image="qrcode-default" translatesAutoresizingMaskIntoConstraints="NO" id="AIT-cg-b95" customClass="UIImageViewPasteable">
+                                <rect key="frame" x="10" y="102.5" width="394" height="394"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="AIT-cg-b95" secondAttribute="height" multiplier="1:1" id="hBB-Gv-oKq"/>
                                 </constraints>
                             </imageView>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" verticalHuggingPriority="1000" verticalCompressionResistancePriority="1000" ambiguous="YES" text="Save the image or the words below. Then click Next to verify your backup." lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="f3r-oP-T55">
-                                <rect key="frame" x="10" y="28" width="355" height="42.5"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" verticalHuggingPriority="1000" verticalCompressionResistancePriority="1000" text="Save the image or the words below. Then click Next to verify your backup." lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="f3r-oP-T55">
+                                <rect key="frame" x="10" y="52" width="394" height="42.5"/>
                                 <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="j17-e2-L38">
-                                <rect key="frame" x="0.0" y="623" width="375" height="44"/>
+                                <rect key="frame" x="0.0" y="818" width="414" height="44"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="44" id="hbI-nB-lFz"/>
                                 </constraints>
@@ -978,28 +982,28 @@ It is impossible to access your data without your access key. With great privacy
                                 </items>
                             </toolbar>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Dht-tF-Jcb" customClass="PasswordStrengthUIView">
-                                <rect key="frame" x="40" y="496" width="235.5" height="6"/>
+                                <rect key="frame" x="40" y="691" width="274.5" height="6"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="6" id="w3z-fj-brN"/>
                                 </constraints>
                             </view>
                             <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Password" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="HTR-we-X9T" customClass="ZDCSecureTextField">
-                                <rect key="frame" x="40" y="460" width="295" height="30"/>
+                                <rect key="frame" x="40" y="655" width="334" height="30"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="30" id="vis-qL-Wxa"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no" secureTextEntry="YES" smartDashesType="no" smartInsertDeleteType="no" smartQuotesType="no"/>
                             </textField>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="750" verticalHuggingPriority="1000" verticalCompressionResistancePriority="1000" ambiguous="YES" text="You may enter an optional passcode for the QR code above." lineBreakMode="wordWrap" numberOfLines="0" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="0Nj-IG-r75">
-                                <rect key="frame" x="20" y="418" width="335" height="34"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="750" verticalHuggingPriority="249" verticalCompressionResistancePriority="1000" text="You may enter an optional passcode for the QR code above." lineBreakMode="wordWrap" numberOfLines="0" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="0Nj-IG-r75">
+                                <rect key="frame" x="20" y="500.5" width="374" height="146.5"/>
                                 <fontDescription key="fontDescription" style="UICTFontTextStyleFootnote"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Very Weak" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="4SV-jV-EDy">
-                                <rect key="frame" x="279.5" y="492" width="55.5" height="14"/>
+                                <rect key="frame" x="318.5" y="687" width="55.5" height="14"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="14" id="aBl-Im-k9Q"/>
                                 </constraints>
@@ -1008,7 +1012,7 @@ It is impossible to access your data without your access key. With great privacy
                                 <nil key="highlightedColor"/>
                             </label>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="of0-Go-vTd" customClass="RKTagsView">
-                                <rect key="frame" x="10" y="519" width="355" height="100"/>
+                                <rect key="frame" x="10" y="714" width="394" height="100"/>
                                 <color key="backgroundColor" red="0.83741801979999997" green="0.83743780850000005" blue="0.83742713930000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="100" id="lJ6-WG-IIX"/>
@@ -1020,17 +1024,17 @@ It is impossible to access your data without your access key. With great privacy
                                     </mask>
                                 </variation>
                             </view>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Access Key Words" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Gmz-v8-2TU">
-                                <rect key="frame" x="131.5" y="510" width="112" height="5"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" insetsLayoutMarginsFromSafeArea="NO" text="Access Key Words" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Gmz-v8-2TU">
+                                <rect key="frame" x="151" y="705" width="112" height="5"/>
                                 <fontDescription key="fontDescription" style="UICTFontTextStyleFootnote"/>
                                 <color key="textColor" white="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="97C-IL-qiL">
-                                <rect key="frame" x="10" y="519" width="355" height="100"/>
+                                <rect key="frame" x="10" y="714" width="394" height="100"/>
                                 <subviews>
                                     <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" text="Access Key words are not allowed when you use a passphrase." translatesAutoresizingMaskIntoConstraints="NO" id="3vG-iB-r2E">
-                                        <rect key="frame" x="20" y="20" width="315" height="60"/>
+                                        <rect key="frame" x="20" y="20" width="354" height="60"/>
                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                         <constraints>
                                             <constraint firstAttribute="height" priority="750" constant="60" id="ipS-2g-XHW"/>
@@ -1064,7 +1068,7 @@ It is impossible to access your data without your access key. With great privacy
                             <constraint firstItem="4SV-jV-EDy" firstAttribute="trailing" secondItem="HTR-we-X9T" secondAttribute="trailing" id="HIl-Hs-A22"/>
                             <constraint firstItem="Gmz-v8-2TU" firstAttribute="top" secondItem="4SV-jV-EDy" secondAttribute="bottom" constant="4" id="MQV-Kx-sMs"/>
                             <constraint firstItem="of0-Go-vTd" firstAttribute="leading" secondItem="0eg-Bb-yz5" secondAttribute="leading" constant="10" id="V8F-TS-sYm"/>
-                            <constraint firstItem="j17-e2-L38" firstAttribute="top" secondItem="of0-Go-vTd" secondAttribute="bottom" priority="900" constant="4" id="VIs-kj-Ldf"/>
+                            <constraint firstItem="j17-e2-L38" firstAttribute="top" relation="greaterThanOrEqual" secondItem="of0-Go-vTd" secondAttribute="bottom" constant="4" id="VIs-kj-Ldf"/>
                             <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="AIT-cg-b95" secondAttribute="trailing" constant="10" id="XGX-yC-Miq"/>
                             <constraint firstItem="4SV-jV-EDy" firstAttribute="top" secondItem="HTR-we-X9T" secondAttribute="bottom" constant="2" id="XIG-3y-f9C"/>
                             <constraint firstItem="j17-e2-L38" firstAttribute="leading" secondItem="0eg-Bb-yz5" secondAttribute="leading" id="YRE-us-S5J"/>

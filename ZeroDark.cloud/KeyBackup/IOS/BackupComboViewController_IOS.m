@@ -862,7 +862,7 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 	
 	
 //	_lblCloneCodeInstructions.text  = cloneCodeInstructions2 ;
-// 	[_lblEnterPasscode sizeToFit];
+ 	[_lblEnterPasscode sizeToFit];
 	
 	[UIView animateWithDuration:animationDuration
 								 delay:0.2
