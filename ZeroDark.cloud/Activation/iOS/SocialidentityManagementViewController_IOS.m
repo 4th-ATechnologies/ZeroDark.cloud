@@ -130,12 +130,7 @@
 	       selector: @selector(databaseConnectionDidUpdate:)
 	           name: UIDatabaseConnectionDidUpdateNotification
 	         object: nil];
-	
-	[nc addObserver: self
-		    selector: @selector(diskManagerChanged:)
-		        name: ZDCDiskManagerChangedNotification
-		      object: zdc.diskManager];
-	
+		
 	hasInternet = zdc.reachability.isReachable;
 	needsRefreshProviders = YES;
 	
@@ -232,19 +227,6 @@
 	if (hasUserChanges)
 	{
 		[self refreshView];
-	}
-}
-
-- (void)diskManagerChanged:(NSNotification *)notification
-{
-	ZDCDiskManagerChanges *changes = notification.userInfo[kZDCDiskManagerChanges];
-	
-	if ([changes.changedUsersIDs containsObject:localUserID])
-	{
-		// Stored avatar(s) may have changed
-		
-		[_tblProviders reloadRowsAtIndexPaths: [_tblProviders indexPathsForVisibleRows]
-		                     withRowAnimation: UITableViewRowAnimationNone];
 	}
 }
 
