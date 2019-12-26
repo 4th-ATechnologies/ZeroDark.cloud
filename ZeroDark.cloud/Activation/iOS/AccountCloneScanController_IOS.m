@@ -8,27 +8,25 @@
  **/
 
 #import "AccountCloneScanController_IOS.h"
-#import "ZeroDarkCloud.h"
-#import "ZeroDarkCloudPrivate.h"
-#import "ZDCImageManagerPrivate.h"
-#import "ZDCUserAccessKeyManager.h"
-#import "ZDCAccessCode.h"
-#import "ZDCConstantsPrivate.h"
-#import "ZDCSound.h"
 
+#import "Auth0Utilities.h"
 #import "LanguageListViewController_IOS.h"
-
-#import "SCShapeView.h"
 #import "QRcodeView.h"
 #import "RKTagsView.h"
-
+#import "SCShapeView.h"
+#import "ZDCAccessCode.h"
+#import "ZDCConstantsPrivate.h"
+#import "ZDCImageManagerPrivate.h"
 #import "ZDCLogging.h"
+#import "ZDCSound.h"
+#import "ZDCUserAccessKeyManager.h"
+#import "ZeroDarkCloudPrivate.h"
 
 // Categories
+#import "NSError+S4.h"
 #import "OSImage+QRCode.h"
 #import "OSImage+ZeroDark.h"
 #import "UIButton+Activation.h"
-#import "NSError+S4.h"
 
 // Libraries
 #import <MobileCoreServices/MobileCoreServices.h>
@@ -122,10 +120,9 @@ typedef enum {
 	UIImage*                defaultUserImage;
 	
 	NSString*       		activationBlob;
-	YapDatabaseConnection 	*databaseConnection;
-	Auth0ProviderManager	*providerManager;
-	ZDCUserAccessKeyManager *accessKeyManager;
-	ZDCImageManager         *imageManager;
+	
+	ZeroDarkCloud *zdc;
+	YapDatabaseConnection *uiDatabaseConnection;
 	
 	BOOL isUsingCarmera;
 	BOOL needsSetupView;
@@ -228,12 +225,10 @@ typedef enum {
 	ZDCLogAutoTrace();
 	[super viewWillAppear:animated];
 	
-	databaseConnection = accountSetupVC.zdc.databaseManager.uiDatabaseConnection;
-	providerManager = accountSetupVC.zdc.auth0ProviderManager;
-	accessKeyManager = accountSetupVC.zdc.userAccessKeyManager;
-	imageManager = accountSetupVC.zdc.imageManager;
+	zdc = accountSetupVC.zdc;
+	uiDatabaseConnection = zdc.databaseManager.uiDatabaseConnection;
 	
-	defaultUserImage = imageManager.defaultUserAvatar;
+	defaultUserImage = zdc.imageManager.defaultUserAvatar;
 	_imgCloneCodeAvatar.image = defaultUserImage;
 	_imgCloneWordsAvatar.image = defaultUserImage;
 
@@ -351,7 +346,23 @@ typedef enum {
 
 - (void)databaseConnectionDidUpdate:(NSNotification *)notification
 {
-	[self refreshView];
+	NSArray *notifications = [notification.userInfo objectForKey:kNotificationsKey];
+
+	BOOL hasUserChanges = NO;
+	
+	NSString *const localUserID = accountSetupVC.user.uuid;
+	if (localUserID)
+	{
+		hasUserChanges =
+		  [uiDatabaseConnection hasChangeForKey: localUserID
+		                           inCollection: kZDCCollection_Users
+		                        inNotifications: notifications];
+	}
+
+	if (hasUserChanges)
+	{
+		[self refreshView];
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -363,8 +374,6 @@ typedef enum {
 	return (self.navigationController.viewControllers.count > 1);
 }
 
-
-
 - (void)refreshView
 {
 	ZDCLogAutoTrace();
@@ -372,7 +381,7 @@ typedef enum {
 	NSString *const localUserID = accountSetupVC.user.uuid;
 	__block ZDCLocalUser *localUser = nil;
 
-	[databaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
@@ -381,7 +390,7 @@ typedef enum {
 	#pragma clang diagnostic pop
 	}];
 
-	if (!localUser) {
+	if (!localUser || !localUser.isLocal) {
 		return;
 	}
 	
@@ -393,24 +402,18 @@ typedef enum {
 	_lblCloneWordsDisplayName.text = displayName;
 	_lblCloneWordsDisplayName.hidden = NO;
 	
-	NSString *auth0_preferredID = localUser.auth0_preferredID;
-	NSDictionary *auth0_preferredProfile = localUser.auth0_profiles[auth0_preferredID];
+	ZDCUserIdentity *displayIdentity = localUser.displayIdentity;
 	
-	NSArray *comps = [auth0_preferredID componentsSeparatedByString:@"|"];
-	NSString *provider = comps.firstObject;
+	NSURL *pictureURL =
+	  [Auth0Utilities pictureUrlForIdentity: displayIdentity
+	                                 region: localUser.aws_region
+	                                 bucket: localUser.aws_bucket];
 	
-	NSString *pictureStr =
-	  [Auth0ProviderManager correctPictureForAuth0ID: auth0_preferredID
-	                                     profileData: auth0_preferredProfile
-	                                          region: localUser.aws_region
-	                                          bucket: localUser.aws_bucket];
-	
-	NSURL *pictureURL = pictureStr ? [NSURL URLWithString:pictureStr] : nil;
-	
+	NSString *provider = displayIdentity.provider;
 	OSImage *providerImage =
-	  [[providerManager providerIcon: Auth0ProviderIconType_Signin
-	                     forProvider: provider]
-	                  scaledToHeight: _imgCloneWordsProvider.frame.size.height];
+	  [[zdc.auth0ProviderManager iconForProvider: provider
+	                                        type: Auth0ProviderIconType_Signin]
+	                              scaledToHeight: _imgCloneWordsProvider.frame.size.height];
 	
 	if (providerImage)
 	{
@@ -421,66 +424,65 @@ typedef enum {
 		_imgCloneWordsProvider.hidden = NO;
 		_imgCloneWordsProvider.image = providerImage;
 		_lblCloneWordsProvider.hidden = YES;
-		
 	}
 	else
 	{
+		NSString *providerName = [zdc.auth0ProviderManager displayNameForProvider:provider];
+		
 		_imgCloneCodeProvider.hidden = YES;
-		_lblCloneWordsProvider.text = provider;
+		_lblCloneWordsProvider.text = providerName;
 		_lblCloneWordsProvider.hidden = NO;
 		
 		_imgCloneCodeProvider.hidden = YES;
-		_lblCloneCodeProvider.text = provider;
+		_lblCloneCodeProvider.text = providerName;
 		_lblCloneCodeProvider.hidden = NO;
 	}
 	
 	if (pictureURL)
 	{
-		__weak typeof(self) weakSelf = self;
-		
 		CGSize avatarSize = _imgCloneWordsAvatar.frame.size;
 		
 		UIImage* (^processingBlock)(UIImage *) = ^(UIImage *image){
 			
-			return [image imageWithMaxSize: avatarSize];
+			return [image scaledToSize:avatarSize scalingMode:ScalingMode_AspectFill];
 		};
-		void (^preFetchBlock)(UIImage *_Nullable) = ^(UIImage *image){
+		void (^preFetchBlock)(UIImage *_Nullable, BOOL) = ^(UIImage *image, BOOL willFetch){
 			
-			__strong typeof(self) strongSelf = weakSelf;
-			if (!strongSelf) return;
+			// The preFetchBlock is invoked BEFORE the `fetchUserAvatar` method returns.
 			
-			image = image ?: strongSelf->defaultUserImage;
+			image = image ?: self->defaultUserImage;
 			
-			strongSelf->_imgCloneCodeAvatar.hidden = NO;
-			strongSelf->_imgCloneCodeAvatar.image = image;
+			self->_imgCloneCodeAvatar.hidden = NO;
+			self->_imgCloneCodeAvatar.image = image;
 			
-			strongSelf->_imgCloneWordsAvatar.hidden = NO;
-			strongSelf->_imgCloneWordsAvatar.image = image;
-		};
-		void (^postFetchBlock)(UIImage *_Nullable, NSError *_Nullable) = ^(UIImage *image, NSError *error){
-			
-			__strong typeof(self) strongSelf = weakSelf;
-			if (!strongSelf) return;
-			
-			strongSelf->_imgCloneCodeAvatar.hidden = NO;
-			strongSelf->_imgCloneWordsAvatar.hidden = NO;
-			
-			if (!image)
-			{
-				image = strongSelf->defaultUserImage;
-			}
-			strongSelf->_imgCloneCodeAvatar.image = image;
-			strongSelf->_imgCloneWordsAvatar.image = image;
+			self->_imgCloneWordsAvatar.hidden = NO;
+			self->_imgCloneWordsAvatar.image = image;
 		};
 		
-		[imageManager fetchUserAvatar: localUser.uuid
-									 auth0ID: auth0_preferredID
-									 fromURL: pictureURL
-									 options: nil
-							  processingID: pictureURL.absoluteString
-						  processingBlock: processingBlock
-		                preFetchBlock: preFetchBlock
-		               postFetchBlock: postFetchBlock];
+		__weak typeof(self) weakSelf = self;
+		void (^postFetchBlock)(UIImage *_Nullable, NSError *_Nullable) = ^(UIImage *image, NSError *error){
+			
+			// The postFetchBlock is invoked LATER, possibly after downloading the avatar.
+			
+			__strong typeof(self) strongSelf = weakSelf;
+			if (!strongSelf) return;
+			
+			if (image)
+			{
+				strongSelf->_imgCloneCodeAvatar.image = image;
+				strongSelf->_imgCloneWordsAvatar.image = image;
+			}
+		};
+		
+		ZDCFetchOptions *options = [[ZDCFetchOptions alloc] init];
+		options.identityID = displayIdentity.identityID;
+		
+		[zdc.imageManager fetchUserAvatar: localUser
+		                      withOptions: options
+		                     processingID: NSStringFromClass([self class])
+		                  processingBlock: processingBlock
+		                    preFetchBlock: preFetchBlock
+		                   postFetchBlock: postFetchBlock];
 	}
 	else
 	{
@@ -1249,9 +1251,14 @@ typedef enum {
 {
 	ZDCLogAutoTrace();
 	__weak typeof(self) weakSelf = self;
-
+	
 	UIImage *image = nil;
+	NSURL* imageURL = nil;
 	NSString *mediaType = [info objectForKey:UIImagePickerControllerMediaType];
+	
+	if (@available(iOS 11.0, *)) {
+		imageURL = [info objectForKey:UIImagePickerControllerImageURL];
+	}
 	
 	if (UTTypeConformsTo((__bridge CFStringRef)mediaType, kUTTypeImage))
 	{
@@ -1262,17 +1269,24 @@ typedef enum {
 		
 		__strong typeof(self) strongSelf = weakSelf;
 		if(!strongSelf) return;
-
+		
 		if (strongSelf->photoPicker == sender) {
 			strongSelf->photoPicker = nil;
 		}
 		
 		if (image)
 		{
-			[strongSelf setQRCodeWithImage:image];
-			
+			[strongSelf setQRCodeWithImage:image.copy];
 		}
+		
+		// rem
+		if(imageURL)
+		{
+			[[NSFileManager defaultManager] removeItemAtPath:imageURL.path error:nil];
+		}
+		
 	}];
+	
 }
 
 

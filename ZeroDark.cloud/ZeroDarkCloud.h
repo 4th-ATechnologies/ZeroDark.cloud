@@ -139,19 +139,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** The functionality of ZeroDarkCloud is split into multiple managers, separated by task.
     Once the database is unlocked, this returns non-nil. */
-@property (nonatomic, readonly, nullable) ZDCRemoteUserManager * remoteUserManager;
-
-/** The functionality of ZeroDarkCloud is split into multiple managers, separated by task.
-    Once the database is unlocked, this returns non-nil. */
 @property (nonatomic, readonly, nullable) ZDCRestManager * restManager;
 
 /** The functionality of ZeroDarkCloud is split into multiple managers, separated by task.
     Once the database is unlocked, this returns non-nil. */
-@property (nonatomic, readonly, nullable) ZDCSearchUserManager * searchManager;
+@property (nonatomic, readonly, nullable) ZDCUserSearchManager * searchManager;
 
 /** The functionality of ZeroDarkCloud is split into multiple managers, separated by task.
     Once the database is unlocked, this returns non-nil. */
 @property (nonatomic, readonly, nullable) ZDCSyncManager * syncManager;
+
+/** The functionality of ZeroDarkCloud is split into multiple managers, separated by task.
+    Once the database is unlocked, this returns non-nil. */
+@property (nonatomic, readonly, nullable) ZDCUserManager * userManager;
 
 /** The functionality of ZeroDarkCloud is split into multiple managers, separated by task.
     Once the database is unlocked, this returns non-nil. */
@@ -294,6 +294,17 @@ NS_ASSUME_NONNULL_BEGIN
  * Utility method to returns the bundle for the ZeroDarkCloud framework.
  */
 + (NSBundle *)frameworkBundle;
+
+/**
+ * Allows you to configure a handler for log messages emitted from the framework.
+ *
+ * A custom log handler allows you to integrate framework-emitted log messages into your desired logging system.
+ *
+ * If you don't configure your own log handler, then a default handler is used, which:
+ * - only logs errors & warnings
+ * - uses os_log
+ */
++ (void)setLogHandler:(void (^)(ZDCLogMessage *))logHandler;
 
 @end
 

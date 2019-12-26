@@ -16,6 +16,7 @@
 
 @class ZDCDownloadOptions;
 @class ZDCDownloadTicket;
+@class ZDCSearchResult;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -209,11 +210,6 @@ typedef void (^UserAvatarDownloadCompletionBlock)(NSData *_Nullable avatar, NSEr
  * @param user
  *   The associated user. (userID == ZDCUser.uuid)
  *
- * @param auth0ID
- *   Users are allowed to link multiple social identities to their user account.
- *   For example, they may link Facebook, LinkedIn, Google, etc.
- *   This specifies the particular social identifier associated with the download.
- *
  * @param options
  *   Various options regarding how to download the file, and whether it should be cached via the DiskManager.
  *   If nil, the default options are used: {cacheToDiskManager: YES, canDownloadWhileInBackground: NO}
@@ -229,15 +225,39 @@ typedef void (^UserAvatarDownloadCompletionBlock)(NSData *_Nullable avatar, NSEr
  *
  * @return A ticket that can be used to track the download.
  *         The ticket includes a NSProgress item that can be used for tracking.
- *         The progress item is also registered with the `ZDCProgressManager`,
- *         and can be fetched from there as well. (Meaning you also get throughput
- *         & estimated time remaining for this progress item.)
  */
 - (ZDCDownloadTicket *)downloadUserAvatar:(ZDCUser *)user
-                                  auth0ID:(nullable NSString *)auth0ID
                                   options:(nullable ZDCDownloadOptions *)options
                           completionQueue:(nullable dispatch_queue_t)completionQueue
                           completionBlock:(UserAvatarDownloadCompletionBlock)completionBlock;
+
+/**
+ * Downloads the avatar for a user.
+ *
+ * @note This method doesn't support background downloads (on iOS).
+ *
+ * @param searchResult
+ *   A search result from ZDCUserSearchManager.
+ *
+ *@param identityID
+ *   Allows you to specifiy which identityID to download.
+ *   If nil, automatically uses the displayIdentity.
+ *
+ * @param completionQueue
+ *   The GCD dispatch queue in which you'd like the completionBlock to be invoked.
+ *   If not specified (nil), the main thread will automatically be used.
+ *
+ * @param completionBlock
+ *   The block to invoke upon download completion.
+ *   This block will be invoked asynchronously on the completionQueue.
+ *
+ * @return A ticket that can be used to track the download.
+ *         The ticket includes a NSProgress item that can be used for tracking.
+ */
+- (ZDCDownloadTicket *)downloadUserAvatar:(ZDCSearchResult *)searchResult
+										 identityID:(nullable NSString *)identityID
+								  completionQueue:(nullable dispatch_queue_t)completionQueue
+								  completionBlock:(UserAvatarDownloadCompletionBlock)completionBlock;
 
 @end
 
@@ -287,6 +307,17 @@ typedef void (^UserAvatarDownloadCompletionBlock)(NSData *_Nullable avatar, NSEr
  */
 @property (nonatomic, assign, readwrite) BOOL canDownloadWhileInBackground;
 #endif
+
+/**
+ * Applies to user avatar downloads.
+ *
+ * Users are allowed to link multiple social identities to their user account.
+ * For example, they may link Facebook, LinkedIn, Google, etc.
+ * This specifies the particular social identifier associated with the download.
+ *
+ * (This value comes from ZDCUser.identities[x].identityID)
+ */
+@property (nonatomic, copy, readwrite, nullable) NSString *identityID;
 
 /**
  * The completionConsolidationTag helps you prevent multiple callbacks.

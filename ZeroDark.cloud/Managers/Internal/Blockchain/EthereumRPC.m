@@ -297,7 +297,7 @@ static ZDCAsyncCompletionDispatch *pendingRequests;
 	
 	NSData *transactionData = [self v3_transactionDataForUserIDHex:userIDHex];
 	
-	NSString *transactionStr = [transactionData hexString];
+	NSString *transactionStr = [transactionData lowercaseHexString];
 	if (![transactionStr hasPrefix:@"0x"] && ![transactionStr hasPrefix:@"0X"]) {
 		transactionStr = [@"0x" stringByAppendingString:transactionStr];
 	}
@@ -401,7 +401,7 @@ static ZDCAsyncCompletionDispatch *pendingRequests;
 	
 	if (data.length == 32)
 	{
-		merkleTreeRoot = [data hexString];
+		merkleTreeRoot = [data lowercaseHexString];
 	}
 	
 	return merkleTreeRoot;

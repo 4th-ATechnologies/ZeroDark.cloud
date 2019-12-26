@@ -178,14 +178,14 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	__weak typeof(self) weakSelf = self;
 
 
-	[providerManager fetchSupportedProvidersWithCompletion:^(NSArray<NSString *> * _Nullable providerKeys, NSError * _Nullable error)
-	 {
-		 NSMutableArray* supportedKeys = nil;
+	[providerManager fetchSupportedProviders:
+		^(NSArray<NSString *> * _Nullable providerKeys, NSError * _Nullable error)
+	{
+		NSMutableArray* supportedKeys = nil;
 
-		 __strong typeof(self) strongSelf = weakSelf;
-
-		 if(strongSelf)
-		 {
+		__strong typeof(self) strongSelf = weakSelf;
+		if (strongSelf)
+		{
 			 if(error)
 			 {
 
@@ -243,7 +243,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	}
 	else
 	{
-		OSImage* image = [providerManager providerIcon:Auth0ProviderIconType_Signin forProvider:key];
+		OSImage *image = [providerManager iconForProvider:key type:Auth0ProviderIconType_Signin];
 		if(!image) image = [OSImage imageNamed:@"provider_auth0"];
 		cell._imgProvider.image = [image scaledToHeight:24];
 		cell._imgProvider.hidden = NO;

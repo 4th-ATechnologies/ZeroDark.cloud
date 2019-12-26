@@ -18,6 +18,7 @@
 #import "ZDCDatabaseManagerPrivate.h"
 #import "ZDCLocalUserPrivate.h"
 #import "ZDCTrunkNodePrivate.h"
+#import "ZDCUserPrivate.h"
 #import "ZeroDarkCloudPrivate.h"
 
 // Categories
@@ -210,79 +211,6 @@ static NSString *const k_displayName = @"displayName";
 			}
 		}];
 	}
-}
-
-
-
--(NSArray <NSDictionary*> *) sortedUnambiguousUserInfoWithLocalUsers:(NSArray <ZDCLocalUser *> *)usersIn
-{
-	NSMutableArray* result = NSMutableArray.array;
-	
-	NSMutableDictionary* nameDict = NSMutableDictionary.dictionary;
-	for (ZDCLocalUser *user in usersIn)
-	{
-		NSString* displayName = [user displayNameForAuth0ID:user.auth0_preferredID];
-		if (displayName == nil)
-			displayName = user.uuid;
-		
-		NSArray* comps = [user.auth0_preferredID componentsSeparatedByString:@"|"];
-		NSString* provider = comps.firstObject;
-		
-		NSMutableArray* items  = [nameDict objectForKey:displayName];
-		NSUInteger count = 0;
-		
-		if(!items)
-		{
-			items = NSMutableArray.array;
-		}
-		
-		for(NSArray* entry in items)
-		{
-			NSString* prov = entry[1];
-			if([provider isEqualToString:prov])
-				count++;
-		}
-		
-		[items addObject:@[user.uuid, provider, @(count) ]];
-		[nameDict setObject:items forKey:displayName];
-	}
-	
-	for(NSString* key in nameDict.allKeys)
-	{
-		NSArray* items = nameDict[key];
-		for(NSArray* entry in items)
-		{
-			NSString* uuid 		= entry[0];
-			NSString* displayName = key;
-			
-			if(items.count > 1)
-			{
-				NSString* provider 	= entry[1];
-				NSUInteger count 	= [entry[2] unsignedIntegerValue];
-				NSString* providerName = [providerManager displayNameforProvider:provider];
-				
-				if(count == 0)
-					displayName  = [NSString stringWithFormat:@"%@ (%@)",key, providerName];
-				else
-					displayName  = [NSString stringWithFormat:@"%@ (%@-%lu)",key, providerName, (unsigned long)count];
-				
-			}
-			
-			[result addObject:@{ kZDCCloudRcrd_UserID: uuid,
-										@"displayName" :displayName}];
-		}
-	}
-	
-	[result sortUsingComparator:^NSComparisonResult(NSDictionary *item1, NSDictionary *item2) {
-		
-		NSString *name1 = item1[@"displayName"];
-		NSString *name2 = item2[@"displayName"];
-		
-		return [name1 localizedCaseInsensitiveCompare:name2];
-	}];
-	
-	
-	return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -487,12 +415,29 @@ static NSString *const k_displayName = @"displayName";
 	}
 	localUser.aws_stage = stage;
 	
-	NSDictionary *auth0_profiles = json[@"auth0"];
-	if (![auth0_profiles isKindOfClass:[NSDictionary class]]) {
-		if (outError) *outError = ErrorWithInvalidKey(@"auth0");
+	NSArray *identities = json[@"identities"];
+	if (![identities isKindOfClass:[NSArray class]]) {
+		if (outError) *outError = ErrorWithInvalidKey(@"identities");
 		return nil;
 	}
-	localUser.auth0_profiles = auth0_profiles;
+	NSMutableArray *parsed = [NSMutableArray arrayWithCapacity:identities.count];
+	for (NSDictionary *identity in identities)
+	{
+		if (![identity isKindOfClass:[NSDictionary class]]) {
+			if (outError) *outError = ErrorWithInvalidKey(@"identities");
+			return nil;
+		}
+		
+		ZDCUserIdentity *ident = [[ZDCUserIdentity alloc] initWithDictionary:identity];
+		
+		if (ident == nil) {
+			if (outError) *outError = ErrorWithInvalidKey(@"identities");
+			return nil;
+		}
+		
+		[parsed addObject:ident];
+	}
+	localUser.identities = parsed;
 	
 	NSString *refreshToken = json[@"refreshToken"];
 	if (![refreshToken isKindOfClass:[NSString class]]) {
@@ -660,9 +605,7 @@ done:
 	__weak typeof(self) weakSelf = self;
 	dispatch_queue_t concurrentQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
-	__block NSDictionary * user_metadata     = nil;
-	__block NSDate       * auth0_lastUpdated = nil;
-	__block NSDictionary * auth0_profiles    = nil;
+	__block ZDCUserProfile *profile = nil;
 
 	__block void (^parameterCheck)(void);
 	__block void (^fetchProfile)(ZDCLocalUser *localUser);
@@ -721,46 +664,53 @@ done:
 		                                 completionBlock:
 		^(NSURLResponse *urlResponse, id responseObject, NSError *error)
 		{
-			 NSInteger statusCode = urlResponse.httpStatusCode;
-
-			 if (statusCode != 200)
-			 {
-				 InvokeCompletionBlock([self errorWithDescription:@"Bad Status response" statusCode:statusCode]);
-			 }
-			 else if (error)
-			 {
-				 InvokeCompletionBlock(error);
-			 }
-			 else if ([responseObject isKindOfClass:[NSDictionary class]])
-			 {
-				 NSDictionary* dict = (NSDictionary*)responseObject;
-
-				 auth0_lastUpdated = dict[@"updated_at"]?[NSDate dateFromRfc3339String:dict[@"updated_at"]]:nil;
-				 user_metadata = dict[kZDCUser_metadataKey];
-
-
-				 NSArray* identities = [dict objectForKey:@"identities"];
-
-				 auth0_profiles = [self createProfilesFromIdentities:identities
-															  region:localUser.aws_region
-															  bucket:localUser.aws_bucket];
-
-
-				 if(!auth0_lastUpdated || !user_metadata || !auth0_profiles)
-				 {
-					 InvokeCompletionBlock([self errorWithDescription:@"server responser was unexpected"]);
-					 return;
-				 }
-
-				 updateDatabase();
-
-			 }
-			 else
-			 {
-				 InvokeCompletionBlock([self errorWithDescription:@"Bad responseObject"]);
-			 }
-		 }];
-
+			if (error)
+			{
+				InvokeCompletionBlock(error);
+				return;
+			}
+			
+			NSInteger statusCode = urlResponse.httpStatusCode;
+			if (statusCode != 200)
+			{
+				error = [self errorWithDescription:@"Bad Status response" statusCode:statusCode];
+				
+				InvokeCompletionBlock(error);
+				return;
+			}
+			
+			NSDictionary *dict = nil;
+			
+			if ([responseObject isKindOfClass:[NSDictionary class]])
+			{
+				dict = (NSDictionary *)responseObject;
+			}
+			else if ([responseObject isKindOfClass:[NSData class]])
+			{
+				NSData *data = (NSData *)responseObject;
+				
+				id value = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+				if ([value isKindOfClass:[NSDictionary class]])
+				{
+					dict = (NSDictionary *)value;
+				}
+			}
+			
+			if (dict)
+			{
+				profile = [[ZDCUserProfile alloc] initWithDictionary:dict];
+			}
+			
+			if (profile)
+			{
+				updateDatabase();
+			}
+			else
+			{
+				error = [self errorWithDescription:@"Unexpected server response"];
+				InvokeCompletionBlock(error);
+			}
+		}];
 	}};
 
 	// STEP 3 :
@@ -777,128 +727,28 @@ done:
 				zdc = strongSelf->zdc;
 			}
 		}
-		
-		NSString *preferedAuth0ID 	= user_metadata[kZDCUser_metadata_preferredAuth0ID];
-		if (!preferedAuth0ID)
-		{
-			preferedAuth0ID = [Auth0Utilities firstAvailableAuth0IDFromProfiles:auth0_profiles];
-		}
 
 		YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
 		[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 
 			ZDCLocalUser *localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
+			
+			localUser = [localUser copy];
+			localUser.identities = profile.identities;
+			localUser.lastRefresh_profile = [NSDate date];
+			
+			[transaction setObject: localUser
+			                forKey: localUser.uuid
+			          inCollection: kZDCCollection_Users];
 
-			localUser = localUser.copy;
+		} completionBlock:^{
 
-			// dont do database update if no changes.
-			if(![auth0_lastUpdated isEqualToDate:localUser.auth0_lastUpdated])
-			{
-				localUser.auth0_lastUpdated  	= auth0_lastUpdated;
-				localUser.auth0_profiles 		= auth0_profiles;
-				localUser.auth0_preferredID 	= preferedAuth0ID;
-
-				[transaction setObject:localUser
-								forKey:localUser.uuid
-						  inCollection:kZDCCollection_Users];
-			}
-
-		}completionBlock:^{
-
-			// we are done.
+			// Done !
 			InvokeCompletionBlock(nil);
 		}];
-
 	}};
 
 	parameterCheck();
-}
-
--(NSDictionary*) createProfilesFromIdentities:(NSArray*)identities
-									   region:(AWSRegion)region
-									   bucket:(NSString *)bucket
-{
-	NSMutableDictionary* auth0_profiles = NSMutableDictionary.dictionary;
-
-	[identities enumerateObjectsUsingBlock:^(NSDictionary* profile, NSUInteger idx, BOOL * _Nonnull stop) {
-
-		NSMutableDictionary* entry = NSMutableDictionary.dictionary;
-
-		NSString* provider 		= [profile objectForKey:@"provider"];
-		NSString* connection 	 = [profile objectForKey:@"connection"];
-		NSString* user_id 		= [profile objectForKey:@"user_id"];
-		NSString* auth0ID = [NSString stringWithFormat:@"%@|%@", provider, user_id];
-
-		NSDictionary* profileData =  [profile objectForKey:@"profileData"];
-		NSString* name 			 = [profileData objectForKey:@"name"];
-		NSString* username 		 = [profileData objectForKey:@"username"];
-		NSString* email 		 = [profileData objectForKey:@"email"];
-		NSString* nickname  	 = [profileData objectForKey:@"nickname"];
-		NSString *displayName 	= nil;
-
-		NSString* picture 		 = [Auth0ProviderManager correctPictureForAuth0ID:auth0ID
-																  profileData:profileData
-																	   region:region
-																	   bucket:bucket];
-		// process nsdictionary issues
-		if([username isKindOfClass:[NSNull class]])
-			username = nil;
-		if([email isKindOfClass:[NSNull class]])
-			email = nil;
-		if([name isKindOfClass:[NSNull class]])
-			name = nil;
-		if([nickname isKindOfClass:[NSNull class]])
-			nickname = nil;
-
-		if(provider && user_id && connection)
-		{
-			NSString* auth0ID = [NSString stringWithFormat:@"%@|%@", provider, user_id];
-
-			entry[@"connection"] = connection;
-
-			if(!name)
-				name = [Auth0Utilities correctUserNameForA0Strategy:connection profile:profileData];
-
-			if(username)
-				entry[@"username"] = username;
-			if(email)
-				entry[@"email"] = email;
-			if(name)
-				entry[@"name"] = name;
-			if(nickname)
-				entry[@"nickname"] = nickname;
-			if(picture)
-				entry[@"picture"] = picture;
-
-			displayName = [Auth0Utilities correctDisplayNameForA0Strategy:connection profile:profileData];
-
-			//			displayName = entry[@"displayName"];
-			//			if (!displayName)  displayName = entry[@"name"];
-			//			if (!displayName)  displayName = entry[@"nickname"];
-			//			if (!displayName)
-			//			{
-			//				displayName = entry[@"email"];
-			//				if (displayName)
-			//				{
-			//					if ([Auth0Utilities is4thAEmail:displayName]) {
-			//						displayName = [Auth0Utilities usernameFrom4thAEmail:displayName];
-			//					}
-			//					else if ([Auth0Utilities is4thARecoveryEmail:displayName]) {
-			//						displayName = kAuth0DBConnection_Recovery;
-			//					}
-			//				}
-			//			}
-
-			if (displayName) {
-				entry[@"displayName"] = displayName;
-			}
-
-			[auth0_profiles setValue:entry forKey:auth0ID];
-		}
-
-	}];
-
-	return auth0_profiles;
 }
 
 /**
@@ -966,8 +816,14 @@ done:
 			return;
 		}
 
+		NSMutableArray *identityIDs = [NSMutableArray arrayWithCapacity:localUser.identities.count];
+		for (ZDCUserIdentity *ident in localUser.identities)
+		{
+			[identityIDs addObject:ident.identityID];
+		}
+		
 		NSData *auth0IDData =
-		  [NSJSONSerialization dataWithJSONObject: localUser.auth0_profiles.allKeys
+		  [NSJSONSerialization dataWithJSONObject: identityIDs
 		                                  options: 0
 		                                    error: &error];
 		
@@ -1093,15 +949,21 @@ done:
 	// Sign the auth0 ID into the public key
 	if (privateKey)
 	{
+		NSMutableArray *identityIDs = [NSMutableArray arrayWithCapacity:localUser.identities.count];
+		for (ZDCUserIdentity *ident in localUser.identities)
+		{
+			[identityIDs addObject:ident.identityID];
+		}
+		
 		NSData *auth0IDData =
-		[NSJSONSerialization dataWithJSONObject:localUser.auth0_profiles.allKeys
-										options:0
-										  error:nil];
+		  [NSJSONSerialization dataWithJSONObject: identityIDs
+		                                  options: 0
+		                                    error: nil];
 
-		[privateKey updateKeyProperty:kZDCCloudRcrd_Auth0ID
-								value:auth0IDData
-						   storageKey:zdc.storageKey
-								error:&exportError];
+		[privateKey updateKeyProperty: kZDCCloudRcrd_Auth0ID
+		                        value: auth0IDData
+		                   storageKey: zdc.storageKey
+		                        error: &exportError];
 	}
 
 	if (exportError)
@@ -1434,7 +1296,7 @@ done:
 				return;
 			}
 
-			recovery_auth0ID = result.profile.userId;
+			recovery_auth0ID = result.profile.userID;
 			recovery_refreshToken = result.refreshToken;
 
 			// Next step
@@ -1539,7 +1401,7 @@ done:
 {
 	// Are we using ZeroDark.identity ?
 	//
-	if (localUser.auth0_profiles)
+	if (localUser.identities.count > 0)
 	{
 		if (![localUser hasRecoveryConnection])
 		{
@@ -1559,11 +1421,11 @@ done:
  */
 - (void)setNewAvatar:(nullable NSData *)newAvatarData
         forLocalUser:(ZDCLocalUser *)localUser
-             auth0ID:(NSString *)auth0ID
+          identityID:(NSString *)identityID
   replacingOldAvatar:(nullable NSData *)oldAvatarData
 {
 	NSParameterAssert(localUser != nil);
-	NSParameterAssert(auth0ID != nil);
+	NSParameterAssert(identityID != nil);
 	
 	if (newAvatarData)
 	{
@@ -1573,7 +1435,7 @@ done:
 		NSError *error = nil;
 		[zdc.diskManager importUserAvatar: import
 		                          forUser: localUser
-		                          auth0ID: auth0ID
+		                       identityID: identityID
 		                            error: &error];
 		
 		if (error) {
@@ -1583,7 +1445,7 @@ done:
 	}
 	else
 	{
-		[zdc.diskManager deleteUserAvatar:localUser.uuid forAuth0ID:auth0ID];
+		[zdc.diskManager deleteUserAvatar:localUser.uuid forIdentityID:identityID];
 	}
 	
 	ZDCCloudOperation *op =
@@ -1591,7 +1453,7 @@ done:
 	                                          treeID: @"*"
 	                                            type: ZDCCloudOperationType_Avatar];
 	
-	op.avatar_auth0ID = auth0ID;
+	op.avatar_auth0ID = identityID;
 	op.avatar_oldETag = oldAvatarData ? [[AWSPayload rawMD5HashForPayload:oldAvatarData] lowercaseHexString] : nil;
 	op.avatar_newETag = newAvatarData ? [[AWSPayload rawMD5HashForPayload:newAvatarData] lowercaseHexString] : nil;
 	

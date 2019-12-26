@@ -15,6 +15,7 @@
 @class ZDCNode;
 @class ZDCUser;
 @class ZDCFetchOptions;
+@class ZDCSearchResult;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -324,6 +325,57 @@ typedef OSImage*_Nonnull (^ZDCImageProcessingBlock)(OSImage *image);
          postFetchBlock:(void(^)(OSImage *_Nullable image, NSError *_Nullable error))postFetchBlock;
 
 /**
+ * Fetches the node's thumbnail, and allows you to process the image.
+ *
+ * &nbsp;
+ * @note You can contol the size of the in-memory cache via the `nodeThumbnailsCache` property.
+ *
+ * @important Empty results are also cached to prevent duplicate lookups. For example, if a user
+ *            doesn't have an avatar, the result of the lookup (the 404), will be cached.
+ *            This results in the preFetchBlock being invoked with its `willFetch` parameter to to FALSE,
+ *            and its `image` parameter set to nil.
+ *
+ * @param searchResult
+ *   A search result from ZDCUserSearchManager.
+ *
+ * @param identityID
+ *   Allows you to specifiy which identityID to download.
+ *   If nil, automatically uses the displayIdentity.
+ *
+ * @param processingID
+ *   A unique identifier that distinguishes the results of this imageProcessingBlock from
+ *   other imageProcessingBlocks that you may be using in other parts of your application.
+ *   For example, if your block resizes the image to 64*64, then you might pass the string "64*64".
+ *   If you pass a nil processingID, then the image won't be cached in memory.
+ *
+ * @param imageProcessingBlock
+ *   A block you can use to modify the image.
+ *   For example you might scale the image to a certain size, round the corners, give it tint, etc.
+ *   The block will be invoked on a background thread.
+ *
+ * @param preFetchBlock
+ *   This block is always invoked.
+ *   And it's invoked BEFORE this method returns.
+ *   It only returns an image if there's a match in the cache that can immediately be used.
+ *   If the preFetchBlock parameter `willFetch` if FALSE, the postFetchBlock will NOT be invoked.
+ *   Keep in mind that (image==nil && !willFetch) is a valid combination representing a
+ *   previous fetch which resulted in no image for the request.
+ *
+ * @param postFetchBlock
+ *   This method is invoked after the image has been read from disk or downloaded from the cloud.
+ *   And after the processingBlock has done its work.
+ *   This block is only invoked if the preFetchBlock is invoked with its `willFetch` parameter set to true.
+ *   This block is always invoked on the main thread.
+ */
+- (nullable ZDCDownloadTicket *)
+        fetchUserAvatar:(ZDCSearchResult *)searchResult
+             identityID:(nullable NSString *)identityID
+           processingID:(nullable NSString *)processingID
+        processingBlock:(ZDCImageProcessingBlock)imageProcessingBlock
+          preFetchBlock:(void(NS_NOESCAPE^)(OSImage *_Nullable image, BOOL willFetch))preFetchBlock
+         postFetchBlock:(void(^)(OSImage *_Nullable image, NSError *_Nullable error))postFetchBlock;
+
+/**
  * Removes all cached avatar images for the given user.
  *
  * There's usually little reason to use this method because the
@@ -390,7 +442,7 @@ typedef OSImage*_Nonnull (^ZDCImageProcessingBlock)(OSImage *image);
  *
  * If set to non-nil, will attempt to download a specific user avatar, associated with the specified identity.
  */
-@property (nonatomic, copy, readwrite, nullable) NSString *auth0ID;
+@property (nonatomic, copy, readwrite, nullable) NSString *identityID;
 
 @end
 

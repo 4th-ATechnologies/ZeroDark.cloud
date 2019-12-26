@@ -15,7 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface UserAvatarViewController_IOS : AccountSetupSubViewController_Base
 
 @property (nonatomic, assign) NSString * localUserID;
-@property (nonatomic, assign) NSString * auth0ID;
+@property (nonatomic, assign) NSString * identityID;
 
 @end
 

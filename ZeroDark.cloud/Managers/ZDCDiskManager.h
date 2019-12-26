@@ -441,12 +441,12 @@ extern NSString *const kZDCDiskManagerChanges;
  * @param user
  *   The corresponding user for the file.
  *
- * @param auth0ID
- *   The auth0ID that corresponds to the avatar that was downloaded.
+ * @param identityID
+ *   The social identitythat corresponds to the avatar that was downloaded.
  */
 - (nullable ZDCCryptoFile *)importUserAvatar:(ZDCDiskImport *)import
                                      forUser:(ZDCUser *)user
-                                     auth0ID:(NSString *)auth0ID
+                                  identityID:(NSString *)identityID
                                        error:(NSError *_Nullable *_Nullable)outError;
 
 /**
@@ -474,10 +474,10 @@ extern NSString *const kZDCDiskManagerChanges;
  * @param userID
  *   The user you're interested in (userID == ZDCUser.uuid)
  *
- * @param auth0ID
+ * @param identityID
  *   If you're interested in a particular social identity.
  */
-- (BOOL)hasUserAvatar:(NSString *)userID forAuth0ID:(nullable NSString *)auth0ID;
+- (BOOL)hasUserAvatar:(NSString *)userID forIdentityID:(nullable NSString *)identityID;
 
 /**
  * Returns a CryptoFile and associated info for the user avatar, if available on disk.
@@ -509,10 +509,10 @@ extern NSString *const kZDCDiskManagerChanges;
  * @param user
  *   The user you're interested in.
  *
- * @param auth0ID
+ * @param identityID
  *   If you're interested in the avatar for a particular social identity.
  */
-- (nullable ZDCDiskExport *)userAvatar:(ZDCUser *)user forAuth0ID:(nullable NSString *)auth0ID;
+- (nullable ZDCDiskExport *)userAvatar:(ZDCUser *)user forIdentityID:(nullable NSString *)identityID;
 
 /**
  * Deletes all avatar files for the given userID from disk.
@@ -538,7 +538,7 @@ extern NSString *const kZDCDiskManagerChanges;
 - (void)deleteUserAvatarsForUserIDs:(NSArray<NSString*> *)userIDs;
 
 /**
- * Deletes the avatar file(s) for the given {userID, auth0ID} tuple from disk.
+ * Deletes the avatar file(s) for the given {userID, identityID} tuple from disk.
  *
  * @note The files are deleted in a safe manner.
  *       That is, if any files are currently being retained (a retainToken is being held for them),
@@ -548,10 +548,10 @@ extern NSString *const kZDCDiskManagerChanges;
  * @param userID
  *   The user you're interested in (userID == ZDCUser.uuid)
  *
- * @param auth0ID
+ * @param identityID
  *   If you're interested in the avatar for a particular social identity.
  */
-- (void)deleteUserAvatar:(NSString *)userID forAuth0ID:(NSString *)auth0ID;
+- (void)deleteUserAvatar:(NSString *)userID forIdentityID:(NSString *)identityID;
 
 /**
  * Migrates user avatar files between persistent & non-persistent.

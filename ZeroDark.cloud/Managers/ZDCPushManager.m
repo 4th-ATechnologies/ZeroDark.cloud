@@ -42,9 +42,9 @@
 
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
-#ifndef robbie_hanson
-#define robbie_hanson 1
-#endif
+//#ifndef robbie_hanson
+//#define robbie_hanson 1
+//#endif
 #if DEBUG
   static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
@@ -943,7 +943,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			}
 			default:
 			{
-				ZDCLogError(@"%@ - Unsupported operation type: %lu", THIS_METHOD, (unsigned long)type);
+				ZDCLogError(@"Unsupported operation type: %lu", (unsigned long)type);
 			#if DEBUG
 				NSAssert(NO, @"Unsupported operation type: %lu", (unsigned long)type);
 			#endif
@@ -1503,9 +1503,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		__block NSError *error = nil;
 		__block ZDCNode *node = nil;
 		__block NSData *rcrdData = nil;
-		__block NSArray<NSString*> *missingKeys = nil;
-		__block NSArray<NSString*> *missingUserIDs = nil;
-		__block NSArray<NSString*> *missingServerIDs = nil;
+		__block ZDCMissingInfo *missingInfo = nil;
 		
 		ZDCCryptoTools *cryptoTools = zdc.cryptoTools;
 		
@@ -1518,9 +1516,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			{
 				rcrdData = [cryptoTools cloudRcrdForNode: node
 				                             transaction: transaction
-				                             missingKeys: &missingKeys
-				                          missingUserIDs: &missingUserIDs
-				                        missingServerIDs: &missingServerIDs
+				                             missingInfo: &missingInfo
 				                                   error: &error];
 			}
 			
@@ -1564,13 +1560,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			
 			[self skipOperationWithContext:context];
 		}
-		else if (missingKeys.count > 0)
+		else if (missingInfo)
 		{
-			[self fixMissingKeysForNodeID:operation.nodeID operation:operation];
-		}
-		else if (missingUserIDs.count > 0)
-		{
-			[self fetchMissingUsers:missingUserIDs forOperation:operation];
+			if (missingInfo.missingKeys.count > 0) {
+				[self fixMissingKeysForNodeID:operation.nodeID operation:operation];
+			}
+			else {
+				[self fetchMissingInfo:missingInfo forOperation:operation];
+			}
 		}
 		else
 		{
@@ -3577,10 +3574,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	__block NSError *error = nil;
 	__block ZDCNode *node = nil;
 	__block NSData *rcrdData = nil;
-	
-	__block NSArray<NSString*> *missingKeys = nil;
-	__block NSArray<NSString*> *missingUserIDs = nil;
-	__block NSArray<NSString*> *missingServerIDs = nil;
+	__block ZDCMissingInfo *missingInfo = nil;
 	
 	ZDCCryptoTools *cryptoTools = zdc.cryptoTools;
 	
@@ -3590,9 +3584,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		rcrdData = [cryptoTools cloudRcrdForNode: node
 		                             transaction: transaction
-		                             missingKeys: &missingKeys
-		                          missingUserIDs: &missingUserIDs
-		                        missingServerIDs: &missingServerIDs
+		                             missingInfo: &missingInfo
 		                                   error: &error];
 		
 		// The current cloudPath of the node may not match this operation.
@@ -3617,13 +3609,14 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		[self skipOperationWithContext:context];
 	}
-	else if (missingKeys.count > 0)
+	else if (missingInfo)
 	{
-		[self fixMissingKeysForNodeID:operation.nodeID operation:operation];
-	}
-	else if (missingUserIDs.count > 0)
-	{
-		[self fetchMissingUsers:missingUserIDs forOperation:operation];
+		if (missingInfo.missingKeys.count > 0) {
+			[self fixMissingKeysForNodeID:operation.nodeID operation:operation];
+		}
+		else {
+			[self fetchMissingInfo:missingInfo forOperation:operation];
+		}
 	}
 	else
 	{
@@ -5111,9 +5104,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	__block ZDCNode *srcNode = nil;
 	__block ZDCNode *dstNode = nil;
 	__block NSData *rcrdData = nil;
-	__block NSArray<NSString*> *missingKeys = nil;
-	__block NSArray<NSString*> *missingUserIDs = nil;
-	__block NSArray<NSString*> *missingServerIDs = nil;
+	__block ZDCMissingInfo *missingInfo = nil;
 	
 	ZDCCryptoTools *cryptoTools = zdc.cryptoTools;
 	
@@ -5125,9 +5116,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		{
 			rcrdData = [cryptoTools cloudRcrdForNode: dstNode
 			                             transaction: transaction
-			                             missingKeys: &missingKeys
-			                          missingUserIDs: &missingUserIDs
-			                        missingServerIDs: &missingServerIDs
+			                             missingInfo: &missingInfo
 			                                   error: &error];
 		}
 		
@@ -5148,13 +5137,13 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		[self skipOperationWithContext:context];
 	}
-	else if (missingKeys.count > 0)
+	else if (missingInfo)
 	{
-		[self fixMissingKeysForNodeID:operation.dstNodeID operation:operation];
-	}
-	else if (missingUserIDs.count > 0)
-	{
-		[self fetchMissingUsers:missingUserIDs forOperation:operation];
+		if (missingInfo.missingKeys.count > 0) {
+			[self fixMissingKeysForNodeID:operation.dstNodeID operation:operation];
+		} else {
+			[self fetchMissingInfo:missingInfo forOperation:operation];
+		}
 	}
 	else
 	{
@@ -5581,8 +5570,8 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		operation.ephemeralInfo.continuation_data = nil;
 	}
 	
-	DDLogVerbose(@"continuation_rcrd: %@", operation.ephemeralInfo.continuation_rcrd);
-	DDLogVerbose(@"continuation_data: %@", operation.ephemeralInfo.continuation_data);
+	ZDCLogVerbose(@"continuation_rcrd: %@", operation.ephemeralInfo.continuation_rcrd);
+	ZDCLogVerbose(@"continuation_data: %@", operation.ephemeralInfo.continuation_data);
 	
 	operation.ephemeralInfo.pollContext = nil;
 	
@@ -6953,7 +6942,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	ZDCCryptoFile *cryptoFile = nil;
 	if (localUser.isLocal)
 	{
-		ZDCDiskExport *export = [zdc.diskManager userAvatar:localUser forAuth0ID:operation.avatar_auth0ID];
+		ZDCDiskExport *export = [zdc.diskManager userAvatar:localUser forIdentityID:operation.avatar_auth0ID];
 		cryptoFile = export.cryptoFile;
 	}
 	
@@ -8373,62 +8362,39 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	}];
 }
 
-- (void)fixMissingKeysForMessageID:(NSString *)messageID operation:(ZDCCloudOperation *)operation
-{
-	ZDCLogAutoTrace();
-	
-//	YapDatabaseCloudCorePipeline *pipeline = [self pipelineForOperation:operation];
-//	
-//	NSDate *distantFuture = [NSDate distantFuture];
-//	NSUUID *opUUID = operation.uuid;
-//	NSString *ctx = @"fix-missing-keys";
-//	
-//	[pipeline setHoldDate:distantFuture forOperationWithUUID:opUUID context:ctx];
-//	[pipeline setStatusAsPendingForOperationWithUUID:opUUID];
-//	
-//	__weak ZeroDarkCloud *zdc = owner;
-//	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
-//		
-//		ZDCOutgoingMessage *message = [transaction objectForKey:messageID inCollection:kZDCCollection_Messages];
-//		if (message)
-//		{
-//			message = [message copy];
-//			NSUInteger changeCount =
-//			  [zdc.cryptoTools fixMissingKeysForShareList: message.shareList
-//			                                encryptionKey: message.encryptionKey
-//			                                  transaction: transaction];
-//			
-//			if (changeCount > 0) {
-//				[transaction setObject:message forKey:message.uuid inCollection:kZDCCollection_Messages];
-//			}
-//		}
-//		
-//	} completionQueue:concurrentQueue completionBlock:^{
-//		
-//		[pipeline setHoldDate:nil forOperationWithUUID:opUUID context:ctx];
-//	}];
-}
-
-- (void)fetchMissingUsers:(NSArray<NSString*> *)missingUserIDs forOperation:(ZDCCloudOperation *)operation
+- (void)fetchMissingInfo:(ZDCMissingInfo *)missingInfo forOperation:(ZDCCloudOperation *)operation
 {
 	ZDCLogAutoTrace();
 	
 	YapDatabaseCloudCorePipeline *pipeline = [self pipelineForOperation:operation];
 	
-	ZDCRemoteUserManager *remoteUserManager = zdc.remoteUserManager;
+	ZDCUserManager *userManager = zdc.userManager;
 	
 	NSDate *distantFuture = [NSDate distantFuture];
 	NSUUID *opUUID = operation.uuid;
 	NSString *ctx = @"fetch-missing-user";
 	
-	for (NSString *userID in missingUserIDs)
+	for (NSString *userID in missingInfo.missingUserIDs)
 	{
 		[pipeline setHoldDate:distantFuture forOperationWithUUID:opUUID context:ctx];
 		
-		[remoteUserManager fetchRemoteUserWithID: userID
-		                             requesterID: operation.localUserID
-		                         completionQueue: concurrentQueue
-		                         completionBlock:^(ZDCUser *remoteUser, NSError *error)
+		[userManager fetchUserWithID: userID
+		                 requesterID: operation.localUserID
+		             completionQueue: concurrentQueue
+		             completionBlock:^(ZDCUser *remoteUser, NSError *error)
+		{
+			[pipeline setHoldDate:nil forOperationWithUUID:opUUID context:ctx];
+		}];
+	}
+	
+	for (ZDCUser *user in missingInfo.missingUserPubKeys)
+	{
+		[pipeline setHoldDate:distantFuture forOperationWithUUID:opUUID context:ctx];
+		
+		[userManager fetchPublicKey: user
+		                requesterID: operation.localUserID
+		            completionQueue: concurrentQueue
+		            completionBlock:^(ZDCUser *remoteUser, NSError *error)
 		{
 			[pipeline setHoldDate:nil forOperationWithUUID:opUUID context:ctx];
 		}];

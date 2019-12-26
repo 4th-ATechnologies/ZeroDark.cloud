@@ -774,7 +774,7 @@ done:
                  inSession:(NSURLSession *)session
             forLocalUserID:(NSString *)localUserID
 {
-	ZDCLogTrace(@"%@ %@", THIS_METHOD, localUserID);
+	ZDCLogVerbose(@"%@", localUserID);
 	
 	ZDCSessionInfo *sessionInfo = [self sessionInfoForUserID:localUserID];
 	
@@ -901,8 +901,6 @@ done:
                  withContext:(ZDCObject *)inContext
                  sessionInfo:(ZDCSessionInfo *)sessionInfo
 {
-	NSAssert(NO, @"Not implemented");
-	
 	dispatch_async(sessionInfo.queue, ^{ @autoreleasepool {
 		
 		if ([inContext isKindOfClass:[ZDCDownloadContext class]])

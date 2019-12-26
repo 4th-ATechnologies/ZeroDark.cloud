@@ -9,8 +9,8 @@
 
 #import <Foundation/Foundation.h>
 
-#import "A0UserProfile.h"
-#import "Auth0API.h"
+#import "A0Token.h"
+#import "ZDCUserProfile.h"
 
 @class Auth0LoginResult;
 @class Auth0LoginProfileResult;
@@ -73,7 +73,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)getUserProfileWithAccessToken:(NSString *)auth0_accessToken
                       completionQueue:(nullable dispatch_queue_t)completionQueue
-                      completionBlock:(void (^)(A0UserProfile *_Nullable profile,
+                      completionBlock:(void (^)(ZDCUserProfile *_Nullable profile,
                                                 NSError *_Nullable error))completionBlock;
 
 /**
@@ -134,7 +134,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * The Auth0 user profile, including all linked identities.
  */
-@property (nonatomic, strong, readonly) A0UserProfile *profile;
+@property (nonatomic, strong, readonly) ZDCUserProfile *profile;
 
 @end
 

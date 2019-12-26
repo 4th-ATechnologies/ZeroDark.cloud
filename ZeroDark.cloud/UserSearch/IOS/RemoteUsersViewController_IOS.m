@@ -20,7 +20,6 @@
 #import "EmptyTableViewCell.h"
 
 #import "Auth0ProviderManager.h"
-#import "ZDCBadgedBarButtonItem.h"
 
 #import "ZDCLogging.h"
 
@@ -31,11 +30,11 @@
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
 #if DEBUG
-static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
-
+#pragma unused(zdcLogLevel)
 
 @implementation RemoteUsersViewController_IOS
 {
@@ -54,12 +53,10 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	NSArray<NSString*>*   		remoteUserIDs;
 	
 	NSString* 						optionalTitle;
-	NSDictionary*            	preferedAuth0IDs;
 	
 	UIImage*               		defaultUserImage;
 	
 	BOOL                 		didModifyRecipents;
-	int                  		level;
 	
 	SharedUsersViewCompletionHandler	completionHandler;
 }
@@ -94,7 +91,6 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 		optionalTitle = title;
 		
 		didModifyRecipents = NO;
-		level = 1;
 	}
 	return self;
 }
@@ -118,11 +114,14 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	_tblUsers.estimatedSectionFooterHeight = 0;
 	//  _tblUsers.touchDelegate    =  (id <UITableViewTouchDelegate>) self;
 	
-	defaultUserImage = [imageManager.defaultUserAvatar imageWithMaxSize:[RemoteUserTableViewCell avatarSize]];
- 
 	providerManager = owner.auth0ProviderManager;
 	imageManager =  owner.imageManager;
 	databaseConnection = owner.databaseManager.uiDatabaseConnection;
+	
+	defaultUserImage =
+	  [imageManager.defaultUserAvatar scaledToSize: [RemoteUserTableViewCell avatarSize]
+	                                   scalingMode: ScalingMode_AspectFill];
+	
 }
 
 -(void)viewWillAppear:(BOOL)animated
@@ -154,18 +153,12 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	self.navigationItem.rightBarButtonItems = @[bbnSave, addItem];
 	bbnSave.enabled = didModifyRecipents;
 	
-	level--;
+	[[NSNotificationCenter defaultCenter] addObserver: self
+														  selector: @selector(databaseConnectionDidUpdate:)
+																name: UIDatabaseConnectionDidUpdateNotification
+															 object: nil];
 	
-	if(level == 0)
-	{
-		[[NSNotificationCenter defaultCenter] addObserver: self
-															  selector: @selector(prefsChanged:)
-																	name: ZDCLocalPreferencesChangedNotification
-																 object: nil];
-		
-		preferedAuth0IDs =  owner.internalPreferences.preferedAuth0IDs;
-	}
-	
+
 	[_tblUsers reloadData];
 }
 
@@ -173,30 +166,30 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 -(void) viewWillDisappear:(BOOL)animated
 {
 	[super viewWillDisappear:animated];
-	
-	if(level == 0)
-	{
-		[[NSNotificationCenter defaultCenter]  removeObserver:self];
-	}
+
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: Notifications
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
--(void)prefsChanged:(NSNotification *)notification
+- (void)databaseConnectionDidUpdate:(NSNotification *)notification
 {
-	ZDCLogAutoTrace();
+	NSArray *notifications = [notification.userInfo objectForKey:kNotificationsKey];
+
+	BOOL hasUserChanges = NO;
 	
-	NSString *prefs_key = [notification.userInfo objectForKey:ZDCLocalPreferencesChanged_UserInfo_Key];
+	hasUserChanges	= [owner.databaseManager.uiDatabaseConnection
+							hasChangeForAnyKeys: [NSSet setWithArray:remoteUserIDs]
+							inCollection:kZDCCollection_Users inNotifications:notifications];
 	
-	if ([prefs_key isEqualToString:ZDCprefs_preferedAuth0IDs])
+	if(hasUserChanges)
 	{
-		preferedAuth0IDs =  owner.internalPreferences.preferedAuth0IDs;
 		[_tblUsers reloadData];
-		
 	}
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: Actions
@@ -251,7 +244,6 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 													localUserID:localUserID
 													sharedUserIDs:remoteUserIDs];
 	
-	level++;
 	[self.navigationController pushViewController:vc animated:YES];
 }
 
@@ -352,36 +344,39 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	__weak typeof(self) weakSelf = self;
 	
 	RemoteUserTableViewCell *cell = (RemoteUserTableViewCell *)[tv dequeueReusableCellWithIdentifier:kRemoteUserTableViewCellIdentifier];
-	//    __weak typeof(self) weakSelf = self;
-	
+	cell.delegate = (id <RemoteUserTableViewCellDelegate>)self;
+
 	NSString* userID = [remoteUserIDs objectAtIndex:indexPath.row];
-	NSString* auth0ID = nil;
-	NSURL *pictureURL = nil;
-	
+ 
 	__block ZDCUser*    user    = nil;
 	
 	[owner.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
 	}];
+
+	CGSize avatarSize = [RemoteUserTableViewCell avatarSize];
 	
+	cell.showCheckMark     = NO;
+	cell.imgAvatar.hidden = NO;
+	cell.imgAvatar.clipsToBounds = YES;
+	cell.imgAvatar.layer.cornerRadius = avatarSize.height / 2;
+
 	if(user)
 	{
 		cell.userID = user.uuid;
-		auth0ID = user.auth0_preferredID;
 		
-		if([preferedAuth0IDs objectForKey: userID])
-			auth0ID = [preferedAuth0IDs objectForKey: userID];
-		
-		cell.auth0ID = auth0ID;
-		cell.delegate = (id <RemoteUserTableViewCellDelegate>)self;
-		
-		NSString* displayName  = [user displayNameForAuth0ID:auth0ID];
+		NSString* displayName  = [user displayName];
 		cell.lblUserName.text = displayName;
+		cell.lblUserName.textColor = UIColor.blackColor;
+
+		ZDCUserIdentity *displayIdentity = user.displayIdentity;
 		
-		NSArray* comps = [auth0ID componentsSeparatedByString:@"|"];
-		NSString* provider = comps.firstObject;
+		NSString *provider = displayIdentity.provider;
 		
-		OSImage* providerImage = [[providerManager providerIcon:Auth0ProviderIconType_Signin forProvider:provider] scaledToHeight:[RemoteUserTableViewCell imgProviderHeight]];
+		OSImage *providerImage =
+		[[providerManager iconForProvider: provider
+											  type: Auth0ProviderIconType_Signin]
+		 scaledToHeight: cell.lblProvider.frame.size.height];
 		if(providerImage)
 		{
 			cell.imgProvider.image =  providerImage;
@@ -390,24 +385,47 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 		}
 		else
 		{
-			NSString* providerName =  [providerManager displayNameforProvider:provider];
-			if(!providerName)
-				providerName = provider;
+			NSString* providerName =  [providerManager displayNameForProvider:provider];
 			cell.lblProvider.text = providerName;
 			cell.imgProvider.hidden = YES;
 			cell.lblProvider.hidden = NO;
 		}
 		
-		NSString* picture  = [Auth0ProviderManager correctPictureForAuth0ID:auth0ID
-																				  profileData:user.auth0_profiles[auth0ID]
-																						 region:user.aws_region
-																						 bucket:user.aws_bucket];
-		if(picture)
-			pictureURL = [NSURL URLWithString:picture];
+		ZDCImageProcessingBlock processingBlock = ^OSImage* (OSImage *image) {
+			
+			return [image scaledToSize:avatarSize scalingMode:ScalingMode_AspectFill];
+		};
 		
-		NSDictionary * auth0_profiles = [Auth0Utilities excludeRecoveryProfile:user.auth0_profiles];
+		void (^preFetch)(OSImage*, BOOL) = ^(OSImage *image, BOOL willFetch) {
+			
+			// The preFetch is invoked BEFORE the fetchUserAvatar method returns.
+			cell.imgAvatar.image = image ?:  self->defaultUserImage;
+		};
 		
-		if(auth0_profiles.count  < 2)
+		void (^postFetch)(OSImage*, NSError*) = ^(OSImage *image, NSError *error) {
+			
+			// The postFetch is invoked LATER, possibly after downloading the image.
+			__strong typeof(self) strongSelf = weakSelf;
+			if(strongSelf == nil) return;
+			
+			if (image)
+			{
+				// Check that the cell hasn't been recycled (is still being used for this identityID)
+				if ([cell.userID isEqual: user.uuid]) {
+					cell.imgAvatar.image =  image;
+				}
+			}
+		};
+		
+		
+		[imageManager fetchUserAvatar: user
+								withOptions: nil
+							  processingID: NSStringFromClass([self class])
+						  processingBlock: processingBlock
+							 preFetchBlock: preFetch
+							postFetchBlock: postFetch];
+		
+		if(user.identities.count  < 2)
 		{
 			cell.lblBadge.hidden = YES;
 		}
@@ -425,84 +443,20 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 				.bottom = 0,
 				.right = 3};
 			
-			cell.lblBadge.text =  [self badgeTextWithCount: auth0_profiles.count];
+			cell.lblBadge.text =  [self badgeTextWithCount: user.identities.count];
 			CGSize newSize = [cell.lblBadge sizeThatFits:CGSizeMake(cell.lblBadge.frame.size.width, 18)];
 			newSize.width += 8;
 			cell.cnstlblBadgeWidth.constant  = MAX(18,newSize.width);
 			
 		}
-		
-		cell.showCheckMark     = NO;
-		cell.imgAvatar.layer.cornerRadius =  RemoteUserTableViewCell.avatarSize.height / 2;
-		cell.imgAvatar.clipsToBounds = YES;
-		
-		cell.progress.hidden = YES;
-		[cell.actAvatar stopAnimating];
-		cell.actAvatar.hidden = YES;
-		
-		if(pictureURL)
-		{
-			cell.imgAvatar.hidden = YES;
-			[cell.actAvatar startAnimating];
-			cell.actAvatar.hidden = NO;
-			
-			CGSize avatarSize = [RemoteUserTableViewCell avatarSize];
-			
-			[ imageManager fetchUserAvatar: userID
-										  auth0ID: auth0ID
-										  fromURL: pictureURL
-										  options: nil
-									processingID: pictureURL.absoluteString
-								processingBlock:^UIImage * _Nonnull(UIImage * _Nonnull image)
-			 {
-				 return [image imageWithMaxSize:avatarSize];
-			 }
-								  preFetchBlock:^(UIImage * _Nullable image)
-			 {
-				 if(image)
-				 {
-					 cell.imgAvatar.hidden = NO;
-					 cell.actAvatar.hidden = YES;
-					 [cell.actAvatar stopAnimating];
-					 cell.imgAvatar.image = image;
-				 }
-			 }
-								 postFetchBlock:^(UIImage * _Nullable image, NSError * _Nullable error)
-			 {
-				 
-				 __strong typeof(self) strongSelf = weakSelf;
-				 if(strongSelf == nil) return;
-				 
-				 // check that the cell is still being used for this user
-				 
-				 
-				 if( [cell.userID isEqualToString: userID])
-				 {
-					 cell.imgAvatar.hidden = NO;
-					 cell.actAvatar.hidden = YES;
-					 [cell.actAvatar stopAnimating];
-					 
-					 if(image)
-					 {
-						 cell.imgAvatar.image = image;
-					 }
-					 else
-					 {
-						 cell.imgAvatar.image = strongSelf->defaultUserImage;
-					 }
-				 }
-			 }];
-			
-			
-		}
-		else
-		{
-			[cell.actAvatar stopAnimating];
-			cell.actAvatar.hidden = YES;
-			cell.imgAvatar.image = defaultUserImage;
-			cell.imgAvatar.hidden = NO;
-		}
-		
+	}
+	else // user is not loaded yet..
+	{
+		cell.lblBadge.hidden = YES;
+		cell.imgProvider.hidden = YES;
+		cell.lblProvider.hidden = YES;
+		cell.lblUserName.text = @"loading…";
+		cell.lblUserName.textColor = UIColor.lightGrayColor;
 	}
 	
 	cell.accessoryView  = [[UIView alloc]initWithFrame: (CGRect)
@@ -575,7 +529,6 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 
 - (void)tableView:(UITableView * _Nonnull)tableView disclosureButtonTappedAtCell:(RemoteUserTableViewCell* _Nonnull)cell
 {
-	
 	NSString*  remoteUserID = cell.userID;
 	__block ZDCUser*    user    = nil;
 	
@@ -585,92 +538,71 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 	
 	if(user)
 	{
-		ZDCSearchUserResult* info = [[ZDCSearchUserResult alloc] initWithUser:user];
-		
-		if([preferedAuth0IDs objectForKey: user.uuid])
-			info.auth0_preferredID  = [preferedAuth0IDs objectForKey: user.uuid];
-		
+		ZDCSearchResult* info = [[ZDCSearchResult alloc] initWithUser:user];
 		UserSearchSocialIDViewController_IOS*  remoteSRVC = nil;
-		
+
 		remoteSRVC = [[UserSearchSocialIDViewController_IOS alloc]
 						  initWithDelegate:(id<UserSearchSocialIDViewControllerDelegate>)self
 						  owner:owner
 						  localUserID:localUserID
-						  searchResultInfo:info];
-		
+						  searchResult:info];
+
 		self.navigationController.navigationBarHidden = NO;
-		level++;
 		[self.navigationController pushViewController:remoteSRVC animated:YES];
 	}
+ 
 }
 #pragma mark -  UserSearchSocialIDViewControllerDelegate
+- (void)userSearchSocialIDViewController:(UserSearchSocialIDViewController_IOS *)sender
+							didSelectIdentityID:(NSString *)identityID
+										 forUserID:(NSString *)userID;
 
-- (void) userSearchSocialIDViewController:(UserSearchSocialIDViewController_IOS *)sender
-								 didSelectAuth0ID:(NSString*)selectedAuth0ID
-										  forUserID:(NSString*)userID
 {
 	__weak typeof(self) weakSelf = self;
 	
 	[owner.databaseManager.rwDatabaseConnection
 	 asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
-		 
-		 ZDCLocalUser *updatedUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
-		 
-		 if(updatedUser)
-		 {
-			 updatedUser                 = updatedUser.copy;
-			 updatedUser.auth0_preferredID = selectedAuth0ID;
-			 [transaction setObject:updatedUser forKey:updatedUser.uuid inCollection:kZDCCollection_Users];
-		 }
-		 
-	 }completionBlock:^{
-		 __strong typeof(self) strongSelf = weakSelf;
-		 if (strongSelf == nil) return;
-		 
-		 [strongSelf->owner.internalPreferences setPreferedAuth0ID:selectedAuth0ID userID:userID];
-		 //        [strongSelf->_tblUsers reloadData];
-	 }];
+		
+		ZDCLocalUser *updatedUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+		
+		if(updatedUser)
+		{
+			updatedUser                 		= updatedUser.copy;
+			updatedUser.preferredIdentityID	= identityID;
+			[transaction setObject:updatedUser forKey:updatedUser.uuid inCollection:kZDCCollection_Users];
+		}
+		
+	}completionBlock:^{
+		__strong typeof(self) strongSelf = weakSelf;
+		if (strongSelf == nil) return;
+		
+		//        [strongSelf->_tblUsers reloadData];
+	}];
 	
 }
+
 
 #pragma mark -  UserSearchViewControllerDelegate
 
-- (void)userSearchUserViewController:(id)sender
-						selectedRecipients:(NSArray <NSArray* /* [userID , auth0ID ]>*/> * )recipientsIn
+ - (void)userSearchViewController:(id)sender addedRecipient:(ZDCUser *)recipient
 {
-	NSMutableSet* _recipSet = [NSMutableSet setWithArray:remoteUserIDs];
-	NSMutableDictionary* _preferedAuth0IDs = [NSMutableDictionary dictionaryWithDictionary:preferedAuth0IDs];
-	
-	[recipientsIn enumerateObjectsUsingBlock:^(NSArray * entry, NSUInteger idx, BOOL * _Nonnull stop) {
-		NSString *userID = entry[0];
-		NSString *auth0ID = entry[1];
-		[_recipSet addObject:userID];
-		
-		if(auth0ID)
-			[_preferedAuth0IDs setObject:auth0ID forKey:userID];
-	}];
-	
-	// update the prefered dictionary here.
-	preferedAuth0IDs = _preferedAuth0IDs;
-	
+	 NSMutableSet* _recipSet = [NSMutableSet setWithArray:remoteUserIDs];
+
+	[_recipSet addObject: recipient.uuid];
 	remoteUserIDs = _recipSet.allObjects;
-	didModifyRecipents = YES;
-	bbnSave.enabled = didModifyRecipents;
-	
+ 	didModifyRecipents = YES;
+ 	bbnSave.enabled = didModifyRecipents;
+
 }
 
-
-- (void)userSearchUserViewController:(id)sender
-						 removedRecipients:(NSArray <NSString* /* [userID */> * )recipients
+- (void)userSearchViewController:(id)sender removedRecipient:(NSString *)userID
 {
 	NSMutableArray* _remoteUserIDs = [NSMutableArray arrayWithArray:remoteUserIDs];
-	[_remoteUserIDs removeObjectsInArray:recipients];
+	[_remoteUserIDs removeObject:userID];
 	remoteUserIDs = _remoteUserIDs;
 	
 	didModifyRecipents = YES;
 	bbnSave.enabled = didModifyRecipents;
-	
 }
-
 
 @end

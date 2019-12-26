@@ -21,7 +21,7 @@ typedef NS_ENUM( NSUInteger, ZDCCheckMarkStyle )
 
 @interface ZDCCheckMark : UIView
 
-@property (nonatomic) bool checked;
+@property (nonatomic) BOOL checked;
 @property (nonatomic) ZDCCheckMarkStyle checkMarkStyle;
 
 @end

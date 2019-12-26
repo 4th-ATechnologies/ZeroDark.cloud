@@ -43,7 +43,7 @@ typedef NS_ENUM(NSInteger, ZDCCloudErrorCode) {
 	 * If you attempt to send a message to a user,
 	 * the receiving user must exist in the database.
 	 *
-	 * (You can use the ZDCRemoteUserManager to create the user if needed.)
+	 * (You can use the ZDCUserManager to create the user if needed.)
 	 */
 	ZDCCloudErrorCode_MissingReceiver,
 	

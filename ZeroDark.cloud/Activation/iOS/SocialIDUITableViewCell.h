@@ -9,19 +9,13 @@
 
 #import <UIKit/UIKit.h>
 
-NS_ASSUME_NONNULL_BEGIN
 @class KGHitTestingButton;
+@protocol SocialIDUITableViewCellDelegate;
+
+NS_ASSUME_NONNULL_BEGIN
 
 extern NSString *const kSocialIDCellIdentifier;
 
-@class SocialIDUITableViewCell;
-
-@protocol SocialIDUITableViewCellDelegate <NSObject>
-@optional
-
-- (void)tableView:(UITableView * _Nonnull)tableView rightButtonTappedAtCell:(SocialIDUITableViewCell* _Nonnull)cell;
-
-@end
 
 @interface SocialIDUITableViewCell : UITableViewCell
 
@@ -33,18 +27,30 @@ extern NSString *const kSocialIDCellIdentifier;
 @property (nonatomic, weak) IBOutlet NSLayoutConstraint  *cnstRightTextOffest;
 @property (nonatomic,weak)  IBOutlet KGHitTestingButton *btnRight;
 
-@property (nonatomic, copy) NSString *Auth0ID;
+@property (nonatomic, weak) id<SocialIDUITableViewCellDelegate> delegate;
+
 @property (nonatomic, copy) NSString *uuid;	// optional value
+@property (nonatomic, copy) NSString *identityID;
 
-@property (nonatomic, weak) id<SocialIDUITableViewCellDelegate>    delegate;
+- (void)showRightButton:(BOOL)shouldShow;
 
--(void)showRightButton:(BOOL)shouldShow;
-
-+(void) registerViewsforTable:(UITableView*)tableView bundle:(nullable NSBundle *)bundle;
++ (void)registerViewsforTable:(UITableView*)tableView bundle:(nullable NSBundle *)bundle;
 
 + (CGFloat)heightForCell;
 + (CGSize)avatarSize;
 + (CGFloat)imgProviderHeight;
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+@protocol SocialIDUITableViewCellDelegate <NSObject>
+@optional
+
+- (void)tableView:(UITableView *)tableView rightButtonTappedAtCell:(SocialIDUITableViewCell *)cell;
+
 @end
 
 NS_ASSUME_NONNULL_END

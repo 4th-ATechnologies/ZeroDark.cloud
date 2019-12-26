@@ -792,11 +792,18 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		return true
 	}
 	
+	
 	func tableView(_ tableView: UITableView, shouldIndentWhileEditingRowAt indexPath: IndexPath) -> Bool {
 		return false
 	}
     
-    
+	func tableView(_ tableView: UITableView, editingStyleForRowAt indexPath: IndexPath) -> UITableViewCell.EditingStyle {
+		  if tableView.isEditing {
+				return .delete
+		  }
+		  return .none
+	 }
+	
 	func tableView(_ tableView: UITableView,
 	               trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
 	) -> UISwipeActionsConfiguration?

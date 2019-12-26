@@ -42,18 +42,11 @@ static  NSString *const kPassPhraseSourceKey      = @"passPhraseSource";
 static Cipher_Algorithm  defaultKeyCipherAlgorithm	=	 kCipher_Algorithm_2FISH256;
 static P2K_Algorithm  	defaultP2KAlgorithm			=	 kP2K_Algorithm_Argon2i;
 
-#ifdef ZDCLogError
-  #define CKERROR                                                                       \
-    if(error) {                                                                         \
-      ZDCLogError(@"ERROR %@ %@:%d", error.localizedDescription, THIS_FILE, __LINE__);  \
-      goto done;                                                                        \
-    }
-#else
-  #define CKERROR  \
-    if (error) {   \
-    goto done;     \
+#define CKERROR                \
+  if(error) {                  \
+    ZDCLogError(@"%@", error); \
+    goto done;                 \
   }
-#endif
 
 @implementation ZDCDatabaseKeyManager {
 	

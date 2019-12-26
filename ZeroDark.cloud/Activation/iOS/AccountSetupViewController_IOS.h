@@ -13,7 +13,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-
 @interface AccountSetupViewController_IOS : AccountSetup_Base <UINavigationControllerDelegate>
 
 - (instancetype)initWithOwner:(ZeroDarkCloud*)inOwner;
@@ -59,9 +58,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)pushSocialIdMgmtWithUserID:(NSString* __nonnull)userID
 		  withNavigationController:(UINavigationController*)navigationController;
 
--(void)pushUserAvatarWithUserID:(NSString* __nonnull)userID
-                        auth0ID:(NSString * __nullable )auth0ID
-       withNavigationController:(UINavigationController*)navigationController;
+-(void)pushUserAvatarWithUserID:(NSString *)userID
+                     identityID:(NSString *)identityID
+           navigationController:(UINavigationController*)navigationController;
 
 - (void)pushAddIdentityWithUserID:(NSString* __nonnull)userID
 		 withNavigationController:(UINavigationController*)navigationController;
@@ -78,18 +77,25 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 @protocol AccountSetupViewController_IOS_Child_Delegate <NSObject>
-@required
 @optional
 
 - (BOOL)canPopViewControllerViaPanGesture:(AccountSetupViewController_IOS *)sender;
+
 @end
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 @interface AccountSetupSubViewController_Base : UIViewController <AccountSetupViewController_IOS_Child_Delegate>
-@property (nonatomic, readwrite) AccountSetupViewController_IOS * accountSetupVC;
+
+@property (nonatomic, readwrite) AccountSetupViewController_IOS *accountSetupVC;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -30,6 +30,10 @@
 		DC61C90F2214D23500829546 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = DC61C90E2214D23500829546 /* main.m */; };
 		DCC6C353221B593C00089558 /* test_BIP39Mnemonic.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC6C352221B593C00089558 /* test_BIP39Mnemonic.m */; };
 		DCC6C354221B593C00089558 /* test_BIP39Mnemonic.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC6C352221B593C00089558 /* test_BIP39Mnemonic.m */; };
+		DCDAC4F523AB06C600D4260B /* Merkle Files in Resources */ = {isa = PBXBuildFile; fileRef = DCDAC4F423AB06C600D4260B /* Merkle Files */; };
+		DCDAC4F623AB06C600D4260B /* Merkle Files in Resources */ = {isa = PBXBuildFile; fileRef = DCDAC4F423AB06C600D4260B /* Merkle Files */; };
+		DCDAC4F823AB06F400D4260B /* test_MerkleTree.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDAC4F723AB06F400D4260B /* test_MerkleTree.m */; };
+		DCDAC4F923AB06F400D4260B /* test_MerkleTree.m in Sources */ = {isa = PBXBuildFile; fileRef = DCDAC4F723AB06F400D4260B /* test_MerkleTree.m */; };
 		DCE663D62218956F000D4BCC /* TestUser.json in Resources */ = {isa = PBXBuildFile; fileRef = DCE663D52218956F000D4BCC /* TestUser.json */; };
 		DCF96F762214DA3B00F6359F /* test_ZDCFileChecksum.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF96F752214DA3B00F6359F /* test_ZDCFileChecksum.m */; };
 		DCF96F772214DA3B00F6359F /* test_ZDCFileChecksum.m in Sources */ = {isa = PBXBuildFile; fileRef = DCF96F752214DA3B00F6359F /* test_ZDCFileChecksum.m */; };
@@ -108,6 +112,8 @@
 		DC61C9172214D24300829546 /* zdc_iOS_test.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = zdc_iOS_test.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC61C91B2214D24300829546 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		DCC6C352221B593C00089558 /* test_BIP39Mnemonic.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = test_BIP39Mnemonic.m; sourceTree = "<group>"; };
+		DCDAC4F423AB06C600D4260B /* Merkle Files */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "Merkle Files"; sourceTree = "<group>"; };
+		DCDAC4F723AB06F400D4260B /* test_MerkleTree.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = test_MerkleTree.m; sourceTree = "<group>"; };
 		DCE663D52218956F000D4BCC /* TestUser.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = TestUser.json; sourceTree = SOURCE_ROOT; };
 		DCF96F752214DA3B00F6359F /* test_ZDCFileChecksum.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = test_ZDCFileChecksum.m; sourceTree = "<group>"; };
 		DCF96F782214DC9100F6359F /* test_Streams.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = test_Streams.m; sourceTree = "<group>"; };
@@ -220,12 +226,14 @@
 		DC4B8CE02214D68600902B08 /* zdc_shared_test */ = {
 			isa = PBXGroup;
 			children = (
+				DCDAC4F423AB06C600D4260B /* Merkle Files */,
 				DC4B8CE82214D69D00902B08 /* Test Files */,
 				DC4B8CEB2214D6C100902B08 /* test_AWSSignature.m */,
 				DCF96F782214DC9100F6359F /* test_Streams.m */,
 				DCF96F752214DA3B00F6359F /* test_ZDCFileChecksum.m */,
 				DCC6C352221B593C00089558 /* test_BIP39Mnemonic.m */,
 				DCFEFB0A2229E04600DD183B /* test_Models.m */,
+				DCDAC4F723AB06F400D4260B /* test_MerkleTree.m */,
 			);
 			path = zdc_shared_test;
 			sourceTree = "<group>";
@@ -434,6 +442,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC4B8CE92214D69D00902B08 /* Test Files in Resources */,
+				DCDAC4F523AB06C600D4260B /* Merkle Files in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -453,6 +462,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC4B8CEA2214D69D00902B08 /* Test Files in Resources */,
+				DCDAC4F623AB06C600D4260B /* Merkle Files in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -628,6 +638,7 @@
 				DCFEFB0B2229E04600DD183B /* test_Models.m in Sources */,
 				DCF96F792214DC9100F6359F /* test_Streams.m in Sources */,
 				DCF96F762214DA3B00F6359F /* test_ZDCFileChecksum.m in Sources */,
+				DCDAC4F823AB06F400D4260B /* test_MerkleTree.m in Sources */,
 				DC4B8CEC2214D6C100902B08 /* test_AWSSignature.m in Sources */,
 				DCC6C353221B593C00089558 /* test_BIP39Mnemonic.m in Sources */,
 			);
@@ -651,6 +662,7 @@
 				DCFEFB0C2229E04600DD183B /* test_Models.m in Sources */,
 				DCF96F7A2214DC9100F6359F /* test_Streams.m in Sources */,
 				DCF96F772214DA3B00F6359F /* test_ZDCFileChecksum.m in Sources */,
+				DCDAC4F923AB06F400D4260B /* test_MerkleTree.m in Sources */,
 				DC4B8CED2214D6C100902B08 /* test_AWSSignature.m in Sources */,
 				DCC6C354221B593C00089558 /* test_BIP39Mnemonic.m in Sources */,
 			);

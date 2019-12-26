@@ -23,14 +23,13 @@ NSString *const kSocialIDCellIdentifier = @"SocialIDCell";
 @synthesize btnRight;
 @synthesize delegate;
 
-@synthesize Auth0ID;
 @synthesize uuid;
+@synthesize identityID;
 
-+(void) registerViewsforTable:(UITableView*)tableView bundle:(nullable NSBundle *)bundle
++ (void)registerViewsforTable:(UITableView*)tableView bundle:(nullable NSBundle *)bundle
 {
 	UINib *buttonCellNib = [UINib nibWithNibName:@"SocialIDUITableViewCell" bundle:bundle];
 	[tableView registerNib:buttonCellNib forCellReuseIdentifier:kSocialIDCellIdentifier];
-
 }
 
 + (CGFloat)heightForCell

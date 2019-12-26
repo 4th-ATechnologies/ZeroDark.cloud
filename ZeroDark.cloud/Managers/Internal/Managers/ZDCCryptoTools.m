@@ -20,8 +20,73 @@
 #import "NSMutableDictionary+ZeroDark.h"
 #import "NSString+ZeroDark.h"
 
+/**
+ * Current version of JSON file, as supported by this framework.
+ */
 static NSUInteger const kZDCCloudRcrdCurrentVersion = 3;
 
+
+@interface ZDCMissingInfo ()
+
+- (void)addMissingKey:(NSString *)key;
+- (void)addMissingUserID:(NSString *)userID;
+- (void)addMissingUserPubKey:(ZDCUser *)user;
+- (void)addMissingServerID:(NSString *)serverID;
+
+@end
+
+@implementation ZDCMissingInfo {
+
+	NSMutableArray<NSString*> *_missingKeys;
+	
+	NSMutableArray<NSString*> *_missingUserIDs;
+	NSMutableArray<ZDCUser*> *_missingUserPubKeys;
+	
+	NSMutableArray<NSString*> *_missingServerIDs;
+}
+
+@synthesize missingKeys = _missingKeys;
+
+@synthesize missingUserIDs = _missingUserIDs;
+@synthesize missingUserPubKeys = _missingUserPubKeys;
+
+@synthesize missingServerIDs = _missingServerIDs;
+
+- (instancetype)init
+{
+	if ((self = [super init]))
+	{
+		_missingKeys = [[NSMutableArray alloc] initWithCapacity:1];
+		
+		_missingUserIDs = [[NSMutableArray alloc] initWithCapacity:1];
+		_missingUserPubKeys = [[NSMutableArray alloc] initWithCapacity:1];
+		
+		_missingServerIDs = [[NSMutableArray alloc] initWithCapacity:1];
+	}
+	return self;
+}
+
+- (void)addMissingKey:(NSString *)key {
+	[_missingKeys addObject:key];
+}
+
+- (void)addMissingUserID:(NSString *)userID {
+	[_missingUserIDs addObject:userID];
+}
+
+- (void)addMissingUserPubKey:(ZDCUser *)user {
+	[_missingUserPubKeys addObject:user];
+}
+
+- (void)addMissingServerID:(NSString *)serverID {
+	[_missingServerIDs addObject:serverID];
+}
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 @implementation ZDCCryptoTools {
 @private
@@ -250,9 +315,7 @@ done:
  */
 - (nullable NSData *)cloudRcrdForNode:(ZDCNode *)node
                           transaction:(YapDatabaseReadTransaction *)transaction
-                          missingKeys:(NSArray<NSString*> **)outMissingKeys
-                       missingUserIDs:(NSArray<NSString*> **)outMissingUserIDs
-							missingServerIDs:(NSArray<NSString*> **)outMissingServerIDs
+                          missingInfo:(ZDCMissingInfo **)outMissingInfo
                                 error:(NSError **)outError
 {
 	// Hello, and welcome to the crypto code !
@@ -336,14 +399,10 @@ done:
 	//
 	// P.S. Thank you for performing your due dilligence.
 	
-	NSParameterAssert(outMissingKeys != nil);
-	NSParameterAssert(outMissingUserIDs != nil);
-	NSParameterAssert(outMissingServerIDs != nil);
+	NSParameterAssert(outMissingInfo != nil);
 	NSParameterAssert(outError != nil);
 	
-	__block NSMutableArray<NSString*> *missingKeys = nil;
-	__block NSMutableArray<NSString*> *missingUserIDs = nil;
-	__block NSMutableArray<NSString*> *missingServerIDs = nil;
+	__block ZDCMissingInfo *missingInfo = nil;
 	__block NSError *error = nil;
 	
 	NSMutableDictionary *dict = nil;
@@ -429,6 +488,7 @@ done:
 				dict_keys[key] = shareItem.rawDictionary;
 				return; // from block; continue;
 			}
+			
 			if (!shareItem.canAddKey || ![shareItem hasPermission:ZDCSharePermission_Read])
 			{
 				// Doesn't need a key, or we haven't been granted permission to add one.
@@ -443,8 +503,27 @@ done:
 				NSString *userID = [ZDCShareList userIDFromKey:key];
 				
 				ZDCUser *user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
-				if (user.accountDeleted)
+				
+				if (user.accountBlocked || user.accountDeleted)
 				{
+					// accountBlocked:
+					//   We've detected publicKey tampering for this user.
+					//   So we're going to refuse to give the user acccess to the data.
+					//
+					// accountDeleted:
+					//   The user account doesn't exist anymore.
+					//   It's been deleted from the server.
+					//
+					// In either case, we still want to add an item to the keys section,
+					// because the server might reject us without it.
+					// But the item is NOT going to have an associated key.
+					//
+					NSAssert(shareItem.key.length == 0, @"Logic bomb");
+					//
+					// That is, we're not giving the user access to the file encryption key.
+					// So they won't be able to decrypt the node.
+					
+					dict_keys[key] = shareItem.rawDictionary;
 					return; // from block; continue;
 				}
 				
@@ -452,31 +531,28 @@ done:
 				  [transaction objectForKey: user.publicKeyID
 				               inCollection: kZDCCollection_PublicKeys];
 				
-				if (pubKey)
+				if (missingInfo == nil) {
+					missingInfo = [[ZDCMissingInfo alloc] init];
+				}
+				
+				if (user == nil)
 				{
-					// Missing (wrapped) node.encryptionKey for user.
-					//
-					// This means we need to update the node.shareList.shareItem in the database.
+					// Missing user.
 					
-					if (missingKeys == nil) {
-						missingKeys = [NSMutableArray array];
-					}
+					[missingInfo addMissingUserID:userID];
+				}
+				else if (pubKey == nil)
+				{
+					// Missing user pubKey.
 					
-					[missingKeys addObject:key];
+					[missingInfo addMissingUserPubKey:user];
 				}
 				else
 				{
-					// Missing publicKey for user.
-					// And the user's account appears to be valid.
-					// And we don't have a pre-wrapped version of the node's encryptionKey.
-					//
-					// This means we need to fetch the user's publicKey before we can upload this node.
+					// Missing (wrapped) node.encryptionKey for user.
+					// This means we need to update the node.shareList.shareItem in the database.
 					
-					if (missingUserIDs == nil) {
-						missingUserIDs = [NSMutableArray array];
-					}
-				
-					[missingUserIDs addObject:userID];
+					[missingInfo addMissingKey:key];
 				}
 			}
 			else if ([ZDCShareList isServerKey:key])
@@ -498,7 +574,7 @@ done:
 		dict[kZDCCloudRcrd_Keys] = dict_keys;
 	}
 	
-	if ((missingKeys.count == 0) && (missingUserIDs.count == 0) && (missingServerIDs.count == 0))
+	if (missingInfo == nil)
 	{
 		NSMutableDictionary *dict_meta = nil;
 		NSMutableDictionary *dict_data = nil;
@@ -606,9 +682,7 @@ done:
 	
 done:
 	
-	*outMissingKeys = missingKeys;
-	*outMissingUserIDs = missingUserIDs;
-	*outMissingServerIDs = missingServerIDs;
+	*outMissingInfo = missingInfo;
 	*outError = error;
 	return result;
 }
@@ -1572,7 +1646,6 @@ done:
 	if (errorOut) *errorOut = error;
 	return dataOut;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Errors

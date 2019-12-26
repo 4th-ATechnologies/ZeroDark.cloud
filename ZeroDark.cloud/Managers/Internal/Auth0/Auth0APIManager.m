@@ -73,7 +73,7 @@ NSString * const A0ParameterCodeChallenge       = @"code_challenge";
 
 - (instancetype)initWithRefreshToken:(NSString *)refreshToken
                              idToken:(NSString *)idToken
-                             profile:(A0UserProfile *)profile
+                             profile:(ZDCUserProfile *)profile
 {
 	NSParameterAssert(refreshToken != nil);
 	NSParameterAssert(idToken != nil);
@@ -271,7 +271,7 @@ static Auth0APIManager *sharedInstance = nil;
 			
 			[self getUserProfileWithAccessToken: accessToken
 			                    completionQueue: backgroundQueue
-			                    completionBlock:^(A0UserProfile *profile, NSError *error)
+			                    completionBlock:^(ZDCUserProfile *profile, NSError *error)
 			{
 				if (error)
 				{
@@ -623,7 +623,7 @@ static Auth0APIManager *sharedInstance = nil;
 		for (NSUInteger i = 0; i < completionBlocks.count; i++)
 		{
 			dispatch_queue_t completionQueue = completionQueues[i];
-			void (^completionBlock)(A0UserProfile *a0Profile, NSError *error) = completionBlocks[i];
+			void (^completionBlock)(ZDCUserProfile *profile, NSError *error) = completionBlocks[i];
 
 			dispatch_async(completionQueue, ^{ @autoreleasepool {
 
@@ -632,7 +632,7 @@ static Auth0APIManager *sharedInstance = nil;
 		}
 	};
 	
-	void (^Succeed)(A0UserProfile*) = ^(A0UserProfile *profile){
+	void (^Succeed)(ZDCUserProfile*) = ^(ZDCUserProfile *profile){
 		
 		NSParameterAssert(profile != nil);
 		
@@ -648,7 +648,7 @@ static Auth0APIManager *sharedInstance = nil;
 		for (NSUInteger i = 0; i < completionBlocks.count; i++)
 		{
 			dispatch_queue_t completionQueue = completionQueues[i];
-			void (^completionBlock)(A0UserProfile *a0Profile, NSError *error) = completionBlocks[i];
+			void (^completionBlock)(ZDCUserProfile *profile, NSError *error) = completionBlocks[i];
 
 			dispatch_async(completionQueue, ^{ @autoreleasepool {
 
@@ -686,7 +686,7 @@ static Auth0APIManager *sharedInstance = nil;
 		}
 		  
 		NSDictionary *jsonDict = nil;
-		A0UserProfile* profile = nil;
+		ZDCUserProfile *profile = nil;
 		
 		if ([responseObject isKindOfClass:[NSData class]])
 		{
@@ -706,7 +706,7 @@ static Auth0APIManager *sharedInstance = nil;
 			}
 			else
 			{
-				profile = [[A0UserProfile alloc] initWithDictionary:jsonDict];
+				profile = [[ZDCUserProfile alloc] initWithDictionary:jsonDict];
 			}
 		}
 		  
@@ -731,7 +731,7 @@ static Auth0APIManager *sharedInstance = nil;
 
 - (void)getUserProfileWithAccessToken:(NSString *)accessToken
                       completionQueue:(nullable dispatch_queue_t)completionQueue
-                      completionBlock:(void (^)(A0UserProfile *_Nullable a0Profile,
+                      completionBlock:(void (^)(ZDCUserProfile *_Nullable profile,
                                                 NSError *_Nullable error))completionBlock
 {
 #ifndef NS_BLOCK_ASSERTIONS

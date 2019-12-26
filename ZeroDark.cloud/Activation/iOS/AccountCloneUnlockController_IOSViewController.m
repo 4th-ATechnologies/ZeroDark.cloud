@@ -96,11 +96,11 @@ static const NSUInteger max_tries = 4;
 
 	_lblDisplayName.text = displayName;
 
-	NSArray* comps = [localUser.auth0_preferredID componentsSeparatedByString:@"|"];
+	NSArray* comps = [localUser.preferredIdentityID componentsSeparatedByString:@"|"];
 	NSString* provider = comps.firstObject;
 
-	OSImage* image = [providerManager providerIcon:Auth0ProviderIconType_64x64 forProvider:provider];
-	if(image)
+	OSImage* image = [providerManager iconForProvider:provider type:Auth0ProviderIconType_64x64];
+	if (image)
 	{
 		_imgProvider.image = image;
 	}

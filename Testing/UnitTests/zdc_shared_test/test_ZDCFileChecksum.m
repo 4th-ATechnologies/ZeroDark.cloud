@@ -7,7 +7,7 @@
 
 #import <stdatomic.h>
 #import <ZeroDarkCloud/ZeroDarkCloud.h>
-#import <ZeroDarkCloud/NSData+S4.h>
+#import <ZeroDarkCloud/NSData+AWSUtilities.h>
 
 typedef NS_ENUM(NSInteger, ZDCFileChecksumTest) {
 	
@@ -380,7 +380,7 @@ typedef NS_ENUM(NSInteger, ZDCFileChecksumTest) {
 			XCTAssert(done == YES);
 			XCTAssert(error == nil);
 			
-			NSString *calculatedChecksum = [hash hexString];
+			NSString *calculatedChecksum = [hash lowercaseHexString];
 			NSString *expectedChecksum = expected[fileURL.lastPathComponent];
 			
 			NSLog(@"=====================================================================");
@@ -451,7 +451,7 @@ typedef NS_ENUM(NSInteger, ZDCFileChecksumTest) {
 		
 		if (hash)
 		{
-			NSString *calculatedChecksum = [hash hexString];
+			NSString *calculatedChecksum = [hash lowercaseHexString];
 			NSString *expectedChecksum = expected[@(chunkIndex)];
 			
 			NSLog(@"=====================================================================");

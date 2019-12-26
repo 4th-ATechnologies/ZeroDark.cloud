@@ -17,12 +17,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface LocalUserSettingsViewController_IOS : UIViewController
 
-@property (nonatomic, weak, readonly)					ZeroDarkCloud*	owner;
-@property (nonatomic, weak, readonly)					NSString*	localUserID;
+- (instancetype)initWithOwner:(ZeroDarkCloud *)zdc
+                  localUserID:(NSString *)localUserID;
 
-- (instancetype)initWithOwner:(ZeroDarkCloud*)inOwner
-						localUserID:(NSString* __nonnull)inLocalUserID;
-
+@property (nonatomic, strong, readonly) ZeroDarkCloud *zdc;
+@property (nonatomic, copy, readonly) NSString *localUserID;
 
 @end
 

@@ -177,8 +177,9 @@
 {
 	__weak typeof(self) weakSelf = self;
 
-	[providerManager fetchSupportedProvidersWithCompletion:^(NSArray<NSString *> * _Nullable providerKeys, NSError * _Nullable error)
-	 {
+	[providerManager fetchSupportedProviders:
+		^(NSArray<NSString *> * _Nullable providerKeys, NSError * _Nullable error)
+	{
 		 NSMutableArray* supportedKeys = nil;
 
 		 __strong typeof(self) strongSelf = weakSelf;
@@ -239,7 +240,7 @@
 	  [sender dequeueReusableCellWithIdentifier:kIdentityProviderTableCellIdentifier];
 	
 	NSString *key = identityProviderKeys[indexPath.row];
-	OSImage *image = [providerManager providerIcon:Auth0ProviderIconType_Signin forProvider:key];
+	OSImage *image = [providerManager iconForProvider:key type:Auth0ProviderIconType_Signin];
 	if (!image) {
 		image = [OSImage imageNamed:@"provider_auth0"];
 	}

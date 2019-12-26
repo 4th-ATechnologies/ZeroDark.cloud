@@ -100,34 +100,35 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 {
 	__weak typeof(self) weakSelf = self;
 
-	[providerManager fetchSupportedProvidersWithCompletion:^(NSArray<NSString *> * _Nullable providerKeys, NSError * _Nullable error)
-	 {
-		 NSMutableArray* supportedKeys = nil;
+	[providerManager fetchSupportedProviders:
+		^(NSArray<NSString*> *providerKeys, NSError *error)
+	{
+		__strong typeof(self) strongSelf = weakSelf;
+		if (strongSelf == nil) return;
+		
+		NSMutableArray *supportedKeys = nil;
+		if (providerKeys)
+		{
+			supportedKeys = [providerKeys mutableCopy];
 
-		 __strong typeof(self) strongSelf = weakSelf;
-		 if (strongSelf == nil) return;
+			// if we are in trial mode we dont show the auth0 login
+			// but in social mode we fall through.
+			if (strongSelf->accountSetupVC.setupMode ==  AccountSetupMode_Trial)
+			{
+				[supportedKeys removeObject:@"auth0"];
+			}
+		}
+		
+		strongSelf->identityProviderKeys = supportedKeys;
 
-		 if(providerKeys)
-		 {
-			 supportedKeys = [NSMutableArray arrayWithArray:providerKeys];
-
-			 // if we are in trial mode we dont show the auth0 login
-			 // but in social mode we fall through.
-			 if(   strongSelf->accountSetupVC.setupMode ==  AccountSetupMode_Trial)
-			 {
-				 [supportedKeys removeObject:@"auth0"];
-			 }
-
-		 }
-		 strongSelf->identityProviderKeys = supportedKeys;
-
-		 if(completionBlock)
-			 completionBlock();
-	 }];
+		if (completionBlock) {
+			completionBlock();
+		}
+	}];
 }
 
-
 #pragma mark - host table
+
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
 	return [IdentityProviderTableViewCell heightForCell];
@@ -147,7 +148,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	IdentityProviderTableViewCell *cell = (IdentityProviderTableViewCell *)  [tv dequeueReusableCellWithIdentifier:kIdentityProviderTableCellIdentifier];
 
 	NSString* key  = identityProviderKeys[indexPath.row];
-	OSImage* image = [providerManager providerIcon:Auth0ProviderIconType_Signin forProvider:key];
+	OSImage* image = [providerManager iconForProvider:key type:Auth0ProviderIconType_Signin];
 	if(!image) image = [OSImage imageNamed:@"provider_auth0"];
 
 	cell._imgProvider.image = [image scaledToHeight:32];

@@ -17,12 +17,12 @@
 #import "AWSRegions.h"
 
 @class ZeroDarkCloud;
+@class ZDCAccessKeyBlob;
 @class ZDCLocalUser;
 @class ZDCLocalUserAuth;
-@class A0UserProfile;
 @class ZDCPublicKey;
 @class ZDCSymmetricKey;
-@class ZDCAccessKeyBlob;
+@class ZDCUserProfile;
 
 typedef NS_ENUM(NSInteger, AccountSetupMode) {
 	AccountSetupMode_Unknown                = 0,
@@ -42,7 +42,7 @@ typedef NS_ENUM(NSInteger, AccountSetupViewID) {
  	AccountSetupViewID_Region,
 
 	AccountSetupViewID_SocialidMgmt,
-    AccountSetupViewID_UserAvatar,
+	AccountSetupViewID_UserAvatar,
 
  	AccountSetupViewID_Help,
  	AccountSetupViewID_AddIdentitityProvider,
@@ -65,7 +65,7 @@ typedef NS_ENUM(NSInteger, AccountState) {
 	AccountState_NeedsCloneClode,
 	AccountState_Ready,
 	AccountState_NeedsRegionSelection,
-    AccountState_NeedsReauthentication,
+	AccountState_NeedsReauthentication,
 
 	AccountState_LinkingID,
 	AccountState_Reauthorized,
@@ -122,7 +122,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readwrite)            AccountSetupMode       setupMode;
 @property (nonatomic, readwrite)            IdenititySelectionMode identityMode;
 @property (nonatomic, readwrite ,nullable)  NSDictionary*          selectedProvider;
-@property (nonatomic, readwrite ,nullable)  A0UserProfile*         userProfile;
+@property (nonatomic, readwrite ,nullable)  ZDCUserProfile*        userProfile;
 @property (nonatomic, readwrite ,nullable)  NSData *               privKeyData;
 
 @property (nonatomic, readwrite ,nullable)  NSString* activationEmail;
@@ -137,17 +137,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)handleFail;   // prototype method
 
 // utility functions
--(BOOL)commonInitWithUserID:(NSString* __nonnull)userID error:(NSError **)errorOut;
+- (BOOL)commonInitWithUserID:(NSString *)userID error:(NSError **)errorOut;
 
-- (ZDCLocalUser *)createLocalUserFromProfile:(A0UserProfile *)profile;
+- (BOOL)isAlreadyLinkedError:(NSError *)error;
 
--(BOOL)isAlreadyLinkedError:(NSError*)error;
-
--(void) handleInternalError:(NSError*)error;
-
-- (nullable NSString *)closestMatchingAuth0IDFromProfile:(A0UserProfile *)profile
-                                                provider:(NSString *)provider
-                                                username:(nullable NSString *)username;
+- (void)handleInternalError:(NSError *)error;
 
 // for an existing account - attempt to login to database account
 - (void)databaseAccountLoginWithUsername:(NSString *)username
@@ -162,35 +156,34 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * For login using social accounts (facebook, google etc..)
  */
-- (void) socialAccountLoginWithAuth:(ZDCLocalUserAuth *)localUserAuth
-                           profile:(A0UserProfile *)profile
-                  preferredAuth0ID:(NSString *)preferedAuth0ID
+- (void)socialAccountLoginWithAuth:(ZDCLocalUserAuth *)localUserAuth
+                           profile:(ZDCUserProfile *)profile
                    completionBlock:(void (^)(AccountState accountState, NSError *_Nullable error))completionBlock;
 
 // resume activation given any state
--(void) resumeActivationForUserID:(NSString*)userID
-			  cancelOperationFlag:(BOOL*_Nullable)cancelOperationFlag
-				  completionBlock:(void (^)(NSError *error))completionBlock;
+- (void)resumeActivationForUserID:(NSString*)userID
+              cancelOperationFlag:(BOOL *_Nullable)cancelOperationFlag
+                  completionBlock:(void (^)(NSError *_Nullable error))completionBlock;
 
 // unlocking the user with clone code
--(void)unlockUserWithAccessKey:(NSData *)accessKey
-					completionBlock:(void (^)(NSError *_Nullable error))completionBlock;
+- (void)unlockUserWithAccessKey:(NSData *)accessKey
+                completionBlock:(void (^)(NSError *_Nullable error))completionBlock;
 
 // region selection
--(void) selectRegionForUserID:(NSString*)userID
-						  region:(AWSRegion) region
-				  completionBlock:(void (^)(NSError *_Nullable error))completionBlock;
+- (void)selectRegionForUserID:(NSString *)userID
+                       region:(AWSRegion)region
+              completionBlock:(void (^)(NSError *_Nullable error))completionBlock;
 
 // profile link and unlink
-- (void)linkProfile:(A0UserProfile *)profile
-	  toLocalUserID:(NSString *)localUserID
-	completionQueue:(nullable dispatch_queue_t)completionQueue
-	completionBlock:(nullable void (^)(NSError *_Nullable error))completionBlock;
+- (void)linkProfile:(ZDCUserProfile *)profile
+      toLocalUserID:(NSString *)localUserID
+    completionQueue:(nullable dispatch_queue_t)completionQueue
+    completionBlock:(nullable void (^)(NSError *_Nullable error))completionBlock;
 
 - (void)unlinkAuth0ID:(NSString *)auth0ID
-	  fromLocalUserID:(NSString *)localUserID
-	  completionQueue:(nullable dispatch_queue_t)completionQueue
-	  completionBlock:(nullable void (^)(NSError *_Nullable error))completionBlock;
+      fromLocalUserID:(NSString *)localUserID
+      completionQueue:(nullable dispatch_queue_t)completionQueue
+      completionBlock:(nullable void (^)(NSError *_Nullable error))completionBlock;
 
 @end
 

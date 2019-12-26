@@ -30,7 +30,7 @@
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
 #if DEBUG
-  static const int zdcLogLevel = ZDCLogLevelDebug;
+  static const int zdcLogLevel = ZDCLogLevelVerbose;
 #else
   static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
@@ -288,7 +288,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	[NSKeyedUnarchiver setClass:[ZDCTrunkNode class] forClassName:@"ZDCContainerNode"];
 	
 	NSURL *databaseURL = zdc.databasePath;
-	ZDCLogDebug(@"databaseURL = %@", databaseURL);
+	ZDCLogVerbose(@"databaseURL = %@", databaseURL);
 	
 	YapDatabaseOptions *options = [[YapDatabaseOptions alloc] init];
 	options.corruptAction = YapDatabaseCorruptAction_Rename;
@@ -1096,7 +1096,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	//
 	// And then we automatically re-register any ZDCCloud instances that were registered from last app launch.
 	
-	NSMutableArray<YapCollectionKey *> *tuples = nil;
+	NSMutableArray<YapCollectionKey *> *tuples = [NSMutableArray arrayWithCapacity:4];
 	BOOL foundAvatarExt = NO;
 	
 	NSArray<NSString *> *previouslyRegisteredExtensionNames = database.previouslyRegisteredExtensionNames;
@@ -1115,33 +1115,26 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 				NSString *localUserID = components[0];
 				NSString *treeID = components[1];
 				
-				YapDatabaseCloudCore *ext = [self registerCloudExtensionForUserID:localUserID treeID:treeID];
-				if (ext)
+				[self registerCloudExtensionForUserID:localUserID treeID:treeID];
+				[tuples addObject:YapCollectionKeyCreate(localUserID, treeID)];
+				
+				if ([localUserID isEqualToString:@"*"] && [treeID isEqualToString:@"*"])
 				{
-					if (tuples == nil) {
-						tuples = [NSMutableArray arrayWithCapacity:4];
-					}
-				
-					YapCollectionKey *tuple = YapCollectionKeyCreate(localUserID, treeID);
-					[tuples addObject:tuple];
-				
-					if ([localUserID isEqualToString:@"*"] && [treeID isEqualToString:@"*"])
-					{
-						foundAvatarExt = YES;
-					}
+					foundAvatarExt = YES;
 				}
 			}
 		}
 	}
 	
-	// The 'previouslyRegisteredCloudExtTuples' variable MUST be non-nil at the completion of this method !
-	//
-	previouslyRegisteredCloudExtTuples = tuples ? [tuples copy] : [NSArray array];
-	
 	if (!foundAvatarExt)
 	{
 		[self registerCloudExtensionForUserID:@"*" treeID:@"*"];
+		[tuples addObject:YapCollectionKeyCreate(@"*", @"*")];
 	}
+	
+	// The 'previouslyRegisteredCloudExtTuples' variable MUST be non-nil at the completion of this method !
+	//
+	previouslyRegisteredCloudExtTuples = tuples ? [tuples copy] : [NSArray array];
 }
 
 - (void)setupActionManager
@@ -1393,7 +1386,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		NSString *localUserID = key;
 		NSString *pushToken = localUser.pushToken;
 		
-		ZDCLogDebug(@"Registering push token for user: %@, token :%@", localUserID, pushToken);
+		ZDCLogVerbose(@"Registering push token for user: %@, token :%@", localUserID, pushToken);
 		
 		[restManager registerPushTokenForLocalUser: localUser
 		                           completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
@@ -1664,14 +1657,6 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 	// We always start the extension suspended.
 	// Every call to suspend must be matched with a call to resume.
 	
-	// This method is getting called before the PushManager has been initialized.
-	// So we let ZeroDarkCloud finish its initialization process,
-	// and then it inovkes [ext resume] when it's done.
-	//
-	// @see [ZeroDarkCloud resumePushQueues]
-	//
-	[ext suspend];
-	
 	// ZDCSyncManager will resume the extension when:
 	//
 	// - it's completed a pull (to ensure we've processed cloud changes)
@@ -1682,7 +1667,15 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 #if TARGET_OS_IPHONE
 	if (previouslyRegisteredCloudExtTuples == nil)
 	{
-		// CloudCore extensions that are re-registered during database setup get an extra suspension.
+		// CloudCore extensions that are re-registered during database setup get a few extra suspensions.
+		
+		// This method is getting called before the PushManager has been initialized.
+		// So we let ZeroDarkCloud finish its initialization process,
+		// and then it inovkes [ext resume] when it's done.
+		//
+		// @see [ZeroDarkCloud unlockOrCreateDatabase:error:]
+		//
+		[ext suspend];
 		
 		// The ZDCSessionManager handles resuming background uploads/downloads.
 		// We don't want to start the push queue until after its resumed its list of active uploads.

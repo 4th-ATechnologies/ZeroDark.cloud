@@ -2837,11 +2837,11 @@
 	}
 	
 	if (oldCloudLocator == nil) {
-		ZDCLogWarn(@"%@ - Ignoring request: oldCloudLocator is nil", THIS_METHOD);
+		ZDCLogWarn(@"Ignoring request: oldCloudLocator is nil");
 		return;
 	}
 	if (newCloudLocator == nil) {
-		ZDCLogWarn(@"%@ - Ignoring request: newCloudLocator is nil", THIS_METHOD);
+		ZDCLogWarn(@"Ignoring request: newCloudLocator is nil");
 		return;
 	}
 	

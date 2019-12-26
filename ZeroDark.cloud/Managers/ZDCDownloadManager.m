@@ -19,6 +19,7 @@
 #import "ZDCNodePrivate.h"
 #import "ZDCProgressManagerPrivate.h"
 #import "ZDCNetworkTools.h"
+#import "ZDCUserSearchManager.h"
 #import "ZeroDarkCloudPrivate.h"
 
 #import "NSError+Auth0API.h"
@@ -61,7 +62,7 @@ static NSUInteger const kMaxFailCount = 8;
 
 - (instancetype)initWithOwner:(ZDCDownloadManager *)owner
                        userID:(NSString *)userID
-                      auth0ID:(NSString *)auth0ID
+                   identityID:(NSString *)identityID
                       options:(ZDCDownloadOptions *)options
               completionQueue:(dispatch_queue_t)completionQueue
               completionBlock:(id)completionBlock;
@@ -70,7 +71,7 @@ static NSUInteger const kMaxFailCount = 8;
 @property (nonatomic, assign, readonly) BOOL isMeta;
 
 @property (nonatomic, strong, readonly) NSString *userID;
-@property (nonatomic, strong, readonly) NSString *auth0ID;
+@property (nonatomic, strong, readonly) NSString *identityID;
 
 @property (nonatomic, strong, readonly) NSString *nodeID;
 @property (nonatomic, assign, readonly) ZDCNodeMetaComponents components;
@@ -174,13 +175,13 @@ static NSUInteger const kMaxFailCount = 8;
 	return [NSString stringWithFormat:@"%@|%d", nodeID, (int)components];
 }
 
-- (NSString *)downloadKeyForUserID:(NSString *)userID auth0ID:(NSString *)auth0ID
+- (NSString *)downloadKeyForUserID:(NSString *)userID identityID:(NSString *)identityID
 {
 	// Format(s)
-	// - userID  : 32 chars (zBase32) e.g.: z55tqmfr9kix1p1gntotqpwkacpuoyno
-	// - auth0ID : <provider_name>|<provider_specific_id>
+	// - userID     : 32 chars (zBase32) e.g.: z55tqmfr9kix1p1gntotqpwkacpuoyno
+	// - identityID : <provider_name>|<provider_userID>
 	
-	return [NSString stringWithFormat:@"%@|%@", userID, auth0ID];
+	return [NSString stringWithFormat:@"%@|%@", userID, identityID];
 }
 
 - (NSString *)resumeKeyForRequest:(NSURLRequest *)request
@@ -2389,23 +2390,18 @@ static NSUInteger const kMaxFailCount = 8;
  * See header file for documentation.
  */
 - (ZDCDownloadTicket *)downloadUserAvatar:(ZDCUser *)user
-                                  auth0ID:(nullable NSString *)auth0ID
                                   options:(nullable ZDCDownloadOptions *)options
                           completionQueue:(nullable dispatch_queue_t)completionQueue
                           completionBlock:(UserAvatarDownloadCompletionBlock)completionBlock
 {
 	ZDCLogAutoTrace();
 	
-	if (!auth0ID) {
-		auth0ID = user.auth0_preferredID;
+	ZDCUserIdentity *identity = nil;
+	if (options.identityID) {
+		identity = [user identityWithID:options.identityID];
 	}
-	if (!auth0ID) {
-		auth0ID = [Auth0Utilities firstAvailableAuth0IDFromProfiles:user.auth0_profiles];
-	}
-	
-	NSDictionary *profile = nil;
-	if (auth0ID) {
-		profile = user.auth0_profiles[auth0ID];
+	else {
+		identity = user.displayIdentity;
 	}
 	
 	NSError *error = nil;
@@ -2415,14 +2411,9 @@ static NSUInteger const kMaxFailCount = 8;
 		NSString *msg = @"Invalid parameter: user is nil";
 		error = [NSError errorWithClass:[self class] code:400 description:msg];
 	}
-	else if (auth0ID == nil)
+	else if (identity == nil)
 	{
-		NSString *msg = @"Invalid parameter: user is missing all social profiles";
-		error = [NSError errorWithClass:[self class] code:400 description:msg];
-	}
-	else if (profile == nil)
-	{
-		NSString *msg = @"Invalid parameter: user is missing profile for auth0ID";
+		NSString *msg = @"Invalid parameter: user is missing identity";
 		error = [NSError errorWithClass:[self class] code:400 description:msg];
 	}
 	
@@ -2438,18 +2429,12 @@ static NSUInteger const kMaxFailCount = 8;
 		return [[ZDCDownloadTicket alloc] init];
 	}
 	
-	NSString *picture =
-	  [Auth0Utilities correctPictureForAuth0ID: auth0ID
-	                               profileData: profile
-	                                    region: user.aws_region
-	                                    bucket: user.aws_bucket];
+	NSURL *pictureURL =
+	  [Auth0Utilities pictureUrlForIdentity: identity
+	                                 region: user.aws_region
+	                                 bucket: user.aws_bucket];
 	
-	NSURL *url = nil;
-	if (picture) {
-		url = [NSURL URLWithString:picture];
-	}
-	
-	if (url == nil)
+	if (pictureURL == nil)
 	{
 		if (completionBlock)
 		{
@@ -2461,37 +2446,74 @@ static NSUInteger const kMaxFailCount = 8;
 		return [[ZDCDownloadTicket alloc] init];
 	}
 	
+	if (options == nil)
+	{
+		options = [[ZDCDownloadOptions alloc] init];
+		options.cacheToDiskManager = YES;
+		options.identityID = identity.identityID;
+	}
+	
 	return [self _downloadUserAvatar: user
-	                         auth0ID: auth0ID
-	                         fromURL: url
+	                      identityID: identity.identityID
+	                         fromURL: pictureURL
 	                         options: options
 	                 completionQueue: completionQueue
 	                 completionBlock: completionBlock];
 }
 
 /**
- * Internal method.
- * Exposed via ZDCDownloadManagerPrivate.
+ * See header file for documentation.
  */
-- (ZDCDownloadTicket *)downloadUserAvatar:(NSString *)userID
-                                  auth0ID:(NSString *)auth0ID
-                                  fromURL:(NSURL *)url
-                                  options:(nullable ZDCDownloadOptions *)inOptions
+- (ZDCDownloadTicket *)downloadUserAvatar:(ZDCSearchResult *)searchResult
+									identityID:(nullable NSString *)inIdentityID
                           completionQueue:(nullable dispatch_queue_t)completionQueue
                           completionBlock:(UserAvatarDownloadCompletionBlock)completionBlock
 {
+	ZDCLogAutoTrace();
+	
+	
+	NSString *userID = searchResult.userID;
+ 
+	ZDCUserIdentity* identity = [searchResult identityWithID:inIdentityID];
+	if(!identity)
+	{
+		identity = searchResult.displayIdentity;
+	}
+ 
+	NSURL *pictureURL =
+	  [Auth0Utilities pictureUrlForIdentity: identity
+	                                 region: searchResult.aws_region
+	                                 bucket: searchResult.aws_bucket];
+	
+	if (pictureURL == nil)
+	{
+		if (completionBlock)
+		{
+			dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+				
+				completionBlock(nil, nil);
+			}});
+		}
+		return [[ZDCDownloadTicket alloc] init];
+	}
+	
+	ZDCDownloadOptions *options = [[ZDCDownloadOptions alloc] init];
+	options.cacheToDiskManager = NO;
+	options.savePersistentlyToDiskManager = NO;
+	options.identityID = identity.identityID;
+	
 	return [self _downloadUserAvatar: userID
-	                         auth0ID: auth0ID
-	                         fromURL: url
-	                         options: inOptions
+	                      identityID: identity.identityID
+	                         fromURL: pictureURL
+	                         options: options
 	                 completionQueue: completionQueue
 	                 completionBlock: completionBlock];
 }
 
 - (ZDCDownloadTicket *)_downloadUserAvatar:(id)userOrUserID
-                                   auth0ID:(NSString *)auth0ID
+                                identityID:(NSString *)identityID
                                    fromURL:(NSURL *)url
-                                   options:(nullable ZDCDownloadOptions *)inOptions
+                                   options:(ZDCDownloadOptions *)options
                            completionQueue:(nullable dispatch_queue_t)completionQueue
                            completionBlock:(UserAvatarDownloadCompletionBlock)completionBlock
 {
@@ -2505,25 +2527,20 @@ static NSUInteger const kMaxFailCount = 8;
 		user = (ZDCUser *)userOrUserID;
 		userID = user.uuid;
 	}
-	else
+	else if ([userOrUserID isKindOfClass:[NSString class]])
 	{
 		userID = [(NSString *)userOrUserID copy]; // mutable string protection
 	}
 	
-	auth0ID = [auth0ID copy]; // mutable string protection
+	NSParameterAssert(userID != nil);
+	NSParameterAssert(identityID != nil);
+	NSParameterAssert(url != nil);
 	
-	ZDCDownloadOptions *options = [inOptions copy];
-	if (options == nil)
-	{
-		options = [[ZDCDownloadOptions alloc] init];
-		options.cacheToDiskManager = YES;
-	}
-	
-	NSString *downloadKey = [self downloadKeyForUserID:userID auth0ID:auth0ID];
+	NSString *downloadKey = [self downloadKeyForUserID:userID identityID:identityID];
 	ZDCDownloadTicket *ticket =
 	  [[ZDCDownloadTicket alloc] initWithOwner: self
 	                                    userID: userID
-	                                   auth0ID: auth0ID
+	                                identityID: identityID
 	                                   options: options
 	                           completionQueue: completionQueue
 	                           completionBlock: completionBlock];
@@ -2571,11 +2588,14 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		if (user && !error)
 		{
-			[strongSelf maybeCacheUserAvatar:data forUser:user withAuth0ID:auth0ID eTag:eTag];
+			[strongSelf maybeCacheUserAvatar: data
+			                         forUser: user
+			                      identityID: identityID
+			                            eTag: eTag];
 		}
 		
 		[strongSelf _downloadUserAvatarDidComplete: userID
-		                                   auth0ID: auth0ID
+		                                identityID: identityID
 		                                  withData: data
 		                                     error: error];
 	}];
@@ -2595,11 +2615,11 @@ static NSUInteger const kMaxFailCount = 8;
 }
 
 - (void)_downloadUserAvatarDidComplete:(NSString *)userID
-                               auth0ID:(NSString *)auth0ID
+                            identityID:(NSString *)identityID
                               withData:(nullable NSData *)data
                                  error:(nullable NSError *)error
 {
-	NSString *downloadKey = [self downloadKeyForUserID:userID auth0ID:auth0ID];
+	NSString *downloadKey = [self downloadKeyForUserID:userID identityID:identityID];
 	
 	__block NSArray<ZDCDownloadTicket*> *tickets = nil;
 	dispatch_sync(downloadQueue, ^{ @autoreleasepool {
@@ -2631,13 +2651,13 @@ static NSUInteger const kMaxFailCount = 8;
 
 - (void)maybeCacheUserAvatar:(nullable NSData *)data
                      forUser:(ZDCUser *)user
-                 withAuth0ID:(NSString *)auth0ID
+                  identityID:(NSString *)identityID
                         eTag:(NSString *)eTag
 {
 	NSParameterAssert(user != nil);
-	NSParameterAssert(auth0ID != nil);
+	NSParameterAssert(identityID != nil);
 	
-	NSString *downloadKey = [self downloadKeyForUserID:user.uuid auth0ID:auth0ID];
+	NSString *downloadKey = [self downloadKeyForUserID:user.uuid identityID:identityID];
 	
 	__block BOOL shouldCache = NO;
 	__block BOOL shouldSave = NO;
@@ -2673,7 +2693,7 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		[zdc.diskManager importUserAvatar: import
 		                          forUser: user
-		                          auth0ID: auth0ID
+		                       identityID: identityID
 		                            error: nil];
 	}
 }
@@ -2702,7 +2722,7 @@ static NSUInteger const kMaxFailCount = 8;
 	NSString* (^downloadKeyForTicket)(ZDCDownloadTicket*) = ^(ZDCDownloadTicket *ticket){
 		
 		if (sender.isUser)
-			return [self downloadKeyForUserID:ticket.userID auth0ID:ticket.auth0ID];
+			return [self downloadKeyForUserID:ticket.userID identityID:ticket.identityID];
 		else if (sender.isMeta)
 			return [self downloadMetaKeyForNodeID:ticket.nodeID components:ticket.components];
 		else
@@ -3037,6 +3057,7 @@ static NSString *const k_saveToDisk    = @"saveToDisk";
 #if TARGET_OS_IPHONE
 static NSString *const k_canBackground = @"canBackground";
 #endif
+static NSString *const k_identityID    = @"identityID";
 static NSString *const k_completionTag = @"completionTag";
 
 @implementation ZDCDownloadOptions
@@ -3046,6 +3067,7 @@ static NSString *const k_completionTag = @"completionTag";
 #if TARGET_OS_IPHONE
 @synthesize canDownloadWhileInBackground = _canBackground;
 #endif
+@synthesize identityID = _identityID;
 @synthesize completionConsolidationTag = _completionConsolidationTag;
 
 
@@ -3058,6 +3080,7 @@ static NSString *const k_completionTag = @"completionTag";
 	#if TARGET_OS_IPHONE
 		_canBackground = [decoder decodeBoolForKey:k_canBackground];
 	#endif
+		_identityID = [decoder decodeObjectForKey:k_identityID];
 		_completionConsolidationTag = [decoder decodeObjectForKey:k_completionTag];
 	}
 	return self;
@@ -3070,6 +3093,7 @@ static NSString *const k_completionTag = @"completionTag";
 #if TARGET_OS_IPHONE
 	[coder encodeBool:_canBackground forKey:k_canBackground];
 #endif
+	[coder encodeObject:_identityID forKey:k_identityID];
 	[coder encodeObject:_completionConsolidationTag forKey:k_completionTag];
 }
 
@@ -3081,6 +3105,7 @@ static NSString *const k_completionTag = @"completionTag";
 #if TARGET_OS_IPHONE
 	copy.canDownloadWhileInBackground = _canBackground;
 #endif
+	copy.identityID = [_identityID copy];
 	copy.completionConsolidationTag = [_completionConsolidationTag copy];
 	
 	return copy;
@@ -3101,7 +3126,7 @@ static NSString *const k_completionTag = @"completionTag";
 @synthesize isMeta = _isMeta;
 
 @synthesize userID = _userID;
-@synthesize auth0ID = _auth0ID;
+@synthesize identityID = _identityID;
 
 @synthesize nodeID = _nodeID;
 @synthesize components = _components;
@@ -3158,7 +3183,7 @@ static NSString *const k_completionTag = @"completionTag";
 
 - (instancetype)initWithOwner:(ZDCDownloadManager *)owner
                        userID:(NSString *)userID
-                      auth0ID:(NSString *)auth0ID
+                   identityID:(NSString *)identityID
                       options:(ZDCDownloadOptions *)options
               completionQueue:(dispatch_queue_t)completionQueue
               completionBlock:(id)completionBlock
@@ -3168,7 +3193,7 @@ static NSString *const k_completionTag = @"completionTag";
 		_owner = owner;
 		_isUser = YES;
 		_userID = userID;
-		_auth0ID = auth0ID;
+		_identityID = identityID;
 		_options = options;
 		_completionQueue = completionQueue;
 		_completionBlock = completionBlock;

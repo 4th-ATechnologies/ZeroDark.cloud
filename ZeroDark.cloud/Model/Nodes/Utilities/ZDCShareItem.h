@@ -120,7 +120,9 @@ typedef NS_OPTIONS(unichar, ZDCSharePermission) {
  */
 - (instancetype)initWithDictionary:(nullable NSDictionary *)dictionary;
 
-/** Returns the "raw" version of the shareList, as it would appear in the cloud. */
+/**
+ * Returns the "raw" version of the shareList, as it would appear in the cloud.
+ */
 @property (nonatomic, readonly) NSDictionary *rawDictionary;
 
 /**
@@ -146,7 +148,8 @@ typedef NS_OPTIONS(unichar, ZDCSharePermission) {
 /**
  * The wrapped encryptionKey that's being used to encrypt the node's content.
  *
- * @note The framework can automatically generate the key for you.
+ * @note You don't need to worry about setting this property.
+ *       The framework will automatically generate the key for you.
  *       You really only need to worry about setting the permissions.
  *
  * The node.encryptionKey is wrapped using the resource's public key.
@@ -168,6 +171,10 @@ typedef NS_OPTIONS(unichar, ZDCSharePermission) {
  * The `canAddKey` property doesn't get modified as a result of pulling down information from the cloud.
  */
 @property (nonatomic, readwrite, assign) BOOL canAddKey;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Convenience
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Returns YES if the given permission is included in the set of permissions.
@@ -191,6 +198,10 @@ typedef NS_OPTIONS(unichar, ZDCSharePermission) {
  *          If the node is immutable, you should make a copy of the node, and then modify the copy.
  */
 - (void)removePermission:(ZDCSharePermission)perm;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Equality
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Returns true if the parameter is of type ZDCShareItem, and all values are the same.

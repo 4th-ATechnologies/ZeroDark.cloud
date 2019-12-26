@@ -35,44 +35,42 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 #pragma unused(zdcLogLevel)
 
 
-typedef NS_ENUM(NSInteger, ZDCButton) {
-	ZDCButton_Camera   = 0,
-	ZDCButton_Photos ,
-	ZDCButton_Documents ,
-	ZDCButton_Paste,
-	ZDCButton_Remove,
+typedef NS_ENUM(NSInteger, TblRow) {
+	TblRow_Camera = 0,
+	TblRow_Photos,
+	TblRow_Documents,
+	TblRow_Paste,
+	TblRow_Remove,
 	
-	ZDCButton_Last,
+	TblRow_Last,
 };
 
 @implementation UserAvatarViewController_IOS
 {
-	IBOutlet __weak UIImageViewPasteable   *_imgAvatar;
-	IBOutlet __weak UILabel                *_lblDisplayName;
-	IBOutlet __weak UIImageView 				*_imgProvider;
-	IBOutlet __weak UILabel     				*_lblProvider;
+	IBOutlet __weak UIImageViewPasteable * _imgAvatar;
+	IBOutlet __weak UILabel              * _lblDisplayName;
+	IBOutlet __weak UIImageView          * _imgProvider;
+	IBOutlet __weak UILabel              * _lblProvider;
 	
-	IBOutlet __weak UITableView             *_tblButtons;
-	IBOutlet __weak NSLayoutConstraint      *_cnstTblButtonsHeight;
+	IBOutlet __weak UITableView          * _tblButtons;
+	IBOutlet __weak NSLayoutConstraint   * _cnstTblButtonsHeight;
 	
 	ZeroDarkCloud         * zdc;
 	YapDatabaseConnection * uiDatabaseConnection;
-	Auth0ProviderManager  * providerManager;
-	ZDCUITools            * uiTools;
 	
-	UIImage*        defaultUserImage;
-	UIImage*        cameraImage;
-	UIImage*        photosImage;
-	UIImage*        pasteImage;
-	UIImage*        documentsImage;
-	UIImage*        removeImage;
+	UIImage * cameraImage;
+	UIImage * photosImage;
+	UIImage * pasteImage;
+	UIImage * documentsImage;
+	UIImage * removeImage;
+	UIImage * _defaultUserImage_mustUseLazyGetter;
 	
-	OSImage*        newUserImage;
-	OSImage*        currentUserImage;
-	BOOL            deleteUserImage;
-	BOOL            hasChanges;
+	OSImage * newUserImage;
+	OSImage * currentUserImage;
+	BOOL      deleteUserImage;
+	BOOL      hasChanges;
 	
-	BOOL             hasCamera;
+	BOOL hasCamera;
 	UIDocumentPickerViewController  *docPicker;
 	UIImagePickerController         *photoPicker;
 	
@@ -82,7 +80,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 
 @synthesize accountSetupVC = accountSetupVC;
 @synthesize localUserID = localUserID;
-@synthesize auth0ID = auth0ID;
+@synthesize identityID = identityID;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark View Lifecycle
@@ -91,8 +89,6 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 - (void)viewDidLoad
 {
 	[super viewDidLoad];
-	
-	defaultUserImage = [zdc.imageManager.defaultUserAvatar imageWithMaxSize:_imgAvatar.frame.size];
 	
 	_imgAvatar.delegate = (id <UIImageViewPasteableDelegate>)self;
 	
@@ -122,8 +118,8 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 	                          inBundle: zdcBundle
 	     compatibleWithTraitCollection: nil] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
 	
-	newUserImage = NULL;
-	currentUserImage = NULL;
+	newUserImage = nil;
+	currentUserImage = nil;
 	deleteUserImage = NO;
 }
 
@@ -134,33 +130,27 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 	
 	zdc = accountSetupVC.zdc;
 	uiDatabaseConnection = zdc.databaseManager.uiDatabaseConnection;
-	providerManager = accountSetupVC.zdc.auth0ProviderManager;
-	uiTools = accountSetupVC.zdc.uiTools;
 	
 	self.navigationItem.title = @"Social Identities";
 	
-	UIBarButtonItem* cancelItem = [[UIBarButtonItem alloc]
-											 initWithBarButtonSystemItem:UIBarButtonSystemItemCancel
-											 target:self action:@selector(handleNavigationBack:)];
+	UIBarButtonItem *cancelItem =
+	  [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemCancel
+	                                                target: self
+	                                                action: @selector(handleNavigationBack:)];
 	
 	self.navigationItem.leftBarButtonItems = @[cancelItem];
 	
-	
-	UIBarButtonItem* doneItem = [[UIBarButtonItem alloc]
-										  initWithBarButtonSystemItem:UIBarButtonSystemItemDone
-										  target:self action:@selector(doneButtonTapped:)];
+	UIBarButtonItem *doneItem =
+	  [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone
+	                                                target: self
+	                                                action: @selector(doneButtonTapped:)];
 	
 	self.navigationItem.rightBarButtonItems = @[doneItem];
 	
 	self.navigationItem.title = @"Update Profile Picture";
 	
-	[[NSNotificationCenter defaultCenter] addObserver: self
-	                                         selector: @selector(databaseConnectionDidUpdate:)
-	                                             name: UIDatabaseConnectionDidUpdateNotification
-	                                           object: nil];
-	
+	[self refreshUserNameAndIcon];
 	[_tblButtons reloadData];
-	[self refreshView];
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -187,41 +177,29 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: Notifications
+// MARK: Refresh View
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)databaseConnectionDidUpdate:(NSNotification *)notification
+- (UIImage *)defaultUserImage
 {
-	NSArray *notifications = [notification.userInfo objectForKey:kNotificationsKey];
-	
-	BOOL hasUserChanges = NO;
-	if (localUserID)
+	if (_defaultUserImage_mustUseLazyGetter == nil)
 	{
-		hasUserChanges =
-		  [uiDatabaseConnection hasChangeForKey: localUserID
-		                           inCollection: kZDCCollection_Users
-		                        inNotifications: notifications];
+		_defaultUserImage_mustUseLazyGetter =
+		  [zdc.imageManager.defaultUserAvatar scaledToSize: _imgAvatar.frame.size
+		                                       scalingMode: ScalingMode_AspectFill];
 	}
 	
-	if (hasUserChanges)
-	{
-		[self refreshView];
-	}
+	return _defaultUserImage_mustUseLazyGetter;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: Refresh View
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)refreshView
-{
-	if (localUserID) {
-		[self refreshUserNameAndIcon];
-	}
-}
-
 - (void)refreshUserNameAndIcon
 {
+	ZDCLogAutoTrace();
+	
 	__block ZDCLocalUser *localUser = nil;
 	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 	#pragma clang diagnostic push
@@ -236,12 +214,17 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 		return;
 	}
 	
-	NSArray* comps = [auth0ID componentsSeparatedByString:@"|"];
-	NSString* provider = comps.firstObject;
-
-	OSImage* providerImage = [[providerManager providerIcon:Auth0ProviderIconType_Signin forProvider:provider] scaledToHeight:_imgProvider.frame.size.height];
+	ZDCUserIdentity *identity = [localUser identityWithID:identityID];
+	Auth0ProviderManager *providerManager = zdc.auth0ProviderManager;
 	
-	if(providerImage)
+	
+	NSString *provider = identity.provider;
+	OSImage *providerImage =
+	  [[providerManager iconForProvider: provider
+	                               type: Auth0ProviderIconType_Signin]
+	                     scaledToHeight: _imgProvider.frame.size.height];
+	
+	if (providerImage)
 	{
 		_imgProvider.hidden = NO;
 		_imgProvider.image = providerImage;
@@ -249,35 +232,28 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 	}
 	else
 	{
+		NSString *providerName = [providerManager displayNameForProvider:provider];
+		
 		_imgProvider.hidden = YES;
-		_lblProvider.text = provider;
+		_lblProvider.text = providerName;
 		_lblProvider.hidden = NO;
 	}
 	
-	NSString *displayName = [localUser displayNameForAuth0ID:auth0ID];
-	if (displayName.length > 0) {
-		_lblDisplayName.text = displayName;
-	}
-	else {
-		_lblDisplayName.text = (localUser.displayName.length > 0) ? localUser.displayName : @"";
-	}
+	NSString *displayName = identity.displayName;
+	_lblDisplayName.text = displayName;
 	
-	CGSize avatarSize = _imgAvatar.image.size;
+	CGSize avatarSize = _imgAvatar.frame.size;
 	
 	UIImage* (^processingBlock)(UIImage *_Nonnull) = ^(UIImage *image) {
 		
-		return [image imageWithMaxSize:avatarSize];
+		return [image scaledToSize:avatarSize scalingMode:ScalingMode_AspectFill];
 	};
 	
 	void (^preFetchBlock)(UIImage*, BOOL) = ^(UIImage *image, BOOL willFetch){
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
 		// The preFetch is invoked BEFORE the fetchUserAvatar method returns.
 		
-		_imgAvatar.image = image ?: defaultUserImage;
-		
-	#pragma clang diagnostic pop
+		self->_imgAvatar.image = image ?: [self defaultUserImage];
 	};
 	
 	__weak typeof(self) weakSelf = self;
@@ -286,18 +262,16 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 		// The postFetch is invoked LATER, possibly after a download.
 		
 		__strong typeof(self) strongSelf = weakSelf;
-		if (strongSelf == nil) return;
-		
-		if (image) {
-			strongSelf->_imgAvatar.image =  image;
+		if (strongSelf && image) {
+			strongSelf->_imgAvatar.image = image;
 		}
 	};
 	
-	ZDCFetchOptions *opts = [[ZDCFetchOptions alloc] init];
-	opts.auth0ID = auth0ID;
+	ZDCFetchOptions *options = [[ZDCFetchOptions alloc] init];
+	options.identityID = identityID;
 	
 	[zdc.imageManager fetchUserAvatar: localUser
-	                      withOptions: opts
+	                      withOptions: options
 	                     processingID: NSStringFromClass([self class])
 	                  processingBlock: processingBlock
 	                    preFetchBlock: preFetchBlock
@@ -315,16 +289,17 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-	return ZDCButton_Last;
+	return TblRow_Last;
 }
-
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"avatatarSourceCell"];
+	NSString *const reuseID = @"avatatarSourceCell";
 	
-	if (cell == nil) {
-		cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"avatatarSourceCell"];
+	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:reuseID];
+	if (cell == nil)
+	{
+		cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:reuseID];
 		cell.selectionStyle = UITableViewCellSelectionStyleNone;
 	}
 	
@@ -344,7 +319,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 	
 	switch (indexPath.row)
 	{
-		case ZDCButton_Camera:
+		case TblRow_Camera:
 		{
 			cell.textLabel.text = @"Camera";
 			cell.imageView.image = [cameraImage imageByScalingProportionallyToSize:CGSizeMake(32, 32)];
@@ -360,7 +335,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 			
 			break;
 		}
-		case ZDCButton_Photos:
+		case TblRow_Photos:
 		{
 			cell.textLabel.text = @"Photos";
 			cell.accessoryType = UITableViewCellAccessoryNone;
@@ -376,7 +351,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 			
 			break;
 		}
-		case ZDCButton_Documents:
+		case TblRow_Documents:
 		{
 			cell.textLabel.text = @"Documents";
 			cell.accessoryType = UITableViewCellAccessoryNone;
@@ -384,7 +359,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 			
 			break;
 		}
-		case ZDCButton_Paste:
+		case TblRow_Paste:
 		{
 			cell.textLabel.text = @"Paste";
 			cell.accessoryType = UITableViewCellAccessoryNone;
@@ -396,7 +371,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 			
 			break;
 		}
-		case ZDCButton_Remove:
+		case TblRow_Remove:
 		{
 			cell.textLabel.text = @"Remove";
 			cell.accessoryType = UITableViewCellAccessoryNone;
@@ -417,7 +392,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 	
 	switch (indexPath.row)
 	{
-		case ZDCButton_Camera:
+		case TblRow_Camera:
 		{
 			BOOL hasCamera = NO;
 			
@@ -428,18 +403,18 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 			
 			break;
 		}
-		case ZDCButton_Photos:
+		case TblRow_Photos:
 		{
 			BOOL hasPhotos = NO;
 			
 			if(ZDCConstants.appHasPhotosPermission)
 				hasPhotos = YES;
 			
-			shouldHighlight  = hasPhotos;
+			shouldHighlight = hasPhotos;
 			
 			break;
 		}
-		case ZDCButton_Paste:
+		case TblRow_Paste:
 		{
 			UIImage *image = [[UIPasteboard generalPasteboard] image];
 			shouldHighlight = image != NULL;
@@ -481,7 +456,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 	
 	switch (indexPath.row)
 	{
-		case ZDCButton_Camera:
+		case TblRow_Camera:
 		{
 			BOOL hasCamera = NO;
 			
@@ -495,7 +470,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 			
 			break;
 		}
-		case ZDCButton_Photos:
+		case TblRow_Photos:
 		{
 			if (ZDCConstants.appHasPhotosPermission)
 			{
@@ -505,19 +480,19 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 			}
 			break;
 		}
-		case ZDCButton_Documents:
+		case TblRow_Documents:
 		{
 			[self documentsButtonTapped: self
 								  sourceView: tv
 								  sourceRect: aFrame];
 			break;
 		}
-		case ZDCButton_Paste:
+		case TblRow_Paste:
 		{
 			[self pasteButtonTapped:self];
 			break;
 		}
-		case ZDCButton_Remove:
+		case TblRow_Remove:
 		{
 			[self removeButtonTapped:self];
 			break;
@@ -540,8 +515,11 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 	
 	if (hasChanges)
 	{
-		ZDCDiskManager *diskManager = accountSetupVC.zdc.diskManager;
-		ZDCLocalUserManager *localUserManager = accountSetupVC.zdc.localUserManager;
+		ZDCDiskManager *diskManager = zdc.diskManager;
+		ZDCLocalUserManager *localUserManager = zdc.localUserManager;
+		
+		NSString *_localUserID = self.localUserID;
+		NSString *_identityID = self.identityID;
 		
 		NSData *jpegData = nil;
 		if (!deleteUserImage && newUserImage)
@@ -553,34 +531,32 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 		__block ZDCLocalUser *localUser = nil;
 		[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction * _Nonnull transaction) {
 			
-			localUser = [transaction objectForKey:self.localUserID inCollection:kZDCCollection_Users];
+			localUser = [transaction objectForKey:_localUserID inCollection:kZDCCollection_Users];
 		}];
 		
 		// Now we need to get the previous eTag
 		
-		ZDCDiskExport *export = [diskManager userAvatar:localUser forAuth0ID:self.auth0ID];
+		ZDCDiskExport *export = [diskManager userAvatar:localUser forIdentityID:_identityID];
 		if (export.cryptoFile)
 		{
-			NSString *_auth0ID = [self.auth0ID copy];
-			
 			[ZDCFileConversion decryptCryptoFileIntoMemory: export.cryptoFile
 													 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
 													 completionBlock:^(NSData *cleartext, NSError *error)
-			 {
-				 if (error || !cleartext) return;
-				 
-				 [localUserManager setNewAvatar: jpegData
-										 forLocalUser: localUser
-												auth0ID: _auth0ID
-								 replacingOldAvatar: cleartext];
-			 }];
+			{
+				if (error || !cleartext) return;
+				
+				[localUserManager setNewAvatar: jpegData
+				                  forLocalUser: localUser
+				                    identityID: _identityID
+				            replacingOldAvatar: cleartext];
+			}];
 		}
 		else
 		{
 			[localUserManager setNewAvatar: jpegData
-									forLocalUser: localUser
-										  auth0ID: self.auth0ID
-							replacingOldAvatar: nil];
+			                  forLocalUser: localUser
+			                    identityID: _identityID
+			            replacingOldAvatar: nil];
 		}
 	}
 	
@@ -589,7 +565,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 
 - (IBAction)removeButtonTapped:(id)sender
 {
-	_imgAvatar.image = defaultUserImage;
+	_imgAvatar.image = [self defaultUserImage];
 	
 	if(newUserImage)
 	{
@@ -632,52 +608,45 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 - (IBAction)cameraButtonTapped:(id)sender
 {
 	ZDCLogAutoTrace();
-	__weak typeof(self) weakSelf = self;
 	
-	// check camera authorization status
 	AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
-	
-	switch (authStatus) {
-			
+	switch (authStatus)
+	{
 		case AVAuthorizationStatusDenied:
 		{
-			[uiTools displayCameraAccessSettingsAlert];
-		}
+			[zdc.uiTools displayCameraAccessSettingsAlert];
 			break;
-			
+		}
 		case AVAuthorizationStatusAuthorized:  // camera authorized
 		{
-			[self presentCamera];
-		}
+			[self showCamera];
 			break;
-			
+		}
 		case AVAuthorizationStatusNotDetermined: // request authorization
 		{
+			__weak typeof(self) weakSelf = self;
+			dispatch_block_t block = ^{
+				
+				[weakSelf showCamera];
+			};
+			
 			[AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
-				dispatch_async(dispatch_get_main_queue(), ^{
-					
-					__strong typeof(self) strongSelf = weakSelf;
-					if (strongSelf) {
-						[strongSelf presentCamera];
-					}
-				});
+				
+				if ([NSThread isMainThread]) {
+					block();
+				} else {
+					dispatch_async(dispatch_get_main_queue(), block);
+				}
 			}];
-		}
 			break;
-			
+		}
 		default:;
-			
-	};
-	
+	}
 }
 
-
-
-
 - (IBAction)documentsButtonTapped:(id)sender
-							  sourceView:(UIView*)sourceView
+							  sourceView:(UIView *)sourceView
 							  sourceRect:(CGRect)sourceRect
-
 {
 	ZDCLogAutoTrace();
 	[self showDocPicker];
@@ -689,42 +658,54 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 
 {
 	ZDCLogAutoTrace();
-	__weak typeof(self) weakSelf = self;
 	
-	if(ZDCConstants.appHasPhotosPermission)
-	{
-		[PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
-			
-			dispatch_async(dispatch_get_main_queue(), ^{
-				
-				__strong typeof(self) strongSelf = weakSelf;
-				if (!strongSelf) return;
-				
-				switch (status) {
-						
-					case PHAuthorizationStatusAuthorized:
-						[strongSelf showPhotoPicker];
-						break;
-						
-					case PHAuthorizationStatusRestricted:
-						break;
-						
-					case PHAuthorizationStatusDenied:
-						[strongSelf->uiTools displayPhotoAccessSettingsAlert];
-						break;
-						
-					default:
-						break;
-				}
-			});
-		}];
+	if (ZDCConstants.appHasPhotosPermission == NO) {
+		return;
 	}
+	
+	__weak typeof(self) weakSelf = self;
+	void (^block)(PHAuthorizationStatus) = ^(PHAuthorizationStatus status){
+		
+		switch (status)
+		{
+			case PHAuthorizationStatusAuthorized:
+				[weakSelf showPhotoPicker];
+				break;
+				
+			case PHAuthorizationStatusRestricted:
+				break;
+				
+			case PHAuthorizationStatusDenied:
+				[weakSelf displayPhotoAccessSettingsAlert];
+				break;
+				
+			default:
+				break;
+		}
+	};
+	
+	[PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
+			
+		if ([NSThread isMainThread]) {
+			block(status);
+		} else {
+			dispatch_async(dispatch_get_main_queue(), ^{
+				block(status);
+			});
+		}
+	}];
 }
 
-// MARK: present pickers
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Show UI
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+- (void)displayPhotoAccessSettingsAlert
+{
+	[zdc.uiTools displayPhotoAccessSettingsAlert];
+}
 
-- (void)presentCamera
+- (void)showCamera
 {
 	ZDCLogAutoTrace();
 	
@@ -734,9 +715,7 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 	photoPicker.allowsEditing = NO;
 	
 	[self presentViewController:photoPicker animated:YES completion:NULL];
-	
 }
-
 
 - (void)showPhotoPicker
 {
@@ -760,8 +739,6 @@ typedef NS_ENUM(NSInteger, ZDCButton) {
 	docPicker.delegate = (id <UIDocumentPickerDelegate>) self;
 	[self presentViewController:docPicker animated:YES completion:NULL];
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark UIDocumentPickerViewControllerDelegate

@@ -1067,6 +1067,67 @@
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
+- (void)fetchPubKeyForUser:(ZDCUser *)user
+               requesterID:(NSString *)localUserID
+           completionQueue:(nullable dispatch_queue_t)completionQueue
+           completionBlock:(void (^)(ZDCPublicKey *_Nullable pubKey, NSError *_Nullable error))completionBlock
+{
+	ZDCLogAutoTrace();
+	
+	[zdc.networkTools downloadDataAtPath: kZDCCloudFileName_PublicKey
+	                            inBucket: user.aws_bucket
+	                              region: user.aws_region
+	                            withETag: nil
+	                               range: nil
+	                         requesterID: localUserID
+	                       canBackground: NO
+	                     completionQueue: completionQueue
+	                     completionBlock:^(NSURLResponse *response, id responseObject, NSError *error)
+	{
+		if (error)
+		{
+			completionBlock(nil, error);
+			return;
+		}
+
+		ZDCPublicKey *pubKey = nil;
+		
+		if ([responseObject isKindOfClass:[NSString class]])
+		{
+			NSString *pubKeyJSON = (NSString *)responseObject;
+			pubKey = [[ZDCPublicKey alloc] initWithUserID:user.uuid pubKeyJSON:pubKeyJSON];
+		}
+		else if ([responseObject isKindOfClass:[NSData class]])
+		{
+			NSData *data = (NSData *)responseObject;
+			NSString *pubKeyJSON = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+			pubKey = [[ZDCPublicKey alloc] initWithUserID:user.uuid pubKeyJSON:pubKeyJSON];
+		}
+		else if ([responseObject isKindOfClass:[NSDictionary class]])
+		{
+			NSDictionary *pubKeyDict = (NSDictionary *)responseObject;
+			pubKey = [[ZDCPublicKey alloc] initWithUserID: user.uuid
+			                                   pubKeyDict: pubKeyDict
+			                                  privKeyDict: nil];
+		}
+			
+		if (![pubKey checkKeyValidityWithError:nil])
+		{
+			error = [NSError errorWithClass:[self class] code:0 description:@"Unreadable pubKey for user"];
+				
+			completionBlock(nil, error);
+			return;
+		}
+		
+		completionBlock(pubKey, nil);
+	}];
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
+ */
 - (void)uploadPrivKey:(NSData *)privKey
                pubKey:(NSData *)pubKey
          forLocalUser:(ZDCLocalUser *)user
@@ -3738,75 +3799,58 @@
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)fetchMerkleTreeFile:(NSString *)root
-                requesterID:(NSString *)localUserID
-            completionQueue:(dispatch_queue_t)inCompletionQueue
-            completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))inCompletionBlock
+            completionQueue:(dispatch_queue_t)completionQueue
+            completionBlock:(void (^)(NSURLResponse *response, NSData *fileData, NSError *error))completionBlock
 {
 	ZDCLogAutoTrace();
 	NSParameterAssert(root != nil);
-	NSParameterAssert(localUserID != nil);
 	
-	root = [root copy];
-	localUserID = [localUserID copy];
-	
-	if (!inCompletionBlock)
+	if (!completionBlock) {
 		return;
+	}
 	
-	if (!inCompletionQueue)
-		inCompletionQueue = dispatch_get_main_queue();
+	if (!completionQueue) {
+		completionQueue = dispatch_get_main_queue();
+	}
 	
 	// rootPath sanitation
-	if ([root hasPrefix:@"0x"]) {
+	if ([root hasPrefix:@"0x"] || [root hasPrefix:@"0X"]) {
 		root = [root substringFromIndex:2];
 	}
 	
 	NSString *rootPath = [NSString stringWithFormat:@"/%@.json", root];
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
+	urlComponents.scheme = @"https";
+	urlComponents.host = @"blockchain.storm4.cloud";
+	urlComponents.path = rootPath;
+	
+	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
+	request.HTTPMethod = @"GET";
+	
+	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+	
+	NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
+	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
+	
+	NSURLSessionDataTask *task =
+	  [session dataTaskWithRequest:request
+	             completionHandler:^(NSData *data, NSURLResponse *response, NSError *error)
+	
 	{
-
-		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
-	#if TARGET_OS_IPHONE
-		AFURLSessionManager *session = sessionInfo.foregroundSession;
-	#else
-		AFURLSessionManager *session = sessionInfo.session;
-	#endif
+	//	if (error) {
+	//		NSLog(@"fetchBlockChainEntry: error: %@", error);
+	//	}
+	//	else {
+	//		NSLog(@"fetchBlockChainEntry: %ld: %@", (long)response.httpStatusCode, responseObject);
+	//	}
 		
-		NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
-		urlComponents.scheme = @"https";
-		urlComponents.host = @"blockchain.storm4.cloud";
-		urlComponents.path = rootPath;
-		
-		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
-		request.HTTPMethod = @"GET";
-		
-		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-		
-		NSURLSessionDataTask *task =
-		  [session dataTaskWithRequest: request
-		                uploadProgress: nil
-		              downloadProgress: nil
-                    completionHandler:^(NSURLResponse *response, id responseObject, NSError *error)
-		{
-		//	if (error) {
-		//		NSLog(@"fetchBlockChainEntry: error: %@", error);
-		//	}
-		//	else {
-		//		NSLog(@"fetchBlockChainEntry: %ld: %@", (long)response.httpStatusCode, responseObject);
-		//	}
-			
-			if (inCompletionBlock)
-			{
-				dispatch_async(inCompletionQueue, ^{ @autoreleasepool {
-					inCompletionBlock(response, responseObject, error);
-				}});
-			}
-		}];
-		
-		[task resume];
+		dispatch_async(completionQueue, ^{ @autoreleasepool {
+			completionBlock(response, data, error);
+		}});
 	}];
+		
+	[task resume];
 }
 
 #pragma clang diagnostic pop

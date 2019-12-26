@@ -9,9 +9,8 @@
 
 #import "ZeroDarkCloudPrivate.h"
 
-#import "Auth0ProviderManagerPrivate.h"
 #import "ZDCAuditPrivate.h"
-#import "ZDCBlockchainManagerPrivate.h"
+#import "ZDCBlockchainManager.h"
 #import "ZDCDatabaseKeyManagerPrivate.h"
 #import "ZDCDatabaseManagerPrivate.h"
 #import "ZDCDirectoryManagerPrivate.h"
@@ -25,9 +24,9 @@
 #import "ZDCPullManagerPrivate.h"
 #import "ZDCPushInfo.h"
 #import "ZDCPushManagerPrivate.h"
-#import "ZDCRemoteUserManagerPrivate.h"
-#import "ZDCSearchUserManagerPrivate.h"
 #import "ZDCSyncManagerPrivate.h"
+#import "ZDCUserManagerPrivate.h"
+#import "ZDCUserSearchManagerPrivate.h"
 #import "ZDCTask_UnregisterPushToken.h"
 #import "ZDCUIToolsPrivate.h"
 #import "ZDCRestManagerPrivate.h"
@@ -39,6 +38,7 @@
 #import "NSError+ZeroDark.h"
 
 // Libraries
+#import <os/log.h>
 #import <YapDatabase/YapDatabase.h>
 #import <YapDatabase/YapDatabaseAtomic.h>
 
@@ -51,6 +51,8 @@
 #else
   static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
+
+typedef void (^ZDCLogHandler)(ZDCLogMessage *);
 
 @interface ZeroDarkCloud () <YapDatabaseCloudCorePipelineDelegate>
 
@@ -77,12 +79,12 @@
 @property (nonatomic, readwrite, nullable) ZDCNetworkTools         * networkTools;
 @property (nonatomic, readwrite, nullable) ZDCPullManager          * pullManager;
 @property (nonatomic, readwrite, nullable) ZDCPushManager          * pushManager;
-@property (nonatomic, readwrite, nullable) ZDCSearchUserManager    * searchManager;
+@property (nonatomic, readwrite, nullable) ZDCUserSearchManager    * searchManager;
 @property (nonatomic, readwrite, nullable) ZDCSessionManager       * sessionManager;
 @property (nonatomic, readwrite, nullable) ZDCSharesManager  		 * sharesManager;
 @property (nonatomic, readwrite, nullable) ZDCSyncManager          * syncManager;
-@property (nonatomic, readwrite, nullable) ZDCRemoteUserManager    * remoteUserManager;
 @property (nonatomic, readwrite, nullable) ZDCRestManager          * restManager;
+@property (nonatomic, readwrite, nullable) ZDCUserManager          * userManager;
 @property (nonatomic, readwrite, nullable) ZDCUserAccessKeyManager * userAccessKeyManager;
 @property (nonatomic, readwrite, nullable) ZDCUITools        	    * uiTools;
 
@@ -122,7 +124,7 @@
 @synthesize pullManager;
 @synthesize pushManager;
 @synthesize sessionManager;
-@synthesize remoteUserManager;
+@synthesize userManager;
 @synthesize auth0ProviderManager;
 @synthesize searchManager;
 @synthesize sharesManager;
@@ -133,6 +135,7 @@
 #pragma mark Class Utilities
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+static ZDCLogHandler logHandler = nil;
 static NSMutableSet<NSString*> *registeredDatabaseNames = nil;
 static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 
@@ -142,6 +145,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 	if (!initialized)
 	{
 		initialized = YES;
+		logHandler = [self defaultLogHandler];
 		registeredDatabaseNames = [[NSMutableSet alloc] initWithCapacity:1];
 		[self loadFontWithName:@"Exo2-Regular"];
 	}
@@ -182,6 +186,64 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 		}
 
 		CFRelease(provider);
+	}
+}
+
++ (ZDCLogHandler)defaultLogHandler
+{
+	NSString *subsystem = @"ZeroDark";
+	NSString *category = @"ZeroDark";
+	
+	os_log_t logger = os_log_create([subsystem UTF8String], [category UTF8String]);
+	
+	ZDCLogHandler handler = ^void (ZDCLogMessage *log){ @autoreleasepool {
+		
+		if (log.flag & ZDCLogFlagError) {
+			os_log_error(logger, "%{public}@ %{public}@", log.function, log.message);
+		}
+		else if (log.flag & ZDCLogFlagWarning) {
+			os_log_info(logger, "%{public}@ %{public}@", log.function, log.message);
+		}
+	}};
+	return handler;
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
+ */
++ (void)setLogHandler:(void (^)(ZDCLogMessage *))inLogHandler
+{
+	logHandler = inLogHandler ?: [self defaultLogHandler];
+}
+
+/**
+ * Used by the macros defined in ZDCLogging.h
+ */
++ (void)log:(ZDCLogLevel)level
+       flag:(ZDCLogFlag)flag
+       file:(const char *)file
+   function:(const char *)function
+       line:(NSUInteger)line
+     format:(NSString *)format, ...
+{
+	va_list args;
+	if (format)
+	{
+		va_start(args, format);
+		NSString *message = [[NSString alloc] initWithFormat:format arguments:args];
+      va_end(args);
+		
+		ZDCLogMessage *logMessage =
+		  [[ZDCLogMessage alloc] initWithMessage: message
+		                                   level: level
+		                                    flag: flag
+		                                    file: [NSString stringWithFormat:@"%s", file]
+		                                function: [NSString stringWithFormat:@"%s", function]
+		                                    line: line];
+		
+		logHandler(logMessage);
 	}
 }
 
@@ -240,6 +302,11 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 	return nil; // This is not the init method you're looking for.
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
+ */
 - (instancetype)initWithDelegate:(id<ZeroDarkCloudDelegate>)inDelegate
                           config:(ZDCConfig *)config
 {
@@ -294,6 +361,11 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 #pragma mark Framework Unlock
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
+ */
 - (BOOL)unlockOrCreateDatabase:(ZDCDatabaseConfig *)config error:(NSError *_Nullable *_Nullable)outError
 {
 	ZDCLogAutoTrace();
@@ -354,7 +426,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 		self.imageManager = [[ZDCImageManager alloc] initWithOwner:self];
 		self.localUserManager = [[ZDCLocalUserManager alloc] initWithOwner:self];
 		self.sessionManager = [[ZDCSessionManager alloc] initWithOwner:self];
-		self.remoteUserManager = [[ZDCRemoteUserManager alloc] initWithOwner:self];
+		self.userManager = [[ZDCUserManager alloc] initWithOwner:self];
 		self.restManager  = [[ZDCRestManager alloc] initWithOwner:self];
 		
 		self.syncManager = [[ZDCSyncManager alloc] initWithOwner:self];
@@ -363,7 +435,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 		self.auth0ProviderManager = [[Auth0ProviderManager alloc] initWithOwner:self];
 		self.uiTools = [[ZDCUITools alloc] initWithOwner:self];
 		self.userAccessKeyManager = [[ZDCUserAccessKeyManager alloc] initWithOwner:self];
-		self.searchManager = [[ZDCSearchUserManager alloc] initWithOwner:self];
+		self.searchManager = [[ZDCUserSearchManager alloc] initWithOwner:self];
 		self.blockchainManager = [[ZDCBlockchainManager alloc] initWithOwner:self];
  		self.sharesManager = [[ZDCSharesManager alloc] initWithOwner:self];
 
@@ -379,7 +451,17 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 	BOOL success = (error == nil);
 	if (success)
 	{
-		[self resumePushQueues];
+		// Resume all re-registered ZDCCloud extensions.
+		
+		NSArray<YapCollectionKey*> *tuples = self.databaseManager.previouslyRegisteredTuples;
+		for (YapCollectionKey *tuple in tuples)
+		{
+			NSString *localUserID = tuple.collection;
+			NSString *treeID = tuple.key;
+			
+			[[self.databaseManager cloudExtForUserID:localUserID treeID:treeID] resume];
+		}
+		
 		[auth0ProviderManager updateProviderCache:NO];  // update provider cache if needed
 	}
 	
@@ -387,6 +469,11 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 	return success;
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
+ */
 - (BOOL)isDatabaseUnlocked
 {
 	__block BOOL result = NO;
@@ -413,16 +500,31 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 #pragma mark Managers
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
+ */
 - (Auth0APIManager *)auth0APIManager
 {
 	return [Auth0APIManager sharedInstance];
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
+ */
 - (ZDCCloudPathManager *)cloudPathManager
 {
 	return [ZDCCloudPathManager sharedInstance];
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZeroDarkCloud.html
+ */
 - (ZDCNodeManager *)nodeManager
 {
 	return [ZDCNodeManager sharedInstance];
@@ -954,18 +1056,6 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
            forPipeline:(YapDatabaseCloudCorePipeline *)pipeline
 {
 	[self.pushManager startOperation:op forPipeline:pipeline];
-}
-
-- (void)resumePushQueues
-{
-	NSArray<YapCollectionKey*> *tuples = self.databaseManager.previouslyRegisteredTuples;
-	for (YapCollectionKey *tuple in tuples)
-	{
-		NSString *localUserID = tuple.collection;
-		NSString *treeID = tuple.key;
-		
-		[[self.databaseManager cloudExtForUserID:localUserID treeID:treeID] resume];
-	}
 }
 
 @end

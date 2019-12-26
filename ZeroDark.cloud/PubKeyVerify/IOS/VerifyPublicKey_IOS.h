@@ -14,9 +14,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface VerifyPublicKey_IOS : UIViewController
 
-- (instancetype)initWithOwner:(ZeroDarkCloud*)inOwner
-                 remoteUserID:(NSString* __nonnull)remoteUserID
-                     localUserID:(NSString* __nonnull)inLocalUserID;
+- (instancetype)initWithOwner:(ZeroDarkCloud *)owner
+                 remoteUserID:(NSString *)remoteUserID
+                  localUserID:(NSString *)localUserID;
 
 @end
 

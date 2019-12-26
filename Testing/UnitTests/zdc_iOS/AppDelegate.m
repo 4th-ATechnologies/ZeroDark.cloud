@@ -14,7 +14,7 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-	[self setupZeroDarkCloud];
+//	[self setupZeroDarkCloud];
 	
 	return YES;
 }
@@ -34,6 +34,7 @@
 	}
 	
 	ZDCConfig *config = [[ZDCConfig alloc] initWithPrimaryTreeID:@"com.4th-a.storm4"];
+	config.databaseName = dbName;
 	
 	zdc = [[ZeroDarkCloud alloc] initWithDelegate: delegate
 	                                       config: config];

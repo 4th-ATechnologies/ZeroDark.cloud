@@ -39,9 +39,9 @@
 #import "ZDCProgressManager.h"
 #import "ZDCPullManager.h"
 #import "ZDCPushManager.h"
-#import "ZDCRemoteUserManager.h"
 #import "ZDCRestManager.h"
-#import "ZDCSearchUserManager.h"
+#import "ZDCUserManager.h"
+#import "ZDCUserSearchManager.h"
 #import "ZDCSyncManager.h"
 
 // Model
@@ -56,8 +56,13 @@
 #import "ZDCLocalUser.h"
 #import "ZDCLocalUserAuth.h"
 
+// Logging
+#import "ZDCLogMessage.h"
+
 // YapDatabaseExtension
 #import "ZDCCloud.h"
+#import "ZDCCloudConnection.h"
+#import "ZDCCloudTransaction.h"
 
 // Streams
 #import "ZDCCacheFileHeader.h"

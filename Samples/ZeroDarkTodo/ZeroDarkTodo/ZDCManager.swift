@@ -1010,7 +1010,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 		
 			for invitation in pendingInvitations {
 		
-				zdc.remoteUserManager!.fetchRemoteUser(withID: invitation.senderID,
+				zdc.userManager!.fetchUser(withID: invitation.senderID,
 				                                  requesterID: invitation.receiverID,
 				                              completionQueue: DispatchQueue.global())
 				{ (user: ZDCUser?, error) in

@@ -200,7 +200,6 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	}
 
 	vc.keyBackupVC = self;
-
 	return vc;
 }
 
