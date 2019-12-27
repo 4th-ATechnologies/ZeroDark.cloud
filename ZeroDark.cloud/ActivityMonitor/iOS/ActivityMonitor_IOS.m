@@ -26,9 +26,9 @@
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
 #if DEBUG
-static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelVerbose | ZDCLogFlagTrace;
 #else
-static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
 typedef NS_ENUM(NSInteger, ActivityType) {
@@ -53,127 +53,147 @@ static NSString *const kActionStatus   = @"action";
 	IBOutlet __weak UIButton*  				_btnPause;
 	UISwipeGestureRecognizer*    				swipeRight;
 
-	ZeroDarkCloud*            			owner;
+	ZeroDarkCloud *zdc;
+	YapDatabaseConnection *uiDatabaseConnection;
 	
-	NSString*                			selectedLocalUserID;
-	NSArray <NSString*>* 				localUserIDs;
+	NSArray<NSString*> *localUserIDs;
+	NSString *selectedLocalUserID;
 	
-	ZDCImageManager*       				imageManager;
-	YapDatabaseConnection*     		databaseConnection;
-	ZDCLocalUserManager * 				localUserManager;
-	ZDCSyncManager*						syncManager;
-	ActivityType							selectedActivityType;
+	ActivityType selectedActivityType;
 	
 	NSMutableDictionary<id, NSMutableDictionary*> *statusStates;
 
-	NSArray<ZDCCloudOperation *> *rawOperations;
-	NSDictionary<NSUUID*, ZDCCloudOperation *> *rawOperationsDict;
+	NSArray<ZDCCloudOperation*> *rawOperations;
+	NSDictionary<NSUUID*, ZDCCloudOperation*> *rawOperationsDict;
 	
 	NSArray<NSString *> *uploadNodeIDs;
 	NSDictionary<NSString*, NSArray<ZDCCloudOperation *> *> *uploadTasks; // key=nodeID, value=[operations]
-	NSDictionary<NSString*, NSNumber*> *minSnapshotDict;                 // key=nodeID, value=snapshot (uint64_t)
+	NSDictionary<NSString*, NSNumber*> *minSnapshotDict;                  // key=nodeID, value=snapshot (uint64_t)
 	
 	NSArray<NSString *> *downloadNodeIDs;
-
 }
 
-
-- (NSError *)errorWithDescription:(NSString *)description
-{
-	NSDictionary *userInfo = nil;
-	if (description)
-		userInfo = @{ NSLocalizedDescriptionKey: description };
-	
-	NSString *domain = NSStringFromClass([self class]);
-	return [NSError errorWithDomain:domain code:0 userInfo:userInfo];
-}
-
-
-- (instancetype)initWithOwner:(ZeroDarkCloud*)inOwner
-						localUserID:(NSString* __nullable)inLocalUserID
+- (instancetype)initWithOwner:(ZeroDarkCloud *)inOwner
+                  localUserID:(NSString *)inLocalUserID
 {
 	NSBundle *bundle = [ZeroDarkCloud frameworkBundle];
 	UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"ActivityMonitor_IOS" bundle:bundle];
+	
 	self = [storyboard instantiateViewControllerWithIdentifier:@"ActivityMonitor"];
 	if (self)
 	{
-		owner = inOwner;
-		selectedLocalUserID = inLocalUserID;
+		zdc = inOwner;
+		selectedLocalUserID = [inLocalUserID copy];
+		
+		uiDatabaseConnection = zdc.databaseManager.uiDatabaseConnection;
+		selectedActivityType = zdc.internalPreferences.activityMonitor_lastActivityType;
 	}
 	return self;
-	
 }
 
-- (void)viewDidLoad {
-    [super viewDidLoad];
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark View Lifecycle
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
- 	localUserIDs = NULL;
-	imageManager =  owner.imageManager;
-	localUserManager = owner.localUserManager;
-	syncManager = owner.syncManager;
-	databaseConnection = owner.databaseManager.uiDatabaseConnection;
+- (void)viewDidLoad
+{
+	ZDCLogAutoTrace();
+	[super viewDidLoad];
 	
 	statusStates = [[NSMutableDictionary alloc] init];
-
-	selectedActivityType = owner.internalPreferences.activityMonitor_lastActivityType;
 }
 
--(void)viewWillAppear:(BOOL)animated
+- (void)viewWillAppear:(BOOL)animated
 {
+	ZDCLogAutoTrace();
 	[super viewWillAppear:animated];
 	
 	self.navigationItem.title = @"Activity";
 	
-	UIImage* image = [[UIImage imageNamed:@"backarrow"
-										  inBundle:[ZeroDarkCloud frameworkBundle]
-			  compatibleWithTraitCollection:nil] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+	UIImage *image = [[UIImage imageNamed: @"backarrow"
+	                             inBundle: [ZeroDarkCloud frameworkBundle]
+	        compatibleWithTraitCollection: nil]
+	               imageWithRenderingMode: UIImageRenderingModeAlwaysTemplate];
 	
-	UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithImage:image
-																					 style:UIBarButtonItemStylePlain
-																					target:self
-																					action:@selector(handleNavigationBack:)];
+	UIBarButtonItem *backItem =
+	  [[UIBarButtonItem alloc] initWithImage: image
+	                                   style: UIBarButtonItemStylePlain
+	                                  target: self
+	                                  action: @selector(handleNavigationBack:)];
 	
 	self.navigationItem.leftBarButtonItem = backItem;
 	
-	swipeRight = [[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(swipeRight:)];
+	swipeRight = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRight:)];
 	[self.view addGestureRecognizer:swipeRight];
 	
-	[self refreshSourceList];
-	[self setNavigationTitleForUserID:selectedLocalUserID];
+	[self refreshLocalUsersList];
+	[self refreshNavigationTitle];
 	
 	[self refreshUploadList];
 	[self refreshDownloadList];
 	[_tblActivity reloadData];
 
-
 	[self refreshActivityType];
-	[self refreshActionStatus];
-	[self refreshStatusLabel];
-
+	[self refreshGeneralStatus];
 }
 
--(void) viewWillDisappear:(BOOL)animated
+- (void)viewWillDisappear:(BOOL)animated
 {
+	ZDCLogAutoTrace();
 	[super viewWillDisappear:animated];
-	[self.view removeGestureRecognizer:swipeRight]; swipeRight = nil;
+	
+	[self.view removeGestureRecognizer:swipeRight];
+	swipeRight = nil;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Notifications
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
--(void)swipeRight:(UISwipeGestureRecognizer *)gesture
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Refresh Data
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)refreshLocalUsersList
 {
-	[self handleNavigationBack:NULL];
+	ZDCLogAutoTrace();
+	NSAssert([NSThread isMainThread], @"Method must be run on main thread");
+	
+	// Update `localUserIDs`
+	
+	NSMutableArray<NSString *> *_localUserIDs = [NSMutableArray array];
+	
+	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		[zdc.localUserManager enumerateLocalUsersWithTransaction: transaction
+		                                              usingBlock:^(ZDCLocalUser *localUser, BOOL *stop)
+		{
+			if (localUser.hasCompletedSetup
+			 && !localUser.accountDeleted
+			 && !localUser.accountSuspended
+			 && !localUser.accountNeedsA0Token)
+			{
+				[_localUserIDs addObject:localUser.uuid];
+			}
+		}];
+		
+	#pragma clang diagnostic pop
+	}];
+	
+	localUserIDs = _localUserIDs.copy;
+	
+	if (!selectedLocalUserID && localUserIDs.count == 1) {
+		selectedLocalUserID = localUserIDs.firstObject;
+	}
 }
-
-- (void)handleNavigationBack:(UIButton *)backButton
-{
-	[[self navigationController] popViewControllerAnimated:YES];
-}
-
-// MARK: refresh data source
 
 - (void)refreshUploadList
 {
 	ZDCLogAutoTrace();
+	
+	ZDCDatabaseManager *databaseManager = zdc.databaseManager;
 	
 	NSMutableArray *_rawOperations = [[NSMutableArray alloc] init];
 	NSMutableDictionary *_rawOperationsDict = [[NSMutableDictionary alloc] init];
@@ -184,12 +204,12 @@ static NSString *const kActionStatus   = @"action";
 	
 	for (NSString *localUserID in localUserIDs)
 	{
-		
-		ZDCCloud *ext = [owner.databaseManager cloudExtForUserID:localUserID treeID:owner.primaryTreeID];
+		ZDCCloud *ext = [databaseManager cloudExtForUserID:localUserID];
 		YapDatabaseCloudCorePipeline *pipeline = [ext  defaultPipeline];
+		
 		[pipeline enumerateOperationsUsingBlock:^(YapDatabaseCloudCoreOperation *op, NSUInteger graphIdx, BOOL *stop){
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 			
 			if (![op isKindOfClass:[ZDCCloudOperation class]]) {
 				return; // from block (i.e. continue)
@@ -260,24 +280,24 @@ static NSString *const kActionStatus   = @"action";
 			
 			_minSnapshotDict[nodeID] = minSnapshot;
 			
-#pragma clang diagnostic pop
+		#pragma clang diagnostic pop
 		}];
 	}
 	
 	[_rawOperations sortWithOptions: NSSortStable
-						 usingComparator:^NSComparisonResult(ZDCCloudOperation *opA, ZDCCloudOperation *opB)
-	 {
-		 uint64_t snapshotA = opA.snapshot;
-		 uint64_t snapshotB = opB.snapshot;
+	                usingComparator:^NSComparisonResult(ZDCCloudOperation *opA, ZDCCloudOperation *opB)
+	{
+		uint64_t snapshotA = opA.snapshot;
+		uint64_t snapshotB = opB.snapshot;
 		 
-		 // - NSOrderedAscending  : The left operand is smaller than the right operand.
-		 // - NSOrderedDescending : The left operand is greater than the right operand.
-		 
-		 if (snapshotA < snapshotB) return NSOrderedAscending;
-		 if (snapshotA > snapshotB) return NSOrderedDescending;
-		 
-		 return NSOrderedSame;
-	 }];
+		// - NSOrderedAscending  : The left operand is smaller than the right operand.
+		// - NSOrderedDescending : The left operand is greater than the right operand.
+		
+		if (snapshotA < snapshotB) return NSOrderedAscending;
+		if (snapshotA > snapshotB) return NSOrderedDescending;
+		
+		return NSOrderedSame;
+	}];
 	
 	NSMutableArray *sortedUploadNodes = [_uploadNodes.array mutableCopy];
 	
@@ -308,16 +328,18 @@ static NSString *const kActionStatus   = @"action";
 {
 	ZDCLogAutoTrace();
 	
+	ZDCProgressManager *progressManager = zdc.progressManager;
+	
 	NSMutableArray<NSString *> *_downloadNodes = nil;
 	BOOL allUsersSelected = selectedLocalUserID == nil;
 
 	if (allUsersSelected)
 	{
-		_downloadNodes = [[[owner.progressManager allDownloadingNodeIDs] allObjects]mutableCopy];
+		_downloadNodes = [[[progressManager allDownloadingNodeIDs] allObjects] mutableCopy];
 	}
 	else if (selectedLocalUserID)
 	{
-		_downloadNodes = [[[owner.progressManager allDownloadingNodeIDs:selectedLocalUserID] allObjects] mutableCopy];
+		_downloadNodes = [[[progressManager allDownloadingNodeIDs:selectedLocalUserID] allObjects] mutableCopy];
 	}
 	else
 	{
@@ -369,156 +391,113 @@ static NSString *const kActionStatus   = @"action";
 	[self refreshSyncStatus];
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Refresh UI
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// MARK: refresh UI
-
-
--(void) setNavigationTitleForUserID:(NSString*)userID
+- (void)refreshNavigationTitle
 {
-	__weak typeof(self) weakSelf = self;
+	ZDCLogAutoTrace();
+	
+	ZDCImageManager *imageManager = zdc.imageManager;
 	
 	BOOL shouldEnable = YES;
-	
-	if(localUserIDs.count == 1)
+	if (localUserIDs.count == 1)
  	{
 		shouldEnable = NO;
 	}
 
-	if(!_btnTitle)
+	if (!_btnTitle)
 	{
 		_btnTitle = [ZDCIconTitleButton buttonWithType:UIButtonTypeCustom];
 		[_btnTitle setTitleColor:self.view.tintColor forState:UIControlStateNormal];
 	}
 	
-	if(shouldEnable)
+	if (shouldEnable)
 	{
-			[_btnTitle addTarget:self action:@selector(navTitleButtonClicked:) forControlEvents:UIControlEventTouchUpInside];
+		[_btnTitle addTarget: self
+		              action: @selector(navTitleButtonClicked:)
+		    forControlEvents: UIControlEventTouchUpInside];
 	}
 	else
 	{
-		[_btnTitle removeTarget:self action:NULL
-				 forControlEvents:UIControlEventTouchUpInside];
+		[_btnTitle removeTarget: self
+		                 action: nil
+		       forControlEvents: UIControlEventTouchUpInside];
 	}
-	
 	
 	self.navigationItem.titleView = _btnTitle;
 	
-	if(userID)
+	CGSize avatarSize = CGSizeMake(30, 30);
+	UIImage* (^defaultAvatar)(void) = ^{
+		
+		return [imageManager.defaultUserAvatar scaledToSize:avatarSize scalingMode:ScalingMode_AspectFill];
+	};
+	
+	if (selectedLocalUserID)
 	{
-	 	__block ZDCUser* user = nil;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-		[databaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-			user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+	 	__block ZDCLocalUser *localUser = nil;
+		[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+			localUser = [transaction objectForKey:selectedLocalUserID inCollection:kZDCCollection_Users];
+			
+		#pragma clang diagnostic pop
 		}];
-#pragma clang diagnostic pop
 
-		[_btnTitle setTitle: user.displayName
-					  forState:UIControlStateNormal ];
+		[_btnTitle setTitle: localUser.displayName
+		           forState: UIControlStateNormal];
 		
-		void (^preFetchBlock)(UIImage*, BOOL) = ^(UIImage *image, BOOL willFetch){
+		UIImage* (^processingBlock)(OSImage *) = ^UIImage* (UIImage *image){
 			
-			__strong typeof(self) strongSelf = weakSelf;
-			if (!strongSelf) return;
-			
-			UIImage* scaledImage = [image?image:strongSelf->imageManager.defaultUserAvatar
-										scaledToHeight:30];
-			
-			[strongSelf->_btnTitle setImage:scaledImage
-										  forState:UIControlStateNormal];
-			
-		};
-		void (^postFetchBlock)(UIImage*, NSError*) = ^(UIImage *image, NSError *error){
-			
-			__strong typeof(self) strongSelf = weakSelf;
-			if (!strongSelf) return;
-			
-			UIImage* scaledImage = [image?image:strongSelf->imageManager.defaultUserAvatar
-										scaledToHeight:30];
-			
-			[strongSelf->_btnTitle setImage:scaledImage
-										  forState:UIControlStateNormal];
+			return [image scaledToSize:avatarSize scalingMode:ScalingMode_AspectFill];
 		};
 		
+		void (^preFetchBlock)(UIImage*, BOOL) = ^(UIImage *userAvatar, BOOL willFetch){
+			
+			// The preFetchBlock is invoked BEFORE the `fetchUserAvatar` method returns
+			
+			UIImage *image = userAvatar ?: defaultAvatar();
+			[self->_btnTitle setImage: image
+			                 forState: UIControlStateNormal];
+		};
+		
+		__weak typeof(self) weakSelf = self;
+		void (^postFetchBlock)(UIImage*, NSError*) = ^(UIImage *userAvatar, NSError *error){
+			
+			// The postFetchBlock is invoked LATER, possibly after downloading the avatar
+			
+			__strong typeof(self) strongSelf = weakSelf;
+			if (strongSelf && userAvatar)
+			{
+				[strongSelf->_btnTitle setImage: userAvatar
+				                       forState: UIControlStateNormal];
+			}
+		};
 
-		[imageManager fetchUserAvatar: user
+		[imageManager fetchUserAvatar: localUser
 		                  withOptions: nil
-							 preFetchBlock: preFetchBlock
-							postFetchBlock: postFetchBlock];
+		                 processingID: NSStringFromClass([self class])
+		              processingBlock: processingBlock
+		                preFetchBlock: preFetchBlock
+		               postFetchBlock: postFetchBlock];
 	}
 	else
 	{
 		[_btnTitle setTitle: NSLocalizedString(@"All Users", @"All Users")
-					  forState:UIControlStateNormal ];
+		           forState: UIControlStateNormal ];
 		
-		UIImage* scaledImage = [imageManager.defaultMultiUserAvatar scaledToHeight:30];
+		UIImage *image = defaultAvatar();
 		
-		[_btnTitle setImage:scaledImage
-					  forState:UIControlStateNormal];
+		[_btnTitle setImage: image
+		           forState: UIControlStateNormal];
 	}
-	
 }
 
-
-- (void)navTitleButtonClicked:(UIButton*) sender
+- (void)refreshActivityType
 {
 	ZDCLogAutoTrace();
-	
-	LocalUserListViewController_IOS* uVC =
-	  [[LocalUserListViewController_IOS alloc] initWithOwner: owner
-	                                                delegate: (id<LocalUserListViewController_Delegate>)self
-	                                          selectedUserID: selectedLocalUserID];
-	
-	
-	uVC.modalPresentationStyle = UIModalPresentationPopover;
-	
-	UIPopoverPresentationController *popover =  uVC.popoverPresentationController;
-	popover.delegate = uVC;
-	
-	popover.sourceView	 = _btnTitle;
-	popover.sourceRect 	= _btnTitle.frame;
-	
-	popover.permittedArrowDirections = UIPopoverArrowDirectionUp;
-	
-	[self presentViewController:uVC animated:YES completion:^{
-		}];
-}
-
-
-- (void)refreshSourceList
-{
-	ZDCLogAutoTrace();
-	
-	// Update `localUserIDs`
-	__block NSMutableArray <NSString *> * _localUserIDs = NSMutableArray.array;
-	
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-	
-	[owner.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction * _Nonnull transaction) {
-		
-		[self->owner.localUserManager enumerateLocalUsersWithTransaction:transaction
-																				usingBlock:^(ZDCLocalUser * _Nonnull localUser, BOOL * _Nonnull stop)
-		 {
-			 if (localUser.hasCompletedSetup
-				  && !localUser.accountDeleted
-				  && !localUser.accountSuspended
-				  && !localUser.accountNeedsA0Token)
-				 [_localUserIDs addObject:localUser.uuid];
-			 
-		 }];
-	}];
-#pragma clang diagnostic pop
-	
-	localUserIDs = _localUserIDs.copy;
-	
-	if(!selectedLocalUserID && localUserIDs.count == 1)
-		selectedLocalUserID = localUserIDs.firstObject;
-	
-}
-
--(void)refreshActivityType
-{
 	
 	if (selectedActivityType != ActivityType_Uploads &&
 		 selectedActivityType != ActivityType_Downloads &&
@@ -528,37 +507,14 @@ static NSString *const kActionStatus   = @"action";
 		selectedActivityType = ActivityType_UploadsDownloads;
 	}
 	
-	if( owner.internalPreferences.activityMonitor_lastActivityType != selectedActivityType)
+	if (zdc.internalPreferences.activityMonitor_lastActivityType != selectedActivityType)
 	{
-		owner.internalPreferences.activityMonitor_lastActivityType = selectedActivityType;
+		zdc.internalPreferences.activityMonitor_lastActivityType = selectedActivityType;
 	}
 	
 	_segActivity.selectedSegmentIndex = selectedActivityType;
 	
 	// do what is needed to update the table.
-}
-
-- (void)refreshStatusLabel
-{
-	//	ZDCLogAutoTrace(); // too noisy
-	
-	BOOL allUsersSelected = selectedLocalUserID == nil;
-
-	id key = allUsersSelected ? [NSNull null] : (selectedLocalUserID ?: @"");
-	NSMutableDictionary *info = statusStates[key];
-	
-	NSString *status = info[kActionStatus];
-	if (status == nil) {
-		status = info[kAdvisoryStatus];
-	}
-	if (status == nil) {
-		status = info[kSyncStatus];
-	}
-	if (status == nil) {
-		status = @"";
-	}
-	
-	_lblStatus.text  = status;
 }
 
 /**
@@ -576,16 +532,15 @@ static NSString *const kActionStatus   = @"action";
  * > For example, the user changes a setting, and we set a temporary action status as feedback.
  * > E.g. user clicks "activate foobar", and we display "foobar activated" message for a few seconds.
  **/
-- (void)refreshActionStatus
+- (void)refreshGeneralStatus
 {
 	ZDCLogAutoTrace();
 	
 	BOOL allUsersSelected = selectedLocalUserID == nil;
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 	
-	[owner.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction * _Nonnull transaction) {
+	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 
 		if (allUsersSelected)
 		{
@@ -610,7 +565,7 @@ static NSString *const kActionStatus   = @"action";
 			{
 				NSString *msg = NSLocalizedString(@"Syncing paused", @"Activity Monitor status");
 				
-				[self setActionStatus:msg forLocalUserID:selectedLocalUserID];
+				[self setAdvisoryStatus:msg forLocalUserID:nil];
 			}
 			else if ((numActive > 0) && (numPaused > 0))
 			{
@@ -621,7 +576,12 @@ static NSString *const kActionStatus   = @"action";
 									  (unsigned long long)numPaused,
 									  (unsigned long long)numActive];
 				
+				[self setAdvisoryStatus:nil forLocalUserID:nil];
 				[self setActionStatus:msg forLocalUserID:nil];
+			}
+			else
+			{
+				[self setAdvisoryStatus:nil forLocalUserID:nil];
 			}
 		}
 		else if (selectedLocalUserID)
@@ -632,9 +592,15 @@ static NSString *const kActionStatus   = @"action";
 			{
 				NSString *msg = NSLocalizedString(@"Syncing paused", @"Activity Monitor status");
 				
-				[self setActionStatus:msg forLocalUserID:selectedLocalUserID];
+				[self setAdvisoryStatus:msg forLocalUserID:selectedLocalUserID];
+			}
+			else
+			{
+				[self setAdvisoryStatus:nil forLocalUserID:selectedLocalUserID];
 			}
 		}
+		
+	#pragma clang diagnostic push
 	}];
 }
 
@@ -645,6 +611,8 @@ static NSString *const kActionStatus   = @"action";
  **/
 - (void)refreshSyncStatus
 {
+	ZDCLogAutoTrace();
+	
 	if ((uploadNodeIDs.count == 0) && (downloadNodeIDs.count == 0))
 	{
 		NSString *msg = NSLocalizedString(@"Up-to-date", @"Activity Monitor status");
@@ -657,8 +625,9 @@ static NSString *const kActionStatus   = @"action";
 		
 		for (NSString *localUserID in localUserIDs)
 		{
-			if([owner.syncManager isPushingPausedForLocalUserID:localUserID])
+			if ([zdc.syncManager isPushingPausedForLocalUserID:localUserID]) {
 				numUsersPaused++;
+			}
 		}
 		
 		NSString *format;
@@ -675,13 +644,39 @@ static NSString *const kActionStatus   = @"action";
 		[self setSyncStatus:msg forLocalUserID:selectedLocalUserID];
 	}
 }
-// MARK:  Status Label
+
+- (void)refreshStatusLabel
+{
+	ZDCLogAutoTrace(); // too noisy
+	
+	BOOL allUsersSelected = selectedLocalUserID == nil;
+
+	id key = allUsersSelected ? [NSNull null] : (selectedLocalUserID ?: @"");
+	NSMutableDictionary *info = statusStates[key];
+	
+	NSString *status = info[kActionStatus];
+	if (status == nil) {
+		status = info[kAdvisoryStatus];
+	}
+	if (status == nil) {
+		status = info[kSyncStatus];
+	}
+	if (status == nil) {
+		status = @"";
+	}
+	
+	_lblStatus.text = status;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Status Label
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * The "sync" status is the generic sync information for a user.
  *
  * For example: "Uploads: 2,  Downloads: 0"
- **/
+ */
 - (void)setSyncStatus:(NSString *)inStatus forLocalUserID:(nullable NSString *)localUserID
 {
 	//	ZDCLogAutoTrace(); // too noisy
@@ -703,7 +698,7 @@ static NSString *const kActionStatus   = @"action";
  * If an "advisory" status is set, it will get displayed instead of the "sync" status.
  *
  * For example, if a user's account has been deleted, the status will convey this information as priority.
- **/
+ */
 - (void)setAdvisoryStatus:(NSString *)inStatus forLocalUserID:(nullable NSString *)localUserID
 {
 	//	ZDCLogAutoTrace(); // too noisy
@@ -761,13 +756,55 @@ static NSString *const kActionStatus   = @"action";
 	});
 }
 
-// MARK: actions
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark User Actions
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)swipeRight:(UISwipeGestureRecognizer *)gesture
+{
+	ZDCLogAutoTrace();
+	
+	[self handleNavigationBack:NULL];
+}
+
+- (void)handleNavigationBack:(UIButton *)backButton
+{
+	ZDCLogAutoTrace();
+	
+	[[self navigationController] popViewControllerAnimated:YES];
+}
+
+- (void)navTitleButtonClicked:(UIButton *)sender
+{
+	ZDCLogAutoTrace();
+	
+	LocalUserListViewController_IOS* uVC =
+	  [[LocalUserListViewController_IOS alloc] initWithOwner: zdc
+	                                                delegate: (id<LocalUserListViewController_Delegate>)self
+	                                          selectedUserID: selectedLocalUserID];
+	
+	uVC.modalPresentationStyle = UIModalPresentationPopover;
+	
+	UIPopoverPresentationController *popover =  uVC.popoverPresentationController;
+	popover.delegate = uVC;
+	
+	popover.sourceView = _btnTitle;
+	popover.sourceRect = _btnTitle.frame;
+	
+	popover.permittedArrowDirections = UIPopoverArrowDirectionUp;
+	
+	[self presentViewController:uVC animated:YES completion:^{
+		// nothing to do here
+	}];
+}
 
 - (IBAction)btnPauseHit:(id)sender
 {
+	ZDCLogAutoTrace();
+	
 	NSString *__unused L10nComment = @"Activity Monitor - actions menu item";
 	
-	BOOL allUsersSelected = selectedLocalUserID == nil;
+	BOOL allUsersSelected = (selectedLocalUserID == nil);
 	
 	// Step 1 of 2:
 	//
@@ -776,10 +813,9 @@ static NSString *const kActionStatus   = @"action";
 	__block BOOL syncingPaused = NO;
 	__block BOOL uploadsPaused = NO;
 	
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-	
-	[owner.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction * _Nonnull transaction) {
+	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
 		if (allUsersSelected)
 		{
@@ -792,21 +828,21 @@ static NSString *const kActionStatus   = @"action";
 			__block NSUInteger numSyncingActive = 0;
 			__block NSUInteger numPushingPaused = 0;
 			
-			[self->localUserManager enumerateLocalUsersWithTransaction:transaction
-																					usingBlock:^(ZDCLocalUser * _Nonnull localUser, BOOL * _Nonnull stop)
-			 {
-				 if (localUser.syncingPaused)
-				 {
-					 numSyncingPaused++;
-				 }
-				 else
-				 {
-					 numSyncingActive++;
-					 if([owner.syncManager isPullingOrPushingChangesForLocalUserID:localUser.uuid])
-						 numPushingPaused++;
-					 
-				 }
-			 }];
+			[zdc.localUserManager enumerateLocalUsersWithTransaction: transaction
+			                                              usingBlock:^(ZDCLocalUser *localUser, BOOL *stop)
+			{
+				if (localUser.syncingPaused)
+				{
+					numSyncingPaused++;
+				}
+				else
+				{
+					numSyncingActive++;
+					if ([zdc.syncManager isPullingOrPushingChangesForLocalUserID:localUser.uuid]) {
+						numPushingPaused++;
+					}
+				}
+			}];
 			
 			syncingPaused = ((numSyncingActive == 0) || (numSyncingPaused > 0));
 			uploadsPaused = ((numSyncingActive > 0) && (numSyncingActive == numPushingPaused));
@@ -815,44 +851,48 @@ static NSString *const kActionStatus   = @"action";
 		{
 			ZDCLocalUser *localUser = [transaction objectForKey:selectedLocalUserID inCollection:kZDCCollection_Users];
 			syncingPaused = localUser.syncingPaused;
-			uploadsPaused = [owner.syncManager isPullingOrPushingChangesForLocalUserID:selectedLocalUserID];
+			uploadsPaused = [zdc.syncManager isPullingOrPushingChangesForLocalUserID:selectedLocalUserID];
 		}
 		
+	#pragma clang diagnostic pop
 	}];
-#pragma clang diagnostic pop
 	
 	// Step 2 of 2:
 	//
 	// Configure the menu accordingly
 	
+	__weak typeof(self) weakSelf = self;
 	
-	UIAlertController *alertController
-	= [UIAlertController alertControllerWithTitle: NULL
-													  message: NULL
-											 preferredStyle: UIAlertControllerStyleActionSheet];
-
+	UIAlertController *alertController =
+	  [UIAlertController alertControllerWithTitle: nil
+	                                      message: nil
+	                               preferredStyle: UIAlertControllerStyleActionSheet];
+	
 	if (syncingPaused)
 	{
 		if (allUsersSelected)
 		{
 			UIAlertAction *resumeSyncingAction =
-			[UIAlertAction actionWithTitle:NSLocalizedString(@"Resume Syncing (for all users)", L10nComment)
-											 style:UIAlertActionStyleDefault
-										  handler:^(UIAlertAction * _Nonnull action) {
-											  [self pauseSyncing:FALSE];
-	 										  }];
+			  [UIAlertAction actionWithTitle: NSLocalizedString(@"Resume Syncing (for all users)", L10nComment)
+			                           style: UIAlertActionStyleDefault
+			                         handler:^(UIAlertAction *action)
+			{
+				BOOL shouldPause = NO;
+				[weakSelf pauseResumeSyncing:shouldPause];
+			}];
 			
 			[alertController addAction:resumeSyncingAction];
-
 		}
 		else
 		{
 			UIAlertAction *resumeSyncingAction =
-			[UIAlertAction actionWithTitle:NSLocalizedString(@"Resume Syncing", L10nComment)
-											 style:UIAlertActionStyleDefault
-										  handler:^(UIAlertAction * _Nonnull action) {
-											  [self pauseSyncing:FALSE];
-											  }];
+			  [UIAlertAction actionWithTitle: NSLocalizedString(@"Resume Syncing", L10nComment)
+			                           style: UIAlertActionStyleDefault
+			                         handler:^(UIAlertAction *action)
+			{
+				BOOL shouldPause = NO;
+				[weakSelf pauseResumeSyncing:shouldPause];
+			}];
 			
 			[alertController addAction:resumeSyncingAction];
 		}
@@ -861,83 +901,81 @@ static NSString *const kActionStatus   = @"action";
 	{
 		if (uploadsPaused)
 		{
-			void (^resumeUploadsHandler)(UIAlertAction*) = ^(UIAlertAction *action){
-				[self resumeUploads];
-			};
-			
 			UIAlertAction *resumeUploadsAction =
 			  [UIAlertAction actionWithTitle: NSLocalizedString(@"Resume Uploads", L10nComment)
 			                           style: UIAlertActionStyleDefault
-			                         handler: resumeUploadsHandler];
+			                         handler:^(UIAlertAction *action)
+			{
+				[weakSelf resumeUploads];
+			}];
 
 			[alertController addAction:resumeUploadsAction];
 		}
 		else
 		{
-			void (^pauseUploadsHandler)(UIAlertAction*) = ^(UIAlertAction *action){
-				[self pauseUploadsAndAbortUploads:YES];
-			};
-			
 			UIAlertAction *pauseUploadsAction =
 			  [UIAlertAction actionWithTitle: NSLocalizedString(@"Pause Uploads", L10nComment)
 			                           style: UIAlertActionStyleDefault
-			                         handler: pauseUploadsHandler];
+			                         handler:^(UIAlertAction *action)
+			{
+				[weakSelf pauseUploadsAndAbortUploads:YES];
+			}];
 			
 			[alertController addAction:pauseUploadsAction];
 		}
 		
 		{ // Scoping
 			
-			void (^pauseSyncingHandler)(UIAlertAction*) = ^(UIAlertAction *action){
-				[self pauseSyncing:TRUE];
-			};
-			
 			UIAlertAction *pauseSyncingAction =
 			  [UIAlertAction actionWithTitle: NSLocalizedString(@"Pause Syncing", L10nComment)
 			                           style: UIAlertActionStyleDefault
-			                         handler: pauseSyncingHandler];
+			                         handler:^(UIAlertAction *action)
+			{
+				BOOL shouldPause = YES;
+				[weakSelf pauseResumeSyncing:shouldPause];
+			}];
 			
 			[alertController addAction:pauseSyncingAction];
 		}
 
 		{ // Scoping
 			
-			void (^pauseFutureUploadsHandler)(UIAlertAction*) = ^(UIAlertAction *action){
-				[self pauseUploadsAndAbortUploads:NO];
-			};
-			
 			UIAlertAction *pauseFutureUploadsAction =
 			  [UIAlertAction actionWithTitle: NSLocalizedString(@"Pause Uploads (continue in-progress)", L10nComment)
 			                           style: UIAlertActionStyleDefault
-			                         handler: pauseFutureUploadsHandler];
+			                         handler:^(UIAlertAction *action)
+			{
+				[weakSelf pauseUploadsAndAbortUploads:NO];
+			}];
 			
 			[alertController addAction:pauseFutureUploadsAction];
 		}
 	}
 	
-	
 	UIAlertAction *cancelAction =
-	[UIAlertAction actionWithTitle:NSLocalizedString(@"Cancel", @"Cancel")
-									 style:UIAlertActionStyleCancel
-								  handler:^(UIAlertAction * _Nonnull action) {
-								 
-									  
-								  }];
+	  [UIAlertAction actionWithTitle: NSLocalizedString(@"Cancel", @"Cancel")
+	                           style: UIAlertActionStyleCancel
+	                         handler:^(UIAlertAction *action)
+	{
+		// Nothing to do here
+	}];
 	
  	[alertController addAction:cancelAction];
 
-	if([ZDCConstants isIPad])
+	if ([ZDCConstants isIPad])
 	{
 		alertController.popoverPresentationController.sourceView = _btnPause;
 		alertController.popoverPresentationController.sourceRect = _btnPause.frame;
 		alertController.popoverPresentationController.permittedArrowDirections  = UIPopoverArrowDirectionAny;
 	}
 	
-	[self presentViewController:alertController animated:YES
-						  completion:^{
-						  }];
+	[self presentViewController: alertController
+	                   animated: YES
+	                 completion:
+	^{
+		// nothing to do here
+	}];
 }
-
 
 - (IBAction)segmentedControlChanged:(id)sender
 {
@@ -953,23 +991,25 @@ static NSString *const kActionStatus   = @"action";
 	[self refreshDownloadList];
 	[_tblActivity reloadData];
 
-	[self refreshActionStatus];
+	[self refreshGeneralStatus];
+	[self refreshSyncStatus];
+}
 
- }
-
-
-
--(void)pauseSyncing:(BOOL)pause
+- (void)pauseResumeSyncing:(BOOL)pause
 {
-	BOOL allUsersSelected = selectedLocalUserID == nil;
-
 	ZDCLogAutoTrace();
 	
-	[owner.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+	BOOL allUsersSelected = (selectedLocalUserID == nil);
+	
+	NSArray<NSString*> *_localUserIDs = [localUserIDs copy];
+	NSString *_selectedLocalUserID = selectedLocalUserID;
+	
+	YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
+	[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
 		if (allUsersSelected)
 		{
-			for (NSString *localUserID in self->localUserIDs)
+			for (NSString *localUserID in _localUserIDs)
 			{
 				ZDCLocalUser *localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
 				if (localUser && localUser.isLocal)
@@ -986,7 +1026,7 @@ static NSString *const kActionStatus   = @"action";
 		}
 		else
 		{
-			ZDCLocalUser *localUser = [transaction objectForKey:selectedLocalUserID inCollection:kZDCCollection_Users];
+			ZDCLocalUser *localUser = [transaction objectForKey:_selectedLocalUserID inCollection:kZDCCollection_Users];
 			if (localUser && localUser.isLocal)
 			{
 				if (localUser.syncingPaused != pause)
@@ -1000,67 +1040,74 @@ static NSString *const kActionStatus   = @"action";
 		}
 	} completionBlock:^{
 	
-// remove this when we get notifications
-		[self refreshActionStatus];
-
+		// remove this when we get notifications
+		[self refreshGeneralStatus];
 	}];
 }
 
-- (void)pauseUploadsAndAbortUploads:(BOOL)shouldAbortUploads;
+- (void)pauseUploadsAndAbortUploads:(BOOL)shouldAbortUploads
 {
+	ZDCLogAutoTrace();
+	
 	BOOL allUsersSelected = (selectedLocalUserID == nil);
 	if (allUsersSelected)
 	{
-		[syncManager pausePushForAllLocalUsersAndAbortUploads:shouldAbortUploads];
+		[zdc.syncManager pausePushForAllLocalUsersAndAbortUploads:shouldAbortUploads];
 	}
 	else
 	{
-		[syncManager pausePushForLocalUserID:selectedLocalUserID andAbortUploads:shouldAbortUploads];
+		[zdc.syncManager pausePushForLocalUserID:selectedLocalUserID andAbortUploads:shouldAbortUploads];
 	}
 	
-	[self refreshActionStatus];
+	[self refreshGeneralStatus];
 }
 
 - (void)resumeUploads
 {
+	ZDCLogAutoTrace();
+	
 	BOOL allUsersSelected = (selectedLocalUserID == nil);
 	if (allUsersSelected)
 	{
-		[syncManager resumePushForAllLocalUsers];
+		[zdc.syncManager resumePushForAllLocalUsers];
 	}
 	else
 	{
-		[syncManager resumePushForLocalUserID:selectedLocalUserID];
+		[zdc.syncManager resumePushForLocalUserID:selectedLocalUserID];
 	}
 	
-	[self refreshActionStatus];
+	[self refreshGeneralStatus];
 }
 
-
-// MARK: LocalUserListViewController_Delegate
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark LocalUserListViewController_Delegate
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)localUserListViewController:(LocalUserListViewController_IOS *)sender
-						  didSelectUserID:(NSString* __nullable) userID
+                    didSelectUserID:(NSString *)userID
 {
-	selectedLocalUserID = userID.length?userID:NULL;
+	ZDCLogAutoTrace();
 	
-	[self setNavigationTitleForUserID:selectedLocalUserID];
+	selectedLocalUserID = userID.length?userID:NULL;
+	[self refreshNavigationTitle];
 	
 	[self refreshUploadList];
 	[self refreshDownloadList];
 	[_tblActivity reloadData];
-	[self refreshActionStatus];
-
+	
+	[self refreshGeneralStatus];
+	[self refreshSyncStatus];
 }
 
-
-// MARK: tableview
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark UITableViewDataSource
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
 	switch (selectedActivityType)
 	{
-		case ActivityType_Uploads          : return (NSInteger)(uploadNodeIDs.count);
+		case ActivityType_Uploads          : return (NSInteger)(uploadNodeIDs.count); break;
 		case ActivityType_Downloads        : return (NSInteger)(downloadNodeIDs.count);
 		case ActivityType_UploadsDownloads : return (NSInteger)(uploadNodeIDs.count + downloadNodeIDs.count);
 		case ActivityType_Raw              : return (NSInteger)(rawOperations.count);
@@ -1068,11 +1115,8 @@ static NSString *const kActionStatus   = @"action";
 	}
 }
 
-
-
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	
 	NSInteger rowIndex = indexPath.row;
 	
 	switch (selectedActivityType)
@@ -1120,7 +1164,6 @@ static NSString *const kActionStatus   = @"action";
 	cell.accessoryType = UITableViewCellAccessoryNone;
 	cell.selectionStyle = UITableViewCellSelectionStyleNone;
 	return cell;
-
 }
 
 - (UITableViewCell *)downloadTableViewCell:(NSString *)nodeID forRow:(NSInteger)rowIndex
@@ -1155,7 +1198,6 @@ static NSString *const kActionStatus   = @"action";
 	cell.selectionStyle = UITableViewCellSelectionStyleNone;
 
 	return cell;
-	
 }
 
 @end
