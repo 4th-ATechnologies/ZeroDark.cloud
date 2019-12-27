@@ -8,8 +8,9 @@
 /// Sample App: WhatsZapp
 
 import UIKit
-import CocoaLumberjack
 
+import CocoaLumberjack
+import ZeroDarkCloud
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -25,6 +26,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		
 		DDTTYLogger.sharedInstance.logFormatter = CustomLogFormatter()
 		DDLog.add(DDTTYLogger.sharedInstance)
+		
+		ZeroDarkCloud.setLogHandler({ (log: ZDCLogMessage) in
+			
+			let message =
+			  DDLogMessage.init(message: log.message,
+			                      level: DDLogLevel(rawValue: log.level.rawValue)!,
+					                 flag: DDLogFlag(rawValue: log.flag.rawValue),
+			                    context: 1,
+			                       file: log.file,
+			                   function: log.function,
+			                       line: log.line,
+			                        tag: nil,
+			                    options: [],
+			                  timestamp: Date())
+			
+			DDLog.log(asynchronous: false, message: message)
+		})
 		
 		// Setup ZeroDarkCloud
 		let _ = ZDCManager.sharedInstance;
