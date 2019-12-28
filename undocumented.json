@@ -79,176 +79,15 @@
     },
     {
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCRestManager.h",
-      "line": 507,
+      "line": 530,
       "symbol": "ZDCRestManager.-fetchPreviousBilling:withYear:month:completionQueue:completionBlock:",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCRestManager.h",
-      "line": 514,
+      "line": 537,
       "symbol": "ZDCRestManager.-productPurchasedByUser:productIdentifier:transactionIdentifier:appStoreReceipt:completionQueue:completionBlock:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 16,
-      "symbol": "ZDCSearchUserMatching",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.class",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 17,
-      "symbol": "ZDCSearchUserMatching.auth0_profileID",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 18,
-      "symbol": "ZDCSearchUserMatching.matchingString",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 19,
-      "symbol": "ZDCSearchUserMatching.matchingRanges",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 27,
-      "symbol": "ZDCSearchUserResult.uuid",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 28,
-      "symbol": "ZDCSearchUserResult.aws_region",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 29,
-      "symbol": "ZDCSearchUserResult.aws_bucket",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 30,
-      "symbol": "ZDCSearchUserResult.auth0_profiles",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 31,
-      "symbol": "ZDCSearchUserResult.auth0_preferredID",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 32,
-      "symbol": "ZDCSearchUserResult.auth0_lastUpdated",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 33,
-      "symbol": "ZDCSearchUserResult.matches",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 35,
-      "symbol": "ZDCSearchUserResult.-initWithUser:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 38,
-      "symbol": "ZDCSearchUserManager",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.class",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 40,
-      "symbol": "ZDCSearchUserManagerResultStage",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enum",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 40,
-      "symbol": "ZDCSearchUserManagerResultStage",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.typedef",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 41,
-      "symbol": "ZDCSearchUserManagerResultStage.ZDCSearchUserManagerResultStage_Unknown",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 42,
-      "symbol": "ZDCSearchUserManagerResultStage.ZDCSearchUserManagerResultStage_Database",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 43,
-      "symbol": "ZDCSearchUserManagerResultStage.ZDCSearchUserManagerResultStage_Cache",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 44,
-      "symbol": "ZDCSearchUserManagerResultStage.ZDCSearchUserManagerResultStage_Server",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 45,
-      "symbol": "ZDCSearchUserManagerResultStage.ZDCSearchUserManagerResultStage_Done",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 49,
-      "symbol": "ZDCSearchUserManager.-unCacheAll",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 51,
-      "symbol": "ZDCSearchUserManager.-unCacheUserID:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCSearchUserManager.h",
-      "line": 53,
-      "symbol": "ZDCSearchUserManager.-queryForUsersWithString:forUserID:providerFilters:localSearchOnly:completionQueue:resultsBlock:",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
     },
@@ -309,6 +148,48 @@
       "warning": "undocumented"
     },
     {
+      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCUserManager.h",
+      "line": 119,
+      "symbol": "ZDCUserDisplay.userID",
+      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCUserManager.h",
+      "line": 120,
+      "symbol": "ZDCUserDisplay.displayName",
+      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCUserSearchManager.h",
+      "line": 34,
+      "symbol": "ZDCSearchResultStage.ZDCSearchResultStage_Database",
+      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCUserSearchManager.h",
+      "line": 35,
+      "symbol": "ZDCSearchResultStage.ZDCSearchResultStage_Cache",
+      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCUserSearchManager.h",
+      "line": 36,
+      "symbol": "ZDCSearchResultStage.ZDCSearchResultStage_Server",
+      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCUserSearchManager.h",
+      "line": 37,
+      "symbol": "ZDCSearchResultStage.ZDCSearchResultStage_Done",
+      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
+      "warning": "undocumented"
+    },
+    {
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Keys/ZDCSymmetricKey.h",
       "line": 26,
       "symbol": "ZDCSymmetricKey.+keyWithString:passCode:",
@@ -337,6 +218,41 @@
       "warning": "undocumented"
     },
     {
+      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/Utilities/ZDCBlockchainProof.h",
+      "line": 20,
+      "symbol": "ZDCBlockchainProof.merkleTreeRoot",
+      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/Utilities/ZDCBlockchainProof.h",
+      "line": 22,
+      "symbol": "ZDCBlockchainProof.blockNumber",
+      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/Utilities/ZDCBlockchainProof.h",
+      "line": 24,
+      "symbol": "ZDCBlockchainProof.merkleTreeFile_pubKey",
+      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/Utilities/ZDCBlockchainProof.h",
+      "line": 25,
+      "symbol": "ZDCBlockchainProof.merkleTreeFile_keyID",
+      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/Utilities/ZDCUserIdentity.h",
+      "line": 14,
+      "symbol": "ZDCUserIdentity",
+      "symbol_kind": "sourcekitten.source.lang.objc.decl.class",
+      "warning": "undocumented"
+    },
+    {
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/ZDCLocalUser.h",
       "line": 13,
       "symbol": "kS4LocalUser_shelflife",
@@ -362,55 +278,6 @@
       "line": 99,
       "symbol": "ZDCLocalUser.auth0_primary",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/ZDCUser.h",
-      "line": 30,
-      "symbol": "kZDCUser_metadataKey",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.constant",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/ZDCUser.h",
-      "line": 31,
-      "symbol": "kZDCUser_metadata_preferredAuth0ID",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.constant",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/ZDCUser.h",
-      "line": 118,
-      "symbol": "ZDCUser.auth0_preferredID",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/ZDCUser.h",
-      "line": 119,
-      "symbol": "ZDCUser.auth0_lastUpdated",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/ZDCUser.h",
-      "line": 121,
-      "symbol": "ZDCUser.preferredProfile",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/ZDCUser.h",
-      "line": 122,
-      "symbol": "ZDCUser.displayName",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/ZDCUser.h",
-      "line": 124,
-      "symbol": "ZDCUser.-displayNameForAuth0ID:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
       "warning": "undocumented"
     },
     {
