@@ -134,7 +134,7 @@
 	#ifndef NS_BLOCK_ASSERTIONS
 		NSAssert(NO, @"Attempting to `setObject:forKey:` with nil key");
 	#else
-		ZDCLogError(@"%@ - Ignoring nil key !", THIS_METHOD);
+		ZDCLogError(@"Ignoring nil key !");
 	#endif
 		return;
 	}
