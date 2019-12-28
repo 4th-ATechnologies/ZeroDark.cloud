@@ -251,7 +251,78 @@ static NSString *const kActionStatus   = @"action";
 	ZDCLogAutoTrace();
 	NSAssert([NSThread isMainThread], @"Notification posted to non-main thread !");
 	
-	// Todo...
+	if (selectedActivityType == ActivityType_Downloads)
+	{
+		// Ignore: This is a notification about upload operations
+		return;
+	}
+	
+	[self tableViewDataSourceWillChange];
+	{
+		[self refreshUploadList];
+	}
+	[self tableViewDataSourceDidChange:/*animateChanges:*/YES];
+	
+	// The above calls will refresh the source data,
+	// and will animate changes to the tableView.
+	//
+	// -- However --
+	//
+	// They will NOT properly reload cells that changed.
+	// So we have to do that manually here.
+	
+	NSDictionary *userInfo = notification.userInfo;
+	NSSet<NSUUID*> *modifiedOpUUIDs = userInfo[YDBCloudCorePipelineQueueChangedKey_modifiedOperationUUIDs];
+	
+	if (modifiedOpUUIDs.count > 0)
+	{
+		NSMutableArray<NSIndexPath*> *modifiedIndexPaths = [NSMutableArray array];
+		
+		switch (selectedActivityType)
+		{
+			case ActivityType_Raw:
+			{
+				for (NSIndexPath *indexPath in [_tblActivity indexPathsForVisibleRows])
+				{
+					ZDCCloudOperation *op = rawOperations[indexPath.row];
+					if ([modifiedOpUUIDs containsObject:op.uuid])
+					{
+						[modifiedIndexPaths addObject:indexPath];
+					}
+				}
+				break;
+			}
+			case ActivityType_Uploads:
+			case ActivityType_UploadsDownloads:
+			{
+				for (NSIndexPath *indexPath in [_tblActivity indexPathsForVisibleRows])
+				{
+					if ((selectedActivityType == ActivityType_UploadsDownloads) && (indexPath.row >= uploadNodeIDs.count)) {
+						continue;
+					}
+					
+					NSString *nodeID = uploadNodeIDs[indexPath.row];
+					NSArray<ZDCCloudOperation*> *ops = uploadTasks[nodeID];
+					
+					for (ZDCCloudOperation *op in ops)
+					{
+						if ([modifiedOpUUIDs containsObject:op.uuid])
+						{
+							[modifiedIndexPaths addObject:indexPath];
+							break;
+						}
+					}
+				}
+				break;
+			}
+			default: { break; }
+		}
+		
+		if (modifiedIndexPaths.count > 0)
+		{
+			[_tblActivity reloadRowsAtIndexPaths:modifiedIndexPaths withRowAnimation:UITableViewRowAnimationNone];
+		}
+	}
 }
 
 - (void)progressListChanged:(NSNotification *)notification
@@ -259,7 +330,31 @@ static NSString *const kActionStatus   = @"action";
 	ZDCLogAutoTrace();
 	NSAssert([NSThread isMainThread], @"Notification posted to non-main thread !");
 	
-	// Todo...
+	ZDCProgressManagerChanges *changes = notification.userInfo[kZDCProgressManagerChanges];
+	ZDCProgressType progressType = changes.progressType;
+	
+	if (progressType == ZDCProgressType_Upload)
+	{
+		NSUUID *operationUUID = changes.operationUUID;
+		
+		NSIndexPath *visibleIndexPath = [self visibleIndexPathForOperationUUID:operationUUID];
+		if (visibleIndexPath)
+		{
+			[_tblActivity reloadRowsAtIndexPaths:@[visibleIndexPath] withRowAnimation:UITableViewRowAnimationNone];
+		}
+	}
+	else if (progressType == ZDCProgressType_MetaDownload || progressType == ZDCProgressType_DataDownload)
+	{
+		if (selectedActivityType == ActivityType_Downloads ||
+		    selectedActivityType == ActivityType_UploadsDownloads)
+		{
+			[self tableViewDataSourceWillChange];
+			{
+				[self refreshDownloadList];
+			}
+			[self tableViewDataSourceDidChange:/*animateChanges:*/YES];
+		}
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -414,27 +509,165 @@ static NSString *const kActionStatus   = @"action";
 	}
 }
 */
+
+- (void)progressPercentChanged:(NSProgress *)progress
+{
+//	ZDCLogAutoTrace(); // noisy
+	
+	NSIndexPath *visibleIndexPath = [self visibleIndexPathForProgress:progress];
+	if (visibleIndexPath)
+	{
+		id <ActivityMonitorTableCellProtocol> cell = (id <ActivityMonitorTableCellProtocol>)
+		  [_tblActivity cellForRowAtIndexPath:visibleIndexPath];
+
+		if (cell)
+		{
+			[self updateCell:cell withProgress:progress];
+		}
+	}
+}
+
+- (void)progressDescriptionChanged:(NSProgress *)progress
+{
+//	ZDCLogAutoTrace(); // noisy
+	
+	NSIndexPath *visibleIndexPath = [self visibleIndexPathForProgress:progress];
+	if (visibleIndexPath)
+	{
+		id <ActivityMonitorTableCellProtocol> cell = (id <ActivityMonitorTableCellProtocol>)
+		  [_tblActivity cellForRowAtIndexPath:visibleIndexPath];
+
+		if ([cell isKindOfClass:[ActivityMonitorTableViewCell class]])
+		{
+			NSString *multipartDescription = progress.userInfo[ZDCLocalizedDescriptionKey];
+			if (multipartDescription)
+			{
+				((ActivityMonitorTableViewCell *)cell).opsInfo.text = multipartDescription;
+			}
+		}
+	}
+}
+
+/**
+ * Progress "calculations" includes networkThroughput & timeRemaining.
+ */
+- (void)progressCalculationsChanged:(NSProgress *)progress
+{
+//	ZDCLogAutoTrace(); // too noisy
+	
+	NSIndexPath *visibleIndexPath = [self visibleIndexPathForProgress:progress];
+	if (visibleIndexPath)
+	{
+		id <ActivityMonitorTableCellProtocol> cell = (id <ActivityMonitorTableCellProtocol>)
+		  [_tblActivity cellForRowAtIndexPath:visibleIndexPath];
+
+		if (cell)
+		{
+			[self updateCell:cell withProgressUserInfo:progress.userInfo];
+		}
+	}
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath
+                      ofObject:(id)object
+                        change:(NSDictionary *)change
+                       context:(void *)context
+{
+	NSAssert([object isKindOfClass:[NSProgress class]], @"Observing unexpected object ?");
+	
+	NSProgress *progress = (NSProgress *)object;
+	
+	__weak typeof(self) weakSelf = self;
+	
+	dispatch_block_t block = ^{
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (strongSelf)
+		{
+			if ([keyPath isEqualToString:NSStringFromSelector(@selector(fractionCompleted))])
+				[strongSelf progressPercentChanged:progress];
+			else if ([keyPath hasSuffix:ZDCLocalizedDescriptionKey])
+				[strongSelf progressDescriptionChanged:progress];
+			else
+				[strongSelf progressCalculationsChanged:progress];
+		}
+		
+	#pragma clang diagnostic pop
+	};
+	
+	if ([NSThread isMainThread])
+		block();
+	else
+		dispatch_async(dispatch_get_main_queue(), block);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Utilities
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/**
- * Returns NSNotFound if not visible.
-**/
+- (nullable NSIndexPath *)visibleIndexPathForProgress:(NSProgress *)progress
+{
+	BOOL maybeUpload = YES;
+	if (@available(macOS 10.13, iOS 11, *))
+	{
+		NSProgressFileOperationKind kind = progress.fileOperationKind;
+		if (kind)
+		{
+			if (kind == NSProgressFileOperationKindDownloading) {
+				maybeUpload = NO;
+			}
+		}
+	}
+	
+	__block NSUUID *operationUUID = nil;
+	if (maybeUpload)
+	{
+		[monitoredUploadProgress enumerateKeysAndObjectsUsingBlock:
+			^(NSUUID *opUUID, NSProgress *opProgress, BOOL *stop)
+		{
+			if (progress == opProgress)
+			{
+				operationUUID = opUUID;
+				*stop = YES;
+			}
+		}];
+	}
+	
+	__block NSString *downloadNodeID = nil;
+	if (operationUUID == nil)
+	{
+		[monitoredDownloadProgress enumerateKeysAndObjectsUsingBlock:
+			^(NSString *nodeID, NSProgress *downloadProgress, BOOL *stop)
+		{
+			if (progress == downloadProgress)
+			{
+				downloadNodeID = nodeID;
+				*stop = YES;
+			}
+		}];
+	}
+	
+	NSIndexPath *visibleIndexPath = [self visibleIndexPathForOperationUUID:operationUUID];
+	if (!visibleIndexPath) {
+		visibleIndexPath = [self visibleIndexPathForDownloadingNodeID:downloadNodeID];
+	}
+	
+	return visibleIndexPath;
+}
+
 - (nullable NSIndexPath *)visibleIndexPathForOperationUUID:(NSUUID *)operationUUID
 {
 	if (operationUUID == nil) return nil;
-	if (selectedActivityType == ActivityType_Downloads) return nil;
 	
-	__block NSIndexPath *result = nil;
+	NSIndexPath *result = nil;
 	
-	for (NSIndexPath *indexPath in [_tblActivity indexPathsForVisibleRows])
+	if (selectedActivityType == ActivityType_Uploads)
 	{
-		NSInteger row = indexPath.row;
-		
-		if (selectedActivityType == ActivityType_Uploads)
+		for (NSIndexPath *indexPath in [_tblActivity indexPathsForVisibleRows])
 		{
-			NSString *nodeID = uploadNodeIDs[row];
+			NSString *nodeID = uploadNodeIDs[indexPath.row];
 			for (ZDCCloudOperation *op in uploadTasks[nodeID])
 			{
 				if ([op.uuid isEqual:operationUUID])
@@ -444,11 +677,14 @@ static NSString *const kActionStatus   = @"action";
 				}
 			}
 		}
-		else if (selectedActivityType == ActivityType_UploadsDownloads)
+	}
+	else if (selectedActivityType == ActivityType_UploadsDownloads)
+	{
+		for (NSIndexPath *indexPath in [_tblActivity indexPathsForVisibleRows])
 		{
-			if (row < uploadNodeIDs.count) // "both" has uploads & downloads
+			if (indexPath.row < uploadNodeIDs.count) // "both" has uploads & downloads
 			{
-				NSString *nodeID = uploadNodeIDs[row];
+				NSString *nodeID = uploadNodeIDs[indexPath.row];
 				for (ZDCCloudOperation *op in uploadTasks[nodeID])
 				{
 					if ([op.uuid isEqual:operationUUID])
@@ -459,13 +695,53 @@ static NSString *const kActionStatus   = @"action";
 				}
 			}
 		}
-		else if (selectedActivityType == ActivityType_Raw)
+	}
+	else if (selectedActivityType == ActivityType_Raw)
+	{
+		for (NSIndexPath *indexPath in [_tblActivity indexPathsForVisibleRows])
 		{
-			ZDCCloudOperation *op = rawOperations[row];
+			ZDCCloudOperation *op = rawOperations[indexPath.row];
 			if ([op.uuid isEqual:operationUUID])
 			{
 				result = indexPath;
 				break;
+			}
+		}
+	}
+	
+	return result;
+}
+
+- (nullable NSIndexPath *)visibleIndexPathForDownloadingNodeID:(NSString *)inNodeID
+{
+	if (inNodeID == nil) return nil;
+	
+	NSIndexPath *result = nil;
+	
+	if (selectedActivityType == ActivityType_Downloads)
+	{
+		for (NSIndexPath *indexPath in [_tblActivity indexPathsForVisibleRows])
+		{
+			NSString *nodeID = downloadNodeIDs[indexPath.row];
+			if ([nodeID isEqualToString:inNodeID])
+			{
+				result = indexPath;
+				break;
+			}
+		}
+	}
+	else if (selectedActivityType == ActivityType_UploadsDownloads)
+	{
+		for (NSIndexPath *indexPath in [_tblActivity indexPathsForVisibleRows])
+		{
+			if (indexPath.row >= uploadNodeIDs.count) // "both" has uploads & downloads
+			{
+				NSString *nodeID = downloadNodeIDs[indexPath.row - uploadNodeIDs.count];
+				if ([nodeID isEqualToString:inNodeID])
+				{
+					result = indexPath;
+					break;
+				}
 			}
 		}
 	}
@@ -1322,7 +1598,7 @@ static NSString *const kActionStatus   = @"action";
 {
 	ZDCLogAutoTrace();
 	
-	if(sender == _segActivity)
+	if (sender == _segActivity)
 	{
 		selectedActivityType = _segActivity.selectedSegmentIndex;
   		[self refreshActivityType];
