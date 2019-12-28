@@ -9,19 +9,18 @@
 
 #import "ActivityMonitor_IOS.h"
 
-#import "ZeroDarkCloud.h"
-#import "ZeroDarkCloudPrivate.h"
-#import "ZDCConstantsPrivate.h"
-
-#import "ZDCIconTitleButton.h"
+#import "ActivityDescriptions.h"
+#import "ActivityMonitorTableViewCell.h"
+#import "ActivityMonitorTableViewCellRaw.h"
 #import "LocalUserListViewController.h"
-
+#import "ZDCConstantsPrivate.h"
+#import "ZDCIconTitleButton.h"
 #import "ZDCLogging.h"
+#import "ZeroDarkCloudPrivate.h"
 
 // Categories
 #import "NSString+ZeroDark.h"
 #import "OSImage+ZeroDark.h"
-
 
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
@@ -45,14 +44,15 @@ static NSString *const kActionStatus   = @"action";
 
 @implementation ActivityMonitor_IOS
 {
-	ZDCIconTitleButton *							_btnTitle;
 	IBOutlet __weak UISegmentedControl*   	_segActivity;
 	IBOutlet __weak UITableView*   			_tblActivity;
 
 	IBOutlet __weak UILabel*   				_lblStatus;
 	IBOutlet __weak UIButton*  				_btnPause;
+	
+	ZDCIconTitleButton *							_btnTitle;
 	UISwipeGestureRecognizer*    				swipeRight;
-
+	
 	ZeroDarkCloud *zdc;
 	YapDatabaseConnection *uiDatabaseConnection;
 	
@@ -60,6 +60,9 @@ static NSString *const kActionStatus   = @"action";
 	NSString *selectedLocalUserID;
 	
 	ActivityType selectedActivityType;
+	
+	NSMutableDictionary<NSUUID*, NSProgress*> *monitoredUploadProgress;
+	NSMutableDictionary<NSString*, NSProgress*> *monitoredDownloadProgress;
 	
 	NSMutableDictionary<id, NSMutableDictionary*> *statusStates;
 
@@ -71,6 +74,9 @@ static NSString *const kActionStatus   = @"action";
 	NSDictionary<NSString*, NSNumber*> *minSnapshotDict;                  // key=nodeID, value=snapshot (uint64_t)
 	
 	NSArray<NSString *> *downloadNodeIDs;
+	
+	NSMutableOrderedSet<NSString *> *tableViewUpdate_oldIdentifiers;
+	NSMutableOrderedSet<NSString *> *tableViewUpdate_oldSelectedIdentifiers;
 }
 
 - (instancetype)initWithOwner:(ZeroDarkCloud *)inOwner
@@ -91,6 +97,33 @@ static NSString *const kActionStatus   = @"action";
 	return self;
 }
 
+- (void)dealloc
+{
+	ZDCLogAutoTrace();
+	
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
+	
+	if ((monitoredUploadProgress.count > 0) || (monitoredDownloadProgress.count > 0))
+	{
+		NSArray<NSString *> *observerKeyPaths = [self observerKeyPaths];
+		
+		for (NSProgress *progress in [monitoredUploadProgress objectEnumerator])
+		{
+			for (NSString *keyPath in observerKeyPaths)
+			{
+				[progress removeObserver:self forKeyPath:keyPath];
+			}
+		}
+		for (NSProgress *progress in [monitoredDownloadProgress objectEnumerator])
+		{
+			for (NSString *keyPath in observerKeyPaths)
+			{
+				[progress removeObserver:self forKeyPath:keyPath];
+			}
+		}
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark View Lifecycle
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -100,7 +133,25 @@ static NSString *const kActionStatus   = @"action";
 	ZDCLogAutoTrace();
 	[super viewDidLoad];
 	
+	monitoredUploadProgress = [[NSMutableDictionary alloc] init];
+	monitoredDownloadProgress = [[NSMutableDictionary alloc] init];
+	
 	statusStates = [[NSMutableDictionary alloc] init];
+	
+	[[NSNotificationCenter defaultCenter] addObserver: self
+	                                         selector: @selector(databaseConnectionDidUpdate:)
+	                                             name: UIDatabaseConnectionDidUpdateNotification
+	                                           object: nil];
+	
+	[[NSNotificationCenter defaultCenter] addObserver: self
+	                                         selector: @selector(pipelineQueueChanged:)
+	                                             name: YDBCloudCorePipelineQueueChangedNotification
+	                                           object: nil];
+	
+	[[NSNotificationCenter defaultCenter] addObserver: self
+	                                         selector: @selector(progressListChanged:)
+	                                             name: ZDCProgressListChangedNotification
+	                                           object: nil];
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -149,6 +200,294 @@ static NSString *const kActionStatus   = @"action";
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Notifications
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)databaseConnectionDidUpdate:(NSNotification *)notification
+{
+	NSArray *notifications = [notification.userInfo objectForKey:kNotificationsKey];
+	
+	BOOL localUsersChanged = [[uiDatabaseConnection ext:Ext_View_LocalUsers] hasChangesForNotifications:notifications];
+	
+	if (localUsersChanged)
+	{
+		[self refreshLocalUsersList]; // <- might change: `allUsersSelected`, `selectedLocalUserID`
+	}
+	
+	if (selectedActivityType == ActivityType_Uploads         ||
+	    selectedActivityType == ActivityType_Downloads       ||
+	    selectedActivityType == ActivityType_UploadsDownloads )
+	{
+		__block NSMutableArray<NSIndexPath*> *changedIndexPaths = nil;
+	
+		for (ActivityMonitorTableViewCell *cell in [_tblActivity visibleCells])
+		{
+			BOOL nodeChanged =
+			  [uiDatabaseConnection hasObjectChangeForKey: cell.nodeID
+			                                 inCollection: kZDCCollection_Nodes
+			                              inNotifications: notifications];
+			if (nodeChanged)
+			{
+				NSIndexPath *indexPath = [_tblActivity indexPathForCell:cell];
+				if (indexPath)
+				{
+					if (changedIndexPaths == nil) {
+						changedIndexPaths = [[NSMutableArray alloc] init];
+					}
+				}
+				
+				[changedIndexPaths addObject:indexPath];
+			}
+		}
+		
+		if (changedIndexPaths.count > 0)
+		{
+			[_tblActivity reloadRowsAtIndexPaths: changedIndexPaths
+			                    withRowAnimation: UITableViewRowAnimationNone];
+		}
+	}
+}
+
+- (void)pipelineQueueChanged:(NSNotification *)notification
+{
+	ZDCLogAutoTrace();
+	NSAssert([NSThread isMainThread], @"Notification posted to non-main thread !");
+	
+	// Todo...
+}
+
+- (void)progressListChanged:(NSNotification *)notification
+{
+	ZDCLogAutoTrace();
+	NSAssert([NSThread isMainThread], @"Notification posted to non-main thread !");
+	
+	// Todo...
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Progress Monitoring
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (NSArray<NSString *> *)observerKeyPaths
+{
+	return @[
+		NSStringFromSelector(@selector(fractionCompleted)),
+		
+		// This doesn't work.
+		// We have to be more precise.
+		//
+	//	NSStringFromSelector(@selector(userInfo)),
+		
+		// This works fine, but we actually don't need it.
+		//
+	//	[NSString stringWithFormat:@"%@.%@",
+	//	  NSStringFromSelector(@selector(userInfo)), NSProgressThroughputKey],
+		//
+		// ZDCProgressManager always sets both NSProgressThroughputKey & NSProgressEstimatedTimeRemainingKey together.
+		// And it always sets NSProgressEstimatedTimeRemainingKey last.
+		// So we can just observe that instead.
+		
+		[NSString stringWithFormat:@"%@.%@",
+		  NSStringFromSelector(@selector(userInfo)), NSProgressEstimatedTimeRemainingKey],
+		
+		// We use this for multipart descriptions.
+		[NSString stringWithFormat:@"%@.%@",
+		  NSStringFromSelector(@selector(userInfo)), ZDCLocalizedDescriptionKey],
+	];
+}
+
+- (NSProgress *)monitoredUploadProgressForOperationUUID:(NSUUID *)operationUUID
+{
+	if (operationUUID == nil) return nil;
+	
+	NSProgress *progress = monitoredUploadProgress[operationUUID];
+	if (progress) {
+		return progress;
+	}
+	
+	__weak typeof(self) weakSelf = self;
+	progress = [zdc.progressManager uploadProgressForOperationUUID: operationUUID
+	                                               completionQueue: dispatch_get_main_queue()
+	                                               completionBlock:^(BOOL success)
+	{
+		[weakSelf stopMonitoringUploadProgressForOperationUUID:operationUUID];
+	}];
+	
+	if (progress)
+	{
+		for (NSString *keyPath in [self observerKeyPaths])
+		{
+			[progress addObserver: self
+			           forKeyPath: keyPath
+			              options: 0
+			              context: NULL];
+		}
+		
+		monitoredUploadProgress[operationUUID] = progress;
+	}
+	
+	return progress;
+}
+
+- (void)stopMonitoringUploadProgressForOperationUUID:(NSUUID *)operationUUID
+{
+	if (operationUUID == nil) return;
+	
+	NSProgress *progress = monitoredUploadProgress[operationUUID];
+	
+	for (NSString *keyPath in [self observerKeyPaths])
+	{
+		[progress removeObserver:self forKeyPath:keyPath];
+	}
+	
+	monitoredUploadProgress[operationUUID] = nil;
+	
+	NSIndexPath *visibleIndexPath = [self visibleIndexPathForOperationUUID:operationUUID];
+	if (visibleIndexPath)
+	{
+		id <ActivityMonitorTableCellProtocol> cell = (id <ActivityMonitorTableCellProtocol>)
+		  [_tblActivity cellForRowAtIndexPath:visibleIndexPath];
+		
+		if (cell)
+		{
+			[self updateCell:cell withProgress:nil];
+			[self updateCell:cell withProgressUserInfo:nil];
+		}
+	}
+}
+/*
+- (NSProgress *)monitoredDownloadProgressForNodeID:(NSString *)nodeID
+{
+	if (nodeID == nil) return nil;
+	
+	NSProgress *progress = monitoredDownloadProgress[nodeID];
+	if (progress) {
+		return progress;
+	}
+	
+	__weak typeof(self) weakSelf = self;
+	progress = [zdc.progressManager downloadProgressForNodeID: nodeID
+	                                          completionQueue: dispatch_get_main_queue()
+	                                          completionBlock:^(NSURL *fileURL, id retainToken, NSError *error)
+	{
+		[weakSelf stopMonitoringDownloadProgressForNodeID:nodeID];
+	}];
+	
+	if (progress)
+	{
+		for (NSString *keyPath in [self observerKeyPaths])
+		{
+			[progress addObserver: self
+			           forKeyPath: keyPath
+			              options: 0
+			              context: NULL];
+		}
+		
+		monitoredDownloadProgress[nodeID] = progress;
+	}
+	
+	return progress;
+}
+
+- (void)stopMonitoringDownloadProgressForNodeID:(NSString *)nodeID
+{
+	if (nodeID == nil) return;
+	
+	NSProgress *progress = monitoredDownloadProgress[nodeID];
+	
+	for (NSString *keyPath in [self observerKeyPaths])
+	{
+		[progress removeObserver:self forKeyPath:keyPath];
+	}
+	
+	monitoredDownloadProgress[nodeID] = nil;
+	
+	NSInteger visibleRow = [self visibleRowForDownloadingNodeID:nodeID];
+	if (visibleRow != NSNotFound)
+	{
+		id <ActivityMonitorTableCellProtocol> cell = (id <ActivityMonitorTableCellProtocol>)
+		  [tableView viewAtColumn:0 row:visibleRow makeIfNecessary:NO];
+		
+		if (cell)
+		{
+			[self updateCell:cell withProgress:nil];
+			[self updateCell:cell withProgressUserInfo:nil];
+		}
+	}
+}
+*/
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Utilities
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Returns NSNotFound if not visible.
+**/
+- (nullable NSIndexPath *)visibleIndexPathForOperationUUID:(NSUUID *)operationUUID
+{
+	if (operationUUID == nil) return nil;
+	if (selectedActivityType == ActivityType_Downloads) return nil;
+	
+	__block NSIndexPath *result = nil;
+	
+	for (NSIndexPath *indexPath in [_tblActivity indexPathsForVisibleRows])
+	{
+		NSInteger row = indexPath.row;
+		
+		if (selectedActivityType == ActivityType_Uploads)
+		{
+			NSString *nodeID = uploadNodeIDs[row];
+			for (ZDCCloudOperation *op in uploadTasks[nodeID])
+			{
+				if ([op.uuid isEqual:operationUUID])
+				{
+					result = indexPath;
+					break;
+				}
+			}
+		}
+		else if (selectedActivityType == ActivityType_UploadsDownloads)
+		{
+			if (row < uploadNodeIDs.count) // "both" has uploads & downloads
+			{
+				NSString *nodeID = uploadNodeIDs[row];
+				for (ZDCCloudOperation *op in uploadTasks[nodeID])
+				{
+					if ([op.uuid isEqual:operationUUID])
+					{
+						result = indexPath;
+						break;
+					}
+				}
+			}
+		}
+		else if (selectedActivityType == ActivityType_Raw)
+		{
+			ZDCCloudOperation *op = rawOperations[row];
+			if ([op.uuid isEqual:operationUUID])
+			{
+				result = indexPath;
+				break;
+			}
+		}
+	}
+	
+	return result;
+}
+
+- (int32_t)priorityForOperation:(ZDCCloudOperation *)op
+{
+	NSAssert([NSThread isMainThread], @"Attempting to access non-safe ivars on on main-thread !");
+	
+//	NSArray<NSNumber*> *overrideInfo = priorityOverrides[op.uuid];
+//	if (overrideInfo)
+//	{
+//		NSNumber *override = overrideInfo[0];
+//		return override.intValue;
+//	}
+//	else
+//	{
+		return op.priority;
+//	}
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Refresh Data
@@ -899,6 +1238,20 @@ static NSString *const kActionStatus   = @"action";
 	}
 	else
 	{
+		{ // Scoping
+			
+			UIAlertAction *pauseSyncingAction =
+			  [UIAlertAction actionWithTitle: NSLocalizedString(@"Pause Syncing", L10nComment)
+			                           style: UIAlertActionStyleDefault
+			                         handler:^(UIAlertAction *action)
+			{
+				BOOL shouldPause = YES;
+				[weakSelf pauseResumeSyncing:shouldPause];
+			}];
+			
+			[alertController addAction:pauseSyncingAction];
+		}
+		
 		if (uploadsPaused)
 		{
 			UIAlertAction *resumeUploadsAction =
@@ -913,42 +1266,30 @@ static NSString *const kActionStatus   = @"action";
 		}
 		else
 		{
-			UIAlertAction *pauseUploadsAction =
-			  [UIAlertAction actionWithTitle: NSLocalizedString(@"Pause Uploads", L10nComment)
-			                           style: UIAlertActionStyleDefault
-			                         handler:^(UIAlertAction *action)
-			{
-				[weakSelf pauseUploadsAndAbortUploads:YES];
-			}];
+			{ // Scoping
+				
+				UIAlertAction *pauseUploadsAction =
+				  [UIAlertAction actionWithTitle: NSLocalizedString(@"Pause Uploads", L10nComment)
+				                           style: UIAlertActionStyleDefault
+				                         handler:^(UIAlertAction *action)
+				{
+					[weakSelf pauseUploadsAndAbortUploads:YES];
+				}];
 			
-			[alertController addAction:pauseUploadsAction];
-		}
+				[alertController addAction:pauseUploadsAction];
+			}
+			{ // Scoping
+	
+				UIAlertAction *pauseFutureUploadsAction =
+				  [UIAlertAction actionWithTitle: NSLocalizedString(@"Pause Uploads (continue in-progress)", L10nComment)
+				                           style: UIAlertActionStyleDefault
+				                         handler:^(UIAlertAction *action)
+				{
+					[weakSelf pauseUploadsAndAbortUploads:NO];
+				}];
 		
-		{ // Scoping
-			
-			UIAlertAction *pauseSyncingAction =
-			  [UIAlertAction actionWithTitle: NSLocalizedString(@"Pause Syncing", L10nComment)
-			                           style: UIAlertActionStyleDefault
-			                         handler:^(UIAlertAction *action)
-			{
-				BOOL shouldPause = YES;
-				[weakSelf pauseResumeSyncing:shouldPause];
-			}];
-			
-			[alertController addAction:pauseSyncingAction];
-		}
-
-		{ // Scoping
-			
-			UIAlertAction *pauseFutureUploadsAction =
-			  [UIAlertAction actionWithTitle: NSLocalizedString(@"Pause Uploads (continue in-progress)", L10nComment)
-			                           style: UIAlertActionStyleDefault
-			                         handler:^(UIAlertAction *action)
-			{
-				[weakSelf pauseUploadsAndAbortUploads:NO];
-			}];
-			
-			[alertController addAction:pauseFutureUploadsAction];
+				[alertController addAction:pauseFutureUploadsAction];
+			}
 		}
 	}
 	
@@ -1147,57 +1488,685 @@ static NSString *const kActionStatus   = @"action";
 			return nil;
 		}
 	}
- }
+}
 
+#pragma mark UITableView Logic
 
 - (UITableViewCell *)uploadTableViewCell:(NSString *)nodeID forRow:(NSInteger)rowIndex
 {
+	ActivityMonitorTableViewCell *cell =
+	  [_tblActivity dequeueReusableCellWithIdentifier:@"ActivityMonitorTableViewCell"];
 
-	UITableViewCell *cell = [_tblActivity dequeueReusableCellWithIdentifier:@"activityCell"];
+	cell.opTypeImageView.image =
+	  [UIImage imageNamed: @"cloud-upload-template-18"
+	             inBundle: [ZeroDarkCloud frameworkBundle] compatibleWithTraitCollection:nil];
 	
-	if (cell == nil) {
-		cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"activityCell"];
-		cell.selectionStyle = UITableViewCellSelectionStyleNone;
+	__block ZDCTreesystemPath *path = nil;
+	
+	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction * transaction) {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		ZDCNode *node = [transaction objectForKey:nodeID inCollection:kZDCCollection_Nodes];
+		//
+		// node might be nil (i.e. node has been deleted)
+		
+		path = [zdc.nodeManager pathForNode:node transaction:transaction];
+		
+	#pragma clang diagnostic pop
+	}];
+	
+	NSArray<ZDCCloudOperation *> *nodeOps = uploadTasks[nodeID];
+	
+	if (path)
+	{
+		if (path.trunk == ZDCTreesystemTrunk_Home) {
+			cell.nodeInfo.text = path.relativePath;
+		}
+		else {
+			cell.nodeInfo.text = path.fullPath;
+		}
 	}
-
-	cell.textLabel.text =  [NSString stringWithFormat:@"Upload %ld ", (long)rowIndex];
-	cell.accessoryType = UITableViewCellAccessoryNone;
-	cell.selectionStyle = UITableViewCellSelectionStyleNone;
+	else // if (path == nil) // node might be nil (i.e. node has been deleted & trash emptied)
+	{
+		// Backup plan:
+		// Try to get the cloudPath from an operation.
+		
+		ZDCCloudOperation *op = [nodeOps firstObject];
+		
+		ZDCCloudPath *cloudPath = op.cloudLocator.cloudPath;
+		
+		ZDCCloudPathComponents comps = ZDCCloudPathComponents_DirPrefix | ZDCCloudPathComponents_FileName_WithoutExt;
+		NSString *cloudPathStr = [cloudPath pathWithComponents:comps];
+		
+		cell.nodeInfo.text = cloudPathStr ?: @"/?";
+	}
+	
+	{ // Priority
+	
+		int32_t priority = [self priorityForOperation:[nodeOps firstObject]];
+		
+		BOOL mixedPriorities = NO;
+		BOOL hasPositivePriority = (priority > 0);
+		BOOL hasNegativePriority = (priority < 0);
+		
+		for (NSUInteger i = 1; i < nodeOps.count; i++)
+		{
+			int32_t altPriority = [self priorityForOperation:nodeOps[i]];
+			if (priority != altPriority)
+			{
+				mixedPriorities = YES;
+				hasPositivePriority = hasPositivePriority || (altPriority > 0);
+				hasNegativePriority = hasNegativePriority || (altPriority < 0);
+			}
+		}
+		
+		if (mixedPriorities)
+		{
+			cell.priority.hidden = NO;
+			
+			if (hasPositivePriority && !hasNegativePriority) {
+				cell.priority.text = @"+X";
+			}
+			else if (!hasPositivePriority && hasNegativePriority) {
+				cell.priority.text = @"-X";
+			}
+			else {
+				cell.priority.text = @"+-";
+			}
+		}
+		else if (priority == 0)
+		{
+			cell.priority.hidden = YES;
+			cell.priority.text = @"";
+		}
+		else
+		{
+			cell.priority.hidden = NO;
+			cell.priority.text = [NSString stringWithFormat:@"%@%d", (priority > 0 ? @"+" : @""), priority];
+		}
+	}
+	
+	ZDCCloudOperation *dataUpload = nil;
+	BOOL hasActiveOp = NO;
+	BOOL hasPutOp = NO;
+	BOOL hasMoveOp = NO;
+	BOOL hasDeleteOp = NO;
+	BOOL hasCopyOp = NO;
+	BOOL hasPutRcrdOp = NO;
+	BOOL hasPutDataOp = NO;
+	
+	ZDCCloud *cloudExt = [zdc.databaseManager cloudExtForUserID:selectedLocalUserID];
+	
+	for (ZDCCloudOperation *op in nodeOps)
+	{
+		if ([op isPutNodeDataOperation])
+		{
+			// There might be multiple file uploads in the queue.
+			// Always use the first one.
+			//
+			if (dataUpload == nil) {
+				dataUpload = op;
+			}
+		}
+		
+		YDBCloudCoreOperationStatus opStatus =
+		  [[cloudExt pipelineWithName:op.pipeline] statusForOperationWithUUID:op.uuid];
+		
+		if (opStatus == YDBCloudOperationStatus_Active)
+		{
+			hasActiveOp = YES;
+		}
+		
+		if ((opStatus != YDBCloudOperationStatus_Skipped) && (opStatus != YDBCloudOperationStatus_Completed))
+		{
+			switch (op.type)
+			{
+				case ZDCCloudOperationType_Put:
+				{
+					hasPutOp = YES;
+					switch (op.putType)
+					{
+						case ZDCCloudOperationPutType_Node_Rcrd:
+							hasPutRcrdOp = YES;
+							break;
+						case ZDCCloudOperationPutType_Node_Data:
+							hasPutDataOp = YES;
+							break;
+						default: break;
+					}
+					break;
+				}
+				case ZDCCloudOperationType_Move:
+				{
+					hasMoveOp = YES;
+					break;
+				}
+				case ZDCCloudOperationType_DeleteLeaf:
+				case ZDCCloudOperationType_DeleteNode:
+				{
+					hasDeleteOp = YES;
+					break;
+				}
+				case ZDCCloudOperationType_CopyLeaf:
+				{
+					hasCopyOp = YES;
+					break;
+				}
+				default: break;
+			}
+		}
+	}
+	
+	NSProgress *progress = [self monitoredUploadProgressForOperationUUID:dataUpload.uuid];
+	
+	NSString *detailedInfo = nil;
+	
+	if (dataUpload && progress && [progress isKindOfClass:[ZDCProgress class]])
+	{
+		detailedInfo = progress.userInfo[ZDCLocalizedDescriptionKey];
+	}
+	
+	if (detailedInfo == nil)
+	{
+		NSMutableArray *opStrs = [NSMutableArray arrayWithCapacity:4];
+		
+		if (hasPutOp)
+		{
+			NSMutableArray *components = [NSMutableArray arrayWithCapacity:3];
+			if (hasPutRcrdOp)  [components addObject:@"rcrd"];
+			if (hasPutDataOp)  [components addObject:@"data"];
+			
+			NSString *str = [NSString stringWithFormat:@"put (%@)", [components componentsJoinedByString:@", "]];
+			[opStrs addObject:str];
+		}
+		
+		if (hasMoveOp)
+		{
+			[opStrs addObject:@"move/rename"];
+		}
+		
+		if (hasDeleteOp)
+		{
+			[opStrs addObject:@"delete"];
+		}
+		
+		if (hasCopyOp)
+		{
+			[opStrs addObject:@"copy"];
+		}
+		
+		detailedInfo = [opStrs componentsJoinedByString:@", "];
+	}
+	
+	cell.opsInfo.text = detailedInfo;
+	
+	if (hasActiveOp)
+		[cell.circularProgress startAnimating];
+	else
+		[cell.circularProgress stopAnimating];
+	
+	[self updateCell:cell withProgress:progress];
+	[self updateCell:cell withProgressUserInfo:progress.userInfo];
+	
 	return cell;
 }
 
 - (UITableViewCell *)downloadTableViewCell:(NSString *)nodeID forRow:(NSInteger)rowIndex
 {
-	UITableViewCell *cell = [_tblActivity dequeueReusableCellWithIdentifier:@"activityCell"];
+	ActivityMonitorTableViewCell *cell =
+	  [_tblActivity dequeueReusableCellWithIdentifier:@"ActivityMonitorTableViewCell"];
 	
-	if (cell == nil) {
-		cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"activityCell"];
-		cell.selectionStyle = UITableViewCellSelectionStyleNone;
-	}
-	
-	cell.textLabel.text =  [NSString stringWithFormat:@"Dwonload %ld ", (long)rowIndex];
-	cell.accessoryType = UITableViewCellAccessoryNone;
-	cell.selectionStyle = UITableViewCellSelectionStyleNone;
+	cell.opTypeImageView.image =
+	  [UIImage imageNamed: @"cloud-download-template-18"
+	             inBundle: [ZeroDarkCloud frameworkBundle] compatibleWithTraitCollection:nil];
 
 	return cell;
 }
 
-
 - (UITableViewCell *)rawTableViewCell:(ZDCCloudOperation *)op forRow:(NSInteger)rowIndex
 {
+	ActivityMonitorTableViewCellRaw *cell =
+	  [_tblActivity dequeueReusableCellWithIdentifier:@"ActivityMonitorTableViewCellRaw"];
 	
-	UITableViewCell *cell = [_tblActivity dequeueReusableCellWithIdentifier:@"activityCell"];
-	
-	if (cell == nil) {
-		cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"activityCell"];
-		cell.selectionStyle = UITableViewCellSelectionStyleNone;
+	NSString *opType = nil;
+	switch (op.type)
+	{
+		case ZDCCloudOperationType_Put:
+		{
+			switch (op.putType)
+			{
+				case ZDCCloudOperationPutType_Node_Rcrd : opType = @"put:rcrd"; break;
+				case ZDCCloudOperationPutType_Node_Data : opType = @"put:data"; break;
+				default                                 : opType = @"put:?";    break;
+			}
+			
+			break;
+		}
+		case ZDCCloudOperationType_Move:
+		{
+			opType = @"move";
+			break;
+		}
+		case ZDCCloudOperationType_DeleteLeaf:
+		{
+			if (op.ifOrphan) {
+				opType = @"delete-leaf (if-orphan)";
+			} else {
+				opType = @"delete-leaf";
+			}
+			
+			break;
+		}
+		case ZDCCloudOperationType_DeleteNode:
+		{
+			if (op.ifOrphan) {
+				opType = @"delete-node (if-orphan)";
+			} else {
+				opType = @"delete-node";
+			}
+			
+			break;
+		}
+		case ZDCCloudOperationType_CopyLeaf:
+		{
+			opType = @"copy-leaf";
+			break;
+		}
+		default:
+		{
+			opType = @"unknown";
+			break;
+		}
 	}
 	
-	cell.textLabel.text =  [NSString stringWithFormat:@"Raw %ld ", (long)rowIndex];
-	cell.accessoryType = UITableViewCellAccessoryNone;
-	cell.selectionStyle = UITableViewCellSelectionStyleNone;
+	cell.opType.text = opType;
+	cell.opUUID.text = [op.uuid UUIDString];
+	cell.snapshot.text = [NSString stringWithFormat:@"%llu", (unsigned long long)op.snapshot];
 
+	NSUInteger dependenciesRemaining = 0;
+	for (NSUUID *depUUID in op.dependencies)
+	{
+		if (rawOperationsDict[depUUID] != nil) {
+			dependenciesRemaining++;
+		}
+	}
+	
+	cell.dependenciesRemaining.text =
+		[NSString stringWithFormat:@"%llu", (unsigned long long)dependenciesRemaining];
+	
+	ZDCCloudLocator *cloudLocator = op.dstCloudLocator;
+	if (cloudLocator == nil) {
+		cloudLocator = op.cloudLocator;
+	}
+	
+	cell.dirPrefix.text = cloudLocator.cloudPath.dirPrefix ?: @"";
+	cell.filename.text = cloudLocator.cloudPath.fileName ?: @"";
+	
+	int32_t priority = [self priorityForOperation:op];
+	if (priority == 0) {
+		cell.priority.hidden = YES;
+		cell.priority.text = @"";
+	}
+	else {
+		cell.priority.hidden = NO;
+		cell.priority.text = [NSString stringWithFormat:@"%@%d", (priority > 0 ? @"+" : @""), priority];
+	}
+	
+	ZDCCloud *cloudExt = [zdc.databaseManager cloudExtForUserID:op.localUserID];
+	YapDatabaseCloudCorePipeline *pipeline = [cloudExt pipelineWithName:op.pipeline];
+	
+	YDBCloudCoreOperationStatus opStatus = [pipeline statusForOperationWithUUID:op.uuid];
+	
+	if (opStatus == YDBCloudOperationStatus_Active) {
+		[cell.circularProgress startAnimating];
+	}
+	else {
+		[cell.circularProgress stopAnimating];
+	}
+	
+	NSProgress *progress = [self monitoredUploadProgressForOperationUUID:op.uuid];
+	
+	[self updateCell:cell withProgress:progress];
+	[self updateCell:cell withProgressUserInfo:progress.userInfo];
+	
 	return cell;
+}
+
+- (void)updateCell:(id <ActivityMonitorTableCellProtocol>)cell withProgress:(NSProgress *)progress
+{
+	if (progress)
+	{
+		double percent = progress.fractionCompleted;
+		
+		cell.horizontalProgress.hidden = NO;
+		cell.horizontalProgress.progress = percent;
+	//	cell.horizontalProgress.indeterminate = (percent >= 1.0);
+	}
+	else
+	{
+		cell.horizontalProgress.hidden = YES;
+		cell.horizontalProgress.progress = 0.0;
+	}
+}
+
+- (void)updateCell:(id <ActivityMonitorTableCellProtocol>)cell withProgressUserInfo:(NSDictionary *)progressUserInfo
+{
+	NSNumber *throughput = progressUserInfo[NSProgressThroughputKey];
+	if (throughput)
+	{
+		cell.networkThroughput.hidden = NO;
+		cell.networkThroughput.text = [ActivityDescriptions descriptionForNetworkThroughput:throughput];
+	}
+	else
+	{
+		cell.networkThroughput.hidden = YES;
+		cell.networkThroughput.text = @"";
+	}
+	
+	NSNumber *remaining = progressUserInfo[NSProgressEstimatedTimeRemainingKey];
+	if (remaining)
+	{
+		cell.timeRemaining.hidden = NO;
+		cell.timeRemaining.text = [ActivityDescriptions descriptionForTimeRemaining:remaining];
+	}
+	else
+	{
+		cell.timeRemaining.hidden = YES;
+		cell.timeRemaining.text = @"";
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark UITableView Update
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * This method is assists the animation & selection logic
+ * within the `tableViewDataSourceWillChange` & `tableViewDataSourceDidChange:` methods.
+ *
+ * It's job is simple:
+ *
+ * - For a given index, the method must return a UNIQUE string the refers only to this item.
+ * - The string must be derived from the underlying data source (i.e. don't use rowIndex as part of the string).
+ *
+ * Remember, this method gets called while in the middle of updating the table.
+ * So the given rowIndex is a reference to the underlying data store,
+ * and not necessarily the current tableView state.
+**/
+- (NSString *)identifierForRow:(NSUInteger)row
+{
+	NSString *const prefix_upload   = @"u|";
+	NSString *const prefix_download = @"d|";
+	NSString *const prefix_raw      = @"r|";
+	
+	switch (selectedActivityType)
+	{
+		case ActivityType_Uploads: {
+			NSString *nodeID = uploadNodeIDs[row];
+			return [prefix_upload stringByAppendingString:nodeID];
+		}
+		case ActivityType_Downloads: {
+			NSString *nodeID = downloadNodeIDs[row];
+			return [prefix_download stringByAppendingString:nodeID];
+		}
+		case ActivityType_UploadsDownloads: {
+			if (row < uploadNodeIDs.count) {
+				NSString *nodeID = uploadNodeIDs[row];
+				return [prefix_upload stringByAppendingString:nodeID];
+			}
+			else {
+				NSString *nodeID = downloadNodeIDs[row - uploadNodeIDs.count];
+				return [prefix_download stringByAppendingString:nodeID];
+			}
+		}
+		case ActivityType_Raw: {
+			NSUUID *opUUID = rawOperations[row].uuid;
+			return [prefix_raw stringByAppendingString:opUUID.UUIDString];
+		}
+		default: {
+			NSAssert(NO, @"Invalid row");
+			return [[NSUUID UUID] UUIDString];
+		}
+	}
+}
+
+- (void)tableViewDataSourceWillChange
+{
+	ZDCLogAutoTrace();
+	
+	{ // tableViewUpdate_oldIdentifiers
+		
+		const NSUInteger count = [_tblActivity numberOfRowsInSection:0];
+		tableViewUpdate_oldIdentifiers = [[NSMutableOrderedSet alloc] initWithCapacity:count];
+		
+		for (NSUInteger rowIdx = 0; rowIdx < count; rowIdx++)
+		{
+			NSString *identifier = [self identifierForRow:rowIdx];
+			NSAssert(
+				![tableViewUpdate_oldIdentifiers containsObject:identifier],
+				@"Method `uniqueIdentifierForRow` MUST return a unique identifier. Not unique: %@", identifier);
+			
+			[tableViewUpdate_oldIdentifiers addObject:identifier];
+		}
+	}
+	{ // tableViewUpdate_oldSelectedIdentifiers
+		
+		NSArray<NSIndexPath*> *selected = _tblActivity.indexPathsForSelectedRows;
+		tableViewUpdate_oldSelectedIdentifiers = [[NSMutableOrderedSet alloc] initWithCapacity:selected.count];
+		
+		for (NSIndexPath *indexPath in selected)
+		{
+			NSString *identifier = [self identifierForRow:indexPath.row];
+			[tableViewUpdate_oldSelectedIdentifiers addObject:identifier];
+		}
+	}
+}
+
+- (void)tableViewDataSourceDidChange:(BOOL)animateChanges
+{
+	ZDCLogAutoTrace();
+	
+	// Step 1 of 3:
+	//
+	// Create a new list of identifiers for the rows.
+	//
+	// Note: We have NOT updated the `tableView` instance yet.
+	// So if we call [_tblActivity numberOfRowsInSection:0], we'll get a bad answer.
+	
+	const NSUInteger count = (NSUInteger)[self tableView:_tblActivity numberOfRowsInSection:0]; // <- see note above
+	NSMutableOrderedSet *tableViewUpdate_newIdentifiers = [NSMutableOrderedSet orderedSetWithCapacity:count];
+	
+	for (NSUInteger rowIdx = 0; rowIdx < count; rowIdx++)
+	{
+		NSString *identifier = [self identifierForRow:rowIdx];
+		NSAssert(
+			![tableViewUpdate_newIdentifiers containsObject:identifier],
+			@"Method `uniqueIdentifierForRow` MUST return a unique identifier. Not unique: %@", identifier);
+		
+		[tableViewUpdate_newIdentifiers addObject:identifier];
+	}
+	
+	// Step 2 of 3:
+	//
+	// Update the tableView data.
+	
+	if (!animateChanges)
+	{
+		[_tblActivity reloadData];
+	}
+	else
+	{
+		// The key to understanding tableView animations is the word "INCREMENTALLY".
+		//
+		// From the Apple Docs:
+		//
+		// > Changes are processed incrementally as the `insertRowsAtIndexes:withAnimation:`,
+		// > `removeRowsAtIndexes:withAnimation:`, and the `moveRowAtIndex:toIndex:` methods
+		// > are called. It is acceptable to delete row 0 multiple times,
+		// > as long as there is still a row available.
+		//
+		// This was explained well in this StackOverflow post:
+		// https://stackoverflow.com/questions/8319332/animating-nstableview-with-beginning-and-ending-array-states
+		//
+		// The original poster asked something about moving the following items around in a tableView:
+		//
+		// > [A,B,C,D] --> [B,C,D,A]
+		//
+		// And the answer was:
+		//
+		// > The documentation for moveRowAtIndex:toIndex: says,
+		// > "Changes happen incrementally as they are sent to the table".
+		// >
+		// > The significance of 'incrementally' can be best illustrated with the transformation from ABCDE to ECDAB.
+		// >
+		// > If you just consider the initial and final indexes, it looks like:
+		// >
+		// > E: 4->0
+		// > C: 2->1
+		// > D: 3->2
+		// > A: 0->3
+		// > B: 1->4
+		// >
+		// > However, when performing the changes incrementally the 'initial' indexes can jump
+		// > around as you transform your array:
+		// >
+		// > E: 4->0 (array is now EABCD)
+		// > C: 3->1 (array is now ECABD)
+		// > D: 4->2 (array is now ECDAB)
+		// > A: 3->3 (array unchanged)
+		// > B: 4->4 (array unchanged)
+		// >
+		// > Basically, you need to tell the NSTableView, step-by-step,
+		// > which rows need to be moved in order to arrive at an array identical to your sorted array.
+		
+		NSMutableOrderedSet *incremental = [tableViewUpdate_oldIdentifiers mutableCopy];
+		NSUInteger incIdx = 0;
+		
+		NSUInteger newIdx = 0;
+		const NSUInteger newCount = tableViewUpdate_newIdentifiers.count;
+		
+		[_tblActivity beginUpdates];
+		
+		while ((incIdx < incremental.count) || (newIdx < newCount))
+		{
+			NSString *incIdentifier = nil;
+			NSString *newIdentifier = nil;
+			
+			if (incIdx < incremental.count) {
+				incIdentifier = incremental[incIdx];
+			}
+			if (newIdx < newCount) {
+				newIdentifier = tableViewUpdate_newIdentifiers[newIdx];
+			}
+			
+			if (incIdentifier)
+			{
+				if (newIdentifier)
+				{
+					// Multiple things to check here:
+					// - was incIdentifier deleted ?
+					// - was newIdentifier added ?
+					// - was some oldIdentifer moved FORWARD ?
+					
+					if ([incIdentifier isEqualToString:newIdentifier])
+					{
+						incIdx++;
+						newIdx++;
+					}
+					else if (![tableViewUpdate_newIdentifiers containsObject:incIdentifier])
+					{
+						NSIndexPath *indexPath = [NSIndexPath indexPathForRow:incIdx inSection:0];
+						UITableViewRowAnimation opts = UITableViewRowAnimationBottom;
+						
+						[_tblActivity deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:opts];
+						[incremental removeObjectAtIndex:incIdx];
+					}
+					else if (![incremental containsObject:newIdentifier])
+					{
+						NSIndexPath *indexPath = [NSIndexPath indexPathForRow:incIdx inSection:0];
+						UITableViewRowAnimation opts = UITableViewRowAnimationBottom;
+						
+						[_tblActivity insertRowsAtIndexPaths:@[indexPath] withRowAnimation:opts];
+						[incremental insertObject:newIdentifier atIndex:incIdx];
+						
+						incIdx++;
+						newIdx++;
+					}
+					else
+					{
+						// Item exists in both old & new states.
+						// But it's position has been moved.
+						
+						NSUInteger prvIncIdx = [incremental indexOfObject:newIdentifier];
+						NSUInteger newIncIdx = incIdx;
+						
+						NSAssert(prvIncIdx != newIncIdx, @"Logic error");
+						
+						NSIndexPath *prvIdxPath = [NSIndexPath indexPathForRow:prvIncIdx inSection:0];
+						NSIndexPath *newIdxPath = [NSIndexPath indexPathForRow:newIncIdx inSection:0];
+						
+						[_tblActivity moveRowAtIndexPath:prvIdxPath toIndexPath:newIdxPath];
+						[incremental moveObjectsAtIndexes:[NSIndexSet indexSetWithIndex:prvIncIdx] toIndex:newIncIdx];
+						
+						incIdx++;
+						newIdx++;
+					}
+				}
+				else
+				{
+					// Only thing we have to check here:
+					// - was oldIdentifier deleted ?
+					
+					if (![tableViewUpdate_newIdentifiers containsObject:incIdentifier])
+					{
+						NSIndexPath *indexPath = [NSIndexPath indexPathForRow:incIdx inSection:0];
+						UITableViewRowAnimation opts = UITableViewRowAnimationBottom;
+						
+						[_tblActivity deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:opts];
+						[incremental removeObjectAtIndex:incIdx];
+					}
+				}
+			}
+			else if (newIdentifier)
+			{
+				// Only thing we have to check here:
+				// - was newIdentifier added ?
+				
+				if (![incremental containsObject:newIdentifier])
+				{
+					NSIndexPath *indexPath = [NSIndexPath indexPathForRow:incIdx inSection:0];
+					UITableViewRowAnimation opts = UITableViewRowAnimationBottom;
+					
+					[_tblActivity insertRowsAtIndexPaths:@[indexPath] withRowAnimation:opts];
+					[incremental insertObject:newIdentifier atIndex:incIdx];
+					
+					incIdx++;
+					newIdx++;
+				}
+			}
+		}
+		
+		NSAssert([incremental isEqual:tableViewUpdate_newIdentifiers], @"Logic error");
+		
+		[_tblActivity endUpdates];
+	}
+	
+	// Step 3 of 3:
+	//
+	// Re-select the row(s) that were previously selected (if they still exist)
+	
+	NSUInteger rowIdx = 0;
+	for (NSString *identifier in tableViewUpdate_newIdentifiers)
+	{
+		if ([tableViewUpdate_oldSelectedIdentifiers containsObject:identifier])
+		{
+			NSIndexPath *indexPath = [NSIndexPath indexPathForRow:rowIdx inSection:0];
+			
+			[_tblActivity selectRowAtIndexPath:indexPath animated:NO scrollPosition:UITableViewScrollPositionNone];
+		}
+		rowIdx++;
+	}
 }
 
 @end

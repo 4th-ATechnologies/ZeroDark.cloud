@@ -1,6 +1,6 @@
 /**
  * ZeroDark.cloud Framework
- * 
+ *
  * Homepage      : https://www.zerodark.cloud
  * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
  * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
@@ -8,14 +8,16 @@
 **/
 
 #import <UIKit/UIKit.h>
-@class ZeroDarkCloud;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ActivityMonitor_IOS : UIViewController
+@protocol ActivityMonitorTableCellProtocol <NSObject>
+@required
 
-- (instancetype)initWithOwner:(ZeroDarkCloud*)inOwner
-						localUserID:(NSString* __nullable)inLocalUserID;
+@property (nonatomic, strong) IBOutlet UIProgressView *horizontalProgress;
+
+@property (nonatomic, strong) IBOutlet UILabel *networkThroughput;
+@property (nonatomic, strong) IBOutlet UILabel *timeRemaining;
 
 @end
 
