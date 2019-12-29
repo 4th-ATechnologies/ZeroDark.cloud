@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>ZDCCryptoFile Class Reference</title>
+    <title>ZDCSyncManagerNotificationInfo Class Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset="utf-8">
@@ -14,9 +14,9 @@
   </head>
   <body>
 
-    <a name="//apple_ref/objc/Class/ZDCCryptoFile" class="dashAnchor"></a>
+    <a name="//apple_ref/objc/Class/ZDCSyncManagerNotificationInfo" class="dashAnchor"></a>
 
-    <a title="ZDCCryptoFile Class Reference"></a>
+    <a title="ZDCSyncManagerNotificationInfo Class Reference"></a>
 
     <header class="header">
       <p class="header-col header-col--primary">
@@ -38,7 +38,7 @@
     <p class="breadcrumbs">
       <a class="breadcrumb" href="../index.html">ZeroDarkCloud Reference</a>
       <img class="carat" src="../img/carat.png" />
-      ZDCCryptoFile Class Reference
+      ZDCSyncManagerNotificationInfo Class Reference
     </p>
 
     <div class="content-wrapper">
@@ -671,40 +671,17 @@
 
         <section class="section">
           <div class="section-content">
-            <h1>ZDCCryptoFile</h1>
+            <h1>ZDCSyncManagerNotificationInfo</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight objective_c"><code><span class="k">@interface</span> <span class="nc">ZDCCryptoFile</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
+                  <pre class="highlight objective_c"><code><span class="k">@interface</span> <span class="nc">ZDCSyncManagerNotificationInfo</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
 
                 </div>
               </div>
-            <p>A CryptoFile instance encapsulates all the information you need to read an encrypted file.</p>
+            <p>When ZDCSyncManager posts a notification, an instance of this class is added the notification.userInfo.</p>
 
-<p>The ZeroDark.cloud framework provides a plethora of tools to read crypto files:</p>
-<li>To decrypt a small cryptoFile into memory, you can use <code><a href="../Classes/ZDCFileConversion.html#/c:objc(cs)ZDCFileConversion(cm)decryptCryptoFileIntoMemory:completionQueue:completionBlock:">+[ZDCFileConversion decryptCryptoFileIntoMemory:completionQueue:completionBlock:]</a></code>.</li>
-<li>To decrypt a larger cryptoFile, use <code><a href="../Classes/ZDCFileConversion.html#/c:objc(cs)ZDCFileConversion(cm)decryptCryptoFile:completionQueue:completionBlock:">+[ZDCFileConversion decryptCryptoFile:completionQueue:completionBlock:]</a></code>.</li>
-<li>To read a cryptoFile as a stream, you can use either <code><a href="../Classes/CloudFile2CleartextInputStream.html">CloudFile2CleartextInputStream</a></code> or <code><a href="../Classes/CacheFile2CleartextInputStream.html">CacheFile2CleartextInputStream</a></code> depending on the fileFormat.</li>
-<li><p>To randomly access data within a cryptoFile, use the <code><a href="../Classes/ZDCFileReader.html">ZDCFileReader</a></code> class.</p></li>
-<div class="aside aside-see">
-    <p class="aside-title">See</p>
-    <p><code><a href="../Classes/ZDCFileConversion.html">ZDCFileConversion</a></code></p>
-
-</div>
-<div class="aside aside-see">
-    <p class="aside-title">See</p>
-    <p><code><a href="../Classes/ZDCFileReader.html">ZDCFileReader</a></code></p>
-
-</div>
-<div class="aside aside-see">
-    <p class="aside-title">See</p>
-    <p><code><a href="../Classes/CloudFile2CleartextInputStream.html">CloudFile2CleartextInputStream</a></code></p>
-
-</div>
-<div class="aside aside-see">
-    <p class="aside-title">See</p>
-    <p><code><a href="../Classes/CacheFile2CleartextInputStream.html">CacheFile2CleartextInputStream</a></code></p>
-
-</div>
+<p>You can extract the info via:
+ <code>notification.userInfo[kZDCSyncManagerNotificationInfo] as? ZDCSyncManagerNotificationInfo</code></p>
 
           </div>
         </section>
@@ -716,9 +693,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCCryptoFile(im)initWithFileURL:fileFormat:encryptionKey:retainToken:"></a>
-                    <a name="//apple_ref/objc/Method/-initWithFileURL:fileFormat:encryptionKey:retainToken:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCCryptoFile(im)initWithFileURL:fileFormat:encryptionKey:retainToken:">-initWithFileURL:fileFormat:encryptionKey:retainToken:</a>
+                    <a name="/c:objc(cs)ZDCSyncManagerNotificationInfo(py)localUserID"></a>
+                    <a name="//apple_ref/objc/Property/localUserID" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCSyncManagerNotificationInfo(py)localUserID">localUserID</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -726,22 +703,19 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Designated initializer</p>
+                        <p>A reference to the localUser being pulled/pushed. (localUserID == ZDCLocalUser.uuid)</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithFileURL</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">fileURL</span>
-                             <span class="nf">fileFormat</span><span class="p">:(</span><span class="n"><a href="../Enums/ZDCCryptoFileFormat.html">ZDCCryptoFileFormat</a></span><span class="p">)</span><span class="nv">fileFormat</span>
-                          <span class="nf">encryptionKey</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSData</span> <span class="o">*</span><span class="p">)</span><span class="nv">encryptionKey</span>
-                            <span class="nf">retainToken</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">id</span><span class="p">)</span><span class="nv">retainToken</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">copy</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">localUserID</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="nf">init</span><span class="p">(</span><span class="nv">fileURL</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">fileFormat</span><span class="p">:</span> <span class="kt"><a href="../Enums/ZDCCryptoFileFormat.html">ZDCCryptoFileFormat</a></span><span class="p">,</span> <span class="nv">encryptionKey</span><span class="p">:</span> <span class="kt">Data</span><span class="p">,</span> <span class="nv">retainToken</span><span class="p">:</span> <span class="kt">Any</span><span class="p">?)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">localUserID</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -751,9 +725,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCCryptoFile(py)fileURL"></a>
-                    <a name="//apple_ref/objc/Property/fileURL" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCCryptoFile(py)fileURL">fileURL</a>
+                    <a name="/c:objc(cs)ZDCSyncManagerNotificationInfo(py)treeID"></a>
+                    <a name="//apple_ref/objc/Property/treeID" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCSyncManagerNotificationInfo(py)treeID">treeID</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -761,19 +735,19 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The location of the file on disk.</p>
+                        <p>The treeID of the system being pulled/pushed. (e.g. <q>com.busines.myApp</q>)</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">strong</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSURL</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">fileURL</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">copy</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">treeID</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">fileURL</span><span class="p">:</span> <span class="kt">URL</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">treeID</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -783,9 +757,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCCryptoFile(py)fileFormat"></a>
-                    <a name="//apple_ref/objc/Property/fileFormat" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCCryptoFile(py)fileFormat">fileFormat</a>
+                    <a name="/c:objc(cs)ZDCSyncManagerNotificationInfo(py)pullResult"></a>
+                    <a name="//apple_ref/objc/Property/pullResult" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCSyncManagerNotificationInfo(py)pullResult">pullResult</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -793,87 +767,20 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The encryption format being used to store the file.</p>
+                        <p>If the notification was via ZDCPullStoppedNotification,
+this value contains information about whether or not the pull succeeded or failed.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n"><a href="../Enums/ZDCCryptoFileFormat.html">ZDCCryptoFileFormat</a></span> <span class="n">fileFormat</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n"><a href="../Enums/ZDCPullResult.html">ZDCPullResult</a></span> <span class="n">pullResult</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">fileFormat</span><span class="p">:</span> <span class="kt"><a href="../Enums/ZDCCryptoFileFormat.html">ZDCCryptoFileFormat</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:objc(cs)ZDCCryptoFile(py)encryptionKey"></a>
-                    <a name="//apple_ref/objc/Property/encryptionKey" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCCryptoFile(py)encryptionKey">encryptionKey</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>The encryption key used to encrypt/decrypt the file.
-This is a symmetric key, typically 512 bits for use with Threefish-512.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">copy</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSData</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">encryptionKey</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">encryptionKey</span><span class="p">:</span> <span class="kt">Data</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:objc(cs)ZDCCryptoFile(py)retainToken"></a>
-                    <a name="//apple_ref/objc/Property/retainToken" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCCryptoFile(py)retainToken">retainToken</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>If the file is being managed by the DiskManager, the retainToken may be non-nil.</p>
-
-<p>As long as the retainToken remains in memory (isn&rsquo;t deallocated),
- the DiskManager considers the file to still be in use, and won&rsquo;t delete the file from disk.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">strong</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">id</span> <span class="n">retainToken</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">retainToken</span><span class="p">:</span> <span class="kt">Any</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">pullResult</span><span class="p">:</span> <span class="kt"><a href="../Enums/ZDCPullResult.html">ZDCPullResult</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
