@@ -77,7 +77,7 @@ extern NSString *const kNotificationsKey;
 
 /**
  * YapDatabase extension of type: YapDatabaseRelationship <br/>
- * Access via: [transaction ext:Ext_Relationship]
+ * Access via: `transaction.ext(Ext_Relationship) as? YapDatabaseRelationshipTransaction`
  *
  * Used by the framework to link various objects together such that
  * deleting object A will automatically delete object B.
@@ -86,7 +86,7 @@ extern NSString *const Ext_Relationship;
 
 /**
  * YapDatabase extension of type: YapDatabaseSecondaryIndex <br/>
- * Access via: [transaction ext:Ext_Index_Nodes]
+ * Access via: `transaction.ext(Ext_Index_Nodes) as? YapDatabaseSecondaryIndexTransaction`
  *
  * Indexes ZDCNode's by properties 'cloudID' & 'dirPrefix' for quick lookup.
  */
@@ -94,7 +94,7 @@ extern NSString *const Ext_Index_Nodes;
 
 /**
  * YapDatabase extension of type: YapDatabaseSecondaryIndex <br/>
- * Access via: [transaction ext:Ext_Index_Nodes]
+ * Access via: `transaction.ext(Ext_Index_Users) as? YapDatabaseSecondaryIndexTransaction`
  *
  * Indexes ZDCUser's by property 'random_uuid' for quick lookup.
  */
@@ -103,17 +103,23 @@ extern NSString *const Ext_Index_Users;
 
 /**
  * YapDatabase extension of type: YapDatabaseAutoView <br/>
- * Access via: [transaction ext:Ext_View_SplitKeys]
+ * Access via: `transaction.ext(Ext_View_SplitKeys) as? YapDatabaseAutoViewTransaction`
  *
- * Organizes ZDCSplitKey for convenience & quick enumeration.
- *
+ * Organizes ZDCSplitKey's for convenience & quick enumeration.
  */
 extern NSString *const Ext_View_SplitKeys;
+
+/**
+ * YapDatabase extension of type: YapDatabaseAutoView <br/>
+ * Access via: `transaction.ext(Ext_View_SplitKeys_Date) as? YapDatabaseAutoViewTransaction`
+ *
+ * Organizes ZDCSplitKey's for convenience & quick enumeration.
+*/
 extern NSString *const Ext_View_SplitKeys_Date;
 
 /**
  * YapDatabase extension of type: YapDatabaseAutoView <br/>
- * Access via: [transaction ext:Ext_View_LocalUsers]
+ * Access via: `transaction.ext(Ext_View_LocalUsers) as? YapDatabaseAutoViewTransaction`
  *
  * Organizes ZDCLocalUser's for convenience & quick enumeration.
  *
@@ -123,31 +129,37 @@ extern NSString *const Ext_View_LocalUsers;
 
 /**
  * YapDatabase extension of type: YapDatabaseAutoView <br/>
- * Access via: [transaction ext:Ext_View_Treesystem_Name]
+ * Access via: `transaction.ext(Ext_View_Treesystem_Name) as? YapDatabaseAutoViewTransaction`
  *
  * Organizes ZDCNode's into a hierarchial view, grouped by parentID & sorted by name.
+ *
+ * @note The ZDCUserManager has LOTS of methods for enumerating & searching the treesystem.
  */
 extern NSString *const Ext_View_Treesystem_Name;
 
 /**
  * YapDatabase extension of type: YapDatabaseAutoView <br/>
- * Access via: [transaction ext:Ext_View_Treesystem_CloudName]
+ * Access via: `transaction.ext(Ext_View_Treesystem_CloudName) as? YapDatabaseAutoViewTransaction`
  *
  * Organizes ZDCNode's into a hierarchial view, grouped by parentID & sorted by cloudName.
+ *
+ * @note The ZDCUserManager has LOTS of methods for enumerating & searching the treesystem.
  */
 extern NSString *const Ext_View_Treesystem_CloudName;
 
 /**
  * YapDatabase extension of type: YapDatabaseAutoView <br/>
- * Access via: [transaction ext:Ext_View_Flat]
+ * Access via: `transaction.ext(Ext_View_Flat) as? YapDatabaseAutoViewTransaction`
  *
  * Organizes ZDCNode's into a "flat" view, grouped by {localUserID, treeID} tuple & sorted by uuid.
+ *
+ * @note The ZDCUserManager has LOTS of methods for enumerating & searching the treesystem.
  */
 extern NSString *const Ext_View_Flat;
 
 /**
  * YapDatabase extension of type: YapDatabaseAutoView <br/>
- * Access via: [transaction ext:Ext_View_CloudNode_DirPrefix]
+ * Access via: `transaction.ext(Ext_View_CloudNode_DirPrefix) as? YapDatabaseAutoViewTransaction`
  *
  * Organizes ZDCCloudNode's into a hierarchial view, grouped by dirPrefix & sorted by cloudName.
  */
@@ -155,7 +167,7 @@ extern NSString *const Ext_View_CloudNode_DirPrefix;
 
 /**
  * YapDatabase extension of type: YapDatabaseAutoView <br/>
- * Access via: [transaction ext:Ext_View_Cloud_Flat]
+ * Access via: `transaction.ext(Ext_View_Cloud_Flat) as? YapDatabaseAutoViewTransaction`
  *
  * Organizes ZDCCloudNode's into a flat view, grouped by {localUserID, treeID} tuple & sorted by uuid.
  */

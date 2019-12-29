@@ -114,9 +114,24 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Instances of this class are created by `-[ZDCUserManager sortedUnambiguousNamesForUsers:]`.
+ */
 @interface ZDCUserDisplay : NSObject
 
+/**
+ * The userID (i.e. ZDCUser.uuid)
+ */
 @property (nonatomic, readonly) NSString *userID;
+
+/**
+ * A unique name for the user, within the context of the returned array.
+ *
+ * For example, if there are 2 users with the displayName of "Vinnie Moscaritolo",
+ * then the display names for each may be something like:
+ * - "Vinnie Moscaritolo (Amazon)"
+ * - "Vinnie Moscaritolo (Facebook)"
+ */
 @property (nonatomic, readonly) NSString *displayName;
 
 @end

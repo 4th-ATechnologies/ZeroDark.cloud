@@ -11,6 +11,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/**
+ * You're always welcome to audit your user data stored in the cloud.
+ *
+ * You can find instructions in the docs:
+ * https://zerodarkcloud.readthedocs.io/en/latest/overview/audit/
+ *
+ * This class exposes the AWS credentials needed to inspect the cloud.
+ */
 @interface ZDCAudit : NSObject
 
 /**
