@@ -45,6 +45,14 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)invokeCompletionHandlerForBackgroundURLSession:(NSString *)sessionIdentifier;
 
+#if TARGET_OS_IOS
+/**
+ * Returns the result of calling:
+ * `[UIImage imageNamed:name inBundle:[ZeroDarkCloud frameworkBundle] compatibleWithTraitCollection:nil]`
+ */
++ (nullable UIImage *)imageNamed:(NSString *)name;
+#endif
+
 @end
 
 NS_ASSUME_NONNULL_END

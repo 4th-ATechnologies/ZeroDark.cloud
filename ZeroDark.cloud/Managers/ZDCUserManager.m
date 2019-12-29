@@ -50,7 +50,7 @@
 	if ((self = [super init]))
 	{
 		_userID = [userID copy];
-		_displayName = [_displayName copy];
+		_displayName = [displayName copy];
 	}
 	return self;
 }

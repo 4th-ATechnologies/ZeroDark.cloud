@@ -18,7 +18,6 @@
 		2E0C415F220A536200D05BC9 /* UIAlertController+TextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E0C415E220A536200D05BC9 /* UIAlertController+TextField.swift */; };
 		2E0C4164220B658200D05BC9 /* SSCheckMark.m in Sources */ = {isa = PBXBuildFile; fileRef = 2E0C4163220B658200D05BC9 /* SSCheckMark.m */; };
 		2E3826372228932000D00BDB /* TaskPhotoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E3826362228932000D00BDB /* TaskPhotoViewController.swift */; };
-		2E51A2FA223DC8F200B2036F /* IconTitleButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 2E51A2F8223DC8F200B2036F /* IconTitleButton.m */; };
 		2E5C092522591F2200AC7DDC /* ListsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E0C413A2207A15400D05BC9 /* ListsViewController.swift */; };
 		2E76DF2A220DE85200F96E6D /* BadgedBarButtonItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 2E76DF29220DE85200F96E6D /* BadgedBarButtonItem.m */; };
 		2E76DF34220E1F3800F96E6D /* UIImage+scaling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E76DF33220E1F3800F96E6D /* UIImage+scaling.swift */; };
@@ -34,6 +33,7 @@
 		D2DDE8E294018817B771FD77 /* Pods_ZeroDarkTodo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 125DE18DB100289358355251 /* Pods_ZeroDarkTodo.framework */; };
 		DC1A75AD2268CD4C009E5C4E /* CloudCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1A75AC2268CD4C009E5C4E /* CloudCodable.swift */; };
 		DC7DD80522D3B18000677034 /* Invitation.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC7DD80422D3B18000677034 /* Invitation.swift */; };
+		DC95FA2C23B925B00003B137 /* IconTitleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC95FA2B23B925B00003B137 /* IconTitleButton.swift */; };
 		DCB1A6BA2301FE3100414198 /* CustomLogFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCB1A6B92301FE3100414198 /* CustomLogFormatter.swift */; };
 		DCDDC32B2377592C00A5358D /* DBManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDDC32A2377592C00A5358D /* DBManager.swift */; };
 /* End PBXBuildFile section */
@@ -57,8 +57,6 @@
 		2E0C4162220B658100D05BC9 /* SSCheckMark.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSCheckMark.h; sourceTree = "<group>"; };
 		2E0C4163220B658200D05BC9 /* SSCheckMark.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSCheckMark.m; sourceTree = "<group>"; };
 		2E3826362228932000D00BDB /* TaskPhotoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskPhotoViewController.swift; sourceTree = "<group>"; };
-		2E51A2F8223DC8F200B2036F /* IconTitleButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IconTitleButton.m; sourceTree = "<group>"; };
-		2E51A2F9223DC8F200B2036F /* IconTitleButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IconTitleButton.h; sourceTree = "<group>"; };
 		2E76DF26220DE5B800F96E6D /* Podfile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Podfile; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		2E76DF28220DE85200F96E6D /* BadgedBarButtonItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BadgedBarButtonItem.h; path = "ZeroDarkTodo/UI tools/BadgedBarButtonItem.h"; sourceTree = SOURCE_ROOT; };
 		2E76DF29220DE85200F96E6D /* BadgedBarButtonItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BadgedBarButtonItem.m; path = "ZeroDarkTodo/UI tools/BadgedBarButtonItem.m"; sourceTree = SOURCE_ROOT; };
@@ -78,6 +76,7 @@
 		DC1A75AC2268CD4C009E5C4E /* CloudCodable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudCodable.swift; sourceTree = "<group>"; };
 		DC349B1122342B3000F1542F /* ZeroDarkTodo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ZeroDarkTodo.entitlements; sourceTree = "<group>"; };
 		DC7DD80422D3B18000677034 /* Invitation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Invitation.swift; sourceTree = "<group>"; };
+		DC95FA2B23B925B00003B137 /* IconTitleButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IconTitleButton.swift; sourceTree = "<group>"; };
 		DCB1A6B92301FE3100414198 /* CustomLogFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomLogFormatter.swift; sourceTree = "<group>"; };
 		DCDDC32A2377592C00A5358D /* DBManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DBManager.swift; sourceTree = "<group>"; };
 		FD3A0A739677846855EBB67E /* Pods-ios-ZeroDarkTodo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ios-ZeroDarkTodo.debug.xcconfig"; path = "Target Support Files/Pods-ios-ZeroDarkTodo/Pods-ios-ZeroDarkTodo.debug.xcconfig"; sourceTree = "<group>"; };
@@ -148,13 +147,12 @@
 		2E76DF27220DE84200F96E6D /* UI tools */ = {
 			isa = PBXGroup;
 			children = (
+				DC95FA2B23B925B00003B137 /* IconTitleButton.swift */,
 				2E76DF33220E1F3800F96E6D /* UIImage+scaling.swift */,
 				2E0C4162220B658100D05BC9 /* SSCheckMark.h */,
 				2E0C4163220B658200D05BC9 /* SSCheckMark.m */,
 				2E76DF28220DE85200F96E6D /* BadgedBarButtonItem.h */,
 				2E76DF29220DE85200F96E6D /* BadgedBarButtonItem.m */,
-				2E51A2F9223DC8F200B2036F /* IconTitleButton.h */,
-				2E51A2F8223DC8F200B2036F /* IconTitleButton.m */,
 			);
 			path = "UI tools";
 			sourceTree = "<group>";
@@ -324,13 +322,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC95FA2C23B925B00003B137 /* IconTitleButton.swift in Sources */,
 				2E76DF34220E1F3800F96E6D /* UIImage+scaling.swift in Sources */,
 				2E3826372228932000D00BDB /* TaskPhotoViewController.swift in Sources */,
 				DC1A75AD2268CD4C009E5C4E /* CloudCodable.swift in Sources */,
 				2E5C092522591F2200AC7DDC /* ListsViewController.swift in Sources */,
 				2E0C41502207CC5900D05BC9 /* Task.swift in Sources */,
 				DCB1A6BA2301FE3100414198 /* CustomLogFormatter.swift in Sources */,
-				2E51A2FA223DC8F200B2036F /* IconTitleButton.m in Sources */,
 				2E9D044C2229DFA20070D2E5 /* InitialViewController.swift in Sources */,
 				2E0C41522207D49400D05BC9 /* TaskDetailsViewController.swift in Sources */,
 				2E0C4164220B658200D05BC9 /* SSCheckMark.m in Sources */,

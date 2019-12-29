@@ -53,6 +53,22 @@ typedef NS_ENUM(NSInteger, ZDCProgressType) {
 };
 
 /**
+ * When a NSProgress instance is registered with the ProgressManager,
+ * the ProgressManager automatically sets this value within the NSProgress.userInfo dictionary.
+ *
+ * The value is of type ZDCProgressType (the enum value is wrapped in NSNumber).
+ */
+extern NSString *const ZDCProgressTypeKey;
+
+/**
+ * When a NSProgress instance of type ZDCProgressType_MetaDownload is registered with the ProgressManager,
+ * the ProgressManager automatically sets this value within the NSProgress.userInfo dictionary.
+ *
+ * The value is of type ZDCNodeMetaComponents (the enum value is wrapped in NSNumber)
+ */
+extern NSString *const ZDCNodeMetaComponentsKey;
+
+/**
  * Reports the results of an upload attempt.
  * If an upload fails the PushManager may still be able to recover.
  */
@@ -99,8 +115,11 @@ typedef void (^UploadCompletionBlock)(BOOL success);
 
 /**
  * If available, returns the download progress of the node.
+ *
  * If there are currently multiple downloads for the node,
- * the priority is (from highest to lowest): 'data', 'all-meta', 'thumbnail', 'metadata', 'header'.
+ * the selection priority is (from highest to lowest): 'data', 'all-meta', 'thumbnail', 'metadata', 'header'.
+ * You can extract the ZDCProgressType value via `progress.userInfo[ZDCProgressTypeKey]`.
+ * You can extract the ZDCNodeMetaComponents value via `progress.userInfo[ZDCNodeMetaComponentsKey]`.
  *
  * @param nodeID
  *   The node you're interested in. (nodeID == ZDCNode.uuid)
@@ -134,7 +153,8 @@ typedef void (^UploadCompletionBlock)(BOOL success);
  * If available, returns the 'meta' download progress of the node.
  *
  * If multiple 'meta' downloads exist for the given node,
- * the priority is (from highest to lowest): 'all-meta', 'thumbnail', 'metadata', 'header'.
+ * the selection priority is (from highest to lowest): 'all-meta', 'thumbnail', 'metadata', 'header'.
+ * You can extract the ZDCNodeMetaComponents value via `progress.userInfo[ZDCNodeMetaComponentsKey]`.
  *
  * @param nodeID
  *   The node you're interested in. (nodeID == ZDCNode.uuid)
@@ -145,7 +165,8 @@ typedef void (^UploadCompletionBlock)(BOOL success);
  * If available, returns the 'meta' download progress of the node.
  *
  * If you pass nil for the components parameter, and multiple downloads exist,
- * the priority is (from highest to lowest): 'all-meta', 'thumbnail', 'metadata', 'header'.
+ * the selection priority is (from highest to lowest): 'all-meta', 'thumbnail', 'metadata', 'header'.
+ * You can extract the ZDCNodeMetaComponents value via `progress.userInfo[ZDCNodeMetaComponentsKey]`.
  *
  * @param nodeID
  *   The node you're interested in. (nodeID == ZDCNode.uuid)
@@ -162,7 +183,8 @@ typedef void (^UploadCompletionBlock)(BOOL success);
  * If the completionBlock is non-nil, then it will be invoked upon download completion.
  *
  * If multiple 'meta' downloads exist for the given node,
- * the priority is (from highest to lowest): 'all-meta', 'thumbnail', 'metadata', 'header'.
+ * the selection priority is (from highest to lowest): 'all-meta', 'thumbnail', 'metadata', 'header'.
+ * You can extract the ZDCNodeMetaComponents value via `progress.userInfo[ZDCNodeMetaComponentsKey]`.
  *
  * @note The progress manager supports multiple {completionBlock, completionQueue} tuples.
  *       All of them will be invoked upon download completion.
@@ -188,7 +210,8 @@ typedef void (^UploadCompletionBlock)(BOOL success);
  *
  * If you pass nil for the components parameter,
  * and multiple 'meta' downloads exist for the given node,
- * the priority is (from highest to lowest): 'all-meta', 'thumbnail', 'metadata', 'header'.
+ * the selection priority is (from highest to lowest): 'all-meta', 'thumbnail', 'metadata', 'header'.
+ * You can extract the ZDCNodeMetaComponents value via `progress.userInfo[ZDCNodeMetaComponentsKey]`.
  *
  * @note The progress manager supports multiple {completionBlock, completionQueue} tuples.
  *       All of them will be invoked upon download completion.
@@ -218,7 +241,8 @@ typedef void (^UploadCompletionBlock)(BOOL success);
  * That is, a {completionQueue, completionBlock} for the download.
  *
  * If multiple 'meta' downloads exist for the given node,
- * the priority is (from highest to lowest): 'all-meta', 'thumbnail', 'metadata', 'header'.
+ * the selection priority is (from highest to lowest): 'all-meta', 'thumbnail', 'metadata', 'header'.
+ * You can extract the ZDCNodeMetaComponents value via `progress.userInfo[ZDCNodeMetaComponentsKey]`.
  *
  * This method is the same as calling `metaDownloadProgressForNodeID:completionQueue:completionBlock:`,
  * and then ignoring the return value. It's just named better. And you won't have to worry
@@ -251,7 +275,8 @@ typedef void (^UploadCompletionBlock)(BOOL success);
  *
  * If you pass nil for the components parameter,
  * and multiple 'meta' downloads exist for the given node,
- * the priority is (from highest to lowest): 'all-meta', 'thumbnail', 'metadata', 'header'.
+ * the selection priority is (from highest to lowest): 'all-meta', 'thumbnail', 'metadata', 'header'.
+ * You can extract the ZDCNodeMetaComponents value via `progress.userInfo[ZDCNodeMetaComponentsKey]`.
  *
  * This method is the same as calling `metaDownloadProgressForNodeID:components:completionQueue:completionBlock:`,
  * and then ignoring the return value. It's just named better. And you won't have to worry
@@ -308,13 +333,18 @@ typedef void (^UploadCompletionBlock)(BOOL success);
  * This doesn't stop the download, it just removes the listener.
  *
  * @note The completionBlock may still be invoked if it's already be dispatched.
+ *
+ * If you have an existing progress instance, but you don't know what components parameter to use:
+ * You can extract the ZDCNodeMetaComponents value via `progress.userInfo[ZDCNodeMetaComponentsKey]`.
  */
 - (void)removeMetaDownloadListenerForNodeID:(NSString *)nodeID
                                  components:(ZDCNodeMetaComponents)components
                             completionBlock:(NodeMetaDownloadCompletionBlock)completionBlock;
 
 /**
- * Removes the associated download progress,
+ * The party responsible for executing the download invokes this method once the download has terminated.
+ *
+ * This method removes the associated download progress,
  * and then invokes all the queued completionBlocks with the given parameters.
  */
 - (void)removeMetaDownloadProgressForNodeID:(NSString *)nodeID
@@ -434,7 +464,9 @@ typedef void (^UploadCompletionBlock)(BOOL success);
                             completionBlock:(NodeDataDownloadCompletionBlock)completionBlock;
 
 /**
- * Removes the associated download progress,
+ * The party responsible for executing the download invokes this method once the download has terminated.
+ *
+ * This method removes the associated download progress,
  * and then invokes all the queued completionBlocks with the given parameters.
  */
 - (void)removeDataDownloadProgressForNodeID:(NSString *)nodeID
@@ -550,7 +582,9 @@ typedef void (^UploadCompletionBlock)(BOOL success);
              forOperation:(ZDCCloudOperation *)operation;
 
 /**
- * Removes the associated upload progress,
+ * The party responsible for executing the upload invokes this method once the upload has terminated.
+ *
+ * This method removes the associated upload progress,
  * and then invokes all the queued completionBlocks with the given parameter.
  */
 - (void)removeUploadProgressForOperationUUID:(NSUUID *)operationID

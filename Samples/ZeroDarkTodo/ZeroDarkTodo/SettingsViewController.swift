@@ -14,8 +14,8 @@ class AccountsTableViewCell : UITableViewCell
 {
 	@IBOutlet public var userName : UILabel!
 	@IBOutlet public var userAvatar : UIImageView!
+	
 	var userID : String?
-
 }
 
 protocol SettingsTableHeaderViewDelegate: class {
@@ -50,8 +50,6 @@ class SettingsTableHeaderView : UITableViewCell
 			delegate?.settingsTableHeaderAddTapped( tableview: tableview)
 		}
 	}
-
-
 }
 
 protocol SettingsViewControllerDelegate: class {
@@ -59,24 +57,25 @@ protocol SettingsViewControllerDelegate: class {
 
 
 class SettingsViewController: UIViewController,
-	UITableViewDelegate, UITableViewDataSource,
-SettingsTableHeaderViewDelegate {
-
-
-	let kSection_Accounts 	= 0
-	let kSection_Options 	= 1
-	let kSection_Last 		= 2
-
-	let kOptions_Activity 	= 0
-	let kOptions_Row_1 		= 1
-	let kOptions_Row_Last 	= 2
+                              UITableViewDelegate,
+                              UITableViewDataSource,
+                              SettingsTableHeaderViewDelegate
+{
+	enum Section: Int, CaseIterable {
+		 case accounts
+		 case options
+	}
+	
+	enum Options: Int, CaseIterable {
+		case activity
+	}
 
 	@IBOutlet public var tblButtons : UITableView!
 
 	var databaseConnection :YapDatabaseConnection!
 
 	weak var delegate : SettingsViewControllerDelegate!
-	var localUsersInfo: [[String: Any]] = []
+	var sortedLocalUserInfo: [ZDCUserDisplay] = []
 	var warningImage : UIImage!
 
 	var preferedWidth: CGFloat
@@ -106,12 +105,8 @@ SettingsTableHeaderViewDelegate {
 		return vc!
 	}
 
-     override func viewDidLoad() {
-        super.viewDidLoad()
-	}
-
 	override func viewWillAppear(_ animated: Bool) {
-		self.navigationItem.title =  NSLocalizedString("Settings", comment: "")
+		self.navigationItem.title = NSLocalizedString("Settings", comment: "")
 
 		self.setupDatabaseConnection()
 		self.refreshView()
@@ -121,26 +116,18 @@ SettingsTableHeaderViewDelegate {
 		
 		let zdc = ZDCManager.zdc()
 		
-		var users: [[String: Any]] = []
 		databaseConnection.read { (transaction) in
 			
-			zdc.localUserManager?.enumerateLocalUsers(with: transaction, using:
-			{ (localUser, stop) in
-				
-				users.append([
-					"uuid"        :  localUser.uuid,
-					"displayName" : localUser.displayName
-				])
-			})
+			let localUsers = zdc.localUserManager!.allLocalUsers(transaction)
+			self.sortedLocalUserInfo = zdc.userManager!.sortedUnambiguousNames(for: localUsers)
 		}
 		
-		localUsersInfo = users
 		self.tblButtons.reloadData()
 	}
 
-
-	// MARK: - database
-
+	/////////////////////////////////////////////
+	// MARK: Database
+	/////////////////////////////////////////////
 
 	private func setupDatabaseConnection()
 	{
@@ -155,55 +142,51 @@ SettingsTableHeaderViewDelegate {
 
 	@objc func databaseConnectionDidUpdate(notification: Notification) {
 
-		let notifications = notification.userInfo?[kNotificationsKey] as! [Notification]
- 		let extLocalUsers =  databaseConnection.ext(Ext_View_LocalUsers) as! YapDatabaseViewConnection
-		let localUserChanges = extLocalUsers.hasChanges(for: notifications)
-
- 		let hasChanges = localUserChanges
-
-		if(hasChanges)
+		if let notifications = notification.userInfo?[kNotificationsKey] as? [Notification],
+ 			let extLocalUsers = databaseConnection.ext(Ext_View_LocalUsers) as? YapDatabaseViewConnection
 		{
-			self.refreshView()
+ 			let hasChanges = extLocalUsers.hasChanges(for: notifications)
+		
+			if hasChanges {
+				
+				self.refreshView()
+			}
 		}
-
 	}
 
-
-	// MARK: - Tableview
-
+	/////////////////////////////////////////////
+	// MARK: Tableview
+	/////////////////////////////////////////////
+	
 	func numberOfSections(in tableView: UITableView) -> Int {
-	//	 let count = Sections.kSection_Last.rawValue - 1
 
-		return 2
+		return Section.allCases.count
 	}
-
 
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
 
 		var result: Int = 0
 
-		switch section {
-			case kSection_Accounts:
+		switch section
+		{
+			case Section.accounts.rawValue:
 			
-			if(localUsersInfo.count > 0)
-			{
-				result =  localUsersInfo.count
-			}
-			else
-			{
- 				result = 1
-			}
+				if sortedLocalUserInfo.count > 0 {
+					result = sortedLocalUserInfo.count
+				}
+				else {
+ 					result = 1
+				}
 			
-		case kSection_Options:
-			result = kOptions_Row_Last
-
-		default:
-			result = 0
+			case Section.options.rawValue:
+			
+				result = Options.allCases.count
+			
+			default: break;
 		}
 
 		return result
 	}
-
 
 	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 
@@ -212,7 +195,7 @@ SettingsTableHeaderViewDelegate {
 		var cell: UITableViewCell? = nil
 		
 		switch indexPath.section {
-		case kSection_Accounts:
+		case Section.accounts.rawValue:
 
 			guard
 				let accountCell = tableView.dequeueReusableCell(withIdentifier: "AccountsTableViewCell") as? AccountsTableViewCell
@@ -220,7 +203,7 @@ SettingsTableHeaderViewDelegate {
 				break;
 			}
 			
-			if localUsersInfo.count == 0 {
+			if sortedLocalUserInfo.count == 0 {
 				
 				accountCell.userName.text = NSLocalizedString("Add Account", comment: "Add Account")
 				accountCell.userName.textColor = self.view.tintColor
@@ -229,19 +212,24 @@ SettingsTableHeaderViewDelegate {
 			}
 			else {
 				
-				let info = localUsersInfo[indexPath.row]
-				let uuid = info["uuid"] as? String
+				let localUserInfo: ZDCUserDisplay = sortedLocalUserInfo[indexPath.row]
+				let localUserID = localUserInfo.userID
 				
 				var localUser: ZDCLocalUser? = nil
 				databaseConnection .read { (transaction) in
 					
-					localUser = transaction.object(forKey: uuid!, inCollection: kZDCCollection_Users) as? ZDCLocalUser
+					localUser = transaction.localUser(id: localUserID)
 				}
 
 				if let localUser = localUser {
 					
-					accountCell.userName.text = info["displayName"] as? String
-					accountCell.userID =  uuid
+					if localUserInfo.displayName.count > 0 {
+						accountCell.userName.text = localUserInfo.displayName
+					} else {
+						accountCell.userName.text = "wtf"
+					}
+					
+					accountCell.userID = localUserID
 					accountCell.userName.textColor = UIColor.black
 					
 					accountCell.userAvatar.layer.cornerRadius = accountCell.userAvatar.frame.width / 2
@@ -275,11 +263,11 @@ SettingsTableHeaderViewDelegate {
 					{
 						accountCell.accessoryView = nil
 						
-						let isSelected = (uuid == AppDelegate.sharedInstance().currentLocalUserID)
-						if(isSelected){
-							accountCell.accessoryType = .checkmark;
-						}else {
-							accountCell.accessoryType = .disclosureIndicator;
+						let isSelected = (localUserID == AppDelegate.sharedInstance().currentLocalUserID)
+						if isSelected {
+							accountCell.accessoryType = .checkmark
+						} else {
+							accountCell.accessoryType = .disclosureIndicator
 						}
 					}
 				}
@@ -287,20 +275,16 @@ SettingsTableHeaderViewDelegate {
 			
 			cell = accountCell
 
-		//	case kSection_Options,
-		default:
+		case Section.options.rawValue:
 
 			cell = tableView.dequeueReusableCell(withIdentifier: "Settings-Options")
 				??  UITableViewCell.init(style: .value1, reuseIdentifier: "Settings-Options" )
 
 			var title = ""
-			switch(indexPath.row)
+			switch indexPath.row
 			{
-			case kOptions_Activity:
-				title = "Show Activity"
-
-			case kOptions_Row_1:
-				title = "do thing 2"
+			case Options.activity.rawValue:
+				title = "Show Activity Monitor"
 
 			default:
 				title = ""
@@ -308,7 +292,8 @@ SettingsTableHeaderViewDelegate {
 
 			cell?.textLabel?.text = title
 			cell?.accessoryType = .none
-
+			
+		default: break
 		}
 
 		return cell!
@@ -318,49 +303,43 @@ SettingsTableHeaderViewDelegate {
 
 		tableView.deselectRow(at: indexPath, animated: true)
 
-		if(indexPath.section == kSection_Accounts){
+		switch indexPath.section {
+		case Section.accounts.rawValue:
 
-			if (localUsersInfo.count > 0) {
+			if sortedLocalUserInfo.count > 0 {
 
-				let info = localUsersInfo[indexPath.row]
-				let  uuid = info["uuid"] as? String
+				let localUserInfo: ZDCUserDisplay = sortedLocalUserInfo[indexPath.row]
+				let localUserID = localUserInfo.userID
 
-				AppDelegate.sharedInstance().currentLocalUserID = uuid
-
+				AppDelegate.sharedInstance().currentLocalUserID = localUserID
 			}
-			else
-			{
+			else {
+				
 				self.settingsTableHeaderAddTapped(tableview: tableView)
 			}
 
-		}
-		else  if(indexPath.section == kSection_Options){
+		case Section.options.rawValue:
             
-            switch(indexPath.row)
-            {
-            case kOptions_Activity:
-                showActivityView()
+			switch indexPath.row {
+			case Options.activity.rawValue:
+				showActivityView()
                 
-            case kOptions_Row_1:
-                test2()
-                
-            default:
-               break
-            }
-
+			default: break
+			}
+			
+		default: break
 		}
-	}
-
-
-	func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-		return 0
 	}
 
 	func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
 		return 30
 	}
+	
+	func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+		return 0
+	}
 
-	 func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+	func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
 		
 		let cell = tableView.dequeueReusableCell(withIdentifier: "SettingsTableHeaderView") as? SettingsTableHeaderView
 		return cell
@@ -368,53 +347,64 @@ SettingsTableHeaderViewDelegate {
 
 	func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
 
-		if let header = view as? SettingsTableHeaderView{
-
-			if(section == kSection_Accounts){
-				header.headerLabel.text = NSLocalizedString("ACCOUNTS", comment:  "Accounts")
-				header.btnAdd.isHidden = false;
-				header.isUserInteractionEnabled = true;
-
-			}else if(section == kSection_Options){
-
-				header.headerLabel.text = NSLocalizedString("OPTIONS", comment:  "Options")
-				header.btnAdd.isHidden = true;
-				header.isUserInteractionEnabled = false;
-			}
-
-			header.delegate = self
+		guard let header = view as? SettingsTableHeaderView else {
+			return
 		}
+
+		switch section {
+		case Section.accounts.rawValue:
+			
+			header.headerLabel.text = NSLocalizedString("ACCOUNTS", comment:  "Accounts")
+			header.btnAdd.isHidden = false;
+			header.isUserInteractionEnabled = true;
+
+		case Section.options.rawValue:
+
+			header.headerLabel.text = NSLocalizedString("OPTIONS", comment:  "Options")
+			header.btnAdd.isHidden = true;
+			header.isUserInteractionEnabled = false;
+			
+		default: break
+		}
+
+		header.delegate = self
 	}
 
 	func tableView(_ tableView: UITableView,
 	trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
-	->   UISwipeActionsConfiguration? {
+	-> UISwipeActionsConfiguration? {
 
-		var actions:Array<UIContextualAction> = Array()
+		var actions = Array<UIContextualAction>()
 
-		if(indexPath.section == kSection_Accounts){
+		if indexPath.section == Section.accounts.rawValue {
 			
-			if (localUsersInfo.count > 0) {
+			if sortedLocalUserInfo.count > 0 {
 				
-				let userInfo = localUsersInfo[indexPath.row]
-				let userID = userInfo["uuid"] as! String
+				let localUserInfo: ZDCUserDisplay = sortedLocalUserInfo[indexPath.row]
+				let localUserID = localUserInfo.userID
 				
-				let moreAction = UIContextualAction(style: .normal, title: "More…",
-																handler: { (action, view, completionHandler) in
-																	completionHandler(true)
+				let moreAction =
+				  UIContextualAction(style: .normal,
+				                     title: "More…",
+				                   handler:
+				{ (action, view, completionHandler) in
+					
+					completionHandler(true)
 				})
 				
-				let deleteAction = UIContextualAction(style: .normal, title: "Delete",
-																  handler: { (action, view, completionHandler) in
+				let deleteAction =
+				  UIContextualAction(style: .normal,
+				                     title: "Delete",
+				                   handler:
+				{(action, view, completionHandler) in
 																	
-																	self.maybeDeleteUserID(localUserID: userID,
-																								  completion:
-																		{ (success) in
-																			completionHandler(success)
-																			if(success) {
-																				AppDelegate.sharedInstance().currentLocalUserID = nil
-																			}
-																	})
+					self.maybeDeleteUserID(localUserID: localUserID, completion: {(success) in
+						
+						completionHandler(success)
+						if success {
+							AppDelegate.sharedInstance().currentLocalUserID = nil
+						}
+					})
 				})
 				
 				deleteAction.backgroundColor = UIColor.red
@@ -430,32 +420,34 @@ SettingsTableHeaderViewDelegate {
 	}
 
 
-	func maybeDeleteUserID(localUserID:String!, completion: @escaping (Bool) -> ()) {
+	func maybeDeleteUserID(localUserID: String, completion: @escaping (Bool) -> ()) {
 		
 		var localUser: ZDCLocalUser? = nil
 		databaseConnection.read { (transaction) in
 			
-			localUser = transaction.object(forKey: localUserID!,
-													 inCollection: kZDCCollection_Users) as? ZDCLocalUser
+			localUser = transaction.localUser(id: localUserID)
 		}
 		
-		if let localUser = localUser
-		{
-			let title =  String(format: NSLocalizedString("Delete user \"%@\" from this device?",
-																		 comment: "Delete user \"%@\" from this device?"),
-									  localUser.displayName)
+		if let localUser = localUser {
 			
-			let warningMessage = NSLocalizedString("You have not backed up your Access Key!\n If you delete this user you might lose access to your data!\n We recommend you backup your Access Key before proceeding.",
-																comment: "You have not backed up your Access Key! If you delete this user you might lose access to your data!\n We recommend you backup your Access Key before proceeding.");
+			let titleFrmt = NSLocalizedString( "Delete user \"%@\" from this device?",
+			                          comment: "Delete user prompt")
+			
+			let title = String(format: titleFrmt, localUser.displayName)
+			
+			let warningMessage = NSLocalizedString("""
+				You have not backed up your access key!\n
+				If you delete this user you might lose access to your data!
+				We recommend you backup your access key before proceeding.
+				""",
+				comment: "Delete user warning");
 				
-			let message = (localUser.hasCompletedSetup && !localUser.hasBackedUpAccessCode)
-				?warningMessage :nil;
+			let message = (localUser.hasCompletedSetup && !localUser.hasBackedUpAccessCode) ? warningMessage : nil
 				
 			let alert =
-				UIAlertController(title: title,
-										message: message,
-										preferredStyle: .alert)
-			
+			  UIAlertController(title: title,
+			                  message: message,
+			           preferredStyle: .alert)
 			
 			let deleteAction = UIAlertAction(title: "Delete", style: .destructive) { (alert: UIAlertAction!) -> Void in
 				
@@ -499,28 +491,23 @@ SettingsTableHeaderViewDelegate {
 		
 	}
 	
-	
-	// MARK: - Actions
-
+	/////////////////////////////////////////////
+	// MARK: Actions
+	/////////////////////////////////////////////
 
 	func settingsTableHeaderAddTapped(tableview: UITableView?) {
 
 		RootContainerViewController.shared()?.showActivationView(canDismissWithoutNewAccount:true)
-
 	}
     
-    func showActivityView() {
+	func showActivityView() {
 		
-		if let rvc = AppDelegate.sharedInstance().revealController{
-			
-			AppDelegate.sharedInstance().toggleSettingsView()
-
-			let nav = rvc.frontViewController as! UINavigationController
-			
-			ZDCManager.zdc().uiTools?.pushActivityView(forLocalUserID:nil, with: nav)
+		AppDelegate.sharedInstance().toggleSettingsView()
+		
+		if let revealController = AppDelegate.sharedInstance().revealController,
+			let navController = revealController.frontViewController as? UINavigationController
+		{
+			ZDCManager.zdc().uiTools?.pushActivityView(forLocalUserID: nil, with: navController)
 		}
-	}
-	
-	func test2() {
 	}
 }

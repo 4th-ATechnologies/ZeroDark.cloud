@@ -43,4 +43,4 @@
 #define ZDCLogInfo(frmt, ...)    ZDC_LOG_MAYBE(zdcLogLevel, ZDCLogFlagInfo,    frmt, ##__VA_ARGS__)
 #define ZDCLogVerbose(frmt, ...) ZDC_LOG_MAYBE(zdcLogLevel, ZDCLogFlagVerbose, frmt, ##__VA_ARGS__)
 #define ZDCLogTrace(frmt, ...)   ZDC_LOG_MAYBE(zdcLogLevel, ZDCLogFlagTrace,   frmt, ##__VA_ARGS__)
-#define ZDCLogAutoTrace()        ZDC_LOG_MAYBE(zdcLogLevel, ZDCLogFlagTrace,   @"")
+#define ZDCLogAutoTrace()        ZDC_LOG_MAYBE(zdcLogLevel, ZDCLogFlagTrace,   @"%s", __FUNCTION__)
