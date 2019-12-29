@@ -27,6 +27,9 @@
 /* extern */ NSString *const ZDCProgressListChangedNotification = @"ZDCProgressListChangedNotification";
 /* extern */ NSString *const kZDCProgressManagerChanges = @"changes";
 
+/* extern */ NSString *const ZDCProgressTypeKey = @"ZDCProgressType";
+/* extern */ NSString *const ZDCNodeMetaComponentsKey = @"ZDCNodeMetaComponents";
+
 /* private*/ NSString *kProgress_UserInfo_ZDCNetworkSpeedInfo = @"ZDCNetworkSpeedInfo";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -409,6 +412,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (NSSet<NSString *> *)allDownloadingNodeIDs
 {
@@ -457,6 +462,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (NSSet<NSString *> *)allDownloadingNodeIDs:(NSString *)localUserID
 {
@@ -503,6 +510,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (nullable NSProgress *)downloadProgressForNodeID:(NSString *)nodeID
 {
@@ -579,6 +588,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (NSSet<NSString *> *)allMetaDownloadingNodeIDs
 {
@@ -610,6 +621,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (NSSet<NSString *> *)allMetaDownloadingNodeIDs:(NSString *)localUserID
 {
@@ -642,7 +655,7 @@
 }
 
 /**
- * See header file for description.
+ *
  */
 - (nullable NSProgress *)metaDownloadProgressForNodeID:(NSString *)nodeID
 {
@@ -654,6 +667,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (nullable NSProgress *)metaDownloadProgressForNodeID:(NSString *)nodeID
                                             components:(nullable NSNumber *)components
@@ -666,6 +681,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (nullable NSProgress *)metaDownloadProgressForNodeID:(NSString *)nodeID
                                        completionQueue:(nullable dispatch_queue_t)completionQueue
@@ -679,6 +696,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (nullable NSProgress *)metaDownloadProgressForNodeID:(NSString *)nodeID
                                             components:(nullable NSNumber *)components
@@ -730,6 +749,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (BOOL)addMetaDownloadListenerForNodeID:(NSString *)nodeID
                          completionQueue:(nullable dispatch_queue_t)completionQueue
@@ -745,7 +766,7 @@
 }
 
 /**
- * See header file for description.
+ *
  */
 - (BOOL)addMetaDownloadListenerForNodeID:(NSString *)nodeID
                               components:(nullable NSNumber *)components
@@ -763,6 +784,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (BOOL)setMetaDownloadProgress:(NSProgress *)progress
                       forNodeID:(NSString *)nodeID
@@ -801,6 +824,9 @@
 	if (components  == 0)   return NO;
 	if (localUserID == nil) return NO;
 #endif
+	
+	[progress setUserInfoObject:@(ZDCProgressType_MetaDownload) forKey:ZDCProgressTypeKey];
+	[progress setUserInfoObject:@(components) forKey:ZDCNodeMetaComponentsKey];
 	
 	__block BOOL shouldPostNotification = NO;
 	__block NSProgress *existingProgress = nil;
@@ -871,6 +897,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (void)removeMetaDownloadListenerForNodeID:(NSString *)nodeID
                                  components:(ZDCNodeMetaComponents)components
@@ -908,6 +936,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (void)removeMetaDownloadProgressForNodeID:(NSString *)nodeID
                                  components:(ZDCNodeMetaComponents)components
@@ -981,6 +1011,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (NSSet<NSString *> *)allDataDownloadingNodeIDs
 {
@@ -1004,6 +1036,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (NSSet<NSString *> *)allDataDownloadingNodeIDs:(NSString *)localUserID
 {
@@ -1034,6 +1068,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (nullable NSProgress *)dataDownloadProgressForNodeID:(NSString *)nodeID
 {
@@ -1042,6 +1078,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (nullable NSProgress *)dataDownloadProgressForNodeID:(NSString *)nodeID
                                        completionQueue:(nullable dispatch_queue_t)completionQueue
@@ -1079,6 +1117,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (BOOL)addDataDownloadListenerForNodeID:(NSString *)nodeID
                          completionQueue:(nullable dispatch_queue_t)completionQueue
@@ -1094,6 +1134,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (BOOL)setDataDownloadProgress:(NSProgress *)progress
                       forNodeID:(NSString *)nodeID
@@ -1127,6 +1169,8 @@
 	if (nodeID      == nil) return NO;
 	if (localUserID == nil) return NO;
 #endif
+	
+	[progress setUserInfoObject:@(ZDCProgressType_DataDownload) forKey:ZDCProgressTypeKey];
 	
 	__block BOOL shouldPostNotification = NO;
 	__block NSProgress *existingProgress = nil;
@@ -1194,6 +1238,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (void)removeDataDownloadListenerForNodeID:(NSString *)nodeID
                             completionBlock:(NodeDataDownloadCompletionBlock)completionBlock
@@ -1226,6 +1272,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (void)removeDataDownloadProgressForNodeID:(NSString *)nodeID
                                  withHeader:(nullable ZDCCloudDataInfo *)header
@@ -1292,6 +1340,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (NSSet<NSUUID *> *)allUploadingOperationUUIDs
 {
@@ -1311,6 +1361,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (NSSet<NSUUID *> *)allUploadingOperationUUIDs:(NSString *)localUserID
 {
@@ -1340,6 +1392,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (NSSet<NSString *> *)allUploadingNodeIDs
 {
@@ -1398,6 +1452,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (nullable NSProgress *)uploadProgressForOperationUUID:(NSUUID *)operationID
 {
@@ -1406,6 +1462,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (nullable NSProgress *)uploadProgressForOperationUUID:(NSUUID *)operationUUID
                                         completionQueue:(nullable dispatch_queue_t)completionQueue
@@ -1444,6 +1502,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (nullable NSProgress *)dataUploadProgressForNodeID:(NSString *)nodeID
 {
@@ -1452,6 +1512,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (nullable NSProgress *)dataUploadProgressForNodeID:(NSString *)nodeID
                                      completionQueue:(nullable dispatch_queue_t)completionQueue
@@ -1501,6 +1563,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCProgressManager.html
  */
 - (BOOL)setUploadProgress:(NSProgress *)progress
              forOperation:(ZDCCloudOperation *)operation
@@ -1512,6 +1576,8 @@
 	if (progress  == nil) return NO;
 	if (operation == nil) return NO;
 #endif
+	
+	[progress setUserInfoObject:@(ZDCProgressType_Upload) forKey:ZDCProgressTypeKey];
 	
 	__block BOOL shouldPostNotification = NO;
 	

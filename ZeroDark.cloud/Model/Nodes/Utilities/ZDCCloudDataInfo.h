@@ -30,19 +30,19 @@ NS_ASSUME_NONNULL_BEGIN
                            lastModified:(NSDate *)lastModified;
 
 /**
- * The size (in bytes) of the metadata section of the DATA file.
+ * The size (in bytes) of the metadata section within the cloud's data file.
  * This corresponds to `[ZeroDarkCloudDelegate metadataForNode:atPath:transaction:]`.
  */
 @property (nonatomic, assign, readonly) uint64_t metadataSize;
 
 /**
- * The size (in bytes) of the thumbnail section of the DATA file.
+ * The size (in bytes) of the thumbnail section within the cloud's data file.
  * This corresponds to `[ZeroDarkCloudDelegate thumbnailForNode:atPath:transaction:]`.
  */
 @property (nonatomic, assign, readonly) uint64_t thumbnailSize;
 
 /**
- * The size (in bytes) of the thumbnail section of the DATA file.
+ * The size (in bytes) of the main data section within the cloud's data file.
  * This corresponds to `[ZeroDarkCloudDelegate dataForNode:atPath:transaction:]`.
  */
 @property (nonatomic, assign, readonly) uint64_t dataSize;

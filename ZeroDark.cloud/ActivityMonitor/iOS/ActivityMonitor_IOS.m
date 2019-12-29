@@ -31,10 +31,10 @@
 #endif
 
 typedef NS_ENUM(NSInteger, ActivityType) {
-	ActivityType_Uploads    = 0,
-	ActivityType_Downloads,
-	ActivityType_UploadsDownloads,
-	ActivityType_Raw,
+	ActivityType_Uploads          = 0,
+	ActivityType_Downloads        = 1,
+	ActivityType_UploadsDownloads = 2,
+	ActivityType_Raw              = 3,
 };
 
 static NSString *const kSyncStatus     = @"sync";
@@ -93,6 +93,14 @@ static NSString *const kActionStatus   = @"action";
 		
 		uiDatabaseConnection = zdc.databaseManager.uiDatabaseConnection;
 		selectedActivityType = zdc.internalPreferences.activityMonitor_lastActivityType;
+		
+		if (selectedActivityType != ActivityType_Uploads &&
+		    selectedActivityType != ActivityType_Downloads &&
+		    selectedActivityType != ActivityType_UploadsDownloads &&
+		    selectedActivityType != ActivityType_Raw)
+		{
+			selectedActivityType = ActivityType_UploadsDownloads;
+		}
 	}
 	return self;
 }
@@ -138,6 +146,8 @@ static NSString *const kActionStatus   = @"action";
 	
 	statusStates = [[NSMutableDictionary alloc] init];
 	
+	_tblActivity.separatorInset = UIEdgeInsetsMake(0, 0, 0, 0);
+	
 	[[NSNotificationCenter defaultCenter] addObserver: self
 	                                         selector: @selector(databaseConnectionDidUpdate:)
 	                                             name: UIDatabaseConnectionDidUpdateNotification
@@ -180,12 +190,14 @@ static NSString *const kActionStatus   = @"action";
 	[self refreshLocalUsersList];
 	[self refreshNavigationTitle];
 	
+	_segActivity.selectedSegmentIndex = selectedActivityType;
+	
 	[self refreshUploadList];
 	[self refreshDownloadList];
 	[_tblActivity reloadData];
-
-	[self refreshActivityType];
+	
 	[self refreshGeneralStatus];
+	[self refreshSyncStatus];
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -210,6 +222,10 @@ static NSString *const kActionStatus   = @"action";
 	if (localUsersChanged)
 	{
 		[self refreshLocalUsersList]; // <- might change: `allUsersSelected`, `selectedLocalUserID`
+		
+		[self refreshNavigationTitle];
+		[self refreshGeneralStatus];
+		[self refreshSyncStatus];
 	}
 	
 	if (selectedActivityType == ActivityType_Uploads         ||
@@ -253,15 +269,21 @@ static NSString *const kActionStatus   = @"action";
 	
 	if (selectedActivityType == ActivityType_Downloads)
 	{
-		// Ignore: This is a notification about upload operations
-		return;
-	}
-	
-	[self tableViewDataSourceWillChange];
-	{
+		// Upload operations aren't currently being displayed in the tableView.
+		// So we can just update the underlying data source.
+		//
 		[self refreshUploadList];
+		[self refreshSyncStatus];
 	}
-	[self tableViewDataSourceDidChange:/*animateChanges:*/YES];
+	else
+	{
+		[self tableViewDataSourceWillChange];
+		{
+			[self refreshUploadList];
+			[self refreshSyncStatus];
+		}
+		[self tableViewDataSourceDidChange:/*animateChanges:*/YES];
+	}
 	
 	// The above calls will refresh the source data,
 	// and will animate changes to the tableView.
@@ -351,8 +373,17 @@ static NSString *const kActionStatus   = @"action";
 			[self tableViewDataSourceWillChange];
 			{
 				[self refreshDownloadList];
+				[self refreshSyncStatus];
 			}
 			[self tableViewDataSourceDidChange:/*animateChanges:*/YES];
+		}
+		else
+		{
+			// Download operations aren't currently being displayed in the tableView.
+			// So we can just update the underlying data source.
+			//
+			[self refreshDownloadList];
+			[self refreshSyncStatus];
 		}
 	}
 }
@@ -427,28 +458,30 @@ static NSString *const kActionStatus   = @"action";
 	if (operationUUID == nil) return;
 	
 	NSProgress *progress = monitoredUploadProgress[operationUUID];
-	
-	for (NSString *keyPath in [self observerKeyPaths])
+	if (progress)
 	{
-		[progress removeObserver:self forKeyPath:keyPath];
-	}
-	
-	monitoredUploadProgress[operationUUID] = nil;
-	
-	NSIndexPath *visibleIndexPath = [self visibleIndexPathForOperationUUID:operationUUID];
-	if (visibleIndexPath)
-	{
-		id <ActivityMonitorTableCellProtocol> cell = (id <ActivityMonitorTableCellProtocol>)
-		  [_tblActivity cellForRowAtIndexPath:visibleIndexPath];
-		
-		if (cell)
+		for (NSString *keyPath in [self observerKeyPaths])
 		{
-			[self updateCell:cell withProgress:nil];
-			[self updateCell:cell withProgressUserInfo:nil];
+			[progress removeObserver:self forKeyPath:keyPath];
+		}
+	
+		monitoredUploadProgress[operationUUID] = nil;
+	
+		NSIndexPath *visibleIndexPath = [self visibleIndexPathForOperationUUID:operationUUID];
+		if (visibleIndexPath)
+		{
+			id <ActivityMonitorTableCellProtocol> cell = (id <ActivityMonitorTableCellProtocol>)
+			  [_tblActivity cellForRowAtIndexPath:visibleIndexPath];
+	
+			if (cell)
+			{
+				[self updateCell:cell withProgress:nil];
+				[self updateCell:cell withProgressUserInfo:nil];
+			}
 		}
 	}
 }
-/*
+
 - (NSProgress *)monitoredDownloadProgressForNodeID:(NSString *)nodeID
 {
 	if (nodeID == nil) return nil;
@@ -458,16 +491,39 @@ static NSString *const kActionStatus   = @"action";
 		return progress;
 	}
 	
-	__weak typeof(self) weakSelf = self;
-	progress = [zdc.progressManager downloadProgressForNodeID: nodeID
-	                                          completionQueue: dispatch_get_main_queue()
-	                                          completionBlock:^(NSURL *fileURL, id retainToken, NSError *error)
-	{
-		[weakSelf stopMonitoringDownloadProgressForNodeID:nodeID];
-	}];
+	progress = [zdc.progressManager downloadProgressForNodeID:nodeID];
 	
 	if (progress)
 	{
+		ZDCProgressType type = (ZDCProgressType)[progress.userInfo[ZDCProgressTypeKey] integerValue];
+		
+		if (type == ZDCProgressType_MetaDownload)
+		{
+			NSNumber *components = progress.userInfo[ZDCNodeMetaComponentsKey];
+			
+			__weak typeof(self) weakSelf = self;
+			[zdc.progressManager addMetaDownloadListenerForNodeID:nodeID
+																	 components:components
+															  completionQueue:dispatch_get_main_queue()
+															  completionBlock:
+			^(ZDCCloudDataInfo *header, NSData *metadata, NSData *thumbnail, NSError *error) {
+				
+				[weakSelf stopMonitoringDownloadProgressForNodeID:nodeID];
+			}];
+		}
+		else if (type == ZDCProgressType_DataDownload)
+		{
+			__weak typeof(self) weakSelf = self;
+			[zdc.progressManager addDataDownloadListenerForNodeID:nodeID
+															  completionQueue:dispatch_get_main_queue()
+															  completionBlock:
+			^(ZDCCloudDataInfo *header, ZDCCryptoFile *cryptoFile, NSError *error) {
+				
+				[weakSelf stopMonitoringDownloadProgressForNodeID:nodeID];
+			}];
+			
+		}
+		
 		for (NSString *keyPath in [self observerKeyPaths])
 		{
 			[progress addObserver: self
@@ -487,28 +543,30 @@ static NSString *const kActionStatus   = @"action";
 	if (nodeID == nil) return;
 	
 	NSProgress *progress = monitoredDownloadProgress[nodeID];
-	
-	for (NSString *keyPath in [self observerKeyPaths])
+	if (progress)
 	{
-		[progress removeObserver:self forKeyPath:keyPath];
-	}
-	
-	monitoredDownloadProgress[nodeID] = nil;
-	
-	NSInteger visibleRow = [self visibleRowForDownloadingNodeID:nodeID];
-	if (visibleRow != NSNotFound)
-	{
-		id <ActivityMonitorTableCellProtocol> cell = (id <ActivityMonitorTableCellProtocol>)
-		  [tableView viewAtColumn:0 row:visibleRow makeIfNecessary:NO];
-		
-		if (cell)
+		for (NSString *keyPath in [self observerKeyPaths])
 		{
-			[self updateCell:cell withProgress:nil];
-			[self updateCell:cell withProgressUserInfo:nil];
+			[progress removeObserver:self forKeyPath:keyPath];
+		}
+	
+		monitoredDownloadProgress[nodeID] = nil;
+	
+		NSIndexPath *visibleIndexPath = [self visibleIndexPathForDownloadingNodeID:nodeID];
+		if (visibleIndexPath)
+		{
+			id <ActivityMonitorTableCellProtocol> cell = (id <ActivityMonitorTableCellProtocol>)
+			  [_tblActivity cellForRowAtIndexPath:visibleIndexPath];
+		
+			if (cell)
+			{
+				[self updateCell:cell withProgress:nil];
+				[self updateCell:cell withProgressUserInfo:nil];
+			}
 		}
 	}
 }
-*/
+
 
 - (void)progressPercentChanged:(NSProgress *)progress
 {
@@ -657,7 +715,7 @@ static NSString *const kActionStatus   = @"action";
 	return visibleIndexPath;
 }
 
-- (nullable NSIndexPath *)visibleIndexPathForOperationUUID:(NSUUID *)operationUUID
+- (nullable NSIndexPath *)visibleIndexPathForOperationUUID:(nullable NSUUID *)operationUUID
 {
 	if (operationUUID == nil) return nil;
 	
@@ -712,7 +770,7 @@ static NSString *const kActionStatus   = @"action";
 	return result;
 }
 
-- (nullable NSIndexPath *)visibleIndexPathForDownloadingNodeID:(NSString *)inNodeID
+- (nullable NSIndexPath *)visibleIndexPathForDownloadingNodeID:(nullable NSString *)inNodeID
 {
 	if (inNodeID == nil) return nil;
 	
@@ -935,8 +993,6 @@ static NSString *const kActionStatus   = @"action";
 	uploadNodeIDs     = [sortedUploadNodes copy];
 	uploadTasks     = [_uploadTasks copy];
 	minSnapshotDict = [_minSnapshotDict copy];
-	
-	[self refreshSyncStatus];
 }
 
 - (void)refreshDownloadList
@@ -1002,8 +1058,6 @@ static NSString *const kActionStatus   = @"action";
 	}
 	
 	downloadNodeIDs = [_downloadNodes copy];
-	
-	[self refreshSyncStatus];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1110,28 +1164,6 @@ static NSString *const kActionStatus   = @"action";
 	}
 }
 
-- (void)refreshActivityType
-{
-	ZDCLogAutoTrace();
-	
-	if (selectedActivityType != ActivityType_Uploads &&
-		 selectedActivityType != ActivityType_Downloads &&
-		 selectedActivityType != ActivityType_UploadsDownloads &&
-		 selectedActivityType != ActivityType_Raw)
-	{
-		selectedActivityType = ActivityType_UploadsDownloads;
-	}
-	
-	if (zdc.internalPreferences.activityMonitor_lastActivityType != selectedActivityType)
-	{
-		zdc.internalPreferences.activityMonitor_lastActivityType = selectedActivityType;
-	}
-	
-	_segActivity.selectedSegmentIndex = selectedActivityType;
-	
-	// do what is needed to update the table.
-}
-
 /**
  * Invoke this method when:
  * - the `allUsersSelected` or `selectedLocalUser` variable is changed
@@ -1151,72 +1183,131 @@ static NSString *const kActionStatus   = @"action";
 {
 	ZDCLogAutoTrace();
 	
-	BOOL allUsersSelected = selectedLocalUserID == nil;
+	ZDCSyncManager *syncManager = zdc.syncManager;
 	
-	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-
-		if (allUsersSelected)
-		{
-			// If some users's are paused, we're going to display it.
+	BOOL usePlayIcon = NO;
+	BOOL useGearIcon = NO;
+	
+	BOOL allUsersSelected = (selectedLocalUserID == nil);
+	if (allUsersSelected)
+	{
+		__block NSUInteger numSyncingPaused = 0;
+		__block NSUInteger numPushingPaused = 0;
+		__block NSUInteger numActive = 0;
+		
+		[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 			
-			NSUInteger numActive = 0;
-			NSUInteger numPaused = 0;
-			
-	 		for(NSString* localUserID in localUserIDs)
+			for (NSString *localUserID in localUserIDs)
 			{
 				ZDCLocalUser *localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
 
 				if (localUser.syncingPaused) {
-					numPaused++;
+					numSyncingPaused++;
+				}
+				else if ([syncManager isPushingPausedForLocalUserID:localUserID]) {
+					numPushingPaused++;
 				}
 				else {
 					numActive++;
 				}
 			}
-	 
-			if ((numActive == 0) && (numPaused > 0))
-			{
-				NSString *msg = NSLocalizedString(@"Syncing paused", @"Activity Monitor status");
-				
-				[self setAdvisoryStatus:msg forLocalUserID:nil];
-			}
-			else if ((numActive > 0) && (numPaused > 0))
-			{
-				// Mixed state - display action status
-				
-				NSString *frmt = NSLocalizedString(@"Accounts paused: %llu,  active: %llu", @"Activity Monitor status");
-				NSString *msg = [NSString stringWithFormat:frmt,
-									  (unsigned long long)numPaused,
-									  (unsigned long long)numActive];
-				
-				[self setAdvisoryStatus:nil forLocalUserID:nil];
-				[self setActionStatus:msg forLocalUserID:nil];
-			}
-			else
-			{
-				[self setAdvisoryStatus:nil forLocalUserID:nil];
-			}
-		}
-		else if (selectedLocalUserID)
-		{
-			ZDCLocalUser *localUser = [transaction objectForKey:selectedLocalUserID inCollection:kZDCCollection_Users];
 			
-			if (localUser.syncingPaused)
-			{
-				NSString *msg = NSLocalizedString(@"Syncing paused", @"Activity Monitor status");
-				
-				[self setAdvisoryStatus:msg forLocalUserID:selectedLocalUserID];
-			}
-			else
-			{
-				[self setAdvisoryStatus:nil forLocalUserID:selectedLocalUserID];
-			}
-		}
+		#pragma clang diagnostic push
+		}];
 		
-	#pragma clang diagnostic push
-	}];
+		if ((numActive == 0) && (numSyncingPaused > 0 && numPushingPaused == 0))
+		{
+			NSString *msg = NSLocalizedString(@"Syncing paused", @"Activity Monitor status");
+			
+			[self setAdvisoryStatus:msg forLocalUserID:nil];
+			
+			usePlayIcon = YES;
+		}
+		else if ((numActive > 0) && (numSyncingPaused > 0 || numPushingPaused > 0))
+		{
+			// Mixed state - display action status
+			
+			NSString *frmt = NSLocalizedString(@"Accounts paused: %llu,  active: %llu", @"Activity Monitor status");
+			NSString *msg = [NSString stringWithFormat:frmt,
+				(unsigned long long)(numSyncingPaused | numPushingPaused),
+				(unsigned long long)numActive];
+			
+			[self setAdvisoryStatus:msg forLocalUserID:nil];
+			[self setActionStatus:msg forLocalUserID:nil];
+			
+			useGearIcon = YES;
+		}
+		else
+		{
+			[self setAdvisoryStatus:nil forLocalUserID:nil];
+		}
+	}
+	else // if (selectedLocalUserID != nil)
+	{
+		__block ZDCLocalUser *localUser = nil;
+		
+		[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+			
+			localUser = [transaction objectForKey:selectedLocalUserID inCollection:kZDCCollection_Users];
+			
+		#pragma clang diagnostic push
+		}];
+		
+		if (localUser.syncingPaused)
+		{
+			NSString *msg = NSLocalizedString(@"Syncing paused", @"Activity Monitor status");
+			
+			[self setAdvisoryStatus:msg forLocalUserID:selectedLocalUserID];
+			usePlayIcon = YES;
+		}
+		else if ([syncManager isPushingPausedForLocalUserID:selectedLocalUserID])
+		{
+			NSString *msg = NSLocalizedString(@"Pushing paused", @"Activity Monitor status");
+			
+			[self setAdvisoryStatus:msg forLocalUserID:selectedLocalUserID];
+			useGearIcon = YES;
+		}
+		else
+		{
+			[self setAdvisoryStatus:nil forLocalUserID:selectedLocalUserID];
+		}
+	}
+	
+	UIImage *image = nil;
+	
+	if (usePlayIcon)
+	{
+		if (@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)) {
+			image = [UIImage systemImageNamed:@"play.circle"];
+		}
+		if (image == nil) {
+			image = [ZeroDarkCloud imageNamed:@"play-round-24"];
+		}
+	}
+	else if (useGearIcon)
+	{
+		if (@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)) {
+			image = [UIImage systemImageNamed:@"gear"];
+		}
+		if (image == nil) {
+			image = [ZeroDarkCloud imageNamed:@"gear"];
+		}
+	}
+	else // usePauseIcon
+	{
+		if (@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)) {
+			image = [UIImage systemImageNamed:@"pause.circle"];
+		}
+		if (image == nil) {
+			image = [ZeroDarkCloud imageNamed:@"pause-round-24"];
+		}
+	}
+	
+	[_btnPause setImage:image forState:UIControlStateNormal];
 }
 
 /**
@@ -1262,9 +1353,9 @@ static NSString *const kActionStatus   = @"action";
 
 - (void)refreshStatusLabel
 {
-	ZDCLogAutoTrace(); // too noisy
+//	ZDCLogAutoTrace(); // noisy
 	
-	BOOL allUsersSelected = selectedLocalUserID == nil;
+	BOOL allUsersSelected = (selectedLocalUserID == nil);
 
 	id key = allUsersSelected ? [NSNull null] : (selectedLocalUserID ?: @"");
 	NSMutableDictionary *info = statusStates[key];
@@ -1453,7 +1544,7 @@ static NSString *const kActionStatus   = @"action";
 				else
 				{
 					numSyncingActive++;
-					if ([zdc.syncManager isPullingOrPushingChangesForLocalUserID:localUser.uuid]) {
+					if ([zdc.syncManager isPushingPausedForLocalUserID:localUser.uuid]) {
 						numPushingPaused++;
 					}
 				}
@@ -1466,7 +1557,7 @@ static NSString *const kActionStatus   = @"action";
 		{
 			ZDCLocalUser *localUser = [transaction objectForKey:selectedLocalUserID inCollection:kZDCCollection_Users];
 			syncingPaused = localUser.syncingPaused;
-			uploadsPaused = [zdc.syncManager isPullingOrPushingChangesForLocalUserID:selectedLocalUserID];
+			uploadsPaused = [zdc.syncManager isPushingPausedForLocalUserID:selectedLocalUserID];
 		}
 		
 	#pragma clang diagnostic pop
@@ -1549,7 +1640,7 @@ static NSString *const kActionStatus   = @"action";
 				                           style: UIAlertActionStyleDefault
 				                         handler:^(UIAlertAction *action)
 				{
-					[weakSelf pauseUploadsAndAbortUploads:YES];
+					[weakSelf pauseUploadsPlusAbort:YES];
 				}];
 			
 				[alertController addAction:pauseUploadsAction];
@@ -1561,7 +1652,7 @@ static NSString *const kActionStatus   = @"action";
 				                           style: UIAlertActionStyleDefault
 				                         handler:^(UIAlertAction *action)
 				{
-					[weakSelf pauseUploadsAndAbortUploads:NO];
+					[weakSelf pauseUploadsPlusAbort:NO];
 				}];
 		
 				[alertController addAction:pauseFutureUploadsAction];
@@ -1598,18 +1689,14 @@ static NSString *const kActionStatus   = @"action";
 {
 	ZDCLogAutoTrace();
 	
-	if (sender == _segActivity)
+	selectedActivityType = _segActivity.selectedSegmentIndex;
+	
+	if (zdc.internalPreferences.activityMonitor_lastActivityType != selectedActivityType)
 	{
-		selectedActivityType = _segActivity.selectedSegmentIndex;
-  		[self refreshActivityType];
+		zdc.internalPreferences.activityMonitor_lastActivityType = selectedActivityType;
 	}
 	
-	[self refreshUploadList];
-	[self refreshDownloadList];
 	[_tblActivity reloadData];
-
-	[self refreshGeneralStatus];
-	[self refreshSyncStatus];
 }
 
 - (void)pauseResumeSyncing:(BOOL)pause
@@ -1655,14 +1742,10 @@ static NSString *const kActionStatus   = @"action";
 				}
 			}
 		}
-	} completionBlock:^{
-	
-		// remove this when we get notifications
-		[self refreshGeneralStatus];
 	}];
 }
 
-- (void)pauseUploadsAndAbortUploads:(BOOL)shouldAbortUploads
+- (void)pauseUploadsPlusAbort:(BOOL)shouldAbortUploads
 {
 	ZDCLogAutoTrace();
 	
@@ -1705,7 +1788,7 @@ static NSString *const kActionStatus   = @"action";
 {
 	ZDCLogAutoTrace();
 	
-	selectedLocalUserID = userID.length?userID:NULL;
+	selectedLocalUserID = userID.length ? userID : nil;
 	[self refreshNavigationTitle];
 	
 	[self refreshUploadList];
@@ -1996,7 +2079,71 @@ static NSString *const kActionStatus   = @"action";
 	cell.opTypeImageView.image =
 	  [UIImage imageNamed: @"cloud-download-template-18"
 	             inBundle: [ZeroDarkCloud frameworkBundle] compatibleWithTraitCollection:nil];
-
+	
+	__block ZDCNode *node = nil;
+	__block ZDCTreesystemPath *path = nil;
+	
+	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction * transaction) {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		node = [transaction objectForKey:nodeID inCollection:kZDCCollection_Nodes];
+		//
+		// node might be nil (i.e. node has been deleted)
+		
+		path = [zdc.nodeManager pathForNode:node transaction:transaction];
+		
+	#pragma clang diagnostic pop
+	}];
+	
+	if (path)
+	{
+		if (path.trunk == ZDCTreesystemTrunk_Home) {
+			cell.nodeInfo.text = path.relativePath;
+		}
+		else {
+			cell.nodeInfo.text = path.fullPath;
+		}
+	}
+	else
+	{
+		cell.nodeInfo.text = @"/?";
+	}
+	
+	cell.priority.hidden = YES;
+	cell.priority.text = @"";
+	
+	{ // scoping
+		
+		NSDate *lastModified = node.lastModified;
+		if (lastModified)
+		{
+			NSString *when = [lastModified descriptionWithLocale:nil];
+			
+			NSString *frmt = NSLocalizedString(@"Modified %@", nil);
+			NSString *str = [NSString stringWithFormat:frmt, when];
+			
+			cell.opsInfo.text = str ?: @"";
+		}
+		else
+		{
+			NSString *str = NSLocalizedString(@"Modified recently", nil);
+			
+			cell.opsInfo.text = str ?: @"";
+		}
+	}
+	
+	NSProgress *progress = [self monitoredDownloadProgressForNodeID:nodeID];
+	
+	BOOL isActive = progress.fractionCompleted > 0.0;
+	if (isActive)
+		[cell.circularProgress startAnimating];
+	else
+		[cell.circularProgress stopAnimating];
+	
+	[self updateCell:cell withProgress:progress];
+	[self updateCell:cell withProgressUserInfo:progress.userInfo];
+	
 	return cell;
 }
 
