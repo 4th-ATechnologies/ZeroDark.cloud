@@ -1098,10 +1098,6 @@ static NSString *const kActionStatus   = @"action";
 	self.navigationItem.titleView = _btnTitle;
 	
 	CGSize avatarSize = CGSizeMake(30, 30);
-	UIImage* (^defaultAvatar)(void) = ^{
-		
-		return [imageManager.defaultUserAvatar scaledToSize:avatarSize scalingMode:ScalingMode_AspectFill];
-	};
 	
 	if (selectedLocalUserID)
 	{
@@ -1117,6 +1113,11 @@ static NSString *const kActionStatus   = @"action";
 
 		[_btnTitle setTitle: localUser.displayName
 		           forState: UIControlStateNormal];
+		
+		UIImage* (^defaultAvatar)(void) = ^{
+			
+			return [imageManager.defaultUserAvatar scaledToSize:avatarSize scalingMode:ScalingMode_AspectFill];
+		};
 		
 		UIImage* (^processingBlock)(OSImage *) = ^UIImage* (UIImage *image){
 			
@@ -1157,7 +1158,9 @@ static NSString *const kActionStatus   = @"action";
 		[_btnTitle setTitle: NSLocalizedString(@"All Users", @"All Users")
 		           forState: UIControlStateNormal ];
 		
-		UIImage *image = defaultAvatar();
+		UIImage *image =
+		  [imageManager.defaultMultiUserAvatar scaledToSize: avatarSize
+		                                        scalingMode: ScalingMode_AspectFill];
 		
 		[_btnTitle setImage: image
 		           forState: UIControlStateNormal];

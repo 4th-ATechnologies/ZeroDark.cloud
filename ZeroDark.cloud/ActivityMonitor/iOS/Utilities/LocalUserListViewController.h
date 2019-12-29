@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, weak, readonly, nullable) id<LocalUserListViewController_Delegate> delegate;
 
-- (CGFloat)preferedWidth;
+- (CGFloat)preferredWidth;
 
 @end
 
@@ -34,7 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
 @optional
 
 - (void)localUserListViewController:(LocalUserListViewController_IOS *)sender
-                    didSelectUserID:(nullable NSString *) userID;
+                    didSelectUserID:(nullable NSString *)localUserID;
 @end
 
 NS_ASSUME_NONNULL_END

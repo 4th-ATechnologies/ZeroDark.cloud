@@ -103,9 +103,12 @@
 	_tblButtons.rowHeight = UITableViewAutomaticDimension;
 	
 	_tblButtons.separatorStyle = UITableViewCellSeparatorStyleSingleLine;
+	if (@available(iOS 11.0, *)) {
+		_tblButtons.separatorInsetReference = UITableViewSeparatorInsetFromCellEdges;
+	}
+	_tblButtons.separatorInset = UIEdgeInsetsMake(0, 40, 0, 0); // top, left, bottom, right
+	
 	_tblButtons.tableFooterView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, _tblButtons.frame.size.width, 1)];
-	//
-	_tblButtons.separatorInset = UIEdgeInsetsMake(0, 80, 0, 0); // top, left, bottom, right
 	
 	uiDatabaseConnection = zdc.databaseManager.uiDatabaseConnection;
 }
@@ -128,8 +131,8 @@
 {
 	[super viewDidLayoutSubviews];
 	
-	self.preferredContentSize =   (CGSize){
-		.width = self.preferedWidth,
+	self.preferredContentSize = (CGSize){
+		.width = self.preferredWidth,
 		.height = _tblButtons.frame.origin.y + _tblButtons.contentSize.height -1
 	};
 }
@@ -138,7 +141,7 @@
 #pragma mark Public API
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (CGFloat)preferedWidth
+- (CGFloat)preferredWidth
 {
 	CGFloat width = 250.0f;	// use default
 	
@@ -158,7 +161,6 @@
 																					traitCollection:(UITraitCollection *)traitCollection {
 	return UIModalPresentationNone;
 }
-
 
 - (UIModalPresentationStyle)adaptivePresentationStyleForPresentationController:(UIPresentationController *)controller
 {
@@ -210,41 +212,6 @@
 	
 	sorted = [zdc.userManager sortedUnambiguousNamesForUsers:localUsers];
 	[_tblButtons reloadData];
-	
-/*
-	[CATransaction begin];
-	[_tblButtons reloadData];
-	
-	[_tblButtons setEditing:YES];
-	_tblButtons.allowsMultipleSelection = NO;
-	_tblButtons.allowsMultipleSelectionDuringEditing = NO;
-	
-	[CATransaction setCompletionBlock:^{
-		
-		__strong typeof(self) strongSelf = weakSelf;
-		if (strongSelf == nil) return;
-
-		__block NSUInteger foundIdx = NSNotFound;
-		[strongSelf->sortedLocalUserInfo enumerateObjectsUsingBlock:^(NSDictionary *dict, NSUInteger idx, BOOL *stop) {
-		
- 			NSString *userID = dict[k_userID];
-			if ([userID isEqualToString:strongSelf->currentUserID])
-			{
-				foundIdx = idx;
-				*stop = YES;
-			}
- 		}];
-	
-		if(foundIdx != NSNotFound)
-		{
-			NSIndexPath* indexPath = [NSIndexPath indexPathForRow:foundIdx inSection:0];
-			[strongSelf->_tblButtons selectRowAtIndexPath: indexPath
-			                                     animated: NO
-			                               scrollPosition: UITableViewScrollPositionMiddle];
-		}
-	}];
-	[CATransaction commit];
-*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -253,35 +220,74 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-	return sorted.count;
+	if (sorted.count == 1) {
+		return 1;
+	} else {
+		return sorted.count + 1;
+	}
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
+	ZDCUserDisplay *localUserDisplay = nil;
+	
+	if (sorted.count == 1) {
+		localUserDisplay = sorted[indexPath.row];
+	}
+	else {
+		if (indexPath.row > 0) {
+			localUserDisplay = sorted[indexPath.row - 1];
+		}
+	}
+	
+	if (localUserDisplay) {
+		return [self cellForUser:localUserDisplay];
+	} else {
+		return [self cellForAllUsers];
+	}
+}
+
+- (LocalUserListUITableViewCell *)cellForAllUsers
+{
 	LocalUserListUITableViewCell *cell = (LocalUserListUITableViewCell *)
-	  [tableView dequeueReusableCellWithIdentifier:@"LocalUserListUITableViewCell"];
+	  [_tblButtons dequeueReusableCellWithIdentifier:@"LocalUserListUITableViewCell"];
+	
+	cell.userAvatar.layer.cornerRadius = LocalUserListUITableViewCell.avatarSize.height / 2;
+	cell.userAvatar.clipsToBounds = YES;
+	
+	cell.lblTitle.text = @"All users";
+	cell.lblTitle.textColor = UIColor.blackColor;
+	cell.userID = nil;
+	
+	cell.userAvatar.image = [self->zdc.imageManager defaultMultiUserAvatar];
+	
+	return cell;
+}
+
+- (LocalUserListUITableViewCell *)cellForUser:(ZDCUserDisplay *)localUserDisplay
+{
+	LocalUserListUITableViewCell *cell = (LocalUserListUITableViewCell *)
+	  [_tblButtons dequeueReusableCellWithIdentifier:@"LocalUserListUITableViewCell"];
 
 	cell.userAvatar.layer.cornerRadius = LocalUserListUITableViewCell.avatarSize.height / 2;
 	cell.userAvatar.clipsToBounds = YES;
-
-	ZDCUserDisplay *userDisplay = sorted[indexPath.row];
 	
-	NSString *userID = userDisplay.userID;
-	NSString *displayName = userDisplay.displayName;
+	NSString *localUserID = localUserDisplay.userID;
+	NSString *displayName = localUserDisplay.displayName;
 	
-	__block ZDCLocalUser *user = nil;
+	__block ZDCLocalUser *localUser = nil;
 	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
-		user = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
+		localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
 		
 	#pragma clang diagnostic pop
 	}];
 	
 	cell.lblTitle.text = displayName;
 	cell.lblTitle.textColor = UIColor.blackColor;
-	cell.userID = userID;
+	cell.userID = localUserID;
 	
 	void (^preFetchBlock)(UIImage*, BOOL) = ^(UIImage *image, BOOL willFetch){
 		
@@ -301,13 +307,13 @@
 		if (image)
 		{
 			// Ensure the cell hasn't been recycled
-			if ([cell.userID isEqualToString:userID]) {
+			if ([cell.userID isEqualToString:localUserID]) {
 				cell.userAvatar.image = image;
 			}
 		}
 	};
 		
-	[zdc.imageManager fetchUserAvatar: user
+	[zdc.imageManager fetchUserAvatar: localUser
 		                   withOptions: nil
 	                    preFetchBlock: preFetchBlock
 	                   postFetchBlock: postFetchBlock];
@@ -315,26 +321,23 @@
 	return cell;
 }
 
-- (UITableViewCellEditingStyle)tableView:(UITableView*)tv editingStyleForRowAtIndexPath:(NSIndexPath*)indexPath {
-	
-	// Apple doesn't support this, but the alternative style UITableViewCellEditingStyleDelete is ugly.
-	//
-	// UITableViewCellEditingStyleMultiSelect = 3
-	//
-	return (UITableViewCellEditingStyle)(3);
-}
-
-
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
 	ZDCLogAutoTrace();
 	
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 	
-	ZDCUserDisplay *userDisplay = sorted[indexPath.row];
-	NSString *userID = userDisplay.userID;
+	ZDCUserDisplay *selected = nil;
+	
+	if (sorted.count == 1) {
+		selected = sorted[indexPath.row];
+	} else {
+		if (indexPath.row > 0) {
+			selected = sorted[indexPath.row - 1];
+		}
+	}
 
-	selectedUserID = userID;
+	selectedUserID = selected.userID;
 	
 	NSArray<NSIndexPath *>* indexPaths = tableView.indexPathsForSelectedRows;
 	[indexPaths enumerateObjectsUsingBlock:^(NSIndexPath * iPath, NSUInteger idx, BOOL * _Nonnull stop) {
@@ -346,15 +349,8 @@
 
 	if ([self.delegate respondsToSelector:@selector(localUserListViewController:didSelectUserID:)])
 	{
-		[self.delegate localUserListViewController:self didSelectUserID:userID];
+		[self.delegate localUserListViewController:self didSelectUserID:selectedUserID];
 	}
-}
-
-
-// prevent deselection - in effect we have radio buttons
-- (nullable NSIndexPath *)tableView:(UITableView *)tableView willDeselectRowAtIndexPath:(NSIndexPath *)indexPath
-{
-	return nil;
 }
 
 @end
