@@ -9,6 +9,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import "ZDCPullManager.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
 /**
@@ -74,9 +76,11 @@ extern NSString *const ZDCPushStoppedNotification;
  */
 extern NSString *const ZDCSyncingNodeIDsChangedNotification;
 
-extern NSString *const kLocalUserIDKey;
-extern NSString *const kAppIDKey;
-extern NSString *const kPullResultKey;
+/**
+ * A key for the notification.userInfo dictionary,
+ * which returns an instance of `ZDCDiskManagerChanges`.
+ */
+extern NSString *const kZDCSyncManagerNotificationInfo;
 
 /**
  * The SyncManager simplifies many aspects of determining sync state.
@@ -256,6 +260,36 @@ extern NSString *const kPullResultKey;
  *       and then make changes to better suite your needs.
 **/
 - (NSSet<NSString *> *)syncingNodeIDsForLocalUserID:(NSString *)localUserID;
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * When ZDCSyncManager posts a notification, an instance of this class is added the notification.userInfo.
+ *
+ * You can extract the info via:
+ * `notification.userInfo[kZDCSyncManagerNotificationInfo] as? ZDCSyncManagerNotificationInfo`
+ */
+@interface ZDCSyncManagerNotificationInfo: NSObject
+
+/**
+ * A reference to the localUser being pulled/pushed. (localUserID == ZDCLocalUser.uuid)
+ */
+@property (nonatomic, copy, readonly) NSString *localUserID;
+
+/**
+ * The treeID of the system being pulled/pushed. (e.g. "com.busines.myApp")
+ */
+@property (nonatomic, copy, readonly) NSString *treeID;
+
+/**
+ * If the notification was via ZDCPullStoppedNotification,
+ * this value contains information about whether or not the pull succeeded or failed.
+ */
+@property (nonatomic, assign, readonly) ZDCPullResult pullResult;
 
 @end
 

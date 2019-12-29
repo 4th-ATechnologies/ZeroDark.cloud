@@ -376,7 +376,7 @@ typedef void (^UserAvatarDownloadCompletionBlock)(NSData *_Nullable avatar, NSEr
  * Indicates to the DownloadManager that you no longer need the data,
  * and that its free to cancel the download (as long as all other tickets agree).
  *
- * If the download is in progress, it will cancelled in a resumable manner.
+ * If the download is in progress, it will be cancelled in a resumable manner.
  * Future requests for the same resource will resume where this download left off.
  *
  * Your completionBlock will be removed from the array of listeners.
