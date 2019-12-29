@@ -6,6 +6,5 @@
 #import "KGHitTestingButton.h"
 #import "BadgedBarButtonItem.h"
 #import "SWRevealViewController.h"
-#import "IconTitleButton.h"
 
 

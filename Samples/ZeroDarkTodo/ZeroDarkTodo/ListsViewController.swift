@@ -13,7 +13,7 @@ import ZeroDarkCloud
 
 
 protocol ListTableCellDelegate: class {
-    func listTableCellRemoteUserClicked(listID: String)
+	func listTableCellRemoteUserClicked(listID: String)
 }
 
 class ListTableCell : UITableViewCell
@@ -40,7 +40,7 @@ class ListTableCell : UITableViewCell
 class ListsViewController: UIViewController, UITableViewDelegate, UITableViewDataSource,
 SettingsViewControllerDelegate, ListTableCellDelegate {
 	
-	var databaseConnection: YapDatabaseConnection!
+	var uiDatabaseConnection: YapDatabaseConnection!
 	var mappings: YapDatabaseViewMappings?
 	var btnTitle: IconTitleButton?
     
@@ -120,14 +120,16 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		let height = sortButtonItem.customView?.heightAnchor.constraint(equalToConstant: 22)
 		height?.isActive = true
         
-        self.navigationItem.rightBarButtonItems = [
+		self.navigationItem.rightBarButtonItems = [
             
-            UIBarButtonItem(barButtonSystemItem: .add,
-                            target: self,
-                            action: #selector(self.didTapAddItemButton(_:))),
-            sortButtonItem	]
+			UIBarButtonItem(barButtonSystemItem: .add,
+			                             target: self,
+			                             action: #selector(self.didTapAddItemButton(_:))),
+			sortButtonItem
+		]
 		
-		#if DEBUG
+	#if DEBUG
+		
 		self.vwSimulate.isHidden = false
 		self.cnstVwSimulateHeight.constant = 44
 		
@@ -141,24 +143,27 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 			simVC.didMove(toParent: self)
 		}
 		
-		#else
+	#else
+		
 		self.vwSimulate.isHidden = true
 		self.cnstVwSimulateHeight.constant = 0
-		#endif
-
-    }
+	
+	#endif
+	}
     
 	override func viewWillAppear(_ animated: Bool) {
         
 		self.setupDatabaseConnection()
         
-		var localUser: ZDCLocalUser!
-		databaseConnection.read {(transaction) in
+		var localUser: ZDCLocalUser?
+		uiDatabaseConnection.read {(transaction) in
 			
-			localUser = transaction.object(forKey: self.localUserID, inCollection: kZDCCollection_Users) as? ZDCLocalUser
+			localUser = transaction.localUser(id: self.localUserID)
 		}
 		
-		self.setNavigationTitle(user: localUser)
+		if let localUser = localUser {
+			self.setNavigationTitle(user: localUser)
+		}
 		listsTable.reloadData()
 	}
 	
@@ -171,11 +176,11 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		
 		if (btnTitle == nil) {
 			
-			btnTitle = IconTitleButton.init(type:.custom)
+			btnTitle = IconTitleButton.create()
 			btnTitle?.setTitleColor(self.view.tintColor, for: .normal)
 			btnTitle?.addTarget(self,
 			                    action: #selector(self.didHitTitle(_:)),
-			                    for: .touchUpInside)
+			                       for: .touchUpInside)
 		}
 		
 		btnTitle?.setTitle(user.displayName, for: .normal)
@@ -186,10 +191,10 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		
 		let size = CGSize(width: 30, height: 30)
 		let defaultImage = { () -> UIImage in
-			return zdc.imageManager!.defaultUserAvatar().scaled(to: size, scalingMode: .aspectFit)
+			return zdc.imageManager!.defaultUserAvatar().scaled(to: size, scalingMode: .aspectFill)
 		}
 		let processing = {(image: UIImage) in
-			return image.scaled(to: size, scalingMode: .aspectFit)
+			return image.scaled(to: size, scalingMode: .aspectFill)
 		}
 		let preFetch = {[weak self](image: UIImage?, willFetch: Bool) -> Void in
 			self?.btnTitle?.setImage(image ?? defaultImage(), for: .normal)
@@ -214,7 +219,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		
 		let zdc = ZDCManager.zdc()
 		
-		databaseConnection = zdc.databaseManager!.uiDatabaseConnection
+		uiDatabaseConnection = zdc.databaseManager?.uiDatabaseConnection
 		self.initializeMappings()
         
 		NotificationCenter.default.addObserver( self,
@@ -234,7 +239,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 			return;
 		}
 		
-		guard let ext = databaseConnection.extension(Ext_View_Lists) as? YapDatabaseViewConnection else {
+		guard let ext = uiDatabaseConnection.extension(Ext_View_Lists) as? YapDatabaseViewConnection else {
 			return
 		}
 		
@@ -286,7 +291,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
     
 	private func initializeMappings() {
         
-		databaseConnection.read { (transaction) in
+		uiDatabaseConnection.read { (transaction) in
 			
 			if transaction.extension(Ext_View_Lists) is YapDatabaseViewTransaction {
 				
@@ -298,13 +303,17 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 			}
 		}
 	}
-    
+	
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MARK: Utilities
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	func listAtIndexPath(_ indexPath: IndexPath) -> List? {
 		
 		var list: List? = nil
 		if let mappings = self.mappings {
 		
-			databaseConnection.read({ (transaction) in
+			uiDatabaseConnection.read({ (transaction) in
 	
 				let viewTransaction = transaction.ext(Ext_View_Lists) as! YapDatabaseViewTransaction
 				list = viewTransaction.object(at: indexPath, with: mappings) as? List
@@ -318,7 +327,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		let zdc = ZDCManager.zdc()
 		
 		var listNode: ZDCNode? = nil
-		databaseConnection.read({ (transaction) in
+		uiDatabaseConnection.read({ (transaction) in
 			
 			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: self.localUserID) {
 				
@@ -332,7 +341,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 	func numberOfPendingTasks(listID: String) -> Int {
 		
 		var count: Int = 0
-		databaseConnection.read {  (transaction) in
+		uiDatabaseConnection.read {  (transaction) in
 			
 			if let vt = transaction.ext(Ext_View_Pending_Tasks) as? YapDatabaseViewTransaction {
 				count = Int(vt.numberOfItems(inGroup: listID))
@@ -345,7 +354,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 	func numberOfTotalTasks(listID: String) -> Int {
 		
 		var count: Int = 0
-		databaseConnection.read { (transaction) in
+		uiDatabaseConnection.read { (transaction) in
 			
 			if let vt = transaction.ext(Ext_View_Tasks) as? YapDatabaseViewTransaction {
 				count = Int(vt.numberOfItems(inGroup: listID))
@@ -507,7 +516,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		let localUserID = self.localUserID
 		
 		var result = true
-		databaseConnection.read {(transaction) in
+		uiDatabaseConnection.read {(transaction) in
 			
 			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
 				let listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kCollection_Lists)
@@ -581,19 +590,21 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
         self.present(alert, animated: true, completion: nil)
     }
     
-    private func moreAlertForListID(listID: String!)
-    {
-        var list: List? = nil
+	private func moreAlertForListID(listID: String) {
+		
+		var list: List? = nil
         
-        databaseConnection .read { (transaction) in
-            list  = transaction.object(forKey: listID, inCollection: kCollection_Lists) as? List
-        }
+		uiDatabaseConnection.read { (transaction) in
+		
+			list = transaction.object(forKey: listID, inCollection: kCollection_Lists) as? List
+		}
         
-        // Create an alert
-        let alertController = UIAlertController(
-            title: "",
-            message: nil,
-            preferredStyle: .actionSheet)
+		// Create an alert
+		let alertController = UIAlertController(
+			title          : "",
+			message        : nil,
+			preferredStyle : .actionSheet
+		)
         
         let titleAttributes = [NSAttributedString.Key.font: UIFont.preferredFont(forTextStyle:.headline),
                                NSAttributedString.Key.foregroundColor: UIColor.black]
@@ -620,13 +631,14 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
         self.present(alertController, animated: true, completion: nil)
     }
     
-    private func didTapRenameForListID(listID: String!)
-    {
-        var list: List! = nil
+	private func didTapRenameForListID(listID: String) {
+		
+		var list: List! = nil
         
-        databaseConnection .read { (transaction) in
-            list  = transaction.object(forKey: listID, inCollection: kCollection_Lists) as? List
-        }
+      uiDatabaseConnection.read { (transaction) in
+			
+			list  = transaction.object(forKey: listID, inCollection: kCollection_Lists) as? List
+		}
         
         let alert = UIAlertController(title:  NSLocalizedString("Rename List Entry", comment: ""),
                                       message: nil,
@@ -657,7 +669,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		let zdc = ZDCManager.zdc()
 		
 		var listNode: ZDCNode? = nil
-		databaseConnection.read { (transaction) in
+		uiDatabaseConnection.read { (transaction) in
 			
 			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: self.localUserID) {
 				
@@ -686,7 +698,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		let zdc = ZDCManager.zdc()
 		
 		var listNode: ZDCNode? = nil
-		databaseConnection.read { (transaction) in
+		uiDatabaseConnection.read { (transaction) in
 			
 			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: self.localUserID) {
 				
