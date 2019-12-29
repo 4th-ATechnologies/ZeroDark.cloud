@@ -22,19 +22,19 @@ Within the code, nearly all ZeroDarkCloud integration is done within the ZDCMana
 
 ZeroDarkTodo is a simple app, with only a few screens. First, we allow the user to create multiple Lists. Each list has a title, and simply acts as a container for a group of todo items.
 
-![ScreenShot_Lists](https://github.com/4th-ATechnologies/ZeroDark.cloud/raw/master/Samples/ZeroDarkTodo/Images/ScreenShot_Lists.png)
+![ScreenShot_Lists](./Screenshots/ScreenShot_Lists.png)
 
 Within each List, we allow the user to create any number of todo items, which we call Tasks:
 
-![ScreenShot_Tasks](https://github.com/4th-ATechnologies/ZeroDark.cloud/raw/master/Samples/ZeroDarkTodo/Images/ScreenShot_Tasks1.png)
+![ScreenShot_Tasks](./Screenshots/ScreenShot_Tasks1.png)
 
 We also allow the user to give each Task a priority (low, normal, high). And we allow them to optionally attach a photo to a Task:
 
-![ScreenShot_Tasks2](https://github.com/4th-ATechnologies/ZeroDark.cloud/raw/master/Samples/ZeroDarkTodo/Images/ScreenShot_Tasks2.png)
+![ScreenShot_Tasks2](./Screenshots/ScreenShot_Tasks2.png)
 
 And finally, we allow the user to share a List with other users. That is, to collaborate on a List. So, for example, Alice could share a list with Bob. Any changes that either of them make (add, modify or delete a Task) will be visible to both users.
 
-![ScreenShot_Sharing](https://github.com/4th-ATechnologies/ZeroDark.cloud/raw/master/Samples/ZeroDarkTodo/Images/ScreenShot_Sharing.png)
+![ScreenShot_Sharing](./Screenshots/ScreenShot_Sharing.png)
 
 ## The Basics
 
@@ -58,7 +58,7 @@ The term "treesystem" might be new, but the concept is simple. It's similar to a
 
 
 
-###### Treesystem != Filesystem
+#### Treesystem != Filesystem
 
 A traditional filesystem has directories & files. This design forces all content to reside in the leaves. That is, if you think about a traditional filesystem as a tree, you can see that all files are leaves, and all non-leaves are directories.
 
@@ -66,7 +66,7 @@ In contrast, the ZeroDark.cloud treesystem acts as a generic tree, where each it
 
 
 
-###### Treesystem = Hierarchial storage for your data
+#### Treesystem = Hierarchial storage for your data
 
 Look at the tree above, and think about the node (A). If this were a filesystem, then 'A' would have to be a directory. However, in a treesystem 'A' can be anything you want it to be. Perhaps 'A' is a Recipe object. And 'D', 'E' & 'F' are images of the recipe. Or perhaps 'A' is a Conversation object, and 'D', 'E', & 'F' are messages within the conversation. Or maybe 'A' is an Album, and 'D', 'E' & 'F' are songs in the album. You get the idea. 
 
@@ -191,7 +191,7 @@ Further, the framework only downloads the treesystem skeleton. It allows you to 
 
 
 
-###### 1. Node Metadata
+#### 1. Node Metadata
 
 The metadata is everything needed by the treesystem to store a node, but excluding the actual content of the node. This includes information such as:
 
@@ -204,7 +204,7 @@ The metadata is everything needed by the treesystem to store a node, but excludi
 
 
 
-###### 2. Node Data
+#### 2. Node Data
 
 The data is the actual content of the node. In other words, the content that your app generates.
 

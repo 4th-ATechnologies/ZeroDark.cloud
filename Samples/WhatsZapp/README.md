@@ -54,7 +54,7 @@ The term "treesystem" might be new, but the concept is simple. It's similar to a
 
 
 
-##### Treesystem != Filesystem
+#### Treesystem != Filesystem
 
 A traditional filesystem has directories & files. This design forces all content to reside in the leaves. That is, if you think about a traditional filesystem as a tree, you can see that all files are leaves, and all non-leaves are directories.
 
@@ -62,7 +62,7 @@ In contrast, the ZeroDark.cloud treesystem acts as a generic tree, where each it
 
 
 
-##### Treesystem = Hierarchial storage for your data
+#### Treesystem = Hierarchial storage for your data
 
 Look at the tree above, and think about the node (A). If this were a filesystem, then 'A' would have to be a directory. However, in a treesystem 'A' can be anything you want it to be. Perhaps 'A' is a Recipe object. And 'D', 'E' & 'F' are images of the recipe. Or perhaps 'A' is a Conversation object, and 'D', 'E', & 'F' are messages within the conversation. Or maybe 'A' is an Album, and 'D', 'E' & 'F' are songs in the album. You get the idea. 
 
@@ -211,3 +211,13 @@ So we setup indexes that:
 - sort messages within each conversation based on timestamp
 
 (*This is really boilerplate stuff, not directly related to ZeroDarkCloud.*)
+
+
+
+## More Information
+
+To find out more about ZeroDark.cloud:
+
+- [Website](https://www.zerodark.cloud/)
+- [Docs](https://zerodarkcloud.readthedocs.io/en/latest/) (high-level discussion of the framework, how it works, what it does, etc)
+- [API Reference](https://apis.zerodark.cloud/index.html) (low-level code documentation for the framework)
