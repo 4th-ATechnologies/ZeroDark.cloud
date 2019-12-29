@@ -51,6 +51,17 @@ extern NSString *const kZDCCloudRcrd_Data_Pointer_Owner;
 extern NSString *const kZDCCloudRcrd_Data_Pointer_Path;
 extern NSString *const kZDCCloudRcrd_Data_Pointer_CloudID;
 
+//
+// Dictionary keys used in .pubKey/.privKey files
+//
+
+extern NSString *const kZDCCloudKey_UserID;
+extern NSString *const kZDCCloudKey_Auth0ID;
+
+// ZDC activation code file extension
+
+extern NSString *const kZDCFileExtension_ActivationCode;
+
 // Names of special files found at resourcesURL
 
 extern NSString *const kSupportedConfigurations;
@@ -63,6 +74,19 @@ extern NSString *const kSupportedConfigurations_Key_AWSRegions;
 extern NSString *const kSupportedConfigurations_Key_AWSRegions_ComingSoon;
 extern NSString *const kSupportedConfigurations_Key_Providers;
 extern NSString *const kSupportedConfigurations_Key_AppleIAP;
+
+// Auth0 API
+
+extern NSString *const kAuth04thA_AppClientID;
+extern NSString *const kAuth04thA_Domain;
+
+// Auth0 Database acccount
+
+extern NSString *const kAuth04thAUserDomain;
+extern NSString *const kAuth04thARecoveryDomain;
+
+extern NSString *const kAuth0DBConnection_UserAuth;
+extern NSString *const kAuth0DBConnection_Recovery;
 
 // Auth0 Error codes
 

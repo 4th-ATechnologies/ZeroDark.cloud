@@ -11,6 +11,7 @@
 
 #import "AWSCredentialsManager.h"
 #import "Auth0Utilities.h"
+#import "ZDCConstantsPrivate.h"
 #import "ZDCLocalUser.h"
 #import "ZDCLocalUserAuth.h"
 #import "ZDCLocalUserPrivate.h"

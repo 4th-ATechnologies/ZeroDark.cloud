@@ -196,27 +196,4 @@ extern NSString *const kZDCDirPrefix_Deprecated_Inbox;
  */
 extern NSString *const kZDCDirPrefix_Deprecated_Outbox;
 
-//
-// Dictionary keys used in .pubKey/.privKey files
-//
-
-extern NSString *const kZDCCloudRcrd_UserID;
-extern NSString *const kZDCCloudRcrd_Auth0ID;
-
-// Auth0 API
-
-extern NSString *const kAuth04thA_AppClientID;
-extern NSString *const kAuth04thADomain;
-
-// Auth0 Database acccount
-
-extern NSString *const kAuth04thAUserDomain;
-extern NSString *const kAuth04thARecoveryDomain;
-
-extern NSString *const kAuth0DBConnection_UserAuth;
-extern NSString *const kAuth0DBConnection_Recovery;
-
-// ZDC activation code file extension
-extern NSString *const kZDCFileExtension_ActivationCode;
-
 NS_ASSUME_NONNULL_END

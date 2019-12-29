@@ -11,7 +11,7 @@
 
 #import "Auth0Constants.h"
 #import "Auth0Utilities.h"
-#import "ZDCConstants.h"
+#import "ZDCConstantsPrivate.h"
 
 static NSString *const k_provider    = @"provider";
 static NSString *const k_userID      = @"userID";

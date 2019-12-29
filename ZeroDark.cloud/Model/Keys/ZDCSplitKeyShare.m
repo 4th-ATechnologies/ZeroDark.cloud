@@ -9,11 +9,11 @@
 
 #import "ZDCSplitKeyShare.h"
 
+#import "ZDCConstantsPrivate.h"
 #import "ZDCObjectSubclass.h"
+
 #import "NSDate+ZeroDark.h"
 #import <S4Crypto/S4Crypto.h>
-#import "ZDCConstants.h"
-
 
 static int const kCurrentVersion = 0;
 
@@ -182,7 +182,7 @@ static NSString *const k_shareData		= @"shareData";
 
 - (NSString *)shareUserID
 {
-	return self.keyDict[kZDCCloudRcrd_UserID];
+	return self.keyDict[kZDCCloudKey_UserID];
 }
 
 @end

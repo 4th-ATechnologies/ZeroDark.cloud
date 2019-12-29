@@ -50,6 +50,15 @@ NSString *const kZDCCloudRcrd_Data_Pointer_Owner   = @"owner";
 NSString *const kZDCCloudRcrd_Data_Pointer_Path    = @"path";
 NSString *const kZDCCloudRcrd_Data_Pointer_CloudID = @"cloudID";
 
+// Dictionary keys used in .pubKey/.privKey files
+
+NSString *const kZDCCloudKey_UserID  = @"userID";
+NSString *const kZDCCloudKey_Auth0ID = @"auth0ID";
+
+// ZDC activation code file extension
+
+NSString *const kZDCFileExtension_ActivationCode = @"zdcactivationcode";
+
 // Names of special files found at resourcesURL
 
 NSString *const kSupportedConfigurations = @"supportedconfig.json";
@@ -61,6 +70,19 @@ NSString *const kSupportedConfigurations_Key_AWSRegions_ComingSoon = @"commingSo
 NSString *const kSupportedConfigurations_Key_Providers             = @"supportedIdentityProviders";
 NSString *const kSupportedConfigurations_Key_AppleIAP              = @"supportedAppleIap";
 
+// Auth0 API
+
+NSString *const kAuth04thA_AppClientID        = @"iLjaFx3CHIyzaXYjrundOOzmYIvS1nbu";
+NSString *const kAuth04thA_Domain              = @"4th-a.auth0.com";
+
+// Auth0 Database acccount
+
+NSString *const kAuth04thAUserDomain          = @"users.4th-a.com";
+NSString *const kAuth04thARecoveryDomain      = @"recovery.4th-a.com";
+
+NSString *const kAuth0DBConnection_UserAuth   = @"Username-Password-Authentication";
+NSString *const kAuth0DBConnection_Recovery   = @"Storm4-Recovery";
+
 // Auth0 Error codes
 
 NSString *const kAuth0Error_RateLimit           = @"too_many_requests";
@@ -71,6 +93,7 @@ NSString *const kAuth0Error_UserExists 			= @"user_exists";
 NSString *const kAuth0Error_UserNameExists 		= @"username_exists";
 
 NSString *const kAuth0ErrorDescription_Blocked  = @"user is blocked";
+
 
 @implementation ZDCConstants
 

@@ -2,7 +2,7 @@
 
 #import "AWSRegions.h"
 #import "S3Request.h"
-#import "ZDCConstants.h"
+#import "ZDCConstantsPrivate.h"
 
 #import "NSError+Auth0API.h"
 

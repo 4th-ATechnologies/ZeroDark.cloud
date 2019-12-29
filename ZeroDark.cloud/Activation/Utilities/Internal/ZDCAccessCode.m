@@ -6,7 +6,9 @@
 //
 
 #import "ZDCAccessCode.h"
+
 #import "ZeroDarkCloudPrivate.h"
+#import "ZDCConstantsPrivate.h"
 #import "AWSURL.h"
 
 // Categories
@@ -921,7 +923,7 @@ done:
 	
 	{
 		NSMutableDictionary * dict = [NSMutableDictionary dictionaryWithDictionary:shareDict];
-		[dict setObject: localUserID forKey:kZDCCloudRcrd_UserID];
+		[dict setObject: localUserID forKey:kZDCCloudKey_UserID];
 		shareDict = dict;
 	}
 	

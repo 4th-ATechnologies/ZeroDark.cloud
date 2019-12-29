@@ -13,10 +13,11 @@
 #import "Auth0Utilities.h"
 #import "AWSPayload.h"
 #import "BIP39Mnemonic.h"
-#import "ZDCLogging.h"
+#import "ZDCConstantsPrivate.h"
 #import "ZDCCloudNodeManager.h"
 #import "ZDCDatabaseManagerPrivate.h"
 #import "ZDCLocalUserPrivate.h"
+#import "ZDCLogging.h"
 #import "ZDCTrunkNodePrivate.h"
 #import "ZDCUserPrivate.h"
 #import "ZeroDarkCloudPrivate.h"
@@ -829,7 +830,7 @@ done:
 		
 		if (error) return; // from transaction block
 
-		[cryptoTools updateKeyProperty: kZDCCloudRcrd_Auth0ID
+		[cryptoTools updateKeyProperty: kZDCCloudKey_Auth0ID
 		                         value: auth0IDData
 		               withPublicKeyID: localUser.publicKeyID
 		                   transaction: transaction
@@ -960,7 +961,7 @@ done:
 		                                  options: 0
 		                                    error: nil];
 
-		[privateKey updateKeyProperty: kZDCCloudRcrd_Auth0ID
+		[privateKey updateKeyProperty: kZDCCloudKey_Auth0ID
 		                        value: auth0IDData
 		                   storageKey: zdc.storageKey
 		                        error: &exportError];

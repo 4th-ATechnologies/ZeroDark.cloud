@@ -10,7 +10,7 @@
 #import "ZDCPublicKey.h"
 
 #import "ZDCObjectSubclass.h"
-#import "ZDCConstants.h"
+#import "ZDCConstantsPrivate.h"
 
 // Categories
 #import "NSData+AWSUtilities.h"
@@ -79,7 +79,7 @@ static BOOL MakeSigningKey(Cipher_Algorithm    keyAlgorithm,
 	{
 		// Add userID to key as signable property
 		err = S4Key_SetPropertyExtended(pubCtx,
-		                                kZDCCloudRcrd_UserID.UTF8String,
+		                                kZDCCloudKey_UserID.UTF8String,
 		                                S4KeyPropertyType_UTF8String,
 		                                S4KeyPropertyExtended_Signable,
 		                        (void *)userID.UTF8String,

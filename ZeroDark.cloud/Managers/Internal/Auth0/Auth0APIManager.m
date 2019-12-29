@@ -10,6 +10,7 @@
 #import "Auth0APIManager.h"
 
 #import "ZDCConstants.h"
+#import "ZDCConstantsPrivate.h"
 #import "ZDCAsyncCompletionDispatch.h"
 
 // Categories
@@ -336,7 +337,7 @@ static Auth0APIManager *sharedInstance = nil;
 
 	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
 	urlComponents.scheme = @"https";
-	urlComponents.host = kAuth04thADomain;
+	urlComponents.host = kAuth04thA_Domain;
 	urlComponents.path = @"/oauth/token";
 
 	NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:8];
@@ -503,7 +504,7 @@ static Auth0APIManager *sharedInstance = nil;
 
 	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
 	urlComponents.scheme = @"https";
-	urlComponents.host = kAuth04thADomain;
+	urlComponents.host = kAuth04thA_Domain;
 	urlComponents.path = @"/dbconnections/signup";
 
 	NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:8];
@@ -662,7 +663,7 @@ static Auth0APIManager *sharedInstance = nil;
 	
 	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
 	urlComponents.scheme = @"https";
-	urlComponents.host = kAuth04thADomain;
+	urlComponents.host = kAuth04thA_Domain;
 	urlComponents.path = @"/userinfo";
 	
 	NSMutableArray<NSURLQueryItem *> *queryItems = [NSMutableArray arrayWithCapacity:1];
@@ -823,7 +824,7 @@ static Auth0APIManager *sharedInstance = nil;
 
 	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
 	urlComponents.scheme = @"https";
-	urlComponents.host = kAuth04thADomain;
+	urlComponents.host = kAuth04thA_Domain;
 	urlComponents.path = @"/oauth/token";
 
 	NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:4];
@@ -1018,7 +1019,7 @@ static Auth0APIManager *sharedInstance = nil;
 	
 	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
 	urlComponents.scheme = @"https";
-	urlComponents.host = kAuth04thADomain;
+	urlComponents.host = kAuth04thA_Domain;
 	urlComponents.path = @"/oauth/token";
 
 	NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:4];
@@ -1103,7 +1104,7 @@ static Auth0APIManager *sharedInstance = nil;
 	
 	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
 	urlComponents.scheme = @"https";
-	urlComponents.host = kAuth04thADomain;
+	urlComponents.host = kAuth04thA_Domain;
 	urlComponents.path = @"/delegation";
 
 	NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:5];
@@ -1281,7 +1282,7 @@ static Auth0APIManager *sharedInstance = nil;
 	
 	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
 	urlComponents.scheme = @"https";
-	urlComponents.host = kAuth04thADomain;
+	urlComponents.host = kAuth04thA_Domain;
 	urlComponents.path = @"/authorize";
 	
 	NSMutableArray<NSURLQueryItem *> *queryItems = [NSMutableArray arrayWithCapacity:params.count];
