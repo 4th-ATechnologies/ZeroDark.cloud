@@ -447,10 +447,10 @@ class MyMessagesViewController: MessagesViewController,
 		
 		let size = CGSize(width: 30, height: 30)
 		let defaultImage = {
-			return imageManager.defaultUserAvatar().scaled(to: size, scalingMode: .aspectFit)
+			return imageManager.defaultUserAvatar().scaled(to: size, scalingMode: .aspectFill)
 		}
 		let processing = {(image: UIImage) in
-			return image.scaled(to: size, scalingMode: .aspectFit)
+			return image.scaled(to: size, scalingMode: .aspectFill)
 		}
 		let preFetch = {[weak self] (image: UIImage?, willFetch: Bool) -> Void in
 			
@@ -616,10 +616,10 @@ class MyMessagesViewController: MessagesViewController,
 		
 		let size = avatarView.frame.size
 		let defaultImage = {
-			return imageManager.defaultUserAvatar().scaled(to: size, scalingMode: .aspectFit)
+			return imageManager.defaultUserAvatar().scaled(to: size, scalingMode: .aspectFill)
 		}
 		let processing = {(image: UIImage) in
-			return image.scaled(to: size, scalingMode: .aspectFit)
+			return image.scaled(to: size, scalingMode: .aspectFill)
 		}
 		let preFetch = { (image: UIImage?, willFetch: Bool) -> Void in
 			

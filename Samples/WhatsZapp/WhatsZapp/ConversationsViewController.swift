@@ -51,6 +51,9 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 		DDLogInfo("viewDidLoad()")
 		super.viewDidLoad()
 		
+		tableView.separatorInsetReference = .fromCellEdges
+		tableView.separatorInset = UIEdgeInsets(top: 0, left: 92, bottom: 0, right: 0)
+		
 		#if targetEnvironment(simulator)
 		do { // running on the simulator
 			
@@ -561,8 +564,8 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 			let imageManager = ZDCManager.zdc().imageManager!
 			
 			let avatarSize = cell.avatarView.frame.size
-			let defaultImage = {
-				return imageManager.defaultUserAvatar().scaled(to: avatarSize, scalingMode: .aspectFit)
+			let defaultImage = { () in
+				return imageManager.defaultUserAvatar().scaled(to: avatarSize, scalingMode: .aspectFill)
 			}
 			
 			if let remoteUser = self.remoteUser(id: conversation.remoteUserID) {
@@ -570,7 +573,7 @@ class ConversationsViewController: UIViewController, UITableViewDataSource, UITa
 				cell.titleLabel.text = remoteUser.displayName
 				
 				let processing = {(image: UIImage) in
-					return image.scaled(to: avatarSize, scalingMode: .aspectFit)
+					return image.scaled(to: avatarSize, scalingMode: .aspectFill)
 				}
 				let preFetch = {(image: UIImage?, willFetch: Bool) -> Void in
 					
