@@ -351,6 +351,7 @@ static NSString *const k_skippedPendingChangeIDs  = @"skippedPendingChangeIDs";
 	NSString *const kMove             = @"move";
 	NSString *const kDeleteLeaf       = @"delete-leaf";
 	NSString *const kDeleteNode       = @"delete-node";
+	NSString *const kUpdateAvatar     = @"update-avatar";
 	
 	NSString *requiredFileID = nextChange.fileID;
 	ZDCMutableChangeItem *mergedChange = [nextChange mutableCopy];
@@ -359,7 +360,7 @@ static NSString *const k_skippedPendingChangeIDs  = @"skippedPendingChangeIDs";
 	{
 		ZDCChangeItem *change = pendingChanges[i];
 		
-		if (![change.fileID isEqualToString:requiredFileID])
+		if (requiredFileID && ![change.fileID isEqualToString:requiredFileID])
 		{
 			// Change is for a different fileID.
 			// Thus it can't be merged with this one.
@@ -520,6 +521,13 @@ static NSString *const k_skippedPendingChangeIDs  = @"skippedPendingChangeIDs";
 				[allChangeIDs addObject:change.uuid];
 				effectiveChangeIDs = [allChangeIDs mutableCopy];
 			}
+			else // if isNonStandardCommand(commandB)
+			{
+				// Unknown command that applies to same file ?!?
+				// We must stop the optimizer here, and deal with the unknown command separately.
+				
+				break;
+			}
 		}
 		else if ([commandA isEqualToString:kMove])
 		{
@@ -586,6 +594,40 @@ static NSString *const k_skippedPendingChangeIDs  = @"skippedPendingChangeIDs";
 				[allChangeIDs addObject:change.uuid];
 				effectiveChangeIDs = [allChangeIDs mutableCopy];
 			}
+			else // if isNonStandardCommand(commandB)
+			{
+				// Unknown command that applies to same file ?!?
+				// We must stop the optimizer here, and deal with the unknown command separately.
+				
+				break;
+			}
+		}
+		else if ([commandA isEqualToString:kUpdateAvatar])
+		{
+			if ([commandB isEqualToString:kUpdateAvatar])
+			{
+				// Are both changes for the same avatar ?
+				//
+				// The path value(s) will be something like:
+				// "avatar/5dcca037370a4d0e9463eb75"
+				
+				NSString *pathA = mergedChange.path;
+				NSString *pathB =       change.path;
+				
+				if ([pathA isEqualToString:pathB])
+				{
+					// FOUND:
+					// - update-avatar + update-avatar
+					
+					// Consecutive update-avatar commands for the same identityID.
+					// We can merge them, which just requires updating the eTag value.
+					
+					mergedChange.eTag = change.eTag;
+					
+					[allChangeIDs addObject:change.uuid];
+					[effectiveChangeIDs addObject:change.uuid];
+				}
+			}
 		}
 		else // if isNonStandardCommand(commandA)
 		{
@@ -593,7 +635,6 @@ static NSString *const k_skippedPendingChangeIDs  = @"skippedPendingChangeIDs";
 			//
 			// - delete-leaf
 			// - delete-node
-			// - update-avatar
 			// - update-auth0
 			
 			break;

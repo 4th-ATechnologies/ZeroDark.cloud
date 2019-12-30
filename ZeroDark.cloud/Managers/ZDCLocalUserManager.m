@@ -1431,26 +1431,37 @@ done:
 	NSString *eTag_new = newAvatarData ? [[AWSPayload rawMD5HashForPayload:newAvatarData] lowercaseHexString] : nil;
 	NSString *eTag_old = oldAvatarData ? [[AWSPayload rawMD5HashForPayload:oldAvatarData] lowercaseHexString] : nil;
 	
-	if (newAvatarData)
-	{
-		ZDCDiskImport *import = [[ZDCDiskImport alloc] initWithCleartextData:newAvatarData];
-		import.storePersistently = YES;
-		import.eTag = eTag_new;
-		
-		NSError *error = nil;
-		[zdc.diskManager importUserAvatar: import
-		                          forUser: localUser
-		                       identityID: identityID
-		                            error: &error];
-		
-		if (error) {
-			ZDCLogWarn(@"Error importing image: %@", error);
-			return;
-		}
+	// When the user is adding/modifing the avatar, we obviously want to store the new avatar in the DiskManager.
+	// But what about when the user is deleting the avatar ?
+	//
+	// We used to do this, but it was a bug:
+	// [zdc.diskManager deleteUserAvatar:localUser.uuid forIdentityID:identityID]; // <= BUG
+	//
+	// Because the rest of the system ends up asking for the localUser's avatar again.
+	// And since the DiskManager has no record of it, the system ends up downloading whatever is in the cloud.
+	//
+	// But that's not what we want here.
+	// Instead, we need to store a nil placeholder to disk.
+	
+	ZDCDiskImport *import = nil;
+	if (newAvatarData) {
+		import = [[ZDCDiskImport alloc] initWithCleartextData:newAvatarData];
+	} else {
+		import = [[ZDCDiskImport alloc] init]; // import.isNilPlaceholder == YES
 	}
-	else
-	{
-		[zdc.diskManager deleteUserAvatar:localUser.uuid forIdentityID:identityID];
+	
+	import.storePersistently = YES;
+	import.eTag = eTag_new;
+	
+	NSError *error = nil;
+	[zdc.diskManager importUserAvatar: import
+	                          forUser: localUser
+	                       identityID: identityID
+	                            error: &error];
+	
+	if (error) {
+		ZDCLogWarn(@"Error importing image: %@", error);
+		return;
 	}
 	
 	ZDCCloudOperation *op =

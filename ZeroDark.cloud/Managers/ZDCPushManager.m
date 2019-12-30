@@ -7029,7 +7029,18 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
  		}
 		else
 		{
-			request.HTTPMethod = @"DELETE";
+			// We used to do this:
+			// request.HTTPMethod = @"DELETE";
+			//
+			// But on iOS, Apple doesn't allow us to perform a DELETE operation on a background NSURLSession.
+			// Thus we have to use an empty POST operation instead.
+			//
+			// So to simplify things (limit differences between platforms),
+			// we're just always going to use an empty POST now.
+			//
+			// This also allows us to remove a method from our serverless list.
+			
+			request.HTTPMethod = @"POST";
 		}
 
 		if (context.eTag) {
@@ -7049,8 +7060,10 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		NSURLSessionUploadTask *task = nil;
 	#if TARGET_OS_IPHONE
 		
+		NSURL *sourceFileURL = context.uploadFileURL ?: [ZDCDirectoryManager emptyUploadFileURL];
+		
 		task = [session uploadTaskWithRequest: request
-		                             fromFile: context.uploadFileURL
+		                             fromFile: sourceFileURL
 		                             progress: nil
 		                    completionHandler: nil];
 		

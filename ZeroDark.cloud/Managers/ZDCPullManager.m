@@ -1955,7 +1955,7 @@ static NSUInteger const kMaxFailCount = 8;
 {
 	ZDCLogTrace(@"[%@] ProcessPendingChange: update-avatar", pullState.localUserID);
 	
-	// Example change:
+	// Example #1 (avatar added/modified):
 	//
 	// {
 	//   app = "*";
@@ -1967,6 +1967,20 @@ static NSUInteger const kMaxFailCount = 8;
 	//   region = "us-west-2";
 	//   ts = 1573939631567;
 	//   uuid = 9D37AF2AFB694539A1340C3124A12A4D;
+	// }
+	//
+	// Example #2 (avatar deleted):
+	//
+	// {
+	//   app = "*";
+	//   bucket = "com.4th-a.user.99xownhcm5p1t1ofm4ny4jq159r8zd5z-675c7206";
+	//   command = "update-avatar";
+	//   eTag = nil;
+	//   id = 01751459B7E6473CA99336297B36BE47;
+	//   path = "avatar/5dcca037370a4d0e9463eb75";
+	//   region = "us-west-2";
+	//   ts = 1577743764542;
+	//   uuid = 01751459B7E6473CA99336297B36BE47;
 	// }
 	//
 	// We're being told about a change to a localUser's avatar (for a particular auth0_id).
@@ -4813,16 +4827,15 @@ static NSUInteger const kMaxFailCount = 8;
  * Encapsulates the logic for comparing the local avatar to a cloud version,
  * to determine if our local version is either outdated or up-to-date.
  */
-- (BOOL)needsUpdateAvatar:(NSString *)cloud_eTag
+- (BOOL)needsUpdateAvatar:(nullable NSString *)cloud_eTag
              forLocalUser:(ZDCLocalUser *)localUser
                identityID:(NSString *)identityID
 {
 	ZDCDiskExport *export = [zdc.diskManager userAvatar:localUser forIdentityID:identityID];
-	ZDCCryptoFile *cryptoFile = export.cryptoFile;
-	
-	if (cryptoFile == nil)
+	if (export == nil)
 	{
-		// Avatar isn't stored in the DiskManager, so doesn't need to be updated.
+		// No avatar stored in the DiskManager. Not even a nil placeholder.
+		// So nothing needs to be updated.
 		return NO;
 	}
 	
@@ -4831,7 +4844,7 @@ static NSUInteger const kMaxFailCount = 8;
 	
 	NSString *local_eTag = export.eTag;
 	
-	if (local_eTag == nil)
+	if (local_eTag == nil && export.cryptoFile)
 	{
 		// Note: We're currently executing on a background thread (concurrentQueue).
 		// So synchronous diskIO is OK here.
@@ -4854,10 +4867,21 @@ static NSUInteger const kMaxFailCount = 8;
 		local_eTag = [[AWSPayload rawMD5HashForPayload:data] lowercaseHexString];
 	}
 	
-	if ([local_eTag isEqualToString:cloud_eTag])
+	if (local_eTag)
 	{
-		// Local avatar is already up-to-date.
-		return NO;
+		if ([local_eTag isEqual:cloud_eTag])
+		{
+			// Local avatar is already up-to-date.
+			return NO;
+		}
+	}
+	else // local_eTag == nil
+	{
+		if (cloud_eTag == nil)
+		{
+			// Local avatar is nil. And so is cloud avatar.
+			return NO;
+		}
 	}
 	
 	// What we have in the DiskManager doesn't match what's in the cloud.
@@ -4877,8 +4901,8 @@ static NSUInteger const kMaxFailCount = 8;
 			
 			if ([op.localUserID isEqualToString:localUser.uuid] && (op.type == ZDCCloudOperationType_Avatar))
 			{
-				if ([op.avatar_oldETag isEqualToString:cloud_eTag] ||
-				    [op.avatar_newETag isEqualToString:cloud_eTag]  )
+				if ([op.avatar_oldETag isEqual:cloud_eTag] ||
+				    [op.avatar_newETag isEqual:cloud_eTag]  )
 				{
 					hasPotentialMatch = YES;
 					*stop = YES;
