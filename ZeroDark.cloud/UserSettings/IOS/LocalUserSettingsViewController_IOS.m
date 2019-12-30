@@ -124,8 +124,13 @@ typedef NS_ENUM(NSInteger, TblRow) {
 	_tblButtons.rowHeight = UITableViewAutomaticDimension;
 	
 	_tblButtons.separatorStyle = UITableViewCellSeparatorStyleSingleLine;
+	if (@available(iOS 11.0, *)) {
+		_tblButtons.separatorInsetReference = UITableViewSeparatorInsetFromCellEdges;
+	}
+	_tblButtons.separatorInset = UIEdgeInsetsMake(0, 52, 0, 0); // top, left, bottom, right
+	
 	_tblButtons.tableFooterView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, _tblButtons.frame.size.width, 1)];
-	_tblButtons.separatorInset = UIEdgeInsetsMake(0, 44, 0, 0); // top, left, bottom, right
+	
 	
 	NSBundle *zdcBundle = [ZeroDarkCloud frameworkBundle];
 	CGSize imageSize = (CGSize){
