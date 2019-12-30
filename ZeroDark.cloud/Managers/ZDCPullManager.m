@@ -908,25 +908,10 @@ static NSUInteger const kMaxFailCount = 8;
 	}
 	else if ([command isEqualToString:@"update-avatar"])
 	{
-		// Notify avatar system that an avatar image (for a localUser) may have changed.
-		
-	//	NSString *avatarFilename = [change.path lastPathComponent];
-	//	NSString *eTag           = change.eTag;
-	
 		[self processPendingChange_UpdateAvatar: change
 		                              changeIDs: changeIDs
 		                              pullState: pullState
 		                        finalCompletion: finalCompletionBlock];
-		
-		[self skipPendingChange: change
-		              changeIDs: changeIDs
-		              pullState: pullState
-		        finalCompletion: finalCompletionBlock
-		  transactionCompletion:^{
-	
-		// Todo: Need to handle this properly
-		//	[self postAvatarUpdatedNotification:localUserID withFilename:avatarFilename eTag:eTag];
-		}];
 	}
 	else if ([command isEqualToString:@"update-auth0"])
 	{
@@ -1991,100 +1976,30 @@ static NSUInteger const kMaxFailCount = 8;
 	
 	NSString *const localUserID = pullState.localUserID;
 	
-	NSString *auth0_userID = [change.path lastPathComponent];
-	NSString *auth0_id = [NSString stringWithFormat:@"auth0|%@", auth0_userID];
+	NSString *identity_userID = [change.path lastPathComponent];
+	NSString *identityID = [NSString stringWithFormat:@"auth0|%@", identity_userID];
 	
 	NSString *cloud_eTag = change.eTag;
 	
 	__block ZDCLocalUser *localUser = nil;
-	[[self roConnection] readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	[[self roConnection] asyncReadWithBlock:^(YapDatabaseReadTransaction *transaction) {
 		
 		localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
-	}];
-	
-	ZDCDiskExport *export = [zdc.diskManager userAvatar:localUser forIdentityID:auth0_id];
-	ZDCCryptoFile *cryptoFile = export.cryptoFile;
-	
-	if (cryptoFile == nil)
-	{
-		// Avatar isn't stored in the DiskManager, so we're done here.
-		[self skipPendingChange: change
-		              changeIDs: changeIDs
-		              pullState: pullState
-		        finalCompletion: finalCompletionBlock];
-		return;
-	}
-	
-	// Note: We're currently executing on a background thread (concurrentQueue).
-	// So synchronous diskIO is OK here.
-	
-	NSError *error = nil;
-	NSData *data = [ZDCFileConversion decryptCryptoFileIntoMemory:export.cryptoFile error:&error];
-	
-	if (error || !data)
-	{
-		// File is corrupt — delete it.
-		[zdc.diskManager deleteUserAvatar:localUserID forIdentityID:auth0_id];
 		
-		// Avatar isn't stored in the DiskManager (anymore), so we're done here.
-		[self skipPendingChange: change
-		              changeIDs: changeIDs
-		              pullState: pullState
-		        finalCompletion: finalCompletionBlock];
-		return;
-	}
-	
-	// AWS eTags are actually just MD5 hashes.
-	// So we can calculate AWS's eTag from our local data.
-	
-	NSString *local_eTag = [[AWSPayload rawMD5HashForPayload:data] lowercaseHexString];
-	
-	if ([local_eTag isEqualToString:cloud_eTag])
-	{
-		// We're already up-to-date.
-		[self skipPendingChange: change
-		              changeIDs: changeIDs
-		              pullState: pullState
-		        finalCompletion: finalCompletionBlock];
-		return;
-	}
-	
-	// What we have in the DiskManager doesn't match what's in the cloud.
-	// But this could be because we have an operation queued to push a NEW avatar to the cloud.
-	
-	__block BOOL hasPotentialMatch = NO;
-	
-	ZDCCloud *ext = [zdc.databaseManager cloudExtForUserID:@"*" treeID:@"*"];
-	YapDatabaseCloudCorePipeline *pipeline = [ext defaultPipeline];
-	
-	[pipeline enumerateOperationsUsingBlock:
-		^(YapDatabaseCloudCoreOperation *operation, NSUInteger graphIdx, BOOL *stop)
-	{
-		if ([operation isKindOfClass:[ZDCCloudOperation class]])
+	} completionQueue:concurrentQueue completionBlock:^{
+		
+		BOOL needsUpdate = [self needsUpdateAvatar:cloud_eTag forLocalUser:localUser identityID:identityID];
+		
+		if (needsUpdate)
 		{
-			ZDCCloudOperation *op = (ZDCCloudOperation *)operation;
-			
-			if ([op.localUserID isEqualToString:localUserID] && (op.type == ZDCCloudOperationType_Avatar))
-			{
-				if ([op.avatar_oldETag isEqualToString:cloud_eTag] ||
-				    [op.avatar_newETag isEqualToString:cloud_eTag]  )
-				{
-					hasPotentialMatch = YES;
-					*stop = YES;
-				}
-			}
+			[zdc.diskManager deleteUserAvatar:localUserID forIdentityID:identityID];
 		}
+		
+		[self skipPendingChange: change
+		              changeIDs: changeIDs
+		              pullState: pullState
+		        finalCompletion: finalCompletionBlock];
 	}];
-	
-	if (!hasPotentialMatch)
-	{
-		[zdc.diskManager deleteUserAvatar:localUserID forIdentityID:auth0_id];
-	}
-	
-	[self skipPendingChange: change
-	              changeIDs: changeIDs
-	              pullState: pullState
-	        finalCompletion: finalCompletionBlock];
 }
 
 /**
@@ -2452,10 +2367,10 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		// Fetch needed information for the pull
 		
-		ZDCUser *user = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
+		ZDCLocalUser *localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
 		
-		bucket = user.aws_bucket;
-		region = user.aws_region;
+		bucket = localUser.aws_bucket;
+		region = localUser.aws_region;
 		
 		for (NSString *trunkID in trunkIDs)
 		{
@@ -2486,8 +2401,46 @@ static NSUInteger const kMaxFailCount = 8;
 		
 	} completionQueue:concurrentQueue completionBlock:^{
 		
+		ZDCPullTaskMultiCompletion *multiCompletion = nil;
+		{ // Scoping
+			
+			ZDCPullTaskSingleCompletion taskCompletion =
+			^(YapDatabaseReadWriteTransaction *transaction, ZDCPullTaskResult *result, uint remaining){
+		
+				NSAssert(result != nil, @"Bad parameter for block: ZDCPullTaskResult");
+				if (result.pullResult == ZDCPullResult_Success) {
+					NSAssert(transaction != nil, @"Bad parameter for block: transaction is nil (with success status)");
+				}
+				
+				dispatch_async(concurrentQueue, ^{ @autoreleasepool {
+					
+					if (![pullStateManager isPullCancelled:pullState]) {
+						[self dequeueNextItemIfPossible:pullState];
+					}
+				}});
+				
+				ZDCLogTrace(@"[%@] Trunk nodes remaining = %u", pullState.localUserID, remaining);
+			};
+		
+			multiCompletion =
+			  [[ZDCPullTaskMultiCompletion alloc] initWithPendingCount: 0
+			                                       taskCompletionBlock: taskCompletion
+			                                      finalCompletionBlock: finalCompletionBlock];
+		}
+		
+		NSString *prefix_root = [NSString stringWithFormat:@"%@/", pullState.treeID];
+		NSString *prefix_avatars = @"avatar/";
+	
+		// Important:
+		//   We incrementPendingCount BEFORE we start the async listBucket task.
+		//   We do this because we must ensure the multiCompletion doesn't invoke
+		//   the finalCompletionBlock prematurely.
+		//
+		[multiCompletion incrementPendingCount:(uint)trunkNodes.count];
 		[self listBucket: bucket
 		          region: region
+		      withPrefix: prefix_root
+		      rootNodeID: localUserID
 		       pullState: pullState
 		      completion:^(ZDCPullTaskResult *result)
 		{
@@ -2499,35 +2452,10 @@ static NSUInteger const kMaxFailCount = 8;
 			
 			if (result.pullResult != ZDCPullResult_Success)
 			{
-				finalCompletionBlock(nil, result);
+				for (ZDCTrunkNode *trunkNode __attribute__((unused)) in trunkNodes) {
+					multiCompletion.wrapper(nil, result);
+				}
 				return;
-			}
-			
-			ZDCPullTaskMultiCompletion *multiCompletion = nil;
-			{ // Scoping
-				
-				ZDCPullTaskSingleCompletion taskCompletion =
-				^(YapDatabaseReadWriteTransaction *transaction, ZDCPullTaskResult *result, uint remaining){
-	
-					NSAssert(result != nil, @"Bad parameter for block: ZDCPullTaskResult");
-					if (result.pullResult == ZDCPullResult_Success) {
-						NSAssert(transaction != nil, @"Bad parameter for block: transaction is nil (with success status)");
-					}
-	
-					dispatch_async(concurrentQueue, ^{ @autoreleasepool {
-	
-						if (![pullStateManager isPullCancelled:pullState]) {
-							[self dequeueNextItemIfPossible:pullState];
-						}
-					}});
-	
-					ZDCLogTrace(@"[%@] Trunk nodes remaining = %u", pullState.localUserID, remaining);
-				};
-	
-				multiCompletion =
-				  [[ZDCPullTaskMultiCompletion alloc] initWithPendingCount: (uint)trunkNodes.count
-				                                       taskCompletionBlock: taskCompletion
-				                                      finalCompletionBlock: finalCompletionBlock];
 			}
 			
 			for (ZDCTrunkNode *trunkNode in trunkNodes)
@@ -2538,24 +2466,50 @@ static NSUInteger const kMaxFailCount = 8;
 				     pullState: pullState
 				    completion: multiCompletion.wrapper];
 			}
+		}];
+	
+		// Important:
+		//   We incrementPendingCount BEFORE we start the async listBucket task.
+		//   We do this because we must ensure the multiCompletion doesn't invoke
+		//   the finalCompletionBlock prematurely.
+		//
+		[multiCompletion incrementPendingCount];
+		[self listBucket: bucket
+		          region: region
+		      withPrefix: prefix_avatars
+		      rootNodeID: @"avatars"
+		       pullState: pullState
+		      completion:^(ZDCPullTaskResult *result)
+		{
+			NSAssert(result != nil, @"Bad parameter for block: ZDCPullTaskResult");
 			
-		//	[self syncAvatarsWithBucket: bucket
-		//	                     region: region
-		//	                  pullState: pullState
-		//	                 completion: innerCompletionBlock]; Don't forget to change pendingCount initialization
+			if ([pullStateManager isPullCancelled:pullState]) {
+				return;
+			}
 			
-			NSAssert(trunkNodes.count != 0, @"Pull is never going to complete!");
+			if (result.pullResult != ZDCPullResult_Success)
+			{
+				multiCompletion.wrapper(nil, result);
+				return;
+			}
+			
+			[self syncAvatarsWithBucket: bucket
+			                     region: region
+			                  pullState: pullState
+			                 completion: multiCompletion.wrapper];
 		}];
 	}];
 }
 
 - (void)listBucket:(NSString *)bucket
             region:(AWSRegion)region
+        withPrefix:(NSString *)prefix
+        rootNodeID:(NSString *)rootNodeID
          pullState:(ZDCPullState *)pullState
         completion:(void(^)(ZDCPullTaskResult *result))completionBlock
 {
 	NSString *const localUserID = pullState.localUserID;
-	ZDCLogTrace(@"[%@] List bucket: %@", localUserID, bucket);
+	ZDCLogTrace(@"[%@] List bucket with prefix: %@", localUserID, prefix);
 	
 	__block NSURLSessionDataTask *task = nil;
 	
@@ -2645,7 +2599,7 @@ static NSUInteger const kMaxFailCount = 8;
 			return;
 		}
 		
-		[pullState pushList:s3Response.objectList withRootNodeID:localUserID];
+		[pullState pushList:s3Response.objectList withRootNodeID:rootNodeID];
 		
 		if (s3Response.nextContinuationToken)
 		{
@@ -2704,8 +2658,6 @@ static NSUInteger const kMaxFailCount = 8;
 			AFURLSessionManager *session = sessionInfo.session;
 		#endif
 			
-			NSString *prefix = [NSString stringWithFormat:@"%@/", pullState.treeID];
-			
 			NSMutableArray<NSURLQueryItem *> *queryItems = [NSMutableArray arrayWithCapacity:4];
 			
 			[queryItems addObject:[NSURLQueryItem queryItemWithName:@"list-type" value:@"2"]];
@@ -2717,17 +2669,17 @@ static NSUInteger const kMaxFailCount = 8;
 			
 			NSURLComponents *urlComponents = nil;
 			NSMutableURLRequest *request =
-			  [S3Request getBucket:bucket
-			              inRegion:region
-			        withQueryItems:queryItems
-			      outUrlComponents:&urlComponents];
+			  [S3Request getBucket: bucket
+			              inRegion: region
+			        withQueryItems: queryItems
+			      outUrlComponents: &urlComponents];
 			
-			[AWSSignature signRequest:request
-			               withRegion:region
-			                  service:AWSService_S3
-			              accessKeyID:auth.aws_accessKeyID
-			                   secret:auth.aws_secret
-			                  session:auth.aws_session];
+			[AWSSignature signRequest: request
+			               withRegion: region
+			                  service: AWSService_S3
+			              accessKeyID: auth.aws_accessKeyID
+			                   secret: auth.aws_secret
+			                  session: auth.aws_session];
 			
 			task = [session dataTaskWithRequest: request
 			                     uploadProgress: nil
@@ -3081,12 +3033,12 @@ static NSUInteger const kMaxFailCount = 8;
 }
 
 /**
- * Called when a RCRD is fetched with encapsulates a pointer to a non-local location.
+ * Called when a RCRD is fetched which encapsulates a pointer to a non-local location.
  * E.g. we encounter a RCRD in Alice's local bucket that points to Bob's bucket.
 **/
 - (void)syncPointeeNode:(ZDCNode *)pointeeNode
             pointerNode:(ZDCNode *)pointerNode
-               pullItem:(ZDCPullItem *)pullItem
+               pullItem:(ZDCPullItem *)pullItem // <= contains completionBlock(s)
               pullState:(ZDCPullState *)pullState
 {
 	NSParameterAssert(pointeeNode != nil);
@@ -3646,6 +3598,63 @@ static NSUInteger const kMaxFailCount = 8;
 	Step1();
 }
 
+- (void)syncAvatarsWithBucket:(NSString *)bucket
+                       region:(AWSRegion)region
+                    pullState:(ZDCPullState *)pullState
+                   completion:(ZDCPullTaskCompletion)completionBlock
+{
+	NSParameterAssert(bucket != nil);
+	NSParameterAssert(region != AWSRegion_Invalid);
+	NSParameterAssert(pullState != nil);
+	NSParameterAssert(completionBlock != nil);
+	
+	NSString *const localUserID = pullState.localUserID;
+	__block ZDCLocalUser *localUser = nil;
+	
+	[[self roConnection] asyncReadWithBlock:^(YapDatabaseReadTransaction * _Nonnull transaction) {
+		
+		localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
+		
+	} completionQueue:concurrentQueue completionBlock:^{
+		
+		if ([pullStateManager isPullCancelled:pullState])
+		{
+			return;
+		}
+		
+		NSArray<S3ObjectInfo *> *avatarsList = [pullState popListWithPrefix:@"avatar/" rootNodeID:@"avatars"];
+		
+		for (S3ObjectInfo *info in avatarsList)
+		{
+			// Example info.key: "avatar/5dcca037370a4d0e9463eb75"
+			
+			NSArray<NSString*> *components = [info.key pathComponents];
+			
+			if (components.count != 2) {
+				continue;
+			}
+			
+			NSString *identity_userID = components[1];
+			NSString *identityID = [NSString stringWithFormat:@"auth0|%@", identity_userID];
+			
+			// This method potentially involves a lot of diskIO,
+			// so we prefer to make this call outside of a readWriteTransaction.
+			//
+			BOOL needsUpdate = [self needsUpdateAvatar:info.eTag forLocalUser:localUser identityID:identityID];
+			
+			if (needsUpdate)
+			{
+				[zdc.diskManager deleteUserAvatar:localUserID forIdentityID:identityID];
+			}
+		}
+		
+		[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+			
+			completionBlock(transaction, [ZDCPullTaskResult success]);
+		}];
+	}];
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Pull Queue
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3699,7 +3708,8 @@ static NSUInteger const kMaxFailCount = 8;
  *
  * Will conditionally recurse into the node's children, if a non-nil dirCompletionBlock is given.
  */
-- (void)pullItem:(ZDCPullItem *)pullItem pullState:(ZDCPullState *)pullState
+- (void)pullItem:(ZDCPullItem *)pullItem   // <= contains completionBlock(s)
+       pullState:(ZDCPullState *)pullState
 {
 	ZDCLogTrace(@"[%@] Pull item: %@", pullState.localUserID, pullItem.rcrdCloudPath);
 	
@@ -4799,6 +4809,99 @@ static NSUInteger const kMaxFailCount = 8;
 	}
 }
 
+/**
+ * Encapsulates the logic for comparing the local avatar to a cloud version,
+ * to determine if our local version is either outdated or up-to-date.
+ */
+- (BOOL)needsUpdateAvatar:(NSString *)cloud_eTag
+             forLocalUser:(ZDCLocalUser *)localUser
+               identityID:(NSString *)identityID
+{
+	ZDCDiskExport *export = [zdc.diskManager userAvatar:localUser forIdentityID:identityID];
+	ZDCCryptoFile *cryptoFile = export.cryptoFile;
+	
+	if (cryptoFile == nil)
+	{
+		// Avatar isn't stored in the DiskManager, so doesn't need to be updated.
+		return NO;
+	}
+	
+	// We need to determine if our local avatar is up-to-date or outdated.
+	// To do that, we need to compare the local_eTag with the cloud_eTag.
+	
+	NSString *local_eTag = export.eTag;
+	
+	if (local_eTag == nil)
+	{
+		// Note: We're currently executing on a background thread (concurrentQueue).
+		// So synchronous diskIO is OK here.
+		
+		NSError *error = nil;
+		NSData *data = [ZDCFileConversion decryptCryptoFileIntoMemory:export.cryptoFile error:&error];
+	
+		if (error || !data)
+		{
+			// File is corrupt — delete it.
+			[zdc.diskManager deleteUserAvatar:localUser.uuid forIdentityID:identityID];
+	
+			// Avatar isn't stored in the DiskManager (anymore), so it doesn't need to be updated.
+			return NO;
+		}
+		
+		// AWS eTags are actually just MD5 hashes.
+		// So we can calculate AWS's eTag from our local data.
+		
+		local_eTag = [[AWSPayload rawMD5HashForPayload:data] lowercaseHexString];
+	}
+	
+	if ([local_eTag isEqualToString:cloud_eTag])
+	{
+		// Local avatar is already up-to-date.
+		return NO;
+	}
+	
+	// What we have in the DiskManager doesn't match what's in the cloud.
+	// But this could be because we have an operation queued to push a NEW avatar to the cloud.
+	
+	__block BOOL hasPotentialMatch = NO;
+	
+	ZDCCloud *ext = [zdc.databaseManager cloudExtForUserID:@"*" treeID:@"*"];
+	YapDatabaseCloudCorePipeline *pipeline = [ext defaultPipeline];
+	
+	[pipeline enumerateOperationsUsingBlock:
+		^(YapDatabaseCloudCoreOperation *operation, NSUInteger graphIdx, BOOL *stop)
+	{
+		if ([operation isKindOfClass:[ZDCCloudOperation class]])
+		{
+			ZDCCloudOperation *op = (ZDCCloudOperation *)operation;
+			
+			if ([op.localUserID isEqualToString:localUser.uuid] && (op.type == ZDCCloudOperationType_Avatar))
+			{
+				if ([op.avatar_oldETag isEqualToString:cloud_eTag] ||
+				    [op.avatar_newETag isEqualToString:cloud_eTag]  )
+				{
+					hasPotentialMatch = YES;
+					*stop = YES;
+				}
+			}
+		}
+	}];
+	
+	if (hasPotentialMatch)
+	{
+		// Local avatar is considered up-to-date, probably ahead of the cloud.
+		return NO;
+	}
+	else // !hasPotentialMatch
+	{
+		// Local avatar exists, but doesn't match the cloud.
+		// And there aren't queued operations which match the cloud.
+		//
+		// Which means we're out-of-date.
+		return YES;
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Low-Level Fetching
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5221,6 +5324,8 @@ static NSUInteger const kMaxFailCount = 8;
 	NSSet<NSString *> *deletedNodeIDs = pullState.unprocessedNodeIDs;
 	if (deletedNodeIDs.count > 0)
 	{
+		ZDCNodeManager *nodeManager = [ZDCNodeManager sharedInstance];
+		
 		NSMutableSet<NSString*> *topLevelDeletedNodeIDs = [NSMutableSet set];
 		
 		for (NSString *nodeID in deletedNodeIDs)
@@ -5229,9 +5334,7 @@ static NSUInteger const kMaxFailCount = 8;
 			if (node)
 			{
 				BOOL parentDeleted = NO;
-				
-				NSArray<NSString*> *parentNodeIDs =
-				  [[ZDCNodeManager sharedInstance] parentNodeIDsForNode:node transaction:transaction];
+				NSArray<NSString*> *parentNodeIDs = [nodeManager parentNodeIDsForNode:node transaction:transaction];
 				
 				for (NSString *parentNodeID in parentNodeIDs)
 				{

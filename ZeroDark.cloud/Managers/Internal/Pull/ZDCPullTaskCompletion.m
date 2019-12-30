@@ -64,6 +64,11 @@
 	return self;
 }
 
+- (void)incrementPendingCount
+{
+	incrementPendingCount(1);
+}
+
 - (void)incrementPendingCount:(uint)increment
 {
 	incrementPendingCount(increment);

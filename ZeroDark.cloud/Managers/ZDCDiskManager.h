@@ -789,6 +789,9 @@ extern NSString *const kZDCDiskManagerChanges;
 /**
  * The DiskManager can store an associated eTag with every imported file.
  * This allows you to determine which version of a file is cached
+ *
+ * The eTag value is stored to disk in an encrypted manner.
+ * In particular, it is encrypted & then stored via an xattr.
  */
 @property (nonatomic, copy, readwrite, nullable) NSString *eTag;
 

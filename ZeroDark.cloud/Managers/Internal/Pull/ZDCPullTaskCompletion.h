@@ -49,6 +49,7 @@ typedef void(^ZDCPullTaskSingleCompletion)(YapDatabaseReadWriteTransaction *_Nul
                  taskCompletionBlock:(nullable ZDCPullTaskSingleCompletion)taskCompletionBlock
                 finalCompletionBlock:(ZDCPullTaskCompletion)finalCompletionBlock;
 
+- (void)incrementPendingCount;
 - (void)incrementPendingCount:(uint)increment;
 
 @property (nonatomic, readonly) ZDCPullTaskCompletion wrapper;

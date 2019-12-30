@@ -1428,10 +1428,14 @@ done:
 	NSParameterAssert(localUser != nil);
 	NSParameterAssert(identityID != nil);
 	
+	NSString *eTag_new = newAvatarData ? [[AWSPayload rawMD5HashForPayload:newAvatarData] lowercaseHexString] : nil;
+	NSString *eTag_old = oldAvatarData ? [[AWSPayload rawMD5HashForPayload:oldAvatarData] lowercaseHexString] : nil;
+	
 	if (newAvatarData)
 	{
 		ZDCDiskImport *import = [[ZDCDiskImport alloc] initWithCleartextData:newAvatarData];
 		import.storePersistently = YES;
+		import.eTag = eTag_new;
 		
 		NSError *error = nil;
 		[zdc.diskManager importUserAvatar: import
@@ -1455,8 +1459,8 @@ done:
 	                                            type: ZDCCloudOperationType_Avatar];
 	
 	op.avatar_auth0ID = identityID;
-	op.avatar_oldETag = oldAvatarData ? [[AWSPayload rawMD5HashForPayload:oldAvatarData] lowercaseHexString] : nil;
-	op.avatar_newETag = newAvatarData ? [[AWSPayload rawMD5HashForPayload:newAvatarData] lowercaseHexString] : nil;
+	op.avatar_oldETag = eTag_old;
+	op.avatar_newETag = eTag_new;
 	
 	NSString *extName = [zdc.databaseManager cloudExtNameForUserID:@"*" treeID:@"*"];
 	
