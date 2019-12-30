@@ -4179,6 +4179,46 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
  * See header file for description.
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCDiskManager.html
+*/
+- (NSArray<NSString*> *)storedIdentityIDs:(NSString *)userID
+{
+	__block NSMutableArray *identityIDs = nil;
+	
+	dispatch_block_t block = ^{ @autoreleasepool {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		NSMutableDictionary<NSString *, NSMutableArray<ZDCFileInfo *> *> *dict = dict_userAvatars;
+		
+		NSArray <ZDCFileInfo *> *infos = dict[userID];
+		if (infos.count > 0)
+		{
+			identityIDs = [NSMutableArray arrayWithCapacity:infos.count];
+			
+			for (ZDCFileInfo *info in infos)
+			{
+				if (!info.pendingDelete)
+				{
+					[identityIDs addObject:info.identityID];
+				}
+			}
+		}
+		
+	#pragma clang diagnostic pop
+	}};
+	
+	if (dispatch_get_specific(IsOnCacheQueueKey))
+		block();
+	else
+		dispatch_sync(cacheQueue, block);
+	
+	return identityIDs ? [identityIDs copy] : [NSArray array];
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCDiskManager.html
  */
 - (nullable ZDCDiskExport *)userAvatar:(ZDCUser *)user
 {
