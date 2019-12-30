@@ -177,7 +177,7 @@ When you design the treesystem for your app, think about long-time users of your
 
 ## Code Structure
 
-**ZDCManager.swift**
+**• ZDCManager.swift**
 
 This is where the majority of the sample code is. This class implements the ZeroDarkCloudDelegate protocol. Thus it:
 
@@ -186,19 +186,19 @@ This is where the majority of the sample code is. This class implements the Zero
 
 
 
-**ConversationsViewController.swift**
+**• ConversationsViewController.swift**
 
 This is the user interface that displays the TableView of all conversations.
 
 
 
-**MyMessagesViewController.swift**
+**• MyMessagesViewController.swift**
 
 This is the user interface that displays the CollectionView of messages within a conversation. We're using the open-source MessageKit, so there's a minimal amount of work we have to do here.
 
 
 
-**DBManager.swift**
+**• DBManager.swift**
 
 Here we setup our database to index stuff for our user interface. In particular, we store 2 different kinds of objects:
 
@@ -211,6 +211,191 @@ So we setup indexes that:
 - sort messages within each conversation based on timestamp
 
 (*This is really boilerplate stuff, not directly related to ZeroDarkCloud.*)
+
+
+
+## Uploading a node
+
+The process of creating & uploading a node to the cloud is quite easy. It goes something like this:
+
+- **App**: "Hey ZDC, I would like to create a new node."
+
+- **ZDC Framework**: "No problem, I can sync that for you. Just tell me where you'd like to put it in the treesystem."
+
+- **App**: "Please put it here: ~/foo/bar"
+
+- **ZDC Framework**: "OK, I've created a node for that path. I will query you later when I'm ready to upload the node's content."
+
+- { Later }
+
+- **ZDC Framework**: "OK, I'm ready to upload the content for the node with path '~/foo/bar'. Please give me the content. I will automatically encrypt the data for you, and then upload it to the cloud. Only those you granted permission will have access to the key required to decrypt the content."
+
+- **App**: "Here you go: 001010100010111010100011111010…."
+
+
+
+In code, it looks like this:
+
+```swift
+databaseConnection.asyncReadWrite {(transaction) in
+
+  // Get a reference to the cloud of the correct localUser.
+  // (The ZeroDarkCloud framework supports multiple localUser's.)
+  if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: self.localUserID) {
+    
+    // Create the treesystem path for our node.
+    // (A treesystem path is just an array of strings.)
+    let treesystemPath = ZDCTreesystemPath(pathComponents: ["foo", "bar"])
+    
+    do {
+      // Tell the framework to create the node.
+      // It will ask the ZeroDarkCloudDelegate for the node's
+      // content later, when it's ready to upload the node.
+      let node = try cloudTransaction.createNode(with: treesystemPath)
+        
+    } catch {
+      print("Error creating node: \(error)") 
+    }
+  }
+}
+```
+
+
+
+And then you implement the [ZeroDarkCloudDelegate](https://apis.zerodark.cloud/Protocols/ZeroDarkCloudDelegate.html) protocol somewhere. And handle the request for the node's data:
+
+```swift
+/// ZeroDarkCloudDelegate function:
+/// 
+/// ZeroDark is asking us to supply the data for a node.
+/// This is the data that will get uploaded to the cloud
+/// (after ZeroDark encrypts it).
+///
+func data(for node: ZDCNode, at path: ZDCTreesystemPath, transaction: YapDatabaseReadTransaction) -> ZDCData {
+  
+  // If you want to store a serialized object in the cloud,
+  // it might look something like this:
+  let data = myObject.serializeAsJSON()
+  return ZDCData(data: data)
+  
+  // If you want to store a file in the cloud,
+  // it might look like this:
+  let fileURL = self.imageURL()
+  return ZDCData(cleartextFileURL: fileURL)
+  
+  // Or maybe you need to run an asynchronous task
+  // in order to generate the data to be stored in the cloud.
+  let promise = ZDCDataPromise()
+  DispatchQueue.global().async {
+    let data = someSlowTask()
+    promise.fulfill(ZDCData(data: data))
+	}
+  return ZDCData(promise: promise)
+}
+```
+
+And that's all there is to it !
+
+
+
+The framework doesn't care how you structure your cloud data. You're free to use JSON, protocol buffers, some custom binary format... whatever you want.
+
+Additionally, ZeroDark.cloud allows you to store nodes of any size. You can even store multi-gigabyte sized files. And the framework will automatically upload the large file using a multi-part process that can recover from network interruptions.
+
+
+
+The framework aims at being unopinionated concerning how you implement your app. You don't have to subclass NSManagedObject, or any such silliness. The framework simply focuses on keeping the local treesystem in-sync with the cloud treesystem.
+
+Further, the framework only downloads the treesystem skeleton. It allows you to decide what content to download, and when. That is, if we think about a treesystem, we can separate it into 2 parts:
+
+
+
+#### 1. Node Metadata
+
+The metadata is everything needed by the treesystem to store a node, but excluding the actual content of the node. This includes information such as:
+
+- what is the name of the node
+- who is the parent of this node
+- who was permission to read / write this node
+- when was the node last modified in the cloud
+- various sync information, such as eTag(s)
+- various crypto information for encrypting & decrypting the content
+
+
+
+#### 2. Node Data
+
+The data is the actual content of the node. In other words, the content that your app generates.
+
+
+
+## Treesystem notifications
+
+The framework automatically downloads node metadata, and creates a skeleton of the treesystem on the local device. The [ZeroDarkCloudDelegate](https://apis.zerodark.cloud/Protocols/ZeroDarkCloudDelegate.html) is then notified about changes to the treesystem that have been detected:
+
+```swift
+/// ZeroDarkCloudDelegate:
+
+func didDiscoverNewNode(_ node: ZDCNode, at path: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
+  // add code here
+}
+
+func didDiscoverModifiedNode(_ node: ZDCNode, with change: ZDCNodeChange, at path: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
+  // add code here
+}
+
+func didDiscoverMovedNode(_ node: ZDCNode, from oldPath: ZDCTreesystemPath, to newPath: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
+  // add code here
+}
+
+func didDiscoverDeletedNode(_ node: ZDCNode, at path: ZDCTreesystemPath, timestamp: Date?, transaction: YapDatabaseReadWriteTransaction) {
+  // add code here
+}
+```
+
+
+
+## Downloading a node
+
+Your app gets to decide which nodes are downloaded, and when. This allows you to make various optimizations for your app. For example, you might choose to only download recent content. Or download certain nodes only on demand.
+
+And downloading is easy using the [DownloadManager](https://zerodarkcloud.readthedocs.io/en/latest/client/downloadManager/):
+
+```Swift
+let options = ZDCDownloadOptions()
+options.cacheToDiskManager = true
+options.canDownloadWhileInBackground = true
+
+zdc.downloadManager?.downloadNodeData( node,
+                              options: options,
+                      completionQueue: DispatchQueue.global())
+{(cloudDataInfo: ZDCCloudDataInfo?, cryptoFile: ZDCCryptoFile?, error: Error?) in
+
+ // download complete
+}
+```
+
+
+
+Of course, downloads can fail due to network problems (e.g. disconnected from WiFi). So the framework also has a way for you to mark a node as "needs download":
+
+```swift
+func didDiscoverNewNode(_ node: ZDCNode, at path: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
+  
+  guard let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: node.localUserID) else {
+    return
+  }
+  cloudTransaction.markNodeAsNeedsDownload(node.uuid, components: .all)
+  
+  downloadNode(node, at: path)
+}
+
+func didReconnectToInternet() {
+  // When we reconnect to Internet, we can enumerate the list
+  // of nodes that are marked as "needs download".
+  downloadPendingNodes()
+}
+```
 
 
 
