@@ -4014,31 +4014,46 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 		{
 			ZDCFileInfo *info = infos[i];
 			
-			if ([info matchesMode:mode type:type format:format identityID:identityID])
+			// A user can have multiple linked social identities.
+			// We're only interested in storing/updating particular identity here,
+			// and we need to leave other identities alone.
+			//
+			// For example:
+			// - identityID      = "auth0|abc123"
+			// - info.identityID = "facebook|def456"
+			//
+			if (![info.identityID isEqualToString:identityID])
 			{
-				matchingInfo = info;
 				i++;
 			}
 			else
 			{
-				// The info doesn't match what's being imported (different format, different persistent setting, etc).
-				// This means the particular file is now outdated, and needs to be deleted.
-				
-				if (info.fileRetainCount == 0)
+				if ([info matchesMode:mode type:type format:format])
 				{
-					NSError *error = nil;
-					[[NSFileManager defaultManager] removeItemAtURL:info.fileURL error:&error];
-					
-					if (error) {
-						ZDCLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
-					}
-					
-					[infos removeObjectAtIndex:i];
+					matchingInfo = info;
+					i++;
 				}
 				else
 				{
-					info.pendingDelete = YES;
-					i++;
+					// The info doesn't match what's being imported (different format, different persistent setting, etc).
+					// This means the particular file is now outdated, and needs to be deleted.
+			
+					if (info.fileRetainCount == 0)
+					{
+						NSError *error = nil;
+						[[NSFileManager defaultManager] removeItemAtURL:info.fileURL error:&error];
+			
+						if (error) {
+							ZDCLogWarn(@"Error deleting fileURL(%@): %@", [info.fileURL path], error);
+						}
+			
+						[infos removeObjectAtIndex:i];
+					}
+					else
+					{
+						info.pendingDelete = YES;
+						i++;
+					}
 				}
 			}
 		}
@@ -4192,7 +4207,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	__block NSString *eTag = nil;
 	__block NSTimeInterval expiration = 0;
 
-	// If auth0ID is nil, we should attempt to return the ZDCFileInfo that matches user.auth0_preferredID.
+	// If identityID is nil, we should attempt to return the ZDCFileInfo that matches user.displayIdentity.identityID.
 	// If we fail to find it, then return none. This will force us to look it up.
 	//
 	if (identityID == nil)
