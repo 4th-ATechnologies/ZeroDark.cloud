@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15702" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina5_9" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15510"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15704"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -776,11 +776,11 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="j9e-ho-CD5">
-                                <rect key="frame" x="20" y="88" width="335" height="621"/>
+                                <rect key="frame" x="20" y="88" width="335" height="587"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             </view>
                             <tabBar contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="MyK-O7-pRb">
-                                <rect key="frame" x="0.0" y="729" width="375" height="49"/>
+                                <rect key="frame" x="0.0" y="695" width="375" height="83"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                 <items>
                                     <tabBarItem tag="1" title="QR Code" image="clonecode-tabbar" id="01b-pv-O2c"/>
@@ -1851,6 +1851,52 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="1Pt-dw-JkU" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="3886" y="2358"/>
+        </scene>
+        <!--Social Identity Authentication View Controller iOS-->
+        <scene sceneID="n9Q-uc-Y69">
+            <objects>
+                <viewController storyboardIdentifier="SocialIdentityAuthenticationViewControllerADD_IOS" useStoryboardIdentifierAsRestorationIdentifier="YES" id="JVP-RB-uA4" customClass="SocialIdentityAuthenticationViewController_IOS" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="vqU-5f-YYZ">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="812"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <webView contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="qDe-rv-Gco">
+                                <rect key="frame" x="0.0" y="54" width="375" height="686"/>
+                                <color key="backgroundColor" red="0.36078431370000003" green="0.38823529410000002" blue="0.4039215686" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            </webView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0VQ-pO-DHi">
+                                <rect key="frame" x="102.66666666666669" y="748" width="170" height="30"/>
+                                <state key="normal" title=" Login with web browser "/>
+                                <connections>
+                                    <action selector="btnUseWebBrowserClicked:" destination="JVP-RB-uA4" eventType="touchUpInside" id="0kP-IE-Ze6"/>
+                                </connections>
+                            </button>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="nCI-es-VNs">
+                                <rect key="frame" x="282.66666666666669" y="753" width="20" height="20"/>
+                            </activityIndicatorView>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstAttribute="trailing" secondItem="qDe-rv-Gco" secondAttribute="trailing" id="4uP-uB-w82"/>
+                            <constraint firstItem="0VQ-pO-DHi" firstAttribute="top" secondItem="qDe-rv-Gco" secondAttribute="bottom" constant="8" id="7f8-8O-fUz"/>
+                            <constraint firstItem="qDe-rv-Gco" firstAttribute="leading" secondItem="mor-ab-crU" secondAttribute="leading" id="YcR-fS-FbH"/>
+                            <constraint firstItem="nCI-es-VNs" firstAttribute="leading" secondItem="0VQ-pO-DHi" secondAttribute="trailing" constant="10" id="gQx-ER-VgT"/>
+                            <constraint firstItem="qDe-rv-Gco" firstAttribute="top" secondItem="mor-ab-crU" secondAttribute="top" constant="10" id="lJF-Kn-cJA"/>
+                            <constraint firstItem="nCI-es-VNs" firstAttribute="centerY" secondItem="0VQ-pO-DHi" secondAttribute="centerY" id="s3A-Oi-IBC"/>
+                            <constraint firstItem="mor-ab-crU" firstAttribute="bottom" secondItem="0VQ-pO-DHi" secondAttribute="bottom" id="yrn-rG-hG1"/>
+                            <constraint firstItem="0VQ-pO-DHi" firstAttribute="centerX" secondItem="vqU-5f-YYZ" secondAttribute="centerX" id="zTW-tY-hsz"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="mor-ab-crU"/>
+                    </view>
+                    <connections>
+                        <outlet property="_btnUseWebBrowser" destination="0VQ-pO-DHi" id="5mb-RL-s7G"/>
+                        <outlet property="actProgress" destination="nCI-es-VNs" id="GCv-KR-ftq"/>
+                        <outlet property="webAuth0View" destination="qDe-rv-Gco" id="1hs-wN-KBI"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="WD7-EK-jjD" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="2509.5999999999999" y="2296.5517241379312"/>
         </scene>
     </scenes>
     <resources>
