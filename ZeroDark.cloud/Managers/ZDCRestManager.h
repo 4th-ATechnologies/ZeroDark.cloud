@@ -13,6 +13,7 @@
 #import "ZDCCloudLocator.h"
 #import "ZDCLocalUser.h"
 #import "ZDCLocalUserAuth.h"
+#import "ZDCMerkleTree.h"
 #import "ZDCPublicKey.h"
 #import "ZDCUser.h"
 
@@ -400,11 +401,13 @@ NS_ASSUME_NONNULL_BEGIN
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Fetches the user's public info (whitelisted identity info) via the API Gateway.
+ * Fetches the user's public info via the API Gateway.
+ *
  * This information includes:
- * - userID (official ZeroDark.cloud userID, as opposed to auth0 identity ID)
+ * - userID
  * - user's region
  * - user's bucket
+ * - list of linked identities
  */
 - (void)fetchFilteredAuth0Profile:(NSString *)remoteUserID
                       requesterID:(NSString *)localUserID
@@ -552,16 +555,31 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * - Query the Ethereum blockchain for a specific userID
  * - If the response includes a merkleTreeRoot, then
- * - Download the corresponding merkleTree file
- * - Verify the publicKey in the merkleTree matches what you expect
- * - Verify the merkleTree itself
+ * - Download the corresponding merkleTreeFile
+ * - Verify the publicKey in the merkleTreeFile matches what you expect
+ * - Verify the merkleTreeFile itself
  *
  * More detailed information on how this works can be found here:
  * https://zerodarkcloud.readthedocs.io/en/latest/overview/ethereum/
+ *
+ * @param merkleTreeRoot
+ *   A merkleTreeRoot value, as returned from the blockchain.
+ *   This is typically a sha256 string, in hex format. For example:
+ *   "0xcd59b7bda6dc1dd82cb173d0cdfa408db30e9a747d4366eb5b60597899eb69c1"
+ *
+ * @param completionQueue
+ *   The dispatch_queue on which to invoke the completionBlock.
+ *
+ * @param completionBlock
+ *   Invoked with the results of the query.
+ *   If the merkleTree parameter is non-nil, you'll want to (1) verify the included publicKey info,
+ *   and (2) verify the merkleTree file itself (via `merkleTree.hashAndVerify()`).
  */
-- (void)fetchMerkleTreeFile:(NSString *)root
-            completionQueue:(nullable dispatch_queue_t)inCompletionQueue
-            completionBlock:(void (^)(NSURLResponse *response, NSData *_Nullable fileData, NSError *_Nullable error))inCompletionBlock;
+- (void)fetchMerkleTreeFile:(NSString *)merkleTreeRoot
+            completionQueue:(nullable dispatch_queue_t)completionQueue
+            completionBlock:(void (^)(NSURLResponse *_Nullable response,
+                                      ZDCMerkleTree *_Nullable merkleTree,
+                                      NSError *_Nullable error))completionBlock;
 
 @end
 

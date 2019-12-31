@@ -2871,12 +2871,12 @@
 			[request setValue:xIfModifiedSince forHTTPHeaderField:@"X-If-Modified-Since"];
 		}
 		
-		[AWSSignature signRequest:request
-		               withRegion:region
-		                  service:AWSService_APIGateway
-		              accessKeyID:auth.aws_accessKeyID
-		                   secret:auth.aws_secret
-		                  session:auth.aws_session];
+		[AWSSignature signRequest: request
+		               withRegion: region
+		                  service: AWSService_APIGateway
+		              accessKeyID: auth.aws_accessKeyID
+		                   secret: auth.aws_secret
+		                  session: auth.aws_session];
 		
 		// Send request
 		
@@ -3798,32 +3798,36 @@
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
-- (void)fetchMerkleTreeFile:(NSString *)root
+- (void)fetchMerkleTreeFile:(NSString *)merkleTreeRoot
             completionQueue:(dispatch_queue_t)completionQueue
-            completionBlock:(void (^)(NSURLResponse *response, NSData *fileData, NSError *error))completionBlock
+            completionBlock:(void (^)(NSURLResponse * response,
+                                      ZDCMerkleTree * merkleTree,
+                                      NSError       * error))completionBlock
 {
 	ZDCLogAutoTrace();
-	NSParameterAssert(root != nil);
+	NSParameterAssert(merkleTreeRoot != nil);
 	
 	if (!completionBlock) {
 		return;
 	}
 	
-	if (!completionQueue) {
-		completionQueue = dispatch_get_main_queue();
-	}
+	void (^InvokeCompletionBlock)(NSURLResponse*, ZDCMerkleTree*, NSError*) =
+	^(NSURLResponse *response, ZDCMerkleTree *merkleTree, NSError *error){
+		
+		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+			completionBlock(response, merkleTree, error);
+		}});
+	};
 	
-	// rootPath sanitation
-	if ([root hasPrefix:@"0x"] || [root hasPrefix:@"0X"]) {
-		root = [root substringFromIndex:2];
+	// Sanitize rootPath sanitation
+	if ([merkleTreeRoot hasPrefix:@"0x"] || [merkleTreeRoot hasPrefix:@"0X"]) {
+		merkleTreeRoot = [merkleTreeRoot substringFromIndex:2];
 	}
-	
-	NSString *rootPath = [NSString stringWithFormat:@"/%@.json", root];
 	
 	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
 	urlComponents.scheme = @"https";
 	urlComponents.host = @"blockchain.storm4.cloud";
-	urlComponents.path = rootPath;
+	urlComponents.path = [NSString stringWithFormat:@"/%@.json", merkleTreeRoot];
 	
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"GET";
@@ -3835,19 +3839,47 @@
 	
 	NSURLSessionDataTask *task =
 	  [session dataTaskWithRequest:request
-	             completionHandler:^(NSData *data, NSURLResponse *response, NSError *error)
-	
+	             completionHandler:^(NSData *data, NSURLResponse *urlResponse, NSError *networkError)
 	{
-	//	if (error) {
-	//		NSLog(@"fetchBlockChainEntry: error: %@", error);
-	//	}
-	//	else {
-	//		NSLog(@"fetchBlockChainEntry: %ld: %@", (long)response.httpStatusCode, responseObject);
-	//	}
+		if (networkError)
+		{
+			InvokeCompletionBlock(urlResponse, nil, networkError);
+			return;
+		}
+		  
+		NSInteger statusCode = [urlResponse httpStatusCode];
+		if (statusCode != 200)
+		{
+			NSString *msg = [NSString stringWithFormat:@"Server returned status code %ld", (long)statusCode];
+			NSError *error = [NSError errorWithClass:[self class] code:statusCode description:msg];
+			
+			InvokeCompletionBlock(urlResponse, nil, error);
+			return;
+		}
+		  
+		NSDictionary *jsonDict = nil;
+		if (data)
+		{
+			jsonDict = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+		}
 		
-		dispatch_async(completionQueue, ^{ @autoreleasepool {
-			completionBlock(response, data, error);
-		}});
+		if (![jsonDict isKindOfClass:[NSDictionary class]])
+		{
+			NSString *msg = @"Server returned non-json-dictionary response";
+			NSError *error = [NSError errorWithClass:[self class] code:500 description:msg];
+			
+			InvokeCompletionBlock(urlResponse, nil, error);
+			return;
+		}
+		  
+		NSError *parseError = nil;
+		ZDCMerkleTree *merkleTree = [ZDCMerkleTree parseFile:jsonDict error:&parseError];
+		  
+		if (parseError) {
+			InvokeCompletionBlock(urlResponse, nil, parseError);
+		} else {
+			InvokeCompletionBlock(urlResponse, merkleTree, nil);
+		}
 	}];
 		
 	[task resume];
