@@ -1548,9 +1548,8 @@
 {
 	ZDCLogAutoTrace();
 	
-	NSAssert(NO, @"Not implemented"); // finish refactoring
+	//	NSAssert(NO, @"Not implemented"); // finish refactoring
 	
-/*
 	void (^InvokeCompletionBlock)(NSError *) = ^(NSError * error){
 		
 		if (completionBlock)
@@ -1567,88 +1566,16 @@
 		return;
 	}
 	
-	NSArray  * identities       = responseObject[@"identities"];
-	NSString * auth0_primary    = responseObject[@"user_id"];
-	NSDate   * auth0_updated_at = responseObject[@"updated_at"]?[NSDate dateFromRfc3339String:responseObject[@"updated_at"]]:nil;
-	
-	if (!identities.count || auth0_primary.length == 0)
+	ZDCUserProfile *profile = [[ZDCUserProfile alloc] initWithDictionary:responseObject];
+
+// create and array of all non recovery IDS
+	NSMutableArray *identityIDs = [NSMutableArray arrayWithCapacity:profile.identities.count];
+	for (ZDCUserIdentity *ident in profile.identities)
 	{
-		InvokeCompletionBlock([self errorWithDescription:@"Unexpected server response" statusCode:500]);
-		return;
+		if(!ident.isRecoveryAccount)
+			[identityIDs addObject:ident.identityID];
 	}
-	
-	NSMutableDictionary* auth0_profiles = [NSMutableDictionary dictionary];
-	
-	for (NSDictionary* item in identities)
-	{
-		NSMutableDictionary* entry = NSMutableDictionary.dictionary;
-		
-		NSDictionary * profile    = item[@"profileData"];
-		NSString     * provider   = item[@"provider"];
-		NSString     * connection = item[@"connection"];
-		
-		// force user_id to always be a string
-		NSString* user_id = [NSString stringWithFormat:@"%@", item[@"user_id"] ];
-		NSString* auth0ID = [NSString stringWithFormat:@"%@|%@", provider, user_id];
-		
-		if (!profile.count || provider.length == 0 || user_id.length == 0)
-		{
-			InvokeCompletionBlock( [self errorWithDescription:@"Unexpected server response" statusCode:500]);
-			return;
-		}
-		
-		[entry addEntriesFromDictionary:profile];
-		entry[@"connection"] = connection;
-		
-		NSString * displayName = nil;
-		NSString * nickname    = profile[@"nickname"];
-		NSString * email       = profile[@"email"];
-		NSString * name        = profile[@"name"];
-		
-		if ([nickname isKindOfClass:[NSNull class]]) {
-			nickname = nil;
-		}
-		if ([email isKindOfClass:[NSNull class]]) {
-			email = nil;
-		}
-		if ([name isKindOfClass:[NSNull class]]) {
-			name = nil;
-		}
-		
-		// fix for weird providers
-		if(!name.length)
-		{
-			name = [Auth0Utilities correctUserNameForA0Strategy:connection
-																	  profile:profile];
-			if(name.length)
-				entry[@"name"]    = name;
-		}
-		
-		if([auth0ID isEqualToString:auth0_primary])
-			entry[@"isPrimaryProfile"] = @(YES);
-		
-		if ([provider isEqualToString:A0StrategyNameAuth0])
-		{
-			if ([Auth0Utilities is4thAEmail:email]) {
-				displayName = [Auth0Utilities usernameFrom4thAEmail:email];
-			}
-		}
-		
-		if(!displayName && name.length)
-			displayName =  name;
-		
-		if(!displayName && email.length)
-			displayName =  email;
-		
-		if(!displayName && nickname.length)
-			displayName =  nickname;
-		
-		if(displayName)
-			entry[@"displayName"]    = displayName;
-		
-		auth0_profiles[auth0ID] = [entry copy];
-	}
-	
+ 
 	__block ZDCLocalUser *updatedUser = nil;
 	[zdc.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction){
 		
@@ -1656,19 +1583,12 @@
 		if (updatedUser)
 		{
 			updatedUser = [updatedUser copy];
-			updatedUser.auth0_profiles = auth0_profiles;
-			updatedUser.auth0_lastUpdated = auth0_updated_at;
-			
-			// update primary if its gone
-			if (![auth0_profiles.allKeys containsObject:updatedUser.auth0_primary]) {
-				updatedUser.auth0_primary = auth0_primary;
-			}
-			
-			// update prefered  if the preferedAuth0ID profile is  gone
-			if (![auth0_profiles.allKeys containsObject:updatedUser.auth0_preferredID ])
-			{
-				NSString* newPreferred = [Auth0Utilities firstAvailableAuth0IDFromProfiles:auth0_profiles];
-				updatedUser.auth0_preferredID = newPreferred;
+			updatedUser.identities = profile.identities;
+			updatedUser.lastRefresh_profile = [NSDate date];
+						
+			// update preferredIdentityID if it's gone
+			if (![identityIDs containsObject:updatedUser.preferredIdentityID]) {
+				updatedUser.preferredIdentityID = identityIDs.firstObject;
 			}
 			
 			[transaction setObject: updatedUser
@@ -1683,7 +1603,7 @@
 		//		[S4ThumbnailManager unCacheAvatarForUserID:updatedUser.uuid];
 		InvokeCompletionBlock(nil);
 	}];
-*/
+	
 }
 
 @end

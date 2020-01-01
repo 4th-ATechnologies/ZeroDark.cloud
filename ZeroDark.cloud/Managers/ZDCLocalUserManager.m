@@ -820,7 +820,9 @@ done:
 		NSMutableArray *identityIDs = [NSMutableArray arrayWithCapacity:localUser.identities.count];
 		for (ZDCUserIdentity *ident in localUser.identities)
 		{
-			[identityIDs addObject:ident.identityID];
+			// dont add recovery IDs to the public key
+			if(!ident.isRecoveryAccount)
+				[identityIDs addObject:ident.identityID];
 		}
 		
 		NSData *auth0IDData =
