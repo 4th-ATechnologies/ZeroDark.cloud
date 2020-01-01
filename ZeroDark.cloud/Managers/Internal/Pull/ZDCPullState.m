@@ -23,6 +23,7 @@
 	NSMutableArray<NSURLSessionTask*>* tasks;
 	
 	NSMutableSet<NSString*> *unprocessedNodeIDs;
+	NSMutableSet<NSString*> *unprocessedIdentityIDs;
 	NSMutableSet<NSString*> *unknownUserIDs;
 	
 	BOOL changeDetected;
@@ -40,6 +41,7 @@
 @dynamic tasks;
 @dynamic tasksCount;
 @dynamic unprocessedNodeIDs;
+@dynamic unprocessedIdentityIDs;
 @dynamic unknownUserIDs;
 
 - (instancetype)initWithLocalUserID:(NSString *)inLocalUserID treeID:(NSString *)inTreeID
@@ -57,8 +59,9 @@
 		items = [[NSMutableArray alloc] init];
 		tasks = [[NSMutableArray alloc] init];
 		
-		unprocessedNodeIDs = [[NSMutableSet alloc] init];
-		unknownUserIDs     = [[NSMutableSet alloc] init];
+		unprocessedNodeIDs     = [[NSMutableSet alloc] init];
+		unprocessedIdentityIDs = [[NSMutableSet alloc] init];
+		unknownUserIDs         = [[NSMutableSet alloc] init];
 		
 		authFailed = NO;
 	}
@@ -375,6 +378,50 @@
 	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
 		[unprocessedNodeIDs removeObject:nodeID];
+		
+	#pragma clang diagnostic pop
+	}});
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Avatar Tracking
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (NSSet<NSString *> *)unprocessedIdentityIDs
+{
+	__block NSSet<NSString *>* result = nil;
+	
+	dispatch_sync(queue, ^{ @autoreleasepool {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		result = [unprocessedIdentityIDs copy];
+		
+	#pragma clang diagnostic pop
+	}});
+	
+	return result;
+}
+
+- (void)addUnprocessedIdentityIDs:(NSArray<NSString *> *)identityIDs
+{
+	dispatch_sync(queue, ^{ @autoreleasepool {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		[unprocessedIdentityIDs addObjectsFromArray:identityIDs];
+		
+	#pragma clang diagnostic pop
+	}});
+}
+
+- (void)removeUnprocessedIdentityID:(NSString *)identityID
+{
+	dispatch_sync(queue, ^{ @autoreleasepool {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		[unprocessedIdentityIDs removeObject:identityID];
 		
 	#pragma clang diagnostic pop
 	}});

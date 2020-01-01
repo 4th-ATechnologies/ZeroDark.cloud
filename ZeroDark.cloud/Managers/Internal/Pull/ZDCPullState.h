@@ -26,6 +26,7 @@
 @property (atomic, assign, readonly) NSUInteger tasksCount;
 
 @property (atomic, strong, readonly) NSSet<NSString *>* unprocessedNodeIDs;
+@property (atomic, strong, readonly) NSSet<NSString *>* unprocessedIdentityIDs;
 @property (atomic, strong, readonly) NSSet<NSString *>* unknownUserIDs;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -71,8 +72,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * As we process each directory (starting at the root), we add all local nodeIDs to the list of unprocessedIDs.
- * As we find remote matches, we can remove the nodeID from the list of unprocessedIDs.
+ * When we start a full pull, we add all uploaded nodeIDs to this list.
+ * Thenk as we find remote matches, we remove nodeIDs from this list.
  *
  * Some nodes that initially appear to be deleted may have actually been moved.
  * However, during the recursive sync, we have no idea where a moved node may have ended up.
@@ -84,6 +85,14 @@
 
 - (void)removeUnprocessedNodeID:(NSString *)nodeID;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Avatar Tracking
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)addUnprocessedIdentityIDs:(NSArray<NSString *> *)identityIDs;
+
+- (void)removeUnprocessedIdentityID:(NSString *)identityID;
+ 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark User Tracking
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

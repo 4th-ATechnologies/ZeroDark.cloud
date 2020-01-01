@@ -480,6 +480,13 @@ extern NSString *const kZDCDiskManagerChanges;
 - (BOOL)hasUserAvatar:(NSString *)userID forIdentityID:(nullable NSString *)identityID;
 
 /**
+ * Returns the list of identityID's for which we have a stored user avatar within the DiskManager.
+ *
+ * @note This list includes any stored information, including nil placholders.
+ */
+- (NSArray<NSString*> *)storedIdentityIDs:(NSString *)userID;
+
+/**
  * Returns a CryptoFile and associated info for the user avatar, if available on disk.
  * The information is bundled in a ZDCDiskExport instance.
  *

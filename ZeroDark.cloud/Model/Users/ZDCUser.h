@@ -12,7 +12,6 @@
 #import "AWSRegions.h"
 #import "ZDCBlockchainProof.h"
 #import "ZDCConstants.h"
-#import "ZDCUserProfile.h"
 #import "ZDCUserIdentity.h"
 
 #import <YapDatabase/YapDatabaseRelationship.h>

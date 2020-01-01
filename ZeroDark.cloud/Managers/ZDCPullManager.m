@@ -2408,10 +2408,9 @@ static NSUInteger const kMaxFailCount = 8;
 		
 		// Get a snapshot of which avatar files we expect to be on the server.
 		
-	//	NSArray<NSString *> *expectedAvatarFilenames =
-	//	  [CloudNodeManager allUploadedAvatarFilenamesWithLocalUserID:localUserID transaction:transaction];
-	//
-	//	[pullState addUnprocessedAvatarFilenames:expectedAvatarFilenames];
+		NSArray<NSString *> *expectedIdentityIDs = [zdc.diskManager storedIdentityIDs:localUserID];
+		
+		[pullState addUnprocessedIdentityIDs:expectedIdentityIDs];
 		
 	} completionQueue:concurrentQueue completionBlock:^{
 		
@@ -3650,6 +3649,8 @@ static NSUInteger const kMaxFailCount = 8;
 			
 			NSString *identity_userID = components[1];
 			NSString *identityID = [NSString stringWithFormat:@"auth0|%@", identity_userID];
+			
+			[pullState removeUnprocessedIdentityID:identityID];
 			
 			// This method potentially involves a lot of diskIO,
 			// so we prefer to make this call outside of a readWriteTransaction.
@@ -5386,6 +5387,23 @@ static NSUInteger const kMaxFailCount = 8;
 				             timestamp: nil
 				             pullState: pullState
 				           transaction: transaction];
+			}
+		}
+	}
+	
+	NSSet<NSString*> *deletedIdentityIDs = [pullState unprocessedIdentityIDs];
+	if (deletedIdentityIDs.count > 0)
+	{
+		NSString *localUserID = pullState.localUserID;
+		ZDCLocalUser *localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
+		
+		for (NSString *identityID in deletedIdentityIDs)
+		{
+			BOOL needsUpdate = [self needsUpdateAvatar:nil forLocalUser:localUser identityID:identityID];
+			
+			if (needsUpdate)
+			{
+				[zdc.diskManager deleteUserAvatar:localUserID forIdentityID:identityID];
 			}
 		}
 	}
