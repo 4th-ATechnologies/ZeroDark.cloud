@@ -79,6 +79,7 @@
     
 	BOOL hasInternet;
 	BOOL needsRefreshProviders;
+	BOOL deleteInProgress;
 	BOOL viewDidLoad;
 	
 	SCLAlertView * warningAlert;
@@ -118,31 +119,11 @@
 	_tblProviders.tableFooterView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, _tblProviders.frame.size.width, 1)];
 
 	self.navigationItem.hidesBackButton = YES;
-
-	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-	
-	[nc addObserver: self
-	       selector: @selector(reachabilityChanged:)
-	           name: AFNetworkingReachabilityDidChangeNotification
-	         object: nil /* notification doesn't assign object ! */];
-	
-	[nc addObserver: self
-	       selector: @selector(databaseConnectionDidUpdate:)
-	           name: UIDatabaseConnectionDidUpdateNotification
-	         object: nil];
-	
-	[nc addObserver: self
-		    selector: @selector(diskManagerChanged:)
-		        name: ZDCDiskManagerChangedNotification
-		      object: zdc.diskManager];
 	
 	hasInternet = zdc.reachability.isReachable;
-	needsRefreshProviders = YES;
-	
-	[self refreshView];
-	[self refreshProviders];
 	
 	viewDidLoad = YES;
+	deleteInProgress = NO;
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -171,6 +152,38 @@
 	                                                action: @selector(btnAddSocialTapped:)];
 
 	self.navigationItem.rightBarButtonItem = addItem;
+	
+	
+	NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+	
+	[nc addObserver: self
+	       selector: @selector(reachabilityChanged:)
+	           name: AFNetworkingReachabilityDidChangeNotification
+	         object: nil /* notification doesn't assign object ! */];
+	
+	[nc addObserver: self
+	       selector: @selector(databaseConnectionDidUpdate:)
+	           name: UIDatabaseConnectionDidUpdateNotification
+	         object: nil];
+	
+	[nc addObserver: self
+		    selector: @selector(diskManagerChanged:)
+		        name: ZDCDiskManagerChangedNotification
+		      object: zdc.diskManager];
+
+	needsRefreshProviders = YES;
+	deleteInProgress = NO;
+
+	[self refreshProviders];
+	[self refreshView];
+}
+
+
+-(void)viewWillDisappear:(BOOL)animated
+{
+	[super viewWillDisappear:animated];
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -220,6 +233,9 @@
 {
 	NSArray *notifications = [notification.userInfo objectForKey:kNotificationsKey];
 
+	if(deleteInProgress)
+		return;
+
 	BOOL hasUserChanges = NO;
 	if (localUserID)
 	{
@@ -238,6 +254,9 @@
 - (void)diskManagerChanged:(NSNotification *)notification
 {
 	ZDCDiskManagerChanges *changes = notification.userInfo[kZDCDiskManagerChanges];
+	
+	if(deleteInProgress)
+		return;
 	
 	if ([changes.changedUsersIDs containsObject:localUserID])
 	{
@@ -334,9 +353,10 @@
 		[self reloadTable];
 		return;
 	}
-	
+	 
 	NSMutableArray<SocialIdentityManagementVC_RowItem *> *newRowItems = [NSMutableArray array];
-
+	ZDCUserIdentity* displayIdentity = localUser.displayIdentity;
+	
 	for (ZDCUserIdentity *identity in localUser.identities)
 	{
 		if (identity.isRecoveryAccount)
@@ -348,7 +368,7 @@
 		NSString *identityID = identity.identityID;
 		
 		BOOL isPrimary = [localUser.auth0_primary isEqualToString:identityID];
-		BOOL isPreferred = [localUser.preferredIdentityID isEqualToString:identityID];
+		BOOL isPreferred = [identityID isEqualToString:displayIdentity.identityID];
 		
 		SocialIdentityManagementVC_RowItem *rowItem = [[SocialIdentityManagementVC_RowItem alloc] init];
 		
@@ -377,17 +397,19 @@
 
 	_vwAddMoreLoser.hidden = newRowItems.count > 1;
 
+
+/// ROBBIE CHECK THIS
 	// We can't get the UITableView to properly show seperators, unless we have multiple cells.
 	// After fighting with UITableView, and searching online for too long, we gave up.
 	// And we're using this ugly hack instead.
 	//
-	for (NSUInteger i = newRowItems.count; i < 5 ; i++)
-	{
-		SocialIdentityManagementVC_RowItem *rowItem = [[SocialIdentityManagementVC_RowItem alloc] init];
-		rowItem.isRealCell = NO;
-
-		[newRowItems addObject:rowItem];
-	}
+//	for (NSUInteger i = newRowItems.count; i < 5 ; i++)
+//	{
+//		SocialIdentityManagementVC_RowItem *rowItem = [[SocialIdentityManagementVC_RowItem alloc] init];
+//		rowItem.isRealCell = NO;
+//
+//		[newRowItems addObject:rowItem];
+//	}
 
 	rowItems = [newRowItems copy];
 	[self reloadTable];
@@ -820,6 +842,8 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 	}
 	[_tblProviders endUpdates];
 
+	deleteInProgress = YES;
+	
 	[self.accountSetupVC showWait: @"Updating your user profile…"
 	                      message: @"one moment — contacting servers…"
 	               viewController: self
@@ -838,6 +862,8 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 		[strongSelf->_tblProviders setEditing:NO];
 		[strongSelf.accountSetupVC cancelWait];
 
+		strongSelf->deleteInProgress = NO;
+		
 		if (error)
 		{
 			NSString *message = nil;

@@ -1353,6 +1353,10 @@ trailingSwipeActionsConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath NS_A
 	ZDCSearchResult* item = nil;
 	NSString*  userID = cell.userID;
 	
+	if ([userID isEqualToString:localUserID]) {
+		return;
+	}
+	
 	if (self.shouldShowRecentRecipients)
 	{
 		__block ZDCUser*    user    = nil;

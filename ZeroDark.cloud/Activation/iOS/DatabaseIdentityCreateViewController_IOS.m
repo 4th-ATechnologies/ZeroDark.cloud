@@ -250,24 +250,23 @@ replacementString:(NSString *)string
 
 -(void)updateButtonsWithTextField:(UITextField *)textField proposedString:(NSString *)proposedString
 {
-
 	NSString* userNameText = (textField == _txtUserNameField)? proposedString:_txtUserNameField.text;
 	NSString* newPwdText = (textField == _txtPwdField)? proposedString:_txtPwdField.text;
 	NSString* vrfPwdText = (textField == _txtVrfPwdField)? proposedString:_txtVrfPwdField.text;
-
+	
 	BOOL userNameOK      = [Auth0Utilities isValid4thAUsername:userNameText] && userNameText.length > 0;
 	BOOL passcodeMatches = newPwdText.length > 0 && [newPwdText isEqualToString:vrfPwdText];
 	BOOL verifyOK        = vrfPwdText.length> 0;
-
+	
 	if(textField == _txtPwdField )
 	{
 		_strengthField.hidden = proposedString.length == 0;
 		_lblStrength.hidden = proposedString.length == 0;
-
+		
 		pwdStrength = [ZDCPasswordStrengthCalculator strengthForPassword:proposedString];
 		_strengthField.score = pwdStrength.score;
 		_lblStrength.text = pwdStrength.scoreLabel;
-
+		
 		if(minScore > 0)
 		{
 			newPassCodeOK = pwdStrength.score >= minScore;
@@ -277,32 +276,31 @@ replacementString:(NSString *)string
 			newPassCodeOK = proposedString.length > 0;
 		}
 	}
-
+	
 	_imgUserNameOK.image = checkImage;
 	_imgUserNameOK.hidden = !(userNameOK);
-
+	
 	_imgVrfPwdOK.image = passcodeMatches?checkImage:failImage;
 	_imgVrfPwdOK.hidden = !(verifyOK && newPassCodeOK);
-
+	
 	_imgNewPwdOK.image = checkImage;
 	_imgNewPwdOK.hidden = !newPassCodeOK;;
-
+	
 	_btnCreate.enabled = (userNameOK && newPassCodeOK && passcodeMatches);
 }
 
 
 -(IBAction) btnCreateClicked:(id) sender
 {
-	_btnCreate.enabled = NO;
 	[self.view endEditing:YES];
-
 	[self showWait:YES];
+
+	_btnCreate.enabled = NO;
 
 	NSString* username = _txtUserNameField.text;
 	NSString* password = _txtPwdField.text;
 
 	__weak typeof(self) weakSelf = self;
-
 
 	[accountSetupVC databaseAccountCreateWithUserName:username
 									   password:password
@@ -453,73 +451,72 @@ replacementString:(NSString *)string
                             password:(NSString *)password
 {
 	ZDCLogAutoTrace();
-
+	
 	_btnCreate.enabled = NO;
 	[self.view endEditing:YES];
-
+	
 	[self showWait:YES];
 	
 	NSString *email = [Auth0Utilities create4thAEmailForUsername:username];
-
+	
 	__weak typeof(self) weakSelf = self;
 	[accountSetupVC databaseAccountLoginWithUsername: email
-	                                        password: password
-	                                 completionBlock:^(AccountState accountState, NSError *error)
-	{
+														 password: password
+												completionBlock:^(AccountState accountState, NSError *error)
+	 {
 		__strong typeof(self) strongSelf = weakSelf;
 		if (!strongSelf) return;
-
-		 [strongSelf showWait:NO];
-
-		 if(error)
-		 {
-
-			 [strongSelf showWait:NO];
-
-			 NSString* errorString = error.localizedDescription;
-
-			 if([strongSelf->accountSetupVC isAlreadyLinkedError:error])
-			 {
-				 errorString = @"This identity is already linked to a different account. To link it to this account, you must first unlink it from the other account.";
-			 }
-
-			 [strongSelf.accountSetupVC showError: @"Can not complete Activation"
-										  message:errorString
-								   viewController:self
-								  completionBlock:^{
-								  }];
-
-		 }
-		 else
-		 {
-
-			 switch (accountState) {
-
-				 case AccountState_Ready:
-					 [strongSelf.accountSetupVC pushAccountReady ];
-					 break;
-
-				 case AccountState_NeedsCloneClode:
-					 [strongSelf.accountSetupVC pushScanClodeCode  ];
-					 break;
-
-				 case AccountState_NeedsRegionSelection:
-					 [strongSelf.accountSetupVC pushRegionSelection  ];
-					 break;
-
-				 default:
-					 [strongSelf.accountSetupVC showError:@"Could not Authenticate"
-												  message:@"internal error"
-										  completionBlock:^{
-											  __strong typeof(self) strongSelf = weakSelf;
-											  if(!strongSelf) return;
-
-											  [strongSelf->accountSetupVC popFromCurrentView];
-										  }];
-					 break;
-			 }
-		 }
-	 }];
+		
+		[strongSelf showWait:NO];
+		
+		if(error)
+		{
+			
+			[strongSelf showWait:NO];
+			
+			NSString* errorString = error.localizedDescription;
+			
+			if([strongSelf->accountSetupVC isAlreadyLinkedError:error])
+			{
+				errorString = @"This identity is already linked to a different account. To link it to this account, you must first unlink it from the other account.";
+			}
+			
+			[strongSelf.accountSetupVC showError: @"Can not complete Activation"
+												  message:errorString
+										 viewController:self
+										completionBlock:^{
+			}];
+		}
+		else
+		{
+			
+			switch (accountState) {
+					
+				case AccountState_Ready:
+					[strongSelf.accountSetupVC pushAccountReady ];
+					break;
+					
+				case AccountState_NeedsCloneClode:
+					[strongSelf.accountSetupVC pushScanClodeCode  ];
+					break;
+					
+				case AccountState_NeedsRegionSelection:
+					[strongSelf.accountSetupVC pushRegionSelection  ];
+					break;
+					
+				default:
+					[strongSelf.accountSetupVC showError:@"Could not Authenticate"
+														  message:@"internal error"
+												completionBlock:^{
+						__strong typeof(self) strongSelf = weakSelf;
+						if(!strongSelf) return;
+						
+						[strongSelf->accountSetupVC popFromCurrentView];
+					}];
+					break;
+			}
+		}
+	}];
 }
 
 @end
