@@ -58,7 +58,7 @@ NSStringFromSelector(_cmd)]  userInfo:nil];
 - (void)commonInit
 {
 	NSString *localeIdentifier = [[NSLocale currentLocale] localeIdentifier];
-	currentLanguageId = [BIP39Mnemonic languageIDForlocaleIdentifier:localeIdentifier];
+	currentLanguageId = [BIP39Mnemonic languageIDForLocaleIdentifier:localeIdentifier];
 	cachedWordList = NULL;
 
 	keyData = NULL;

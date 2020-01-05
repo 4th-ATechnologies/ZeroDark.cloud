@@ -1,11 +1,11 @@
 /**
  * ZeroDark.cloud
- * 
+ *
  * Homepage      : https://www.zerodark.cloud
  * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
  * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
  * API Reference : https://apis.zerodark.cloud
-**/
+ */
 
 #import <Foundation/Foundation.h>
 
@@ -13,11 +13,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 typedef NS_ENUM(NSInteger, Mnemonic_Algorithm) {
-	Mnemonic_Storm4 ,
-	Mnemonic_ZDC ,
-	Mnemonic_Invalid = NSIntegerMax
+	Mnemonic_Storm4,
+	Mnemonic_ZDC
 };
-
 
 /**
  * Bitcoin Improvement Protocol (BIP) #39
@@ -30,22 +28,22 @@ typedef NS_ENUM(NSInteger, Mnemonic_Algorithm) {
 @interface BIP39Mnemonic : NSObject
 
 /**
-* Return a the closest language identifier for given localeIdentifier
-* the language identifier is passed to APIs below that require a language identifier
-*
-* @param localeIdentifier
-*   optional locale for the wordlist - for null will default to prefered locale
-*
-* @return A string matching the closest language identifier for the locale.
-*/
-+ (nullable NSString *)languageIDForlocaleIdentifier:(NSString *_Nullable)localeIdentifier;
+ * Returns the closest language identifier for given localeIdentifier.
+ * The language identifier is passed to other BIP39Mnemonic functions that require it.
+ *
+ * @param localeIdentifier
+ *   Optional locale for the wordlist - for null will default to preferred locale
+ *
+ * @return A string matching the closest language identifier for the locale.
+ */
++ (nullable NSString *)languageIDForLocaleIdentifier:(nullable NSString *)localeIdentifier;
 
 /**
  * Return an array of languageIDs supported
  *
  * @return An array of string's of the languageIDs supported
  */
-+ (nullable NSArray<NSString*> *)availableLanguages;
++ (NSArray<NSString*> *)availableLanguages;
 
 /**
  * Return a the number of mnemonic words needed for given bit size
@@ -72,7 +70,7 @@ typedef NS_ENUM(NSInteger, Mnemonic_Algorithm) {
  *
  * @return An array of 2048 unique words in the word list
  */
-+(nullable NSArray<NSString*> *)wordListForLanguageID:(NSString *_Nullable)languageID
++ (nullable NSArray<NSString*> *)wordListForLanguageID:(NSString *_Nullable)languageID
                                                 error:(NSError *_Nullable *_Nullable)errorOut;
 
 
@@ -81,7 +79,7 @@ typedef NS_ENUM(NSInteger, Mnemonic_Algorithm) {
  *
  * @param languageID
  *   optional languageID for the wordlist - for null will default to prefered locale
-
+ *
  * @param word
  *   word to use to search wordlist
  *
@@ -90,9 +88,9 @@ typedef NS_ENUM(NSInteger, Mnemonic_Algorithm) {
  *
  * @return A string with matching mnemonic
  */
-+ (nullable NSString *)matchingMnemonicForString:(NSString*)word
-						   languageID:(NSString* _Nullable)languageID
-								error:(NSError *_Nullable *_Nullable)errorOut;
++ (nullable NSString *)matchingMnemonicForString:(NSString *)word
+                                      languageID:(NSString *_Nullable)languageID
+                                           error:(NSError *_Nullable *_Nullable)errorOut;
 
 /**
  * Converts from a mnemonic to its data.
@@ -109,7 +107,7 @@ typedef NS_ENUM(NSInteger, Mnemonic_Algorithm) {
  * @return The key which the mnemonic was encoding.
  */
 + (nullable NSData *)dataFromMnemonic:(NSArray<NSString*> *)mnemonic
-                           languageID:(NSString* _Nullable)languageID
+                           languageID:(NSString *_Nullable)languageID
                                 error:(NSError *_Nullable *_Nullable)errorOut;
 
 /**
@@ -131,8 +129,8 @@ typedef NS_ENUM(NSInteger, Mnemonic_Algorithm) {
                                        languageID:(NSString *_Nullable)languageID
                                             error:(NSError *_Nullable *_Nullable)errorOut;
 
- /**
- * Converts from a key  to a mnemonic (word list).
+/**
+ * Converts from a key to a mnemonic (word list).
  *
  * @param keyData
  *   The key to convert to a mnemonic.
@@ -151,14 +149,14 @@ typedef NS_ENUM(NSInteger, Mnemonic_Algorithm) {
  * @return The mnemonic, represented as an array of words from the language file.
  */
 + (nullable NSArray<NSString*> *)mnemonicFromKey:(NSData *)keyData
-                                       passphrase:(nullable NSString *)passphrase
-									  languageID:(NSString* _Nullable)languageID
-									   algorithm:(Mnemonic_Algorithm)algorithm
-                                            error:(NSError *_Nullable *_Nullable)errorOut;
+                                      passphrase:(NSString *_Nullable)passphrase
+                                      languageID:(NSString *_Nullable)languageID
+                                       algorithm:(Mnemonic_Algorithm)algorithm
+                                           error:(NSError *_Nullable *_Nullable)errorOut;
 
 /**
  * Converts from a mnemonic back to a key.
- * 
+ *
  * @param mnemonic
  *   The mnemonic output from a previous encoding (using the same passphrase & language file).
  *
@@ -174,10 +172,10 @@ typedef NS_ENUM(NSInteger, Mnemonic_Algorithm) {
  * @return The key which the mnemonic was encoding.
  */
 + (nullable NSData *)keyFromMnemonic:(NSArray<NSString*> *)mnemonic
-                           passphrase:(nullable NSString *)passphrase
-						  languageID:(NSString* _Nullable)languageID
-						   algorithm:(Mnemonic_Algorithm)algorithm
-                                error:(NSError *_Nullable *_Nullable)errorOut;
+                          passphrase:(NSString *_Nullable)passphrase
+                          languageID:(NSString *_Nullable)languageID
+                           algorithm:(Mnemonic_Algorithm)algorithm
+                               error:(NSError *_Nullable *_Nullable)errorOut;
 
 @end
 

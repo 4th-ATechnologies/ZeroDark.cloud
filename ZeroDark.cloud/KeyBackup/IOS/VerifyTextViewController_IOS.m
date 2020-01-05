@@ -366,7 +366,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
             NSLocale *newLocale = [NSLocale localeWithLocaleIdentifier:lang];
             if(newLocale)
             {
-                NSString* newLangID = [BIP39Mnemonic languageIDForlocaleIdentifier: newLocale.localeIdentifier];
+                NSString* newLangID = [BIP39Mnemonic languageIDForLocaleIdentifier: newLocale.localeIdentifier];
                 if(newLangID && ![newLangID isEqualToString:keyBackupVC.currentLanguageId])
                 {
                     [self updateTagsToLanguageID:newLangID];
