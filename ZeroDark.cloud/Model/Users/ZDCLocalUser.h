@@ -10,8 +10,6 @@
 #import "ZDCUser.h"
 #import <YapDatabase/YapDatabaseRelationship.h>
 
-extern double const kS4LocalUser_shelflife;     // acceptable time since last update
-
 NS_ASSUME_NONNULL_BEGIN
 
 /**
