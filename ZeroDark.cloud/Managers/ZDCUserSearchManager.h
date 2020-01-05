@@ -29,11 +29,20 @@ NS_ASSUME_NONNULL_BEGIN
  * rather than waiting for a round-trip to the server.
  *
  * @note The order of the stages is not guaranteed. You may receive results from stages in any order.
+ *       However, you will receive a ZDCSearchResultStage_Done at the end.
  */
 typedef NS_ENUM(NSInteger, ZDCSearchResultStage) {
+	
+	/** The search results come from a search within the local database. */
 	ZDCSearchResultStage_Database,
+	
+	/** The search results come from a search of the in-memory cache populated from previous server responses. */
 	ZDCSearchResultStage_Cache,
+	
+	/** The search results come directly from the server. */
 	ZDCSearchResultStage_Server,
+	
+	/** The search request is complete. */
 	ZDCSearchResultStage_Done,
 };
 
