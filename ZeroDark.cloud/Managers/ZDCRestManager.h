@@ -16,6 +16,7 @@
 #import "ZDCMerkleTree.h"
 #import "ZDCPublicKey.h"
 #import "ZDCUser.h"
+#import "ZDCUserBill.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -528,22 +529,32 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)fetchCurrentBilling:(NSString *)localUserID
             completionQueue:(nullable dispatch_queue_t)completionQueue
-            completionBlock:(void (^)(NSDictionary *_Nullable billing, NSError *_Nullable error))completionBlock;
+            completionBlock:(void (^)(ZDCUserBill *_Nullable bill, NSError *_Nullable error))completionBlock;
 
+/**
+ * Queries the server for the user's billing info.
+ *
+ * The result will include billing & usage information for the user's account,
+ * as well as detailed information on a per-app basis.
+ */
 - (void)fetchPreviousBilling:(NSString *)localUserID
-                    withYear:(int)year
-                       month:(int)month
+                    withYear:(NSInteger)year
+                       month:(NSInteger)month
              completionQueue:(nullable dispatch_queue_t)completionQueue
-             completionBlock:(void (^)(NSDictionary *_Nullable billing, NSError *_Nullable error))completionBlock;
+             completionBlock:(void (^)(ZDCUserBill *_Nullable bill, NSError *_Nullable error))completionBlock;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Purchases
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)productPurchasedByUser:(NSString *)localUserID
-			 productIdentifier:(NSString *)productIdentifier
-		 transactionIdentifier:(NSString *)transactionIdentifier
-			   appStoreReceipt:(NSData 	*) appStoreReceipt
-			   completionQueue:(nullable dispatch_queue_t)completionQueue
-			   completionBlock:(void (^)(NSURLResponse *response, id _Nullable responseObject, NSError *_Nullable error))completionBlock;
-
+             productIdentifier:(NSString *)productIdentifier
+         transactionIdentifier:(NSString *)transactionIdentifier
+               appStoreReceipt:(NSData *)appStoreReceipt
+               completionQueue:(nullable dispatch_queue_t)completionQueue
+               completionBlock:(void (^)(NSURLResponse *response,
+                                         id _Nullable responseObject,
+                                         NSError *_Nullable error))completionBlock;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Blockchain

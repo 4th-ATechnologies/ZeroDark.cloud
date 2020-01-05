@@ -21,6 +21,7 @@
 #import "ZDCLocalUserPrivate.h"
 #import "ZDCLocalUserAuth.h"
 #import "ZDCLogging.h"
+#import "ZDCUserBillPrivate.h"
 #import "ZeroDarkCloudPrivate.h"
 
 // Categories
@@ -61,7 +62,7 @@
 	ZDCAsyncCompletionDispatch *asyncCompletionDispatch;
 	
 	dispatch_queue_t billing_queue;
-	NSMutableDictionary *billing_history;
+	NSMutableDictionary<NSString*, ZDCUserBill*> *billing_history;
 }
 
 #pragma clang diagnostic push
@@ -193,7 +194,7 @@
 		for (NSUInteger i = 0; i < completionBlocks.count; i++)
 		{
 			dispatch_queue_t completionQueue = completionQueues[i];
-			void (^completionBlock)(NSDictionary* config, NSError *error) = completionBlocks[i];
+			void (^completionBlock)(NSDictionary*, NSError*) = completionBlocks[i];
 
 			dispatch_async(completionQueue, ^{ @autoreleasepool {
 				completionBlock(config, error);
@@ -401,6 +402,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)setupAccountForLocalUser:(ZDCLocalUser *)localUser
 								withAuth:(ZDCLocalUserAuth *)auth
@@ -1720,6 +1723,11 @@
 #pragma mark Auth0
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
+ */
 - (void)fetchAuth0ProfileForLocalUserID:(NSString*) localUserID
 					  completionQueue:(dispatch_queue_t)completionQueue
 					  completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
@@ -1885,6 +1893,11 @@
 	}];
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
+ */
 - (void)searchUserMatch:(NSString *)queryString
                provider:(nullable NSString *)providerString
                  treeID:(NSString *)treeID
@@ -2003,6 +2016,8 @@
 
 /**
  * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
 - (void)linkAuth0ID:(NSString *)linkAuth0ID
        toRecoveryID:(NSString *)recoveryAuth0ID
@@ -2109,8 +2124,10 @@
 }
 
 /**
- * Uses the server API to link a secondary Auth0 ID to the user's auth0 identity.
-**/
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
+ */
 - (void)linkAuth0ID:(NSString *)linkAuth0ID
             forUser:(ZDCLocalUser *)localUser
     completionQueue:(dispatch_queue_t)completionQueue
@@ -2231,6 +2248,11 @@
 	}];
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
+ */
 - (void)unlinkAuth0ID:(NSString *)unlinkAuth0ID
               forUser:(ZDCLocalUser *)localUser
       completionQueue:(dispatch_queue_t)completionQueue
@@ -2354,133 +2376,11 @@
 #pragma mark Billing
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)productPurchasedByUser:(NSString *)inLocalUserID
-			 productIdentifier:(NSString *)productIdentifier
-		 transactionIdentifier:(NSString *)transactionIdentifier
-			   appStoreReceipt:(NSData 	*) appStoreReceipt
-			   completionQueue:(nullable dispatch_queue_t)inCompletionQueue
-			   completionBlock:(void (^)(NSURLResponse *response, id _Nullable responseObject, NSError *_Nullable error))inCompletionBlock
-{
-	ZDCLogAutoTrace();
-
-	NSParameterAssert(inLocalUserID != nil);
-	NSParameterAssert(productIdentifier != nil);
-	NSParameterAssert(appStoreReceipt != nil);
-
-	NSString *localUserID = [inLocalUserID copy]; // mutable string protection
-
-	if (!inCompletionBlock)
-		return;
-
-	if (!inCompletionQueue)
-		inCompletionQueue = dispatch_get_main_queue();
-
-	NSString *requestKey = [NSString stringWithFormat:@"%@|%@|%@",
-							NSStringFromSelector(_cmd), localUserID, transactionIdentifier];
-
-
-	NSUInteger requestCount =
-	[asyncCompletionDispatch pushCompletionQueue:inCompletionQueue
-								 completionBlock:inCompletionBlock
-										  forKey:requestKey];
-
-	if (requestCount > 1)
-	{
-		// There's a previous request currently in-flight.
-		// The <completionQueue, completionBlock> have been added to the existing request's list.
-		return;
-	}
-
-	void (^InvokeCompletionBlocks)(NSURLResponse*, id, NSError*) = ^(NSURLResponse *response, id responseObject, NSError *error) {
-
-		NSArray<dispatch_queue_t> * completionQueues = nil;
-		NSArray<id>               * completionBlocks = nil;
-		[asyncCompletionDispatch popCompletionQueues:&completionQueues
-									completionBlocks:&completionBlocks
-											  forKey:requestKey];
-
-		for (NSUInteger i = 0; i < completionBlocks.count; i++)
-		{
-			dispatch_queue_t completionQueue = completionQueues[i];
-			void (^completionBlock)(NSURLResponse *response, id responseObject, NSError *error) = completionBlocks[i];
-
-			dispatch_async(completionQueue, ^{ @autoreleasepool {
-				completionBlock(response, responseObject,error);
-			}});
-		}
-	};
-
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
-	{
-		if (error)
-		{
-			InvokeCompletionBlocks(nil, nil, error);
-			return;
-		}
-
-		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
-	#if TARGET_OS_IPHONE
-		AFURLSessionManager *session = sessionInfo.foregroundSession;
-	#else
-		AFURLSessionManager *session = sessionInfo.session;
-	#endif
-		ZDCSessionUserInfo *userInfo = sessionInfo.userInfo;
-
-		AWSRegion region = AWSRegion_Master; // Payment always goes through Oregon
-
-		NSString *stage = userInfo.stage;
-		if (!stage)
-		{
-			stage = DEFAULT_AWS_STAGE;
-		}
-
-		// Create JSON for request
-		NSDictionary *jsonDict = @{
-			@"type"         : @"apple",
-			@"receipt_data" : [appStoreReceipt base64EncodedStringWithOptions:0]
-		};
-		NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:nil];
-
-		NSString *path = @"/payment/oneTime";
-
-		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
-
-		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
-		request.HTTPMethod = @"POST";
-		request.HTTPBody = jsonData;
-
-		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-		
-		// Send request
-		[AWSSignature signRequest: request
-		               withRegion: region
-		                  service: AWSService_APIGateway
-		              accessKeyID: auth.aws_accessKeyID
-		                   secret: auth.aws_secret
-		                  session: auth.aws_session];
-
-		NSURLSessionDataTask *task =
-			[session dataTaskWithRequest: request
-			              uploadProgress: nil
-			            downloadProgress: nil
-			           completionHandler:^(NSURLResponse *response, id responseObject, NSError *error)
-		{
-			InvokeCompletionBlocks(response, responseObject,error);
-		}];
-
-		[task resume];
-	}];
-}
-
-
 /**
- * Queries the server to see if the user has transitioned from "free trial user" to "paying customer".
- *
- * Note: The server also sends a push notification for this change.
- * But if push notifications are disabled, this method should be consulted on-demand.
-**/
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
+ */
 - (void)fetchIsCustomer:(NSString *)inLocalUserID
         completionQueue:(nullable dispatch_queue_t)inCompletionQueue
         completionBlock:(void (^)(BOOL isPayingCustomer, NSError *_Nullable error))inCompletionBlock
@@ -2520,7 +2420,7 @@
 		for (NSUInteger i = 0; i < completionBlocks.count; i++)
 		{
 			dispatch_queue_t completionQueue = completionQueues[i];
-			void (^completionBlock)(BOOL result, NSError *error) = completionBlocks[i];
+			void (^completionBlock)(BOOL, NSError *) = completionBlocks[i];
 			
 			dispatch_async(completionQueue, ^{ @autoreleasepool {
 				completionBlock(result, error);
@@ -2606,11 +2506,10 @@
 }
 
 /**
- * Queries the server for the current balance of the user.
- *
- * Note: The server also sends a push notification for this change.
- * But if push notifications are disabled, this method should be consulted on-demand.
-**/
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
+ */
 - (void)fetchCurrentBalance:(NSString *)inLocalUserID
             completionQueue:(nullable dispatch_queue_t)inCompletionQueue
             completionBlock:(void (^)(double credit, NSError *_Nullable error))inCompletionBlock
@@ -2650,7 +2549,7 @@
 		for (NSUInteger i = 0; i < completionBlocks.count; i++)
 		{
 			dispatch_queue_t completionQueue = completionQueues[i];
-			void (^completionBlock)(double credit, NSError *error) = completionBlocks[i];
+			void (^completionBlock)(double, NSError*) = completionBlocks[i];
 			
 			dispatch_async(completionQueue, ^{ @autoreleasepool {
 				completionBlock(credit, error);
@@ -2736,31 +2635,28 @@
 }
 
 /**
- * Queries the server for the user's billing info.
- * 
- * The result will include billing & usage information for the user's account,
- * as well as detailed information on a per-app basis.
-**/
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
+ */
 - (void)fetchCurrentBilling:(NSString *)inLocalUserID
             completionQueue:(dispatch_queue_t)inCompletionQueue
-            completionBlock:(void (^)(NSDictionary *billing, NSError *error))inCompletionBlock
+            completionBlock:(void (^)(ZDCUserBill *bill, NSError *error))inCompletionBlock
 {
 	ZDCLogAutoTrace();
 	
 	NSString *localUserID = [inLocalUserID copy]; // mutable string protection
 	
-	if (!inCompletionBlock)
+	if (!inCompletionBlock) {
 		return;
-	
-	if (!inCompletionQueue)
-		inCompletionQueue = dispatch_get_main_queue();
+	}
 	
 	NSString *requestKey = [NSString stringWithFormat:@"%@|%@", NSStringFromSelector(_cmd), localUserID];
 	
 	NSUInteger requestCount =
-	  [asyncCompletionDispatch pushCompletionQueue:inCompletionQueue
-	                               completionBlock:inCompletionBlock
-	                                        forKey:requestKey];
+	  [asyncCompletionDispatch pushCompletionQueue: inCompletionQueue
+	                               completionBlock: inCompletionBlock
+	                                        forKey: requestKey];
 	
 	if (requestCount > 1)
 	{
@@ -2769,7 +2665,7 @@
 		return;
 	}
 	
-	void (^InvokeCompletionBlocks)(NSDictionary*, NSError*) = ^(NSDictionary *response, NSError *error) {
+	void (^InvokeCompletionBlocks)(ZDCUserBill*, NSError*) = ^(ZDCUserBill *result, NSError *error) {
 		
 		NSArray<dispatch_queue_t> * completionQueues = nil;
 		NSArray<id>               * completionBlocks = nil;
@@ -2780,15 +2676,15 @@
 		for (NSUInteger i = 0; i < completionBlocks.count; i++)
 		{
 			dispatch_queue_t completionQueue = completionQueues[i];
-			void (^completionBlock)(NSDictionary *response, NSError *error) = completionBlocks[i];
+			void (^completionBlock)(ZDCUserBill*, NSError*) = completionBlocks[i];
 			
 			dispatch_async(completionQueue, ^{ @autoreleasepool {
-				completionBlock(response, error);
+				completionBlock(result, error);
 			}});
 		}
 	};
 	
-	__block NSDictionary *billing_last;
+	__block ZDCUserBill *billing_last = nil;
 	dispatch_sync(billing_queue, ^{
 		
 		billing_last = billing_history[localUserID];
@@ -2798,40 +2694,29 @@
 	
 	if (billing_last)
 	{
-		// Notes:
-		//
-		// billing_month is 0-based (javascript).
-		// now_month is 1-based (NSCalendar).
-		//
-		// billing_offset is in hours (from UTC).
-		// This should be zero for AWS.
-		
-		NSUInteger billing_year  = [billing_last[@"metadata"][@"year"] unsignedIntegerValue];
-		NSUInteger billing_month = [billing_last[@"metadata"][@"month"] unsignedIntegerValue] + 1;
-		
-		NSUInteger billing_offset = [billing_last[@"metadata"][@"timezoneOffset"] unsignedIntegerValue];
+		NSUInteger billing_year = billing_last.metadata.year;
+		NSUInteger billing_month = billing_last.metadata.month;
 		
 		NSDate *now = [NSDate date];
 		
 		NSCalendar *calendar = [NSCalendar currentCalendar];
-		calendar.timeZone = [NSTimeZone timeZoneForSecondsFromGMT:(billing_offset * 60 * 60)];
 		
 		NSUInteger now_year  = [calendar component:NSCalendarUnitYear fromDate:now];
 		NSUInteger now_month = [calendar component:NSCalendarUnitMonth fromDate:now];
 		
 		if ((billing_year == now_year) && (billing_month == now_month))
 		{
-			id value = billing_last[@"metadata"][@"lastChange"];
+			NSDate *lastChange = billing_last.metadata.timestamp;
+			uint64_t millis = (uint64_t)[lastChange timeIntervalSince1970] * (uint64_t)1000;
 			
-			if ([value isKindOfClass:[NSNumber class]])
-				xIfModifiedSince = [(NSNumber *)value stringValue];
-			else if ([value isKindOfClass:[NSString class]])
-				xIfModifiedSince = (NSString *)value;
+			xIfModifiedSince = [NSString stringWithFormat:@"%llu", millis];
 		}
 	}
 	
+	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	
 	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionQueue: bgQueue
 	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
@@ -2860,7 +2745,8 @@
 		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
 		
 		urlComponents.queryItems = @[
-		  [NSURLQueryItem queryItemWithName:@"v" value:@"1"]
+		  [NSURLQueryItem queryItemWithName:@"v" value:@"1"],
+		  [NSURLQueryItem queryItemWithName:@"rates" value:@"aws"]
 		];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
@@ -2886,18 +2772,25 @@
 		              downloadProgress: nil
 		             completionHandler:^(NSURLResponse *response, id responseObject, NSError *error)
 		{
+			if (error)
+			{
+				InvokeCompletionBlocks(nil, error);
+				return;
+			}
+			
+			ZDCUserBill *result = nil;
+			
 			NSInteger statusCode = response.httpStatusCode;
-			
-			NSDictionary *jsonDict = nil;
-			
 			if (statusCode == 304)
 			{
 				// No change since our last fetch.
 				
-				jsonDict = billing_last;
+				result = billing_last;
 			}
 			else
 			{
+				NSDictionary *jsonDict = nil;
+				
 				if ([responseObject isKindOfClass:[NSDictionary class]])
 				{
 					jsonDict = (NSDictionary *)responseObject;
@@ -2907,20 +2800,26 @@
 					jsonDict = [NSJSONSerialization JSONObjectWithData:(NSData *)responseObject options:0 error:&error];
 				}
 				
-				// Cache result in memory.
-				// This helps us reduce lambda processing time & bandwidth usage.
-				// 
-				dispatch_sync(billing_queue, ^{
+				if (jsonDict)
+				{
+					result = [[ZDCUserBill alloc] initWithDictionary:jsonDict];
 					
-					billing_history[localUserID] = jsonDict;
-				});
+					// Cache result in memory.
+					// This helps us reduce lambda processing time & bandwidth usage.
+					//
+					dispatch_sync(billing_queue, ^{
+					
+						billing_history[localUserID] = result;
+					});
+				}
+				else if (!error) // no JSON parsing errors
+				{
+					NSString *msg = @"Server returned non-json-dictionary response";
+					error = [NSError errorWithClass:[self class] code:500 description:msg];
+				}
 			}
 			
-			// Update response with "monthlyEstimate" values.
-			//
-			NSDictionary *billing = [self calculateMonthlyInfoForBilling:jsonDict user:localUserID];
-			
-			InvokeCompletionBlocks(billing, error);
+			InvokeCompletionBlocks(result, error);
 		}];
 		
 		[task resume];
@@ -2928,31 +2827,31 @@
 }
 
 /**
- *
-**/
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
+ */
 - (void)fetchPreviousBilling:(NSString *)inLocalUserID
-                    withYear:(int)year
-                       month:(int)month
+                    withYear:(NSInteger)year
+                       month:(NSInteger)month
              completionQueue:(nullable dispatch_queue_t)inCompletionQueue
-             completionBlock:(void (^)(NSDictionary *billing, NSError *error))inCompletionBlock
+             completionBlock:(void (^)(ZDCUserBill *bill, NSError *error))inCompletionBlock
 {
 	ZDCLogAutoTrace();
 	
 	NSString *localUserID = [inLocalUserID copy]; // mutable string protection
 	
-	if (!inCompletionBlock)
+	if (!inCompletionBlock) {
 		return;
+	}
 	
-	if (!inCompletionQueue)
-		inCompletionQueue = dispatch_get_main_queue();
-	
-	NSString *requestKey = [NSString stringWithFormat:@"%@|%@|%d|%d",
-	                          NSStringFromSelector(_cmd), localUserID, year, month];
+	NSString *requestKey = [NSString stringWithFormat:@"%@|%@|%ld|%ld",
+	                          NSStringFromSelector(_cmd), localUserID, (long)year, (long)month];
 	
 	NSUInteger requestCount =
-	  [asyncCompletionDispatch pushCompletionQueue:inCompletionQueue
-	                               completionBlock:inCompletionBlock
-	                                        forKey:requestKey];
+	  [asyncCompletionDispatch pushCompletionQueue: inCompletionQueue
+	                               completionBlock: inCompletionBlock
+	                                        forKey: requestKey];
 	
 	if (requestCount > 1)
 	{
@@ -2961,7 +2860,7 @@
 		return;
 	}
 	
-	void (^InvokeCompletionBlocks)(NSDictionary*, NSError*) = ^(NSDictionary *response, NSError *error) {
+	void (^InvokeCompletionBlocks)(ZDCUserBill*, NSError*) = ^(ZDCUserBill *bill, NSError *error) {
 		
 		NSArray<dispatch_queue_t> * completionQueues = nil;
 		NSArray<id>               * completionBlocks = nil;
@@ -2972,18 +2871,20 @@
 		for (NSUInteger i = 0; i < completionBlocks.count; i++)
 		{
 			dispatch_queue_t completionQueue = completionQueues[i];
-			void (^completionBlock)(NSDictionary *response, NSError *error) = completionBlocks[i];
+			void (^completionBlock)(ZDCUserBill*, NSError*) = completionBlocks[i];
 			
 			dispatch_async(completionQueue, ^{ @autoreleasepool {
-				completionBlock(response, error);
+				completionBlock(bill, error);
 			}});
 		}
 	};
 	
+	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	
 	dispatch_block_t requestBlock = ^{ @autoreleasepool {
 	
 		[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-		                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+		                                    completionQueue: bgQueue
 		                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 		{
 			if (error)
@@ -3013,19 +2914,20 @@
 			
 			urlComponents.queryItems = @[
 			  [NSURLQueryItem queryItemWithName:@"v" value:@"1"],
-			  [NSURLQueryItem queryItemWithName:@"year" value:[NSString stringWithFormat:@"%d", year]],
-			  [NSURLQueryItem queryItemWithName:@"month" value:[NSString stringWithFormat:@"%d", month]]
+			  [NSURLQueryItem queryItemWithName:@"rates" value:@"aws"],
+			  [NSURLQueryItem queryItemWithName:@"year" value:[NSString stringWithFormat:@"%ld", (long)year]],
+			  [NSURLQueryItem queryItemWithName:@"month" value:[NSString stringWithFormat:@"%ld", (long)(month-1)]]
 			];
 			
 			NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 			[request setHTTPMethod:@"GET"];
 			
-			[AWSSignature signRequest:request
-			               withRegion:region
-			                  service:AWSService_APIGateway
-			              accessKeyID:auth.aws_accessKeyID
-			                   secret:auth.aws_secret
-			                  session:auth.aws_session];
+			[AWSSignature signRequest: request
+			               withRegion: region
+			                  service: AWSService_APIGateway
+			              accessKeyID: auth.aws_accessKeyID
+			                   secret: auth.aws_secret
+			                  session: auth.aws_session];
 			
 			// Send request
 			
@@ -3035,8 +2937,13 @@
 			              downloadProgress: nil
 			             completionHandler:^(NSURLResponse *response, id responseObject, NSError *error)
 			{
-				NSDictionary *jsonDict = nil;
+				if (error)
+				{
+					InvokeCompletionBlocks(nil, error);
+					return;
+				}
 				
+				NSDictionary *jsonDict = nil;
 				if ([responseObject isKindOfClass:[NSDictionary class]])
 				{
 					jsonDict = (NSDictionary *)responseObject;
@@ -3046,10 +2953,15 @@
 					jsonDict = [NSJSONSerialization JSONObjectWithData:(NSData *)responseObject options:0 error:&error];
 				}
 				
+				ZDCUserBill *bill = nil;
 				if (jsonDict)
 				{
-					BOOL isFinalized = [jsonDict[@"metadata"][@"final"] boolValue];
-					if (isFinalized)
+					bill = [[ZDCUserBill alloc] initWithDictionary:jsonDict];
+					
+				//	(void)bill.apps;
+				//	(void)[bill calculateCost:@"com.4th-a.WhatsZapp"];
+					
+					if (bill.metadata.isFinal)
 					{
 						// Cache result in database.
 						// This helps us reduce lambda processing time & bandwidth usage.
@@ -3066,9 +2978,13 @@
 						}];
 					}
 				}
+				else if (!error) // no JSON parsing errors
+				{
+					NSString *msg = @"Server returned non-json-dictionary response";
+					error = [NSError errorWithClass:[self class] code:500 description:msg];
+				}
 				
-				NSDictionary *billing = [self calculateMonthlyInfoForBilling:jsonDict user:localUserID];
-				InvokeCompletionBlocks(billing, error);
+				InvokeCompletionBlocks(bill, error);
 			}];
 			
 			[task resume];
@@ -3084,7 +3000,7 @@
 		
 		cachedResponseData = cachedResponse.data;
 		
-	} completionQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) completionBlock:^{
+	} completionQueue:bgQueue completionBlock:^{
 		
 		NSDictionary *jsonDict = nil;
 		
@@ -3095,8 +3011,8 @@
 		
 		if (jsonDict)
 		{
-			NSDictionary *billing = [self calculateMonthlyInfoForBilling:jsonDict user:localUserID];
-			InvokeCompletionBlocks(billing, nil);
+			ZDCUserBill *bill = [[ZDCUserBill alloc] initWithDictionary:jsonDict];
+			InvokeCompletionBlocks(bill, nil);
 		}
 		else
 		{
@@ -3105,688 +3021,131 @@
 	}];
 }
 
-/**
- * The billing object is broken into sections:
- * - totals
- * - apps
- * 
- * This method calculates & adds the following to each section:
- *
- * - accumulatedStorageBytes
- * - accumulatedBandwidthBytes
- * - accumulatedStorageCost
- * - accumulatedBandwidthCost
- * - accumulatedOtherCost
- * - accumulatedOtherCost_S3
- * - accumulatedOtherCost_Lambda
- * - accumulatedOtherCost_SNS
- * - accumulatedDiscount
- * - accumulatedTotalCost
- * 
- * - estimatedStorageBytes
- * - estimatedBandwidthBytes
- * - estimatedStorageCost
- * - estimatedBandwidthCost
- * - estimatedOtherCost
- * - estimatedOtherCost_S3
- * - estimatedOtherCost_Lambda
- * - estimatedOtherCost_SNS
- * - estimatedDiscount
- * - estimatedTotalCost
- * 
- * - finalStorageBytes
- * - finalBandwidthBytes
- * - finalStorageCost
- * - finalBandwidthCost
- * - finalOtherCost      (S3 get/put & lambda)
- * - finalOtherCost_S3
- * - finalOtherCost_Lambda
- * - finalOtherCost_SNS
- * - finalDiscount
- * - finalTotalCost
-**/
-- (NSDictionary *)calculateMonthlyInfoForBilling:(NSDictionary *)inBilling user:(NSString *)localUserID
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Purchase
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)productPurchasedByUser:(NSString *)inLocalUserID
+             productIdentifier:(NSString *)productIdentifier
+         transactionIdentifier:(NSString *)transactionIdentifier
+               appStoreReceipt:(NSData *)appStoreReceipt
+               completionQueue:(nullable dispatch_queue_t)inCompletionQueue
+               completionBlock:(void (^)(NSURLResponse *response,
+                                         id _Nullable responseObject,
+                                         NSError *_Nullable error))inCompletionBlock
 {
 	ZDCLogAutoTrace();
-	
-	if (inBilling == nil) return nil;
-	
-	NSMutableDictionary *billing = [inBilling deepCopyWithOptions:S4DeepCopy_MutableContainers];
-	
-	if (billing == nil) return nil;
-	
-	// At the very end of the month, the hourly cron job sets a "final: true" flag in the metadata section.
-	
-	NSUInteger version = 0;
-	
-	NSUInteger year = 0;
-	NSUInteger month = 0;
-	NSUInteger timezoneOffset = 0;
-	
-	BOOL isFinalized = NO;
-	
-	NSDictionary *metadata = billing[@"metadata"];
-	if (metadata)
+
+	NSParameterAssert(inLocalUserID != nil);
+	NSParameterAssert(productIdentifier != nil);
+	NSParameterAssert(appStoreReceipt != nil);
+
+	NSString *localUserID = [inLocalUserID copy]; // mutable string protection
+
+	if (!inCompletionBlock)
+		return;
+
+	if (!inCompletionQueue)
+		inCompletionQueue = dispatch_get_main_queue();
+
+	NSString *requestKey = [NSString stringWithFormat:@"%@|%@|%@",
+							NSStringFromSelector(_cmd), localUserID, transactionIdentifier];
+
+
+	NSUInteger requestCount =
+	[asyncCompletionDispatch pushCompletionQueue:inCompletionQueue
+								 completionBlock:inCompletionBlock
+										  forKey:requestKey];
+
+	if (requestCount > 1)
 	{
-		version = [metadata[@"version"] unsignedIntegerValue];
-		
-		year = [metadata[@"year"] unsignedIntegerValue];
-		month = [metadata[@"month"] unsignedIntegerValue];
-		timezoneOffset = [metadata[@"timezoneOffset"] unsignedIntegerValue];
-		
-		isFinalized = [metadata[@"final"] boolValue];
+		// There's a previous request currently in-flight.
+		// The <completionQueue, completionBlock> have been added to the existing request's list.
+		return;
 	}
-	
-	NSDateComponents *dateComponents = [[NSDateComponents alloc] init];
-	dateComponents.year = year;
-	dateComponents.month = (month + 1); // Javascript: 0-based, NSDateComponents: 1-based
-	dateComponents.day = 1;
-	dateComponents.hour = 0;
-	dateComponents.minute = 0;
-	dateComponents.second = 0;
-	dateComponents.nanosecond = 0;
-	
-	NSCalendar *calendar = [NSCalendar currentCalendar];
-	calendar.timeZone = [NSTimeZone timeZoneForSecondsFromGMT:(timezoneOffset * 60)];
-	
-	NSDate *beginningOfMonth = [calendar dateFromComponents:dateComponents];
-	NSDate *endOfMonth = [calendar dateByAddingUnit:NSCalendarUnitMonth value:1 toDate:beginningOfMonth options:0];
-	
-	uint64_t ts_beginningOfMonth = (uint64_t)([beginningOfMonth timeIntervalSince1970] * 1000);
-	uint64_t ts_endOfMonth = (uint64_t)([endOfMonth timeIntervalSince1970] * 1000);
-	
-	uint64_t ts_monthSpan = ts_endOfMonth - ts_beginningOfMonth;
-	
-	double hours_in_month = ts_monthSpan / (1000 * 60 * 60);
-	
-	NSDictionary *rates = billing[@"rates"];
-	
-	const uint64_t KB_in_bytes  = 1000;
-	const uint64_t MB_in_bytes  = 1000 * KB_in_bytes;
-	const uint64_t GB_in_bytes  = 1000 * MB_in_bytes;
-	const uint64_t TB_in_bytes  = 1000 * GB_in_bytes;
-	const uint64_t PB_in_bytes  = 1000 * TB_in_bytes;
-	
-	const uint64_t KiB_in_bytes  = 1024;
-	const uint64_t MiB_in_bytes  = 1024 * KiB_in_bytes;
-	const uint64_t GiB_in_bytes  = 1024 * MiB_in_bytes;
-	const uint64_t TiB_in_bytes  = 1024 * GiB_in_bytes;
-	const uint64_t PiB_in_bytes  = 1024 * TiB_in_bytes;
-	
-	typedef NS_ENUM(NSInteger, PrefixType) {
-		PrefixType_Unknown,
-		PrefixType_Binary,
-		PrefixType_Decimal
-	};
-	
-	PrefixType (^valueToPrefixType)(id) = ^PrefixType (id value) {
-		
-		if ([value isKindOfClass:[NSNumber class]]) {
-			return PrefixType_Unknown;
-		}
-		
-		if (![value isKindOfClass:[NSString class]]) {
-			return PrefixType_Unknown;
-		}
-		
-		NSString *str = (NSString *)value;
-		
-		if ([str isEqualToString:@"∞"])
-			return PrefixType_Unknown;
-		
-		NSArray<NSString *> *split = [str componentsSeparatedByString:@" "];
-		
-		if (split.count == 1)
-		{
-			return PrefixType_Unknown;
-		}
-		else
-		{
-			NSString *type = split[1];
-			
-			if ([type hasPrefix:@"KB"]) { return PrefixType_Decimal; } // "KB", "KBM"
-			if ([type hasPrefix:@"MB"]) { return PrefixType_Decimal; }
-			if ([type hasPrefix:@"GB"]) { return PrefixType_Decimal; }
-			if ([type hasPrefix:@"TB"]) { return PrefixType_Decimal; }
-			if ([type hasPrefix:@"PB"]) { return PrefixType_Decimal; }
-			
-			if ([type hasPrefix:@"KiB"]) { return PrefixType_Binary; } // "KiB", "KiBM"
-			if ([type hasPrefix:@"MiB"]) { return PrefixType_Binary; }
-			if ([type hasPrefix:@"GiB"]) { return PrefixType_Binary; }
-			if ([type hasPrefix:@"TiB"]) { return PrefixType_Binary; }
-			if ([type hasPrefix:@"PiB"]) { return PrefixType_Binary; }
-			
-			return PrefixType_Unknown;
-		}
-	};
-	
-	double (^valueToDouble)(id) = ^double (id value){
-		
-		if ([value isKindOfClass:[NSNumber class]]) {
-			return [(NSNumber *)value doubleValue];
-		}
-		
-		if (![value isKindOfClass:[NSString class]]) {
-			return 0.0;
-		}
-		
-		NSString *str = (NSString *)value;
-		
-		if ([str isEqualToString:@"∞"])
-			return UINT64_MAX;
-		
-		NSArray<NSString *> *split = [str componentsSeparatedByString:@" "];
-		
-		// Caution: commas break strtoull function.
-		// strtoull("10,000", NULL, 10) => 10 !
-		//
-		NSString *numStr = [split[0] stringByReplacingOccurrencesOfString:@"," withString:@""];
-		uint64_t number = strtoull([numStr UTF8String], NULL, 10);
-		
-		if (split.count == 1)
-		{
-			return number;
-		}
-		else
-		{
-			uint64_t multiplier = 1;
-			NSString *type = split[1];
-			
-			     if ([type isEqualToString:@"KB"]) { multiplier =  KB_in_bytes; }
-			else if ([type isEqualToString:@"MB"]) { multiplier =  MB_in_bytes; }
-			else if ([type isEqualToString:@"GB"]) { multiplier =  GB_in_bytes; }
-			else if ([type isEqualToString:@"TB"]) { multiplier =  TB_in_bytes; }
-			else if ([type isEqualToString:@"PB"]) { multiplier =  PB_in_bytes; }
-			
-			else if ([type isEqualToString:@"KiB"]) { multiplier =  KiB_in_bytes; }
-			else if ([type isEqualToString:@"MiB"]) { multiplier =  MiB_in_bytes; }
-			else if ([type isEqualToString:@"GiB"]) { multiplier =  GiB_in_bytes; }
-			else if ([type isEqualToString:@"TiB"]) { multiplier =  TiB_in_bytes; }
-			else if ([type isEqualToString:@"PiB"]) { multiplier =  PiB_in_bytes; }
-			
-			return number * multiplier;
-		}
-	};
-	
-	PrefixType (^calculatePrefixType)(NSDictionary *) = ^NSInteger (NSDictionary *rateContainer) {
 
-		NSArray *flat_pricing  = rateContainer[@"flat"];
-		NSArray *range_pricing = rateContainer[@"range"];
-
-		if (flat_pricing)
-		{
-			// [price_per_unit, unit_size]
-			//
-			// Examples:
-			// - [0.004, 10000] => 0.4 cents per 10,000 => So 5,000 would cost 0.2 cents (i.e. $0.002)
-			// - [0.50, 1000000] => 50 cents per 1 million = > So 100 would cost $0.00005
-			
-			id unit_size = flat_pricing[1];
-			
-			PrefixType prefix_type;
-			
-			if ((prefix_type = valueToPrefixType(unit_size)) != PrefixType_Unknown) {
-				return prefix_type;
-			}
-		}
-		else if (range_pricing)
-		{
-			// [
-			//   [price_per_unit, unit_size, first_range_size],
-			//   [price_per_unit, unit_size, second_range_size],
-			//   ...
-			// ]
-			
-			for (NSArray *range in range_pricing)
-			{
-				id unit_size  = range[1];
-				id range_size = range[2];
-			
-				PrefixType prefix_type;
-				
-				if ((prefix_type = valueToPrefixType(unit_size)) != PrefixType_Unknown) {
-					return prefix_type;
-				}
-				
-				if ((prefix_type = valueToPrefixType(range_size)) != PrefixType_Unknown) {
-					return prefix_type;
-				}
-			}
-		}
-
-		return PrefixType_Unknown;
-	};
-	
-	double (^calculateServiceCost)(double, NSDictionary *) = ^double (double value, NSDictionary *rateContainer){
-		
-		NSArray *flat_pricing  = rateContainer[@"flat"];
-		NSArray *range_pricing = rateContainer[@"range"];
-		
-		if (flat_pricing)
-		{
-			// [price_per_unit, unit_size]
-			//
-			// Examples:
-			// - [0.004, 10000] => 0.4 cents per 10,000 => So 5,000 would cost 0.2 cents (i.e. $0.002)
-			// - [0.50, 1000000] => 50 cents per 1 million = > So 100 would cost $0.00005
-			
-			double price_per_unit = valueToDouble(flat_pricing[0]);
-			double unit_size      = valueToDouble(flat_pricing[1]);
-			
-			return ((value / unit_size) * price_per_unit);
-		}
-		else if (range_pricing)
-		{
-			// [
-			//   [price_per_unit, unit_size, first_range_size],
-			//   [price_per_unit, unit_size, second_range_size],
-			//   ...
-			// ]
-			//
-			// Example: (bandwidth)
-			//
-			// [0.09,  "1 GB", "10 TB"],
-			// [0.085, "1 GB", "40 TB"],
-			// [0.070, "1 GB", "100 TB"],
-			// [0.050, "1 GB", "∞"]
-			//
-			// Translation:
-			// - The first 10 terabytes of bandwidth are charged a 9 cents per gigabyte.
-			// - After that, the next 40 terabytes of bandwidth are charged at 8.5 cents per gigabyte.
-			//   In other words, the range: 10 TB - 50 TB
-			// - After that, the next 100 terabytes of bandwidth are charged at 7 cents per gigabyte.
-			//   In other words, the range: 50 TB - 150 TB
-			// - After that, every gigabyte is charged at 5 cents per gigabyte.
-			//   In other words, the range: 150 TB - Infinity
-			
-			double cost = 0.0;
-			NSUInteger range_index = 0;
-			
-			while (value > 0)
-			{
-				NSArray *range = range_pricing[range_index];
-				
-				double price_per_unit = valueToDouble(range[0]);
-				double unit_size      = valueToDouble(range[1]);
-				double range_size     = valueToDouble(range[2]);
-				
-				if (value > range_size)
-				{
-					cost += ((range_size / unit_size) * price_per_unit);
-					value -= range_size;
-				}
-				else
-				{
-					cost += ((value / unit_size) * price_per_unit);
-					value = 0;
-				}
-				
-				range_index++;
-			}
-			
-			return cost;
-		}
-		else
-		{
-			return 0.0;
-		}
-	};
-	
-	void (^calculateMonthlyInfo)(NSMutableDictionary *) = ^(NSMutableDictionary *item){ @autoreleasepool {
-		
-		if (item == nil) return;
-		
-		NSDictionary * rate_s3_storage          = rates[@"s3"][@"gigabyteMonths"];
-		if (!rate_s3_storage) rate_s3_storage   = rates[@"s3"][@"byteHours"];      // Old server name
-		
-		NSDictionary * rate_s3_getCount         = rates[@"s3"][@"getCount"];
-		NSDictionary * rate_s3_putCount         = rates[@"s3"][@"putCount"];
-		NSDictionary * rate_sns_publishCount    = rates[@"sns"][@"publishCount"];
-		NSDictionary * rate_sns_mobilePushCount = rates[@"sns"][@"mobilePushCount"];
-		NSDictionary * rate_lambda_requestCount = rates[@"lambda"][@"requestCount"];
-		NSDictionary * rate_lambda_millisCount  = rates[@"lambda"][@"millisCount"];
-		NSDictionary * rate_bandwidth_byteCount = rates[@"bandwidth"][@"byteCount"];
-		
-		double item_s3_byteHours = 0;
-		double item_s3_byteCount = 0;
-		
-		if (version == 0)
-		{
-			item_s3_byteHours += valueToDouble(item[@"s3"][@"byteHours"]);
-			item_s3_byteCount += valueToDouble(item[@"s3"][@"byteCount"]);
-		}
-		else
-		{
-			NSDictionary *storage_items   = item[@"s3"][@"storage"];
-			NSDictionary *multipart_items = item[@"s3"][@"multipart"];
-			
-			for (NSString *storage_type in storage_items)
-			{
-				item_s3_byteHours += valueToDouble(storage_items[storage_type][@"byteHours"]);
-				item_s3_byteCount += valueToDouble(storage_items[storage_type][@"byteCount"]);
-			}
-			
-			for (NSString *multipart_id in multipart_items)
-			{
-				item_s3_byteHours += valueToDouble(multipart_items[multipart_id][@"byteHours"]);
-				item_s3_byteCount += valueToDouble(multipart_items[multipart_id][@"byteCount"]);
-			}
-			
-			// Simplify process for UI.
-			
-			item[@"s3"][@"byteCount"] = @(item_s3_byteCount);
-		}
-		
-		double item_s3_getCount         = valueToDouble(item[@"s3"][@"getCount"]);
-		double item_s3_putCount         = valueToDouble(item[@"s3"][@"putCount"]);
-		double item_sns_publishCount    = valueToDouble(item[@"sns"][@"publishCount"]);
-		double item_sns_mobilePushCount = valueToDouble(item[@"sns"][@"mobilePushCount"]);
-		double item_lambda_requestCount = valueToDouble(item[@"lambda"][@"requestCount"]);
-		double item_lambda_millisCount  = valueToDouble(item[@"lambda"][@"millisCount"]);
-		double item_bandwidth_byteCount = valueToDouble(item[@"bandwidth"][@"byteCount"]);
-		
-		if (isFinalized)
-		{
-			double finalGBMonths         = 0.0;
-			double finalStorageCost      = 0.0;
-			double finalBandwidthCost    = 0.0;
-			double finalOtherCost_S3     = 0.0;
-			double finalOtherCost_Lambda = 0.0;
-			double finalOtherCost_SNS    = 0.0;
-			double finalOtherCost        = 0.0;
-			double finalDiscount         = 0.0;
-			double finalTotalCost        = 0.0;
-			
-			finalGBMonths = item_s3_byteHours / hours_in_month / GB_in_bytes; // always in decimal for macOS/iOS
-			
-			if (item[@"cost_storage"])
-			{
-				finalStorageCost = [item[@"cost_storage"] doubleValue];
-			}
-			else
-			{
-				double GxB_months = 0;
-				if (calculatePrefixType(rate_s3_storage) == PrefixType_Binary) {
-					GxB_months = item_s3_byteHours / hours_in_month / GiB_in_bytes;
-				}
-				else {
-					GxB_months = item_s3_byteHours / hours_in_month / GB_in_bytes;
-				}
-				
-				finalStorageCost += calculateServiceCost(GxB_months, rate_s3_storage);
-			}
-			
-			if (item[@"cost_bandwidth"]) {
-				finalBandwidthCost = [item[@"cost_bandwidth"] doubleValue];
-			}
-			else {
-				finalBandwidthCost = calculateServiceCost(item_bandwidth_byteCount, rate_bandwidth_byteCount);
-			}
-			
-			finalOtherCost_S3 += calculateServiceCost(item_s3_getCount, rate_s3_getCount);
-			finalOtherCost_S3 += calculateServiceCost(item_s3_putCount, rate_s3_putCount);
-			
-			finalOtherCost_Lambda += calculateServiceCost(item_lambda_requestCount, rate_lambda_requestCount);
-			finalOtherCost_Lambda += calculateServiceCost(item_lambda_millisCount,  rate_lambda_millisCount);
-			
-			finalOtherCost_SNS += calculateServiceCost(item_sns_publishCount,    rate_sns_publishCount);
-			finalOtherCost_SNS += calculateServiceCost(item_sns_mobilePushCount, rate_sns_mobilePushCount);
-			
-			if (item[@"cost_other"]) {
-				finalOtherCost = [item[@"cost_other"] doubleValue];
-			}
-			else {
-				finalOtherCost = finalOtherCost_S3 + finalOtherCost_Lambda + finalOtherCost_SNS;
-			}
-			
-			NSDictionary *discounts = item[@"discounts"];
-			if ([discounts isKindOfClass:[NSDictionary class]])
-			{
-				for (NSNumber *value in discounts.objectEnumerator)
-				{
-					if ([value isKindOfClass:[NSNumber class]])
-					{
-						finalDiscount += [value doubleValue];
-					}
-				}
-			}
-			
-			if (item[@"cost"]) {
-				finalTotalCost = [item[@"cost"] doubleValue];
-			}
-			else {
-				finalTotalCost = finalStorageCost + finalBandwidthCost + finalOtherCost;
-			}
-			
-			item[@"finalStorageBytes"]     = @(finalGBMonths * GB_in_bytes);
-			item[@"finalBandwidthBytes"]   = @(item_bandwidth_byteCount);
-			
-			item[@"finalStorageCost"]      = @(finalStorageCost);
-			item[@"finalBandwidthCost"]    = @(finalBandwidthCost);
-			item[@"finalOtherCost"]        = @(finalOtherCost);
-			item[@"finalOtherCost_S3"]     = @(finalOtherCost_S3);
-			item[@"finalOtherCost_Lambda"] = @(finalOtherCost_Lambda);
-			item[@"finalOtherCost_SNS"]    = @(finalOtherCost_SNS);
-			item[@"finalDiscount"]         = @(finalDiscount);
-			item[@"finalTotalCost"]        = @(finalTotalCost);
-		}
-		else
-		{
-			uint64_t ts = [item[@"timestamp"] unsignedIntegerValue];
-			
-			item[@"startingTimestamp"] = @(ts_beginningOfMonth);
-			item[@"endingTimestamp"]   = @(ts_endOfMonth);
-			
-			int64_t elapsed   = (int64_t)(ts - ts_beginningOfMonth);
-			int64_t remaining = (int64_t)(ts_endOfMonth - ts);
-			
-		#pragma clang diagnostic push
-		#pragma clang diagnostic ignored "-Wambiguous-macro"
-			elapsed   = CLAMP(0, elapsed,   (int64_t)ts_monthSpan); // careful: casting is required !
-			remaining = CLAMP(0, remaining, (int64_t)ts_monthSpan); // careful: casting is required !
-		#pragma clang pop
-			
-			item[@"elapsedTime"]   = @(elapsed);
-			item[@"remainingTime"] = @(remaining);
-			
-			double accumulatedGBMonths         = 0.0;
-			double accumulatedStorageCost      = 0.0;
-			double accumulatedBandwidthCost    = 0.0;
-			double accumulatedOtherCost_S3     = 0.0;
-			double accumulatedOtherCost_Lambda = 0.0;
-			double accumulatedOtherCost_SNS    = 0.0;
-			double accumulatedOtherCost        = 0.0;
-			double accumulatedDiscount         = 0.0;
-			double accumulatedTotalCost        = 0.0;
-			
-			accumulatedGBMonths = item_s3_byteHours / hours_in_month / GB_in_bytes; // always in decimal for macOS/iOS
-			
-			if (item[@"cost_storage"])
-			{
-				accumulatedStorageCost = [item[@"cost_storage"] doubleValue];
-			}
-			else
-			{
-				double accumulated_GxB_months;
-				if (calculatePrefixType(rate_s3_storage) == PrefixType_Binary) {
-					accumulated_GxB_months = item_s3_byteHours / hours_in_month / GiB_in_bytes;
-				}
-				else {
-					accumulated_GxB_months = item_s3_byteHours / hours_in_month / GB_in_bytes;
-				}
-				
-				accumulatedStorageCost = calculateServiceCost(accumulated_GxB_months, rate_s3_storage);
-			}
-			
-			if (item[@"cost_bandwidth"]) {
-				accumulatedBandwidthCost = [item[@"cost_bandwidth"] doubleValue];
-			}
-			else {
-				accumulatedBandwidthCost = calculateServiceCost(item_bandwidth_byteCount, rate_bandwidth_byteCount);
-			}
-			
-			accumulatedOtherCost_S3 += calculateServiceCost(item_s3_getCount, rate_s3_getCount);
-			accumulatedOtherCost_S3 += calculateServiceCost(item_s3_putCount, rate_s3_putCount);
-			
-			accumulatedOtherCost_Lambda += calculateServiceCost(item_lambda_requestCount, rate_lambda_requestCount);
-			accumulatedOtherCost_Lambda += calculateServiceCost(item_lambda_millisCount,  rate_lambda_millisCount);
-			
-			accumulatedOtherCost_SNS += calculateServiceCost(item_sns_publishCount,    rate_sns_publishCount);
-			accumulatedOtherCost_SNS += calculateServiceCost(item_sns_mobilePushCount, rate_sns_mobilePushCount);
-			
-			if (item[@"cost_other"]) {
-				accumulatedOtherCost = [item[@"cost_other"] doubleValue];
-			}
-			else {
-				accumulatedOtherCost = accumulatedOtherCost_S3 + accumulatedOtherCost_Lambda + accumulatedOtherCost_SNS;
-			}
-			
-			if (item[@"cost"]) {
-				accumulatedTotalCost = [item[@"cost"] doubleValue];
-			}
-			else {
-				accumulatedTotalCost = accumulatedStorageCost + accumulatedBandwidthCost + accumulatedOtherCost;
-			}
-			
-			item[@"accumulatedStorageBytes"]     = @(accumulatedGBMonths * GB_in_bytes);
-			item[@"accumulatedBandwidthBytes"]   = @(item_bandwidth_byteCount);
-			
-			item[@"accumulatedStorageCost"]      = @(accumulatedStorageCost);
-			item[@"accumulatedBandwidthCost"]    = @(accumulatedBandwidthCost);
-			item[@"accumulatedOtherCost_S3"]     = @(accumulatedOtherCost_S3);
-			item[@"accumulatedOtherCost_Lambda"] = @(accumulatedOtherCost_Lambda);
-			item[@"accumulatedOtherCost_SNS"]    = @(accumulatedOtherCost_SNS);
-			item[@"accumulatedOtherCost"]        = @(accumulatedOtherCost);
-			item[@"accumulatedDiscount"]         = @(accumulatedDiscount);
-			item[@"accumulatedTotalCost"]        = @(accumulatedTotalCost);
-			
-			// Project current usage patterns to the end of the month.
-			
-			double remaining_hours = (double)remaining / (double)(1000 * 60 * 60);
-			
-			double remaining_s3_byteHours = item_s3_byteCount * remaining_hours;
-			double estimated_s3_byteHours = item_s3_byteHours + remaining_s3_byteHours;
-			
-			double multiplier = 1.0 + ((double)remaining / (double)elapsed);
-			
-			double estimated_s3_getCount         = item_s3_getCount         * multiplier;
-			double estimated_s3_putCount         = item_s3_putCount         * multiplier;
-			double estimated_sns_publishCount    = item_sns_publishCount    * multiplier;
-			double estimated_sns_mobilePushCount = item_sns_mobilePushCount * multiplier;
-			double estimated_lambda_requestCount = item_lambda_requestCount * multiplier;
-			double estimated_lambda_millisCount  = item_lambda_millisCount  * multiplier;
-			double estimated_bandwidth_byteCount = item_bandwidth_byteCount * multiplier;
-			
-			double estimatedGBMonths         = 0.0;
-			double estimatedStorageCost      = 0.0;
-			double estimatedBandwidthCost    = 0.0;
-			double estimatedOtherCost_S3     = 0.0;
-			double estimatedOtherCost_Lambda = 0.0;
-			double estimatedOtherCost_SNS    = 0.0;
-			double estimatedOtherCost        = 0.0;
-			double estimatedDiscount         = 0.0;
-			double estimatedTotalCost        = 0.0;
-			
-			estimatedGBMonths = estimated_s3_byteHours / hours_in_month / GB_in_bytes; // always in decimal for macOS/iOS
-			
-			double estimated_GxB_months;
-			if (calculatePrefixType(rate_s3_storage) == PrefixType_Binary) {
-				estimated_GxB_months = estimated_s3_byteHours / hours_in_month / GiB_in_bytes;
-			}
-			else {
-				estimated_GxB_months = estimated_s3_byteHours / hours_in_month / GB_in_bytes;
-			}
-			
-			estimatedStorageCost += calculateServiceCost(estimated_GxB_months, rate_s3_storage);
-			
-			estimatedBandwidthCost += calculateServiceCost(estimated_bandwidth_byteCount, rate_bandwidth_byteCount);
-			
-			estimatedOtherCost_S3 += calculateServiceCost(estimated_s3_getCount, rate_s3_getCount);
-			estimatedOtherCost_S3 += calculateServiceCost(estimated_s3_putCount, rate_s3_putCount);
-			
-			estimatedOtherCost_Lambda += calculateServiceCost(estimated_lambda_requestCount, rate_lambda_requestCount);
-			estimatedOtherCost_Lambda += calculateServiceCost(estimated_lambda_millisCount,  rate_lambda_millisCount);
-			
-			estimatedOtherCost_SNS += calculateServiceCost(estimated_sns_publishCount,    rate_sns_publishCount);
-			estimatedOtherCost_SNS += calculateServiceCost(estimated_sns_mobilePushCount, rate_sns_mobilePushCount);
-			
-			estimatedOtherCost = estimatedOtherCost_S3 + estimatedOtherCost_Lambda + estimatedOtherCost_SNS;
-			
-			estimatedTotalCost = estimatedStorageCost + estimatedBandwidthCost + estimatedOtherCost - estimatedDiscount;
-			
-			item[@"estimatedStorageBytes"]     = @(estimatedGBMonths * GB_in_bytes);
-			item[@"estimatedBandwidthBytes"]   = @(estimated_bandwidth_byteCount);
-			
-			item[@"estimatedStorageCost"]      = @(estimatedStorageCost);
-			item[@"estimatedBandwidthCost"]    = @(estimatedBandwidthCost);
-			item[@"estimatedOtherCost_S3"]     = @(estimatedOtherCost_S3);
-			item[@"estimatedOtherCost_Lambda"] = @(estimatedOtherCost_Lambda);
-			item[@"estimatedOtherCost_SNS"]    = @(estimatedOtherCost_SNS);
-			item[@"estimatedOtherCost"]        = @(estimatedOtherCost);
-			item[@"estimatedDiscount"]         = @(estimatedDiscount);
-			item[@"estimatedTotalCost"]        = @(estimatedTotalCost);
-		}
-	}};
-	
-#if DEBUG && robbie_hanson && 0
-	// <screenshot_hack>
-	
-	void (^manipulateValue)(NSArray *, NSString *, double);
-	manipulateValue = ^(NSArray *paths, NSString *op, double manipulator){ @autoreleasepool {
-		
-		id prvValue = nil;
-		id value = billing;
-		
-		for (NSString *path in paths)
-		{
-			prvValue = value;
-			value = value[path];
-		}
-		
-		if ([value isKindOfClass:[NSNumber class]])
-		{
-			double oldValue = [value doubleValue];
-			double newValue = oldValue;
-			
-			if ([op isEqualToString:@"mul"]) {
-				newValue = oldValue * manipulator;
-			}
-			else if ([op isEqualToString:@"div"]) {
-				newValue = oldValue / manipulator;
-			}
-			else if ([op isEqualToString:@"set"]) {
-				newValue = manipulator;
-			}
-			
-			prvValue[[paths lastObject]] = @(newValue);
-		}
-		
-	}};
-	
-	manipulateValue(@[@"apps", @"com.4th-a.storm4", @"s3", @"byteCount"], @"mul", 8);
-	manipulateValue(@[@"apps", @"com.4th-a.storm4", @"s3", @"byteHours"], @"mul", 8);
-	
-	manipulateValue(@[@"apps", @"com.4th-a.storm4", @"s3", @"getCount"], @"div", 16);
-	manipulateValue(@[@"apps", @"com.4th-a.storm4", @"s3", @"putCount"], @"div", 16);
-	
-	manipulateValue(@[@"apps", @"com.4th-a.storm4", @"lambda", @"millisCount"], @"div", 16);
-	manipulateValue(@[@"apps", @"com.4th-a.storm4", @"lambda", @"requestCount"], @"div", 16);
-	
-	manipulateValue(@[@"apps", @"com.4th-a.storm4", @"bandwidth", @"byteCount"], @"div", 10);
-	
-	// </screenshot_hack>
-#endif
-	
-	NSMutableDictionary *totals = billing[@"totals"];
-	calculateMonthlyInfo(totals);
-	
-	NSDictionary *apps = billing[@"apps"];
-	for (NSMutableDictionary *app in [apps objectEnumerator])
+	void (^InvokeCompletionBlocks)(NSURLResponse*, id, NSError*) =
+		^(NSURLResponse *response, id responseObject, NSError *error)
 	{
-		calculateMonthlyInfo(app);
-	}
-	
-	return billing;
+		NSArray<dispatch_queue_t> * completionQueues = nil;
+		NSArray<id>               * completionBlocks = nil;
+		[asyncCompletionDispatch popCompletionQueues:&completionQueues
+									completionBlocks:&completionBlocks
+											  forKey:requestKey];
+
+		for (NSUInteger i = 0; i < completionBlocks.count; i++)
+		{
+			dispatch_queue_t completionQueue = completionQueues[i];
+			void (^completionBlock)(NSURLResponse*, id, NSError*) = completionBlocks[i];
+
+			dispatch_async(completionQueue, ^{ @autoreleasepool {
+				completionBlock(response, responseObject,error);
+			}});
+		}
+	};
+
+	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
+	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	{
+		if (error)
+		{
+			InvokeCompletionBlocks(nil, nil, error);
+			return;
+		}
+
+		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
+	#if TARGET_OS_IPHONE
+		AFURLSessionManager *session = sessionInfo.foregroundSession;
+	#else
+		AFURLSessionManager *session = sessionInfo.session;
+	#endif
+		ZDCSessionUserInfo *userInfo = sessionInfo.userInfo;
+
+		AWSRegion region = AWSRegion_Master; // Payment always goes through Oregon
+
+		NSString *stage = userInfo.stage;
+		if (!stage)
+		{
+			stage = DEFAULT_AWS_STAGE;
+		}
+
+		// Create JSON for request
+		NSDictionary *jsonDict = @{
+			@"type"         : @"apple",
+			@"receipt_data" : [appStoreReceipt base64EncodedStringWithOptions:0]
+		};
+		NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:nil];
+
+		NSString *path = @"/payment/oneTime";
+
+		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+
+		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
+		request.HTTPMethod = @"POST";
+		request.HTTPBody = jsonData;
+
+		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+		
+		// Send request
+		[AWSSignature signRequest: request
+		               withRegion: region
+		                  service: AWSService_APIGateway
+		              accessKeyID: auth.aws_accessKeyID
+		                   secret: auth.aws_secret
+		                  session: auth.aws_session];
+
+		NSURLSessionDataTask *task =
+			[session dataTaskWithRequest: request
+			              uploadProgress: nil
+			            downloadProgress: nil
+			           completionHandler:^(NSURLResponse *response, id responseObject, NSError *error)
+		{
+			InvokeCompletionBlocks(response, responseObject,error);
+		}];
+
+		[task resume];
+	}];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
