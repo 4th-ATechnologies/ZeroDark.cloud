@@ -119,23 +119,24 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
 /**
  * When the PushManager is ready to upload a node, it uses this method to request the node's data.
  *
- * The framework supports everything from empty nodes, to multi-gigabyte nodes.
+ * You supply the node's data, and the framework handles encrypting the data & uploading it to the cloud.
+ *
+ * In terms of size, the framework supports everything from empty (zero-length) nodes, to multi-gigabyte nodes.
  * The `ZDCData` class helps to support this diversity by providing multiple ways
  * in which you can reference the data that is to be encrypted & uploaded.
  *
- * For small nodes, you can simply serialize the data, and create a ZDCData holding those bytes.
- * For larger files, you can provide a reference to a fileURL.
+ * For small nodes, you can simply serialize the data, and create a ZDCData holding those in-memory bytes.
+ * For large files, you can provide a reference via a fileURL.
  *
- * The framework also supports files that are stored on disk in an encrypted format via `ZDCCryptoFile`.
+ * The framework also supports files that are stored to disk in an encrypted format via `ZDCCryptoFile`.
  * For example, you can use the `ZDCDiskManager` to store files on disk in an encrypted manner.
  * And files stored by the ZDCDiskManager can be easily uploaded by initializing a ZDCData
  * instance from a ZDCCryptoFile returned from the DiskManager.
  *
- * @note The data that you return will be properly encrypted by the framework (as needed)
- *       before uploading it to the cloud.
+ * @note The data that you return will be properly encrypted by the framework before uploading it to the cloud.
  *
  * @param node
- *   The node that is being uploaded
+ *   The node that is being uploaded.
  *
  * @param path
  *   The treesystem path of the node.
@@ -152,7 +153,9 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
 /**
  * When the PushManager is ready to upload a node, it uses this method request the node's optional metadata.
  *
- * The framework supports everything from empty nodes, to multi-gigabyte nodes.
+ * You supply the node's metadata, and the framework handles encrypting it & uploading it to the cloud.
+ *
+ * In terms of size, the framework supports everything from empty (zero-length) nodes, to multi-gigabyte nodes.
  * If you're storing large files in the cloud, you may want to include an additional metadata section.
  * By doing so, you allow other devices to download the metadata independently from the (large) full node.
  *
@@ -164,8 +167,7 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
  * (Remember, the server cannot read the content that you store in the cloud.
  *  So it's impossible to ask the server to extract any information, such as metadata or a thumbnail.)
  *
- * @note The data that you return will be properly encrypted by the framework (as needed)
- *       before uploading it to the cloud.
+ * @note The data that you return will be properly encrypted by the framework before uploading it to the cloud.
  *
  * @param node
  *   The node that is being uploaded.
@@ -185,16 +187,18 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
 /**
  * When the PushManager is ready to upload a node, it uses this method to request the node's optional thumbnail.
  *
- * The framework supports everything from empty nodes, to multi-gigabyte nodes.
- * If you're storing large files in the cloud, you may want to include an additional metadata section.
+ * You supply the node's thumbnail, and the framework handles encrypting it & uploading it to the cloud.
+ *
+ * In terms of size, the framework supports everything from empty (zero-length) nodes, to multi-gigabyte nodes.
+ * If you're storing large files in the cloud, you may want to include an additional thumbnail section.
  * By doing so, you allow other devices to download the thumbnail independently from the (large) full node.
  *
  * For example, say the node is a large image from a modern camera.
  * You could also include a small thumbnail version of the image.
  * This would allow other devices to download just the thumbnail,
  * and then have everything needed to display the image within your UI.
- * You'll use less bandwidth, and the client applications will use less storage for each image.
- * The full version of the image can be downloaded on demand.
+ * The app will then use less bandwidth & less disk storage for each image.
+ * The full version of the image can be downloaded on demand, as needed.
  *
  * (Remember, the server cannot read the content that you store in the cloud.
  *  So it's impossible to ask the server to extract any information, such as metadata or a thumbnail.)
@@ -223,13 +227,6 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
  * When this method is called, the ZDCNode instance has already been updated within the database.
  * This method is being called within the same atomic transaction that modifies the node in the database.
  *
- * The information that may be useful to you is:
- * - node.eTag_data
- * - node.lastModified_data
- *
- * In particular, storing the `eTag_data` property in your custom model objects
- * will allow you to determine if your object is behind the server, and requires a download.
- *
  * @param node
  *   The updated node.
  *
@@ -248,32 +245,7 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
 /**
  * When the PushManager is ready to send an outgoing message, it uses this method to request the message data.
  *
- * You are allowed to send messages that contain an unlimited amount of data, however,
- * there are restrictions regarding the location of the data.
- *
- * For example, imagine that Alice wants to send a 1 gigabyte file to Bob.
- *
- * The following is allowed:
- * - Alice stores the 1 gigabyte file somewhere in her own treesystem
- * - She gives Bob read permission to this file
- * - Then she sends a message to Bob that contains a link to the file
- *
- * The following is also allowed:
- * - Bob creates a "folder" in his treesystem, and gives Alice write permission
- * - Alice then stores the 1 gigabyte file in that "folder" (within Bob's treesystem)
- *
- * However, the following is NOT allowed:
- * - Alice sends a message to Bob that contains the 1 gigabyte file
- *
- * In other words, raw messages are limited to a maximum of 1 MiB (1,048,576 bytes).
- * However there are no restrictions on the size of attachments.
- * And your app is free to decide exactly where & how attachments are stored.
- *
- * One common solution is to store attachments in the "temp" container.
- * For example, Alice would store that 1 gig file in temp,
- * and her message to Bob would contain a reference to the file.
- * She may be even set a "burn" time on the 1 gig file so it gets
- * deleted automatically by the server after 30 days.
+ * You supply the message data, and the framework handles encrypting it & uploading it to the cloud.
  *
  * @param message
  *   The outgoing message to be sent.
