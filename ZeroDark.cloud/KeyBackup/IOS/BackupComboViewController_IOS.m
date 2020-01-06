@@ -563,7 +563,6 @@
 	NSArray<NSString*> * wordList = [BIP39Mnemonic mnemonicFromKey:keyBackupVC.accessKeyData
 																		 passphrase:keyBackupVC.user.syncedSalt
 																		 languageID:keyBackupVC.currentLanguageId
-																		  algorithm:Mnemonic_Storm4
 																				error:&error];
 	
 	[_tagView removeAllTags];

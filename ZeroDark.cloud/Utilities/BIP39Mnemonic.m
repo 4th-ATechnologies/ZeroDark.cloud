@@ -525,53 +525,22 @@ done:
 + (nullable NSArray<NSString*> *)mnemonicFromKey:(NSData *)keyData
 									  passphrase:(nullable NSString *)passphrase
 									  languageID:(NSString* _Nullable)languageID
-									   algorithm:(Mnemonic_Algorithm)algorithm
 										   error:(NSError *_Nullable *_Nullable)errorOut
 
 {
 	NSArray<NSString*> * result = nil;
 	NSError * error = nil;
-
 	
-	switch (algorithm) {
-		case Mnemonic_Storm4:
-			result = [self storm4MnemonicFromKey:keyData
+	result = [self storm4MnemonicFromKey:keyData
 									  passphrase:passphrase
-								 languageID:languageID
-										   error:&error];
-			break;
-
-		case Mnemonic_ZDC:
-			result = [self zdcMnemonicFromKey:keyData
-									  passphrase:passphrase
-								 languageID:languageID
-										   error:&error];
-			break;
-
-		default:
-			error = [self errorWithDescription:@"invalid algorithm"];
- 		break;
-	}
-
+									  languageID:languageID
+											 error:&error];
+	
 	if (errorOut) *errorOut = error;
-
+	
 	return result;
 }
 
-+ (nullable NSArray<NSString*> *)zdcMnemonicFromKey:(NSData *)keyData
-											passphrase:(nullable NSString *)passphrase
-										 languageID:(NSString* _Nullable)languageID
-												 error:(NSError *_Nullable *_Nullable)errorOut
-{
-	NSError * error = nil;
-	NSMutableArray *words = nil;
-
-
-	error = [self errorWithDescription:@"lazy programmer"];
-
-	if (errorOut) *errorOut = error;
-	return words;
-}
 
 /**
  * See header file for description.
@@ -682,50 +651,19 @@ done:
 + (nullable NSData *)keyFromMnemonic:(NSArray<NSString*> *)mnemonic
 						  passphrase:(nullable NSString *)passphrase
 						  languageID:(NSString* _Nullable)languageID
-						   algorithm:(Mnemonic_Algorithm)algorithm
 							   error:(NSError *_Nullable *_Nullable)errorOut
 {
 	NSData* result = nil;
 	NSError * error = nil;
-
-	switch (algorithm) {
-		case Mnemonic_Storm4:
-			result = [self storm4KeyFromMnemonic:mnemonic
-									  passphrase:passphrase
-										  languageID:languageID
-										   error:&error];
-			break;
-
-		case Mnemonic_ZDC:
-			result = [self zdcKeyFromMnemonic:mnemonic
-									 passphrase:passphrase
-									   languageID:languageID
-										  error:&error];
-			break;
-
-		default:
-			error = [self errorWithDescription:@"invalid algorithm"];
-			break;
-	}
-
-	if (errorOut) *errorOut = error;
-
-	return result;
-}
-
-+ (nullable NSData *)zdcKeyFromMnemonic:(NSArray<NSString*> *)mnemonic
-								passphrase:(nullable NSString *)passphrase
-							 languageID:(NSString* _Nullable)languageID
-									 error:(NSError *_Nullable *_Nullable)errorOut
-{
-	NSError * error = nil;
-	NSData *result = nil;
-
-	error = [self errorWithDescription:@"lazy programmer"];
-
-	if (errorOut) *errorOut = error;
-	return result;
 	
+	result = [self storm4KeyFromMnemonic:mnemonic
+									  passphrase:passphrase
+									  languageID:languageID
+											 error:&error];
+	
+	if (errorOut) *errorOut = error;
+	
+	return result;
 }
 
 /**

@@ -228,7 +228,6 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
         NSData* accessKey = [BIP39Mnemonic keyFromMnemonic:normalizedTagArray
                                                 passphrase:localUser.syncedSalt
                                                 languageID:keyBackupVC.currentLanguageId
-                                                 algorithm:Mnemonic_Storm4
                                                      error:&error];
         if(!error
            && accessKey

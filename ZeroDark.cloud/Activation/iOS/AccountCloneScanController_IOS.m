@@ -921,7 +921,6 @@ typedef enum {
 		NSData* accessKey = [BIP39Mnemonic keyFromMnemonic:normalizedTagArray
 															 passphrase:localUser.syncedSalt
 															 languageID:currentLanguageId
-															  algorithm:Mnemonic_Storm4
 																	error:&error];
 		
 		if(error)

@@ -471,7 +471,6 @@ static NSString *const k_displayName = @"displayName";
 	  [BIP39Mnemonic keyFromMnemonic: mnemonicWords
 	                      passphrase: syncedSalt
 	                      languageID: @"en_US"
-	                       algorithm: Mnemonic_Storm4
 	                           error: &error];
 	
 	if (error) {

@@ -11,14 +11,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-
-typedef NS_ENUM(NSInteger, Mnemonic_Algorithm) {
-	Mnemonic_Storm4 ,
-	Mnemonic_ZDC ,
-	Mnemonic_Invalid = NSIntegerMax
-};
-
-
 /**
  * Bitcoin Improvement Protocol (BIP) #39
  * "Mnemonic code for generating deterministic keys"
@@ -153,7 +145,6 @@ typedef NS_ENUM(NSInteger, Mnemonic_Algorithm) {
 + (nullable NSArray<NSString*> *)mnemonicFromKey:(NSData *)keyData
                                        passphrase:(nullable NSString *)passphrase
 									  languageID:(NSString* _Nullable)languageID
-									   algorithm:(Mnemonic_Algorithm)algorithm
                                             error:(NSError *_Nullable *_Nullable)errorOut;
 
 /**
@@ -176,7 +167,6 @@ typedef NS_ENUM(NSInteger, Mnemonic_Algorithm) {
 + (nullable NSData *)keyFromMnemonic:(NSArray<NSString*> *)mnemonic
                            passphrase:(nullable NSString *)passphrase
 						  languageID:(NSString* _Nullable)languageID
-						   algorithm:(Mnemonic_Algorithm)algorithm
                                 error:(NSError *_Nullable *_Nullable)errorOut;
 
 @end
