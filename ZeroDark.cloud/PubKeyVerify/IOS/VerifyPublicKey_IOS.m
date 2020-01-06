@@ -71,7 +71,6 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	
 	YapDatabaseConnection * uiDatabaseConnection;
 	ZDCPublicKey          * pubKey;
-	NSString              * blockchainTransaction;
 	
 	NSDateFormatter * formatter;
 	
@@ -135,7 +134,6 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	_cnstVerifyBlockChainBottom.constant = 20;
 	
 	_btnShowTransaction.hidden = YES;
-	blockchainTransaction = nil;
 	
 	_imgAvatar.layer.cornerRadius = 50 / 2;
 	_imgAvatar.clipsToBounds = YES;
@@ -464,6 +462,8 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 {
 	ZDCLogAutoTrace();
 
+	__weak typeof(self) weakSelf = self;
+
 	if (!_remoteUserID || !_localUserID) return;
 	
 	__block ZDCUser *remoteUser = nil;
@@ -491,8 +491,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 		_btnVerifyBlockChain.hidden = NO;
 		_actVerifyBlockChain.hidden = YES;
 		
-		//        _btnShowTransaction.hidden = NO;
-		blockchainTransaction = remoteUser.blockchainProof.merkleTreeRoot;
+		_btnShowTransaction.hidden = NO;
 		return;
 	}
 	
@@ -504,86 +503,108 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	_cnstVerifyBlockChainBottom.constant = 20;
 	
 	[_actVerifyBlockChain startAnimating];
-	blockchainTransaction = nil;
-	
-//	__weak typeof(self) weakSelf = self;
-//	[zdc.blockchainManager fetchBlockchainRootForUserID: _remoteUserID
-//	                                        requesterID: _localUserID
-//	                                    completionQueue: nil
-//	                                    completionBlock:^(NSString *merkleTreeRoot, NSError *error)
-//	{
-//		[weakSelf didFetchBlockchainInfo:merkleTreeRoot error:error];
-//	}];
-}
 
-- (void)didFetchBlockchainInfo:(NSString *)merkleTreeRoot error:(NSError *)error
-{
-	ZDCLogAutoTrace();
-	
-	[_actVerifyBlockChain stopAnimating];
-	_actVerifyBlockChain.hidden = YES;
-	
-	if (error)
-	{
-		[_btnVerifyBlockChain setImage:warningImage forState:UIControlStateNormal];
-		_txtVerifyBlockChain.text = @"Blockchain Verification Failed";
-		
-		_txtVerifyBlockChainError.text = error.localizedDescription;
-		_txtVerifyBlockChainError.textColor = UIColor.redColor;
-		[_txtVerifyBlockChainError sizeToFit];
-		_txtVerifyBlockChainError.hidden = NO;
-		_cnstVerifyBlockChainBottom.constant = _txtVerifyBlockChainError.frame.size.height + 30;
-	}
-	else if (!merkleTreeRoot)
-	{
-		[_btnVerifyBlockChain setImage:questionImage forState:UIControlStateNormal];
-		_txtVerifyBlockChain.text = @"No Blockchain Entry";
-		
-		__block ZDCUser *remoteUser = nil;
-		[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-		#pragma clang diagnostic push
-		#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-			
-			remoteUser = [transaction objectForKey:_remoteUserID inCollection:kZDCCollection_Users];
-			
-		#pragma clang diagnostic pop
-		}];
-		
-		if (remoteUser.isLocal && ![(ZDCLocalUser *)remoteUser isPayingCustomer])
+	[zdc.userManager checkBlockchain:remoteUser
+						  completionQueue:nil
+						  completionBlock:^(ZDCUser * _Nullable remoteUser, NSError * _Nullable error)
+	 {
+		__strong typeof(self) ss = weakSelf;
+		if (ss)
 		{
-			_txtVerifyBlockChainError.text = @"One of the benefits of becoming a customer is that your public key identity is further protected by adding it to the Ethereum Blockchain.";
+			[ss->_actVerifyBlockChain stopAnimating];
+			ss->_actVerifyBlockChain.hidden = YES;
+			ss->_btnVerifyBlockChain.hidden = NO;
+
+			if (error)
+			{
+				[ss->_btnVerifyBlockChain setImage:ss->warningImage forState:UIControlStateNormal];
+				ss->_txtVerifyBlockChain.text = @"Blockchain Verification Failed";
+				
+				ss->_txtVerifyBlockChainError.text = error.localizedDescription;
+				ss->_txtVerifyBlockChainError.textColor = UIColor.redColor;
+				[ss->_txtVerifyBlockChainError sizeToFit];
+				ss->_txtVerifyBlockChainError.hidden = NO;
+				ss->_cnstVerifyBlockChainBottom.constant = ss->_txtVerifyBlockChainError.frame.size.height + 30;
+			}
+			else if(!remoteUser.blockchainProof)
+			{
+				[ss->_btnVerifyBlockChain setImage:ss->questionImage forState:UIControlStateNormal];
+				ss->_txtVerifyBlockChain.text = @"No Blockchain Entry";
+				
+				if (remoteUser.isLocal && ![(ZDCLocalUser *)remoteUser isPayingCustomer])
+				{
+					ss->_txtVerifyBlockChainError.text = @"One of the benefits of becoming a customer is that your public key identity is further protected by adding it to the Ethereum Blockchain.";
+				}
+				else
+				{
+					ss->_txtVerifyBlockChainError.text = @"This key has not yet been added to the Ethereum Blockchain.";
+				}
+				
+				ss->_txtVerifyBlockChainError.textColor = UIColor.blackColor;
+				[ss->_txtVerifyBlockChainError sizeToFit];
+				ss->_txtVerifyBlockChainError.hidden = NO;
+				ss->_cnstVerifyBlockChainBottom.constant = ss->_txtVerifyBlockChainError.frame.size.height  + 30;
+			}
+			else
+			{
+				ss->_txtVerifyBlockChain.text = @"Blockchain Entry Verified";
+				[ss->_btnVerifyBlockChain setImage:ss->okImage forState:UIControlStateNormal];
+				ss->_btnShowTransaction.hidden = NO;
+			}
 		}
-		else
-		{
-			_txtVerifyBlockChainError.text = @"This key has not yet been added to the Ethereum Blockchain.";
-		}
-		
-		_txtVerifyBlockChainError.textColor = UIColor.blackColor;
-		[_txtVerifyBlockChainError sizeToFit];
-		_txtVerifyBlockChainError.hidden = NO;
-		_cnstVerifyBlockChainBottom.constant = _txtVerifyBlockChainError.frame.size.height  + 30;
-	}
-	else
-	{
-		_txtVerifyBlockChain.text = @"Blockchain Entry Verified";
-		[_btnVerifyBlockChain setImage:okImage forState:UIControlStateNormal];
-		
-		blockchainTransaction = merkleTreeRoot;
-	//	_btnShowTransaction.hidden = NO;
-	}
-	
-	_btnVerifyBlockChain.hidden = NO;
+	}];
 }
 
 -(IBAction)btnShowTransactionHit:(id)sender
 {
-	if(blockchainTransaction .length)
-	{
-		//        NSURL* verifyURL = [[AppConstants blockChainVerifyURL] URLByAppendingPathComponent:blockChainTransactionID];
-		//        [[UIApplication sharedApplication] openURL:verifyURL];
-		//       FIX_LATER("show merkleTreeRoot")
-	}
+	__block ZDCUser *remoteUser = nil;
 	
+	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		remoteUser = [transaction objectForKey:_remoteUserID inCollection:kZDCCollection_Users];
+			
+	#pragma clang diagnostic pop
+	}];
+
+	if(remoteUser.blockchainProof)
+	{
+		//   FIX_LATER("show merkleTreeRoot")
+	}
+}
+
+-(IBAction)btnReverifyBlockChain:(id)sender
+{
+	#if DEBUG
+	__weak typeof(self) weakSelf = self;
+
+	[zdc.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (strongSelf)
+		{
+			ZDCUser *remoteUser = nil;
+			
+			remoteUser = [transaction objectForKey:strongSelf->_remoteUserID
+											  inCollection:kZDCCollection_Users];
+			
+			if (remoteUser)
+			{
+				remoteUser = remoteUser.copy;
+				remoteUser.blockchainProof = NULL;
+				[transaction setObject:remoteUser
+									 forKey:remoteUser.uuid
+							 inCollection:kZDCCollection_Users];
+			}
+		}
+	}
+  completionQueue: dispatch_get_main_queue()
+  completionBlock:^{
+		[self refreshBlockchainInfo];
+	}];
+#endif
+
 }
 
 @end

@@ -79,7 +79,7 @@ NS_ASSUME_NONNULL_BEGIN
  * If the blockchain contains a proof for this user,
  * the system performs the calculations to verify the validity of the locally stored publicKey.
  */
-- (void)recheckBlockchain:(ZDCUser *)user
+- (void)checkBlockchain:(ZDCUser *)user
           completionQueue:(nullable dispatch_queue_t)completionQueue
           completionBlock:(nullable void (^)(ZDCUser *_Nullable remoteUser, NSError *_Nullable error))completionBlock;
 
