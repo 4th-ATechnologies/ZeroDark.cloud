@@ -1,20 +1,6 @@
 {
   "warnings": [
     {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCRestManager.h",
-      "line": 530,
-      "symbol": "ZDCRestManager.-fetchPreviousBilling:withYear:month:completionQueue:completionBlock:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCRestManager.h",
-      "line": 537,
-      "symbol": "ZDCRestManager.-productPurchasedByUser:productIdentifier:transactionIdentifier:appStoreReceipt:completionQueue:completionBlock:",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.method.instance",
-      "warning": "undocumented"
-    },
-    {
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCUITools.h",
       "line": 22,
       "symbol": "ZDCAccountSetupViewControllerProxy",
@@ -50,34 +36,6 @@
       "warning": "undocumented"
     },
     {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCUserSearchManager.h",
-      "line": 34,
-      "symbol": "ZDCSearchResultStage.ZDCSearchResultStage_Database",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCUserSearchManager.h",
-      "line": 35,
-      "symbol": "ZDCSearchResultStage.ZDCSearchResultStage_Cache",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCUserSearchManager.h",
-      "line": 36,
-      "symbol": "ZDCSearchResultStage.ZDCSearchResultStage_Server",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Managers/ZDCUserSearchManager.h",
-      "line": 37,
-      "symbol": "ZDCSearchResultStage.ZDCSearchResultStage_Done",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
-      "warning": "undocumented"
-    },
-    {
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Keys/ZDCSymmetricKey.h",
       "line": 26,
       "symbol": "ZDCSymmetricKey.+keyWithString:passCode:",
@@ -106,80 +64,24 @@
       "warning": "undocumented"
     },
     {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/Utilities/ZDCBlockchainProof.h",
-      "line": 20,
-      "symbol": "ZDCBlockchainProof.merkleTreeRoot",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/Utilities/ZDCBlockchainProof.h",
-      "line": 22,
-      "symbol": "ZDCBlockchainProof.blockNumber",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/Utilities/ZDCBlockchainProof.h",
-      "line": 24,
-      "symbol": "ZDCBlockchainProof.merkleTreeFile_pubKey",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/Utilities/ZDCBlockchainProof.h",
-      "line": 25,
-      "symbol": "ZDCBlockchainProof.merkleTreeFile_keyID",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/Utilities/ZDCUserIdentity.h",
-      "line": 14,
-      "symbol": "ZDCUserIdentity",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.class",
-      "warning": "undocumented"
-    },
-    {
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/ZDCLocalUser.h",
-      "line": 13,
-      "symbol": "kS4LocalUser_shelflife",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.constant",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/ZDCLocalUser.h",
-      "line": 83,
+      "line": 81,
       "symbol": "ZDCLocalUser.isPayingCustomer",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
       "warning": "undocumented"
     },
     {
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/ZDCLocalUser.h",
-      "line": 97,
+      "line": 95,
       "symbol": "ZDCLocalUser.activationDate",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
       "warning": "undocumented"
     },
     {
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Model/Users/ZDCLocalUser.h",
-      "line": 99,
+      "line": 97,
       "symbol": "ZDCLocalUser.auth0_primary",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Streams/ZDCCacheFileHeader.h",
-      "line": 38,
-      "symbol": "ZDCCacheFileHeader",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.typedef",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Streams/ZDCCloudFileHeader.h",
-      "line": 51,
-      "symbol": "ZDCCloudFileHeader",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.typedef",
       "warning": "undocumented"
     },
     {
@@ -207,13 +109,6 @@
       "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Utilities/BIP39Mnemonic.h",
       "line": 17,
       "symbol": "Mnemonic_Algorithm.Mnemonic_ZDC",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Utilities/BIP39Mnemonic.h",
-      "line": 18,
-      "symbol": "Mnemonic_Algorithm.Mnemonic_Invalid",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
       "warning": "undocumented"
     }

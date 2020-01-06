@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           ZeroDarkCloud Docs
         </a>
-         (97% documented)
+         (98% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -165,6 +165,29 @@
             </ul>
           </li>
           <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Billing.html">Billing</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCUserBill.html">ZDCUserBill</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCUserBillMetadata.html">ZDCUserBillMetadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCAppBill.html">ZDCAppBill</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCStorageBill.html">ZDCStorageBill</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCAppCost.html">ZDCAppCost</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCAppCostDetails.html">ZDCAppCostDetails</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
             <a class="nav-group-name-link" href="../File%20%26%20Streams.html">File &amp; Streams</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
@@ -201,10 +224,16 @@
                 <a class="nav-group-task-link" href="../Classes/ZDCFilesystemMonitor.html">ZDCFilesystemMonitor</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Type%20Definitions/ZDCCacheFileHeader.html">ZDCCacheFileHeader</a>
+                <a class="nav-group-task-link" href="../Structs/ZDCCacheFileHeader.html">ZDCCacheFileHeader</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Type%20Definitions/ZDCCloudFileHeader.html">ZDCCloudFileHeader</a>
+                <a class="nav-group-task-link" href="../File%20%26%20Streams.html#/c:ZDCCacheFileHeader.h@T@ZDCCacheFileHeader">ZDCCacheFileHeader</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/ZDCCloudFileHeader.html">ZDCCloudFileHeader</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../File%20%26%20Streams.html#/c:ZDCCloudFileHeader.h@T@ZDCCloudFileHeader">ZDCCloudFileHeader</a>
               </li>
             </ul>
           </li>
@@ -320,6 +349,9 @@
                 <a class="nav-group-task-link" href="../Classes/ZDCLogMessage.html">ZDCLogMessage</a>
               </li>
               <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCMerkleTree.html">ZDCMerkleTree</a>
+              </li>
+              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/ZDCProgressManagerChanges.html">ZDCProgressManagerChanges</a>
               </li>
               <li class="nav-group-task">
@@ -336,9 +368,6 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/ZDCUserDisplay.html">ZDCUserDisplay</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Classes/ZDCUserProfile.html">ZDCUserProfile</a>
               </li>
             </ul>
           </li>
@@ -461,9 +490,6 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@kNotificationsKey">kNotificationsKey</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@kS4LocalUser_shelflife">kS4LocalUser_shelflife</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@kZDCAnonymousUserID">kZDCAnonymousUserID</a>
@@ -701,14 +727,26 @@ this class encompasses information about the proof.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The merkleTreeRoot value is stored on the blockchain (i.e. within the smart contract).</p>
+
+<p>This value is a reference to a merkleTreeFile that can be fetched from the server.
+ For example, if the merkleTreeRoot value is
+ <q>cd59b7bda6dc1dd82cb173d0cdfa408db30e9a747d4366eb5b60597899eb69c1</q>,
+ then you could fetch the corresponding JSON file at
+ <a href="https://blockchain.storm4.cloud/cd59b7bda6dc1dd82cb173d0cdfa408db30e9a747d4366eb5b60597899eb69c1.json">https://blockchain.storm4.cloud/cd59b7bda6dc1dd82cb173d0cdfa408db30e9a747d4366eb5b60597899eb69c1.json</a></p>
+
+<p>The RestManager has an API to fetch this file for you, given a merkleTreeRoot value:
+ <code><a href="../Classes/ZDCRestManager.html#/c:objc(cs)ZDCRestManager(im)fetchMerkleTreeFile:completionQueue:completionBlock:">-[ZDCRestManager fetchMerkleTreeFile:completionQueue:completionBlock:]</a></code></p>
+
+<p>The merkleTreeFile is a JSON file that allows you to independently verify the public key information.
+ You can use the ZDCMerkleTree class to parse &amp; validate this file.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">merkleTreeRoot</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">merkleTreeRoot</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
@@ -733,14 +771,17 @@ this class encompasses information about the proof.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>The smart contract is coded such that, when a user&rsquo;s merkleTreeRoot is stored in the contract,
+ it also records the blockNumber at which the proof was submitted.</p>
+
+<p>This information can be used to determine when the user&rsquo;s publicKey proof was posted to the blockchain.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSUInteger</span> <span class="n">blockNumber</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSUInteger</span> <span class="n">blockNumber</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
@@ -765,14 +806,14 @@ this class encompasses information about the proof.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Stores the pubKey value that was recorded in the merkleTreeFile.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">merkleTreeFile_pubKey</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">merkleTreeFile_pubKey</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
@@ -797,14 +838,14 @@ this class encompasses information about the proof.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Stores the keyID value that was recorded in the merkleTreeFile.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">merkleTreeFile_keyID</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">merkleTreeFile_keyID</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
@@ -824,7 +865,7 @@ this class encompasses information about the proof.</p>
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-12-29)</p>
+      <p>&copy; 2020 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2020-01-05)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.11.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

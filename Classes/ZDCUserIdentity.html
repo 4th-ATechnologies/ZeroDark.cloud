@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           ZeroDarkCloud Docs
         </a>
-         (97% documented)
+         (98% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -165,6 +165,29 @@
             </ul>
           </li>
           <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Billing.html">Billing</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCUserBill.html">ZDCUserBill</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCUserBillMetadata.html">ZDCUserBillMetadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCAppBill.html">ZDCAppBill</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCStorageBill.html">ZDCStorageBill</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCAppCost.html">ZDCAppCost</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCAppCostDetails.html">ZDCAppCostDetails</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
             <a class="nav-group-name-link" href="../File%20%26%20Streams.html">File &amp; Streams</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
@@ -201,10 +224,16 @@
                 <a class="nav-group-task-link" href="../Classes/ZDCFilesystemMonitor.html">ZDCFilesystemMonitor</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Type%20Definitions/ZDCCacheFileHeader.html">ZDCCacheFileHeader</a>
+                <a class="nav-group-task-link" href="../Structs/ZDCCacheFileHeader.html">ZDCCacheFileHeader</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Type%20Definitions/ZDCCloudFileHeader.html">ZDCCloudFileHeader</a>
+                <a class="nav-group-task-link" href="../File%20%26%20Streams.html#/c:ZDCCacheFileHeader.h@T@ZDCCacheFileHeader">ZDCCacheFileHeader</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/ZDCCloudFileHeader.html">ZDCCloudFileHeader</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../File%20%26%20Streams.html#/c:ZDCCloudFileHeader.h@T@ZDCCloudFileHeader">ZDCCloudFileHeader</a>
               </li>
             </ul>
           </li>
@@ -320,6 +349,9 @@
                 <a class="nav-group-task-link" href="../Classes/ZDCLogMessage.html">ZDCLogMessage</a>
               </li>
               <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCMerkleTree.html">ZDCMerkleTree</a>
+              </li>
+              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/ZDCProgressManagerChanges.html">ZDCProgressManagerChanges</a>
               </li>
               <li class="nav-group-task">
@@ -336,9 +368,6 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/ZDCUserDisplay.html">ZDCUserDisplay</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Classes/ZDCUserProfile.html">ZDCUserProfile</a>
               </li>
             </ul>
           </li>
@@ -461,9 +490,6 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@kNotificationsKey">kNotificationsKey</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@kS4LocalUser_shelflife">kS4LocalUser_shelflife</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@kZDCAnonymousUserID">kZDCAnonymousUserID</a>
@@ -674,101 +700,15 @@
             <h1>ZDCUserIdentity</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight objective_c"><code><span class="k">@interface</span> <span class="nc">ZDCUserIdentity</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="o">&lt;</span><span class="n">NSSecureCoding</span><span class="p">,</span> <span class="n">NSCopying</span><span class="o">&gt;</span>
-
-<span class="cm">/**
- * Standard initializer
- */</span>
-<span class="k">-</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithDictionary</span><span class="p">:(</span><span class="n">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="nv">dict</span><span class="p">;</span>
-
-<span class="cm">/**
- *  The identityID is the unique identifier for this identity,
- *  which encodes both the provider_name &amp; provider_userID.
- */</span>
-<span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">identityID</span><span class="p">;</span>
-
-<span class="cm">/**
- *  Name of the identity provider. (e.g. "facebook", "github", ...)
- */</span>
-<span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">provider</span><span class="p">;</span>
-
-<span class="cm">/**
- * The userID within the context of the provider/connection.
- *
- * For example, if the provider is facebook, then the userID will be the unique facebookUserID.
- *
- * @important This is NOT the same as ZDCUser.uuid.
- */</span>
-<span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">userID</span><span class="p">;</span>
-
-<span class="cm">/**
- * If the provider_name is "auth0", this value stores the database connection being used.
- * Otherwise the value is nil.
- */</span>
-<span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">connection</span><span class="p">;</span>
-
-<span class="cm">/**
- *  Flag that indicates if the identity is `Social`. e.g: Facebook
- */</span>
-<span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">isSocial</span><span class="p">;</span>
-
-<span class="cm">/**
- * The owner-preferred flag may be set by the owner of this identity.
- *
- * For example, Alice might link multiple identities to her account:
- * - Facebook (for friends &amp; family)
- * - LinkedIn (for work colleagues)
- *
- * Alice might set her LinkedIn profile as her preferred identity.
- * This means that, all else being equal, her LinkedIn name &amp; avatar will be shown to other people.
- *
- * However, this can be overridden by other users.
- * For example, Bob (Alice's friend) may prefer to see Alice's Facebook name &amp; avatar.
- * So Bob can set Alice's ZDCUser.preferredIdentityID to override this value.
- *
- * In other words:
- * - Alice's LinkedIn ZDCUserIdentity.isOwnerPerferredIdentity is TRUE
- * - But Bob has set Alice's ZDCUser.preferredIdentityID to point at her Facebook ZDCUserIdentity
- * - Thus on Bob's system, we display Alice using her Facebook identity
- */</span>
-<span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">isOwnerPreferredIdentity</span><span class="p">;</span>
-
-<span class="cm">/**
- * User's profile data, which comes from the identity provider.
- */</span>
-<span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSDictionary</span> <span class="o">*</span><span class="n">profileData</span><span class="p">;</span>
-
-<span class="c1">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////</span>
-<span class="cp">#pragma mark Convenience Properties
-</span><span class="c1">////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////</span>
-
-<span class="cm">/**
- * Returns the proper display name, taking into consideration many different things,
- * including the provider &amp; profileData.
- */</span>
-<span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">displayName</span><span class="p">;</span>
-
-<span class="cm">/**
- * Co-op users have a recovery connection created for them automatically.
- *
- * This protects users in the event they're unable to login to their social identity.
- * For example, say their only linked identity is Facebook.
- * And then Facebook decides to kick them off the platform for thought crimes.
- * This would leave them in a situation in which they have no way to login to their account.
- *
- * In such a situation, the Recovery connection can act as way to restore a user's access to their account.
- * ZeroDark will have policies and procedures in place for this situation.
- *
- * Note: Logging into a social account (or recovery account) doesn't allow you to do jack squat
- * unless you have your access key. Without the access key you can't read any data.
- */</span>
-<span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">isRecoveryAccount</span><span class="p">;</span>
-
-<span class="k">@end</span></code></pre>
+                  <pre class="highlight objective_c"><code><span class="k">@interface</span> <span class="nc">ZDCUserIdentity</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="o">&lt;</span><span class="n">NSSecureCoding</span><span class="p">,</span> <span class="n">NSCopying</span><span class="o">&gt;</span></code></pre>
 
                 </div>
               </div>
-            <p>Undocumented</p>
+            <p>Encapsulates an identity that&rsquo;s attached to the user.</p>
+
+<p>For example, a user may attach their Facebook or LinkedIn identity.
+ This is done to improve searchability, and to provide proof that a ZDC account is owned by a particular person
+ (and not an imposter, or somebody else with a similar name).</p>
 
           </div>
         </section>
@@ -1156,7 +1096,7 @@ including the provider &amp; profileData.</p>
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-12-29)</p>
+      <p>&copy; 2020 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2020-01-05)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.11.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

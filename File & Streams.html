@@ -23,7 +23,7 @@
         <a class="header-link" href="index.html">
           ZeroDarkCloud Docs
         </a>
-         (97% documented)
+         (98% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -165,6 +165,29 @@
             </ul>
           </li>
           <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Billing.html">Billing</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes/ZDCUserBill.html">ZDCUserBill</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes/ZDCUserBillMetadata.html">ZDCUserBillMetadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes/ZDCAppBill.html">ZDCAppBill</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes/ZDCStorageBill.html">ZDCStorageBill</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes/ZDCAppCost.html">ZDCAppCost</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes/ZDCAppCostDetails.html">ZDCAppCostDetails</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
             <a class="nav-group-name-link" href="File%20%26%20Streams.html">File &amp; Streams</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
@@ -201,10 +224,16 @@
                 <a class="nav-group-task-link" href="Classes/ZDCFilesystemMonitor.html">ZDCFilesystemMonitor</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Type%20Definitions/ZDCCacheFileHeader.html">ZDCCacheFileHeader</a>
+                <a class="nav-group-task-link" href="Structs/ZDCCacheFileHeader.html">ZDCCacheFileHeader</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Type%20Definitions/ZDCCloudFileHeader.html">ZDCCloudFileHeader</a>
+                <a class="nav-group-task-link" href="File%20%26%20Streams.html#/c:ZDCCacheFileHeader.h@T@ZDCCacheFileHeader">ZDCCacheFileHeader</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/ZDCCloudFileHeader.html">ZDCCloudFileHeader</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="File%20%26%20Streams.html#/c:ZDCCloudFileHeader.h@T@ZDCCloudFileHeader">ZDCCloudFileHeader</a>
               </li>
             </ul>
           </li>
@@ -320,6 +349,9 @@
                 <a class="nav-group-task-link" href="Classes/ZDCLogMessage.html">ZDCLogMessage</a>
               </li>
               <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes/ZDCMerkleTree.html">ZDCMerkleTree</a>
+              </li>
+              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Classes/ZDCProgressManagerChanges.html">ZDCProgressManagerChanges</a>
               </li>
               <li class="nav-group-task">
@@ -336,9 +368,6 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Classes/ZDCUserDisplay.html">ZDCUserDisplay</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Classes/ZDCUserProfile.html">ZDCUserProfile</a>
               </li>
             </ul>
           </li>
@@ -461,9 +490,6 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Other%20Constants.html#/c:@kNotificationsKey">kNotificationsKey</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other%20Constants.html#/c:@kS4LocalUser_shelflife">kS4LocalUser_shelflife</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Other%20Constants.html#/c:@kZDCAnonymousUserID">kZDCAnonymousUserID</a>
@@ -1221,9 +1247,9 @@ and uses a block-based notification system to alert you when changes are signale
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@T@ZDCCacheFileHeader"></a>
-                    <a name="//apple_ref/objc/Type/ZDCCacheFileHeader" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@T@ZDCCacheFileHeader">ZDCCacheFileHeader</a>
+                    <a name="/c:@S@ZDCCacheFileHeader"></a>
+                    <a name="//apple_ref/objc/Struct/ZDCCacheFileHeader" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@S@ZDCCacheFileHeader">ZDCCacheFileHeader</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1231,15 +1257,63 @@ and uses a block-based notification system to alert you when changes are signale
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>ZeroDark.cloud uses 2 different types of encrypted files:</p>
 
-                        <a href="Type%20Definitions/ZDCCacheFileHeader.html" class="slightly-smaller">See more</a>
+<ul>
+<li>cache files</li>
+<li>cloud files</li>
+</ul>
+
+<p>A cache file is very simple, and it&rsquo;s what we prefer to use when storing a file on the local device.
+ It&rsquo;s created like this:</p>
+
+<ol>
+<li>append this header to the beginning of the plaintext (non-encrypted) file</li>
+<li>encrypt the data (header + plaintext) using the encryption key</li>
+</ol>
+
+<p>The output will be an encrypted file whose size is rounded up to the nearest kZDCNode_TweakBlockSizeInBytes.
+ When attempting decryption, we can verify the decryption key is correct by inspecting the decrypted header.</p>
+
+                        <a href="Structs/ZDCCacheFileHeader.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">typedef</span> <span class="k">struct</span> <span class="n">ZDCCacheFileHeader</span> <span class="n">ZDCCacheFileHeader</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">struct</span> <span class="n">ZDCCacheFileHeader</span> <span class="p">{}</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">struct</span> <span class="kt">ZDCCacheFileHeader</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:ZDCCacheFileHeader.h@T@ZDCCacheFileHeader"></a>
+                    <a name="//apple_ref/objc/Type/ZDCCacheFileHeader" class="dashAnchor"></a>
+                    <a class="token" href="#/c:ZDCCacheFileHeader.h@T@ZDCCacheFileHeader">ZDCCacheFileHeader</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Standard typedef for <code>struct ZDCCacheFileHeader</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">typedef</span> <span class="k">struct</span> <span class="n"><a href="Structs/ZDCCacheFileHeader.html">ZDCCacheFileHeader</a></span> <span class="n"><a href="Structs/ZDCCacheFileHeader.html">ZDCCacheFileHeader</a></span></code></pre>
 
                         </div>
                       </div>
@@ -1253,9 +1327,9 @@ and uses a block-based notification system to alert you when changes are signale
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@T@ZDCCloudFileHeader"></a>
-                    <a name="//apple_ref/objc/Type/ZDCCloudFileHeader" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@T@ZDCCloudFileHeader">ZDCCloudFileHeader</a>
+                    <a name="/c:@S@ZDCCloudFileHeader"></a>
+                    <a name="//apple_ref/objc/Struct/ZDCCloudFileHeader" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@S@ZDCCloudFileHeader">ZDCCloudFileHeader</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1263,15 +1337,79 @@ and uses a block-based notification system to alert you when changes are signale
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>ZeroDark.cloud uses 2 different types of encrypted files:</p>
 
-                        <a href="Type%20Definitions/ZDCCloudFileHeader.html" class="slightly-smaller">See more</a>
+<ul>
+<li>cache files</li>
+<li>cloud files</li>
+</ul>
+
+<p>A cloud file is what we store in the cloud, and it contains 4 separate sections:</p>
+
+<ul>
+<li>header prefix</li>
+<li>metadata (optional)</li>
+<li>thumbnail (optional)</li>
+<li>data</li>
+</ul>
+
+<p>By storing the metadata &amp; thumbnail sections separately, we make it possible for client devices
+ to download only what they need. For example, a mobile device might just download the thumbnails
+ for a picture or video. This significantly decreases bandwidth demand,
+ while maintaining a proper user experience.</p>
+
+<p>A cloud file is created like so:</p>
+
+<ol>
+<li>append this header to the beginning of the plaintext (non-encrypted) file</li>
+<li>append a metadata section (JSON) (optional)</li>
+<li>append a thumbnail (such as small jpg/png) (optional)</li>
+<li>append the raw file data</li>
+<li>encrypt the data (header + metadata + thumbnail + data) using the encryption key</li>
+</ol>
+
+<p>The output will be an encrypted file whose size is rounded up to the nearest kZDCNode_TweakBlockSizeInBytes.
+ When attempting decryption, we can verify the decryption key is correct by inspecting the decrypted header.</p>
+
+                        <a href="Structs/ZDCCloudFileHeader.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">typedef</span> <span class="k">struct</span> <span class="n">ZDCCloudFileHeader</span> <span class="n">ZDCCloudFileHeader</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">struct</span> <span class="n">ZDCCloudFileHeader</span> <span class="p">{}</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">struct</span> <span class="kt">ZDCCloudFileHeader</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:ZDCCloudFileHeader.h@T@ZDCCloudFileHeader"></a>
+                    <a name="//apple_ref/objc/Type/ZDCCloudFileHeader" class="dashAnchor"></a>
+                    <a class="token" href="#/c:ZDCCloudFileHeader.h@T@ZDCCloudFileHeader">ZDCCloudFileHeader</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Standard typedef for <code>struct ZDCCloudFileHeader</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">typedef</span> <span class="k">struct</span> <span class="n"><a href="Structs/ZDCCloudFileHeader.html">ZDCCloudFileHeader</a></span> <span class="n"><a href="Structs/ZDCCloudFileHeader.html">ZDCCloudFileHeader</a></span></code></pre>
 
                         </div>
                       </div>
@@ -1286,7 +1424,7 @@ and uses a block-based notification system to alert you when changes are signale
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-12-29)</p>
+      <p>&copy; 2020 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2020-01-05)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.11.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

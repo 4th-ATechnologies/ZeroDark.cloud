@@ -23,7 +23,7 @@
         <a class="header-link" href="index.html">
           ZeroDarkCloud Docs
         </a>
-         (97% documented)
+         (98% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -165,6 +165,29 @@
             </ul>
           </li>
           <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Billing.html">Billing</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes/ZDCUserBill.html">ZDCUserBill</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes/ZDCUserBillMetadata.html">ZDCUserBillMetadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes/ZDCAppBill.html">ZDCAppBill</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes/ZDCStorageBill.html">ZDCStorageBill</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes/ZDCAppCost.html">ZDCAppCost</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes/ZDCAppCostDetails.html">ZDCAppCostDetails</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
             <a class="nav-group-name-link" href="File%20%26%20Streams.html">File &amp; Streams</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
@@ -201,10 +224,16 @@
                 <a class="nav-group-task-link" href="Classes/ZDCFilesystemMonitor.html">ZDCFilesystemMonitor</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Type%20Definitions/ZDCCacheFileHeader.html">ZDCCacheFileHeader</a>
+                <a class="nav-group-task-link" href="Structs/ZDCCacheFileHeader.html">ZDCCacheFileHeader</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Type%20Definitions/ZDCCloudFileHeader.html">ZDCCloudFileHeader</a>
+                <a class="nav-group-task-link" href="File%20%26%20Streams.html#/c:ZDCCacheFileHeader.h@T@ZDCCacheFileHeader">ZDCCacheFileHeader</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/ZDCCloudFileHeader.html">ZDCCloudFileHeader</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="File%20%26%20Streams.html#/c:ZDCCloudFileHeader.h@T@ZDCCloudFileHeader">ZDCCloudFileHeader</a>
               </li>
             </ul>
           </li>
@@ -320,6 +349,9 @@
                 <a class="nav-group-task-link" href="Classes/ZDCLogMessage.html">ZDCLogMessage</a>
               </li>
               <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes/ZDCMerkleTree.html">ZDCMerkleTree</a>
+              </li>
+              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Classes/ZDCProgressManagerChanges.html">ZDCProgressManagerChanges</a>
               </li>
               <li class="nav-group-task">
@@ -336,9 +368,6 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Classes/ZDCUserDisplay.html">ZDCUserDisplay</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Classes/ZDCUserProfile.html">ZDCUserProfile</a>
               </li>
             </ul>
           </li>
@@ -461,9 +490,6 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Other%20Constants.html#/c:@kNotificationsKey">kNotificationsKey</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other%20Constants.html#/c:@kS4LocalUser_shelflife">kS4LocalUser_shelflife</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Other%20Constants.html#/c:@kZDCAnonymousUserID">kZDCAnonymousUserID</a>
@@ -679,6 +705,48 @@
 
         <section class="section">
           <div class="section-content">
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCMerkleTree"></a>
+                    <a name="//apple_ref/objc/Class/ZDCMerkleTree" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCMerkleTree">ZDCMerkleTree</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Utility class for parsing &amp; reading merkingTree files, as downloaded from ZDC servers.</p>
+<div class="aside aside-see">
+    <p class="aside-title">See</p>
+    <code><a href="Classes/ZDCRestManager.html#/c:objc(cs)ZDCRestManager(im)fetchMerkleTreeFile:completionQueue:completionBlock:">-[ZDCRestManager fetchMerkleTreeFile:completionQueue:completionBlock:]</a></code>
+
+</div>
+
+                        <a href="Classes/ZDCMerkleTree.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@interface</span> <span class="nc">ZDCMerkleTree</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">ZDCMerkleTree</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
             <div class="task-group">
               <ul class="item-container">
                 <li class="item">
@@ -1373,50 +1441,13 @@ and where the match occurred. A UI may use this information to highlight the mat
                 </li>
               </ul>
             </div>
-            <div class="task-group">
-              <ul class="item-container">
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:objc(cs)ZDCUserProfile"></a>
-                    <a name="//apple_ref/objc/Class/ZDCUserProfile" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCUserProfile">ZDCUserProfile</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Encapsulates the user&rsquo;s profile, which is made up of one or more linked identities.</p>
-
-                        <a href="Classes/ZDCUserProfile.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@interface</span> <span class="nc">ZDCUserProfile</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="o">&lt;</span><span class="n">NSSecureCoding</span><span class="o">&gt;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">ZDCUserProfile</span> <span class="p">:</span> <span class="kt">NSObject</span><span class="p">,</span> <span class="kt">NSSecureCoding</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-              </ul>
-            </div>
           </div>
         </section>
 
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-12-29)</p>
+      <p>&copy; 2020 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2020-01-05)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.11.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

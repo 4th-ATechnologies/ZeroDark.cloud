@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           ZeroDarkCloud Docs
         </a>
-         (97% documented)
+         (98% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -165,6 +165,29 @@
             </ul>
           </li>
           <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Billing.html">Billing</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCUserBill.html">ZDCUserBill</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCUserBillMetadata.html">ZDCUserBillMetadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCAppBill.html">ZDCAppBill</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCStorageBill.html">ZDCStorageBill</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCAppCost.html">ZDCAppCost</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCAppCostDetails.html">ZDCAppCostDetails</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
             <a class="nav-group-name-link" href="../File%20%26%20Streams.html">File &amp; Streams</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
@@ -201,10 +224,16 @@
                 <a class="nav-group-task-link" href="../Classes/ZDCFilesystemMonitor.html">ZDCFilesystemMonitor</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Type%20Definitions/ZDCCacheFileHeader.html">ZDCCacheFileHeader</a>
+                <a class="nav-group-task-link" href="../Structs/ZDCCacheFileHeader.html">ZDCCacheFileHeader</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Type%20Definitions/ZDCCloudFileHeader.html">ZDCCloudFileHeader</a>
+                <a class="nav-group-task-link" href="../File%20%26%20Streams.html#/c:ZDCCacheFileHeader.h@T@ZDCCacheFileHeader">ZDCCacheFileHeader</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/ZDCCloudFileHeader.html">ZDCCloudFileHeader</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../File%20%26%20Streams.html#/c:ZDCCloudFileHeader.h@T@ZDCCloudFileHeader">ZDCCloudFileHeader</a>
               </li>
             </ul>
           </li>
@@ -320,6 +349,9 @@
                 <a class="nav-group-task-link" href="../Classes/ZDCLogMessage.html">ZDCLogMessage</a>
               </li>
               <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/ZDCMerkleTree.html">ZDCMerkleTree</a>
+              </li>
+              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/ZDCProgressManagerChanges.html">ZDCProgressManagerChanges</a>
               </li>
               <li class="nav-group-task">
@@ -336,9 +368,6 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/ZDCUserDisplay.html">ZDCUserDisplay</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Classes/ZDCUserProfile.html">ZDCUserProfile</a>
               </li>
             </ul>
           </li>
@@ -461,9 +490,6 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@kNotificationsKey">kNotificationsKey</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@kS4LocalUser_shelflife">kS4LocalUser_shelflife</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@kZDCAnonymousUserID">kZDCAnonymousUserID</a>
@@ -695,9 +721,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)BIP39Mnemonic(cm)languageIDForlocaleIdentifier:"></a>
-                    <a name="//apple_ref/objc/Method/+languageIDForlocaleIdentifier:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)BIP39Mnemonic(cm)languageIDForlocaleIdentifier:">+languageIDForlocaleIdentifier:</a>
+                    <a name="/c:objc(cs)BIP39Mnemonic(cm)languageIDForLocaleIdentifier:"></a>
+                    <a name="//apple_ref/objc/Method/+languageIDForLocaleIdentifier:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)BIP39Mnemonic(cm)languageIDForLocaleIdentifier:">+languageIDForLocaleIdentifier:</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -705,21 +731,21 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Return a the closest language identifier for given localeIdentifier
- the language identifier is passed to APIs below that require a language identifier</p>
+                        <p>Returns the closest language identifier for given localeIdentifier.
+ The language identifier is passed to other BIP39Mnemonic functions that require it.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">languageIDForlocaleIdentifier</span><span class="p">:</span>
-    <span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">localeIdentifier</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nf">languageIDForLocaleIdentifier</span><span class="p">:</span>
+    <span class="p">(</span><span class="n">nullable</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">localeIdentifier</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kd">func</span> <span class="nf">languageIDForlocaleIdentifier</span><span class="p">(</span><span class="n">_</span> <span class="nv">localeIdentifier</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kd">func</span> <span class="nf">languageID</span><span class="p">(</span><span class="n">forLocaleIdentifier</span> <span class="nv">localeIdentifier</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">String</span><span class="p">?</span></code></pre>
 
                         </div>
                       </div>
@@ -735,7 +761,7 @@
                               </td>
                               <td>
                                 <div>
-                                  <p>optional locale for the wordlist - for null will default to prefered locale</p>
+                                  <p>Optional locale for the wordlist - for null will default to preferred locale</p>
                                 </div>
                               </td>
                             </tr>
@@ -769,12 +795,12 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n">NSString</span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span><span class="n">availableLanguages</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n">NSString</span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span><span class="n">availableLanguages</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kd">func</span> <span class="nf">availableLanguages</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">String</span><span class="p">]?</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kd">func</span> <span class="nf">availableLanguages</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">String</span><span class="p">]</span></code></pre>
 
                         </div>
                       </div>
@@ -1181,7 +1207,7 @@ The data size must be a multiple of 32 bits, with a total length between 128-256
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Converts from a key  to a mnemonic (word list).</p>
+                        <p>Converts from a key to a mnemonic (word list).</p>
 
                       </div>
                       <div class="declaration">
@@ -1190,7 +1216,7 @@ The data size must be a multiple of 32 bits, with a total length between 128-256
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n">NSString</span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span>
     <span class="nf">mnemonicFromKey</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSData</span> <span class="o">*</span><span class="p">)</span><span class="nv">keyData</span>
-         <span class="nf">passphrase</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">passphrase</span>
+         <span class="nf">passphrase</span><span class="p">:(</span><span class="n">NSString</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">passphrase</span>
          <span class="nf">languageID</span><span class="p">:(</span><span class="n">NSString</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">languageID</span>
           <span class="nf">algorithm</span><span class="p">:(</span><span class="n"><a href="../Enums/Mnemonic_Algorithm.html">Mnemonic_Algorithm</a></span><span class="p">)</span><span class="nv">algorithm</span>
               <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">errorOut</span><span class="p">;</span></code></pre>
@@ -1287,7 +1313,7 @@ If a passphrase is not present, an empty string &ldquo;&rdquo; is used instead.<
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">NSData</span> <span class="o">*</span><span class="p">)</span><span class="nf">keyFromMnemonic</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n">NSString</span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span><span class="nv">mnemonic</span>
-                          <span class="nf">passphrase</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">passphrase</span>
+                          <span class="nf">passphrase</span><span class="p">:(</span><span class="n">NSString</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">passphrase</span>
                           <span class="nf">languageID</span><span class="p">:(</span><span class="n">NSString</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">languageID</span>
                            <span class="nf">algorithm</span><span class="p">:(</span><span class="n"><a href="../Enums/Mnemonic_Algorithm.html">Mnemonic_Algorithm</a></span><span class="p">)</span><span class="nv">algorithm</span>
                                <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">errorOut</span><span class="p">;</span></code></pre>
@@ -1369,7 +1395,7 @@ If a passphrase is not present, an empty string &ldquo;&rdquo; is used instead.<
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2019-12-29)</p>
+      <p>&copy; 2020 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2020-01-05)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.11.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>
