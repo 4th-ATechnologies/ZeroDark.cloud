@@ -53,18 +53,23 @@
 
 @implementation BIP39Mnemonic
 
-+(nullable NSString*)languageIDForlocaleIdentifier:(NSString* _Nullable)localeIdentifier;
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/BIP39Mnemonic.html
+ */
++ (nullable NSString *)languageIDForLocaleIdentifier:(NSString *_Nullable)localeIdentifier
 {
-	NSString* languageID = nil;
-
-	NSArray* available = [self availableLanguages];
-
-	if(!localeIdentifier)
+	if (!localeIdentifier) {
 		localeIdentifier =  NSLocale.currentLocale.localeIdentifier;
+	}
 
 	localeIdentifier = [localeIdentifier stringByReplacingOccurrencesOfString:@"-" withString:@"_"];
+	
+	NSString *languageID = nil;
+	NSArray<NSString*> *available = [self availableLanguages];
 
-	if([available containsObject:localeIdentifier])
+	if ([available containsObject:localeIdentifier])
 	{
 		languageID = localeIdentifier;
 	}
@@ -86,20 +91,25 @@
 	return languageID;
 }
 
-+(nullable NSArray<NSString*> *) availableLanguages
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/BIP39Mnemonic.html
+ */
++ (NSArray<NSString*> *)availableLanguages
 {
-	NSMutableArray* langs = NSMutableArray.array;
+	NSMutableArray<NSString*> *langs = [NSMutableArray array];
 
 	NSBundle *bundle = [NSBundle bundleForClass:[ZeroDarkCloud class]];
 	NSArray* contents = [bundle URLsForResourcesWithExtension:@"bip39" subdirectory:@""];
 
   	for (NSURL *url in contents) {
 
-		NSString* lang = url.lastPathComponent.stringByDeletingPathExtension;
+		NSString *lang = url.lastPathComponent.stringByDeletingPathExtension;
 		[langs addObject:lang];
 	}
 
-	return langs;
+	return [langs copy];
 }
 
 +(NSURL*) langFileURLforLanguageID:(NSString* _Nullable)languageID
@@ -114,7 +124,7 @@
 
 	if(!identifier)
 	{
-		identifier = [self languageIDForlocaleIdentifier:[NSLocale currentLocale].localeIdentifier];
+		identifier = [self languageIDForLocaleIdentifier:[NSLocale currentLocale].localeIdentifier];
 	}
 
 	NSString* fileName= [NSString stringWithFormat:@"%@", identifier];

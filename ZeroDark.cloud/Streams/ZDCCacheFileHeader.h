@@ -35,7 +35,7 @@
  * The output will be an encrypted file whose size is rounded up to the nearest kZDCNode_TweakBlockSizeInBytes.
  * When attempting decryption, we can verify the decryption key is correct by inspecting the decrypted header.
  */
-typedef struct {
+struct ZDCCacheFileHeader {
 	
 	/**
 	 * This value should be kZDCCacheFileContextMagic,
@@ -54,6 +54,13 @@ typedef struct {
 	 */
 	uint8_t  reserved[kZDCCacheFileReservedBytes];
     
-} ZDCCacheFileHeader;
+};
+
+/** Standard typedef for `struct ZDCCacheFileHeader`. */
+typedef struct ZDCCacheFileHeader ZDCCacheFileHeader;
+//
+// ^Note:
+//    We don't do `typedef struct {...} ZDCCacheFileHeader;` because the docs don't recognize it properly.
+//    So we're doing it the old-fashioned way, to make the docs right.
 
 #endif

@@ -195,7 +195,7 @@ typedef enum {
 	_tagView.textField.autocorrectionType = UITextAutocorrectionTypeNo;
 	
 	NSString *localeIdentifier = [[NSLocale currentLocale] localeIdentifier];
-	currentLanguageId = [BIP39Mnemonic languageIDForlocaleIdentifier: localeIdentifier];
+	currentLanguageId = [BIP39Mnemonic languageIDForLocaleIdentifier: localeIdentifier];
 	bip39Words = [NSSet setWithArray:[BIP39Mnemonic wordListForLanguageID:localeIdentifier
 																						 error:nil]];
 	
@@ -1583,7 +1583,7 @@ typedef enum {
 			NSLocale *newLocale = [NSLocale localeWithLocaleIdentifier:lang];
 			if(newLocale)
 			{
-				NSString* newLangID = [BIP39Mnemonic languageIDForlocaleIdentifier: newLocale.localeIdentifier];
+				NSString* newLangID = [BIP39Mnemonic languageIDForLocaleIdentifier: newLocale.localeIdentifier];
 				if(newLangID && ![newLangID isEqualToString:currentLanguageId])
 				{
 					[self updateTagsToLanguageID:newLangID];

@@ -72,6 +72,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 		}
 		
 //		fetchAuditCredentials()
+//		fetchBilling()
 	}
 	
 //	private func fetchAuditCredentials() {
@@ -99,6 +100,34 @@ class ZDCManager: ZeroDarkCloudDelegate {
 //				print("Audit:\(audit)")
 //			}
 //		}
+//	}
+	
+//	private func fetchBilling() {
+//		
+//		let zdc = self.zdc!
+//		
+//		var localUser: ZDCLocalUser?
+//		zdc.databaseManager?.roDatabaseConnection.asyncRead({ (transaction) in
+//		
+//			localUser = zdc.localUserManager?.anyLocalUser(transaction)
+//		
+//		}, completionBlock: {
+//		
+//			if let localUser = localUser {
+//				
+//			//	zdc.restManager?.fetchPreviousBilling(localUser.uuid, withYear: 2019, month: 12, completionQueue: nil) { (bill, error) in
+//			//		if let bill = bill {
+//			//			print("current billing:\(bill)")
+//			//		}
+//			//	}
+//				
+//			//	zdc.restManager?.fetchCurrentBilling(localUser.uuid, completionQueue: nil) { (bill, error) in
+//			//		if let bill = bill {
+//			//			print("current billing:\(bill)")
+//			//		}
+//			//	}
+//			}
+//		})
 //	}
 	
 	public static var sharedInstance: ZDCManager = {

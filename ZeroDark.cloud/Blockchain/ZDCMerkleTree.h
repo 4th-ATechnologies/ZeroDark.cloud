@@ -13,6 +13,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Utility class for parsing & reading merkingTree files, as downloaded from ZDC servers.
+ *
+ * @see `-[ZDCRestManager fetchMerkleTreeFile:completionQueue:completionBlock:]`
  */
 @interface ZDCMerkleTree : NSObject
 

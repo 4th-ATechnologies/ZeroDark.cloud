@@ -1,8 +1,5 @@
 #import "ZDCLocalUserPrivate.h"
 
-
-double const kS4LocalUser_shelflife = (60 * 60 * 24 * 1);
-
 static int const kS4LocalUser_CurrentVersion = 1;
 #pragma unused(kS4LocalUser_CurrentVersion)
 

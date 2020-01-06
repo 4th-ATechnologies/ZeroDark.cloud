@@ -11,6 +11,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/**
+ * Encapsulates an identity that's attached to the user.
+ *
+ * For example, a user may attach their Facebook or LinkedIn identity.
+ * This is done to improve searchability, and to provide proof that a ZDC account is owned by a particular person
+ * (and not an imposter, or somebody else with a similar name).
+ */
 @interface ZDCUserIdentity : NSObject <NSSecureCoding, NSCopying>
 
 /**

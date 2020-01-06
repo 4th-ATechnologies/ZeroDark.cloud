@@ -47,6 +47,14 @@ custom_categories:
   - ZDCTrunkNode
   - ZDCUser
   - ZDCUserIdentity
+- name: Billing
+  children:
+  - ZDCUserBill
+  - ZDCUserBillMetadata
+  - ZDCAppBill
+  - ZDCStorageBill
+  - ZDCAppCost
+  - ZDCAppCostDetails
 - name: File & Streams
   children:
   - ZDCInputStream
