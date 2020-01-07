@@ -29,11 +29,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		
 		ZeroDarkCloud.setLogHandler({ (log: ZDCLogMessage) in
 			
+			// Convert to CocoaLumberjack log
 			let message =
 			  DDLogMessage.init(message: log.message,
 			                      level: DDLogLevel(rawValue: log.level.rawValue)!,
 					                 flag: DDLogFlag(rawValue: log.flag.rawValue),
-			                    context: 1,
+			                    context: 1, // <= Used in CustomLogFormatter.swift
 			                       file: log.file,
 			                   function: log.function,
 			                       line: log.line,
@@ -41,6 +42,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 			                    options: [],
 			                  timestamp: Date())
 			
+			// And pump log message into CocoaLumberjack system
 			DDLog.log(asynchronous: false, message: message)
 		})
 		

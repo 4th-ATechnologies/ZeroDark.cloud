@@ -26,8 +26,11 @@ class CustomLogFormatter: NSObject, DDLogFormatter {
 		let ts = dateFormatter.string(from: logMessage.timestamp)
 		let msg = logMessage.message
 		
-		if logMessage.context == 2147483647 {
-			return "\(ts): ☁︎ \(msg)"
+		if logMessage.context == 1 { // logMessage is coming from ZeroDarkCloud framework
+			return "\(ts): 🔨 \(msg)"
+		}
+		else if logMessage.context == 27017 { // logMessage is coming from YapDatabase framework
+			return "\(ts): 🗄 \(msg)"
 		}
 		else {
 			

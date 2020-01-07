@@ -69,13 +69,18 @@ class ZDCManager: ZeroDarkCloudDelegate {
 			}
 		}
 		
-		// The ZDCPullStopped notification is broadcast when the framework:
-		// - discovered changed nodes in the cloud
-		// - finished syncing the changed node metadata
+		// The ZDCSyncStatusChanged notification is broadcast when:
+		// - PullStarted (cloud changes detected)
+		// - PullStopped
+		// - PushStarted
+		// - PushStopped
+		// - PushPaused
+		// - PushResumed
+		// - SyncingNodeIDsChanged
 		//
 		NotificationCenter.default.addObserver( self,
-		                              selector: #selector(self.pullStopped(notification:)),
-		                                  name: Notification.Name.ZDCPullStopped,
+		                              selector: #selector(self.syncStatusChanged(notification:)),
+		                                  name: Notification.Name.ZDCSyncStatusChanged,
 		                                object: nil)
 	}
 	
@@ -715,9 +720,14 @@ class ZDCManager: ZeroDarkCloudDelegate {
 // MARK: ZeroDarkCloud: Notifications
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	@objc func pullStopped(notification: Notification) {
+	@objc func syncStatusChanged(notification: Notification) {
 		
-		acceptPendingInvitations()
+		if let info = notification.userInfo?[kZDCSyncStatusNotificationInfo] as? ZDCSyncStatusNotificationInfo {
+			
+			if info.type == .pullStopped {
+				acceptPendingInvitations()
+			}
+		}
 	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
