@@ -226,7 +226,7 @@
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCUserManager.html
  */
-- (void)recheckBlockchain:(ZDCUser *)user
+- (void)checkBlockchain:(ZDCUser *)user
           completionQueue:(nullable dispatch_queue_t)completionQueue
           completionBlock:(nullable void (^)(ZDCUser *_Nullable remoteUser, NSError *_Nullable error))completionBlock
 {
@@ -251,7 +251,7 @@
 		return;
 	}
 	
-	[self _recheckBlockchain: userID
+	[self _checkBlockchain: userID
 	         completionQueue: completionQueue
 	         completionBlock: completionBlock];
 }
@@ -806,7 +806,7 @@
 	fetchAuth0Info();
 }
 
-- (void)_recheckBlockchain:(NSString *)userID
+- (void)_checkBlockchain:(NSString *)userID
            completionQueue:(nullable dispatch_queue_t)inCompletionQueue
            completionBlock:(nullable void (^)(ZDCUser *_Nullable remoteUser, NSError *_Nullable error))inCompletionBlock
 {
