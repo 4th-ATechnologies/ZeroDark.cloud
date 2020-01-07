@@ -79,53 +79,55 @@ class ZDCManager: ZeroDarkCloudDelegate {
 //
 //		let zdc = self.zdc!
 //
-//		var localUserID: String?
+//		var localUser: ZDCLocalUser?
 //		zdc.databaseManager?.roDatabaseConnection.asyncRead({ (transaction) in
 //
-//			localUserID = zdc.localUserManager?.anyLocalUserID(transaction)
+//			localUser = zdc.localUserManager?.anyLocalUser(transaction)
 //
 //		}, completionBlock: {
 //
-//			if let localUserID = localUserID {
-//				self.fetchAuditCredentials(localUserID)
+//			guard let localUser = localUser else {
+//				return
+//			}
+//
+//			zdc.fetchAuditCredentials(localUser.uuid) { (audit: ZDCAudit?, error: Error?) in
+//
+//				if let audit = audit {
+//					print("Audit:\(audit)")
+//				}
 //			}
 //		})
 //	}
-//
-//	private func fetchAuditCredentials(_ localUserID: String) {
-//
-//		zdc.fetchAuditCredentials(localUserID) { (audit: ZDCAudit?, error: Error?) in
-//
-//			if let audit = audit {
-//				print("Audit:\(audit)")
-//			}
-//		}
-//	}
 	
 //	private func fetchBilling() {
-//		
+//
 //		let zdc = self.zdc!
-//		
+//
 //		var localUser: ZDCLocalUser?
 //		zdc.databaseManager?.roDatabaseConnection.asyncRead({ (transaction) in
-//		
+//
 //			localUser = zdc.localUserManager?.anyLocalUser(transaction)
-//		
+//
 //		}, completionBlock: {
-//		
-//			if let localUser = localUser {
-//				
-//			//	zdc.restManager?.fetchPreviousBilling(localUser.uuid, withYear: 2019, month: 12, completionQueue: nil) { (bill, error) in
-//			//		if let bill = bill {
-//			//			print("current billing:\(bill)")
-//			//		}
-//			//	}
-//				
-//			//	zdc.restManager?.fetchCurrentBilling(localUser.uuid, completionQueue: nil) { (bill, error) in
-//			//		if let bill = bill {
-//			//			print("current billing:\(bill)")
-//			//		}
-//			//	}
+//
+//			guard let localUser = localUser else {
+//				return
+//			}
+//
+//		//	zdc.restManager?.fetchPreviousBilling(localUser.uuid, withYear: 2019, month: 12, completionQueue: nil) { (bill, error) in
+//		//		if let bill = bill {
+//		//			print("current billing:\(bill)")
+//		//		}
+//		//	}
+//
+//			zdc.restManager?.fetchCurrentBilling(localUser.uuid, completionQueue: nil) { (bill, error) in
+//				if let bill = bill {
+//					print("current billing: \(bill)")
+//
+//					if let cost = bill.calculateCost("com.4th-a.WhatsZapp") {
+//						print("current cost: \(cost)")
+//					}
+//				}
 //			}
 //		})
 //	}

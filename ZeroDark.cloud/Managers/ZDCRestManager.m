@@ -2958,9 +2958,6 @@
 				{
 					bill = [[ZDCUserBill alloc] initWithDictionary:jsonDict];
 					
-				//	(void)bill.apps;
-				//	(void)[bill calculateCost:@"com.4th-a.WhatsZapp"];
-					
 					if (bill.metadata.isFinal)
 					{
 						// Cache result in database.

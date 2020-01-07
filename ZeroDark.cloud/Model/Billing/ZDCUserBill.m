@@ -39,6 +39,11 @@
 	return self;
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCUserBill.html
+ */
 - (ZDCUserBillMetadata *)metadata
 {
 	ZDCUserBillMetadata *result = _metadata;
@@ -60,6 +65,11 @@
 	return result;
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCUserBill.html
+ */
 - (NSDictionary *)rates
 {
 	id value = _dict[@"rates"];
@@ -70,6 +80,11 @@
 	return [NSDictionary dictionary];
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCUserBill.html
+ */
 - (NSDictionary<NSString*, ZDCAppBill*> *)apps
 {
 	NSDictionary<NSString*, ZDCAppBill*> *result = _apps;
@@ -114,7 +129,22 @@
 	return result;
 }
 
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCUserBill.html
+ */
 - (nullable ZDCAppCost *)calculateCost:(NSString *)treeID
+{
+	return [self calculateCost:treeID zdcFee:0.05];
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCUserBill.html
+ */
+- (nullable ZDCAppCost *)calculateCost:(NSString *)treeID zdcFee:(double)zdcFeePercentage
 {
 	ZDCAppBill *appBill = self.apps[treeID ?: @"*"];
 	if (appBill == nil) {
@@ -235,6 +265,8 @@
 	
 	double (^calculateServiceCost)(double, NSDictionary *) = ^double (double value, NSDictionary *rateContainer){
 		
+		double cost = 0.0;
+		
 		NSArray *flat_pricing  = rateContainer[@"flat"];
 		NSArray *range_pricing = rateContainer[@"range"];
 		
@@ -249,10 +281,8 @@
 			double price_per_unit = valueToDouble(flat_pricing[0]);
 			double unit_size      = valueToDouble(flat_pricing[1]);
 			
-			if (unit_size == DBL_MAX) {
-				return 0.0;
-			} else {
-				return ((value / unit_size) * price_per_unit);
+			if (unit_size != DBL_MAX) {
+				cost = ((value / unit_size) * price_per_unit);
 			}
 		}
 		else if (range_pricing)
@@ -279,7 +309,6 @@
 			// - After that, every gigabyte is charged at 5 cents per gigabyte.
 			//   In other words, the range: 150 TB - Infinity
 			
-			double cost = 0.0;
 			NSUInteger range_index = 0;
 			
 			while (value > 0)
@@ -303,13 +332,9 @@
 				
 				range_index++;
 			}
-			
-			return cost;
 		}
-		else
-		{
-			return 0.0;
-		}
+		
+		return cost * (1.0 + zdcFeePercentage);
 	};
 	
 	NSDictionary *rates = self.rates;

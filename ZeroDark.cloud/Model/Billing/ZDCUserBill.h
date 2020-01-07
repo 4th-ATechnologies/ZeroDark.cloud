@@ -51,8 +51,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Calculates the raw cloud costs for a given app, or the totals for all apps.
- *
  * If you want to know the totals (for all apps), you can pass "*".
+ *
+ * This method invokes `-calculateCost:zdcFee:`, and passes the standard zdcFee of 5% (0.05).
  *
  * @param treeID
  *   A ZeroDark.cloud treeID, as registered in the dashboard.
@@ -60,6 +61,20 @@ NS_ASSUME_NONNULL_BEGIN
  *   If you want to know the totals (for all apps), you can pass "*".
  */
 - (nullable ZDCAppCost *)calculateCost:(NSString *)treeID;
+
+/**
+ * Calculates the raw cloud costs for a given app, or the totals for all apps.
+ * If you want to know the totals (for all apps), you can pass "*".
+ *
+ * @param treeID
+ *   A ZeroDark.cloud treeID, as registered in the dashboard.
+ *   For example: "com.myCompany.myApp", "com.4th-a.ZeroDarkTodo".
+ *   If you want to know the totals (for all apps), you can pass "*".
+ *
+ * @param percentage
+ *   The zdcFee being applied. This is typically 5% (i.e. 0.05).
+ */
+- (nullable ZDCAppCost *)calculateCost:(NSString *)treeID zdcFee:(double)percentage;
 
 @end
 
