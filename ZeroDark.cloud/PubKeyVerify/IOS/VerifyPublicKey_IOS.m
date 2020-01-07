@@ -1,11 +1,11 @@
 /**
  * ZeroDark.cloud Framework
- * 
+ *
  * Homepage      : https://www.zerodark.cloud
  * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
  * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
  * API Reference : https://apis.zerodark.cloud
-**/
+ **/
 
 #import "VerifyPublicKey_IOS.h"
 
@@ -70,7 +70,6 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	NSString * _localUserID;
 	
 	YapDatabaseConnection * uiDatabaseConnection;
-	ZDCPublicKey          * pubKey;
 	
 	NSDateFormatter * formatter;
 	
@@ -83,7 +82,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 }
 
 - (instancetype)initWithOwner:(ZeroDarkCloud *)inOwner
-                 remoteUserID:(NSString *)inRemoteUserID
+					  remoteUserID:(NSString *)inRemoteUserID
 						localUserID:(NSString *)inLocalUserID
 {
 	NSBundle *bundle = [ZeroDarkCloud frameworkBundle];
@@ -106,17 +105,17 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	uiDatabaseConnection = zdc.databaseManager.uiDatabaseConnection;
 	
 	formatter = [ZDCDateFormatterCache dateFormatterWithDateStyle: NSDateFormatterShortStyle
-	                                                    timeStyle: NSDateFormatterShortStyle];
+																		 timeStyle: NSDateFormatterShortStyle];
 	
 	_txtPubKeyID.lineBreakMode = NSLineBreakByWordWrapping;
 	_txtPubKeyID.numberOfLines = 0;
 	_txtPubKeyID.font = [UIFont monospacedDigitSystemFontOfSize: _txtPubKeyID.font.pointSize
-	                                                     weight: UIFontWeightRegular];
+																		  weight: UIFontWeightRegular];
 	
 	_txtUserID.lineBreakMode = NSLineBreakByWordWrapping;
 	_txtUserID.numberOfLines = 0;
 	_txtUserID.font = [UIFont monospacedDigitSystemFontOfSize: _txtUserID.font.pointSize
-	                                                   weight: UIFontWeightRegular];
+																		weight: UIFontWeightRegular];
 	
 	_btnPubKeyIntegrity.hidden = YES;
 	_actPubKeyIntegrity.hidden = YES;
@@ -137,18 +136,18 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	
 	_imgAvatar.layer.cornerRadius = 50 / 2;
 	_imgAvatar.clipsToBounds = YES;
-		
+	
 	okImage = [UIImage imageNamed: @"roundedGreenCheck"
-	                     inBundle: [ZeroDarkCloud frameworkBundle]
+								inBundle: [ZeroDarkCloud frameworkBundle]
 	compatibleWithTraitCollection: nil];
 	
 	warningImage = [UIImage imageNamed: @"warning"
-	                          inBundle: [ZeroDarkCloud frameworkBundle]
-	     compatibleWithTraitCollection: nil];
+									  inBundle: [ZeroDarkCloud frameworkBundle]
+		  compatibleWithTraitCollection: nil];
 	
 	questionImage = [UIImage imageNamed: @"question-circle"
-	                           inBundle: [ZeroDarkCloud frameworkBundle]
-	      compatibleWithTraitCollection: nil];
+										inBundle: [ZeroDarkCloud frameworkBundle]
+			compatibleWithTraitCollection: nil];
 	
 	__weak typeof(self) weakSelf = self;
 	[_txtPubKeyID setLabelCopied:^(NSString *copyString) {
@@ -173,21 +172,18 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 			  compatibleWithTraitCollection:nil] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
 	
 	UIBarButtonItem *backItem =
-	  [[UIBarButtonItem alloc] initWithImage: image
-	                                   style: UIBarButtonItemStylePlain
-	                                  target: self
-	                                  action: @selector(handleNavigationBack:)];
+	[[UIBarButtonItem alloc] initWithImage: image
+												style: UIBarButtonItemStylePlain
+											  target: self
+											  action: @selector(handleNavigationBack:)];
 	
 	self.navigationItem.leftBarButtonItem = backItem;
 	
 	swipeRight = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRight:)];
 	[self.view addGestureRecognizer:swipeRight];
 	
-	[self refreshUserInfo];
-	[self refreshKeyInfo];
-	[self refreshPubKeyIntegrity];
-	[self refreshServerCopy];
-	[self refreshBlockchainInfo];
+	[self refresh];
+	
 }
 
 
@@ -213,23 +209,45 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	[[self navigationController] popViewControllerAnimated:YES];
 }
 
+-(void)refresh
+{
+	_txtPubKeyIntegrity.hidden = YES;
+	_txtPubKeyServer.hidden = YES;
+	_txtVerifyBlockChain.hidden = YES;
+	
+	[self refreshUserInfo];
+	[self checkForPublickey];
+}
+
 - (void)refreshUserInfo
 {
 	ZDCLogAutoTrace();
 	
 	__block ZDCUser *remoteUser = nil;
-	__block ZDCUser *localUser = nil;
 	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
-		localUser = [transaction objectForKey:_localUserID inCollection:kZDCCollection_Users];
 		remoteUser = [transaction objectForKey:_remoteUserID inCollection:kZDCCollection_Users];
 		
-	#pragma clang diagnostic pop
+#pragma clang diagnostic pop
 	}];
 	
 	_lblDisplayName.text = remoteUser.displayName;
+	
+	NSMutableString *string = [NSMutableString stringWithString:remoteUser.uuid];
+	[string insertString:@"\r" atIndex:16];
+	_txtUserID.text =  string;
+	
+	_txtPubKeyType.text = @"…";
+	_txtCreated.text = @"…";
+	_txtPubKeyID.text = @"…";
+	
+	if (@available(iOS 13.0, *)) {
+		_txtPubKeyType.textColor = UIColor.placeholderTextColor;
+		_txtCreated.textColor = UIColor.placeholderTextColor;
+		_txtPubKeyID.textColor = UIColor.placeholderTextColor;
+	}
 	
 	void (^preFetchBlock)(UIImage*, BOOL) = ^(UIImage *image, BOOL willFetch){
 		
@@ -239,7 +257,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 			self->_imgAvatar.image = image;
 		} else {
 			self->_imgAvatar.image = [self->zdc.imageManager.defaultUserAvatar scaledToSize: self->_imgAvatar.frame.size
-			                                                                    scalingMode: ScalingMode_AspectFill];
+																									  scalingMode: ScalingMode_AspectFill];
 		}
 	};
 	
@@ -255,22 +273,32 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	};
 	
 	[zdc.imageManager fetchUserAvatar: remoteUser
-	                      withOptions: nil
-	                    preFetchBlock: preFetchBlock
-	                   postFetchBlock: postFetchBlock];
+								 withOptions: nil
+							  preFetchBlock: preFetchBlock
+							 postFetchBlock: postFetchBlock];
 }
 
-- (void)refreshKeyInfo
+-(void)checkForPublickey
 {
 	ZDCLogAutoTrace();
+	__weak typeof(self) weakSelf = self;
 	
 	if (!_remoteUserID) return;
 	
+	_txtPubKeyIntegrity.hidden = NO;
+	_txtPubKeyIntegrity.text = @"Checking Public Key…";
+	_btnPubKeyIntegrity.hidden = YES;
+	_actPubKeyIntegrity.hidden = NO;
+	_txtPubKeyIntegrityError.hidden = YES;
+	_cnstPubKeyIntegrityBottom.constant = 20;
+	[_actPubKeyIntegrity startAnimating];
+	
 	__block ZDCUser* user = nil;
+	__block ZDCPublicKey  * pubKey = nil;
 	
 	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
 		user = [transaction objectForKey:_remoteUserID inCollection:kZDCCollection_Users];
 		if(user)
@@ -278,8 +306,50 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 			pubKey = [transaction objectForKey:user.publicKeyID inCollection:kZDCCollection_PublicKeys];
 		}
 		
-	#pragma clang diagnostic pop
+#pragma clang diagnostic pop
 	}];
+	
+	if(!pubKey)
+	{
+		[zdc.userManager fetchPublicKey:user
+								  requesterID:_localUserID
+							 completionQueue: nil
+							 completionBlock:^(ZDCUser *remoteUser, NSError *error)
+		 {
+			__strong typeof(self) ss = weakSelf;
+			
+			if(error || !remoteUser.publicKeyID)
+			{
+				[ss->_actPubKeyIntegrity stopAnimating];
+				ss->_actPubKeyIntegrity.hidden = YES;
+				[ss->_btnPubKeyIntegrity setImage:ss->warningImage forState:UIControlStateNormal];
+				ss->_btnPubKeyIntegrity.hidden = NO;
+				ss->_txtPubKeyIntegrity.text = @"Key Integrity Verification Failed";
+				ss->_txtPubKeyIntegrityError.text = error.localizedDescription;
+				ss->_txtPubKeyIntegrityError.textColor = UIColor.redColor;
+				[ss->_txtPubKeyIntegrityError sizeToFit];
+				ss->_txtPubKeyIntegrityError.hidden = NO;
+				ss->_cnstPubKeyIntegrityBottom.constant = ss->_txtPubKeyIntegrityError.frame.size.height  + 30;
+			}
+			else
+			{
+				[ss checkForPublickey];
+			}
+		}];
+	}
+	else
+	{
+		[_actPubKeyIntegrity stopAnimating];
+		_actPubKeyIntegrity.hidden = YES;
+		
+		[self refreshKeyInfo:pubKey];
+	}
+	
+}
+
+- (void)refreshKeyInfo:(ZDCPublicKey*)pubKey
+{
+	ZDCLogAutoTrace();
 	
 	if (pubKey)
 	{
@@ -302,13 +372,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 			NSString* hexString = [NSString hexEncodeBytesWithSpaces:pubKeyKeyIDData.bytes
 																			  length:pubKeyKeyIDData.length];
 			_txtPubKeyID.text = hexString;
-			
 		}
-		
-		
-		NSMutableString *string = [NSMutableString stringWithString:keyDict[@"userID"]];
-		[string insertString:@"\r" atIndex:16];
-		_txtUserID.text =  string;
 		
 		_txtPubKeyType.text =  keyDict[@"keySuite"];
 		
@@ -323,15 +387,24 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 		{
 			_txtCreated.text = @"Invalid";
 		}
+		
+		_txtPubKeyType.textColor = UIColor.blackColor;
+		_txtCreated.textColor = UIColor.blackColor;
+		_txtPubKeyID.textColor = UIColor.blackColor;
+		
+		[self refreshPubKeyIntegrity:pubKey];
 	}
+	
 }
 
 
-- (void)refreshPubKeyIntegrity
+- (void)refreshPubKeyIntegrity:(ZDCPublicKey*)pubKey
 {
 	ZDCLogAutoTrace();
 	
 	_txtPubKeyIntegrity.text = @"Verifying Key Integrity…";
+	_txtPubKeyIntegrity.hidden = NO;
+	
 	_btnPubKeyIntegrity.hidden = YES;
 	_actPubKeyIntegrity.hidden = NO;
 	_txtPubKeyIntegrityError.hidden = YES;
@@ -358,6 +431,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	if (error)
 	{
 		[_btnPubKeyIntegrity setImage:warningImage forState:UIControlStateNormal];
+		_btnPubKeyIntegrity.hidden = NO;
 		_txtPubKeyIntegrity.text = @"Key Integrity Verification Failed";
 		_txtPubKeyIntegrityError.text = error.localizedDescription;
 		_txtPubKeyIntegrityError.textColor = UIColor.redColor;
@@ -369,16 +443,18 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	{
 		_txtPubKeyIntegrity.text = @"Key Integrity Verified";
 		[_btnPubKeyIntegrity setImage:okImage forState:UIControlStateNormal];
+		_btnPubKeyIntegrity.hidden = NO;
+		
+		[self refreshServerCopy:pubKey];
 	}
-	
-	_btnPubKeyIntegrity.hidden = NO;
 }
 
-- (void)refreshServerCopy
+- (void)refreshServerCopy:(ZDCPublicKey*)pubKey
 {
 	ZDCLogAutoTrace();
 	
 	_txtPubKeyServer.text = @"Verifying KeyServer Copy…";
+	_txtPubKeyServer.hidden = NO;
 	_btnPubKeyServer.hidden = YES;
 	_actPubKeyServer.hidden = NO;
 	_txtPubKeyServerError.hidden = YES;
@@ -388,25 +464,29 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	__block ZDCUser *remoteUser = nil;
 	
 	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
 		remoteUser = [transaction objectForKey:_remoteUserID inCollection:kZDCCollection_Users];
 		
-	#pragma clang diagnostic pop
+#pragma clang diagnostic pop
 	}];
 	
 	__weak typeof(self) weakSelf = self;
 	[zdc.restManager fetchPubKeyForUser: remoteUser
-	                        requesterID: _localUserID
-	                    completionQueue: nil
-	                    completionBlock:^(ZDCPublicKey *serverPubKey, NSError *error)
-	{
-		[weakSelf didFetchServerCopy:serverPubKey error:error];
+									requesterID: _localUserID
+							  completionQueue: nil
+							  completionBlock:^(ZDCPublicKey *serverPubKey, NSError *error)
+	 {
+		[weakSelf didFetchServerCopy:serverPubKey
+							  localPubKey:pubKey
+									  error:error];
 	}];
 }
 
-- (void)didFetchServerCopy:(ZDCPublicKey *)serverPubKey error:(NSError *)error
+- (void)didFetchServerCopy:(ZDCPublicKey *)serverPubKey
+					localPubKey:(ZDCPublicKey*)pubKey
+							error:(NSError *)error
 {
 	ZDCLogAutoTrace();
 	
@@ -441,6 +521,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	if (error)
 	{
 		[_btnPubKeyServer setImage:warningImage forState:UIControlStateNormal];
+		_btnPubKeyServer.hidden = NO;
 		_txtPubKeyServer.text = @"KeyServer Verification Failed";
 		
 		_txtPubKeyServerError.text = error.localizedDescription;
@@ -453,49 +534,19 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	{
 		_txtPubKeyServer.text = @"Key Server Copy Verified";
 		[_btnPubKeyServer setImage:okImage forState:UIControlStateNormal];
+		_btnPubKeyServer.hidden = NO;
+		[self refreshBlockchainInfo];
 	}
-	
-	_btnPubKeyServer.hidden = NO;
 }
 
 - (void)refreshBlockchainInfo
 {
 	ZDCLogAutoTrace();
-
+	
 	__weak typeof(self) weakSelf = self;
-
-	if (!_remoteUserID || !_localUserID) return;
-	
-	__block ZDCUser *remoteUser = nil;
-	__block ZDCUser *localUser = nil;
-	
-	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-		
-		localUser = [transaction objectForKey:_localUserID inCollection:kZDCCollection_Users];
-		remoteUser = [transaction objectForKey:_remoteUserID inCollection:kZDCCollection_Users];
-		if(remoteUser)
-		{
-			pubKey = [transaction objectForKey:remoteUser.publicKeyID inCollection:kZDCCollection_PublicKeys];
-		}
-		
-	#pragma clang diagnostic pop
-	}];
-	
-	// once the merkleTreeRoot is cached, it's immutable.  dont look it up again.
-	if(remoteUser.blockchainProof)
-	{
-		_txtVerifyBlockChain.text = @"Blockchain Entry Verified";
-		[_btnVerifyBlockChain setImage: okImage forState:UIControlStateNormal];
-		_btnVerifyBlockChain.hidden = NO;
-		_actVerifyBlockChain.hidden = YES;
-		
-		_btnShowTransaction.hidden = NO;
-		return;
-	}
 	
 	_txtVerifyBlockChain.text = @"Verifying Blockchain Entry…";
+	_txtVerifyBlockChain.hidden = NO;
 	_btnVerifyBlockChain.hidden = YES;
 	_actVerifyBlockChain.hidden = NO;
 	_btnShowTransaction.hidden = YES;
@@ -503,7 +554,34 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	_cnstVerifyBlockChainBottom.constant = 20;
 	
 	[_actVerifyBlockChain startAnimating];
-
+	
+	if (!_remoteUserID || !_localUserID) return;
+	
+	__block ZDCUser *remoteUser = nil;
+	
+	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		remoteUser = [transaction objectForKey:_remoteUserID inCollection:kZDCCollection_Users];
+		
+#pragma clang diagnostic pop
+	}];
+	
+	// once the merkleTreeRoot is cached, it's immutable.  dont look it up again.
+	if(remoteUser.blockchainProof)
+	{
+		[_actVerifyBlockChain stopAnimating];
+		_actVerifyBlockChain.hidden = YES;
+		_btnVerifyBlockChain.hidden = NO;
+		
+		_txtVerifyBlockChain.text = @"Blockchain Entry Verified";
+		[_btnVerifyBlockChain setImage: okImage forState:UIControlStateNormal];
+		_btnShowTransaction.hidden = NO;
+		return;
+	}
+	
+	
 	[zdc.userManager checkBlockchain:remoteUser
 						  completionQueue:nil
 						  completionBlock:^(ZDCUser * _Nullable remoteUser, NSError * _Nullable error)
@@ -514,7 +592,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 			[ss->_actVerifyBlockChain stopAnimating];
 			ss->_actVerifyBlockChain.hidden = YES;
 			ss->_btnVerifyBlockChain.hidden = NO;
-
+			
 			if (error)
 			{
 				[ss->_btnVerifyBlockChain setImage:ss->warningImage forState:UIControlStateNormal];
@@ -560,14 +638,14 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	__block ZDCUser *remoteUser = nil;
 	
 	[uiDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 		
 		remoteUser = [transaction objectForKey:_remoteUserID inCollection:kZDCCollection_Users];
-			
-	#pragma clang diagnostic pop
+		
+#pragma clang diagnostic pop
 	}];
-
+	
 	if(remoteUser.blockchainProof)
 	{
 		//   FIX_LATER("show merkleTreeRoot")
@@ -576,9 +654,9 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 
 -(IBAction)btnReverifyBlockChain:(id)sender
 {
-	#if DEBUG
+#if DEBUG
 	__weak typeof(self) weakSelf = self;
-
+	
 	[zdc.databaseManager.rwDatabaseConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
 		__strong typeof(self) strongSelf = weakSelf;
@@ -599,12 +677,12 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 			}
 		}
 	}
-  completionQueue: dispatch_get_main_queue()
-  completionBlock:^{
+	  completionQueue: dispatch_get_main_queue()
+	  completionBlock:^{
 		[self refreshBlockchainInfo];
 	}];
 #endif
-
+	
 }
 
 @end
