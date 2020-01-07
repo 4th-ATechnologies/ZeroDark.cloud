@@ -577,7 +577,9 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 		
 		_txtVerifyBlockChain.text = @"Blockchain Entry Verified";
 		[_btnVerifyBlockChain setImage: okImage forState:UIControlStateNormal];
+#if DEBUG
 		_btnShowTransaction.hidden = NO;
+#endif
 		return;
 	}
 	
@@ -627,7 +629,9 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 			{
 				ss->_txtVerifyBlockChain.text = @"Blockchain Entry Verified";
 				[ss->_btnVerifyBlockChain setImage:ss->okImage forState:UIControlStateNormal];
-				ss->_btnShowTransaction.hidden = NO;
+				#if DEBUG
+						ss->_btnShowTransaction.hidden = NO;
+				#endif
 			}
 		}
 	}];
@@ -648,7 +652,9 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	
 	if(remoteUser.blockchainProof)
 	{
-		//   FIX_LATER("show merkleTreeRoot")
+		NSURL *url = [ZDCConstants ZDCblockchainVerifyURLForUserID:remoteUser.uuid];		
+		NSDictionary *options = @{};
+		[[UIApplication sharedApplication] openURL:url options:options completionHandler:nil];
 	}
 }
 

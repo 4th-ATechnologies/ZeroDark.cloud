@@ -183,7 +183,13 @@ static BOOL isOSX = NO;
 + (NSURL *)ZDCaccessKeyBlogPostURL
 {
 	return [NSURL URLWithString:@"https://zerodarkcloud.readthedocs.io/en/latest/"];
-	
 }
+
++ (NSURL *)ZDCblockchainVerifyURLForUserID:(NSString*)userID
+{
+	NSString *const urlStr = [NSString stringWithFormat:@"https://users.storm4.cloud/id/%@", userID];
+	return [NSURL URLWithString:urlStr];
+}
+
 
 @end

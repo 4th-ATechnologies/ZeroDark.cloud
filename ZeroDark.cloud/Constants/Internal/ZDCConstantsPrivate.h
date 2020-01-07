@@ -113,6 +113,7 @@ extern NSString *const kAuth0ErrorDescription_Blocked; // extra qualifier for un
 // Important URLS
 + (NSURL *)ZDCsplitKeyBlogPostURL;
 + (NSURL *)ZDCaccessKeyBlogPostURL;
++ (NSURL *)ZDCblockchainVerifyURLForUserID:(NSString*)userID;
 
 @end
 
