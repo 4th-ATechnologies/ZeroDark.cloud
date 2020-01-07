@@ -18,121 +18,67 @@
 // Log Levels: off, error, warning, info, verbose
 // Log Flags : trace
 #if DEBUG
-static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #else
-static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 
-@implementation SimulatePushNotificationViewController_IOS
-{
+@implementation SimulatePushNotificationViewController_IOS {
 	
-	IBOutlet __weak UIButton                		*_btnSimPush;
-	IBOutlet __weak UIActivityIndicatorView  		*_actPush;
+	IBOutlet __weak UIButton                *_btnSimPush;
+	IBOutlet __weak UIActivityIndicatorView *_activityIndicator;
 	
-	ZeroDarkCloud*                     owner;
+	ZeroDarkCloud *zdc;
 }
-
 
 - (instancetype)initWithOwner:(ZeroDarkCloud*)inOwner
 {
-	
-	self = [super initWithNibName:@"SimulatePushNotificationViewController_IOS"
-								  bundle:[ZeroDarkCloud frameworkBundle]];
+	self = [super initWithNibName: @"SimulatePushNotificationViewController_IOS"
+	                       bundle: [ZeroDarkCloud frameworkBundle]];
  	if (self)
 	{
-		owner = inOwner;
+		zdc = inOwner;
  	}
 	return self;
-	
 }
 
--(void)viewWillAppear:(BOOL)animated
+- (void)viewDidLoad
 {
-    [super viewWillAppear:	animated];
+	ZDCLogAutoTrace();
+	[super viewDidLoad];
 	
-	[[NSNotificationCenter defaultCenter] addObserver:self
-														  selector:@selector(pullStarted:)
-																name:ZDCPullStartedNotification
-															 object:nil];
-	
-	[[NSNotificationCenter defaultCenter] addObserver:self
-														  selector:@selector(pullStopped:)
-																name:ZDCPullStoppedNotification
-															 object:nil];
-
-	[[NSNotificationCenter defaultCenter] addObserver:self
-														  selector:@selector(pushStarted:)
-																name:ZDCPushStartedNotification
-															 object:nil];
-
-	[[NSNotificationCenter defaultCenter] addObserver:self
-														  selector:@selector(pushStopped:)
-																name:ZDCPushStoppedNotification
-															 object:nil];
-
+	[[NSNotificationCenter defaultCenter] addObserver: self
+	                                         selector: @selector(syncStatusChanged:)
+	                                             name: ZDCSyncStatusChangedNotification
+	                                           object: nil];
 }
 
--(void)viewWillDisappear:(BOOL)animated
+- (void)dealloc
 {
-	[super viewWillDisappear:animated];
-
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
-	
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MARK: Pull/Push
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
-- (void)pullStarted:(NSNotification *)notification
+- (void)syncStatusChanged:(NSNotification *)notification
 {
 	ZDCLogAutoTrace();
 
-	if(!_actPush.isAnimating){
-		[_actPush startAnimating];
+	BOOL isSyncing = [zdc.syncManager isPullingOrPushingChangesForAnyLocalUser];
+	if (isSyncing) {
+		[_activityIndicator startAnimating];
 		_btnSimPush.enabled = NO;
-  	}
-
-}
-
-- (void)pullStopped:(NSNotification *)notification
-{
-	ZDCLogAutoTrace();
-	
-	if(_actPush.isAnimating){
-		[_actPush stopAnimating];
+	} else {
+		[_activityIndicator stopAnimating];
 		_btnSimPush.enabled = YES;
 	}
-
-}
-
-- (void)pushStarted:(NSNotification *)notification
-{
-	ZDCLogAutoTrace();
-	
-	if(!_actPush.isAnimating){
-		[_actPush startAnimating];
-		_btnSimPush.enabled = NO;
-	}
-
-}
-
-- (void)pushStopped:(NSNotification *)notification
-{
-	ZDCLogAutoTrace();
-
-	if(_actPush.isAnimating){
-		[_actPush stopAnimating];
-		 _btnSimPush.enabled = YES;
-		 }
-
 }
 
 - (IBAction)didHitSimulatePush:(id)sender
 {
-	[owner.syncManager pullChangesForAllLocalUsers];
+	[zdc.syncManager pullChangesForAllLocalUsers];
 }
  
  

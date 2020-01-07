@@ -14,73 +14,89 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- * This notification is broadcast when changes are discovered in the cloud,
- * and the PullManager has started working to update the treesystem state.
+ * The SyncManager broadcasts several types of notifications for changes in the sync state.
+ * This tells you what change caused the notification.
+ */
+typedef NS_ENUM(NSInteger, ZDCSyncStatusNotificationType) {
+	
+	/**
+	 * This notification type is broadcast when changes have been discovered in the cloud,
+	 * and the PullManager has started working to update the treesystem state.
+	 */
+	ZDCSyncStatusNotificationType_PullStarted,
+	
+	/**
+	 * This notification type is broadcast after:
+	 * - changes were discovered in the cloud
+	 * - the PullManager attempted to update the treesystem state
+	 * - and the PullManager is now done with its attempt (either success or failure)
+	 */
+	ZDCSyncStatusNotificationType_PullStopped,
+	
+	/**
+	 * This notification type is broadcast when the PushManager changes its active status.
+	 * This happens when:
+	 * - the PushManager sees new upload operations in the queue
+	 * - AND it h started working on them
+	 */
+	ZDCSyncStatusNotificationType_PushStarted,
+	
+	/**
+	 * This notification type is broadcast when the PushManager changes its active status.
+	 * This happens when:
+	 * - the PushManager completes all the upload operations in its queue
+	 * - OR the PushManager is stopped due to Internet reachability changes
+	 */
+	ZDCSyncStatusNotificationType_PushStopped,
+	
+	/**
+	 * This notification type is broadcast when the PushManger is manually paused.
+	 *
+	 * @see `-pausePushForLocalUserID:andAbortUploads:`
+	 * @see `-pausePushForAllLocalUsersAndAbortUploads:`
+	 */
+	ZDCSyncStatusNotificationType_PushPaused,
+	
+	/**
+	 * This notification type is broadcast when the PushManager is manually resumed (after being previously paused).
+	 *
+	 * @see `-resumePushForLocalUserID:`
+	 * @see `-resumePushForAllLocalUsers`
+	 */
+	ZDCSyncStatusNotificationType_PushResumed,
+	
+	/**
+	 * This notification is broadcast when a user's syncingNodeID's list changes.
+	 * In other words, the list of nodes being synced (pushed or pulled) has changed.
+	 *
+	 * @see `-syncingNodeIDsForLocalUserID`
+	 */
+	ZDCSyncStatusNotificationType_SyncingNodeIDsChanged
+};
+
+/**
+ * This notification is broadcast whenever the sync status changes, which includes:
+ * - PullStarted (cloud changes detected)
+ * - PullStopped
+ * - PushStarted
+ * - PushStopped
+ * - PushPaused
+ * - PushResumed
+ * - SyncingNodeIDsChanged
  *
- * The following keys are available in the notification's userInfo:
- * - kLocalUserIDKey : value is string
- * - kAppIDKey : value is string
+ * The notification.userInfo dictionary contains an instance of `ZDCSyncStatusNotificationInfo`.
+ * It can be extracted via:
+ * `notification.userInfo[kZDCSyncStatusNotificationInfo] as? ZDCSyncStatusNotificationInfo`
  *
  * This notification is always broadcast on the main thread.
  */
-extern NSString *const ZDCPullStartedNotification;
+extern NSString *const ZDCSyncStatusChangedNotification;
 
 /**
- * This notification is broadcast after:
- * - changes were discovered in the cloud
- * - the PullManager attempted to update the treesystem state
- * - and the PullManager is now done with its attempt (either success or failure)
- *
- * The following keys are available in the notification's userInfo:
- * - kLocalUserIDKey : value is string
- * - kAppIDKey : value is string
- * - kPullResultKey : value is (wrapped) `ZDCPullResult`
- *
- * This notification is always broadcast on the main thread.
+ * A key for the notification.userInfo dictionary of ZDCSyncStatusChangedNotification.
+ * The corresponding value is an instance of `ZDCSyncStatusNotificationInfo`.
  */
-extern NSString *const ZDCPullStoppedNotification;
-
-/**
- * This notifications is broadcast when the PushManager changes active status.
- * This happens when:
- * - the PushManager receives new upload operations, and starts working on them
- *
- * The following keys are available in the notification's userInfo:
- * - kLocalUserIDKey : value is string
- * - kAppIDKey : value is string
- *
- * This notification is always broadcast on the main thread.
- */
-extern NSString *const ZDCPushStartedNotification;
-
-/**
- * This notification is broadcast when the PushManager changes active status.
- * This happens when:
- * - the PushManager completes all the upload operations in its queue
- * - or the PushManager is stopped due to Internet reachability changes
- *
- * The following keys are available in the notification's userInfo:
- * - kLocalUserIDKey : value is string
- * - kAppIDKey : value is string
- *
- * This notification is always broadcast on the main thread.
- */
-extern NSString *const ZDCPushStoppedNotification;
-
-/**
- * This notification is broadcast when a user's syncingNodeID's list changes.
- *
- * @see `-syncingNodeIDsForLocalUserID`
- *
- * This notification is always broadcast on the main thread.
- */
-extern NSString *const ZDCSyncingNodeIDsChangedNotification;
-
-/**
- * A key for the notification.userInfo dictionary,
- * which returns an instance of `ZDCDiskManagerChanges`.
- */
-extern NSString *const kZDCSyncManagerNotificationInfo;
+extern NSString *const kZDCSyncStatusNotificationInfo;
 
 /**
  * The SyncManager simplifies many aspects of determining sync state.
@@ -246,7 +262,7 @@ extern NSString *const kZDCSyncManagerNotificationInfo;
  * - The node is being pushed to the server, or scheduled to be pushed.
  * - The node has children, and there's a descendant (at any depth - child, grandchild, etc)
  *   that's being pushed to the server (or scheduled to be pushed).
- * - The node has changes on the cloud, and we're pulling the changes to it.
+ * - The node has changes in the cloud, and we're pulling the changes to it.
  * - The node has children, and there's a descendant (at any depth - child, grandchild, etc)
  *   for which we're pulling changes for.
  * - There's an active dowload for the given nodeID (which was requested via DownloadManager).
@@ -268,12 +284,20 @@ extern NSString *const kZDCSyncManagerNotificationInfo;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * When ZDCSyncManager posts a notification, an instance of this class is added the notification.userInfo.
+ * When a ZDCSyncStatusChangedNotification is posed, an instance of this class is added the notification.userInfo.
  *
  * You can extract the info via:
- * `notification.userInfo[kZDCSyncManagerNotificationInfo] as? ZDCSyncManagerNotificationInfo`
+ * `notification.userInfo[kZDCSyncStatusNotificationInfo] as? ZDCSyncStatusNotificationInfo`
  */
-@interface ZDCSyncManagerNotificationInfo: NSObject
+@interface ZDCSyncStatusNotificationInfo: NSObject
+
+/**
+ * Tells you which type of notification is being broadcast.
+ *
+ * The SyncManager publishes many different types of notifications.
+ * And its generally the case that if you need to listen for one of them, you need to listen to several of them.
+ */
+@property (nonatomic, readonly) ZDCSyncStatusNotificationType type;
 
 /**
  * A reference to the localUser being pulled/pushed. (localUserID == ZDCLocalUser.uuid)
@@ -286,7 +310,7 @@ extern NSString *const kZDCSyncManagerNotificationInfo;
 @property (nonatomic, copy, readonly) NSString *treeID;
 
 /**
- * If the notification was via ZDCPullStoppedNotification,
+ * If the notification type is PullStopped,
  * this value contains information about whether or not the pull succeeded or failed.
  */
 @property (nonatomic, assign, readonly) ZDCPullResult pullResult;

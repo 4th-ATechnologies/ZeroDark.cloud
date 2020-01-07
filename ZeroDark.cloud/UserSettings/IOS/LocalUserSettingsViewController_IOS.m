@@ -35,9 +35,9 @@ typedef NS_ENUM(NSInteger, TblRow) {
 	TblRow_SocialIDMgmt,
 	TblRow_Clone,
 	TblRow_BackupKey,
-	TblRow_VerifyPublicKey,
-	TblRow_PauseSync,
 	TblRow_Activity,
+	TblRow_PauseSync,
+	TblRow_VerifyPublicKey,
 
 #if DEBUG
 	TblRow_Logout,
@@ -131,50 +131,30 @@ typedef NS_ENUM(NSInteger, TblRow) {
 	
 	_tblButtons.tableFooterView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, _tblButtons.frame.size.width, 1)];
 	
-	
-	NSBundle *zdcBundle = [ZeroDarkCloud frameworkBundle];
 	CGSize imageSize = (CGSize){
 		.width = 32,
 		.height = 32
 	};
 	
-	socialImage = [[UIImage imageNamed: @"social"
-	                          inBundle: zdcBundle
-	     compatibleWithTraitCollection: nil] imageByScalingProportionallyToSize:imageSize];
-	
-	keysImage = [[UIImage imageNamed: @"circle-check"
-	                        inBundle: zdcBundle
-	   compatibleWithTraitCollection: nil] imageByScalingProportionallyToSize:imageSize];
-	
-	cloneImage = [[UIImage imageNamed: @"clonecode-tabbar"
-	                         inBundle: zdcBundle
-	    compatibleWithTraitCollection: nil] imageByScalingProportionallyToSize:imageSize];
-	
-	activityImage = [[UIImage imageNamed: @"storm4_28"
-	                            inBundle: zdcBundle
-	       compatibleWithTraitCollection: nil] imageByScalingProportionallyToSize:imageSize];
-	
-	backupImage = [[UIImage imageNamed: @"keys"
-	                          inBundle: zdcBundle
-	     compatibleWithTraitCollection: nil] imageByScalingProportionallyToSize:imageSize];
-	
-	logoutImage = [[UIImage imageNamed: @"logout"
-	                          inBundle: zdcBundle
-	     compatibleWithTraitCollection: nil] imageByScalingProportionallyToSize:imageSize];
-
-	pauseImage = [[UIImage imageNamed: @"pause-round-24"
-	                         inBundle: zdcBundle
-	    compatibleWithTraitCollection: nil] imageByScalingProportionallyToSize:imageSize];
-
-	resumeImage = [[UIImage imageNamed: @"play-round-24"
-	                          inBundle: zdcBundle
-	     compatibleWithTraitCollection: nil] imageByScalingProportionallyToSize:imageSize];
+	socialImage   = [[zdc imageNamed:@"social"]           scaledToSize:imageSize scalingMode:ScalingMode_AspectFit];
+	keysImage     = [[zdc imageNamed:@"circle-check"]     scaledToSize:imageSize scalingMode:ScalingMode_AspectFit];
+	cloneImage    = [[zdc imageNamed:@"clonecode-tabbar"] scaledToSize:imageSize scalingMode:ScalingMode_AspectFit];
+	activityImage = [[zdc imageNamed:@"storm4_28"]        scaledToSize:imageSize scalingMode:ScalingMode_AspectFit];
+	backupImage   = [[zdc imageNamed:@"keys"]             scaledToSize:imageSize scalingMode:ScalingMode_AspectFit];
+	logoutImage   = [[zdc imageNamed:@"logout"]           scaledToSize:imageSize scalingMode:ScalingMode_AspectFit];
+	pauseImage    = [[zdc imageNamed:@"pause-round-24"]   scaledToSize:imageSize scalingMode:ScalingMode_AspectFit];
+	resumeImage   = [[zdc imageNamed:@"play-round-24"]    scaledToSize:imageSize scalingMode:ScalingMode_AspectFit];
 	
 	self.navigationItem.hidesBackButton = YES;
 	
 	[[NSNotificationCenter defaultCenter] addObserver: self
 														  selector: @selector(databaseConnectionDidUpdate:)
 																name: UIDatabaseConnectionDidUpdateNotification
+															 object: nil];
+	
+	[[NSNotificationCenter defaultCenter] addObserver: self
+														  selector: @selector(syncStatusChanged:)
+																name: ZDCSyncStatusChangedNotification
 															 object: nil];
 }
 
@@ -201,11 +181,6 @@ typedef NS_ENUM(NSInteger, TblRow) {
 	
 	[self refreshUserNameandIcon];
 	[_tblButtons reloadData];
-}
-
-- (void)viewDidLayoutSubviews
-{
-	[super viewDidLayoutSubviews];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -237,8 +212,20 @@ typedef NS_ENUM(NSInteger, TblRow) {
 	}
 }
 
+- (void)syncStatusChanged:(NSNotification *)notification
+{
+	ZDCSyncStatusNotificationInfo *info = notification.userInfo[kZDCSyncStatusNotificationInfo];
+	
+	if (info.type == ZDCSyncStatusNotificationType_PushPaused ||
+	    info.type == ZDCSyncStatusNotificationType_PushResumed )
+	{
+		NSIndexPath *indexPath = [NSIndexPath indexPathForRow:TblRow_PauseSync inSection:0];
+		[_tblButtons reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Refresh
+#pragma mark Utilities
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)refreshUserNameandIcon
@@ -302,6 +289,26 @@ typedef NS_ENUM(NSInteger, TblRow) {
 	}
 }
 
+- (void)setSyncingPaused:(BOOL)flag
+{
+	NSString *_localUserID = localUserID;
+			
+	YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
+	[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+				 
+		ZDCLocalUser *updatedUser = [transaction objectForKey:_localUserID inCollection:kZDCCollection_Users];
+		if (updatedUser)
+		{
+			updatedUser = [updatedUser copy];
+			updatedUser.syncingPaused = flag;
+					
+			[transaction setObject: updatedUser
+			                forKey: updatedUser.uuid
+			          inCollection: kZDCCollection_Users];
+		}
+	}];
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark UITableViewDataSource
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -328,18 +335,21 @@ typedef NS_ENUM(NSInteger, TblRow) {
 	switch (indexPath.row)
 	{
 		case TblRow_SocialIDMgmt:
+		{
 			title = NSLocalizedString(@"Social Identities", @"Social Identities");
 			image = socialImage;
 			cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
 			break;
-			
+		}
 		case TblRow_Clone:
+		{
 			title = NSLocalizedString(@"Setup on another device", @"Setup on another device");
 			image = cloneImage;
 			cell.accessoryType =  UITableViewCellAccessoryDisclosureIndicator;
 			break;
-			
+		}
 		case TblRow_BackupKey:
+		{
 			title = NSLocalizedString(@"Backup Access Key", @"Backup Access Key");
 			image = backupImage;
 			
@@ -353,39 +363,51 @@ typedef NS_ENUM(NSInteger, TblRow) {
 			}
 			cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
 			break;
-			
+		}
 		case TblRow_VerifyPublicKey:
+		{
 			title = NSLocalizedString(@"Verify Public Key", @"Verify Public Key");
 			image = keysImage;
 			cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
 			break;
-
+		}
 		case TblRow_Activity:
+		{
 			title = NSLocalizedString(@"Activity", @"Activity");
 			image = activityImage;
 			cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
 			break;
- 
+		}
 		case TblRow_PauseSync:
-			if (localUser.syncingPaused)
+		{
+			BOOL syncingPaused = localUser.syncingPaused;
+			BOOL pushingPaused = [zdc.syncManager isPushingPausedForLocalUserID:localUser.uuid];
+		
+			if (syncingPaused)
 			{
-				title = NSLocalizedString(@"Resume Syncing", @"Resume Syncing");
+				title = NSLocalizedString(@"Resume Syncing", @"LocalUserSettings: table row item");
 				image = resumeImage;
  			}
+			else if (pushingPaused)
+			{
+				title = NSLocalizedString(@"Resume Pushing", @"LocalUserSettings: table row item");
+				image = resumeImage;
+			}
 			else
 			{
-				title = NSLocalizedString(@"Pause Syncing", @"Pause Syncing");
+				title = NSLocalizedString(@"Pause Syncing", @"LocalUserSettings: table row item");
 				image = pauseImage;
 			}
 			cell.accessoryType = UITableViewCellAccessoryNone;
 			break;
-			
+		}
 		case TblRow_Logout:
+		{
 			title = @"Log Out";
 			image = logoutImage;
 			cell.accessoryType = UITableViewCellAccessoryNone;
 			break;
-			
+		}
 		default:;
 	}
 	
@@ -479,32 +501,21 @@ typedef NS_ENUM(NSInteger, TblRow) {
 		}
 		case TblRow_PauseSync:
 		{
-			NSString *_localUserID = localUserID;
-			__block ZDCLocalUser *updatedUser = nil;
+			BOOL syncingPaused = localUser.syncingPaused;
+			BOOL pushingPaused = [zdc.syncManager isPushingPausedForLocalUserID:localUser.uuid];
 			
-			YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
-			[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
-				 
-				updatedUser = [transaction objectForKey:_localUserID inCollection:kZDCCollection_Users];
-				if (updatedUser)
-				{
-					updatedUser = [updatedUser copy];
-					updatedUser.syncingPaused = !updatedUser.syncingPaused;
-					
-					[transaction setObject: updatedUser
-					                forKey: updatedUser.uuid
-					          inCollection: kZDCCollection_Users];
-				}
-				 
-			 } completionBlock:^{
-				 
-				if (updatedUser)
-				{
-					self->localUser = updatedUser;
-					[tableView reloadRowsAtIndexPaths: @[indexPath]
-					                 withRowAnimation: UITableViewRowAnimationFade];
-				}
-			}];
+			if (syncingPaused)
+			{
+				[self setSyncingPaused:NO];
+			}
+			else if (pushingPaused)
+			{
+				[zdc.syncManager resumePushForLocalUserID:localUser.uuid];
+			}
+			else
+			{
+				[self setSyncingPaused:YES];
+			}
 			break;
 		}
 

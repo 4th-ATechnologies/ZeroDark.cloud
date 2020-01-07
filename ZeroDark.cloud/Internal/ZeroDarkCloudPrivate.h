@@ -51,6 +51,12 @@ NS_ASSUME_NONNULL_BEGIN
  * `[UIImage imageNamed:name inBundle:[ZeroDarkCloud frameworkBundle] compatibleWithTraitCollection:nil]`
  */
 + (nullable UIImage *)imageNamed:(NSString *)name;
+
+/**
+ * Returns the result of calling:
+ * `[UIImage imageNamed:name inBundle:[ZeroDarkCloud frameworkBundle] compatibleWithTraitCollection:nil]`
+ */
+- (nullable UIImage *)imageNamed:(NSString *)name;
 #endif
 
 @end

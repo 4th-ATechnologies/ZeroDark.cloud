@@ -189,6 +189,56 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 	}
 }
 
+/**
+ * Every ZDC instance must have a unique database.
+ * That is, multiple ZDC instances are not allowed to share the same database.
+ *
+ * Further, there are other ZDC classes that need their own unique values or directories.
+ * For example, the ZDCDiskManager needs container directories that won't overlap with
+ * other possible ZeroDarkCloud instances.
+ *
+ * To achieve this result, we derive unique values from the database filename.
+ * Another possible option would have been to hash the database filepath.
+ * However, iOS makes this idea difficult for us because it keeps changing the location of the app containers.
+ * For example, you get a different filepath each time you build-and-go on the simulator.
+ *
+ * So our simple solution is to require database filenames to be unique.
+ */
++ (BOOL)registerDatabaseName:(NSString *)inDatabaseName
+{
+	NSString *databaseName = [inDatabaseName lowercaseString];
+	if (databaseName == nil) return NO;
+	
+	BOOL result = NO;
+	YAPUnfairLockLock(&registrationLock);
+	{
+		if (![registeredDatabaseNames containsObject:databaseName])
+		{
+			[registeredDatabaseNames addObject:databaseName];
+			result = YES;
+		}
+	}
+	YAPUnfairLockUnlock(&registrationLock);
+	
+	return result;
+}
+
++ (void)deregisterDatabaseName:(NSString *)inDatabaseName
+{
+	NSString *databaseName = [inDatabaseName lowercaseString];
+	if (databaseName == nil) return;
+	
+	YAPUnfairLockLock(&registrationLock);
+	{
+		[registeredDatabaseNames removeObject:databaseName];
+	}
+	YAPUnfairLockUnlock(&registrationLock);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Logging
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 + (ZDCLogHandler)defaultLogHandler
 {
 	NSString *subsystem = @"ZeroDark";
@@ -247,56 +297,19 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 	}
 }
 
-/**
- * Every ZDC instance must have a unique database.
- * That is, multiple ZDC instances are not allowed to share the same database.
- *
- * Further, there are other ZDC classes that need their own unique values or directories.
- * For example, the ZDCDiskManager needs container directories that won't overlap with
- * other possible ZeroDarkCloud instances.
- *
- * To achieve this result, we derive unique values from the database filename.
- * Another possible option would have been to hash the database filepath.
- * However, iOS makes this idea difficult for us because it keeps changing the location of the app containers.
- * For example, you get a different filepath each time you build-and-go on the simulator.
- *
- * So our simple solution is to require database filenames to be unique.
- */
-+ (BOOL)registerDatabaseName:(NSString *)inDatabaseName
-{
-	NSString *databaseName = [inDatabaseName lowercaseString];
-	if (databaseName == nil) return NO;
-	
-	BOOL result = NO;
-	YAPUnfairLockLock(&registrationLock);
-	{
-		if (![registeredDatabaseNames containsObject:databaseName])
-		{
-			[registeredDatabaseNames addObject:databaseName];
-			result = YES;
-		}
-	}
-	YAPUnfairLockUnlock(&registrationLock);
-	
-	return result;
-}
-
-+ (void)deregisterDatabaseName:(NSString *)inDatabaseName
-{
-	NSString *databaseName = [inDatabaseName lowercaseString];
-	if (databaseName == nil) return;
-	
-	YAPUnfairLockLock(&registrationLock);
-	{
-		[registeredDatabaseNames removeObject:databaseName];
-	}
-	YAPUnfairLockUnlock(&registrationLock);
-}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Image Helpers
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if TARGET_OS_IOS
 + (nullable UIImage *)imageNamed:(NSString *)name
 {
 	return [UIImage imageNamed:name inBundle:[self frameworkBundle] compatibleWithTraitCollection:nil];
+}
+
+- (nullable UIImage *)imageNamed:(NSString *)name
+{
+	return [[self class] imageNamed:name];
 }
 #endif
 
