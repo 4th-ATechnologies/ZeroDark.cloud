@@ -679,32 +679,82 @@ class MyMessagesViewController: MessagesViewController,
 			
 			guard
 				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
+				let conversationNode = cloudTransaction.linkedNode(forConversationID: conversationID),
 				let conversation = transaction.conversation(id: conversationID),
 				let remoteUser = transaction.user(id: conversation.remoteUserID)
 			else {
 				return
 			}
 			
-			// Step 1 of 3:
+			// Step 1 of 4:
 			//
-			// Write the message to the database
+			// Write the message to the database.
+			//
+			// @see Message.swift => `extension YapDatabaseReadWriteTransaction {...}`
 			
 			transaction.setMessage(message)
 			
-			// Step 2 of 3:
+			// Step 2 of 4:
+			//
+			// Determine graph dependencies.
+			//
+			// ZeroDark.cloud is a general purpose framework.
+			// It enforces treesystem dependencies automatically, but app-specific dependencies are on us.
+			//
+			// Imagine the following treesystem:
+			//
+			//       (A)
+			//       / \
+			//    (B)   (C)
+			//    / \
+			//  (D) (E)
+			//
+			// The framework knows that it cannot upload (D) until after its uploaded (B).
+			// That's obvious from the treesystem itself.
+			// But what about (D) vs (E) ? Can it upload them both at the same time ?
+			//
+			// There's nothing in the treesystem that says those 2 nodes cannot be uploaded simultaneously.
+			// And since its a general purpose framework, it doesn't make that assumption.
+			//
+			// But in our particular case, (D) & (E) are messages.
+			// And we want to maintain the order of the messages.
+			//
+			// I.E. this is an app-specific constraint we want to enforce.
+			//
+			// Luckily it's easy to achieve this using dependencies.
+			// Here's what our treesystem looks like:
+			//
+			//         (home)
+			//          /  \
+			//   (convoA)  (convoB)
+			//     /  \
+			// (msg1) (msg2)
+			//
+			// Before we add the msg2 node, we can simply ask the system for a list of pending operations where:
+			// - op.node is a child of (convoA)
+			//
+			// Thus, if msg1 is still in the push queue, we can now use it as a dependency.
+			//
+			// We also take similar approach for copying nodes to the recipient's inbox.
+			
+			let prvMsgOps = cloudTransaction.pendingPutOperations(withParentID: conversationNode.uuid)
+			
+			let prvCopyOps = cloudTransaction.pendingCopyOperations(withRecipientInbox: remoteUser)
+			
+			// Step 3 of 4:
 			//
 			// Create node in the treesystem, using path:
 			//
 			// home://conversationID/uuid
 			
 			let msgNodeName = UUID().uuidString // don't care - doesn't matter to us
-			let localPath = ZDCTreesystemPath(pathComponents: [conversationID, msgNodeName])
+			let msgPath = ZDCTreesystemPath(pathComponents: [conversationID, msgNodeName])
 			
-			let node: ZDCNode!
+			let msgNode: ZDCNode!
 			do {
-				node = try cloudTransaction.createNode(withPath: localPath)
+				msgNode = try cloudTransaction.createNode(withPath: msgPath, dependencies: prvMsgOps)
 				
-				try cloudTransaction.linkNodeID(node.uuid, toMessageID: message.uuid)
+				try cloudTransaction.linkNodeID(msgNode.uuid, toMessageID: message.uuid)
 				
 			} catch {
 				print("Error creating message node: \(error)")
@@ -714,13 +764,13 @@ class MyMessagesViewController: MessagesViewController,
 				return
 			}
 			
-			// Step 3 of 3:
+			// Step 4 of 4:
 			//
 			// After we've uploaded the message to our treesystem,
 			// use a server-side-copy operation to put the message into the recipients inbox.
 		
 			do {
-				try cloudTransaction.copy(node, toRecipientInbox: remoteUser)
+				try cloudTransaction.copy(msgNode, toRecipientInbox: remoteUser, withDependencies: prvCopyOps)
 				
 			} catch {
 				print("Error creating server-side-copy operation: \(error)")
@@ -859,19 +909,69 @@ class MyMessagesViewController: MessagesViewController,
 				
 				guard
 					let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
+					let conversationNode = cloudTransaction.linkedNode(forConversationID: conversationID),
 					let conversation = transaction.conversation(id: conversationID),
 					let remoteUser = transaction.user(id: conversation.remoteUserID)
 				else {
 					return
 				}
 				
-				// Step 1 of 3:
+				// Step 1 of 4:
 				//
 				// Write the message to the database
+				//
+				// @see Message.swift => `extension YapDatabaseReadWriteTransaction {...}`
 				
 				transaction.setMessage(message)
 				
-				// Step 2 of 3:
+				// Step 2 of 4:
+				//
+				// Determine graph dependencies.
+				//
+				// ZeroDark.cloud is a general purpose framework.
+				// It enforces treesystem dependencies automatically, but app-specific dependencies are on us.
+				//
+				// Imagine the following treesystem:
+				//
+				//       (A)
+				//       / \
+				//    (B)   (C)
+				//    / \
+				//  (D) (E)
+				//
+				// The framework knows that it cannot upload (D) until after its uploaded (B).
+				// That's obvious from the treesystem itself.
+				// But what about (D) vs (E) ? Can it upload them both at the same time ?
+				//
+				// There's nothing in the treesystem that says those 2 nodes cannot be uploaded simultaneously.
+				// And since its a general purpose framework, it doesn't make that assumption.
+				//
+				// But in our particular case, (D) & (E) are messages.
+				// And we want to maintain the order of the messages.
+				//
+				// I.E. this is an app-specific constraint we want to enforce.
+				//
+				// Luckily it's easy to achieve this using dependencies.
+				// Here's what our treesystem looks like:
+				//
+				//         (home)
+				//          /  \
+				//   (convoA)  (convoB)
+				//     /  \
+				// (msg1) (msg2)
+				//
+				// Before we add the msg2 node, we can simply ask the system for a list of pending operations where:
+				// - op.node is a child of (convoA)
+				//
+				// Thus, if msg1 is still in the push queue, we can now use it as a dependency.
+				//
+				// We also take similar approach for copying nodes to the recipient's inbox.
+				
+				let prvMsgOps = cloudTransaction.pendingPutOperations(withParentID: conversationNode.uuid)
+				
+				let prvCopyOps = cloudTransaction.pendingCopyOperations(withRecipientInbox: remoteUser)
+				
+				// Step 3 of 4:
 				//
 				// Create the message node and insert the attachment node.
 				
@@ -880,7 +980,7 @@ class MyMessagesViewController: MessagesViewController,
 				
 				let msgNode: ZDCNode!
 				do {
-					msgNode = try cloudTransaction.createNode(withPath: localPath)
+					msgNode = try cloudTransaction.createNode(withPath: localPath, dependencies: prvMsgOps)
 					
 					attachmentNode.parentID = msgNode.uuid
 					try cloudTransaction.insertNode(attachmentNode)
@@ -895,7 +995,7 @@ class MyMessagesViewController: MessagesViewController,
 					return
 				}
 				
-				// Step 3 of 3:
+				// Step 4 of 4:
 				//
 				// After we've uploaded the message to our treesystem,
 				// use a server-side-copy operation to put the message into the recipients inbox.
@@ -918,11 +1018,12 @@ class MyMessagesViewController: MessagesViewController,
 					// We're going with option 2 here.
 					//
 					let uploadOps = cloudTransaction.addedOperations()
+					let depOps = prvCopyOps + uploadOps
 					
 					let copyMsgNode =
 						try cloudTransaction.copy( msgNode,
 						         toRecipientInbox: remoteUser,
-						         withDependencies: uploadOps)
+						         withDependencies: depOps)
 					
 					try cloudTransaction.copy( attachmentNode,
 					              toRecipient: remoteUser,

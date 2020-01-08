@@ -195,11 +195,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * The eTag is used for put-node-data operations.
- * It designates the currently know version of the data in the cloud.
+ * It designates the currently known version of the data in the cloud.
  *
  * For example, imagine the current version of a node is 'A'.
  * If we queue an operation to update that node, then our operation will specify
- * that we expect the current versio of the node to be 'A'.
+ * that we expect the current version of the node to be 'A'.
  * When the operation hits the cloud, that operation will succeed as long as the node is still at 'A'.
  * However, if the node has been updated by another device, we may discover it's actually at 'B' now.
  *

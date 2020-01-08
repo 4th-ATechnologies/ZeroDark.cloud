@@ -239,7 +239,7 @@ static ZDCNodeManager *sharedInstance = nil;
 	ZDCTrunkNode *trunkNode = nil;
 	NSMutableArray<NSString *> *pathComponents = [NSMutableArray arrayWithCapacity:8];
 	
-	while (YES)
+	while (node)
 	{
 		if ([node isKindOfClass:[ZDCTrunkNode class]])
 		{

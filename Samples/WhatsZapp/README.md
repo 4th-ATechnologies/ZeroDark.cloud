@@ -161,6 +161,10 @@ If Bob responds to Alice, the reverse flow occurs:
 
 ## Designing for the cloud
 
+The treesystem design for this sample app is simply one of many designs that are possible. You might have an idea for a better design.
+
+
+
 When you design your treesystem, what you're doing is optimizing for the cloud. For example, imagine we didn't bother with conversation nodes. Every single message that Alice receives (whether from Bob, Carol or whoever), just sits in her inbox. But now fast-forward 12 months. Alice has 100,000 messages sitting in her inbox. And she just bought a new phone. Then she logs into your app on this brand new phone...
 
 Leaving all messages in the inbox container means the app has to download all 100,000 messages. Without doing so, we can't be sure who Alice has conversations with. Now contrast that with our optimized design above.

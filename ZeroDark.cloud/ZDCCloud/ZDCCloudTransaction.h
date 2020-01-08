@@ -177,6 +177,27 @@ typedef NS_OPTIONS(NSUInteger, ZDCNodeComponents) {
 NS_SWIFT_NAME(createNode(withPath:));
 
 /**
+ * Creates a new node with the given path,
+ * and queues upload operation(s) to push the node to the cloud.
+ *
+ * @param path
+ *   The treesystem path of the node.
+ *
+ * @param dependencies
+ *   If the upload operation should be dependent upon other operations, you may pass those dependencies here.
+ *
+ * @param outError
+ *   Set to nil on success.
+ *   Otherwise returns an error that explains what went wrong.
+ *
+ * @return The newly created node.
+ */
+- (nullable ZDCNode *)createNodeWithPath:(ZDCTreesystemPath *)path
+                            dependencies:(nullable NSArray<ZDCCloudOperation*> *)dependencies
+                                   error:(NSError *_Nullable *_Nullable)outError
+NS_SWIFT_NAME(createNode(withPath:dependencies:));
+
+/**
  * Inserts the given node into the treesystem (as configured),
  * and queues upload operation(s) to push the node to the cloud.
  *
@@ -456,6 +477,9 @@ NS_SWIFT_NAME(insertNode(_:));
  * On success, a temporary node is returned.
  * The temporary node isn't part of the treesystem, but it is stored in the database.
  * This node will be automatically deleted after the operation has been completed.
+ *
+ * @note You can also add dependencies via the `-modifyOperation:` method,
+ *       available via the superclass (YapDatabaseCloudCoreTransaction).
  *
  * @param node
  *   The node to copy.
@@ -922,6 +946,8 @@ NS_SWIFT_NAME(recursiveAddShareItem(_:forUserID:nodeID:));
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Returns the operations that were added to the push queue in THIS transaction.
+ *
  * When you create, modify or delete a node, the system creates and queues operations
  * to push these changes to the cloud. The operations are stored safely in the database,
  * and are executed by the PushManager.
@@ -929,15 +955,14 @@ NS_SWIFT_NAME(recursiveAddShareItem(_:forUserID:nodeID:));
  * Occassionally you may want to tweak an operation's dependencies or priority.
  * You can do that at any time using the underlying functions exposed by YapDatabaseCloudCore.
  *
- * (See: [YapDatabaseCloudCoreTransaction enumerateAddedOperationsUsingBlock:])
- *
- * However, the most common use case is to tweak these within the same database commit
- * in which you created the operation(s). This method returns the operations that were
- * added to the queue in THIS transaction.
+ * @note ZDCCloudTransaction extends YapDatabaseCloudCoreTransaction.
+ *       So you have full access to the public API of YapDatabaseCloudCoreTransaction too.
  */
 - (NSArray<ZDCCloudOperation*> *)addedOperations;
 
 /**
+ * Returns the operations that were added to the push queue in THIS transaction (for the given nodeID).
+ *
  * When you create, modify or delete a node, the system creates and queues operations
  * to push these changes to the cloud. The operations are stored safely in the database,
  * and are executed by the PushManager.
@@ -945,11 +970,8 @@ NS_SWIFT_NAME(recursiveAddShareItem(_:forUserID:nodeID:));
  * Occassionally you may want to tweak an operation's dependencies or priority.
  * You can do that at any time using the underlying functions exposed by YapDatabaseCloudCore.
  *
- * (See: [YapDatabaseCloudCoreTransaction enumerateAddedOperationsUsingBlock:])
- *
- * However, the most common use case is to tweak these within the same database commit
- * in which you created the operation(s). This method returns the operations that were
- * added to the queue in THIS transaction.
+ * @note ZDCCloudTransaction extends YapDatabaseCloudCoreTransaction.
+ *       So you have full access to the public API of YapDatabaseCloudCoreTransaction too.
  *
  * @param nodeID
  *   The node whose operations you're looking for. (nodeID == ZDCNode.uuid)
@@ -961,6 +983,46 @@ NS_SWIFT_NAME(recursiveAddShareItem(_:forUserID:nodeID:));
  * This information may be useful in determining why your data is out-of-sync with the cloud.
  */
 - (BOOL)hasPendingDataUploadsForNodeID:(NSString *)nodeID;
+
+/**
+ * Returns a list of pending ZDCCloudOperations for which:
+ * - op.type == ZDCCloudOperationType_Put
+ * - op.nodeID matches the list of childNodeIDs for the given parent node.
+ *
+ * Occassionally you may want to tweak an operation's dependencies or priority.
+ * You can do that at any time using the underlying functions exposed by YapDatabaseCloudCore.
+ *
+ * @note ZDCCloudTransaction extends YapDatabaseCloudCoreTransaction.
+ *       So you have full access to the public API of YapDatabaseCloudCoreTransaction too.
+ *
+ * If this method doesn't do exactly what you want, you can easily create your own version of it.
+ * Since ZDCCloudTransaction extends YapDatabaseCloudCoreTransaction,
+ * you can use methods such as `[YapDatabaseCloudCoreTransaction enumerateOperationsUsingBlock:]` to perform
+ * your own enumeration with your own filters.
+ */
+- (NSArray<ZDCCloudOperation*> *)pendingPutOperationsWithParentID:(NSString *)parentNodeID;
+
+/**
+ * Returns a list of pending ZDCCloudOperations for which:
+ * - op.type == ZDCCloudOperationType_CopyLeaf
+ * - op.dstCloudLocator matches the given recipients inbox
+ *
+ * Occassionally you may want to tweak an operation's dependencies or priority.
+ * You can do that at any time using the underlying functions exposed by YapDatabaseCloudCore.
+ *
+ * @note ZDCCloudTransaction extends YapDatabaseCloudCoreTransaction.
+ *       So you have full access to the public API of YapDatabaseCloudCoreTransaction too.
+ *
+ * If this method doesn't do exactly what you want, you can easily create your own version of it.
+ * Since ZDCCloudTransaction extends YapDatabaseCloudCoreTransaction,
+ * you can use methods such as `[YapDatabaseCloudCoreTransaction enumerateOperationsUsingBlock:]` to perform
+ * your own enumeration with your own filters.
+ */
+- (NSArray<ZDCCloudOperation*> *)pendingCopyOperationsWithRecipientInbox:(ZDCUser *)recipient;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Conflict Resolution
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Enumerates all the operations in the queue,

@@ -193,6 +193,18 @@
 - (nullable ZDCNode *)createNodeWithPath:(ZDCTreesystemPath *)path
                                    error:(NSError *_Nullable *_Nullable)outError
 {
+	return [self createNodeWithPath:path dependencies:nil error:outError];
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (nullable ZDCNode *)createNodeWithPath:(ZDCTreesystemPath *)path
+                            dependencies:(nullable NSArray<ZDCCloudOperation*> *)dependencies
+                                   error:(NSError *_Nullable *_Nullable)outError
+{
 	ZDCLogAutoTrace();
 	
 	// Proper API usage check
@@ -243,6 +255,7 @@
 	}
 	
 	NSString *localUserID = [self localUserID];
+	NSString *treeID = [self treeID];
 	
 	ZDCNode *node = [[ZDCNode alloc] initWithLocalUserID:localUserID];
 	node.parentID = parentNode.uuid;
@@ -252,8 +265,36 @@
 	
 	[rwTransaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
 	
-	[self queuePutOperationForNodeRcrd:node];
-	[self queuePutOperationForNodeData:node];
+	// Create & queue operation(s)
+	
+	ZDCCloudLocator *cloudLocator_bare =
+	  [[ZDCCloudPathManager sharedInstance] cloudLocatorForNode: node
+	                                                transaction: databaseTransaction];
+	
+	ZDCCloudOperation *op_rcrd =
+	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
+	                                          treeID: treeID
+	                                         putType: ZDCCloudOperationPutType_Node_Rcrd];
+	
+	op_rcrd.nodeID = node.uuid;
+	op_rcrd.cloudLocator = [cloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Rcrd];
+	
+	ZDCCloudOperation *op_data =
+	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
+	                                          treeID: treeID
+	                                         putType: ZDCCloudOperationPutType_Node_Data];
+	
+	op_data.nodeID = node.uuid;
+	op_data.cloudLocator = [cloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Data];
+	op_data.eTag = node.eTag_data;
+	
+	if (dependencies.count > 0) {
+		[op_rcrd addDependencies:dependencies];
+		[op_data addDependencies:dependencies];
+	}
+	
+	[self addOperation:op_rcrd];
+	[self addOperation:op_data];
 	
 	if (outError) *outError = nil;
 	return node;
@@ -289,6 +330,7 @@
 	}
 	
 	NSString *localUserID = [self localUserID];
+	NSString *treeID = [self treeID];
 	
 	if (![node.localUserID isEqualToString:localUserID])
 	{
@@ -342,25 +384,11 @@
 	
 	[rwTransaction setObject:node forKey:node.uuid inCollection:kZDCCollection_Nodes];
 	
-	[self queuePutOperationForNodeRcrd:node];
-	[self queuePutOperationForNodeData:node];
+	// Create & queue operation(s)
 	
-	return YES;
-}
-
-- (nullable ZDCCloudOperation *)queuePutOperationForNodeRcrd:(ZDCNode *)node
-{
-	NSString *localUserID = [self localUserID];
-	NSString *treeID = [self treeID];
-	
-	ZDCCloudLocator *cloudLocator_rcrd =
+	ZDCCloudLocator *cloudLocator_bare =
 	  [[ZDCCloudPathManager sharedInstance] cloudLocatorForNode: node
-	                                              fileExtension: kZDCCloudFileExtension_Rcrd
 	                                                transaction: databaseTransaction];
-	
-	if (cloudLocator_rcrd == nil) {
-		return nil;
-	}
 	
 	ZDCCloudOperation *op_rcrd =
 	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
@@ -368,37 +396,25 @@
 	                                         putType: ZDCCloudOperationPutType_Node_Rcrd];
 	
 	op_rcrd.nodeID = node.uuid;
-	op_rcrd.cloudLocator = cloudLocator_rcrd;
+	op_rcrd.cloudLocator = [cloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Rcrd];
 	
 	[self addOperation:op_rcrd];
-	return op_rcrd;
-}
-
-- (nullable ZDCCloudOperation *)queuePutOperationForNodeData:(ZDCNode *)node
-{
-	NSString *localUserID = [self localUserID];
-	NSString *treeID = [self treeID];
 	
-	if (node.isPointer) {
-		return nil;
+	if (!node.isPointer)
+	{
+		ZDCCloudOperation *op_data =
+		  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
+																treeID: treeID
+															  putType: ZDCCloudOperationPutType_Node_Data];
+		
+		op_data.nodeID = node.uuid;
+		op_data.cloudLocator = [cloudLocator_bare copyWithFileNameExt:kZDCCloudFileExtension_Data];
+		op_data.eTag = node.eTag_data;
+		
+		[self addOperation:op_data];
 	}
 	
-	ZDCCloudLocator *cloudLocator_data =
-	  [[ZDCCloudPathManager sharedInstance] cloudLocatorForNode: node
-	                                              fileExtension: kZDCCloudFileExtension_Data
-	                                                transaction: databaseTransaction];
-	
-	ZDCCloudOperation *op_data =
-	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
-	                                          treeID: treeID
-	                                         putType: ZDCCloudOperationPutType_Node_Data];
-	
-	op_data.nodeID = node.uuid;
-	op_data.cloudLocator = cloudLocator_data;
-	op_data.eTag = node.eTag_data;
-	
-	[self addOperation:op_data];
-	return op_data;
+	return YES;
 }
 
 /**
@@ -1382,7 +1398,7 @@
 	              withName: nil
 	            parentNode: nil
 	          dependencies: dependencies
-	                error: outError];
+	                 error: outError];
 }
 
 /**
@@ -1834,7 +1850,22 @@
 	                  forKey: pointerNode.uuid
 	            inCollection: kZDCCollection_Nodes];
 	
-	[self queuePutOperationForNodeRcrd:pointerNode];
+	// Create & queue operation(s)
+	
+	ZDCCloudLocator *cloudLocator_rcrd =
+	  [[ZDCCloudPathManager sharedInstance] cloudLocatorForNode: pointerNode
+	                                              fileExtension: kZDCCloudFileExtension_Rcrd
+	                                                transaction: databaseTransaction];
+	
+	ZDCCloudOperation *op_rcrd =
+	  [[ZDCCloudOperation alloc] initWithLocalUserID: localUserID
+	                                          treeID: treeID
+	                                         putType: ZDCCloudOperationPutType_Node_Rcrd];
+	
+	op_rcrd.nodeID = pointerNode.uuid;
+	op_rcrd.cloudLocator = cloudLocator_rcrd;
+	
+	[self addOperation:op_rcrd];
 	
 	if (outError) *outError = nil;
 	return pointerNode;
@@ -2531,6 +2562,82 @@
 	
 	return changesets;
 }
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (NSArray<ZDCCloudOperation*> *)pendingPutOperationsWithParentID:(NSString *)parentNodeID
+{
+	NSMutableSet *childNodeIDs = [NSMutableSet set];
+	
+	[[ZDCNodeManager sharedInstance] enumerateNodeIDsWithParentID: parentNodeID
+	                                                  transaction: databaseTransaction
+	                                                   usingBlock:^(NSString *childNodeID, BOOL *stop)
+	{
+		[childNodeIDs addObject:childNodeID];
+	}];
+	
+	NSMutableArray<ZDCCloudOperation*> *pendingOps = [NSMutableArray array];
+	
+	[self enumerateOperationsUsingBlock:^(YapDatabaseCloudCorePipeline *pipeline,
+	                                      YapDatabaseCloudCoreOperation *operation, NSUInteger graphIdx, BOOL *stop)
+	{
+		if ([operation isKindOfClass:[ZDCCloudOperation class]])
+		{
+			__unsafe_unretained ZDCCloudOperation *op = (ZDCCloudOperation *)operation;
+			
+			if (op.type == ZDCCloudOperationType_Put && op.nodeID && [childNodeIDs containsObject:op.nodeID])
+			{
+				[pendingOps addObject:op];
+			}
+		}
+	}];
+	
+	return pendingOps;
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCCloudTransaction.html
+ */
+- (NSArray<ZDCCloudOperation*> *)pendingCopyOperationsWithRecipientInbox:(ZDCUser *)recipient
+{
+	AWSRegion region = recipient.aws_region;
+	NSString *bucket = recipient.aws_bucket;
+	NSString *treeID = [self treeID];
+	NSString *dirPrefix = kZDCDirPrefix_MsgsIn;
+	
+	NSMutableArray<ZDCCloudOperation*> *pendingOps = [NSMutableArray array];
+	
+	[self enumerateOperationsUsingBlock:^(YapDatabaseCloudCorePipeline *pipeline,
+	                                      YapDatabaseCloudCoreOperation *operation, NSUInteger graphIdx, BOOL *stop)
+	{
+		if ([operation isKindOfClass:[ZDCCloudOperation class]])
+		{
+			__unsafe_unretained ZDCCloudOperation *op = (ZDCCloudOperation *)operation;
+			
+			if (op.type == ZDCCloudOperationType_CopyLeaf)
+			{
+				if (op.dstCloudLocator.region == region &&
+				   [op.dstCloudLocator.bucket isEqual:bucket] &&
+				   [op.dstCloudLocator.cloudPath.treeID isEqual:treeID] &&
+				   [op.dstCloudLocator.cloudPath.dirPrefix isEqual:dirPrefix])
+				{
+					[pendingOps addObject:op];
+				}
+			}
+		}
+	}];
+	
+	return pendingOps;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Conflict Resolution
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * See header file for description.
