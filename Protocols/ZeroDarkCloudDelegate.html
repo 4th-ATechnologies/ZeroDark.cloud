@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           ZeroDarkCloud Docs
         </a>
-         (98% documented)
+         (99% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -364,7 +364,7 @@
                 <a class="nav-group-task-link" href="../Classes/ZDCSearchResult.html">ZDCSearchResult</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Classes/ZDCSyncManagerNotificationInfo.html">ZDCSyncManagerNotificationInfo</a>
+                <a class="nav-group-task-link" href="../Classes/ZDCSyncStatusNotificationInfo.html">ZDCSyncStatusNotificationInfo</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/ZDCUserDisplay.html">ZDCUserDisplay</a>
@@ -450,18 +450,6 @@
                 <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@ZDCProgressTypeKey">ZDCProgressTypeKey</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@ZDCPullStartedNotification">ZDCPullStartedNotification</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@ZDCPullStoppedNotification">ZDCPullStoppedNotification</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@ZDCPushStartedNotification">ZDCPushStartedNotification</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@ZDCPushStoppedNotification">ZDCPushStoppedNotification</a>
-              </li>
-              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@ZDCShareKeyType_Passphrase">ZDCShareKeyType_Passphrase</a>
               </li>
               <li class="nav-group-task">
@@ -486,7 +474,7 @@
                 <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@ZDCStreamUnexpectedFileSize">ZDCStreamUnexpectedFileSize</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@ZDCSyncingNodeIDsChangedNotification">ZDCSyncingNodeIDsChangedNotification</a>
+                <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@ZDCSyncStatusChangedNotification">ZDCSyncStatusChangedNotification</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@kNotificationsKey">kNotificationsKey</a>
@@ -579,16 +567,13 @@
                 <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@kZDCProgressManagerChanges">kZDCProgressManagerChanges</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@kZDCSyncManagerNotificationInfo">kZDCSyncManagerNotificationInfo</a>
+                <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@kZDCSyncStatusNotificationInfo">kZDCSyncStatusNotificationInfo</a>
               </li>
             </ul>
           </li>
           <li class="nav-group-name">
             <a class="nav-group-name-link" href="../Other%20Enums.html">Other Enumerations</a>
             <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Enums/Mnemonic_Algorithm.html">Mnemonic_Algorithm</a>
-              </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Enums/ZDCChildProgressType.html">ZDCChildProgressType</a>
               </li>
@@ -642,6 +627,9 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Enums/ZDCSharePermission.html">ZDCSharePermission</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCSyncStatusNotificationType.html">ZDCSyncStatusNotificationType</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Enums/ZDCTreesystemTrunk.html">ZDCTreesystemTrunk</a>
@@ -736,21 +724,22 @@ and facilitates communication about cloud changes.</p>
                       <div class="abstract">
                         <p>When the PushManager is ready to upload a node, it uses this method to request the node&rsquo;s data.</p>
 
-<p>The framework supports everything from empty nodes, to multi-gigabyte nodes.
+<p>You supply the node&rsquo;s data, and the framework handles encrypting the data &amp; uploading it to the cloud.</p>
+
+<p>In terms of size, the framework supports everything from empty (zero-length) nodes, to multi-gigabyte nodes.
  The <code><a href="../Classes/ZDCData.html">ZDCData</a></code> class helps to support this diversity by providing multiple ways
  in which you can reference the data that is to be encrypted &amp; uploaded.</p>
 
-<p>For small nodes, you can simply serialize the data, and create a ZDCData holding those bytes.
- For larger files, you can provide a reference to a fileURL.</p>
+<p>For small nodes, you can simply serialize the data, and create a ZDCData holding those in-memory bytes.
+ For large files, you can provide a reference via a fileURL.</p>
 
-<p>The framework also supports files that are stored on disk in an encrypted format via <code><a href="../Classes/ZDCCryptoFile.html">ZDCCryptoFile</a></code>.
+<p>The framework also supports files that are stored to disk in an encrypted format via <code><a href="../Classes/ZDCCryptoFile.html">ZDCCryptoFile</a></code>.
  For example, you can use the <code><a href="../Classes/ZDCDiskManager.html">ZDCDiskManager</a></code> to store files on disk in an encrypted manner.
  And files stored by the ZDCDiskManager can be easily uploaded by initializing a ZDCData
  instance from a ZDCCryptoFile returned from the DiskManager.</p>
 <div class="aside aside-note">
     <p class="aside-title">Note</p>
-    <p>The data that you return will be properly encrypted by the framework (as needed)
-   before uploading it to the cloud.</p>
+    <p>The data that you return will be properly encrypted by the framework before uploading it to the cloud.</p>
 
 </div>
 
@@ -782,7 +771,7 @@ and facilitates communication about cloud changes.</p>
                               </td>
                               <td>
                                 <div>
-                                  <p>The node that is being uploaded</p>
+                                  <p>The node that is being uploaded.</p>
                                 </div>
                               </td>
                             </tr>
@@ -835,7 +824,9 @@ and facilitates communication about cloud changes.</p>
                       <div class="abstract">
                         <p>When the PushManager is ready to upload a node, it uses this method request the node&rsquo;s optional metadata.</p>
 
-<p>The framework supports everything from empty nodes, to multi-gigabyte nodes.
+<p>You supply the node&rsquo;s metadata, and the framework handles encrypting it &amp; uploading it to the cloud.</p>
+
+<p>In terms of size, the framework supports everything from empty (zero-length) nodes, to multi-gigabyte nodes.
  If you&rsquo;re storing large files in the cloud, you may want to include an additional metadata section.
  By doing so, you allow other devices to download the metadata independently from the (large) full node.</p>
 
@@ -848,8 +839,7 @@ and facilitates communication about cloud changes.</p>
   So it&rsquo;s impossible to ask the server to extract any information, such as metadata or a thumbnail.)</p>
 <div class="aside aside-note">
     <p class="aside-title">Note</p>
-    <p>The data that you return will be properly encrypted by the framework (as needed)
-   before uploading it to the cloud.</p>
+    <p>The data that you return will be properly encrypted by the framework before uploading it to the cloud.</p>
 
 </div>
 
@@ -934,16 +924,18 @@ and facilitates communication about cloud changes.</p>
                       <div class="abstract">
                         <p>When the PushManager is ready to upload a node, it uses this method to request the node&rsquo;s optional thumbnail.</p>
 
-<p>The framework supports everything from empty nodes, to multi-gigabyte nodes.
- If you&rsquo;re storing large files in the cloud, you may want to include an additional metadata section.
+<p>You supply the node&rsquo;s thumbnail, and the framework handles encrypting it &amp; uploading it to the cloud.</p>
+
+<p>In terms of size, the framework supports everything from empty (zero-length) nodes, to multi-gigabyte nodes.
+ If you&rsquo;re storing large files in the cloud, you may want to include an additional thumbnail section.
  By doing so, you allow other devices to download the thumbnail independently from the (large) full node.</p>
 
 <p>For example, say the node is a large image from a modern camera.
  You could also include a small thumbnail version of the image.
  This would allow other devices to download just the thumbnail,
  and then have everything needed to display the image within your UI.
- You&rsquo;ll use less bandwidth, and the client applications will use less storage for each image.
- The full version of the image can be downloaded on demand.</p>
+ The app will then use less bandwidth &amp; less disk storage for each image.
+ The full version of the image can be downloaded on demand, as needed.</p>
 
 <p>(Remember, the server cannot read the content that you store in the cloud.
   So it&rsquo;s impossible to ask the server to extract any information, such as metadata or a thumbnail.)</p>
@@ -1038,16 +1030,6 @@ and facilitates communication about cloud changes.</p>
 <p>When this method is called, the ZDCNode instance has already been updated within the database.
  This method is being called within the same atomic transaction that modifies the node in the database.</p>
 
-<p>The information that may be useful to you is:</p>
-
-<ul>
-<li>node.eTag_data</li>
-<li>node.lastModified_data</li>
-</ul>
-
-<p>In particular, storing the <code>eTag_data</code> property in your custom model objects
- will allow you to determine if your object is behind the server, and requires a download.</p>
-
 <p>@path
    The location of the node within the treesystem.</p>
 
@@ -1127,41 +1109,7 @@ and facilitates communication about cloud changes.</p>
                       <div class="abstract">
                         <p>When the PushManager is ready to send an outgoing message, it uses this method to request the message data.</p>
 
-<p>You are allowed to send messages that contain an unlimited amount of data, however,
- there are restrictions regarding the location of the data.</p>
-
-<p>For example, imagine that Alice wants to send a 1 gigabyte file to Bob.</p>
-
-<p>The following is allowed:</p>
-
-<ul>
-<li>Alice stores the 1 gigabyte file somewhere in her own treesystem</li>
-<li>She gives Bob read permission to this file</li>
-<li>Then she sends a message to Bob that contains a link to the file</li>
-</ul>
-
-<p>The following is also allowed:</p>
-
-<ul>
-<li>Bob creates a <q>folder</q> in his treesystem, and gives Alice write permission</li>
-<li>Alice then stores the 1 gigabyte file in that <q>folder</q> (within Bob&rsquo;s treesystem)</li>
-</ul>
-
-<p>However, the following is NOT allowed:</p>
-
-<ul>
-<li>Alice sends a message to Bob that contains the 1 gigabyte file</li>
-</ul>
-
-<p>In other words, raw messages are limited to a maximum of 1 MiB (1,048,576 bytes).
- However there are no restrictions on the size of attachments.
- And your app is free to decide exactly where &amp; how attachments are stored.</p>
-
-<p>One common solution is to store attachments in the <q>temp</q> container.
- For example, Alice would store that 1 gig file in temp,
- and her message to Bob would contain a reference to the file.
- She may be even set a <q>burn</q> time on the 1 gig file so it gets
- deleted automatically by the server after 30 days.</p>
+<p>You supply the message data, and the framework handles encrypting it &amp; uploading it to the cloud.</p>
 
                       </div>
                       <div class="declaration">
@@ -2154,8 +2102,8 @@ Recall that the DATA file stores the node&rsquo;s contents (metadata, thumbnail 
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2020 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2020-01-05)</p>
-      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.11.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+      <p>&copy; 2020 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2020-01-09)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.11.2</a>.</p>
     </section>
   </body>
 </div>

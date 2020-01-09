@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>ZDCGraftInvite Class Reference</title>
+    <title>ZDCSyncStatusNotificationType Enumeration Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset="utf-8">
@@ -14,9 +14,9 @@
   </head>
   <body>
 
-    <a name="//apple_ref/objc/Class/ZDCGraftInvite" class="dashAnchor"></a>
+    <a name="//apple_ref/objc/Enum/ZDCSyncStatusNotificationType" class="dashAnchor"></a>
 
-    <a title="ZDCGraftInvite Class Reference"></a>
+    <a title="ZDCSyncStatusNotificationType Enumeration Reference"></a>
 
     <header class="header">
       <p class="header-col header-col--primary">
@@ -38,7 +38,7 @@
     <p class="breadcrumbs">
       <a class="breadcrumb" href="../index.html">ZeroDarkCloud Reference</a>
       <img class="carat" src="../img/carat.png" />
-      ZDCGraftInvite Class Reference
+      ZDCSyncStatusNotificationType Enumeration Reference
     </p>
 
     <div class="content-wrapper">
@@ -685,28 +685,15 @@
 
         <section class="section">
           <div class="section-content">
-            <h1>ZDCGraftInvite</h1>
+            <h1>ZDCSyncStatusNotificationType</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight objective_c"><code><span class="k">@interface</span> <span class="nc">ZDCGraftInvite</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="o">&lt;</span><span class="n">NSCopying</span><span class="o">&gt;</span></code></pre>
+                  <pre class="highlight objective_c"><code><span class="k">enum</span> <span class="n">ZDCSyncStatusNotificationType</span> <span class="p">{}</span></code></pre>
 
                 </div>
               </div>
-            <p>A GraftInvite encompasses the information required to complete a graft.</p>
-
-<p>For example, if Alice wants to collaborate with Bob,
- then she wants to share a branch of her treesystem with Bob.
- There are 2 steps required for Alice.</p>
-
-<p>First, she needs to give Bob permission to access her branch.
- She can accomplish this with <code><a href="../Classes/ZDCCloudTransaction.html#/c:objc(cs)ZDCCloudTransaction(im)recursiveAddShareItem:forUserID:nodeID:">-[ZDCCloudTransaction recursiveAddShareItem:forUserID:nodeID:]</a></code>.</p>
-
-<p>Second, she needs to send a message to Bob.
- The message is some kind of application-specific <q>invite</q>.
- And the invite must contain, at a minimum, the information contained in this class.</p>
-
-<p>After Bob receives the invite message, he can accept the invite via
- <code>-[ZDCCloudTransaction graftNodeWithLocalPath:::::]</code>.</p>
+            <p>The SyncManager broadcasts several types of notifications for changes in the sync state.
+This tells you what change caused the notification.</p>
 
           </div>
         </section>
@@ -718,9 +705,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCGraftInvite(im)initWithCloudID:cloudPath:"></a>
-                    <a name="//apple_ref/objc/Method/-initWithCloudID:cloudPath:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCGraftInvite(im)initWithCloudID:cloudPath:">-initWithCloudID:cloudPath:</a>
+                    <a name="/c:@E@ZDCSyncStatusNotificationType@ZDCSyncStatusNotificationType_PullStarted"></a>
+                    <a name="//apple_ref/objc/Case/ZDCSyncStatusNotificationType_PullStarted" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@E@ZDCSyncStatusNotificationType@ZDCSyncStatusNotificationType_PullStarted">ZDCSyncStatusNotificationType_PullStarted</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -728,20 +715,20 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Standard initializer.</p>
+                        <p>This notification type is broadcast when changes have been discovered in the cloud,
+and the PullManager has started working to update the treesystem state.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithCloudID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">cloudID</span>
-                              <span class="nf">cloudPath</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCCloudPath.html">ZDCCloudPath</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">cloudPath</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="n">ZDCSyncStatusNotificationType_PullStarted</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="nf">init</span><span class="p">(</span><span class="nv">cloudID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">cloudPath</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCCloudPath.html">ZDCCloudPath</a></span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">pullStarted</span> <span class="o">=</span> <span class="mi">0</span></code></pre>
 
                         </div>
                       </div>
@@ -751,9 +738,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCGraftInvite(py)cloudID"></a>
-                    <a name="//apple_ref/objc/Property/cloudID" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCGraftInvite(py)cloudID">cloudID</a>
+                    <a name="/c:@E@ZDCSyncStatusNotificationType@ZDCSyncStatusNotificationType_PullStopped"></a>
+                    <a name="//apple_ref/objc/Case/ZDCSyncStatusNotificationType_PullStopped" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@E@ZDCSyncStatusNotificationType@ZDCSyncStatusNotificationType_PullStopped">ZDCSyncStatusNotificationType_PullStopped</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -761,32 +748,25 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Corresponds to ZDCNode.cloudID.</p>
+                        <p>This notification type is broadcast after:</p>
 
-<p>Every node has a server-assigned uuid, called the cloudID.
- Since the value is server-assigned, we won&rsquo;t know this value until after the node has been uploaded.</p>
-
-<p>This value is important, because it ensures the recipient of the invite can still accept our
- invitation even if we move the node.</p>
-
-<p>For example:
- If Alice wants to collaborate with Bob, she may send an invite the references her node at home://foo/bar
- But if Alice renamed the node to home://foo/buzz, then the location of the node changes,
- both in her treesystem, and in the cloud.
- By including the cloudID, Bob will be able to track down the current location of the node.
- (The server has an API that allows Bob to perform this task, if necessary.)</p>
+<ul>
+<li>changes were discovered in the cloud</li>
+<li>the PullManager attempted to update the treesystem state</li>
+<li>and the PullManager is now done with its attempt (either success or failure)</li>
+</ul>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">copy</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">cloudID</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="n">ZDCSyncStatusNotificationType_PullStopped</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">cloudID</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">pullStopped</span> <span class="o">=</span> <span class="mi">1</span></code></pre>
 
                         </div>
                       </div>
@@ -796,9 +776,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCGraftInvite(py)cloudPath"></a>
-                    <a name="//apple_ref/objc/Property/cloudPath" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCGraftInvite(py)cloudPath">cloudPath</a>
+                    <a name="/c:@E@ZDCSyncStatusNotificationType@ZDCSyncStatusNotificationType_PushStarted"></a>
+                    <a name="//apple_ref/objc/Case/ZDCSyncStatusNotificationType_PushStarted" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@E@ZDCSyncStatusNotificationType@ZDCSyncStatusNotificationType_PushStarted">ZDCSyncStatusNotificationType_PushStarted</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -806,22 +786,185 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Represents the current location of the node in the cloud.</p>
+                        <p>This notification type is broadcast when the PushManager changes its active status.
+This happens when:</p>
 
-<p>If the cloudPath happens to change, the cloudID ensures the recipient can still
- track down current cloudPath of the node.</p>
+<ul>
+<li>the PushManager sees new upload operations in the queue</li>
+<li>AND it h started working on them</li>
+</ul>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">copy</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n"><a href="../Classes/ZDCCloudPath.html">ZDCCloudPath</a></span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">cloudPath</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="n">ZDCSyncStatusNotificationType_PushStarted</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@NSCopying</span> <span class="k">var</span> <span class="nv">cloudPath</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCCloudPath.html">ZDCCloudPath</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">pushStarted</span> <span class="o">=</span> <span class="mi">2</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:@E@ZDCSyncStatusNotificationType@ZDCSyncStatusNotificationType_PushStopped"></a>
+                    <a name="//apple_ref/objc/Case/ZDCSyncStatusNotificationType_PushStopped" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@E@ZDCSyncStatusNotificationType@ZDCSyncStatusNotificationType_PushStopped">ZDCSyncStatusNotificationType_PushStopped</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>This notification type is broadcast when the PushManager changes its active status.
+This happens when:</p>
+
+<ul>
+<li>the PushManager completes all the upload operations in its queue</li>
+<li>OR the PushManager is stopped due to Internet reachability changes</li>
+</ul>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="n">ZDCSyncStatusNotificationType_PushStopped</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">pushStopped</span> <span class="o">=</span> <span class="mi">3</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:@E@ZDCSyncStatusNotificationType@ZDCSyncStatusNotificationType_PushPaused"></a>
+                    <a name="//apple_ref/objc/Case/ZDCSyncStatusNotificationType_PushPaused" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@E@ZDCSyncStatusNotificationType@ZDCSyncStatusNotificationType_PushPaused">ZDCSyncStatusNotificationType_PushPaused</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>This notification type is broadcast when the PushManger is manually paused.</p>
+<div class="aside aside-see">
+    <p class="aside-title">See</p>
+    <code>-pausePushForLocalUserID:andAbortUploads:</code>
+
+</div>
+<div class="aside aside-see">
+    <p class="aside-title">See</p>
+    <code>-pausePushForAllLocalUsersAndAbortUploads:</code>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="n">ZDCSyncStatusNotificationType_PushPaused</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">pushPaused</span> <span class="o">=</span> <span class="mi">4</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:@E@ZDCSyncStatusNotificationType@ZDCSyncStatusNotificationType_PushResumed"></a>
+                    <a name="//apple_ref/objc/Case/ZDCSyncStatusNotificationType_PushResumed" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@E@ZDCSyncStatusNotificationType@ZDCSyncStatusNotificationType_PushResumed">ZDCSyncStatusNotificationType_PushResumed</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>This notification type is broadcast when the PushManager is manually resumed (after being previously paused).</p>
+<div class="aside aside-see">
+    <p class="aside-title">See</p>
+    <code>-resumePushForLocalUserID:</code>
+
+</div>
+<div class="aside aside-see">
+    <p class="aside-title">See</p>
+    <code>-resumePushForAllLocalUsers</code>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="n">ZDCSyncStatusNotificationType_PushResumed</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">pushResumed</span> <span class="o">=</span> <span class="mi">5</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:@E@ZDCSyncStatusNotificationType@ZDCSyncStatusNotificationType_SyncingNodeIDsChanged"></a>
+                    <a name="//apple_ref/objc/Case/ZDCSyncStatusNotificationType_SyncingNodeIDsChanged" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@E@ZDCSyncStatusNotificationType@ZDCSyncStatusNotificationType_SyncingNodeIDsChanged">ZDCSyncStatusNotificationType_SyncingNodeIDsChanged</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>This notification is broadcast when a user&rsquo;s syncingNodeID&rsquo;s list changes.
+ In other words, the list of nodes being synced (pushed or pulled) has changed.</p>
+<div class="aside aside-see">
+    <p class="aside-title">See</p>
+    <code>-syncingNodeIDsForLocalUserID</code>
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="n">ZDCSyncStatusNotificationType_SyncingNodeIDsChanged</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">syncingNodeIDsChanged</span> <span class="o">=</span> <span class="mi">6</span></code></pre>
 
                         </div>
                       </div>

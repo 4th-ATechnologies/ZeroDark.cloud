@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>ZDCGraftInvite Class Reference</title>
+    <title>ZDCSyncStatusNotificationInfo Class Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset="utf-8">
@@ -14,9 +14,9 @@
   </head>
   <body>
 
-    <a name="//apple_ref/objc/Class/ZDCGraftInvite" class="dashAnchor"></a>
+    <a name="//apple_ref/objc/Class/ZDCSyncStatusNotificationInfo" class="dashAnchor"></a>
 
-    <a title="ZDCGraftInvite Class Reference"></a>
+    <a title="ZDCSyncStatusNotificationInfo Class Reference"></a>
 
     <header class="header">
       <p class="header-col header-col--primary">
@@ -38,7 +38,7 @@
     <p class="breadcrumbs">
       <a class="breadcrumb" href="../index.html">ZeroDarkCloud Reference</a>
       <img class="carat" src="../img/carat.png" />
-      ZDCGraftInvite Class Reference
+      ZDCSyncStatusNotificationInfo Class Reference
     </p>
 
     <div class="content-wrapper">
@@ -685,28 +685,17 @@
 
         <section class="section">
           <div class="section-content">
-            <h1>ZDCGraftInvite</h1>
+            <h1>ZDCSyncStatusNotificationInfo</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight objective_c"><code><span class="k">@interface</span> <span class="nc">ZDCGraftInvite</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="o">&lt;</span><span class="n">NSCopying</span><span class="o">&gt;</span></code></pre>
+                  <pre class="highlight objective_c"><code><span class="k">@interface</span> <span class="nc">ZDCSyncStatusNotificationInfo</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
 
                 </div>
               </div>
-            <p>A GraftInvite encompasses the information required to complete a graft.</p>
+            <p>When a ZDCSyncStatusChangedNotification is posed, an instance of this class is added the notification.userInfo.</p>
 
-<p>For example, if Alice wants to collaborate with Bob,
- then she wants to share a branch of her treesystem with Bob.
- There are 2 steps required for Alice.</p>
-
-<p>First, she needs to give Bob permission to access her branch.
- She can accomplish this with <code><a href="../Classes/ZDCCloudTransaction.html#/c:objc(cs)ZDCCloudTransaction(im)recursiveAddShareItem:forUserID:nodeID:">-[ZDCCloudTransaction recursiveAddShareItem:forUserID:nodeID:]</a></code>.</p>
-
-<p>Second, she needs to send a message to Bob.
- The message is some kind of application-specific <q>invite</q>.
- And the invite must contain, at a minimum, the information contained in this class.</p>
-
-<p>After Bob receives the invite message, he can accept the invite via
- <code>-[ZDCCloudTransaction graftNodeWithLocalPath:::::]</code>.</p>
+<p>You can extract the info via:
+ <code>notification.userInfo[kZDCSyncStatusNotificationInfo] as? ZDCSyncStatusNotificationInfo</code></p>
 
           </div>
         </section>
@@ -718,9 +707,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCGraftInvite(im)initWithCloudID:cloudPath:"></a>
-                    <a name="//apple_ref/objc/Method/-initWithCloudID:cloudPath:" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCGraftInvite(im)initWithCloudID:cloudPath:">-initWithCloudID:cloudPath:</a>
+                    <a name="/c:objc(cs)ZDCSyncStatusNotificationInfo(py)type"></a>
+                    <a name="//apple_ref/objc/Property/type" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCSyncStatusNotificationInfo(py)type">type</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -728,20 +717,22 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Standard initializer.</p>
+                        <p>Tells you which type of notification is being broadcast.</p>
+
+<p>The SyncManager publishes many different types of notifications.
+ And its generally the case that if you need to listen for one of them, you need to listen to several of them.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithCloudID</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">cloudID</span>
-                              <span class="nf">cloudPath</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCCloudPath.html">ZDCCloudPath</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">cloudPath</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n"><a href="../Enums/ZDCSyncStatusNotificationType.html">ZDCSyncStatusNotificationType</a></span> <span class="n">type</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="nf">init</span><span class="p">(</span><span class="nv">cloudID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">cloudPath</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCCloudPath.html">ZDCCloudPath</a></span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">type</span><span class="p">:</span> <span class="kt"><a href="../Enums/ZDCSyncStatusNotificationType.html">ZDCSyncStatusNotificationType</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -751,9 +742,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCGraftInvite(py)cloudID"></a>
-                    <a name="//apple_ref/objc/Property/cloudID" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCGraftInvite(py)cloudID">cloudID</a>
+                    <a name="/c:objc(cs)ZDCSyncStatusNotificationInfo(py)localUserID"></a>
+                    <a name="//apple_ref/objc/Property/localUserID" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCSyncStatusNotificationInfo(py)localUserID">localUserID</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -761,32 +752,19 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Corresponds to ZDCNode.cloudID.</p>
-
-<p>Every node has a server-assigned uuid, called the cloudID.
- Since the value is server-assigned, we won&rsquo;t know this value until after the node has been uploaded.</p>
-
-<p>This value is important, because it ensures the recipient of the invite can still accept our
- invitation even if we move the node.</p>
-
-<p>For example:
- If Alice wants to collaborate with Bob, she may send an invite the references her node at home://foo/bar
- But if Alice renamed the node to home://foo/buzz, then the location of the node changes,
- both in her treesystem, and in the cloud.
- By including the cloudID, Bob will be able to track down the current location of the node.
- (The server has an API that allows Bob to perform this task, if necessary.)</p>
+                        <p>A reference to the localUser being pulled/pushed. (localUserID == ZDCLocalUser.uuid)</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">copy</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">cloudID</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">copy</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">localUserID</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">cloudID</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">localUserID</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -796,9 +774,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:objc(cs)ZDCGraftInvite(py)cloudPath"></a>
-                    <a name="//apple_ref/objc/Property/cloudPath" class="dashAnchor"></a>
-                    <a class="token" href="#/c:objc(cs)ZDCGraftInvite(py)cloudPath">cloudPath</a>
+                    <a name="/c:objc(cs)ZDCSyncStatusNotificationInfo(py)treeID"></a>
+                    <a name="//apple_ref/objc/Property/treeID" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCSyncStatusNotificationInfo(py)treeID">treeID</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -806,22 +784,52 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Represents the current location of the node in the cloud.</p>
-
-<p>If the cloudPath happens to change, the cloudID ensures the recipient can still
- track down current cloudPath of the node.</p>
+                        <p>The treeID of the system being pulled/pushed. (e.g. <q>com.busines.myApp</q>)</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">copy</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n"><a href="../Classes/ZDCCloudPath.html">ZDCCloudPath</a></span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">cloudPath</span><span class="p">;</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">copy</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">treeID</span><span class="p">;</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@NSCopying</span> <span class="k">var</span> <span class="nv">cloudPath</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCCloudPath.html">ZDCCloudPath</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">treeID</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCSyncStatusNotificationInfo(py)pullResult"></a>
+                    <a name="//apple_ref/objc/Property/pullResult" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCSyncStatusNotificationInfo(py)pullResult">pullResult</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>If the notification type is PullStopped,
+this value contains information about whether or not the pull succeeded or failed.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">readonly</span><span class="p">,</span> <span class="n">assign</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">)</span> <span class="n"><a href="../Enums/ZDCPullResult.html">ZDCPullResult</a></span> <span class="n">pullResult</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">pullResult</span><span class="p">:</span> <span class="kt"><a href="../Enums/ZDCPullResult.html">ZDCPullResult</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>

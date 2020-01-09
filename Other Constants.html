@@ -23,7 +23,7 @@
         <a class="header-link" href="index.html">
           ZeroDarkCloud Docs
         </a>
-         (98% documented)
+         (99% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -364,7 +364,7 @@
                 <a class="nav-group-task-link" href="Classes/ZDCSearchResult.html">ZDCSearchResult</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Classes/ZDCSyncManagerNotificationInfo.html">ZDCSyncManagerNotificationInfo</a>
+                <a class="nav-group-task-link" href="Classes/ZDCSyncStatusNotificationInfo.html">ZDCSyncStatusNotificationInfo</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Classes/ZDCUserDisplay.html">ZDCUserDisplay</a>
@@ -450,18 +450,6 @@
                 <a class="nav-group-task-link" href="Other%20Constants.html#/c:@ZDCProgressTypeKey">ZDCProgressTypeKey</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other%20Constants.html#/c:@ZDCPullStartedNotification">ZDCPullStartedNotification</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other%20Constants.html#/c:@ZDCPullStoppedNotification">ZDCPullStoppedNotification</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other%20Constants.html#/c:@ZDCPushStartedNotification">ZDCPushStartedNotification</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other%20Constants.html#/c:@ZDCPushStoppedNotification">ZDCPushStoppedNotification</a>
-              </li>
-              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Other%20Constants.html#/c:@ZDCShareKeyType_Passphrase">ZDCShareKeyType_Passphrase</a>
               </li>
               <li class="nav-group-task">
@@ -486,7 +474,7 @@
                 <a class="nav-group-task-link" href="Other%20Constants.html#/c:@ZDCStreamUnexpectedFileSize">ZDCStreamUnexpectedFileSize</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other%20Constants.html#/c:@ZDCSyncingNodeIDsChangedNotification">ZDCSyncingNodeIDsChangedNotification</a>
+                <a class="nav-group-task-link" href="Other%20Constants.html#/c:@ZDCSyncStatusChangedNotification">ZDCSyncStatusChangedNotification</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Other%20Constants.html#/c:@kNotificationsKey">kNotificationsKey</a>
@@ -579,16 +567,13 @@
                 <a class="nav-group-task-link" href="Other%20Constants.html#/c:@kZDCProgressManagerChanges">kZDCProgressManagerChanges</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other%20Constants.html#/c:@kZDCSyncManagerNotificationInfo">kZDCSyncManagerNotificationInfo</a>
+                <a class="nav-group-task-link" href="Other%20Constants.html#/c:@kZDCSyncStatusNotificationInfo">kZDCSyncStatusNotificationInfo</a>
               </li>
             </ul>
           </li>
           <li class="nav-group-name">
             <a class="nav-group-name-link" href="Other%20Enums.html">Other Enumerations</a>
             <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Enums/Mnemonic_Algorithm.html">Mnemonic_Algorithm</a>
-              </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Enums/ZDCChildProgressType.html">ZDCChildProgressType</a>
               </li>
@@ -642,6 +627,9 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Enums/ZDCSharePermission.html">ZDCSharePermission</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Enums/ZDCSyncStatusNotificationType.html">ZDCSyncStatusNotificationType</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Enums/ZDCTreesystemTrunk.html">ZDCTreesystemTrunk</a>
@@ -2542,9 +2530,9 @@ which returns an instance of <code><a href="Classes/ZDCProgressManagerChanges.ht
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@ZDCPullStartedNotification"></a>
-                    <a name="//apple_ref/objc/Constant/ZDCPullStartedNotification" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@ZDCPullStartedNotification">ZDCPullStartedNotification</a>
+                    <a name="/c:@ZDCSyncStatusChangedNotification"></a>
+                    <a name="//apple_ref/objc/Constant/ZDCSyncStatusChangedNotification" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@ZDCSyncStatusChangedNotification">ZDCSyncStatusChangedNotification</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2552,15 +2540,21 @@ which returns an instance of <code><a href="Classes/ZDCProgressManagerChanges.ht
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>This notification is broadcast when changes are discovered in the cloud,
- and the PullManager has started working to update the treesystem state.</p>
-
-<p>The following keys are available in the notification&rsquo;s userInfo:</p>
+                        <p>This notification is broadcast whenever the sync status changes, which includes:</p>
 
 <ul>
-<li>kLocalUserIDKey : value is string</li>
-<li>kAppIDKey : value is string</li>
+<li>PullStarted (cloud changes detected)</li>
+<li>PullStopped</li>
+<li>PushStarted</li>
+<li>PushStopped</li>
+<li>PushPaused</li>
+<li>PushResumed</li>
+<li>SyncingNodeIDsChanged</li>
 </ul>
+
+<p>The notification.userInfo dictionary contains an instance of <code><a href="Classes/ZDCSyncStatusNotificationInfo.html">ZDCSyncStatusNotificationInfo</a></code>.
+ It can be extracted via:
+ <code>notification.userInfo[kZDCSyncStatusNotificationInfo] as? ZDCSyncStatusNotificationInfo</code></p>
 
 <p>This notification is always broadcast on the main thread.</p>
 
@@ -2569,12 +2563,12 @@ which returns an instance of <code><a href="Classes/ZDCProgressManagerChanges.ht
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">extern</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">_Nonnull</span> <span class="n">ZDCPullStartedNotification</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">extern</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">_Nonnull</span> <span class="n">ZDCSyncStatusChangedNotification</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="k">let</span> <span class="nv">ZDCPullStarted</span><span class="p">:</span> <span class="kt">NSNotification</span><span class="o">.</span><span class="kt">Name</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="k">let</span> <span class="nv">ZDCSyncStatusChanged</span><span class="p">:</span> <span class="kt">NSNotification</span><span class="o">.</span><span class="kt">Name</span></code></pre>
 
                         </div>
                       </div>
@@ -2584,9 +2578,9 @@ which returns an instance of <code><a href="Classes/ZDCProgressManagerChanges.ht
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@ZDCPullStoppedNotification"></a>
-                    <a name="//apple_ref/objc/Constant/ZDCPullStoppedNotification" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@ZDCPullStoppedNotification">ZDCPullStoppedNotification</a>
+                    <a name="/c:@kZDCSyncStatusNotificationInfo"></a>
+                    <a name="//apple_ref/objc/Constant/kZDCSyncStatusNotificationInfo" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@kZDCSyncStatusNotificationInfo">kZDCSyncStatusNotificationInfo</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2594,200 +2588,20 @@ which returns an instance of <code><a href="Classes/ZDCProgressManagerChanges.ht
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>This notification is broadcast after:</p>
-
-<ul>
-<li>changes were discovered in the cloud</li>
-<li>the PullManager attempted to update the treesystem state</li>
-<li>and the PullManager is now done with its attempt (either success or failure)</li>
-</ul>
-
-<p>The following keys are available in the notification&rsquo;s userInfo:</p>
-
-<ul>
-<li>kLocalUserIDKey : value is string</li>
-<li>kAppIDKey : value is string</li>
-<li>kPullResultKey : value is (wrapped) <code><a href="Enums/ZDCPullResult.html">ZDCPullResult</a></code></li>
-</ul>
-
-<p>This notification is always broadcast on the main thread.</p>
+                        <p>A key for the notification.userInfo dictionary of ZDCSyncStatusChangedNotification.
+The corresponding value is an instance of <code><a href="Classes/ZDCSyncStatusNotificationInfo.html">ZDCSyncStatusNotificationInfo</a></code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">extern</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">_Nonnull</span> <span class="n">ZDCPullStoppedNotification</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">extern</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">_Nonnull</span> <span class="n">kZDCSyncStatusNotificationInfo</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="k">let</span> <span class="nv">ZDCPullStopped</span><span class="p">:</span> <span class="kt">NSNotification</span><span class="o">.</span><span class="kt">Name</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@ZDCPushStartedNotification"></a>
-                    <a name="//apple_ref/objc/Constant/ZDCPushStartedNotification" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@ZDCPushStartedNotification">ZDCPushStartedNotification</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>This notifications is broadcast when the PushManager changes active status.
- This happens when:</p>
-
-<ul>
-<li>the PushManager receives new upload operations, and starts working on them</li>
-</ul>
-
-<p>The following keys are available in the notification&rsquo;s userInfo:</p>
-
-<ul>
-<li>kLocalUserIDKey : value is string</li>
-<li>kAppIDKey : value is string</li>
-</ul>
-
-<p>This notification is always broadcast on the main thread.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">extern</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">_Nonnull</span> <span class="n">ZDCPushStartedNotification</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="k">let</span> <span class="nv">ZDCPushStarted</span><span class="p">:</span> <span class="kt">NSNotification</span><span class="o">.</span><span class="kt">Name</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@ZDCPushStoppedNotification"></a>
-                    <a name="//apple_ref/objc/Constant/ZDCPushStoppedNotification" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@ZDCPushStoppedNotification">ZDCPushStoppedNotification</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>This notification is broadcast when the PushManager changes active status.
- This happens when:</p>
-
-<ul>
-<li>the PushManager completes all the upload operations in its queue</li>
-<li>or the PushManager is stopped due to Internet reachability changes</li>
-</ul>
-
-<p>The following keys are available in the notification&rsquo;s userInfo:</p>
-
-<ul>
-<li>kLocalUserIDKey : value is string</li>
-<li>kAppIDKey : value is string</li>
-</ul>
-
-<p>This notification is always broadcast on the main thread.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">extern</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">_Nonnull</span> <span class="n">ZDCPushStoppedNotification</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="k">let</span> <span class="nv">ZDCPushStopped</span><span class="p">:</span> <span class="kt">NSNotification</span><span class="o">.</span><span class="kt">Name</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@ZDCSyncingNodeIDsChangedNotification"></a>
-                    <a name="//apple_ref/objc/Constant/ZDCSyncingNodeIDsChangedNotification" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@ZDCSyncingNodeIDsChangedNotification">ZDCSyncingNodeIDsChangedNotification</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>This notification is broadcast when a user&rsquo;s syncingNodeID&rsquo;s list changes.</p>
-<div class="aside aside-see">
-    <p class="aside-title">See</p>
-    <code>-syncingNodeIDsForLocalUserID</code>
-
-</div>
-
-<p>This notification is always broadcast on the main thread.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">extern</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">_Nonnull</span> <span class="n">ZDCSyncingNodeIDsChangedNotification</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="k">let</span> <span class="nv">ZDCSyncingNodeIDsChanged</span><span class="p">:</span> <span class="kt">NSNotification</span><span class="o">.</span><span class="kt">Name</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@kZDCSyncManagerNotificationInfo"></a>
-                    <a name="//apple_ref/objc/Constant/kZDCSyncManagerNotificationInfo" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@kZDCSyncManagerNotificationInfo">kZDCSyncManagerNotificationInfo</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>A key for the notification.userInfo dictionary,
-which returns an instance of <code><a href="Classes/ZDCDiskManagerChanges.html">ZDCDiskManagerChanges</a></code>.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">extern</span> <span class="n">NSString</span> <span class="o">*</span><span class="k">const</span> <span class="n">_Nonnull</span> <span class="n">kZDCSyncManagerNotificationInfo</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">let</span> <span class="nv">kZDCSyncManagerNotificationInfo</span><span class="p">:</span> <span class="kt">String</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">let</span> <span class="nv">kZDCSyncStatusNotificationInfo</span><span class="p">:</span> <span class="kt">String</span></code></pre>
 
                         </div>
                       </div>
@@ -3326,8 +3140,8 @@ Value will be a (wrapped) ZDCChildProgressType value.</p>
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2020 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2020-01-05)</p>
-      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.11.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+      <p>&copy; 2020 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2020-01-09)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.11.2</a>.</p>
     </section>
   </body>
 </div>

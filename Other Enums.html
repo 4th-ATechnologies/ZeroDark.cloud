@@ -23,7 +23,7 @@
         <a class="header-link" href="index.html">
           ZeroDarkCloud Docs
         </a>
-         (98% documented)
+         (99% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -364,7 +364,7 @@
                 <a class="nav-group-task-link" href="Classes/ZDCSearchResult.html">ZDCSearchResult</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Classes/ZDCSyncManagerNotificationInfo.html">ZDCSyncManagerNotificationInfo</a>
+                <a class="nav-group-task-link" href="Classes/ZDCSyncStatusNotificationInfo.html">ZDCSyncStatusNotificationInfo</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Classes/ZDCUserDisplay.html">ZDCUserDisplay</a>
@@ -450,18 +450,6 @@
                 <a class="nav-group-task-link" href="Other%20Constants.html#/c:@ZDCProgressTypeKey">ZDCProgressTypeKey</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other%20Constants.html#/c:@ZDCPullStartedNotification">ZDCPullStartedNotification</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other%20Constants.html#/c:@ZDCPullStoppedNotification">ZDCPullStoppedNotification</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other%20Constants.html#/c:@ZDCPushStartedNotification">ZDCPushStartedNotification</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other%20Constants.html#/c:@ZDCPushStoppedNotification">ZDCPushStoppedNotification</a>
-              </li>
-              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Other%20Constants.html#/c:@ZDCShareKeyType_Passphrase">ZDCShareKeyType_Passphrase</a>
               </li>
               <li class="nav-group-task">
@@ -486,7 +474,7 @@
                 <a class="nav-group-task-link" href="Other%20Constants.html#/c:@ZDCStreamUnexpectedFileSize">ZDCStreamUnexpectedFileSize</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other%20Constants.html#/c:@ZDCSyncingNodeIDsChangedNotification">ZDCSyncingNodeIDsChangedNotification</a>
+                <a class="nav-group-task-link" href="Other%20Constants.html#/c:@ZDCSyncStatusChangedNotification">ZDCSyncStatusChangedNotification</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Other%20Constants.html#/c:@kNotificationsKey">kNotificationsKey</a>
@@ -579,16 +567,13 @@
                 <a class="nav-group-task-link" href="Other%20Constants.html#/c:@kZDCProgressManagerChanges">kZDCProgressManagerChanges</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Other%20Constants.html#/c:@kZDCSyncManagerNotificationInfo">kZDCSyncManagerNotificationInfo</a>
+                <a class="nav-group-task-link" href="Other%20Constants.html#/c:@kZDCSyncStatusNotificationInfo">kZDCSyncStatusNotificationInfo</a>
               </li>
             </ul>
           </li>
           <li class="nav-group-name">
             <a class="nav-group-name-link" href="Other%20Enums.html">Other Enumerations</a>
             <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="Enums/Mnemonic_Algorithm.html">Mnemonic_Algorithm</a>
-              </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Enums/ZDCChildProgressType.html">ZDCChildProgressType</a>
               </li>
@@ -642,6 +627,9 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Enums/ZDCSharePermission.html">ZDCSharePermission</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Enums/ZDCSyncStatusNotificationType.html">ZDCSyncStatusNotificationType</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Enums/ZDCTreesystemTrunk.html">ZDCTreesystemTrunk</a>
@@ -1045,6 +1033,44 @@ to determine if the log message should be emitted.</p>
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/c:@E@ZDCSyncStatusNotificationType"></a>
+                    <a name="//apple_ref/objc/Enum/ZDCSyncStatusNotificationType" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@E@ZDCSyncStatusNotificationType">ZDCSyncStatusNotificationType</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The SyncManager broadcasts several types of notifications for changes in the sync state.
+This tells you what change caused the notification.</p>
+
+                        <a href="Enums/ZDCSyncStatusNotificationType.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">enum</span> <span class="n">ZDCSyncStatusNotificationType</span> <span class="p">{}</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">enum</span> <span class="kt">ZDCSyncStatusNotificationType</span> <span class="p">:</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/c:@E@ZDCSearchResultStage"></a>
                     <a name="//apple_ref/objc/Enum/ZDCSearchResultStage" class="dashAnchor"></a>
                     <a class="token" href="#/c:@E@ZDCSearchResultStage">ZDCSearchResultStage</a>
@@ -1165,46 +1191,6 @@ to determine if the log message should be emitted.</p>
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">enum</span> <span class="kt">ZDCCloudFileSection</span> <span class="p">:</span> <span class="kt">Int</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <ul class="item-container">
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@E@Mnemonic_Algorithm"></a>
-                    <a name="//apple_ref/objc/Enum/Mnemonic_Algorithm" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@E@Mnemonic_Algorithm">Mnemonic_Algorithm</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                        <a href="Enums/Mnemonic_Algorithm.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="n">NS_ENUM</span><span class="p">(</span><span class="n">NSInteger</span><span class="p">,</span> <span class="n">Mnemonic_Algorithm</span><span class="p">)</span> <span class="p">{</span>
-	<span class="n">Mnemonic_Storm4</span><span class="p">,</span>
-	<span class="n">Mnemonic_ZDC</span>
-<span class="p">}</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">enum</span> <span class="kt">Mnemonic_Algorithm</span> <span class="p">:</span> <span class="kt">Int</span></code></pre>
 
                         </div>
                       </div>
@@ -1472,8 +1458,8 @@ That is, the type of node being uploaded to the cloud.</p>
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2020 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2020-01-05)</p>
-      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.11.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+      <p>&copy; 2020 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2020-01-09)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.11.2</a>.</p>
     </section>
   </body>
 </div>

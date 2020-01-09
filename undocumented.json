@@ -83,34 +83,6 @@
       "symbol": "ZDCLocalUser.auth0_primary",
       "symbol_kind": "sourcekitten.source.lang.objc.decl.property",
       "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Utilities/BIP39Mnemonic.h",
-      "line": 15,
-      "symbol": "Mnemonic_Algorithm",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enum",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Utilities/BIP39Mnemonic.h",
-      "line": 15,
-      "symbol": "Mnemonic_Algorithm",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.typedef",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Utilities/BIP39Mnemonic.h",
-      "line": 16,
-      "symbol": "Mnemonic_Algorithm.Mnemonic_Storm4",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/robbie/Programs/4thA/ZeroDark.cloud/ZeroDark.cloud/Utilities/BIP39Mnemonic.h",
-      "line": 17,
-      "symbol": "Mnemonic_Algorithm.Mnemonic_ZDC",
-      "symbol_kind": "sourcekitten.source.lang.objc.decl.enumcase",
-      "warning": "undocumented"
     }
   ],
   "source_directory": "/Users/robbie/Programs/4thA/ZeroDark.cloud"

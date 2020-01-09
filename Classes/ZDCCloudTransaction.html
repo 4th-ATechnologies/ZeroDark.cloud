@@ -23,7 +23,7 @@
         <a class="header-link" href="../index.html">
           ZeroDarkCloud Docs
         </a>
-         (98% documented)
+         (99% documented)
       </p>
     
       <p class="header-col--secondary">
@@ -364,7 +364,7 @@
                 <a class="nav-group-task-link" href="../Classes/ZDCSearchResult.html">ZDCSearchResult</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Classes/ZDCSyncManagerNotificationInfo.html">ZDCSyncManagerNotificationInfo</a>
+                <a class="nav-group-task-link" href="../Classes/ZDCSyncStatusNotificationInfo.html">ZDCSyncStatusNotificationInfo</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Classes/ZDCUserDisplay.html">ZDCUserDisplay</a>
@@ -450,18 +450,6 @@
                 <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@ZDCProgressTypeKey">ZDCProgressTypeKey</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@ZDCPullStartedNotification">ZDCPullStartedNotification</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@ZDCPullStoppedNotification">ZDCPullStoppedNotification</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@ZDCPushStartedNotification">ZDCPushStartedNotification</a>
-              </li>
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@ZDCPushStoppedNotification">ZDCPushStoppedNotification</a>
-              </li>
-              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@ZDCShareKeyType_Passphrase">ZDCShareKeyType_Passphrase</a>
               </li>
               <li class="nav-group-task">
@@ -486,7 +474,7 @@
                 <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@ZDCStreamUnexpectedFileSize">ZDCStreamUnexpectedFileSize</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@ZDCSyncingNodeIDsChangedNotification">ZDCSyncingNodeIDsChangedNotification</a>
+                <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@ZDCSyncStatusChangedNotification">ZDCSyncStatusChangedNotification</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@kNotificationsKey">kNotificationsKey</a>
@@ -579,16 +567,13 @@
                 <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@kZDCProgressManagerChanges">kZDCProgressManagerChanges</a>
               </li>
               <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@kZDCSyncManagerNotificationInfo">kZDCSyncManagerNotificationInfo</a>
+                <a class="nav-group-task-link" href="../Other%20Constants.html#/c:@kZDCSyncStatusNotificationInfo">kZDCSyncStatusNotificationInfo</a>
               </li>
             </ul>
           </li>
           <li class="nav-group-name">
             <a class="nav-group-name-link" href="../Other%20Enums.html">Other Enumerations</a>
             <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a class="nav-group-task-link" href="../Enums/Mnemonic_Algorithm.html">Mnemonic_Algorithm</a>
-              </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Enums/ZDCChildProgressType.html">ZDCChildProgressType</a>
               </li>
@@ -642,6 +627,9 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Enums/ZDCSharePermission.html">ZDCSharePermission</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/ZDCSyncStatusNotificationType.html">ZDCSyncStatusNotificationType</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Enums/ZDCTreesystemTrunk.html">ZDCTreesystemTrunk</a>
@@ -1050,6 +1038,90 @@ For example, if the given nodeNode is <q>Foobar.ext</q>, this method may return 
                               <td>
                                 <div>
                                   <p>The treesystem path of the node.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>outError</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Set to nil on success.
+Otherwise returns an error that explains what went wrong.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The newly created node.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCCloudTransaction(im)createNodeWithPath:dependencies:error:"></a>
+                    <a name="//apple_ref/objc/Method/-createNodeWithPath:dependencies:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCCloudTransaction(im)createNodeWithPath:dependencies:error:">-createNodeWithPath:dependencies:error:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a new node with the given path,
+ and queues upload operation(s) to push the node to the cloud.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n"><a href="../Classes/ZDCNode.html">ZDCNode</a></span> <span class="o">*</span><span class="p">)</span>
+    <span class="nf">createNodeWithPath</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCTreesystemPath.html">ZDCTreesystemPath</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">path</span>
+          <span class="nf">dependencies</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n"><a href="../Classes/ZDCCloudOperation.html">ZDCCloudOperation</a></span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span><span class="nv">dependencies</span>
+                 <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">outError</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">createNode</span><span class="p">(</span><span class="n">withPath</span> <span class="nv">path</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCTreesystemPath.html">ZDCTreesystemPath</a></span><span class="p">,</span> <span class="nv">dependencies</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Classes/ZDCCloudOperation.html">ZDCCloudOperation</a></span><span class="p">]?)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ZDCNode.html">ZDCNode</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>path</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The treesystem path of the node.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dependencies</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>If the upload operation should be dependent upon other operations, you may pass those dependencies here.</p>
                                 </div>
                               </td>
                             </tr>
@@ -2037,6 +2109,12 @@ Otherwise returns an error that explains what went wrong.</p>
 <p>On success, a temporary node is returned.
  The temporary node isn&rsquo;t part of the treesystem, but it is stored in the database.
  This node will be automatically deleted after the operation has been completed.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <p>You can also add dependencies via the <code>-modifyOperation:</code> method,
+   available via the superclass (YapDatabaseCloudCoreTransaction).</p>
+
+</div>
 
                       </div>
                       <div class="declaration">
@@ -3775,18 +3853,20 @@ You can get the eTag from the DownloadManager&rsquo;s completion block parameter
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>When you create, modify or delete a node, the system creates and queues operations
+                        <p>Returns the operations that were added to the push queue in THIS transaction.</p>
+
+<p>When you create, modify or delete a node, the system creates and queues operations
  to push these changes to the cloud. The operations are stored safely in the database,
  and are executed by the PushManager.</p>
 
 <p>Occassionally you may want to tweak an operation&rsquo;s dependencies or priority.
  You can do that at any time using the underlying functions exposed by YapDatabaseCloudCore.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    ZDCCloudTransaction extends YapDatabaseCloudCoreTransaction.
+   So you have full access to the public API of YapDatabaseCloudCoreTransaction too.
 
-<p>(See: [YapDatabaseCloudCoreTransaction enumerateAddedOperationsUsingBlock:])</p>
-
-<p>However, the most common use case is to tweak these within the same database commit
- in which you created the operation(s). This method returns the operations that were
- added to the queue in THIS transaction.</p>
+</div>
 
                       </div>
                       <div class="declaration">
@@ -3818,18 +3898,20 @@ You can get the eTag from the DownloadManager&rsquo;s completion block parameter
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>When you create, modify or delete a node, the system creates and queues operations
+                        <p>Returns the operations that were added to the push queue in THIS transaction (for the given nodeID).</p>
+
+<p>When you create, modify or delete a node, the system creates and queues operations
  to push these changes to the cloud. The operations are stored safely in the database,
  and are executed by the PushManager.</p>
 
 <p>Occassionally you may want to tweak an operation&rsquo;s dependencies or priority.
  You can do that at any time using the underlying functions exposed by YapDatabaseCloudCore.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <p>ZDCCloudTransaction extends YapDatabaseCloudCoreTransaction.
+   So you have full access to the public API of YapDatabaseCloudCoreTransaction too.</p>
 
-<p>(See: [YapDatabaseCloudCoreTransaction enumerateAddedOperationsUsingBlock:])</p>
-
-<p>However, the most common use case is to tweak these within the same database commit
- in which you created the operation(s). This method returns the operations that were
- added to the queue in THIS transaction.</p>
+</div>
 
                       </div>
                       <div class="declaration">
@@ -3901,6 +3983,121 @@ This information may be useful in determining why your data is out-of-sync with 
                     </section>
                   </div>
                 </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCCloudTransaction(im)pendingPutOperationsWithParentID:"></a>
+                    <a name="//apple_ref/objc/Method/-pendingPutOperationsWithParentID:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCCloudTransaction(im)pendingPutOperationsWithParentID:">-pendingPutOperationsWithParentID:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns a list of pending ZDCCloudOperations for which:</p>
+
+<ul>
+<li>op.type == ZDCCloudOperationType_Put</li>
+<li>op.nodeID matches the list of childNodeIDs for the given parent node.</li>
+</ul>
+
+<p>Occassionally you may want to tweak an operation&rsquo;s dependencies or priority.
+ You can do that at any time using the underlying functions exposed by YapDatabaseCloudCore.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    ZDCCloudTransaction extends YapDatabaseCloudCoreTransaction.
+   So you have full access to the public API of YapDatabaseCloudCoreTransaction too.
+
+</div>
+
+<p>If this method doesn&rsquo;t do exactly what you want, you can easily create your own version of it.
+ Since ZDCCloudTransaction extends YapDatabaseCloudCoreTransaction,
+ you can use methods such as <code>[YapDatabaseCloudCoreTransaction enumerateOperationsUsingBlock:]</code> to perform
+ your own enumeration with your own filters.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n"><a href="../Classes/ZDCCloudOperation.html">ZDCCloudOperation</a></span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span><span class="nf">pendingPutOperationsWithParentID</span><span class="p">:</span>
+    <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">parentNodeID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">pendingPutOperations</span><span class="p">(</span><span class="n">withParentID</span> <span class="nv">parentNodeID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt"><a href="../Classes/ZDCCloudOperation.html">ZDCCloudOperation</a></span><span class="p">]</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)ZDCCloudTransaction(im)pendingCopyOperationsWithRecipientInbox:"></a>
+                    <a name="//apple_ref/objc/Method/-pendingCopyOperationsWithRecipientInbox:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)ZDCCloudTransaction(im)pendingCopyOperationsWithRecipientInbox:">-pendingCopyOperationsWithRecipientInbox:</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns a list of pending ZDCCloudOperations for which:</p>
+
+<ul>
+<li>op.type == ZDCCloudOperationType_CopyLeaf</li>
+<li>op.dstCloudLocator matches the given recipients inbox</li>
+</ul>
+
+<p>Occassionally you may want to tweak an operation&rsquo;s dependencies or priority.
+ You can do that at any time using the underlying functions exposed by YapDatabaseCloudCore.</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    ZDCCloudTransaction extends YapDatabaseCloudCoreTransaction.
+   So you have full access to the public API of YapDatabaseCloudCoreTransaction too.
+
+</div>
+
+<p>If this method doesn&rsquo;t do exactly what you want, you can easily create your own version of it.
+ Since ZDCCloudTransaction extends YapDatabaseCloudCoreTransaction,
+ you can use methods such as <code>[YapDatabaseCloudCoreTransaction enumerateOperationsUsingBlock:]</code> to perform
+ your own enumeration with your own filters.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n"><a href="../Classes/ZDCCloudOperation.html">ZDCCloudOperation</a></span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span>
+    <span class="nf">pendingCopyOperationsWithRecipientInbox</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/ZDCUser.html">ZDCUser</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">recipient</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">pendingCopyOperations</span><span class="p">(</span><span class="n">withRecipientInbox</span> <span class="nv">recipient</span><span class="p">:</span> <span class="kt"><a href="../Classes/ZDCUser.html">ZDCUser</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt"><a href="../Classes/ZDCCloudOperation.html">ZDCCloudOperation</a></span><span class="p">]</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Conflict%20Resolution"></a>
+                <a name="//apple_ref/objc/Section/Conflict Resolution" class="dashAnchor"></a>
+                <a href="#/Conflict%20Resolution">
+                  <h3 class="section-name">Conflict Resolution</h3>
+                </a>
+              </div>
+              <ul class="item-container">
                 <li class="item">
                   <div>
                     <code>
@@ -4047,8 +4244,8 @@ This information may be useful in determining why your data is out-of-sync with 
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2020 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2020-01-05)</p>
-      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.11.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+      <p>&copy; 2020 <a class="link" href="https://www.zerdark.cloud" target="_blank" rel="external">4th-A Technologies</a>. All rights reserved. (Last updated: 2020-01-09)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.11.2</a>.</p>
     </section>
   </body>
 </div>
