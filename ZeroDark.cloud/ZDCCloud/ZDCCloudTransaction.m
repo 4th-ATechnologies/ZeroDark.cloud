@@ -228,6 +228,10 @@
 	}
 	
 	ZDCNode *parentNode = [self nodeWithPath:[path parentPath]];
+	if (parentNode.isPointer) {
+		parentNode = [[ZDCNodeManager sharedInstance] targetNodeForNode:parentNode transaction:databaseTransaction];
+	}
+	
 	if (parentNode == nil)
 	{
 		ZDCCloudErrorCode code = ZDCCloudErrorCode_MissingParent;
@@ -319,16 +323,6 @@
 	}
 	YapDatabaseReadWriteTransaction *rwTransaction = (YapDatabaseReadWriteTransaction *)databaseTransaction;
 	
-	if (node.name == nil || node.parentID == nil)
-	{
-		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
-		NSString *desc = @"Invalid parameter: node isn't configured properly: requires name and/or parentID.";
-		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
-		
-		if (outError) *outError = error;
-		return NO;
-	}
-	
 	NSString *localUserID = [self localUserID];
 	NSString *treeID = [self treeID];
 	
@@ -343,6 +337,42 @@
 		
 		if (outError) *outError = error;
 		return NO;
+	}
+	
+	if (node.name == nil || node.parentID == nil)
+	{
+		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
+		NSString *desc = @"Invalid parameter: node isn't configured properly: requires name and/or parentID.";
+		NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
+		
+		if (outError) *outError = error;
+		return NO;
+	}
+	
+	ZDCNode *parentNode = [databaseTransaction objectForKey:node.parentID inCollection:kZDCCollection_Nodes];
+	if (parentNode.isPointer)
+	{
+		parentNode = [[ZDCNodeManager sharedInstance] targetNodeForNode:parentNode transaction:databaseTransaction];
+		if (parentNode)
+		{
+			// Fix it automatically
+			
+			if (node.isImmutable) {
+				node = [node copy];
+			}
+			node.parentID = parentNode.uuid;
+		}
+		else
+		{
+			// Not fixable
+			
+			ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
+			NSString *desc = @"Invalid parameter: node isn't configured properly: parentNode cannot be a pointer.";
+			NSError *error = [NSError errorWithClass:[self class] code:code description:desc];
+			
+			if (outError) *outError = error;
+			return nil;
+		}
 	}
 	
 	if ([databaseTransaction hasObjectForKey:node.uuid inCollection:kZDCCollection_Nodes])
@@ -442,7 +472,7 @@
 	
 	if (![newNode.localUserID isEqualToString:localUserID])
 	{
-		// You're adding the node to the wrong ZDCCloud extension.
+		// You're modifying the node with the wrong ZDCCloud extension.
 		// ZDCNode.localUserID MUST match ZDCCloud.localUserID.
 		
 		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
@@ -556,7 +586,7 @@
 	
 	if (![srcNode.localUserID isEqualToString:localUserID])
 	{
-		// You're adding the node to the wrong ZDCCloud extension.
+		// You're modifying the node with the wrong ZDCCloud extension.
 		// ZDCNode.localUserID MUST match ZDCCloud.localUserID.
 		
 		ZDCCloudErrorCode code = ZDCCloudErrorCode_InvalidParameter;
@@ -596,6 +626,11 @@
 	}
 	
 	ZDCNode *dstParentNode = [self nodeWithPath:[dstPath parentPath]];
+	if (dstParentNode.isPointer) {
+		dstParentNode = [[ZDCNodeManager sharedInstance] targetNodeForNode: dstParentNode
+		                                                       transaction: databaseTransaction];
+	}
+	
 	if (dstParentNode == nil)
 	{
 		ZDCCloudErrorCode code = ZDCCloudErrorCode_MissingParent;
@@ -781,14 +816,13 @@
 	
 	// What kind of node are we dealing with here ?
 	
-	const BOOL isPointer = rootNode.isPointer;
-	const BOOL isLeaf = isPointer; // pointer nodes are required to be leafs
+	const BOOL isPointer = rootNode.isPointer; // pointer nodes are required to be leafs
 	
 	NSMutableDictionary *json = nil;
 	NSMutableDictionary *children = nil;
 	NSString *strOpts = nil;
 	
-	if (!isLeaf)
+	if (!isPointer)
 	{
 		// Create JSON structure for delete-node command.
 		// For example:
@@ -865,27 +899,24 @@
 				                  forKey: cloudNode.uuid
 				            inCollection: kZDCCollection_CloudNodes];
 		
-				if (!isLeaf)
+				// Fill out the JSON info for this child node
+		
+				NSString *cloudID = childNode.cloudID;
+				if (cloudID)
 				{
-					// Fill out the JSON info for this child node
-		
-					NSString *cloudID = childNode.cloudID;
-					if (cloudID)
+					NSString *dirPrefix = cloudLocator.cloudPath.dirPrefix;
+					
+					NSMutableDictionary *dir = children[dirPrefix];
+					if (dir == nil)
 					{
-						NSString *dirPrefix = cloudLocator.cloudPath.dirPrefix;
+						dir = [NSMutableDictionary dictionary];
+						children[dirPrefix] = dir;
 		
-						NSMutableDictionary *dir = children[dirPrefix];
-						if (dir == nil)
-						{
-							dir = [NSMutableDictionary dictionary];
-							children[dirPrefix] = dir;
-		
-							dir[@""] = strOpts;
-						}
-		
-						dir[cloudID] = (childNode.eTag_rcrd ?: @"");
-						[cloudIDs addObject:cloudID];
+						dir[@""] = strOpts;
 					}
+					
+					dir[cloudID] = (childNode.eTag_rcrd ?: @"");
+					[cloudIDs addObject:cloudID];
 				}
 			}
 		}
@@ -907,7 +938,7 @@
 	
 	ZDCCloudOperation *operation = nil;
 	
-	if (isLeaf)
+	if (isPointer)
 	{
 		// Delete-Leaf operation
 		
