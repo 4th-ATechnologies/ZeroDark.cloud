@@ -3050,13 +3050,13 @@
 	YapDatabaseReadWriteTransaction *rwTransaction = (YapDatabaseReadWriteTransaction *)databaseTransaction;
 	ZDCNodeManager *nodeManager = [ZDCNodeManager sharedInstance];
 	
-	void (^checkNode)(ZDCNode *) = ^void (ZDCNode *node){ @autoreleasepool {
+	BOOL (^checkNode)(ZDCNode *) = ^BOOL (ZDCNode *node){ @autoreleasepool {
 		
 		ZDCTreesystemPath *path = [nodeManager pathForNode:node transaction:rwTransaction];
 		if (path.trunk != ZDCTreesystemTrunk_Detached)
 		{
 			// Ignore - not a detached node
-			return;
+			return NO;
 		}
 		
 		// A detached node might have children:
@@ -3084,22 +3084,38 @@
 			[nodeIDs addObject:nodeID];
 		}];
 		
-		if (!hasRemainingOps(nodeIDs))
-		{
+		if (hasRemainingOps(nodeIDs)) {
+			return NO;
+		}
+		else {
 			[rwTransaction removeObjectsForKeys:[nodeIDs allObjects] inCollection:kZDCCollection_Nodes];
+			return YES;
+		}
+	}};
+	
+	void (^recursiveCheckNode)(ZDCNode*) = ^void (ZDCNode *node) { @autoreleasepool {
+		
+		ZDCNode *currentNode = node;
+		while (currentNode) {
+			
+			if (!checkNode(currentNode)) {
+				break;
+			}
+			
+			currentNode = [rwTransaction objectForKey:currentNode.parentID inCollection:kZDCCollection_Nodes];
 		}
 	}};
 	
 	NSString *srcNodeID = finishedOp.nodeID;
 	ZDCNode *srcNode = [databaseTransaction objectForKey:srcNodeID inCollection:kZDCCollection_Nodes];
 	if (srcNode) {
-		checkNode(srcNode);
+		recursiveCheckNode(srcNode);
 	}
 	
 	NSString *dstNodeID = finishedOp.dstNodeID;
 	ZDCNode *dstNode = [databaseTransaction objectForKey:dstNodeID inCollection:kZDCCollection_Nodes];
 	if (dstNode) {
-		checkNode(dstNode);
+		recursiveCheckNode(dstNode);
 	}
 }
 
