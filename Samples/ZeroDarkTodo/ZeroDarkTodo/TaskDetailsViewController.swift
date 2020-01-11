@@ -26,12 +26,15 @@ class FitButton: UIButton {
 	}
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ––––––––––––––––––––––––––––––––––––––––––––––––––
 // MARK: -
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ––––––––––––––––––––––––––––––––––––––––––––––––––
 
-class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelegate,
-                          UITextViewDelegate, UINavigationControllerDelegate, UIImagePickerControllerDelegate
+class TaskDetailsViewController: UIViewController,
+	UITextViewDelegate,
+	UINavigationControllerDelegate,
+	UIImagePickerControllerDelegate,
+	TaskPhotoViewControllerDelegate
 {
 	@IBOutlet public var btnIcon : FitButton!
 	@IBOutlet public var hitView : UIView!
@@ -74,9 +77,9 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 		return vc!
 	}
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: View Lifecycle
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
+	// MARK: View Lifecycle
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -138,91 +141,91 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 		hitView.removeGestureRecognizer(tap)
 	}
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: Refresh
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	private func reloadThumbnail() {
-		
-	}
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
+	// MARK: Refresh
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
 	
 	private func refreshView() {
 
 		let zdc = ZDCManager.zdc()
 		
+		var _task: Task?
+		var _imageNode: ZDCNode?
 		databaseConnection.read { (transaction) in
 			
-			guard
-				let task = transaction.object(forKey: self.taskID, inCollection: kCollection_Tasks) as? Task
+			_task = transaction.task(id: self.taskID)
+			if let task = _task {
+				_imageNode = self.imageNode(forTask: task, transaction: transaction)
+			}
+		}
+		
+		guard let task = _task else {
+			return
+		}
+		
+		self.navigationItem.title = task.title
+		self.taskName.text = task.title
+		self.taskDetails.text = task.details
+	
+		self.checkMark.checked = task.completed
+		self.created.text =  self.dateFormatter.string(from:task.creationDate)
+		self.uuid.text = task.uuid
+
+		let lastModified = task.lastModified()
+		
+		self.modifiedValue.text = self.dateFormatter.string(from: lastModified)
+		self.modifiedLabel.isHidden = false
+		self.modifiedValue.isHidden = false
+		
+		self.seg.selectedSegmentIndex = task.priority.rawValue
+		
+		if imageWasUpdated {
+			self.btnIcon.setImage((updatedImage ?? self.defaultImage), for: .normal)
+		}
+		else { // if !imageWasUpdated
+			
+			if let imageNode = _imageNode {
+				
+				// We're going to use the ZDCImageManager to fetch the thumbnail for us.
+				// The API uses 2 closures:
+				//
+				// - preFetch closure
+				// - postFetch closure
+				//
+				// The preFetch closure is invoked BEFORE the `fetchNodeThumbnail` function returns.
+				//
+				// If preFetch.willInvoke is false, the postFetch closure will NOT be called.
+				//
+				let preFetch = {(image: UIImage?, willInvoke: Bool) in
+					
+					self.btnIcon.setImage((image ?? self.defaultImage), for: .normal)
+				}
+				let postFetch = {(image: UIImage?, error: Error?) in
+					
+					if (image != nil) {
+						self.btnIcon.setImage(image, for: .normal)
+						
+					} else {
+						// Network request failed.
+						// You may want to display an error image ?
+					}
+				}
+				
+				let options = ZDCFetchOptions()
+				options.downloadIfMarkedAsNeedsDownload = true
+				
+				zdc.imageManager?.fetchNodeThumbnail(imageNode, with: options, preFetch: preFetch, postFetch: postFetch)
+			}
 			else {
-				return
+				
+				self.btnIcon.setImage(defaultImage, for: .normal)
 			}
-			
-			self.navigationItem.title = task.title
-			self.taskName.text = task.title
-			self.taskDetails.text = task.details
-
-			self.checkMark.checked = task.completed
-			self.created.text =  self.dateFormatter.string(from:task.creationDate)
-			self.uuid.text = task.uuid
-
-			let lastModified = task.lastModified()
-			
-			self.modifiedValue.text = self.dateFormatter.string(from: lastModified)
-			self.modifiedLabel.isHidden = false
-			self.modifiedValue.isHidden = false
-			
-			self.seg.selectedSegmentIndex = task.priority.rawValue
-			
-			if imageWasUpdated {
-				self.btnIcon.setImage((updatedImage ?? self.defaultImage), for: .normal)
-			}
-			else // if !imageWasUpdated
-			{
-				if let imageNode = self.imageNode(forTask: task, transaction: transaction) {
-					
-					// We're going to use the ZDCImageManager to fetch the thumbnail for us.
-					// The API uses 2 closures:
-					//
-					// - preFetch closure
-					// - postFetch closure
-					//
-					// The preFetch closure is invoked BEFORE the `fetchNodeThumbnail` function returns.
-					//
-					// If preFetch.willInvoke is false, the postFetch closure will NOT be called.
-					//
-					let preFetch = {(image: UIImage?, willInvoke: Bool) in
-						
-						self.btnIcon.setImage((image ?? self.defaultImage), for: .normal)
-					}
-					let postFetch = {(image: UIImage?, error: Error?) in
-						
-						if (image != nil) {
-							self.btnIcon.setImage(image, for: .normal)
-							
-						} else {
-							// Network request failed.
-							// You may want to display an error image ?
-						}
-					}
-					
-					let options = ZDCFetchOptions()
-					options.downloadIfMarkedAsNeedsDownload = true
-					
-					zdc.imageManager?.fetchNodeThumbnail(imageNode, with: options, preFetch: preFetch, postFetch: postFetch)
-				}
-				else {
-					
-					self.btnIcon.setImage(defaultImage, for: .normal)
-				}
-			}
-			
-		} // end: databaseConnection.read
+		}
 	}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: Database
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
+	// MARK: Database
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
 	
 	private func setupDatabaseConnection() {
 		
@@ -240,9 +243,9 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 		let notifications = notification.userInfo?[kNotificationsKey] as! [Notification]
 		
 		let hasChanges = databaseConnection.hasChange(
-			forKey: taskID,
-			inCollection: kCollection_Tasks,
-			in: notifications
+			forKey       : taskID,
+			inCollection : kCollection_Tasks,
+			in           : notifications
 		)
 
 		if hasChanges {
@@ -279,7 +282,7 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 		var imageNode: ZDCNode? = nil
 		
 		if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-			let taskNode = cloudTransaction.linkedNode(forKey: task.uuid, inCollection: kCollection_Tasks)
+			let taskNode = cloudTransaction.linkedNode(forTaskID: task.uuid)
 		{
 			imageNode = zdc.nodeManager.findNode(withName: "img", parentID: taskNode.uuid, transaction: transaction)
 		}
@@ -305,7 +308,7 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 		rwDatabaseConnection.asyncReadWrite { (transaction) in
 			
 			guard
-				var task = transaction.object(forKey: self.taskID, inCollection: kCollection_Tasks) as? Task
+				var task = transaction.task(id: self.taskID)
 			else {
 				return
 			}
@@ -382,10 +385,10 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 				//
 				let changeset = task.changeset() ?? Dictionary()
 				
-				transaction.setObject(task , forKey: task.uuid, inCollection: kCollection_Tasks)
+				transaction.setTask(task)
 		
 				if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-					let taskNode = cloudTransaction.linkedNode(forKey: task.uuid, inCollection: kCollection_Tasks)
+					let taskNode = cloudTransaction.linkedNode(forTaskID: task.uuid)
 				{
 					cloudTransaction.queueDataUpload(forNodeID: taskNode.uuid, withChangeset: changeset)
 					//                                                         ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -405,10 +408,10 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 			
 		}
 	}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: Actions
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
+	// MARK: Actions
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
 	
 	override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
 		super.touchesBegan(touches, with: event)
@@ -430,7 +433,7 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 		var hasImage: Bool = false
 		databaseConnection .read { (transaction) in
 			
-			if let task = transaction.object(forKey: self.taskID, inCollection: kCollection_Tasks) as? Task {
+			if let task = transaction.task(id: self.taskID) {
 				
 				let imageNode = self.imageNode(forTask: task, transaction: transaction)
 				hasImage = (imageNode != nil)
@@ -471,9 +474,9 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 		// Nothing to do here
 	}
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: UIImagePickerControllerDelegate
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
+	// MARK: UIImagePickerControllerDelegate
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
 
 	func imagePickerController(_ picker: UIImagePickerController,
 	                           didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any])
@@ -508,16 +511,14 @@ class TaskDetailsViewController: UIViewController, TaskPhotoViewControllerDelega
 		picker.dismiss(animated: true, completion: nil)
 	}
 	
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
 	// MARK: TaskPhotoViewControllerDelegate
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
 
-	func taskPhotoImageWasUpdated(image: UIImage?)
-	{
+	func taskPhotoImageWasUpdated(image: UIImage?) {
 		
 		self.updatedImage = image
 		self.imageWasUpdated = true
 	}
 	
-
 }

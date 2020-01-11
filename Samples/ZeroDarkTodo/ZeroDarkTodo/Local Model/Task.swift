@@ -71,7 +71,9 @@ class Task: ZDCRecord, Codable, YapDatabaseRelationshipNode {
 	/// ```
 	/// var task: Task? = nil
 	/// databaseConnection.read() {(transaction) in
-	///   task = transaction.object(forKey: listID, inCollection: kCollection_Tasks) as? Task
+	///   task = transaction.object(forKey: taskID, inCollection: kCollection_Tasks) as? Task
+	///   // or using our class extension:
+	///   task = transaction.task(id: taskID)
 	/// }
 	/// ```
 	var uuid: String
@@ -84,6 +86,8 @@ class Task: ZDCRecord, Codable, YapDatabaseRelationshipNode {
 	/// var list: List? = nil
 	/// databaseConnection.read() {(transaction) in
 	///   list = transaction.object(forKey: task.listID, inCollection: kCollection_Lists) as? List
+	///   // or using our class extension:
+	///   list = transaction.list(id: listID)
 	/// }
 	/// ```
 	var listID: String
@@ -97,9 +101,9 @@ class Task: ZDCRecord, Codable, YapDatabaseRelationshipNode {
 	var localLastModified: Date
 	var cloudLastModified: Date?
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: Init
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
+	// MARK: Init
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
 
 	required init() {
 		fatalError("init() not supported. Use init(listID:title:)")
@@ -179,9 +183,9 @@ class Task: ZDCRecord, Codable, YapDatabaseRelationshipNode {
 		super.init(copy: source)
 	}
 	
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: CloudCodable
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
+	// MARK: CloudCodable
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
 	
 	init(fromCloudData cloudData: Data, node: ZDCNode, listID: String) throws {
 
@@ -213,9 +217,9 @@ class Task: ZDCRecord, Codable, YapDatabaseRelationshipNode {
 		return data
 	}
 	
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: Convenience Functions
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
+	// MARK: Convenience Functions
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
 	
 	func lastModified()-> Date {
 		
@@ -231,9 +235,9 @@ class Task: ZDCRecord, Codable, YapDatabaseRelationshipNode {
 		return localLastModified
 	}
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: YapDatabaseRelationship
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
+	// MARK: YapDatabaseRelationship
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
 
 	/// YapDatabase has an extension called YapDatabaseRelationship.
 	/// And this extension is registered for us automatically by ZeroDark.cloud.
@@ -259,34 +263,54 @@ class Task: ZDCRecord, Codable, YapDatabaseRelationshipNode {
 	}
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ––––––––––––––––––––––––––––––––––––––––––––––––––
 // MARK: -
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ––––––––––––––––––––––––––––––––––––––––––––––––––
 
-/// We only store a subset of the object in the cloud.
-/// This class acts as a JSON wrapper for the information that gets encoded/decoded into JSON for cloud storage.
-///
-class TaskCloudJSON: Codable {
+// We're adding a few simple extensions to YapDatabse.
+// Mostly because we're lazy, and don't want to keep typing `kCollection_Tasks`.
+// But it also makes the code a little easier to read.
+
+extension YapDatabaseReadTransaction {
 	
-	enum CodingKeys: String, CodingKey {
-		case title = "title"
-		case details = "details"
-		case creationDate = "creationDate"
-		case completed = "completed"
-		case priority = "priority"
+	func task(id taskID: String) -> Task? {
+		
+		return self.object(forKey: taskID, inCollection: kCollection_Tasks) as? Task
+	}
+}
+
+extension YapDatabaseReadWriteTransaction {
+	
+	func setTask(_ task: Task) {
+		
+		self.setObject(task, forKey: task.uuid, inCollection: kCollection_Tasks)
 	}
 	
-	var title: String
-	var details: String?
-	var creationDate: Date
-	var completed: Bool
-	var priority: TaskPriority
+	func removeTask(id taskID: String) {
+		
+		self.removeObject(forKey: taskID, inCollection: kCollection_Tasks)
+	}
 	
-	init(fromTask task: Task) {
-		self.title = task.title
-		self.details = task.details
-		self.creationDate = task.creationDate
-		self.completed = task.completed
-		self.priority = task.priority
+	func touchTask(id taskID: String) {
+		
+		self.touchObject(forKey: taskID, inCollection: kCollection_Tasks)
+	}
+}
+
+extension ZDCCloudTransaction {
+	
+	func linkNodeID(_ nodeID: String, toTaskID taskID: String) throws {
+		
+		try self.linkNodeID(nodeID, toKey: taskID, inCollection: kCollection_Tasks)
+	}
+	
+	func linkedNode(forTaskID taskID: String) -> ZDCNode? {
+		
+		return self.linkedNode(forKey: taskID, inCollection: kCollection_Tasks)
+	}
+	
+	func linkedNodeID(forTaskID taskID: String) -> String? {
+		
+		return self.linkedNodeID(forKey: taskID, inCollection: kCollection_Tasks)
 	}
 }

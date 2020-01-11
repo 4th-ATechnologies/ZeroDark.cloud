@@ -109,9 +109,9 @@ class Conversation: NSCopying, Codable {
 
 extension YapDatabaseReadTransaction {
 	
-	func conversation(id: String) -> Conversation? {
+	func conversation(id conversationID: String) -> Conversation? {
 		
-		return self.object(forKey: id, inCollection: kCollection_Conversations) as? Conversation
+		return self.object(forKey: conversationID, inCollection: kCollection_Conversations) as? Conversation
 	}
 }
 
@@ -120,6 +120,16 @@ extension YapDatabaseReadWriteTransaction {
 	func setConversation(_ conversation: Conversation) {
 		
 		self.setObject(conversation, forKey: conversation.uuid, inCollection: kCollection_Conversations)
+	}
+	
+	func removeConversation(id conversationID: String) {
+		
+		self.removeObject(forKey: conversationID, inCollection: kCollection_Conversations)
+	}
+	
+	func touchConversation(id conversationID: String) {
+		
+		self.touchObject(forKey: conversationID, inCollection: kCollection_Conversations)
 	}
 }
 

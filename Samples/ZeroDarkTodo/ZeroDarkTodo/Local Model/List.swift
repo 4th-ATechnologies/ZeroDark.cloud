@@ -42,6 +42,8 @@ class List: NSCopying, Codable {
 	/// var list: List? = nil
 	/// databaseConnection.read() {(transaction) in
 	///   list = transaction.object(forKey: listID, inCollection: kCollection_Lists) as? List
+	///   // or using our class extension:
+	///   list = transaction.list(id: listID)
 	/// }
 	/// ```
 	let uuid: String
@@ -78,9 +80,9 @@ class List: NSCopying, Codable {
 		self.init(uuid: uuid, localUserID: source.localUserID, title: source.title)
 	}
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: NSCopying
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
+	// MARK: NSCopying
+	// ––––––––––––––––––––––––––––––––––––––––––––––––––
  
 	func copy(with zone: NSZone? = nil) -> Any {
 
@@ -88,5 +90,57 @@ class List: NSCopying, Codable {
 		                localUserID : localUserID,
 		                title       : title)
 		return copy
+	}
+}
+
+// ––––––––––––––––––––––––––––––––––––––––––––––––––
+// MARK: -
+// ––––––––––––––––––––––––––––––––––––––––––––––––––
+
+// We're adding a few simple extensions to YapDatabse.
+// Mostly because we're lazy, and don't want to keep typing `kCollection_Lists`.
+// But it also makes the code a little easier to read.
+
+extension YapDatabaseReadTransaction {
+	
+	func list(id listID: String) -> List? {
+		
+		return self.object(forKey: listID, inCollection: kCollection_Lists) as? List
+	}
+}
+
+extension YapDatabaseReadWriteTransaction {
+	
+	func setList(_ list: List) {
+		
+		self.setObject(list, forKey: list.uuid, inCollection: kCollection_Lists)
+	}
+	
+	func removeList(id listID: String) {
+		
+		self.removeObject(forKey: listID, inCollection: kCollection_Lists)
+	}
+	
+	func touchList(id listID: String) {
+		
+		self.touchObject(forKey: listID, inCollection: kCollection_Lists)
+	}
+}
+
+extension ZDCCloudTransaction {
+	
+	func linkNodeID(_ nodeID: String, toListID listID: String) throws {
+		
+		try self.linkNodeID(nodeID, toKey: listID, inCollection: kCollection_Lists)
+	}
+	
+	func linkedNode(forListID listID: String) -> ZDCNode? {
+		
+		return self.linkedNode(forKey: listID, inCollection: kCollection_Lists)
+	}
+	
+	func linkedNodeID(forListID listID: String) -> String? {
+		
+		return self.linkedNodeID(forKey: listID, inCollection: kCollection_Lists)
 	}
 }

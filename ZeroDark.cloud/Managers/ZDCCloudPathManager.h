@@ -22,8 +22,8 @@ NS_ASSUME_NONNULL_BEGIN
  * This is to maintain zero-knowledge, and protect the customer in situations
  * where the node-names themselves may reveal sensitive information.
  *
- * For more information about how the encryption works, see this article:
- * https://zerodarkcloud.readthedocs.io/en/latest/overview/encryption/
+ * For more information about how treesystem encryption works, see this article:
+ * https://zerodarkcloud.readthedocs.io/en/latest/overview/encryption_2/
  *
  * Here's the high-level overview:
  *

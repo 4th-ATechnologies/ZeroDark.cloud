@@ -326,7 +326,7 @@ done:
 	// - RCRD (short for record)
 	// - DATA
 	//
-	// When you audit the data stored in the cloud, you'll see both these files clearly.
+	// When you audit the data stored in the cloud, you'll see both files clearly.
 	// They share the same name, but use different file extensions. For example:
 	//
 	// - dcauqok66griorw7m7487itp3rtrceem.rcrd
@@ -429,11 +429,6 @@ done:
 	// Is this a special type of node ?
 	
 	const BOOL isPointer = node.isPointer;
-	
-	const BOOL isMessage =
-	    [node.parentID hasSuffix:@"|inbox"]
-	 || [node.parentID hasSuffix:@"|outbox"]
-	 || [node.parentID hasSuffix:@"|signal"];
 	
 	// Prepare JSON dictionary
 	
@@ -603,13 +598,6 @@ done:
 				dict_data = [NSMutableDictionary dictionaryWithCapacity:1];
 				dict_data[kZDCCloudRcrd_Data_Pointer] = pointer;
 			}
-		}
-		else if (isMessage)
-		{
-			// Messages don't have metadata section.
-			// But the server requires either a data or metadata section.
-			
-			dict[kZDCCloudRcrd_Meta] = @"";
 		}
 		else
 		{

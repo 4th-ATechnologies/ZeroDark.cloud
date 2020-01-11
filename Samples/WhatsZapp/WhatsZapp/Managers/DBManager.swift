@@ -28,6 +28,8 @@ class DBManager {
 	}()
 	
 	private init() {
+		
+		// Configure logging level (for CocoaLumberjack)
 	#if DEBUG
 		dynamicLogLevel = .all
 	#else
@@ -37,9 +39,22 @@ class DBManager {
 	
 	public func configureDatabase(_ database: YapDatabase) {
 		
+		// YapDatabase allows us to store any objects that conform to Swift's Codable protocol.
+		// All we have to do is register the class.
+		//
+		// YapDatabase is a collection/key/value store.
+		// So we're registering the class with the collection in which we're going to store instances of the class.
+		//
 		database.registerCodableSerialization(Conversation.self, forCollection: kCollection_Conversations)
 		database.registerCodableSerialization(Message.self, forCollection: kCollection_Messages)
 		
+		// In addtion to being a collection/key/value store, YapDatabase comes with a bunch of extensions.
+		// These extensions allow us to do a bunch of cool stuff such as:
+		// - order & sort items in the database
+		// - create various indexes on object properties (for searching, etc)
+		// - full text search extension
+		// - etc
+		//
 		registerExtension_ConversationsView(database)
 		registerExtension_MessagesView(database)
 		registerExtension_UnreadMessagesView(database)
@@ -47,7 +62,7 @@ class DBManager {
 	}
 	
 	/// In the user interface, we need to display a tableView of all the conversations.
-	/// So we need to sort these conversations based on their `lastActivity` property.
+	/// So we want to sort these conversations based on their `lastActivity` property.
 	/// We use a `YapDatabaseAutoView` to accomplish this.
 	///
 	private func registerExtension_ConversationsView(_ database: YapDatabase) -> Void {
@@ -289,7 +304,7 @@ class DBManager {
 					conversation = conversation.copy() as! Conversation
 					conversation.lastActivity = new_lastActivity
 					
-					transaction.setObject(conversation, forKey: conversation.uuid, inCollection: kCollection_Conversations)
+					transaction.setConversation(conversation)
 					didUpdateConversation = true
 				}
 			}
@@ -317,7 +332,7 @@ class DBManager {
 				// A "touch" will get reported to our ConversationsVC as an update for this Conversation object.
 				// Which will trigger it to reload the appropriate tableView row.
 				
-				transaction.touchObject(forKey: conversation.uuid, inCollection: kCollection_Conversations)
+				transaction.touchConversation(id: conversation.uuid)
 			}
 		}
 		
@@ -366,14 +381,14 @@ class DBManager {
 					conversation = conversation.copy() as! Conversation
 					conversation.lastActivity = new_lastActivity
 					
-					transaction.setObject(conversation, forKey: conversation.uuid, inCollection: kCollection_Conversations)
+					transaction.setConversation(conversation)
 					didUpdateConversation = true
 				}
 			}
 			
 			if !didUpdateConversation {
 				
-				transaction.touchObject(forKey: conversation.uuid, inCollection: kCollection_Conversations)
+				transaction.touchConversation(id: conversation.uuid)
 			}
 		}
 		

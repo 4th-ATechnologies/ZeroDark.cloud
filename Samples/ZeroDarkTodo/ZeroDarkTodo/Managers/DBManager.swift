@@ -17,11 +17,6 @@ let Ext_View_Tasks         = "Tasks"
 let Ext_View_Pending_Tasks = "PendingTasks"
 let Ext_Hooks              = "Hooks"
 
-extension Notification.Name {
-	static let UIDBConnectionWillUpdate = Notification.Name("UIDBConnectionWillUpdate")
-	static let UIDBConnectionDidUpdate  = Notification.Name("UIDBConnectionDidUpdate")
-}
-
 /// We're using YapDatabase in this example.
 /// You don't have to use it (but it's pretty awesome).
 ///
@@ -34,9 +29,8 @@ class DBManager {
 		return dbManager
 	}()
 	
-	private var _uiDatabaseConnection: YapDatabaseConnection?
-	
 	private init() {
+		// Configure logging level (for CocoaLumberjack)
 	#if DEBUG
 		dynamicLogLevel = .all
 	#else
@@ -46,16 +40,32 @@ class DBManager {
 	
 	public func configureDatabase(_ db: YapDatabase) {
 		
+		// YapDatabase allows us to store any objects that conform to Swift's Codable protocol.
+		// All we have to do is register the class.
+		//
+		// YapDatabase is a collection/key/value store.
+		// So we're registering the class with the collection in which we're going to store instances of the class.
+		//
 		db.registerCodableSerialization(List.self, forCollection: kCollection_Lists)
 		db.registerCodableSerialization(Task.self, forCollection: kCollection_Tasks)
 		db.registerCodableSerialization(Invitation.self, forCollection: kCollection_Invitations)
 		
+		// In addtion to being a collection/key/value store, YapDatabase comes with a bunch of extensions.
+		// These extensions allow us to do a bunch of cool stuff such as:
+		// - order & sort items in the database
+		// - create various indexes on object properties (for searching, etc)
+		// - full text search extension
+		// - etc
+		//
+		// In this example, we create a few extensions for doing things such as
+		// - sorting the lists for display in a tableView
+		// - sorting the tasks (within each list) for display in a tableView
+		// - etc
+		//
 		registerExtension_ListsView(db)
 		registerExtension_TasksView(db)
 		registerExtension_PendingTasksView(db)
 		registerExtension_Hooks(db)
-		
-		setupUIDatabaseConnection(db)
 	}
 	
 	/// In the user interface, we need to display a tableView of all the Lists.
@@ -127,7 +137,7 @@ class DBManager {
 		let versionTag = "\(version)-\(locale)"
 		
 		let options = YapDatabaseViewOptions()
-		options.allowedCollections = YapWhitelistBlacklist(whitelist: Set([kCollection_Lists]))
+		options.allowedCollections = YapWhitelistBlacklist(whitelist: Set([kCollection_Lists])) // optimization
 		
 		let view =
 			YapDatabaseAutoView(grouping: grouping,
@@ -203,7 +213,7 @@ class DBManager {
 		let versionTag =  "2019-02-04-x"; // <---------- change me if you modify grouping or sorting closure
 		
 		let options = YapDatabaseViewOptions()
-		options.allowedCollections = YapWhitelistBlacklist(whitelist: Set([kCollection_Tasks]))
+		options.allowedCollections = YapWhitelistBlacklist(whitelist: Set([kCollection_Tasks])) // optimization
 
 		let view =
 			YapDatabaseAutoView(grouping: grouping,
@@ -237,7 +247,7 @@ class DBManager {
 		// Only include Tasks that are NOT complete.
 		//
 		let grouping = YapDatabaseViewGrouping.withObjectBlock(
-		{(transaction, collection, key, obj) -> String? in
+			{(transaction, collection, key, obj) -> String? in
 			
 			if let task = obj as? Task {
 				
@@ -266,7 +276,7 @@ class DBManager {
 		let versionTag =  "2019-02-04-x"; // <---------- change me if you modify grouping or sorting closure
 		
 		let options = YapDatabaseViewOptions()
-		options.allowedCollections = YapWhitelistBlacklist(whitelist: Set([kCollection_Tasks]))
+		options.allowedCollections = YapWhitelistBlacklist(whitelist: Set([kCollection_Tasks])) // optimization
 
 		let view = YapDatabaseAutoView(grouping: grouping,
 		                                sorting: sorting,
@@ -316,7 +326,7 @@ class DBManager {
 				// A Task item was inserted or modified.
 				// So we "touch" the parent List, which will trigger a UI update for it.
 				//
-				transaction.touchObject(forKey: task.listID, inCollection: kCollection_Lists)
+				transaction.touchList(id: task.listID)
 			}
 		}
 		
@@ -332,7 +342,7 @@ class DBManager {
 				// A Task item will be deleted.
 				// So we "touch" the parent List, which will trigger a UI update for it.
 				//
-				transaction.touchObject(forKey: task.listID, inCollection: kCollection_Lists)
+				transaction.touchList(id: task.listID)
 			}
 		}
 		
@@ -343,56 +353,5 @@ class DBManager {
 				DDLogError("Error registering \(extName) !!!")
 			}
 		}
-	}
-	
-	private func setupUIDatabaseConnection(_ db: YapDatabase) {
-		
-		_uiDatabaseConnection = db.newConnection()
-		_uiDatabaseConnection?.objectCacheLimit = 1000;
-		_uiDatabaseConnection?.metadataCacheLimit = 1000;
-		_uiDatabaseConnection?.name = "uiDatabaseConnection"
-		
-	#if DEBUG
-		_uiDatabaseConnection?.permittedTransactions = [.YDB_MainThreadOnly, .YDB_SyncReadTransaction] // NO asyncReads!
-	#endif
-		
-		_uiDatabaseConnection?.enableExceptionsForImplicitlyEndingLongLivedReadTransaction()
-		_uiDatabaseConnection?.beginLongLivedReadTransaction()
-		
-		let nc = NotificationCenter.default
-		nc.addObserver( self,
-		      selector: #selector(self.databaseModified(notification:)),
-		          name: Notification.Name.YapDatabaseModified,
-		        object: db)
-	}
-	
-	public func uiDatabaseConnection() -> YapDatabaseConnection? {
-		
-		assert(Thread.isMainThread, "Can't use the uiDatabaseConnection outside the main thread")
-		return _uiDatabaseConnection
-	}
-	
-	@objc func databaseModified(notification: Notification) {
-		
-		guard let uiDatabaseConnection = _uiDatabaseConnection else {
-			return
-		}
-		
-		let nc = NotificationCenter.default
-		
-		// Notify observers we're about to update the database connection
-		nc.post(name: Notification.Name.UIDBConnectionWillUpdate, object: self)
-		
-		// Move uiDatabaseConnection to the latest commit.
-		// Function returns all the notifications for each commit we jump.
-		
-		let notifications = uiDatabaseConnection.beginLongLivedReadTransaction()
-		
-		// Notify observers that the uiDatabaseConnection was updated
-		let userInfo = ["notifications": notifications]
-
-		nc.post(name: Notification.Name.UIDBConnectionDidUpdate,
-		      object: self,
-		    userInfo: userInfo)
 	}
 }

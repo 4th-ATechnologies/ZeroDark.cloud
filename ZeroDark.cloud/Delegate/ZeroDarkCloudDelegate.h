@@ -114,7 +114,7 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
 @protocol ZeroDarkCloudDelegate
 @required
 
-#pragma mark Push - Nodes
+#pragma mark Push
 
 /**
  * When the PushManager is ready to upload a node, it uses this method to request the node's data.
@@ -240,24 +240,6 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
                  atPath:(ZDCTreesystemPath *)path
             transaction:(YapDatabaseReadWriteTransaction *)transaction;
 
-#pragma mark Push - Messages
-
-/**
- * When the PushManager is ready to send an outgoing message, it uses this method to request the message data.
- *
- * You supply the message data, and the framework handles encrypting it & uploading it to the cloud.
- *
- * @param message
- *   The outgoing message to be sent.
- *
- * @param transaction
- *   An atomic transaction in which its safe to read any needed information from the database.
- *
- * @return Either nil, or a ZDCData instance that wraps the message data to send.
- */
-- (nullable ZDCData *)dataForMessage:(ZDCNode *)message
-                         transaction:(YapDatabaseReadTransaction *)transaction;
-
 /**
  * This method is called by the framework after a message has been sent.
  *
@@ -266,6 +248,9 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
  *
  * @param message
  *   The message which was sent.
+ *
+ * @param recipient
+ *   The user to which the message was delivered.
  *
  * @param transaction
  *   The atomic transaction in which the database was modified.

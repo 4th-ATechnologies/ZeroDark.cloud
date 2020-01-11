@@ -1609,25 +1609,13 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				node = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
 				if (node)
 				{
-					BOOL isMessage =
-					    [node.parentID hasSuffix:@"|inbox"]
-					 || [node.parentID hasSuffix:@"|outbox"]
-					 || [node.parentID hasSuffix:@"|signal"];
+					ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
 					
-					if (isMessage)
+					data = [zdc.delegate dataForNode:node atPath:path transaction:transaction];
+					if (data)
 					{
-						data = [zdc.delegate dataForMessage:node transaction:transaction];
-					}
-					else
-					{
-						ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
-						
-						data = [zdc.delegate dataForNode:node atPath:path transaction:transaction];
-						if (data)
-						{
-							metadata = [zdc.delegate metadataForNode:node atPath:path transaction:transaction];
-							thumbnail = [zdc.delegate thumbnailForNode:node atPath:path transaction:transaction];
-						}
+						metadata = [zdc.delegate metadataForNode:node atPath:path transaction:transaction];
+						thumbnail = [zdc.delegate thumbnailForNode:node atPath:path transaction:transaction];
 					}
 				}
 				
@@ -2509,9 +2497,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			}
 			else if (operation.putType == ZDCCloudOperationPutType_Node_Data)
 			{
-				BOOL isSignal = [node.parentID hasSuffix:@"|signal"];
+				ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
 				
-				if (isSignal)
+				if (path.trunk == ZDCTreesystemTrunk_Detached)
 				{
 					NSString *recipientID = node.anchor.userID;
 					ZDCUser *recipient = [transaction objectForKey:recipientID inCollection:kZDCCollection_Users];
@@ -2522,8 +2510,6 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				}
 				else
 				{
-					ZDCTreesystemPath *path = [[ZDCNodeManager sharedInstance] pathForNode:node transaction:transaction];
-					
 					[zdc.delegate didPushNodeData:node atPath:path transaction:transaction];
 				}
 			}

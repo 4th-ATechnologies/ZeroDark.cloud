@@ -144,7 +144,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: ZeroDarkCloudDelegate: Push (Nodes)
+// MARK: ZeroDarkCloudDelegate: Push
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/// ZeroDark is asking us to supply the serialized data for a node.
@@ -306,19 +306,6 @@ class ZDCManager: ZeroDarkCloudDelegate {
 	func didPushNodeData(_ node: ZDCNode, at path: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
 		
 		DDLogInfo("didPushNodeData:at: \(path.fullPath())")
-	}
-	
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: ZeroDarkCloudDelegate: Push (Messages)
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	/// ZeroDark is asking us to supply the serialized data for the message.
-	///
-	func data(forMessage message: ZDCNode, transaction: YapDatabaseReadTransaction) -> ZDCData? {
-		
-		// We don't use this function in this sample app.
-		// @see data(for:at:transaction:)
-		return nil
 	}
 	
 	/// ZeroDark has finished sending the message.
@@ -581,7 +568,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 			
 			// A conversation was deleted (along with all associated messages)
 			
-			transaction.removeObject(forKey: conversation.uuid, inCollection: kCollection_Conversations)
+			transaction.removeConversation(id: conversation.uuid)
 			
 			if let viewTransaction = transaction.ext(DBExt_MessagesView) as? YapDatabaseViewTransaction {
 				
@@ -600,7 +587,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 			
 			// A message was deleted
 			
-			transaction.removeObject(forKey: message.uuid, inCollection: kCollection_Messages)
+			transaction.removeMessage(id: message.uuid)
 		}
 	}
 	
@@ -621,10 +608,9 @@ class ZDCManager: ZeroDarkCloudDelegate {
 		
 		if let node = transaction.object(forKey: nodeID, inCollection: kZDCCollection_Nodes) as? ZDCNode {
 			
-			if let treesystemPath = zdc.nodeManager.path(for: node, transaction: transaction) {
-				
-				self.downloadNode(node, at: treesystemPath)
-			}
+			let treesystemPath = zdc.nodeManager.path(for: node, transaction: transaction)
+			
+			self.downloadNode(node, at: treesystemPath)
 		}
 	}
 	
@@ -896,7 +882,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 			
 			guard
 				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUser.uuid),
-				let convoNode = cloudTransaction.linkedNode(forKey: convo.uuid, inCollection: kCollection_Conversations)
+				let convoNode = cloudTransaction.linkedNode(forConversationID: convo.uuid)
 			else {
 				return
 			}
@@ -993,7 +979,6 @@ class ZDCManager: ZeroDarkCloudDelegate {
 			
 			guard
 				let msgNode = transaction.node(id: msgNodeID),
-				let msgPath = zdc.nodeManager.path(for: msgNode, transaction: transaction),
 				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: msgNode.localUserID)
 			else {
 				return
@@ -1039,6 +1024,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 			//
 			let senderID = msgNode.senderID ?? cloudJSON.senderID
 			
+			let msgPath = zdc.nodeManager.path(for: msgNode, transaction: transaction)
 			if msgPath.trunk == .inbox {
 				
 				// For messages in our inbox:

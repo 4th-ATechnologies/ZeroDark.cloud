@@ -136,8 +136,7 @@
 				DC97C1972356341000B46DA4 /* Assets.xcassets */,
 				DC97C1992356341000B46DA4 /* LaunchScreen.storyboard */,
 				DC97C19C2356341000B46DA4 /* Info.plist */,
-				DC97C1A223565FF000B46DA4 /* ZDCManager.swift */,
-				DC1CEF3B235E3242004B2EBC /* DBManager.swift */,
+				DCD07E3B23CA33EC0036A5BC /* Managers */,
 				DC1CEF3A235E2D82004B2EBC /* Local Model */,
 				DC97E4B0236CD2850022B25F /* Cloud Model */,
 				DC76FC0A235AB54F0013047B /* Utilities */,
@@ -152,6 +151,15 @@
 				DC97E4B1236CE5060022B25F /* MessageCloudJSON.swift */,
 			);
 			path = "Cloud Model";
+			sourceTree = "<group>";
+		};
+		DCD07E3B23CA33EC0036A5BC /* Managers */ = {
+			isa = PBXGroup;
+			children = (
+				DC1CEF3B235E3242004B2EBC /* DBManager.swift */,
+				DC97C1A223565FF000B46DA4 /* ZDCManager.swift */,
+			);
+			path = Managers;
 			sourceTree = "<group>";
 		};
 		DECBCE259FD8F93FEA90FF3E /* Frameworks */ = {

@@ -73,7 +73,6 @@ static NSString *const k_pointeeID             = @"pointeeID";
 @synthesize anchor = anchor;
 @synthesize pointeeID = pointeeID;
 @dynamic isPointer;
-@dynamic isSignal;
 
 - (void)setDirSalt:(NSData *)newDirSalt
 {
@@ -272,11 +271,6 @@ static NSString *const k_pointeeID             = @"pointeeID";
 	return (pointeeID != nil);
 }
 
-- (BOOL)isSignal
-{
-	return [parentID hasSuffix:@"|signal"];
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Random
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -305,9 +299,9 @@ static NSString *const k_pointeeID             = @"pointeeID";
 #pragma mark Special ParentID's
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-+ (NSString *)signalParentIDForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID
++ (NSString *)detachedParentIDForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID
 {
-	return [NSString stringWithFormat:@"%@|%@|signal", localUserID, treeID];
+	return [NSString stringWithFormat:@"%@|%@|detached", localUserID, treeID];
 }
 
 + (NSString *)graftParentIDForLocalUserID:(NSString *)localUserID treeID:(NSString *)treeID

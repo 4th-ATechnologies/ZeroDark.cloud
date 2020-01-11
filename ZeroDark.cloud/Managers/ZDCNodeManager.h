@@ -163,8 +163,8 @@ NS_ASSUME_NONNULL_BEGIN
  * @param transaction
  *   A database transaction - allows the method to read from the database.
  */
-- (nullable ZDCTreesystemPath *)pathForNode:(ZDCNode *)node
-                                transaction:(YapDatabaseReadTransaction *)transaction;
+- (ZDCTreesystemPath *)pathForNode:(ZDCNode *)node
+                       transaction:(YapDatabaseReadTransaction *)transaction;
 
 /**
  * Returns an array of all parent nodeID's of the given node, up to the containerNode.

@@ -32,6 +32,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 	
 	private init() {
 		
+		// Configure logging level (for CocoaLumberjack)
 	#if DEBUG
 		dynamicLogLevel = .all
 	#else
@@ -96,7 +97,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// MARK: ZeroDarkCloudDelegate: Push (Nodes)
+	// MARK: ZeroDarkCloudDelegate: Push
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/// ZeroDark is asking us to supply the serialized data for a node.
@@ -104,66 +105,121 @@ class ZDCManager: ZeroDarkCloudDelegate {
 	///
 	func data(for node: ZDCNode, at path: ZDCTreesystemPath, transaction: YapDatabaseReadTransaction) -> ZDCData {
 		
-		// We need to figure out what object is associated with the given node.
-		// We can do that by asking the framework which {collection, key} tuple is linked to the node.
-		//
-		// So first we get an instance of ZDCCloudTransaction.
+		// First we get an instance of ZDCCloudTransaction.
 		// Since the ZeroDarkCloud framework supports multiple localUsers,
 		// we need to get the ZDCCloudTransaction for the correct localUser.
 		
-		let ext = zdc.cloudTransaction(transaction, forLocalUserID: node.localUserID)
+		guard
+			let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: node.localUserID)
+		else {
+			return ZDCData()
+		}
 		
-		// Now we can ask it what tuple is linked to this node.
-		// And the collection will tell us what the object type is.
+		if path.trunk == .home {
 		
-		if let (collection, key) = ext?.linkedCollectionAndKey(forNodeID: node.uuid) {
+			// We need to figure out what object is associated with the given node.
+			// We can do that by asking the framework which {collection, key} tuple is linked to the node.
 			
-			// Now we need to serialize our object for storage in the cloud.
-			// Our model classes use the `cloudEncode()` function for this task.
-			
-			if collection == kCollection_Lists {
-				
-				// We don't actually store anything in the cloud for a list.
-				// For the current codebase, the title is the only thing we currently need.
-				//
-				return ZDCData()
-			}
-			else if collection == kCollection_Tasks {
-				
-				let taskID = key
-				if let task = transaction.object(forKey: taskID, inCollection: collection) as? Task {
-					
-					do {
-						let data = try task.cloudEncode()
-						return ZDCData(data: data)
-						
-					} catch {
-						DDLogError("Error in task.cloudEncode(): \(error)")
+			if let (collection, key) = cloudTransaction.linkedCollectionAndKey(forNodeID: node.uuid) {
+	
+				// And now the collection will tell us what the object type is.
+	
+				if collection == kCollection_Lists {
+	
+					// We don't actually store anything in the cloud for a list.
+					// For the current codebase, the title is the only thing we currently need.
+					//
+					return ZDCData()
+				}
+				else if collection == kCollection_Tasks {
+	
+					let taskID = key
+					if let task = transaction.object(forKey: taskID, inCollection: collection) as? Task {
+	
+						do {
+							let data = try task.cloudEncode()
+							return ZDCData(data: data)
+	
+						} catch {
+							DDLogError("Error in task.cloudEncode(): \(error)")
+						}
 					}
 				}
 			}
+			else if path.pathComponents.count == 3 {
+	
+				// This is for a Task's image:
+				//
+				//      (home)
+				//       /  \
+				// (listA)  (listB)
+				//           /    \
+				//      (task1)   (task2)
+				//         |
+				//       (imgA)
+				//
+				// path: /{listB}/{task1}/img
+				//
+				// We always store the image in the DiskManager.
+				// And we store it with the "persistent" flag so it can't get deleted until after we've uploaded it.
+	
+				if let export = zdc.diskManager?.nodeData(node),
+					let cryptoFile = export.cryptoFile
+				{
+					return ZDCData(cryptoFile: cryptoFile)
+				}
+			}
 		}
-		else if path.pathComponents.count == 3 {
+		else if path.trunk == .outbox || path.trunk == .inbox {
 			
-			// This is for a Task's image:
-			//
-			//      (home)
-			//       /  \
-			// (listA)  (listB)
-			//           /    \
-			//      (task1)   (task2)
-			//         |
-			//       (imgA)
-			//
-			// path: /{listB}/{task1}/img
-			//
-			// We always store the image in the DiskManager.
-			// And we store it with the "persistent" flag so it can't get deleted until after we've uploaded it.
+			// The node is a message (an invitation to another user to collaborate on a list).
 			
-			if let export = zdc.diskManager?.nodeData(node),
-				let cryptoFile = export.cryptoFile
-			{
-				return ZDCData(cryptoFile: cryptoFile)
+			// When we enqueued the message, we tagged it with the corresponding listID.
+			// So we can fetch our listID via this tag.
+			guard
+				let listID = cloudTransaction.tag(forNodeID: node.uuid, withIdentifier: "listID") as? String,
+				let list = transaction.list(id: listID)
+			else {
+				return ZDCData()
+			}
+			
+			// Our message needs to include the cloudID & cloudPath to the node.
+			// This will allow the message receiver to graft the node into their treesystem.
+			//
+			guard
+				let listNode = cloudTransaction.linkedNode(forListID: listID),
+				let graftInvite = cloudTransaction.graftInvite(for: listNode)
+			else {
+				return ZDCData()
+			}
+			
+			// In the future, we may want to allow our user to type a message.
+			// For example:
+			//
+			//   "Hey Bob, we have a lot of shopping to do for the holidays. Let's collaborate on this list !!!"
+			//
+			// This sample app doesn't include this UI.
+			// But you can test it out by hard-coding a message here.
+			//
+			let msgText: String? = nil
+			
+			// Create invitation wrapper
+			//
+			let invitation = InvitationCloudJSON(listName: list.title,
+			                                      message: msgText,
+			                                    cloudPath: graftInvite.cloudPath.path(),
+			                                      cloudID: graftInvite.cloudID)
+			
+			// Convert to JSON, and return data
+			do {
+				let encoder = JSONEncoder()
+				let jsonData = try encoder.encode(invitation)
+				return ZDCData(data: jsonData)
+				
+			} catch {
+				
+				DDLogError("Error encoding message dict to JSON: \(error)")
+				return ZDCData()
 			}
 		}
 		
@@ -241,65 +297,6 @@ class ZDCManager: ZeroDarkCloudDelegate {
 		// Nothing to do here for this app
 	}
 	
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// MARK: ZeroDarkCloudDelegate: Push (Messages)
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	/// ZeroDark is asking us to supply the serialized data for the message.
-	/// This is the data that will get uploaded to the cloud (after ZeroDark encrypts it).
-	///
-	func data(forMessage message: ZDCNode, transaction: YapDatabaseReadTransaction) -> ZDCData? {
-		
-		// When we enqueued the message, we tagged it with the corresponding listID.
-		// So we can fetch our listID via this tag.
-		guard
-			let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: message.localUserID),
-		   let listID = cloudTransaction.tag(forNodeID: message.uuid, withIdentifier: "listID") as? String,
-			let list = transaction.object(forKey: listID, inCollection: kCollection_Lists) as? List
-		else {
-			return nil
-		}
-		
-		// Our message needs to include the cloudID & cloudPath to the node.
-		// This will allow the message receiver to graft the node into their treesystem.
-		//
-		guard
-			let listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kCollection_Lists),
-			let graftInvite = cloudTransaction.graftInvite(for: listNode)
-		else {
-			return nil
-		}
-		
-		// In the future, we may want to allow our user to type a message.
-		// For example:
-		//
-		//   "Hey Bob, we have a lot of shopping to do for the holidays. Let's collaborate on this list !!!"
-		//
-		// This sample app doesn't include this UI.
-		// But you can test it out by hard-coding a message here.
-		//
-		let msgText: String? = nil
-		
-		// Create invitation wrapper
-		//
-		let invitation = InvitationCloudJSON(listName: list.title,
-		                                      message: msgText,
-		                                    cloudPath: graftInvite.cloudPath.path(),
-		                                      cloudID: graftInvite.cloudID)
-		
-		// Convert to JSON, and return data
-		do {
-			let encoder = JSONEncoder()
-			let jsonData = try encoder.encode(invitation)
-			return ZDCData(data: jsonData)
-			
-		} catch {
-			
-			DDLogError("Error encoding message dict to JSON: \(error)")
-			return nil
-		}
-	}
-	
 	func didSendMessage(_ message: ZDCNode, toRecipient recipient: ZDCUser, transaction: YapDatabaseReadWriteTransaction) {
 		
 		DDLogInfo("didSendMessage:toRecipient: \(recipient.uuid)")
@@ -358,19 +355,12 @@ class ZDCManager: ZeroDarkCloudDelegate {
 						let list = List(localUserID: node.localUserID, title: title)
 						
 						// Store the downloaded List object in the database.
-						//
-						// YapDatabase is a collection/key/value store.
-						// So we store all List objects in the same collection: kCollection_Lists
-						// And every list has a uuid, which we use as the key in the database.
-						//
-						// Wondering how the object gets serialized / deserialized ?
-						// The List object supports the Swift Codable protocol.
 						
-						transaction.setObject(list, forKey: list.uuid, inCollection: kCollection_Lists)
+						transaction.setList(list)
 						
 						// Link the List to the Node
 						do {
-							try cloudTransaction.linkNodeID(node.uuid, toKey: list.uuid, inCollection: kCollection_Lists)
+							try cloudTransaction.linkNodeID(node.uuid, toListID: list.uuid)
 							
 						} catch {
 							DDLogError("Error linking node to list: \(error)")
@@ -619,7 +609,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 					
 					// All we have to do is delete the corresponding List from the database.
 					
-					transaction.removeObject(forKey: list.uuid, inCollection: kCollection_Lists)
+					transaction.removeList(id: list.uuid)
 					
 					// The Tasks will be automatically deleted, courtesy of YapDatabaseRelationship extension.
 					// For more information on how this works, look at the function:
@@ -634,7 +624,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 					
 					// Delete the corresponding task.
 					
-					transaction.removeObject(forKey: task.uuid, inCollection: kCollection_Tasks)
+					transaction.removeTask(id: task.uuid)
 				}
 			
 			case 3:
@@ -648,7 +638,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 				if let parentPath = path.parent(),
 				   let task = cloudTransaction.linkedObject(for: parentPath) as? Task
 				{
-					transaction.touchObject(forKey: task.uuid, inCollection: kCollection_Tasks)
+					transaction.touchTask(id: task.uuid)
 				}
 			
 			default:
@@ -738,10 +728,8 @@ class ZDCManager: ZeroDarkCloudDelegate {
 		
 		if let node = transaction.object(forKey: nodeID, inCollection: kZDCCollection_Nodes) as? ZDCNode {
 			
-			if let treesystemPath = zdc.nodeManager.path(for: node, transaction: transaction) {
-				
-				self.downloadNode(node, at: treesystemPath)
-			}
+			let treesystemPath = zdc.nodeManager.path(for: node, transaction: transaction)
+			self.downloadNode(node, at: treesystemPath)
 		}
 	}
 	
@@ -1021,8 +1009,8 @@ class ZDCManager: ZeroDarkCloudDelegate {
 			for invitation in pendingInvitations {
 		
 				zdc.userManager!.fetchUser(withID: invitation.senderID,
-				                                  requesterID: invitation.receiverID,
-				                              completionQueue: DispatchQueue.global())
+				                      requesterID: invitation.receiverID,
+				                  completionQueue: DispatchQueue.global())
 				{ (user: ZDCUser?, error) in
 		
 					if (user != nil) {
@@ -1107,15 +1095,8 @@ class ZDCManager: ZeroDarkCloudDelegate {
 					let _ = try existingTask.merge(cloudVersion: downloadedTask, pendingChangesets: pendingChangesets)
 					
 					// Store the updated Task object in the database.
-					//
-					// YapDatabase is a collection/key/value store.
-					// We store all Task objects in the same collection: kCollection_Tasks
-					// And every task has a uuid, which we use as the key in the database.
-					//
-					// Wondering how the object gets serialized / deserialized ?
-					// The Task object supports the Swift Codable protocol.
 					
-					transaction.setObject(existingTask, forKey: existingTask.uuid, inCollection: kCollection_Tasks)
+					transaction.setTask(existingTask)
 					
 					// We notify the system that we've merged the changes from the cloud.
 					//
@@ -1134,26 +1115,19 @@ class ZDCManager: ZeroDarkCloudDelegate {
 					// We just need to change its uuid to match.
 					//
 					downloadedTask = Task(copy: downloadedTask, uuid: existingTask.uuid)
-					transaction.setObject(downloadedTask, forKey: downloadedTask.uuid, inCollection: kCollection_Tasks)
+					transaction.setTask(downloadedTask)
 				}
 			}
 			else {
 				
 				// Store the new Task object in the database.
-				//
-				// YapDatabase is a collection/key/value store.
-				// We store all Task objects in the same collection: kCollection_Tasks
-				// And every task has a uuid, which we use as the key in the database.
-				//
-				// Wondering how the object gets serialized / deserialized ?
-				// The Task object supports the Swift Codable protocol.
 				
-				transaction.setObject(downloadedTask, forKey: downloadedTask.uuid, inCollection: kCollection_Tasks)
+				transaction.setTask(downloadedTask)
 				
 				// Link the Task to the Node
 				//
 				do {
-					try cloudTransaction.linkNodeID(taskNodeID, toKey: downloadedTask.uuid, inCollection: kCollection_Tasks)
+					try cloudTransaction.linkNodeID(taskNodeID, toTaskID: downloadedTask.uuid)
 					
 				} catch {
 					DDLogError("Error linking node to task: \(error)")
@@ -1298,7 +1272,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 			
 			var permsOps: [ZDCCloudOperation] = []
 			
-			if let listNodeID = cloudTransaction.linkedNodeID(forKey: listID, inCollection: kCollection_Lists) {
+			if let listNodeID = cloudTransaction.linkedNodeID(forListID: listID) {
 				
 				for addedUserID in newUsers {
 				
@@ -1329,7 +1303,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 			//
 			// We can accomplish this using YapDatabase's `touch` functionality.
 			
-			transaction.touchObject(forKey: listID, inCollection: kCollection_Lists)
+			transaction.touchList(id: listID)
 			
 			// Step 3 of 3:
 			//
@@ -1462,7 +1436,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 		
 					let list = List(localUserID: invitation.receiverID, title: localPath.nodeName)
 		
-					transaction.setObject(list, forKey: list.uuid, inCollection: kCollection_Lists)
+					transaction.setList(list)
 		
 					// Step 5:
 					//
@@ -1472,7 +1446,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 					// And allows us to quickly lookup the List given the node. Or vice-versa.
 		
 					do {
-						try cloudTransaction.linkNodeID(listNode.uuid, toKey: list.uuid, inCollection: kCollection_Lists)
+						try cloudTransaction.linkNodeID(listNode.uuid, toListID: list.uuid)
 					} catch {
 						DDLogError("Error linking node: \(error)")
 					}
@@ -1541,7 +1515,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 			
 			guard
 				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-				let taskNode = cloudTransaction.linkedNode(forKey: taskID, inCollection: kCollection_Tasks)
+				let taskNode = cloudTransaction.linkedNode(forTaskID: taskID)
 			else {
 					return
 			}
@@ -1571,7 +1545,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 			//
 			// We're lazy, so we're going with option 2 for now.
 			
-			transaction.touchObject(forKey: taskID, inCollection: kCollection_Tasks)
+			transaction.touchTask(id: taskID)
 		})
 	}
 	
@@ -1592,7 +1566,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 			
 			if
 				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-				let taskNode = cloudTransaction.linkedNode(forKey: taskID, inCollection: kCollection_Tasks)
+				let taskNode = cloudTransaction.linkedNode(forTaskID: taskID)
 			{
 				existingImageNode =
 					zdc.nodeManager.findNode(withName    : "img",
@@ -1629,7 +1603,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 				
 				guard
 					let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-					let taskNode = cloudTransaction.linkedNode(forKey: taskID, inCollection: kCollection_Tasks)
+					let taskNode = cloudTransaction.linkedNode(forTaskID: taskID)
 				else {
 					return
 				}
@@ -1662,7 +1636,7 @@ class ZDCManager: ZeroDarkCloudDelegate {
 				//
 				// We're lazy, so we're going with option 2 for now.
 				
-				transaction.touchObject(forKey: taskID, inCollection: kCollection_Tasks)
+				transaction.touchTask(id: taskID)
 			})
 		}
 	}

@@ -227,14 +227,10 @@ static ZDCNodeManager *sharedInstance = nil;
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
-- (nullable ZDCTreesystemPath *)pathForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
+- (ZDCTreesystemPath *)pathForNode:(ZDCNode *)node transaction:(YapDatabaseReadTransaction *)transaction
 {
 	ZDCLogAutoTrace();
 	NSParameterAssert(transaction != nil);
-	
-	if (node == nil) {
-		return nil;
-	}
 	
 	ZDCTrunkNode *trunkNode = nil;
 	NSMutableArray<NSString *> *pathComponents = [NSMutableArray arrayWithCapacity:8];

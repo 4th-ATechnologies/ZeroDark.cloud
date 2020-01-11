@@ -331,7 +331,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 			
 			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: self.localUserID) {
 				
-				listNode = cloudTransaction.linkedNode(forKey: list.uuid, inCollection: kCollection_Lists)
+				listNode = cloudTransaction.linkedNode(forListID: list.uuid)
 			}
 		})
 		
@@ -433,15 +433,8 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 			listID = list.uuid
 			
 			// Store the List object in the database.
-			//
-			// YapDatabase is a collection/key/value store.
-			// So we store all List objects in the same collection: kCollection_Lists
-			// And every list has a uuid, which we use as the key in the database.
-			//
-			// Wondering how the object gets serialized / deserialized ?
-			// The List object supports the Swift Codable protocol.
 			
-			transaction.setObject(list, forKey: list.uuid, inCollection: kCollection_Lists)
+			transaction.setList(list)
 			
 			do {
 				
@@ -452,7 +445,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 				// And then link our object to the node.
 				// This is optional, but it makes life easier for this particular app.
 				
-				try cloudTransaction.linkNodeID(node.uuid, toKey: list.uuid, inCollection: kCollection_Lists)
+				try cloudTransaction.linkNodeID(node.uuid, toListID: list.uuid)
 				
 			} catch {
 				
@@ -486,17 +479,17 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		
 		rwDatabaseConnection.asyncReadWrite({ (transaction) in
 			
-			guard var list = transaction.object(forKey: listID, inCollection: kCollection_Lists) as? List else {
+			guard var list = transaction.list(id: listID) else {
 				return
 			}
 			
 			list = list.copy() as! List
 			list.title = newTitle
 			
-			transaction.setObject(list, forKey: list.uuid, inCollection: kCollection_Lists)
+			transaction.setList(list)
 			
 			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-				var listNode = cloudTransaction.linkedNode(forKey: list.uuid, inCollection: kCollection_Lists)
+				var listNode = cloudTransaction.linkedNode(forListID: list.uuid)
 			{
 				listNode = listNode.copy() as! ZDCNode
 				listNode.name = newTitle
@@ -519,7 +512,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 		uiDatabaseConnection.read {(transaction) in
 			
 			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: localUserID),
-				let listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kCollection_Lists)
+				let listNode = cloudTransaction.linkedNode(forListID: listID)
 			{
 				// If our listNode is a pointer,
 				// then the owner is somebody else.
@@ -596,7 +589,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
         
 		uiDatabaseConnection.read { (transaction) in
 		
-			list = transaction.object(forKey: listID, inCollection: kCollection_Lists) as? List
+			list = transaction.list(id: listID)
 		}
         
 		// Create an alert
@@ -637,7 +630,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
         
       uiDatabaseConnection.read { (transaction) in
 			
-			list  = transaction.object(forKey: listID, inCollection: kCollection_Lists) as? List
+			list  = transaction.list(id: listID)
 		}
         
         let alert = UIAlertController(title:  NSLocalizedString("Rename List Entry", comment: ""),
@@ -673,7 +666,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 			
 			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: self.localUserID) {
 				
-				listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kCollection_Lists)
+				listNode = cloudTransaction.linkedNode(forListID: listID)
 			}
 		}
 		
@@ -702,7 +695,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 			
 			if let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: self.localUserID) {
 				
-				listNode = cloudTransaction.linkedNode(forKey: listID, inCollection: kCollection_Lists)
+				listNode = cloudTransaction.linkedNode(forListID: listID)
 			}
 		}
 		
@@ -835,7 +828,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 			
 			rwDatabaseConnection.asyncReadWrite({ (transaction) in
 				
-				transaction.removeObject(forKey: list.uuid, inCollection: kCollection_Lists)
+				transaction.removeList(id: list.uuid)
 				
 			}, completionBlock: {
 				
@@ -870,7 +863,7 @@ SettingsViewControllerDelegate, ListTableCellDelegate {
 			
 			rwDatabaseConnection.asyncReadWrite({ (transaction) in
 				
-				transaction.removeObject(forKey: list.uuid, inCollection: kCollection_Lists)
+				transaction.removeList(id: list.uuid)
 				
 			}, completionBlock: {
 				

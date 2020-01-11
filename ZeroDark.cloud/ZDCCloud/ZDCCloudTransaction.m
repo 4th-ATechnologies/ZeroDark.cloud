@@ -57,9 +57,9 @@
 	return [parentConnection->parent defaultPipeline];
 }
 
-- (NSString *)signalParentID
+- (NSString *)detachedParentID
 {
-	return [ZDCNode signalParentIDForLocalUserID:[self localUserID] treeID:[self treeID]];
+	return [ZDCNode detachedParentIDForLocalUserID:[self localUserID] treeID:[self treeID]];
 }
 
 - (NSString *)graftParentID
@@ -782,13 +782,7 @@
 	// What kind of node are we dealing with here ?
 	
 	const BOOL isPointer = rootNode.isPointer;
-	
-	const BOOL isMessage =
-	    [rootNode.parentID hasSuffix:@"|inbox"]
-	 || [rootNode.parentID hasSuffix:@"|outbox"]
-	 || [rootNode.parentID hasSuffix:@"|signal"];
-	
-	const BOOL isLeaf = isPointer || isMessage;
+	const BOOL isLeaf = isPointer; // pointer nodes are required to be leafs
 	
 	NSMutableDictionary *json = nil;
 	NSMutableDictionary *children = nil;
@@ -1175,7 +1169,7 @@
 	for (ZDCUser *recipient in recipients)
 	{
 		ZDCNode *dstNode = [[ZDCNode alloc] initWithLocalUserID:localUserID];
-		dstNode.parentID = [self signalParentID];
+		dstNode.parentID = [self detachedParentID];
 		dstNode.encryptionKey = message.encryptionKey;
 		
 		NSString *cloudName = [ZDCNode randomCloudName];
@@ -1285,7 +1279,7 @@
 	NSString *treeID = [self treeID];
 	
 	ZDCNode *signal = [[ZDCNode alloc] initWithLocalUserID:localUserID];
-	signal.parentID = [self signalParentID];
+	signal.parentID = [self detachedParentID];
 	
 	NSString *cloudName = [ZDCNode randomCloudName];
 	signal.name = cloudName;
@@ -1562,7 +1556,7 @@
 	// Create dstNode (this is a temporary node, that gets deleted after the operation finishes)
 	
 	ZDCNode *dstNode = [[ZDCNode alloc] initWithLocalUserID:localUserID];
-	dstNode.parentID = parentNode ? parentNode.uuid : [self signalParentID];
+	dstNode.parentID = parentNode ? parentNode.uuid : [self detachedParentID];
 	
 	NSString *cloudName = [remoteCloudPath fileNameWithExt:nil];
 	dstNode.name = nodeName ?: cloudName;
@@ -2986,13 +2980,13 @@
 }
 
 /**
- * Signal nodes are temporary.
+ * Detached nodes are temporary.
  * They contain the information we need to complete an operation in the queue.
- * And once the operation is completed/skipped, we're free to delete the node.
+ * And once the operation is completed/skipped, we're free to delete the node(s).
  */
-- (void)maybeDeleteSignalNode:(ZDCCloudOperation *)finishedOp
+- (void)maybeDeleteDetachedNodes:(ZDCCloudOperation *)finishedOp
 {
-	BOOL (^hasRemainingOps)(ZDCNode *) = ^BOOL (ZDCNode *node){
+	BOOL (^hasRemainingOps)(NSSet<NSString*> *) = ^BOOL (NSSet<NSString*> *nodeIDs){ @autoreleasepool {
 		
 		NSString *pipelineName = finishedOp.pipeline;
 		YapDatabaseCloudCorePipeline *pipeline = [self->parentConnection->parent pipelineWithName:pipelineName];
@@ -3007,12 +3001,12 @@
 			
 			if (![op.uuid isEqual:finishedOp.uuid])
 			{
-				if ([op.nodeID isEqualToString:node.uuid]) {
+				if (op.nodeID && [nodeIDs containsObject:op.nodeID]) {
 					foundMatch = YES;
 					*stop = YES;
 				}
 				
-				if ([op.dstNodeID isEqualToString:node.uuid]) {
+				if (op.dstNodeID && [nodeIDs containsObject:op.dstNodeID]) {
 					foundMatch = YES;
 					*stop = YES;
 				}
@@ -3020,27 +3014,61 @@
 		}];
 		
 		return foundMatch;
-	};
+	}};
 	
 	YapDatabaseReadWriteTransaction *rwTransaction = (YapDatabaseReadWriteTransaction *)databaseTransaction;
+	ZDCNodeManager *nodeManager = [ZDCNodeManager sharedInstance];
+	
+	void (^checkNode)(ZDCNode *) = ^void (ZDCNode *node){ @autoreleasepool {
+		
+		ZDCTreesystemPath *path = [nodeManager pathForNode:node transaction:rwTransaction];
+		if (path.trunk != ZDCTreesystemTrunk_Detached)
+		{
+			// Ignore - not a detached node
+			return;
+		}
+		
+		// A detached node might have children:
+		//
+		//      (detached_node_A)
+		//         /    \
+		//       (B)    (C)
+		//               |
+		//              (D)
+		//
+		// Once all operations have completed such that:
+		// - there are no more operations for the given node
+		// - there are no more operations for any children of the given node
+		//
+		// Then we can safely delete the node, and ALL children.
+		
+		NSMutableSet<NSString*> *nodeIDs = [NSMutableSet set];
+		[nodeIDs addObject:node.uuid];
+		
+		[nodeManager recursiveEnumerateNodeIDsWithParentID: node.uuid
+		                                       transaction: rwTransaction
+		                                        usingBlock:
+		^(NSString *nodeID, NSArray<NSString *> *pathFromParent, BOOL *recurseInto, BOOL *stop)
+		{
+			[nodeIDs addObject:nodeID];
+		}];
+		
+		if (!hasRemainingOps(nodeIDs))
+		{
+			[rwTransaction removeObjectsForKeys:[nodeIDs allObjects] inCollection:kZDCCollection_Nodes];
+		}
+	}};
 	
 	NSString *srcNodeID = finishedOp.nodeID;
-	NSString *dstNodeID = finishedOp.dstNodeID;
-	
 	ZDCNode *srcNode = [databaseTransaction objectForKey:srcNodeID inCollection:kZDCCollection_Nodes];
-	if (srcNode.isSignal)
-	{
-		if (!hasRemainingOps(srcNode)) {
-			[rwTransaction removeObjectForKey:srcNodeID inCollection:kZDCCollection_Nodes];
-		}
+	if (srcNode) {
+		checkNode(srcNode);
 	}
 	
+	NSString *dstNodeID = finishedOp.dstNodeID;
 	ZDCNode *dstNode = [databaseTransaction objectForKey:dstNodeID inCollection:kZDCCollection_Nodes];
-	if (dstNode.isSignal)
-	{
-		if (!hasRemainingOps(dstNode)) {
-			[rwTransaction removeObjectForKey:dstNodeID inCollection:kZDCCollection_Nodes];
-		}
+	if (dstNode) {
+		checkNode(dstNode);
 	}
 }
 
@@ -3750,7 +3778,7 @@
 {
 	if ([operation isKindOfClass:[ZDCCloudOperation class]])
 	{
-		[self maybeDeleteSignalNode:(ZDCCloudOperation *)operation];
+		[self maybeDeleteDetachedNodes:(ZDCCloudOperation *)operation];
 	}
 }
 
@@ -3758,7 +3786,7 @@
 {
 	if ([operation isKindOfClass:[ZDCCloudOperation class]])
 	{
-		[self maybeDeleteSignalNode:(ZDCCloudOperation *)operation];
+		[self maybeDeleteDetachedNodes:(ZDCCloudOperation *)operation];
 	}
 }
 

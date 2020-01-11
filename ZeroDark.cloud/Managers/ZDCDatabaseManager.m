@@ -658,7 +658,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		
 		// Regular nodes have a parentID.
 		// Graft nodes have a special parentID: "<localUserID>|<treeID>|graft".
-		// Signal nodes have a special parentID: "<localUserID>|<treeID>|signal".
+		// Detached nodes have a special parentID: "<localUserID>|<treeID>|detached".
 		// Container nodes don't have a parentID.
 		//
 		return node.parentID;
@@ -750,7 +750,7 @@ NSString *const Index_Users_Column_RandomUUID = @"random_uuid";
 		
 		// Regular nodes have a parentID.
 		// Graft nodes have a special parentID: "<localUserID>|<treeID>|graft".
-		// Signal nodes have a special parentID: "<localUserID>|<treeID>|signal".
+		// Detached nodes have a special parentID: "<localUserID>|<treeID>|detached".
 		// Container nodes don't have a parentID.
 		//
 		return node.parentID;

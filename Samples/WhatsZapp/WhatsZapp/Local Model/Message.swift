@@ -114,9 +114,9 @@ class Message: Codable, NSCopying {
 
 extension YapDatabaseReadTransaction {
 	
-	func message(id: String) -> Message? {
+	func message(id messageID: String) -> Message? {
 		
-		return self.object(forKey: id, inCollection: kCollection_Messages) as? Message
+		return self.object(forKey: messageID, inCollection: kCollection_Messages) as? Message
 	}
 }
 
@@ -125,6 +125,16 @@ extension YapDatabaseReadWriteTransaction {
 	func setMessage(_ message: Message) {
 		
 		self.setObject(message, forKey: message.uuid, inCollection: kCollection_Messages)
+	}
+	
+	func removeMessage(id messageID: String) {
+		
+		self.removeObject(forKey: messageID, inCollection: kCollection_Messages)
+	}
+	
+	func touchMessage(id messageID: String) {
+		
+		self.touchObject(forKey: messageID, inCollection: kCollection_Messages)
 	}
 }
 

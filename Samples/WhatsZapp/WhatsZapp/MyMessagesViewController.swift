@@ -307,11 +307,12 @@ class MyMessagesViewController: MessagesViewController,
 			
 			guard
 				let cloudTransaction = zdc.cloudTransaction(transaction, forLocalUserID: self.localUserID),
-				let msgNode = cloudTransaction.linkedNode(forMessage: messageID),
-				let msgPath = zdc.nodeManager.path(for: msgNode, transaction: transaction)
+				let msgNode = cloudTransaction.linkedNode(forMessage: messageID)
 			else {
 				return
 			}
+			
+			let msgPath = zdc.nodeManager.path(for: msgNode, transaction: transaction)
 			
 			let attachmentPath = msgPath.appendingComponent("attachment")
 			node = cloudTransaction.node(path: attachmentPath)
@@ -939,7 +940,7 @@ class MyMessagesViewController: MessagesViewController,
 				//    / \
 				//  (D) (E)
 				//
-				// The framework knows that it cannot upload (D) until after its uploaded (B).
+				// The framework knows that it cannot upload (D) until after it has uploaded (B).
 				// That's obvious from the treesystem itself.
 				// But what about (D) vs (E) ? Can it upload them both at the same time ?
 				//
@@ -965,7 +966,7 @@ class MyMessagesViewController: MessagesViewController,
 				//
 				// Thus, if msg1 is still in the push queue, we can now use it as a dependency.
 				//
-				// We also take similar approach for copying nodes to the recipient's inbox.
+				// We also take a similar approach for copying nodes to the recipient's inbox.
 				
 				let prvMsgOps = cloudTransaction.pendingPutOperations(withParentID: conversationNode.uuid)
 				
