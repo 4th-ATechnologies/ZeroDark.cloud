@@ -1648,16 +1648,34 @@ static ZDCNodeManager *sharedInstance = nil;
 - (BOOL)resetPermissionsForNode:(ZDCNode *)node transaction:(YapDatabaseReadWriteTransaction *)transaction
 {
 	ZDCLogAutoTrace();
+	NSParameterAssert(!node.isImmutable);
 	NSParameterAssert(transaction != nil);
 	
 	ZDCNode *parent = [transaction objectForKey:node.parentID inCollection:kZDCCollection_Nodes];
-	if (parent == nil) return NO;
+	if (parent) {
+		[self resetPermissionsForNode:node withParentShareList:parent.shareList];
+		return YES;
+	}
+	else {
+		return NO;
+	}
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
+ */
+- (void)resetPermissionsForNode:(ZDCNode *)node withParentShareList:(ZDCShareList *)parentShareList
+{
+	ZDCLogAutoTrace();
+	NSParameterAssert(!node.isImmutable);
 	
 	[node.shareList removeAllShareItems];
 	
 	// Goal is to inherit permissions from the parent node.
 	//
-	[parent.shareList enumerateListWithBlock:^(NSString *key, ZDCShareItem *shareItem, BOOL *stop) {
+	[parentShareList enumerateListWithBlock:^(NSString *key, ZDCShareItem *shareItem, BOOL *stop) {
 		
 		if (![key isEqualToString:@"UID:*"] &&
 		    ![key isEqualToString:@"UID:anonymous"])
@@ -1672,8 +1690,6 @@ static ZDCNodeManager *sharedInstance = nil;
 			[node.shareList addShareItem:copy forKey:key];
 		}
 	}];
-	
-	return YES;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

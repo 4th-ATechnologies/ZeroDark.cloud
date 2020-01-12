@@ -642,7 +642,7 @@ static NSString *const k_dict    = @"dict";
 		// The keyID is derived from the key bits.
 		// (I'm pretty sure it's a hash, but I'd need to double-check to be sure.)
 		//
-		// So the idea here is that we if all the other stuff is the same (including keyID),
+		// So the idea here is that if all the other stuff is the same (including keyID),
 		// then the key is also the same as well.
 		//
 		// Note: If an attacker tried to fake it by chaning the key, but not changing the keyID,

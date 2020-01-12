@@ -1152,16 +1152,7 @@
 		message.pendingRecipients = userIDs;
 	}
 	
-	{ // Add sender permissions
-		
-		ZDCShareItem *item = [[ZDCShareItem alloc] init];
-		[item addPermission:ZDCSharePermission_Read];
-		[item addPermission:ZDCSharePermission_Write];
-		[item addPermission:ZDCSharePermission_Share];
-		[item addPermission:ZDCSharePermission_LeafsOnly];
-		
-		[message.shareList addShareItem:item forUserID:localUserID];
-	}
+	[[ZDCNodeManager sharedInstance] resetPermissionsForNode:message transaction:rwTransaction];
 	
 	[rwTransaction setObject:message forKey:message.uuid inCollection:kZDCCollection_Nodes];
 	
@@ -1214,27 +1205,24 @@
 		                                 treeID: treeID
 		                              dirPrefix: kZDCDirPrefix_MsgsIn];
 		
-		{ // Add recipient permissions
-			
-			ZDCShareItem *item = [[ZDCShareItem alloc] init];
-			[item addPermission:ZDCSharePermission_Read];
-			[item addPermission:ZDCSharePermission_Write];
-			[item addPermission:ZDCSharePermission_Share];
-			[item addPermission:ZDCSharePermission_LeafsOnly];
-			
-			[dstNode.shareList addShareItem:item forUserID:recipient.uuid];
-		}
+		ZDCShareList *parentShareList =
+		  [ZDCShareList defaultShareListForTrunk: ZDCTreesystemTrunk_Inbox
+		                         withLocalUserID: recipient.uuid];
+		
+		[[ZDCNodeManager sharedInstance] resetPermissionsForNode:dstNode withParentShareList:parentShareList];
 		
 		if (![dstNode.shareList hasShareItemForUserID:localUserID])
 		{
 			// Add sender permissions
 			
-			ZDCShareItem *item = [[ZDCShareItem alloc] init];
-			[item addPermission:ZDCSharePermission_LeafsOnly];
-			[item addPermission:ZDCSharePermission_WriteOnce];
-			[item addPermission:ZDCSharePermission_BurnIfSender];
-			
-			[dstNode.shareList addShareItem:item forUserID:localUserID];
+			ZDCShareItem *src = [parentShareList shareItemForUserID:@"*"];
+			if (src)
+			{
+				ZDCShareItem *item = [[ZDCShareItem alloc] init];
+				item.permissions = src.permissions;
+				
+				[dstNode.shareList addShareItem:item forUserID:localUserID];
+			}
 		}
 		
 		[rwTransaction setObject:dstNode forKey:dstNode.uuid inCollection:kZDCCollection_Nodes];
@@ -1323,27 +1311,24 @@
 	                                 treeID: treeID
 	                              dirPrefix: kZDCDirPrefix_MsgsIn];
 	
-	{ // Add recipient permissions
-		
-		ZDCShareItem *item = [[ZDCShareItem alloc] init];
-		[item addPermission:ZDCSharePermission_Read];
-		[item addPermission:ZDCSharePermission_Write];
-		[item addPermission:ZDCSharePermission_Share];
-		[item addPermission:ZDCSharePermission_LeafsOnly];
-		
-		[signal.shareList addShareItem:item forUserID:recipient.uuid];
-	}
+	ZDCShareList *parentShareList =
+	  [ZDCShareList defaultShareListForTrunk: ZDCTreesystemTrunk_Inbox
+									 withLocalUserID: recipient.uuid];
+	
+	[[ZDCNodeManager sharedInstance] resetPermissionsForNode:signal withParentShareList:parentShareList];
 	
 	if (![signal.shareList hasShareItemForUserID:localUserID])
 	{
 		// Add sender permissions
 		
-		ZDCShareItem *item = [[ZDCShareItem alloc] init];
-		[item addPermission:ZDCSharePermission_LeafsOnly];
-		[item addPermission:ZDCSharePermission_WriteOnce];
-		[item addPermission:ZDCSharePermission_BurnIfSender];
-		
-		[signal.shareList addShareItem:item forUserID:localUserID];
+		ZDCShareItem *src = [parentShareList shareItemForUserID:@"*"];
+		if (src)
+		{
+			ZDCShareItem *item = [[ZDCShareItem alloc] init];
+			item.permissions = src.permissions;
+			
+			[signal.shareList addShareItem:item forUserID:localUserID];
+		}
 	}
 	
 	[rwTransaction setObject:signal forKey:signal.uuid inCollection:kZDCCollection_Nodes];

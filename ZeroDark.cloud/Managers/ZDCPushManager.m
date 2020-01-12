@@ -5732,15 +5732,15 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				//
 				// Message:
 				// - srcNode : msg in outbox
-				// - dstNode : signal (detached node, not part of treesystem)
+				// - dstNode : detached node (not part of treesystem)
 				//
 				// Signal:
-				// - srcNode : signal (detached node, not part of treesystem)
+				// - srcNode : detached node (not part of treesystem)
 				// - dstNode : nil
 				//
 				// CopyToInbox:
-				// - srcNode : normal node in treesystem somewhere
-				// - dstNode : signal (detached node, not part of treesystem)
+				// - srcNode : normal node (in treesystem somewhere)
+				// - dstNode : detached node (not part of treesystem)
 				
 				ZDCNode *node = nil;
 				if (dstNode)

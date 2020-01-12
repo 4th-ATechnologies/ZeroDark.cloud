@@ -490,8 +490,16 @@ NS_SWIFT_NAME(findNode(withCloudPath:bucket:region:localUserID:treeID:transactio
  *
  * @return YES on success. NO on failure (node is immutable, doesn't have parentID, etc)
  */
-- (BOOL)resetPermissionsForNode:(ZDCNode *)node
-                    transaction:(YapDatabaseReadWriteTransaction *)transaction;
+- (BOOL)resetPermissionsForNode:(ZDCNode *)node transaction:(YapDatabaseReadWriteTransaction *)transaction;
+
+/**
+ * Updates the permissions for the node to match the given shareList.
+ *
+ * @param node
+ *   The node to modify.
+ *   The passed instance must not be immutable, as this method intends to modify node.shareList.
+ */
+- (void)resetPermissionsForNode:(ZDCNode *)node withParentShareList:(ZDCShareList *)parentShareList;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Conflict Resolution

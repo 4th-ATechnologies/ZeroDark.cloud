@@ -326,7 +326,7 @@ NS_SWIFT_NAME(insertNode(_:));
  * Messages are first uploaded into the sender's outbox,
  * and then copied server-side into the recipient's inbox.
  *
- * You supply the data for the message via `[ZeroDarkCloudDelegate dataForMessage:transaction:]`.
+ * You supply the data for the message via `[ZeroDarkCloudDelegate dataForNode:atPath:transaction:]`.
  * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
  *
  * For more information about messaging, see the docs:
@@ -350,7 +350,7 @@ NS_SWIFT_NAME(insertNode(_:));
  * Messages are first uploaded into the sender's outbox,
  * and then copied server-side into the recipient's inbox.
  *
- * You supply the data for the message via `[ZeroDarkCloudDelegate dataForMessage:transaction:]`.
+ * You supply the data for the message via `[ZeroDarkCloudDelegate dataForNode:atPath:transaction:]`.
  * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
  *
  * For more information about messaging, see the docs:
@@ -391,7 +391,7 @@ NS_SWIFT_NAME(insertNode(_:));
  * There is NOT a copy of the message within the outbox of the sender.
  * In other words, signals are designed to be minimal, and don't cause additional overhead for the sender.
  *
- * You supply the data for the message via `[ZeroDarkCloudDelegate dataForMessage:transaction:]`.
+ * You supply the data for the message via `[ZeroDarkCloudDelegate dataForNode:atPath:transaction:]`.
  * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
  *
  * For more information about messaging, see the docs:
@@ -418,7 +418,7 @@ NS_SWIFT_NAME(insertNode(_:));
  * There is NOT a copy of the message within the outbox of the sender.
  * In other words, signals are designed to be minimal, and don't cause additional overhead for the sender.
  *
- * You supply the data for the message via `[ZeroDarkCloudDelegate dataForMessage:transaction:]`.
+ * You supply the data for the message via `[ZeroDarkCloudDelegate dataForNode:atPath:transaction:]`.
  * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
  *
  * For more information about messaging, see the docs:
@@ -451,7 +451,7 @@ NS_SWIFT_NAME(insertNode(_:));
  *
  * On success, a temporary node is returned.
  * The temporary node isn't part of the treesystem, but it is stored in the database.
- * This node will be automatically deleted after the operation has been completed.
+ * This node will be automatically deleted after the operation has completed.
  *
  * @param node
  *   The node to copy.
