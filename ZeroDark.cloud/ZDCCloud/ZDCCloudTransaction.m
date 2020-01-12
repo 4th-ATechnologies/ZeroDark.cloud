@@ -1402,11 +1402,17 @@
 	  [[ZDCCloudPath alloc] initWithTreeID: [self treeID]
 	                         inboxFileName: [ZDCNode randomCloudName]];
 	
+	ZDCShareList *parentShareList =
+	  [ZDCShareList defaultShareListForTrunk: ZDCTreesystemTrunk_Inbox
+	                         withLocalUserID: recipient.uuid];
+	
 	return [self _copyNode: node
 	           toRecipient: recipient
 	       remoteCloudPath: remoteCloudPath
 	              withName: nil
 	            parentNode: nil
+	       parentShareList: parentShareList
+	        childShareList: nil
 	          dependencies: dependencies
 	                 error: outError];
 }
@@ -1459,8 +1465,10 @@
 	       remoteCloudPath: dstCloudPath
 	              withName: nodeName
 	            parentNode: parentNode
+	       parentShareList: nil
+	        childShareList: nil
 	          dependencies: nil
-	                error: outError];
+	                 error: outError];
 }
 
 /**
@@ -1471,6 +1479,7 @@
 - (nullable ZDCNode *)copyNode:(ZDCNode *)srcNode
                    toRecipient:(ZDCUser *)recipient
                remoteCloudPath:(ZDCCloudPath *)remoteCloudPath
+                     shareList:(ZDCShareList *)shareList
                          error:(NSError *_Nullable *_Nullable)outError
 {
 	return [self _copyNode: srcNode
@@ -1478,8 +1487,10 @@
 	       remoteCloudPath: remoteCloudPath
 	              withName: nil
 	            parentNode: nil
+	       parentShareList: nil
+	        childShareList: shareList
 	          dependencies: nil
-	                error: outError];
+	                 error: outError];
 }
 
 /**
@@ -1490,6 +1501,8 @@
                 remoteCloudPath:(ZDCCloudPath *)remoteCloudPath
                        withName:(nullable NSString *)nodeName
                      parentNode:(nullable ZDCNode *)parentNode
+                parentShareList:(nullable ZDCShareList *)parentShareList
+                 childShareList:(nullable ZDCShareList *)childShareList
                    dependencies:(nullable NSArray<ZDCCloudOperation*> *)dependencies
                           error:(NSError *_Nullable *_Nullable)outError
 {
@@ -1598,27 +1611,37 @@
 	//
 	dstNode.encryptionKey = srcNode.encryptionKey;
 	
-	{ // Add recipient permissions
-		
-		ZDCShareItem *item = [[ZDCShareItem alloc] init];
-		[item addPermission:ZDCSharePermission_Read];
-		[item addPermission:ZDCSharePermission_Write];
-		[item addPermission:ZDCSharePermission_Share];
-		[item addPermission:ZDCSharePermission_LeafsOnly];
-		
-		[dstNode.shareList addShareItem:item forUserID:recipient.uuid];
-	}
+	// Configure permissions
 	
-	if (![dstNode.shareList hasShareItemForUserID:localUserID])
+	if (childShareList)
 	{
-		// Add sender permissions
+		[childShareList enumerateListWithBlock:^(NSString *key, ZDCShareItem *shareItem, BOOL *stop) {
+			
+			ZDCShareItem *copy = [[ZDCShareItem alloc] init];
+			copy.permissions = shareItem.permissions;
+			
+			[dstNode.shareList addShareItem:copy forKey:key];
+		}];
+	}
+	else
+	{
+		parentShareList = parentShareList ?: parentNode.shareList;
 		
-		ZDCShareItem *item = [[ZDCShareItem alloc] init];
-		[item addPermission:ZDCSharePermission_LeafsOnly];
-		[item addPermission:ZDCSharePermission_WriteOnce];
-		[item addPermission:ZDCSharePermission_BurnIfSender];
+		[[ZDCNodeManager sharedInstance] resetPermissionsForNode:dstNode withParentShareList:parentShareList];
 		
-		[dstNode.shareList addShareItem:item forUserID:localUserID];
+		if (![dstNode.shareList hasShareItemForUserID:localUserID])
+		{
+			// Add sender permissions
+			
+			ZDCShareItem *src = [parentShareList shareItemForUserID:@"*"];
+			if (src)
+			{
+				ZDCShareItem *item = [[ZDCShareItem alloc] init];
+				item.permissions = src.permissions;
+				
+				[dstNode.shareList addShareItem:item forUserID:localUserID];
+			}
+		}
 	}
 	
 	[rwTransaction setObject:dstNode forKey:dstNode.uuid inCollection:kZDCCollection_Nodes];

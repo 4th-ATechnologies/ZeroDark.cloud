@@ -549,6 +549,9 @@ NS_SWIFT_NAME(insertNode(_:));
  *   The destination location to copy the node to.
  *   Typically this information is derived from a dropbox invite.
  *
+ * @param shareList
+ *   The shareList to use for the destination node.
+ *
  * @param outError
  *   Set to nil on success.
  *   Otherwise returns an error that explains what went wrong.
@@ -558,6 +561,7 @@ NS_SWIFT_NAME(insertNode(_:));
 - (nullable ZDCNode *)copyNode:(ZDCNode *)node
                    toRecipient:(ZDCUser *)recipient
                remoteCloudPath:(ZDCCloudPath *)remoteCloudPath
+                     shareList:(ZDCShareList *)shareList
                          error:(NSError *_Nullable *_Nullable)outError;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
