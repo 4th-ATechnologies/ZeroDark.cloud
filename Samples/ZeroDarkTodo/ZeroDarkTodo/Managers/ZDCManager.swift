@@ -297,9 +297,9 @@ class ZDCManager: ZeroDarkCloudDelegate {
 		// Nothing to do here for this app
 	}
 	
-	func didSendMessage(_ message: ZDCNode, toRecipient recipient: ZDCUser, transaction: YapDatabaseReadWriteTransaction) {
+	func didPushNodeData(_ node: ZDCNode, toRecipient recipient: ZDCUser, transaction: YapDatabaseReadWriteTransaction) {
 		
-		DDLogInfo("didSendMessage:toRecipient: \(recipient.uuid)")
+		DDLogInfo("didPushNodeData:toRecipient: \(recipient.uuid)")
 		
 		// Nothing to do here for this app
 	}

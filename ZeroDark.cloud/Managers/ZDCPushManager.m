@@ -2501,11 +2501,11 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 				
 				if (path.trunk == ZDCTreesystemTrunk_Detached)
 				{
-					NSString *recipientID = node.anchor.userID;
+					NSString *recipientID = operation.dstCloudLocator.bucketOwner;
 					ZDCUser *recipient = [transaction objectForKey:recipientID inCollection:kZDCCollection_Users];
 					if (recipient)
 					{
-						[zdc.delegate didSendMessage:node toRecipient:recipient transaction:transaction];
+						[zdc.delegate didPushNodeData:node toRecipient:recipient transaction:transaction];
 					}
 				}
 				else
@@ -5681,86 +5681,88 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	 *
 	**/
 	
-	BOOL didSendMessage = (statusCode == 200);
+	BOOL opSuccessful = (statusCode == 200);
 	
 	[[self rwConnection] asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 		
-		// Update node (if operation was node related)
+		// Update node (if needed)
 		
-		BOOL isOutgoingMessage =
-		  [operation.dstCloudLocator.cloudPath.dirPrefix isEqualToString:kZDCDirPrefix_MsgsIn];
+		NSString *dstUserID = operation.dstCloudLocator.bucketOwner ?: @"";
 		
-		if (isOutgoingMessage)
+		ZDCNode *srcNode = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
+		if (srcNode && [srcNode.pendingRecipients containsObject:dstUserID])
 		{
-			NSString *dstUserID = operation.dstCloudLocator.bucketOwner ?: @"";
+			NSMutableSet<NSString*> *pendingRecipients = [srcNode.pendingRecipients mutableCopy];
+			[pendingRecipients removeObject:dstUserID];
 			
-			ZDCNode *srcNode = [transaction objectForKey:operation.nodeID inCollection:kZDCCollection_Nodes];
-			if (srcNode && [srcNode.pendingRecipients containsObject:dstUserID])
+			srcNode = [srcNode copy];
+			srcNode.pendingRecipients = pendingRecipients;
+			
+			[transaction setObject:srcNode forKey:srcNode.uuid inCollection:kZDCCollection_Nodes];
+		}
+		
+		ZDCNode *dstNode = [transaction objectForKey:operation.dstNodeID inCollection:kZDCCollection_Nodes];
+		if (dstNode && [dstNode.pendingRecipients containsObject:dstUserID])
+		{
+			NSMutableSet<NSString*> *pendingRecipients = [dstNode.pendingRecipients mutableCopy];
+			[pendingRecipients removeObject:dstUserID];
+			
+			dstNode = [dstNode copy];
+			dstNode.pendingRecipients = pendingRecipients;
+			
+			[transaction setObject:dstNode forKey:dstNode.uuid inCollection:kZDCCollection_Nodes];
+		}
+		
+		// Notify delegate
+		
+		ZDCUser *recipient = [transaction objectForKey:dstUserID inCollection:kZDCCollection_Users];
+		if (recipient && opSuccessful)
+		{
+			// We're going to invoke [delegate didPushNodeData:toRecipient:transaction:]
+			// The question is: What should the 'node' parameter be?
+			//
+			// The intention is that the parameter is always a message.
+			// So either an outgoing message (i.e. node in outbox),
+			// or a signal (i.e. detached node, where node.isSignal == YES).
+			//
+			// Message:
+			// - srcNode = msg in outbox
+			// - dstNode = detached node (not part of treesystem)
+			//
+			// Signal:
+			// - srcNode = detached node (not part of treesystem)
+			// - dstNode = nil
+			//
+			// CopyToInbox:
+			// - srcNode = normal node (in treesystem somewhere)
+			// - dstNode = detached node (not part of treesystem)
+			//
+			// But there's a different in the API within ZDCCloudTransaction:
+			//
+			// - sendMessageToRecipients::
+			//   Returns a single ZDCNode, which represents the srcNode of the operation
+			//
+			// - copyNode:::
+			//   Returns a single ZDCNode, which represents the dstNode of the operation
+				
+			ZDCNode *node = nil;
+			if (dstNode)
 			{
-				NSMutableSet<NSString*> *pendingRecipients = [srcNode.pendingRecipients mutableCopy];
-				[pendingRecipients removeObject:dstUserID];
+				ZDCTrunkNode *trunkNode =
+				  [[ZDCNodeManager sharedInstance] trunkNodeForNode:srcNode transaction:transaction];
 				
-				srcNode = [srcNode copy];
-				srcNode.pendingRecipients = pendingRecipients;
-				
-				[transaction setObject:srcNode forKey:srcNode.uuid inCollection:kZDCCollection_Nodes];
-			}
-			
-			ZDCNode *dstNode = [transaction objectForKey:operation.dstNodeID inCollection:kZDCCollection_Nodes];
-			if (dstNode && [dstNode.pendingRecipients containsObject:dstUserID])
-			{
-				NSMutableSet<NSString*> *pendingRecipients = [dstNode.pendingRecipients mutableCopy];
-				[pendingRecipients removeObject:dstUserID];
-				
-				dstNode = [dstNode copy];
-				dstNode.pendingRecipients = pendingRecipients;
-				
-				[transaction setObject:dstNode forKey:dstNode.uuid inCollection:kZDCCollection_Nodes];
-			}
-			
-			// Notify delegate
-			
-			ZDCUser *recipient = [transaction objectForKey:dstUserID inCollection:kZDCCollection_Users];
-			if (recipient && didSendMessage)
-			{
-				// We're going to invoke [delegate didSendMessage:toRecipient:transaction:]
-				// The question is: What should the 'node' parameter be?
-				//
-				// The intention is that the parameter is always a message.
-				// So either an outgoing message (i.e. node in outbox),
-				// or a signal (i.e. detached node, where node.isSignal == YES).
-				//
-				// Message:
-				// - srcNode : msg in outbox
-				// - dstNode : detached node (not part of treesystem)
-				//
-				// Signal:
-				// - srcNode : detached node (not part of treesystem)
-				// - dstNode : nil
-				//
-				// CopyToInbox:
-				// - srcNode : normal node (in treesystem somewhere)
-				// - dstNode : detached node (not part of treesystem)
-				
-				ZDCNode *node = nil;
-				if (dstNode)
-				{
-					ZDCTrunkNode *trunkNode =
-					  [[ZDCNodeManager sharedInstance] trunkNodeForNode:srcNode transaction:transaction];
-					
-					if (trunkNode.trunk == ZDCTreesystemTrunk_Outbox) {
-						node = srcNode;
-					} else {
-						node = dstNode;
-					}
-				}
-				else
-				{
+				if (trunkNode.trunk == ZDCTreesystemTrunk_Outbox) {
 					node = srcNode;
+				} else {
+					node = dstNode;
 				}
-				
-				[zdc.delegate didSendMessage:node toRecipient:recipient transaction:transaction];
 			}
+			else
+			{
+				node = srcNode;
+			}
+			
+			[zdc.delegate didPushNodeData:node toRecipient:recipient transaction:transaction];
 		}
 		
 		// Mark operation as complete

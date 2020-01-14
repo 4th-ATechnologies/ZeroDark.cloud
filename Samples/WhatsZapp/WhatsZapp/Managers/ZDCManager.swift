@@ -303,17 +303,23 @@ class ZDCManager: ZeroDarkCloudDelegate {
 	
 	/// ZeroDark just pushed our data to the cloud.
 	///
+	/// In particular, this method is used when the node resides within the localUser's treesystem.
+	///
 	func didPushNodeData(_ node: ZDCNode, at path: ZDCTreesystemPath, transaction: YapDatabaseReadWriteTransaction) {
 		
 		DDLogInfo("didPushNodeData:at: \(path.fullPath())")
 	}
 	
-	/// ZeroDark has finished sending the message.
-	/// This means a copy of the message is now in the recipient's inbox.
+	/// ZeroDark just pushed a node to another user.
 	///
-	func didSendMessage(_ message: ZDCNode, toRecipient recipient: ZDCUser, transaction: YapDatabaseReadWriteTransaction) {
+	/// This is used for messages, signals, and other operations that push or copy nodes into another user's treesystem.
+	///
+	/// For WhatsZapp, this method is invoked after an outgoing message has been copied from our conversation into
+	/// the recipient's inbox.
+	///
+	func didPushNodeData(_ node: ZDCNode, toRecipient recipient: ZDCUser, transaction: YapDatabaseReadWriteTransaction) {
 		
-		DDLogInfo("didSendMessage:toRecipient: \(recipient.uuid)")
+		DDLogInfo("didPushNodeData:toRecipient: \(recipient.uuid)")
 	}
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

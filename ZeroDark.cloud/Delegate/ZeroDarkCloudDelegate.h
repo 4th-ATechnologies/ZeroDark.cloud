@@ -224,6 +224,10 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
 /**
  * This method is called by the framework after a node's data has been pushed to the cloud.
  *
+ * In particular, this method is invoked if the node resides within the localUser's treesystem.
+ * For messages, signals, and other operations that place node's into a different user's treesystem,
+ * the `-didPushNodeData:toRecipient:transaction:` method is used.
+ *
  * When this method is called, the ZDCNode instance has already been updated within the database.
  * This method is being called within the same atomic transaction that modifies the node in the database.
  *
@@ -241,7 +245,10 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
             transaction:(YapDatabaseReadWriteTransaction *)transaction;
 
 /**
- * This method is called by the framework after a message has been sent.
+ * This method is called by the framework after a node's data has been pushed to the cloud.
+ *
+ * In particular, this method is invoked if the node resides in a different user's treestem.
+ * For nodes within the localUser's treesystem, the `-didPushNodeData:atPath:transaction:` method is used.
  *
  * When this method is called, the queued ZDCCloudOperation has already been deleted from the database.
  * This method is being called within the same atomic transaction that modifies the the database.
@@ -257,7 +264,7 @@ typedef NS_ENUM(NSInteger, ZDCNodeConflict) {
  *   This allows you to update your own objects within the same atomic transaction that
  *   removes the queued outgoing message.
  */
-- (void)didSendMessage:(ZDCNode *)message
+- (void)didPushNodeData:(ZDCNode *)message
            toRecipient:(ZDCUser *)recipient
            transaction:(YapDatabaseReadWriteTransaction *)transaction;
 

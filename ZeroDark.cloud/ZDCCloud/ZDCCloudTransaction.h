@@ -326,8 +326,11 @@ NS_SWIFT_NAME(insertNode(_:));
  * Messages are first uploaded into the sender's outbox,
  * and then copied server-side into the recipient's inbox.
  *
- * You supply the data for the message via `[ZeroDarkCloudDelegate dataForNode:atPath:transaction:]`.
- * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
+ * You supply the data for the message via `-[ZeroDarkCloudDelegate dataForNode:atPath:transaction:]`.
+ * After the message has been uploaded into the sender's outbox,
+ * you'll receive `-[ZeroDarkCloudDelegate didPushNodeData:atPath:transaction]`.
+ * After the message has been copied into a recipient's inbox,
+ * you'll receive `-[ZeroDarkCloudDelegate didPushNodeData:toRecipient:transaction:]`.
  *
  * For more information about messaging, see the docs:
  * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
@@ -351,7 +354,10 @@ NS_SWIFT_NAME(insertNode(_:));
  * and then copied server-side into the recipient's inbox.
  *
  * You supply the data for the message via `[ZeroDarkCloudDelegate dataForNode:atPath:transaction:]`.
- * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
+ * After the message has been uploaded into the sender's outbox,
+ * you'll receive `-[ZeroDarkCloudDelegate didPushNodeData:atPath:transaction]`.
+ * After the message has been copied into a recipient's inbox,
+ * you'll receive `-[ZeroDarkCloudDelegate didPushNodeData:toRecipient:transaction:]`.
  *
  * For more information about messaging, see the docs:
  * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
@@ -392,7 +398,8 @@ NS_SWIFT_NAME(insertNode(_:));
  * In other words, signals are designed to be minimal, and don't cause additional overhead for the sender.
  *
  * You supply the data for the message via `[ZeroDarkCloudDelegate dataForNode:atPath:transaction:]`.
- * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
+ * After the message has been pushed to the recipient's inbox,
+ * you'll receive `-[ZeroDarkCloudDelegate didPushNodeData:toRecipient:transaction:]`.
  *
  * For more information about messaging, see the docs:
  * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
@@ -419,7 +426,8 @@ NS_SWIFT_NAME(insertNode(_:));
  * In other words, signals are designed to be minimal, and don't cause additional overhead for the sender.
  *
  * You supply the data for the message via `[ZeroDarkCloudDelegate dataForNode:atPath:transaction:]`.
- * And you'll be informed of the message deliveries via `[ZeroDarkCloudDelegate didSendMessage:transaction:]`
+ * After the message has been pushed to the recipient's inbox,
+ * you'll receive `-[ZeroDarkCloudDelegate didPushNodeData:toRecipient:transaction:]`.
  *
  * For more information about messaging, see the docs:
  * https://zerodarkcloud.readthedocs.io/en/latest/client/messaging/
