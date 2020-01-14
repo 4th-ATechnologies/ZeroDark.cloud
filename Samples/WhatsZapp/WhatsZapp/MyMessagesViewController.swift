@@ -56,9 +56,13 @@ class MsgKitPhoto: MessageKit.MediaItem { // cannot be a struct !
 	}
 }
 
+// --------------------------------------------------------------------------------
+// MARK: -
+// --------------------------------------------------------------------------------
+
 class MyMessagesViewController: MessagesViewController,
                                 MessagesDataSource, MessagesLayoutDelegate, MessagesDisplayDelegate,
-                                MessageInputBarDelegate,
+                                MessageCellDelegate, MessageInputBarDelegate,
                                 UIImagePickerControllerDelegate, UINavigationControllerDelegate {
 	
 	let localUserID: String
@@ -84,9 +88,9 @@ class MyMessagesViewController: MessagesViewController,
 		fatalError("init(coder:) has not been implemented")
 	}
 	
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: View Lifecycle
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// --------------------------------------------------------------------------------
+	// MARK: View Lifecycle
+	// --------------------------------------------------------------------------------
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -109,6 +113,7 @@ class MyMessagesViewController: MessagesViewController,
 		messagesCollectionView.messagesDataSource = self
 		messagesCollectionView.messagesLayoutDelegate = self
 		messagesCollectionView.messagesDisplayDelegate = self
+		messagesCollectionView.messageCellDelegate = self
 		self.messageInputBar.delegate = self
 		
 		let photoButton = InputBarButtonItem()
@@ -143,9 +148,9 @@ class MyMessagesViewController: MessagesViewController,
 		}
 	}
 	
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: Utilities
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// --------------------------------------------------------------------------------
+	// MARK: Utilities
+	// --------------------------------------------------------------------------------
 	
 	func initializeMappings() {
 		
@@ -360,9 +365,9 @@ class MyMessagesViewController: MessagesViewController,
 		}
 	}
 	
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: Notifications
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// --------------------------------------------------------------------------------
+	// MARK: Notifications
+	// --------------------------------------------------------------------------------
 	
 	@objc private func uiDatabaseConnectionDidUpdate(_ notification: NSNotification) {
 		
@@ -423,9 +428,9 @@ class MyMessagesViewController: MessagesViewController,
 		})
 	}
 	
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: Navigation Bar
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// --------------------------------------------------------------------------------
+	// MARK: Navigation Bar
+	// --------------------------------------------------------------------------------
 	
 	private func configureNavigationTitle(_ remoteUser: ZDCUser) {
 		
@@ -492,9 +497,9 @@ class MyMessagesViewController: MessagesViewController,
 		}
 	}
 	
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: MessagesDataSource
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// --------------------------------------------------------------------------------
+	// MARK: MessagesDataSource
+	// --------------------------------------------------------------------------------
 	
 	func currentSender() -> SenderType {
 		
@@ -596,10 +601,10 @@ class MyMessagesViewController: MessagesViewController,
 		}
 	}
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: MessagesDisplayDelegate
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+	// --------------------------------------------------------------------------------
+	// MARK: MessagesDisplayDelegate
+	// --------------------------------------------------------------------------------
+	
 	func configureAvatarView(_ avatarView: AvatarView,
 	                         for message: MessageType,
 	                         at indexPath: IndexPath,
@@ -653,9 +658,18 @@ class MyMessagesViewController: MessagesViewController,
 		                   postFetch: postFetch)
 	}
 	
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: MessageInputBarDelegate
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// --------------------------------------------------------------------------------
+	// MARK: MessageCellDelegate
+	// --------------------------------------------------------------------------------
+	
+	func didTapMessage(in cell: MessageCollectionViewCell) {
+		
+		DDLogInfo("didTapMessage(in:)")
+	}
+	
+	// --------------------------------------------------------------------------------
+	// MARK: MessageInputBarDelegate
+	// --------------------------------------------------------------------------------
 
 	func inputBar(_ inputBar: MessageInputBar, didPressSendButtonWith text: String) {
 		
@@ -784,9 +798,9 @@ class MyMessagesViewController: MessagesViewController,
 		inputBar.inputTextView.text = ""
 	}
 	
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MARK: MessageInputBarDelegate
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// --------------------------------------------------------------------------------
+	// MARK: MessageInputBarDelegate
+	// --------------------------------------------------------------------------------
 	
 	private func didTapPhotoButton() {
 		DDLogInfo("didTapPhotoButton()")
