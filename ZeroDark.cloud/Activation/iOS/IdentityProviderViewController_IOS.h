@@ -12,8 +12,6 @@
 
 @interface IdentityProviderViewController_IOS : AccountSetupSubViewController_Base
 
-
-@property (nonatomic, assign) IdenititySelectionMode   idenitityMode;
-
+@property (nonatomic, assign) IdenititySelectionMode idenitityMode;
 
 @end

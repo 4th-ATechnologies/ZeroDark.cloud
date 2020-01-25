@@ -633,14 +633,13 @@
 }
 
 
--(void) continueWithURLEventQueryString:(NSString *)queryString
-							   provider:(NSString*)provider
+- (void)continueWithURLEventQueryString:(NSString *)queryString
+                               provider:(NSString *)provider
 {
 	[self removeWebProgress];
 
-	[self processQueryString:queryString
-					provider:provider];
-
+	[self processQueryString: queryString
+	                provider: provider];
 }
 
 - (void)authenticateUserWithAuth:(ZDCLocalUserAuth *)auth

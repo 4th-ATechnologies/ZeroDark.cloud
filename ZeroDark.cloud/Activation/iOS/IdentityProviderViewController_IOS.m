@@ -169,55 +169,50 @@
 	}];
 }
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Utilities
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
--(void) fillIdentityProvidersWithCompletion:(dispatch_block_t)completionBlock
+- (void)fillIdentityProvidersWithCompletion:(dispatch_block_t)completionBlock
 {
 	__weak typeof(self) weakSelf = self;
 
 	[providerManager fetchSupportedProviders:
 		^(NSArray<NSString *> * _Nullable providerKeys, NSError * _Nullable error)
 	{
-		 NSMutableArray* supportedKeys = nil;
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
 
-		 __strong typeof(self) strongSelf = weakSelf;
+		if (error)
+		{
+			[strongSelf.accountSetupVC showError: @"Could not get list of identity providers "
+			                             message: error.localizedDescription
+			                      viewController: self
+			                     completionBlock:
+			^{
+				[strongSelf.accountSetupVC popFromCurrentView];
+			}];
+		}
+		else // if (providerKeys)
+		{
+			NSMutableArray* supportedKeys = [providerKeys mutableCopy];
+			
+			// if we are in trial mode we dont show the auth0 login
+			// but in social mode we fall through.
+			
+			if (strongSelf.accountSetupVC.setupMode ==  AccountSetupMode_Trial
+			 || strongSelf.accountSetupVC.identityMode == IdenititySelectionMode_ExistingAccount)
+			{
+				[supportedKeys removeObject:@"auth0"];
+			}
+			
+			strongSelf->identityProviderKeys = supportedKeys;
+		}
 
-		 if(strongSelf)
-		 {
-			 if(error)
-			 {
-
-				 [strongSelf.accountSetupVC showError:@"Could not get list of identity providers "
-											  message:error.localizedDescription
-									   viewController:self
-									  completionBlock:^{
-
-										  [strongSelf.accountSetupVC popFromCurrentView   ];
-									  }];
-			 }
-
-			 if(providerKeys)
-			 {
-				 supportedKeys = [NSMutableArray arrayWithArray:providerKeys];
-
-				 // if we are in trial mode we dont show the auth0 login
-				 // but in social mode we fall through.
-				 if(   strongSelf.accountSetupVC.setupMode ==  AccountSetupMode_Trial
-					|| strongSelf.accountSetupVC.identityMode == IdenititySelectionMode_ExistingAccount)
-				 {
-					 [supportedKeys removeObject:@"auth0"];
-				 }
-
-			 }
-			 strongSelf->identityProviderKeys = supportedKeys;
-
-		 }
-
-		 if(completionBlock)
-			 completionBlock();
-	 }];
+		if (completionBlock) {
+			completionBlock();
+		}
+	}];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

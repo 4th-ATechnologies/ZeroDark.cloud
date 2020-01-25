@@ -13,10 +13,10 @@
 @interface SocialIdentityAuthenticationViewController_IOS : AccountSetupSubViewController_Base
 
 @property (nonatomic, assign) NSString *URLEventQueryString;
-@property (nonatomic, assign) NSString *providerName;;
+@property (nonatomic, assign) NSString *providerName;
 
--(void) continueWithURLEventQueryString:(NSString *)queryString
-							   provider:(NSString*)provider;
+- (void)continueWithURLEventQueryString:(NSString *)queryString
+                               provider:(NSString *)provider;
 
 @end
 

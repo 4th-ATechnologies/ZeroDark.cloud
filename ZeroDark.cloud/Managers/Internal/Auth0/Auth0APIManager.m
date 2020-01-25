@@ -372,7 +372,7 @@ static Auth0APIManager *sharedInstance = nil;
 	//   We only need the access_token for one reason:
 	//   It's required in order to fetch the user's profile from auth0.
 	//
-	// No here's the crazy part:
+	// Now here's the crazy part:
 	//
 	// When we login here, we'll receive all 3 tokens.
 	// But the access_token we get back is garbage.
