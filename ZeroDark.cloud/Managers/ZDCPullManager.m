@@ -3807,20 +3807,20 @@ static NSUInteger const kMaxFailCount = 8;
 			
 			NSString *parentID = [pullItem.parents lastObject];
 			
-			ZDCNode *node =
-			  [self findNodeWithCloudPath: pullItem.rcrdCloudPath
-			                    cloudRcrd: cloudRcrd
-				                  parentID: parentID
-			                    pullState: pullState
-			                  transaction: transaction];
+			ZDCNode *matchingNode =
+			  [self didPullNodeWithCloudPath: pullItem.rcrdCloudPath
+			                       cloudRcrd: cloudRcrd
+				                     parentID: parentID
+			                       pullState: pullState
+			                     transaction: transaction];
 			
-			if (node) {
-				[pullState removeUnprocessedNodeID:node.uuid];
+			if (matchingNode) {
+				[pullState removeUnprocessedNodeID:matchingNode.uuid];
 			}
 			
-			if (node)
+			if (matchingNode)
 			{
-				[self updateNode: node
+				[self updateNode: matchingNode
 				   withCloudRcrd: cloudRcrd
 				        pullItem: pullItem
 				       pullState: pullState
@@ -3899,11 +3899,11 @@ static NSUInteger const kMaxFailCount = 8;
  * Searches the database for a matching node.
  * If a conflicting node is found occupying the same path, then that node is moved.
  */
-- (nullable ZDCNode *)findNodeWithCloudPath:(ZDCCloudPath *)remoteCloudPath
-                                  cloudRcrd:(ZDCCloudRcrd *)cloudRcrd
-                                   parentID:(NSString *)parentID
-                                  pullState:(ZDCPullState *)pullState
-                                transaction:(YapDatabaseReadWriteTransaction *)transaction
+- (nullable ZDCNode *)didPullNodeWithCloudPath:(ZDCCloudPath *)remoteCloudPath
+                                     cloudRcrd:(ZDCCloudRcrd *)cloudRcrd
+                                      parentID:(NSString *)parentID
+                                     pullState:(ZDCPullState *)pullState
+                                   transaction:(YapDatabaseReadWriteTransaction *)transaction
 {
 	ZDCNodeManager *const nodeManager = [ZDCNodeManager sharedInstance];
 	ZDCCloudPathManager *const cloudPathManager = [ZDCCloudPathManager sharedInstance];

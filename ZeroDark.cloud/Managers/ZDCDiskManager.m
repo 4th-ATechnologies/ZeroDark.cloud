@@ -3572,7 +3572,7 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 			}
 		}
 		
-		if (infos)
+		if (info)
 		{
 			fileURL = info.fileURL;
 			format = info.format;
