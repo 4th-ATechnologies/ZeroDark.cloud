@@ -1,0 +1,23 @@
+source 'https://github.com/CocoaPods/Specs.git'
+
+workspace 'ConflictResolutionTests'
+project 'ConflictResolutionTests'
+use_frameworks!
+inhibit_all_warnings!
+
+# Workaround for Xcode bug:
+# - https://www.ralfebert.de/ios/blog/cocoapods-clean-input-output-files/
+# - https://github.com/CocoaPods/CocoaPods/issues/8073
+# - https://github.com/CocoaPods/CocoaPods/pull/8105
+#
+install! 'cocoapods', :disable_input_output_paths => true
+
+abstract_target 'ios' do
+	platform :ios, '10.1'
+
+	pod 'ZeroDarkCloud/Swift', path: '../../', :inhibit_warnings => false
+	
+	target :'ConflictResolutionTests' do
+	end
+
+end
