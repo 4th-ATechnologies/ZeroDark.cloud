@@ -78,7 +78,7 @@ class ViewController: UIViewController , UITabBarDelegate, UITextFieldDelegate, 
 		self.navigationItem.rightBarButtonItems = [
 			globeButtonItem	]
 
- 		currentLanguageId = BIP39Mnemonic.languageIDForlocaleIdentifier(Locale.current.identifier)
+		currentLanguageId = BIP39Mnemonic.languageID(forLocaleIdentifier: Locale.current.identifier)
 	}
 
 
@@ -186,8 +186,7 @@ class ViewController: UIViewController , UITabBarDelegate, UITextFieldDelegate, 
 			else {
 				data = try BIP39Mnemonic.key(fromMnemonic: words,
 											 passphrase: _txtPasscode.text,
-											 languageID: currentLanguageId,
-											 algorithm: .storm4) as Data
+											 languageID: currentLanguageId) as Data
 			}
 
 			if(encryptionKey ==  data)
@@ -247,8 +246,7 @@ class ViewController: UIViewController , UITabBarDelegate, UITextFieldDelegate, 
 			do {
 				let words = try BIP39Mnemonic.mnemonic(fromKey: encryptionKey!,
 													   passphrase: _txtPasscode.text,
-													   languageID: currentLanguageId,
-													   algorithm: .storm4)
+													   languageID: currentLanguageId )
 
 				_txtWords.text = words.joined(separator: " ")
 
