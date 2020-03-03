@@ -14,9 +14,6 @@ PODS:
   - AFNetworking/Serialization (3.2.1)
   - AFNetworking/UIKit (3.2.1):
     - AFNetworking/NSURLSession
-  - CocoaLumberjack (3.6.0):
-    - CocoaLumberjack/Core (= 3.6.0)
-  - CocoaLumberjack/Core (3.6.0)
   - JGProgressView (1.2.1)
   - KGHitTestingViews (0.9.5)
   - S4Crypto (2.2.10)
@@ -154,9 +151,8 @@ PODS:
     - YapDatabase/SQLCipher-ObjC/Extensions/View
     - YapDatabase/SQLCipher/Core
   - ZDCSyncableObjC (1.0.1)
-  - ZeroDarkCloud/Core (0.9.1):
+  - ZeroDarkCloud/Core (0.9.4):
     - AFNetworking
-    - CocoaLumberjack
     - JGProgressView
     - KGHitTestingViews
     - NSColor-Crayola
@@ -168,9 +164,8 @@ PODS:
     - YapDatabase/SQLCipher-ObjC (>= 4.0)
     - ZDCSyncableObjC
     - zipzap
-  - ZeroDarkCloud/Swift (0.9.1):
+  - ZeroDarkCloud/Swift (0.9.4):
     - AFNetworking
-    - CocoaLumberjack
     - JGProgressView
     - KGHitTestingViews
     - NSColor-Crayola
@@ -191,9 +186,8 @@ DEPENDENCIES:
   - ZeroDarkCloud/Swift (from `../../`)
 
 SPEC REPOS:
-  https://github.com/cocoapods/specs.git:
+  https://github.com/CocoaPods/Specs.git:
     - AFNetworking
-    - CocoaLumberjack
     - JGProgressView
     - KGHitTestingViews
     - S4Crypto
@@ -212,7 +206,6 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   AFNetworking: b6f891fdfaed196b46c7a83cf209e09697b94057
-  CocoaLumberjack: 78b0c238666f4f58db069738ec176f4519557516
   JGProgressView: 6f3dfda0de2d7c49b249f3075553d09f39e42bd5
   KGHitTestingViews: 34a1c05a3ec0778ca8c46fadf994c9292c56f374
   S4Crypto: 6f563ee3bd08f02791508717c58f14fff83cfe2d
@@ -223,9 +216,9 @@ SPEC CHECKSUMS:
   XMLDictionary: fa07b6ff422b3a91d47a5de9bc82e3fc04fbd167
   YapDatabase: 260b1b0b3e6ae6775383edc923e19813586615eb
   ZDCSyncableObjC: 0866ef66fc5be67e0b6df713cff9b9b84eed9967
-  ZeroDarkCloud: 66de3410a66c8c17d7912659be2bcc7289635a70
+  ZeroDarkCloud: 176df722e9e59e17c112c124584572687835a588
   zipzap: 940162d9c9c60472c2eab341385e4214da0fdf1c
 
 PODFILE CHECKSUM: fe81b70586c15876b58a8785148f78cc8d48a4b7
 
-COCOAPODS: 1.7.2
+COCOAPODS: 1.8.4

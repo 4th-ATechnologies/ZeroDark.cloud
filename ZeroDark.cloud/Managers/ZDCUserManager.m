@@ -964,7 +964,14 @@
 			
 		} completionQueue:concurrentQueue completionBlock:^{
 
-			InvokeCompletionBlocks(user, nil);
+			if( blockchainError.userInfo[NSUnderlyingErrorKey])
+			{
+				InvokeCompletionBlocks(user, blockchainError);
+			}
+			else
+			{
+				InvokeCompletionBlocks(user, nil);
+			}
 		}];
 	}};
 	

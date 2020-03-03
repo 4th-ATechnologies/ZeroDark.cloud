@@ -329,6 +329,8 @@ static ZDCAsyncCompletionDispatch *pendingRequests;
 				NSDictionary *dict = (NSDictionary *)obj;
 				
 				NSString *result = dict[@"result"];
+				NSDictionary * errorDict =  dict[@"error"];
+	 
 				if ([result isKindOfClass:[NSString class]])
 				{
 					NSData *resultData = [NSData dataFromHexString:result];
@@ -337,6 +339,14 @@ static ZDCAsyncCompletionDispatch *pendingRequests;
 						merkleTreeRoot = [self v3_merkleTreeRootFromResponse:resultData];
 					}
 				}
+				else if(errorDict && [errorDict isKindOfClass:[NSDictionary class]])
+				{
+					NSString* errMsg =  errorDict[@"message"];
+					NSInteger errCode = [errorDict[@"code"] integerValue];
+					NSError* eth_Error = [self errorWithDescription:errMsg statusCode:errCode];
+					error = eth_Error;
+				}
+				
 			}
 		}
 		
@@ -426,7 +436,7 @@ static ZDCAsyncCompletionDispatch *pendingRequests;
 	}
 	
 	NSString *const accessToken = @"94cbbe9f44574c19af2335390473a778";
-	NSString *const urlStr = [NSString stringWithFormat:@"https://mainnet.infura.io/%@", accessToken];
+	NSString *const urlStr = [NSString stringWithFormat:@"https://mainnet.infura.io/v3/%@", accessToken];
 	
 	NSURL *url = [NSURL URLWithString:urlStr];
 	
@@ -453,6 +463,17 @@ static ZDCAsyncCompletionDispatch *pendingRequests;
 	
 	NSString *domain = NSStringFromClass([self class]);
 	return [NSError errorWithDomain:domain code:0 userInfo:userInfo];
+}
+
++ (NSError *)errorWithDescription:(NSString *)description statusCode:(NSUInteger)statusCode
+{
+	NSDictionary *userInfo = nil;
+	if (description) {
+		userInfo = @{ NSLocalizedDescriptionKey: description };
+	}
+	
+	NSString *domain = NSStringFromClass([self class]);
+	return [NSError errorWithDomain:domain code:statusCode userInfo:userInfo];
 }
 
 @end

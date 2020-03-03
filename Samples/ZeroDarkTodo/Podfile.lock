@@ -157,7 +157,7 @@ PODS:
     - YapDatabase/SQLCipher/Core
   - ZDCSyncable (1.0.2)
   - ZDCSyncableObjC (1.0.1)
-  - ZeroDarkCloud/Core (0.9.3):
+  - ZeroDarkCloud/Core (0.9.4):
     - AFNetworking
     - JGProgressView
     - KGHitTestingViews
@@ -170,7 +170,7 @@ PODS:
     - YapDatabase/SQLCipher-ObjC (>= 4.0)
     - ZDCSyncableObjC
     - zipzap
-  - ZeroDarkCloud/Swift (0.9.3):
+  - ZeroDarkCloud/Swift (0.9.4):
     - AFNetworking
     - JGProgressView
     - KGHitTestingViews
@@ -234,7 +234,7 @@ SPEC CHECKSUMS:
   YapDatabase: 260b1b0b3e6ae6775383edc923e19813586615eb
   ZDCSyncable: 12256222acfc1eda4a03b9c3f7ae8766bac4d027
   ZDCSyncableObjC: 0866ef66fc5be67e0b6df713cff9b9b84eed9967
-  ZeroDarkCloud: c1770a125c540eeb6ea6357ebfa0d1ae89662443
+  ZeroDarkCloud: 176df722e9e59e17c112c124584572687835a588
   zipzap: 940162d9c9c60472c2eab341385e4214da0fdf1c
 
 PODFILE CHECKSUM: 5f1f54c5e1b2998e74adc823a67ceb6c8e42fed4

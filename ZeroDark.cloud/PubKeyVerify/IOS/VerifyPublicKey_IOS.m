@@ -597,10 +597,20 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 			
 			if (error)
 			{
+				NSError *eth_Error = error.userInfo[NSUnderlyingErrorKey];
+				
 				[ss->_btnVerifyBlockChain setImage:ss->warningImage forState:UIControlStateNormal];
 				ss->_txtVerifyBlockChain.text = @"Blockchain Verification Failed";
 				
-				ss->_txtVerifyBlockChainError.text = error.localizedDescription;
+				if(eth_Error.localizedDescription	)
+				{
+					ss->_txtVerifyBlockChainError.text = eth_Error.localizedDescription;
+				}
+				else
+				{
+					ss->_txtVerifyBlockChainError.text = error.localizedDescription;
+				}
+				
 				ss->_txtVerifyBlockChainError.textColor = UIColor.redColor;
 				[ss->_txtVerifyBlockChainError sizeToFit];
 				ss->_txtVerifyBlockChainError.hidden = NO;
