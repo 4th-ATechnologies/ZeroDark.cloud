@@ -527,8 +527,6 @@ static NSString *const k_displayName = @"displayName";
 	                     withAccessKey: accessKey
 	                       transaction: transaction];
 	
-done:
-	
 	if (outError) *outError = nil;
 	return localUser;
 }
