@@ -67,7 +67,6 @@ NS_ASSUME_NONNULL_BEGIN
  * Write some doocumentation here
  *
  */
-
 - (void)refreshAuth0ProfilesForLocalUserID:(NSString *)userID
 						   completionQueue:(nullable dispatch_queue_t)completionQueue
 						   completionBlock:(nullable void (^)( NSError *error))completionBlock;

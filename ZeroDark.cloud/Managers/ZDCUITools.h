@@ -1,11 +1,11 @@
-/**
+/*
  * ZeroDark.cloud Framework
- * 
+ *
  * Homepage      : https://www.zerodark.cloud
  * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
  * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
  * API Reference : https://apis.zerodark.cloud
- **/
+**/
 
 #if TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
@@ -30,7 +30,6 @@ NS_ASSUME_NONNULL_BEGIN
  * The ZDCUITools is a series of functions that simpily the user interface needed for
  * creating, signing-in and managing ZDCLocalUsers
  */
-
 @interface ZDCUITools : NSObject
 
 #if TARGET_OS_IPHONE
@@ -85,8 +84,8 @@ typedef void(^accountSetupViewCompletionHandler)(NSString *__nullable localUserI
  * @param navigationController
  * The app bar navigation controller instance that owns the view controller.
  */
--(void)pushSettingsForLocalUserID:(NSString* __nonnull)localUserID
-		 withNavigationController:(UINavigationController*)navigationController;
+- (void)pushSettingsForLocalUserID:(NSString *)localUserID
+          withNavigationController:(UINavigationController *)navigationController;
 
 /**
  * Push a UIViewController for managing a ZDCLocalUser socialIDs
@@ -97,8 +96,8 @@ typedef void(^accountSetupViewCompletionHandler)(NSString *__nullable localUserI
  * @param navigationController
  * The app bar navigation controller instance that owns the view controller.
  */
-- (void)pushSocialIdMgmtWithUserID:(NSString* __nonnull)userID
-		  withNavigationController:(UINavigationController*)navigationController;
+- (void)pushSocialIdMgmtWithUserID:(NSString *)userID
+          withNavigationController:(UINavigationController *)navigationController;
 
 /**
  * Push a UIViewController for backing up a ZDCLocalUser Access Key
@@ -172,7 +171,7 @@ typedef void(^SharedUsersViewCompletionHandler)(NSSet<NSString*> *addedUserIDs,
 #endif
 
 
-// MARK: useful for debugging
+// MARK: Debugging
 
 /**
  * Delete the Refresh token for a given Local User.
@@ -182,11 +181,10 @@ typedef void(^SharedUsersViewCompletionHandler)(NSSet<NSString*> *addedUserIDs,
  * @param localUserID
  *   The localUser for which you're interested (localUserID == ZDCLocalUser.uuid)
  *
-  *
+ *
  * @param completionBlock
  *   The completionHandler, to call once the token is removed from the database
  */
-
 - (void)deleteRefreshTokenforUserID:(NSString *)localUserID
                     completionBlock:(dispatch_block_t __nullable )completionBlock;
 
@@ -195,8 +193,7 @@ typedef void(^SharedUsersViewCompletionHandler)(NSSet<NSString*> *addedUserIDs,
 
 /**
  * return a UIViewController for that simulates push notifcations for debugging
- *
-*/
+ */
 - (UIViewController* __nullable)simulatePushNotificationViewController;
 #endif
 

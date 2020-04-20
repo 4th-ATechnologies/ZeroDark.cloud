@@ -42,7 +42,7 @@
 
 /**
  * An idToken is a JWT that can be exchanged for AWS credentials.
- * 
+ *
  * These tokens have an expiration date, and therefore need to be regularly refreshed.
  */
 @property (nonatomic, copy, readwrite) NSString * auth0_idToken;

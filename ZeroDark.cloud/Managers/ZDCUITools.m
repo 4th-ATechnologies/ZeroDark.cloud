@@ -103,13 +103,12 @@
 
 }
 
--(void)pushSettingsForLocalUserID:(NSString* __nonnull)localUserID
-		 withNavigationController:(UINavigationController*)navigationController
+- (void)pushSettingsForLocalUserID:(NSString *)localUserID
+          withNavigationController:(UINavigationController*)navigationController
 {
-	
-	LocalUserSettingsViewController_IOS* vc = [[LocalUserSettingsViewController_IOS alloc]
-															 initWithOwner:zdc
-															 localUserID:localUserID];
+	LocalUserSettingsViewController_IOS *vc =
+	  [[LocalUserSettingsViewController_IOS alloc] initWithOwner: zdc
+	                                                 localUserID: localUserID];
 	
 	[navigationController pushViewController:vc animated:YES];
 }

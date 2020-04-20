@@ -1015,7 +1015,7 @@ static Auth0APIManager *sharedInstance = nil;
 	// - It does NOT work if the user logged in via social (e.g. with LinkedIn)
 	//
 	// In discussing the manner with Auth0 support,
-	// the told us to use the delegation API (even though it's technically deprecated).
+	// they told us to use the delegation API (even though it's technically deprecated).
 	
 	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
 	urlComponents.scheme = @"https";

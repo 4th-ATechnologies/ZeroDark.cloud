@@ -124,8 +124,6 @@ static NSString *const k_deprecated_accountDeleted      = @"accountDeleted";
 		needsCheckAccountDeleted       = [decoder decodeBoolForKey:k_needsCheckAccountDeleted];
 
 		auth0_primary = [decoder decodeObjectForKey:k_auth0_primary];
-		
-	//	waitListInfo = [decoder decodeObjectForKey:k_waitListInfo];
 	}
     
 	return self;

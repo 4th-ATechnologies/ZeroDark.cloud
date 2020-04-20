@@ -324,8 +324,7 @@ typedef void (^UserAvatarDownloadCompletionBlock)(NSData *_Nullable avatar, NSEr
  *
  * It's common to have a function that requests a download (if needed).
  * However, this function may run multiple times.
- * For example, it may run as part of the dataSource for tableView/collectionView,
- * and thereform may request a download dozens of times as the user scrolls around the view.
+ * For example, it may run everytime your view refreshes.
  *
  * The optimium result would be:
  * 1. perform the download only once (consolidate network requests)
@@ -338,6 +337,22 @@ typedef void (^UserAvatarDownloadCompletionBlock)(NSData *_Nullable avatar, NSEr
  * When this is the case, you can set a non-nil completionConsolidationTag.
  * And if there's already a queued completionBlock with the same completionConsolidationTag,
  * then the passed completionBlock won't be added to the queue again.
+ *
+ * Remember: It's important that your completionConsolidationTag is properly
+ * unique to the calling instance.
+ *
+ * options.completionConsolidationTag = "hardCodedString" // <- BAD code, BUG magnet
+ * options.completionConsolidationTag = String(describing: type(of: self)) // <- GOOD code
+ *
+ * The BAD code will result in a bug IF:
+ * - You copy-n-paste the code to another class
+ * - The calling instance gets quickly recycled (*)
+ *
+ * (*) Imagine that ViewControllerA gets instantiated, and performs a request with the above bad code.
+ * Then ViewControllerA gets popped from the view stack and is deinitialized.
+ * Then a NEW ViewControllerA instance gets created, and performs the same request with the above bad code.
+ * Since its using the same "hardCodedString", and the previous request is already queued,
+ * the DownloadManager will ignore the request, and will NOT invoke your completion block!
  */
 @property (nonatomic, copy, readwrite, nullable) NSString *completionConsolidationTag;
 

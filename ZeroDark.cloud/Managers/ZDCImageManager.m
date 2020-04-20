@@ -1,11 +1,11 @@
 /**
  * ZeroDark.cloud
- * 
+ *
  * Homepage      : https://www.zerodark.cloud
  * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
  * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
  * API Reference : https://apis.zerodark.cloud
-**/
+ */
 
 #import "ZDCImageManagerPrivate.h"
 
@@ -89,7 +89,7 @@
 
 - (instancetype)init
 {
-	return nil; // To access this class use: ZeroDarkCloud.downloadManager
+	return nil; // To access this class use: ZeroDarkCloud.imageManager
 }
 
 - (instancetype)initWithOwner:(ZeroDarkCloud *)inOwner
