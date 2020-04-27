@@ -18,6 +18,8 @@
 #import "ZDCDatabaseManagerPrivate.h"
 #import "ZDCLocalUserPrivate.h"
 #import "ZDCLogging.h"
+#import "ZDCPublicKeyPrivate.h"
+#import "ZDCSymmetricKeyPrivate.h"
 #import "ZDCTrunkNodePrivate.h"
 #import "ZDCUserPrivate.h"
 #import "ZeroDarkCloudPrivate.h"
@@ -447,7 +449,7 @@ static NSString *const k_displayName = @"displayName";
 	}
 	
 	ZDCLocalUserAuth *localUserAuth = [[ZDCLocalUserAuth alloc] init];
-	localUserAuth.auth0_refreshToken = refreshToken;
+	localUserAuth.coop_refreshToken = refreshToken;
 	
 	NSString *syncedSalt = json[@"syncedSalt"];
 	if (![syncedSalt isKindOfClass:[NSString class]]) {
@@ -923,69 +925,86 @@ static NSString *const k_displayName = @"displayName";
 	ZDCLogAutoTrace();
 	__weak typeof(self) weakSelf = self;
 
-	void (^InvokeCompletionBlock)(NSData *pKToUnlock, NSError *error) = ^(NSData *pKToUnlock, NSError *error){
+	void (^Fail)(NSError*) = ^(NSError *error) {
+		
+		if (completionBlock == nil) return;
+		
+		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+			completionBlock(nil, error);
+		}});
+	};
+	
+	void (^Succeed)(NSData*) = ^(NSData *pKToUnlock){
 
 		if (completionBlock == nil) return;
 
 		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
-			completionBlock(pKToUnlock, error);
+			completionBlock(pKToUnlock, nil);
 		}});
 	};
 
 	__block ZDCPublicKey *   privateKey  = nil;
 	__block ZDCSymmetricKey* cloneKey    = nil;
-	NSError *exportError = nil;
+	NSError *error = nil;
 
 	// Create temporary private key and clone key,
 	// but don't update DB until we know what the real values on the server are.
 
-	cloneKey = [ZDCSymmetricKey keyWithAlgorithm:kCipher_Algorithm_2FISH256
-									 storageKey:zdc.storageKey];
+	cloneKey = [ZDCSymmetricKey createWithAlgorithm: kCipher_Algorithm_2FISH256
+	                                     storageKey: zdc.storageKey
+	                                          error: &error];
+	
+	if (error) {
+		Fail(error);
+		return;
+	}
 
-	privateKey = [ZDCPublicKey privateKeyWithOwner:localUser.uuid
-									   storageKey:zdc.storageKey
-										algorithm:kCipher_Algorithm_ECC41417];
+	privateKey = [ZDCPublicKey createWithUserID: localUser.uuid
+	                                  algorithm: kCipher_Algorithm_ECC41417
+	                                 storageKey: zdc.storageKey
+	                                      error: &error];
+	
+	if (error) {
+		Fail(error);
+		return;
+	}
 
 	// Sign the auth0 ID into the public key
-	if (privateKey)
+	
+	NSMutableArray *identityIDs = [NSMutableArray arrayWithCapacity:localUser.identities.count];
+	for (ZDCUserIdentity *ident in localUser.identities)
 	{
-		NSMutableArray *identityIDs = [NSMutableArray arrayWithCapacity:localUser.identities.count];
-		for (ZDCUserIdentity *ident in localUser.identities)
-		{
-			[identityIDs addObject:ident.identityID];
-		}
-		
-		NSData *auth0IDData =
-		  [NSJSONSerialization dataWithJSONObject: identityIDs
-		                                  options: 0
-		                                    error: nil];
-
-		[privateKey updateKeyProperty: kZDCCloudKey_Auth0ID
-		                        value: auth0IDData
-		                   storageKey: zdc.storageKey
-		                        error: &exportError];
+		[identityIDs addObject:ident.identityID];
 	}
+	
+	NSData *auth0IDData =
+	  [NSJSONSerialization dataWithJSONObject: identityIDs
+	                                  options: 0
+	                                    error: nil];
 
-	if (exportError)
-	{
-		InvokeCompletionBlock(nil, exportError);
+	[privateKey updateKeyProperty: kZDCCloudKey_Auth0ID
+	                        value: auth0IDData
+	                   storageKey: zdc.storageKey
+	                        error: &error];
+
+	if (error) {
+		Fail(error);
 		return;
 	}
 
-	NSData *privKeyData = [zdc.cryptoTools exportPrivateKey:privateKey
-												   encryptedTo:cloneKey
-														 error:&exportError];
-	if (exportError)
-	{
-		InvokeCompletionBlock(nil, exportError);
+	NSData *privKeyData = [zdc.cryptoTools exportPrivateKey: privateKey
+	                                            encryptedTo: cloneKey
+	                                                  error: &error];
+	if (error) {
+		Fail(error);
 		return;
 	}
 
-	NSData *pubKeyData = [zdc.cryptoTools exportPublicKey:privateKey
-													   error:&exportError];
-	if (exportError)
-	{
-		InvokeCompletionBlock(nil, exportError);
+	NSData *pubKeyData = [zdc.cryptoTools exportPublicKey: privateKey
+	                                                error: &error];
+	
+	if (error) {
+		Fail(error);
 		return;
 	}
 
@@ -1002,9 +1021,8 @@ static NSString *const k_displayName = @"displayName";
 		__strong typeof(self) strongSelf = weakSelf;
 		if (!strongSelf) return;
 
-		if (uploadError)
-		{
-			InvokeCompletionBlock(nil, uploadError);
+		if (uploadError) {
+			Fail(uploadError);
 			return;
 		}
 
@@ -1012,14 +1030,14 @@ static NSString *const k_displayName = @"displayName";
 
 		if (statusCode == 200 || statusCode == 201)
 		{
-            [self updateUserRecord: localUser
-                    withPrivateKey: privateKey
-                         accessKey: cloneKey
-                   completionQueue: concurrentQueue
-                   completionBlock:^
-             {
-                 InvokeCompletionBlock(nil, nil);
-             }];
+			[self updateUserRecord: localUser
+			        withPrivateKey: privateKey
+			             accessKey: cloneKey
+			       completionQueue: concurrentQueue
+			       completionBlock:^
+			{
+				Succeed(nil);
+			}];
 		}
 		else if (statusCode == 409)  // conflict - keys are already there
 		{
@@ -1028,9 +1046,8 @@ static NSString *const k_displayName = @"displayName";
 			NSError* parsingError = nil;
 			NSDictionary* jsonDict = [NSJSONSerialization JSONObjectWithData:(NSData *)data options:0 error:&parsingError];
 
-			if (parsingError)
-			{
-				InvokeCompletionBlock(nil, parsingError);
+			if (parsingError) {
+				Fail(parsingError);
 				return;
 			}
 
@@ -1045,16 +1062,15 @@ static NSString *const k_displayName = @"displayName";
 				NSString *msg = // Localize me
 				@"internal error : server call to privPubKey return unexpected value";
 
-				InvokeCompletionBlock(nil, [self errorWithDescription:msg]);
+				Fail([self errorWithDescription:msg]);
 				return;
 			}
 
 			// check that its a real key.
 			NSString* locator = [strongSelf->zdc.cryptoTools keyIDforPrivateKeyData:pkData error:&parsingError];
 
-			if (parsingError)
-			{
-				InvokeCompletionBlock(nil, parsingError);
+			if (parsingError) {
+				Fail(parsingError);
 				return;
 			}
 
@@ -1069,10 +1085,11 @@ static NSString *const k_displayName = @"displayName";
 
 				if(!userPubKey)
 				{
-					NSString *msg =  NSLocalizedString( @"Internal error: user record specifies a publicKeyID but it's not found in database",
-													   @"Internal error: user record specifies a publicKeyID but it's not found in database");
+					NSString *msg = NSLocalizedString(
+						@"Internal error: user record specifies a publicKeyID but it's not found in database",
+						nil);
 
-					InvokeCompletionBlock(nil, [self errorWithDescription:msg]);
+					Fail([self errorWithDescription:msg]);
 					return;
 				}
 
@@ -1080,16 +1097,16 @@ static NSString *const k_displayName = @"displayName";
 				{
 					// We have an existing account, and the key is same
 
-					if(userPubKey.isPrivateKey)	// is it a private key?
+					if (userPubKey.isPrivateKey)	// is it a private key?
 					{
-						InvokeCompletionBlock(nil, nil);
+						Succeed(nil);
 						return;
 					}
 					else
 					{
 						// we need to  update the public key on DB with a private key.  --  we need to unlock later.;
 
-						InvokeCompletionBlock(pkData, nil);
+						Succeed(pkData);
 						return;
 					}
 				}
@@ -1098,10 +1115,11 @@ static NSString *const k_displayName = @"displayName";
 					// we have a key but it is a mismatch  !!!
 					//    FIX_BEFORE_SHIP("we have a key but it is a mismatch -- Warn USER.")
 
-					NSString *msg =  NSLocalizedString( @"Internal error: key on server exists but doesn't match client",
-													   @"Internal error: key on server exists but doesn't match client");
+					NSString *msg = NSLocalizedString(
+						@"Internal error: key on server exists but doesn't match client",
+						nil);
 
-					InvokeCompletionBlock(nil, [self errorWithDescription:msg]);
+					Fail([self errorWithDescription:msg]);
 					return;
 
 				}
@@ -1110,12 +1128,12 @@ static NSString *const k_displayName = @"displayName";
 			{
 				// key on server but not in our DB --  we need to unlock later.
 
-				InvokeCompletionBlock(pkData, nil);
+				Succeed(pkData);
 				return;
 
 			}
 		}
-		else if(statusCode == 423)
+		else if (statusCode == 423)
 		{
 			// Locked - retry.
 
@@ -1127,7 +1145,7 @@ static NSString *const k_displayName = @"displayName";
 			NSString *msg = // Localize me
 			@"internal error : server call to privPubKey return enexpected code";
 
-			InvokeCompletionBlock(nil, [self errorWithDescription:msg statusCode:statusCode]);
+			Fail([self errorWithDescription:msg statusCode:statusCode]);
 		}
 	}};
 
@@ -1153,7 +1171,7 @@ static NSString *const k_displayName = @"displayName";
 			NSString *msg = // Localize me
 			@"Internal Error: server call to privPubKey failed. Check internet connection.";
 
-			InvokeCompletionBlock(nil, [self errorWithDescription:msg]);
+			Fail([self errorWithDescription:msg]);
 			return;
 		}
 
@@ -1381,7 +1399,7 @@ static NSString *const k_displayName = @"displayName";
 			if (recovery_refreshToken)
 			{
 				auth = [auth copy];
-				auth.auth0_refreshToken = recovery_refreshToken;
+				auth.coop_refreshToken = recovery_refreshToken;
 				
 				[transaction setObject:auth forKey:localUserID inCollection:kZDCCollection_UserAuth];
 			}

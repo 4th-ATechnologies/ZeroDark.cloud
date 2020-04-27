@@ -60,7 +60,7 @@ typedef NS_ENUM(NSInteger, AWSCredentialsErrorCode) {
  * Deletes the user's AWS credentials, by deleting the corresponding properties in ZDCLocalUserAuth.
  *
  * If the `deleteRefreshToken` parameter is TRUE, then:
- * - ZDCLocalUserAuth.auth0_refreshToken will be deleted
+ * - ZDCLocalUserAuth.coop_refreshToken will be deleted
  * - ZDCLocalUser.accountNeedsA0Token will be set to TRUE
  *
  * Use this as a way to force-logout the user, without actually deleting the localUser account.

@@ -10,7 +10,7 @@
 #import "ZDCUserAccessKeyManager.h"
 
 #import "ZeroDarkCloudPrivate.h"
-#import "ZDCSymmetricKey.h"
+#import "ZDCSymmetricKeyPrivate.h"
 
 // Categories
 #import "NSError+S4.h"
@@ -51,30 +51,32 @@
 }
 
 - (ZDCAccessKeyBlob *)blobFromData:(NSData *)blobData
-					   localUserID:(NSString *)localUserID
-							 error:(NSError *_Nullable *_Nullable)errorOut
+                       localUserID:(NSString *)localUserID
+                             error:(NSError *_Nullable *_Nullable)errorOut
 {
+	
+	S4Err              err = kS4Err_NoErr;
+
+	Cipher_Algorithm   algorithm = kCipher_Algorithm_2FISH256;
+	size_t             cipherSizeInBits = 0;
+
+	S4KeyContextRef    cloneKeyCtx = kInvalidS4KeyContextRef;
+	ZDCSymmetricKey  * symKey = nil;
+	
 	ZDCAccessKeyBlob * blob = nil;
-	NSError     * error = nil;
-	S4Err         err = kS4Err_NoErr;
-
-	Cipher_Algorithm algorithm = kCipher_Algorithm_2FISH256;
-	size_t           cipherSizeInBits = 0;
-
-	S4KeyContextRef newcloneKeyCtx = kInvalidS4KeyContextRef;
-	ZDCSymmetricKey * symKey = nil;
-
+	NSError          * error = nil;
+	
 	err = Cipher_GetKeySize(algorithm, &cipherSizeInBits); CKERR;
-	ASSERTERR(blobData.length == (cipherSizeInBits / 8), kS4Err_CorruptData );
+	ASSERTERR(blobData.length == (cipherSizeInBits / 8), kS4Err_BadParams);
 
-	err = S4Key_NewSymmetric(algorithm, blobData.bytes, &newcloneKeyCtx); CKERR;
+	err = S4Key_NewSymmetric(algorithm, blobData.bytes, &cloneKeyCtx); CKERR;
 
-	symKey = [ZDCSymmetricKey keyWithS4Key:newcloneKeyCtx
-								storageKey:zdc.storageKey];
+	symKey = [ZDCSymmetricKey createWithS4Key:cloneKeyCtx storageKey:zdc.storageKey error:&error];
+	if (error) {
+		goto done;
+	}
 
-	// create the blob
-	blob = [[ZDCAccessKeyBlob alloc] initWithLocalUserID:localUserID
-												accessKey:symKey];
+	blob = [[ZDCAccessKeyBlob alloc] initWithLocalUserID:localUserID accessKey:symKey];
 
 done:
 
@@ -82,8 +84,8 @@ done:
 		error = [NSError errorWithS4Error:err];
 	}
 
-	if (S4KeyContextRefIsValid(newcloneKeyCtx)) {
-		S4Key_Free(newcloneKeyCtx);
+	if (S4KeyContextRefIsValid(cloneKeyCtx)) {
+		S4Key_Free(cloneKeyCtx);
 	}
 
 	if (errorOut) *errorOut = error;

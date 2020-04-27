@@ -11,6 +11,8 @@
 
 #import "ZDCConstantsPrivate.h"
 #import "ZDCNodePrivate.h"
+#import "ZDCPublicKeyPrivate.h"
+#import "ZDCSymmetricKeyPrivate.h"
 #import "ZeroDarkCloudPrivate.h"
 
 // Categories
@@ -1119,17 +1121,17 @@ done:
 	return privKey;
 }
 
-- (nullable ZDCSymmetricKey *)createSymmetricKey:(NSData*)keyData
-								 		encryptionAlgorithm:(Cipher_Algorithm)encryptionAlgorithm
-											  error:(NSError *_Nullable *_Nullable)errorOut
+- (nullable ZDCSymmetricKey *)createSymmetricKey:(NSData *)keyData
+                             encryptionAlgorithm:(Cipher_Algorithm)encryptionAlgorithm
+                                           error:(NSError *_Nullable *_Nullable)errorOut
 {
-	NSError *			error = nil;
 	S4Err         		err = kS4Err_NoErr;
-	ZDCSymmetricKey* 	symKey = nil;
 
 	S4KeyContextRef 	symKeyCtx = kInvalidS4KeyContextRef;
-
 	size_t           	cipherSizeInBits = 0;
+	
+	ZDCSymmetricKey * result = nil;
+	NSError         * error = nil;
 
 	// parameter checking
 	if (keyData == nil)
@@ -1138,36 +1140,34 @@ done:
 		goto done;
 	}
 
-
-	if(!zdc || !S4KeyContextRefIsValid(zdc.storageKey))
+	if (!zdc || !S4KeyContextRefIsValid(zdc.storageKey))
 	{
 		error = [self errorWithDescription:@"unlocking key not available."];
 		goto done;
 	}
 
-
 	err = Cipher_GetKeySize(encryptionAlgorithm, &cipherSizeInBits); CKERR;
-	ASSERTERR(keyData.length == (cipherSizeInBits / 8), kS4Err_CorruptData );
+	ASSERTERR(keyData.length == (cipherSizeInBits / 8), kS4Err_BadParams);
 
 	// Create a S4 Symmetric key to unlock the pub/priv key with
 	err = S4Key_NewSymmetric(encryptionAlgorithm, keyData.bytes, &symKeyCtx); CKERR;
 
-	symKey = [ZDCSymmetricKey keyWithS4Key:symKeyCtx
-								storageKey:zdc.storageKey];
-
-
+	result = [ZDCSymmetricKey createWithS4Key: symKeyCtx
+	                               storageKey: zdc.storageKey
+	                                    error: &error];
+	
 done:
 
-	if (S4KeyContextRefIsValid(symKeyCtx))
+	if (S4KeyContextRefIsValid(symKeyCtx)) {
 		S4Key_Free(symKeyCtx);
+	}
 
- 	if (IsS4Err(err))
+	if (IsS4Err(err)) {
 		error = [NSError errorWithS4Error:err];
-
+	}
 
 	if (errorOut) *errorOut = error;
-
-	return symKey;
+	return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

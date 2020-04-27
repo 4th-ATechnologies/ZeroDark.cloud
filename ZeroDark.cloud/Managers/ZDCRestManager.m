@@ -1110,8 +1110,7 @@
 		{
 			NSDictionary *pubKeyDict = (NSDictionary *)responseObject;
 			pubKey = [[ZDCPublicKey alloc] initWithUserID: user.uuid
-			                                   pubKeyDict: pubKeyDict
-			                                  privKeyDict: nil];
+			                                   pubKeyDict: pubKeyDict];
 		}
 			
 		if (![pubKey checkKeyValidityWithError:nil])

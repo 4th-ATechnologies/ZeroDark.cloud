@@ -7,8 +7,12 @@
  * API Reference : https://apis.zerodark.cloud
 **/
 
-#import "ZDCSymmetricKey.h"
+#import "ZDCSymmetricKeyPrivate.h"
 #import "ZDCObjectSubclass.h"
+
+#import "NSError+S4.h"
+#import "NSString+ZeroDark.h"
+
 
 static int const kS4SymmetricKey_CurrentVersion = 0;
 
@@ -30,191 +34,108 @@ static NSString *const k_keyJSON     = @"keyJSON";
 
 @dynamic keyDict;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Initializers
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static BOOL S4MakeSymmetricKey(Cipher_Algorithm keyAlgorithm,
-                               S4KeyContextRef  storageKeyCtx,
-                               NSString**       keyStringOut,
-                               NSString**       keyIDOut)
++ (nullable instancetype)createWithAlgorithm:(Cipher_Algorithm)algorithm
+                                  storageKey:(S4KeyContextRef)storageKeyCtx
+                                       error:(NSError *_Nullable *_Nullable)outError
 {
-	BOOL success = NO;
-	S4Err     err = kS4Err_NoErr;
-	
-	NSString* symKey = nil;
-	NSString* keyID = nil;
-	
-	S4KeyContextRef symCtx = kInvalidS4KeyContextRef;
-	
-	uint8_t*    keyData = NULL;
-	size_t      keyDataLen = 0;
-	char*       keyIDStr = NULL;
-	
-	uint8_t         keyBytes[32];
-	
+	S4Err err = kS4Err_NoErr;
+		
 	size_t cipherSizeInBits = 0;
 	size_t cipherSizeInBytes = 0;
 	
-	// create the new storage key
+	uint8_t keyBytes[32];
 	
-	err = Cipher_GetKeySize(keyAlgorithm, &cipherSizeInBits); CKERR;
+	S4KeyContextRef symCtx = kInvalidS4KeyContextRef;
+	
+	uint8_t * keyData = NULL;
+	size_t    keyDataLen = 0;
+	
+	NSString *keyJSON = nil;
+	
+	ZDCSymmetricKey *result = nil;
+	NSError *error = nil;
+	
+	ASSERTERR(S4KeyContextRefIsValid(symCtx), kS4Err_BadParams);
+	
+	err = Cipher_GetKeySize(algorithm, &cipherSizeInBits); CKERR;
 	cipherSizeInBytes = cipherSizeInBits / 8;
 	ASSERTERR((cipherSizeInBytes != 0) && (cipherSizeInBytes <= sizeof(keyBytes)), kS4Err_BadParams);
 	
 	err = RNG_GetBytes(keyBytes, cipherSizeInBytes); CKERR;
-	err = S4Key_NewSymmetric(keyAlgorithm, keyBytes, &symCtx ); CKERR;
-	err = S4Key_GetAllocatedProperty(symCtx, kS4KeyProp_KeyIDString, NULL, (void **)&keyIDStr, NULL); CKERR;
-	keyID = [NSString stringWithUTF8String:keyIDStr];
+	err = S4Key_NewSymmetric(algorithm, keyBytes, &symCtx); CKERR;
 	
 	err = S4Key_SerializeToS4Key(symCtx, storageKeyCtx, &keyData, &keyDataLen); CKERR;
-	symKey = [[NSString alloc] initWithBytesNoCopy: keyData
-	                                        length: keyDataLen
-	                                      encoding: NSUTF8StringEncoding
-	                                  freeWhenDone: YES];
+	keyJSON = [[NSString alloc] initWithBytesNoCopy: keyData
+	                                         length: keyDataLen
+	                                       encoding: NSUTF8StringEncoding
+	                                   freeWhenDone: YES];
 	
-	if (keyStringOut) *keyStringOut = symKey;
-   if (keyIDOut) *keyIDOut = keyID;
+	result = [[ZDCSymmetricKey alloc] initWithKeyJSON:keyJSON];
+		 
+done:
 	
-	success = YES;
-    
+	ZERO(keyBytes, sizeof(keyBytes));
+	
+	if (S4KeyContextRefIsValid(symCtx)) {
+		S4Key_Free(symCtx);
+	}
+	
+	if (IsS4Err(err)) {
+		error = [NSError errorWithS4Error:err];
+	}
+	
+	if (outError) *outError = error;
+	return result;
+}
+
++ (nullable instancetype)createWithS4Key:(S4KeyContextRef)symCtx
+                              storageKey:(S4KeyContextRef)storageKeyCtx
+	                                error:(NSError *_Nullable *_Nullable)outError
+{
+	S4Err err = kS4Err_NoErr;
+	
+	uint8_t * keyData = NULL;
+	size_t    keyDataLen = 0;
+	
+	NSString *keyJSON = nil;
+	
+	ZDCSymmetricKey *result = nil;
+	NSError *error = nil;
+	
+	ASSERTERR(symCtx->type == kS4KeyType_Symmetric, kS4Err_BadParams);
+	ASSERTERR(S4KeyContextRefIsValid(symCtx), kS4Err_BadParams);
+	
+	err = S4Key_SerializeToS4Key(symCtx, storageKeyCtx, &keyData, &keyDataLen); CKERR;
+	keyJSON = [[NSString alloc] initWithBytesNoCopy: keyData
+	                                         length: keyDataLen
+	                                       encoding: NSUTF8StringEncoding
+	                                   freeWhenDone: YES];
+	
+	result = [[ZDCSymmetricKey alloc] initWithKeyJSON:keyJSON];
+	
 done:
-    
-    ZERO(keyBytes, sizeof(keyBytes));
-    
-    if(keyIDStr)
-        XFREE(keyIDStr);
-    
-    if(S4KeyContextRefIsValid(symCtx))
-          S4Key_Free(symCtx);
-    
-    return success;
+	
+	if (IsS4Err(err)) {
+		error = [NSError errorWithS4Error:err];
+	}
+	
+	if (outError) *outError = error;
+	return result;
 }
 
-static BOOL importEncodedSymmetricKey(NSString  * keyStringIn,
-                                NSString  * passCodeIn,
-                                NSString ** locatorOut )
-{
-    BOOL            success = NO;
-    S4Err           err = kS4Err_NoErr;
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Init
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    S4KeyContextRef symCtx      =  kInvalidS4KeyContextRef;
-    S4KeyContextRef *importCtx = NULL;
-    size_t          keyCount = 0;
-    
-     err = S4Key_DeserializeKeys((uint8_t*)keyStringIn.UTF8String, keyStringIn.length, &keyCount, &importCtx ); CKERR;
-    ASSERTERR(keyCount == 1,  kS4Err_SelfTestFailed);
-    
-    err = S4Key_DecryptFromPassPhrase(importCtx[0],(uint8_t*) passCodeIn.UTF8String, passCodeIn.length, &symCtx); CKERR;
-  
-    // check that it is a sym key
-    ASSERTERR(symCtx->type == kS4KeyType_Symmetric ,  kS4Err_BadParams);
- 
-
-    success =  YES;
-    
-done:
-    
-    if(S4KeyContextRefIsValid(symCtx))
-        S4Key_Free(symCtx);
-    
-   
-    return success;
-}
-
-static BOOL importS4Key(S4KeyContextRef     symCtx,
-                        S4KeyContextRef      storageKeyCtx,
-                        NSString             ** keyStringOut,
-                        NSString             ** keyIDOut  )
-{
-    BOOL            success = NO;
-    S4Err           err = kS4Err_NoErr;
-    
-    NSString*       keyString = NULL;
-    NSString*       keyID = NULL;
-    
-    if(S4KeyContextRefIsValid(symCtx))
-    {
-        uint8_t*    keyData = NULL;
-        size_t      keyDataLen = 0;
-        char*       keyIDStr = NULL;
-        
-        // check that it is a sym key
-        ASSERTERR(symCtx->type == kS4KeyType_Symmetric ,  kS4Err_BadParams);
-        
-        err = S4Key_GetAllocatedProperty(symCtx, kS4KeyProp_KeyIDString, NULL, (void**)&keyIDStr, NULL); CKERR;
-        keyID = [NSString stringWithUTF8String:keyIDStr];
-     
-        err = S4Key_SerializeToS4Key(symCtx, storageKeyCtx, &keyData, &keyDataLen); CKERR;
-        keyString = [[NSString alloc]initWithBytesNoCopy:keyData length:keyDataLen encoding:NSUTF8StringEncoding freeWhenDone:YES];
-  
-        if(keyStringOut) *keyStringOut = keyString;
-        if(keyIDOut) *keyIDOut = keyID;
-        
-        success =  YES;
-     }
-    
-done:
-    
-    
-    return success;
-}
-
-
-
-
-+ (instancetype)keyWithS4Key:(S4KeyContextRef)symCtx
-                  storageKey:(S4KeyContextRef)storageKey
-{
-    ZDCSymmetricKey *key = nil;
-    
-    NSString *keyString = nil;
-    NSString *locator = nil;
-    
-    if ( importS4Key(symCtx, storageKey, &keyString, &locator))
-    {
-          key =  [[ZDCSymmetricKey alloc] initWithUUID:locator
-                                              keyJSON:keyString];
-    }
-        
-    return key;
-}
-
-+ (id)keyWithAlgorithm:(Cipher_Algorithm)algorithm
-            storageKey:(S4KeyContextRef)storageKey
-{
-    ZDCSymmetricKey *key = nil;
-    NSString *keyString = nil;
-    NSString *locator = nil;
-    
-    if (S4MakeSymmetricKey(algorithm, storageKey,  &keyString, &locator))
-    {
-        key =  [[ZDCSymmetricKey alloc] initWithUUID:locator
-                                            keyJSON:keyString];
-    }
-    
-    return key;
-}
-
-
-+ (id)keyWithString:(NSString *)inKeyJSON passCode:(NSString*)passCode
-{
-    ZDCSymmetricKey *key = nil;
-    
-       NSString *locator = nil;
-    
-    if (importEncodedSymmetricKey(inKeyJSON, passCode, &locator))
-    {
-        key = [[ZDCSymmetricKey alloc] initWithUUID:locator
-                                           keyJSON:inKeyJSON];
-    }
-    
-    return key;
-}
-
-- (instancetype)initWithUUID:(NSString *)inUUID
-                     keyJSON:(NSString *)inKeyJSON
+- (instancetype)initWithKeyJSON:(NSString *)inKeyJSON
 {
 	if ((self = [super init]))
 	{
-		uuid = [inUUID copy];
+		uuid = [[NSUUID UUID] UUIDString];
 		keyJSON = [inKeyJSON copy];
 	}
 	return self;

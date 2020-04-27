@@ -19,13 +19,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface ZDCPublicKey : ZDCObject <NSCoding, NSCopying>
 
 /**
- * Generates a random public/private key pair.
- */
-+ (instancetype)privateKeyWithOwner:(NSString *)userID
-                         storageKey:(S4KeyContextRef)storageKey
-                          algorithm:(Cipher_Algorithm)algorithm;
-
-/**
  * Creates a new PublicKey instance from the given parameters.
  *
  * @param userID
@@ -41,28 +34,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Creates a new PublicKey instance from the given parameters.
- * If a privKeyJSON parameter is passed, the key will also contain the corresponding private key.
- *
- * @param userID
- *   The corresponding userID (userID == ZDCUser.uuid)
- *
- * @param pubKeyJSON
- *   A string that contains the serialized JSON parameters which can be used to create the public key.
- *   This contains information such as the ECC curve,
- *   and other such parameters needed for the type of public key.
- *
- * @param privKeyJSON
- *   A string that contains the serialized JSON parameters which can be used to create the private key.
- *   This contains information such as the ECC curve,
- *   and other such parameters needed for the type of public key.
- */
-- (instancetype)initWithUserID:(NSString *)userID
-                    pubKeyJSON:(NSString *)pubKeyJSON
-                   privKeyJSON:(nullable NSString *)privKeyJSON;
-
-/**
- * Creates a new PublicKey instance from the given parameters.
- * If a privKeyDict parameter is passed, the key will also contain the corresponding private key.
  *
  * @param userID
  *   The corresponding userID (userID == ZDCUser.uuid)
@@ -71,15 +42,9 @@ NS_ASSUME_NONNULL_BEGIN
  *   A dictionary that contains the parameters which can be used to create the public key.
  *   This contains information such as the ECC curve,
  *   and other such parameters needed for the type of public key.
- *
- * @param privKeyDict
- *   A dictionary that contains the parameters which can be used to create the private key.
- *   This contains information such as the ECC curve,
- *   and other such parameters needed for the type of public key.
  */
 - (instancetype)initWithUserID:(NSString *)userID
-                    pubKeyDict:(NSDictionary *)pubKeyDict
-                   privKeyDict:(nullable NSDictionary *)privKeyDict;
+                    pubKeyDict:(NSDictionary *)pubKeyDict;
 
 /**
  * Every PublicKey instance has a randomly generated UUID.

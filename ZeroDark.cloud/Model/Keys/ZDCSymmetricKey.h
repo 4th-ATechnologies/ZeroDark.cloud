@@ -18,20 +18,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface ZDCSymmetricKey : ZDCObject <NSCoding, NSCopying>
 
 /**
- * Generates a random symmetic key.
+ * The uuid is used for referencing a ZDCSymmetricKey instance in the LOCAL DATABASE.
  */
-+ (instancetype)keyWithAlgorithm:(Cipher_Algorithm)algorithm
-                      storageKey:(S4KeyContextRef)storageKey;
-
-+ (instancetype)keyWithString:(NSString *)inKeyJSON
-                     passCode:(NSString *)passCode;
-
-+ (instancetype)keyWithS4Key:(S4KeyContextRef)symCtx
-                  storageKey:(S4KeyContextRef)storageKey;
-
-- (instancetype)initWithUUID:(NSString *)uuid
-			            keyJSON:(NSString *)keyJSON;
-
 @property (nonatomic, copy, readonly) NSString * uuid;
 
 /**

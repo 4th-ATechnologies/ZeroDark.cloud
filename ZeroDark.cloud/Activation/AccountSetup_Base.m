@@ -698,7 +698,7 @@
 			else if (strongSelf.identityMode == IdenititySelectionMode_ReauthorizeAccount)
 			{
 				[strongSelf reauthorizeUserID: strongSelf->user.uuid
-				             withRefreshToken: newAuth.auth0_refreshToken
+				             withRefreshToken: newAuth.coop_refreshToken
 				              completionBlock:^(NSError *error)
 				{
 													 
@@ -1060,7 +1060,7 @@
 		&& !existingAccount.accountSuspended)
 	{
 		[self reauthorizeUserID:existingAccount.uuid
-				 withRefreshToken:localUserAuth.auth0_refreshToken
+				 withRefreshToken:localUserAuth.coop_refreshToken
 				  completionBlock:^(NSError *error) {
 					  
 					  InvokeCompletionBlock(AccountState_Reauthorized,error);

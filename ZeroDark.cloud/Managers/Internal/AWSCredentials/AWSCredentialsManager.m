@@ -165,7 +165,7 @@
 		}
 
 		// Sanity check: localUserAuth has non-nil refresh_token
-		if (!auth.auth0_refreshToken)
+		if (!auth.coop_refreshToken)
 		{
 			NSError *noRefreshTokensError = [strongSelf noRefreshTokensError];
 			
@@ -196,25 +196,25 @@
 			return;
 		}
 		
-		BOOL needsRefreshIDToken = YES;
+		BOOL needsRefreshJWT = YES;
 		
-		// Check for unexpired idToken
+		// Check for unexpired JWT
 		//
-		if (auth.auth0_idToken)
+		if (auth.coop_jwt)
 		{
-			NSDate *expiration = [JWTUtilities expireDateFromJWTString:auth.auth0_idToken error:nil];
+			NSDate *expiration = [JWTUtilities expireDateFromJWTString:auth.coop_jwt error:nil];
 			if (expiration && [expiration isAfter:nowPlusBuffer])
 			{
-				needsRefreshIDToken = NO;
+				needsRefreshJWT = NO;
 			}
 		}
 		
 		dispatch_queue_t backgroundQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 		
-		if (needsRefreshIDToken)
+		if (needsRefreshJWT)
 		{
 			[strongSelf refreshIDTokenForUserID: userID
-			                   withRefreshToken: auth.auth0_refreshToken
+			                   withRefreshToken: auth.coop_refreshToken
 			                    completionQueue: backgroundQueue
 			                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 			{
@@ -225,7 +225,7 @@
 				}
 				
 				[weakSelf refreshAWSCredentialsForUserID: userID
-				                                 idToken: auth.auth0_idToken
+				                                 idToken: auth.coop_jwt
 				                                   stage: localUser.aws_stage
 				                         completionQueue: backgroundQueue
 				                         completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
@@ -240,7 +240,7 @@
 		else
 		{
 			[strongSelf refreshAWSCredentialsForUserID: userID
-			                                   idToken: auth.auth0_idToken
+			                                   idToken: auth.coop_jwt
 			                                     stage: localUser.aws_stage
 			                           completionQueue: backgroundQueue
 			                           completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
@@ -282,7 +282,7 @@
 
 			if (deleteRefreshToken)
 			{
-				localUserAuth.auth0_refreshToken = nil;
+				localUserAuth.coop_refreshToken = nil;
 				
 				localUser = [localUser copy];
 				localUser.accountNeedsA0Token = YES;
@@ -323,7 +323,7 @@
 			localUserAuth.aws_session     = nil;
 			localUserAuth.aws_expiration  = nil;
 
-			localUserAuth.auth0_refreshToken = refreshToken;
+			localUserAuth.coop_refreshToken = refreshToken;
 
 			if (refreshToken) {
 				localUser.accountNeedsA0Token = NO;
@@ -408,7 +408,7 @@
 			auth = [transaction objectForKey:userID inCollection:kZDCCollection_UserAuth];
 			auth = [auth copy];
 			
-			auth.auth0_idToken = idToken;
+			auth.coop_jwt = idToken;
 			
 			[transaction setObject:auth forKey:userID inCollection:kZDCCollection_UserAuth];
 			
@@ -765,8 +765,8 @@
 		auth.aws_session = session;
 		auth.aws_expiration = expiration;
 		
-		auth.auth0_refreshToken = refreshToken;
-		auth.auth0_idToken = idToken;
+		auth.coop_refreshToken = refreshToken;
+		auth.coop_jwt = idToken;
 	}
 	
 	if (authOut) *authOut = auth;
@@ -786,7 +786,7 @@
 
 - (NSError *)noRefreshTokensError
 {
-	NSString *description = @"ZDCLocalUserAuth has no valid auth0_refreshToken.";
+	NSString *description = @"ZDCLocalUserAuth has no valid refreshToken.";
 	return [NSError errorWithClass: [self class]
 	                          code: AWSCredentialsErrorCode_NoRefreshTokens
 	                   description: description];

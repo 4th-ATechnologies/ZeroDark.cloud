@@ -5,16 +5,19 @@
 static int const kCurrentVersion = 4;
 #pragma unused(kCurrentVersion)
 
-static NSString *const k_version            = @"version";
-static NSString *const k_localUserID        = @"userID"; // historical name
-static NSString *const k_aws_accessKeyID    = @"aws_accessKeyID";
-static NSString *const k_aws_secret         = @"aws_secret";
-static NSString *const k_aws_session        = @"aws_session";
-static NSString *const k_aws_expiration     = @"aws_expiration";
+static NSString *const k_version              = @"version";
+static NSString *const k_localUserID          = @"userID";
+static NSString *const k_aws_accessKeyID      = @"aws_accessKeyID";
+static NSString *const k_aws_secret           = @"aws_secret";
+static NSString *const k_aws_session          = @"aws_session";
+static NSString *const k_aws_expiration       = @"aws_expiration";
 
-static NSString *const k_auth0_refreshToken = @"auth0_refreshToken";
-static NSString *const k_auth0_idToken      = @"auth0_idToken";
- 
+static NSString *const k_coop_refreshToken    = @"auth0_refreshToken";
+static NSString *const k_coop_jwt             = @"auth0_idToken";
+
+static NSString *const k_partner_refreshToken = @"partner_refreshToken";
+static NSString *const k_partner_jwt          = @"partner_jwt";
+
 
 @implementation ZDCLocalUserAuth
 
@@ -25,8 +28,11 @@ static NSString *const k_auth0_idToken      = @"auth0_idToken";
 @synthesize aws_session = aws_session;
 @synthesize aws_expiration = aws_expiration;
 
-@synthesize auth0_refreshToken = auth0_refreshToken;
-@synthesize auth0_idToken = auth0_idToken;
+@synthesize coop_refreshToken = coop_refreshToken;
+@synthesize coop_jwt = coop_jwt;
+
+@synthesize partner_refreshToken = partner_refreshToken;
+@synthesize partner_jwt = partner_jwt;
 
 - (id)initWithCoder:(NSCoder *)decoder
 {
@@ -41,8 +47,11 @@ static NSString *const k_auth0_idToken      = @"auth0_idToken";
 		aws_session = [decoder decodeObjectForKey:k_aws_session];
 		aws_expiration = [decoder decodeObjectForKey:k_aws_expiration];
 
-		auth0_refreshToken = [decoder decodeObjectForKey:k_auth0_refreshToken];
-		auth0_idToken = [decoder decodeObjectForKey:k_auth0_idToken];
+		coop_refreshToken = [decoder decodeObjectForKey:k_coop_refreshToken];
+		coop_jwt = [decoder decodeObjectForKey:k_coop_jwt];
+		
+		partner_refreshToken = [decoder decodeObjectForKey:k_partner_refreshToken];
+		partner_jwt = [decoder decodeObjectForKey:k_partner_jwt];
 	}
 	return self;
 }
@@ -60,8 +69,11 @@ static NSString *const k_auth0_idToken      = @"auth0_idToken";
 	[coder encodeObject:aws_session forKey:k_aws_session];
 	[coder encodeObject:aws_expiration forKey:k_aws_expiration];
 
-	[coder encodeObject:auth0_refreshToken forKey:k_auth0_refreshToken];
-	[coder encodeObject:auth0_idToken forKey:k_auth0_idToken];
+	[coder encodeObject:coop_refreshToken forKey:k_coop_refreshToken];
+	[coder encodeObject:coop_jwt forKey:k_coop_jwt];
+	
+	[coder encodeObject:partner_refreshToken forKey:k_partner_refreshToken];
+	[coder encodeObject:partner_jwt forKey:k_partner_jwt];
 }
 
 - (id)copyWithZone:(NSZone *)zone
@@ -75,8 +87,11 @@ static NSString *const k_auth0_idToken      = @"auth0_idToken";
 	copy->aws_session = aws_session;
 	copy->aws_expiration = aws_expiration;
 
-	copy->auth0_refreshToken = auth0_refreshToken;
-	copy->auth0_idToken = auth0_idToken;
+	copy->coop_refreshToken = coop_refreshToken;
+	copy->coop_jwt = coop_jwt;
+	
+	copy->partner_refreshToken = partner_refreshToken;
+	copy->partner_jwt = partner_jwt;
 	
 	return copy;
 }

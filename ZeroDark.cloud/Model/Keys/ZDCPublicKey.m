@@ -47,102 +47,73 @@ static NSString *const k_pubKeyJSON   = @"k_pubKeyJSON";
 @dynamic keyID;
 //@dynamic eTag;
 
-static BOOL MakeSigningKey(Cipher_Algorithm    keyAlgorithm,
-                           NSString          * userID, // optional
-                           S4KeyContextRef     storageKeyCtx,
-                           NSString         ** pubKeyStringOut,
-                           NSString         ** privkeyStringOut,
-                           NSString         ** keyIDOut)
-{
-	BOOL success = NO;
-	S4Err err = kS4Err_NoErr;
-	
-	NSString* privKey = nil;
-	NSString* pubKey = nil;
-	NSString* keyID = nil;
-	
-	S4KeyContextRef pubCtx = kInvalidS4KeyContextRef;
-	uint8_t* privKeyData = NULL;
-	uint8_t* pubKeyData = NULL;
-   size_t keyDataLen = 0;
-   char* keyIDStr = NULL;
-	
-	time_t startTime = [[NSDate date] timeIntervalSince1970];
-	
-	// create a pub/priv key pair.
-	err = S4Key_NewPublicKey(keyAlgorithm, &pubCtx); CKERR;
-	
-	err = S4Key_GetAllocatedProperty(pubCtx, kS4KeyProp_KeyIDString, NULL, (void**)&keyIDStr, NULL); CKERR;
-	keyID = [NSString stringWithUTF8String:keyIDStr];
-	
-	if (userID)
-	{
-		// Add userID to key as signable property
-		err = S4Key_SetPropertyExtended(pubCtx,
-		                                kZDCCloudKey_UserID.UTF8String,
-		                                S4KeyPropertyType_UTF8String,
-		                                S4KeyPropertyExtended_Signable,
-		                        (void *)userID.UTF8String,
-		                                userID.UTF8LengthInBytes); CKERR;
-	}
-	
-	// set key create time
-	err = S4Key_SetProperty(pubCtx, kS4KeyProp_StartDate, S4KeyPropertyType_Time, &startTime, sizeof(time_t)); CKERR;
-	
-//	if (expireDate)
-//	{
-//		time_t expireTime = [expireDate timeIntervalSince1970];
-//		err = SCKeySetProperty(ecKey, kSCKeyProp_ExpireDate, SCKeyPropertyType_Time, &expireTime, sizeof(time_t)); CKERR;
-//	}
-    
-	err = S4Key_SerializeToS4Key(pubCtx, storageKeyCtx, &privKeyData, &keyDataLen); CKERR;
-	privKey = [[NSString alloc] initWithBytesNoCopy:privKeyData
-	                                         length:keyDataLen
-	                                       encoding:NSUTF8StringEncoding
-	                                   freeWhenDone:YES];
-	
-	err = S4Key_SerializePubKey(pubCtx, &pubKeyData, &keyDataLen); CKERR;
-	pubKey = [[NSString alloc] initWithBytesNoCopy:pubKeyData
-	                                        length:keyDataLen
-	                                      encoding:NSUTF8StringEncoding
-	                                  freeWhenDone:YES];
-	
-	success = YES;
-	
-done:
-	
-	if (S4KeyContextRefIsValid(pubCtx)) {
-		S4Key_Free(pubCtx);
-	}
-	
-	if(privkeyStringOut) *privkeyStringOut = privKey;
-	if(pubKeyStringOut) *pubKeyStringOut = pubKey;
-	if(keyIDOut) *keyIDOut = keyID;
-	
-	return success;
-}
-
 /**
  * See header file for description.
  */
-+ (instancetype)privateKeyWithOwner:(NSString *)userID
-                         storageKey:(S4KeyContextRef)storageKey
-                          algorithm:(Cipher_Algorithm)algorithm
-
++ (nullable instancetype)createWithUserID:(NSString *)userID
+                                algorithm:(Cipher_Algorithm)algorithm
+                               storageKey:(S4KeyContextRef)storageKeyCtx
+                                    error:(NSError *_Nullable *_Nullable)outError
 {
-	NSString *pubKeyString = nil;
-	NSString *privKeyString = nil;
-    
-	if (MakeSigningKey(algorithm, userID, storageKey, &pubKeyString, &privKeyString, NULL))
-	{
-		return [[ZDCPublicKey alloc] initWithUserID: userID
-		                                 pubKeyJSON: pubKeyString
-		                                privKeyJSON: privKeyString];
+	S4Err           err = kS4Err_NoErr;
+		
+	S4KeyContextRef keyCtx = kInvalidS4KeyContextRef;
+	time_t          startTime = [[NSDate date] timeIntervalSince1970];
+	
+	uint8_t       * privKeyData = NULL;
+	uint8_t       * pubKeyData = NULL;
+	size_t          keyDataLen = 0;
+	
+	NSString      * privKeyJSON = nil;
+	NSString      * pubKeyJSON = nil;
+	
+	ZDCPublicKey  * result = nil;
+	NSError       * error = nil;
+	
+	ASSERTERR(userID != nil, kS4Err_BadParams);
+	ASSERTERR(S4KeyContextRefIsValid(storageKeyCtx), kS4Err_BadParams);
+	
+	err = S4Key_NewPublicKey(algorithm, &keyCtx); CKERR;
+	
+	// Add userID to key as signable property
+	err = S4Key_SetPropertyExtended(keyCtx,
+											  kZDCCloudKey_UserID.UTF8String,
+											  S4KeyPropertyType_UTF8String,
+											  S4KeyPropertyExtended_Signable,
+									(void *)userID.UTF8String,
+											  userID.UTF8LengthInBytes); CKERR;
+	
+	// set key create time
+	err = S4Key_SetProperty(keyCtx, kS4KeyProp_StartDate, S4KeyPropertyType_Time, &startTime, sizeof(time_t)); CKERR;
+		 
+	err = S4Key_SerializeToS4Key(keyCtx, storageKeyCtx, &privKeyData, &keyDataLen); CKERR;
+	privKeyJSON = [[NSString alloc] initWithBytesNoCopy: privKeyData
+	                                             length: keyDataLen
+	                                           encoding: NSUTF8StringEncoding
+	                                       freeWhenDone: YES];
+	
+	err = S4Key_SerializePubKey(keyCtx, &pubKeyData, &keyDataLen); CKERR;
+	pubKeyJSON = [[NSString alloc] initWithBytesNoCopy: pubKeyData
+	                                            length: keyDataLen
+	                                          encoding: NSUTF8StringEncoding
+	                                      freeWhenDone: YES];
+	
+	result = [[ZDCPublicKey alloc] initWithUserID: userID
+	                                   pubKeyJSON: pubKeyJSON
+	                                  privKeyJSON: privKeyJSON];
+	
+done:
+	
+	if (S4KeyContextRefIsValid(keyCtx)) {
+		S4Key_Free(keyCtx);
 	}
-	else
-	{
-		return nil;
+	
+	if (IsS4Err(err)) {
+		error = [NSError errorWithS4Error:err];
 	}
+	
+	if (outError) *outError = error;
+	return result;
 }
 
 /**
@@ -155,12 +126,10 @@ done:
 	NSString* string = nil;
 
 	NSString* keySuite = [dictionaryIn objectForKey:@"keySuite"];
-
-	if(keySuite)
+	if (keySuite)
 	{
 		[newDict removeObjectForKey:@"keySuite"];
 	}
-
 
 	NSData *JSONData = [NSJSONSerialization dataWithJSONObject:newDict options:0 error:nil];
 	if(JSONData)
@@ -247,17 +216,12 @@ done:
  */
 - (id)initWithUserID:(NSString *)inUserID
           pubKeyDict:(NSDictionary *)inPubKeyDict
-         privKeyDict:(nullable NSDictionary *)inPrivKeyDict
 {
 	NSString *inPubKeyJSON = [[self class] s4PropertyStringFromDictionary:inPubKeyDict];
-	NSString *inPrivKeyJSON = nil;
-	if (inPrivKeyDict) {
-		inPrivKeyJSON = [[self class] s4PropertyStringFromDictionary:inPrivKeyDict];
-	}
 	
-	return [self initWithUserID:inUserID
-                     pubKeyJSON:inPubKeyJSON
-                    privKeyJSON:inPrivKeyJSON];
+	return [self initWithUserID: inUserID
+	                 pubKeyJSON: inPubKeyJSON
+	                privKeyJSON: nil];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

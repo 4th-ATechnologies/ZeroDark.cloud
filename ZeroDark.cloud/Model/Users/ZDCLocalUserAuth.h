@@ -1,6 +1,8 @@
 #import <Foundation/Foundation.h>
 #import <ZDCSyncableObjC/ZDCObject.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  * Encapsulates the information necessary to authenticate the localUser with various systems.
  */
@@ -14,37 +16,52 @@
 /**
  * Part of the credentials used by AWS.
  */
-@property (nonatomic, copy, readwrite) NSString * aws_accessKeyID;
+@property (nonatomic, copy, readwrite, nullable) NSString * aws_accessKeyID;
 
 /**
  * Part of the credentials used by AWS.
  */
-@property (nonatomic, copy, readwrite) NSString * aws_secret;
+@property (nonatomic, copy, readwrite, nullable) NSString * aws_secret;
 
 /**
  * Part of the credentials used by AWS.
  */
-@property (nonatomic, copy, readwrite) NSString * aws_session;
+@property (nonatomic, copy, readwrite, nullable) NSString * aws_session;
 
 /**
  * The AWS credentials are only valid for a short period of time. (usually just a few hours)
  * This property stores when they expire, so we know if we can re-use them, or if we need to refresh them.
  */
-@property (nonatomic, copy, readwrite) NSDate * aws_expiration;
+@property (nonatomic, copy, readwrite, nullable) NSDate * aws_expiration;
 
 /**
- * Used for Auth0, which is our identity broker (for now).
- *
- * This property can be exchanged for a fresh idToken from Auth0.
- * And idToken is a JWT, that can itself be exchanged for AWS credentials.
+ * The refreshToken is a long-lived token which can be regularly exchanged for a fresh JWT.
  */
-@property (nonatomic, copy, readwrite) NSString	* auth0_refreshToken;
+@property (nonatomic, copy, readwrite, nullable) NSString *coop_refreshToken;
 
 /**
- * An idToken is a JWT that can be exchanged for AWS credentials.
+ * The JWT is used for authentication with the various ZeroDark API.
+ * The JWT JWT can also be used to fetch AWS credentials.
  *
- * These tokens have an expiration date, and therefore need to be regularly refreshed.
+ * A JWT is a JSON Web Token.
+ * JWT's have an expiration date, and therefore need to be regularly refreshed.
  */
-@property (nonatomic, copy, readwrite) NSString * auth0_idToken;
+@property (nonatomic, copy, readwrite, nullable) NSString * coop_jwt;
+
+/**
+ * The refreshToken is a long-lived token which can be regularly exchanged for a fresh JWT.
+ */
+@property (nonatomic, copy, readwrite, nullable) NSString *partner_refreshToken;
+
+/**
+ * The JWT is used for authentication with the various ZeroDark API.
+ * The JWT JWT can also be used to fetch AWS credentials.
+ *
+ * A JWT is a JSON Web Token.
+ * JWT's have an expiration date, and therefore need to be regularly refreshed.
+ */
+@property (nonatomic, copy, readwrite, nullable) NSString *partner_jwt;
 
 @end
+
+NS_ASSUME_NONNULL_END
