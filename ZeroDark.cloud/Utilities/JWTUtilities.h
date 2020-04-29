@@ -21,7 +21,14 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * @note This method doesn't verify the JWT in any manner. If you need that, use a proper JWT framework.
  */
-+ (nullable NSDate *)expireDateFromJWTString:(NSString *)token error:(NSError *_Nullable *_Nullable)errorOut;
++ (nullable NSDate *)expireDateFromJWT:(NSString *)jwt error:(NSError *_Nullable *_Nullable)errorOut;
+
+/**
+ * Parses the JSON from the JWT, and extracts the issuer (name: 'iss').
+ *
+ * @note This method doesn't verify the JWT in any manner. If you need that, use a proper JWT framework.
+ */
++ (nullable NSString *)issuerFromJWT:(NSString *)jwt error:(NSError *_Nullable *_Nullable)errorOut;
 
 @end
 

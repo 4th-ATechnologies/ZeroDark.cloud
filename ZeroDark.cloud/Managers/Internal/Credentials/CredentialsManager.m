@@ -14,6 +14,7 @@
 #import "NSDate+ZeroDark.h"
 #import "NSError+Auth0API.h"
 #import "NSError+ZeroDark.h"
+#import "NSURLResponse+ZeroDark.h"
 
 static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 
@@ -183,7 +184,7 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 		
 		if (jwt)
 		{
-			NSDate *expiration = [JWTUtilities expireDateFromJWTString:jwt error:nil];
+			NSDate *expiration = [JWTUtilities expireDateFromJWT:jwt error:nil];
 			if (expiration)
 			{
 				NSDate *nowPlusBuffer = [[NSDate date] dateByAddingTimeInterval:SAFE_INTERVAL];
@@ -409,7 +410,7 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 		BOOL needsRefreshJWT = YES;
 		if (jwt)
 		{
-			NSDate *expiration = [JWTUtilities expireDateFromJWTString:jwt error:nil];
+			NSDate *expiration = [JWTUtilities expireDateFromJWT:jwt error:nil];
 			if (expiration)
 			{
 				NSDate *nowPlusBuffer = [[NSDate date] dateByAddingTimeInterval:SAFE_INTERVAL];
@@ -433,11 +434,10 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 			
 			NSString *jwt = isCoop ? auth.coop_jwt : auth.partner_jwt;
 			
-			[weakSelf refreshAWSCredentialsForUserID: localUserID
-			                                 idToken: jwt
-			                                   stage: localUser.aws_stage
-			                         completionQueue: bgQueue
-			                         completionBlock: NotifyListeners];
+			[weakSelf refreshAWSCredentials: localUser
+			                            jwt: jwt
+			                completionQueue: bgQueue
+			                completionBlock: NotifyListeners];
 		};
 		
 		if (needsRefreshJWT)
@@ -481,7 +481,7 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 		localUserAuth = [transaction objectForKey:userID inCollection:kZDCCollection_UserAuth];
 		localUser = [transaction objectForKey:userID inCollection:kZDCCollection_Users];
 
-		if (localUser && localUserAuth )
+		if (localUser && localUserAuth)
 		{
 			localUserAuth = [localUserAuth copy];
 
@@ -765,15 +765,43 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 		}
 	};
 	
+	NSString *localUserID = localUser.uuid;
 	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
-	NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
-	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
-	
-	NSURLComponents *urlComponents =
-	  [zdc.restManager apiGatewayV1ForRegion: AWSRegion_US_West_2
-	                                   stage: localUser.aws_stage ?: @"prod"
-	                                    path: @"/authdUsrPtnr/auth/foobar?"];
+	[self fetchPartnerJWT: localUser
+	         refreshToken: refreshToken
+	      completionQueue: bgQueue
+	      completionBlock:^(NSString *jwt, NSError *error)
+	{
+		if (error)
+		{
+			NotifyListeners(nil, error);
+			return;
+		}
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
+		__block ZDCLocalUserAuth *auth = nil;
+		
+		YapDatabaseConnection *rwConnection = [strongSelf->zdc.databaseManager rwDatabaseConnection];
+		[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+			
+			auth = [transaction objectForKey:localUserID inCollection:kZDCCollection_UserAuth];
+			auth = [auth copy];
+			
+			auth.partner_jwt = jwt;
+			
+			[transaction setObject:auth forKey:localUserID inCollection:kZDCCollection_UserAuth];
+			
+		} completionQueue:bgQueue completionBlock:^{
+			
+			NSError *error =
+				auth ? nil : [weakSelf missingInvalidUserError:@"No matching ZDCLocalUserAuth in database"];
+			
+			NotifyListeners(auth, error);
+		}];
+	}];
 }
 
 /**
@@ -782,25 +810,25 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
  * - fetches new aws credentials from the server
  * - updates the ZDCLocalUserAuth object in the database
  */
-- (void)refreshAWSCredentialsForUserID:(NSString *)userID
-                               idToken:(NSString *)idToken
-                                 stage:(NSString *)stage
-                       completionQueue:(dispatch_queue_t)completionQueue
-                       completionBlock:(void (^)(ZDCLocalUserAuth *auth, NSError *error))completionBlock
+- (void)refreshAWSCredentials:(ZDCLocalUser *)localUser
+                          jwt:(NSString *)jwt
+              completionQueue:(dispatch_queue_t)completionQueue
+              completionBlock:(void (^)(ZDCLocalUserAuth *auth, NSError *error))completionBlock
 {
-	NSParameterAssert(userID != nil);
-	NSParameterAssert(idToken != nil);
-	NSParameterAssert(stage != nil);
+	NSParameterAssert(localUser != nil);
+	NSParameterAssert(jwt != nil);
 	NSParameterAssert(completionQueue != nil);
 	NSParameterAssert(completionBlock != nil);
 	
 	__weak typeof(self) weakSelf = self;
-	dispatch_queue_t backgroundQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
-	[self fetchAWSCredentialsWithIDToken: idToken
-	                               stage: stage
-	                     completionQueue: backgroundQueue
-	                     completionBlock:^(NSDictionary *delegation, NSError *error)
+	NSString *localUserID = localUser.uuid;
+	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	
+	[self fetchAWSCredentialsWithJWT: jwt
+	                           stage: localUser.aws_stage ?: @"prod"
+	                 completionQueue: bgQueue
+	                 completionBlock:^(NSDictionary *delegation, NSError *error)
 	{
 		if (error)
 		{
@@ -831,7 +859,7 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 		YapDatabaseConnection *rwConnection = [strongSelf->zdc.databaseManager rwDatabaseConnection];
 		[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
 			
-			auth = [transaction objectForKey:userID inCollection:kZDCCollection_UserAuth];
+			auth = [transaction objectForKey:localUserID inCollection:kZDCCollection_UserAuth];
 			auth = [auth copy];
 			
 			auth.aws_accessKeyID = aws_accessKeyID;
@@ -839,14 +867,14 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 			auth.aws_session     = aws_session;
 			auth.aws_expiration  = aws_expiration;
 
-			[transaction setObject:auth forKey:userID inCollection:kZDCCollection_UserAuth];
+			[transaction setObject:auth forKey:localUserID inCollection:kZDCCollection_UserAuth];
 			
 		} completionQueue:completionQueue completionBlock:^{
 			
-			if (auth)
-				completionBlock(auth, nil);
-			else
-				completionBlock(nil, [weakSelf missingInvalidUserError:@"No matching ZDCLocalUserAuth for userID."]);
+			NSError *error =
+				auth ? nil : [weakSelf missingInvalidUserError:@"No matching ZDCLocalUserAuth in database"];
+			
+			completionBlock(auth, error);
 		}];
 	}];
 }
@@ -855,73 +883,30 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 #pragma mark Low Level
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)fetchAWSCredentialsWithIDToken:(NSString *)idToken
-                                 stage:(NSString *)stage
-                       completionQueue:(dispatch_queue_t)completionQueue
-                       completionBlock:(void (^)(NSDictionary *delegation, NSError *error))completionBlock
+- (void)fetchPartnerJWT:(ZDCLocalUser *)localUser
+           refreshToken:(NSString *)refreshToken
+        completionQueue:(dispatch_queue_t)completionQueue
+        completionBlock:(void (^)(NSString *jwt, NSError *error))completionBlock
 {
-#ifndef NS_BLOCK_ASSERTIONS
-	NSParameterAssert(idToken != nil);
-	NSParameterAssert(stage != nil);
+	NSParameterAssert(localUser != nil);
+	NSParameterAssert(completionQueue != nil);
 	NSParameterAssert(completionBlock != nil);
-#else
-	if (completionBlock == nil) return;
-#endif
 	
-	if (idToken == nil)
-	{
-		NSError *error = [self invalidIDTokenError];
-		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
-			
-			completionBlock(nil, error);
-		}});
-		return;
-	}
-	
-	NSString *requestKey = [NSString stringWithFormat:@"%@-%@", NSStringFromSelector(_cmd), idToken];
-
-	NSUInteger requestCount =
-	  [pendingRequests pushCompletionQueue: completionQueue
-	                       completionBlock: completionBlock
-	                                forKey: requestKey];
-
-	if (requestCount > 1)
-	{
-		// There's a previous request currently in-flight.
-		// The <completionQueue, completionBlock> have been added to the existing request's list.
-		return;
-	}
-	
-	[self _fetchAWSCredentialsWithIDToken:idToken stage:stage requestKey:requestKey];
-}
-
-- (void)_fetchAWSCredentialsWithIDToken:(NSString *)idToken
-                                  stage:(NSString *)stage
-                             requestKey:(NSString *)requestKey
-{
 	__weak typeof(self) weakSelf = self;
 	
-	void (^InvokeCompletionBlocks)(NSDictionary*, NSError*) = ^(NSDictionary *delegation, NSError *error){
+	NSString *localUserID = localUser.uuid;
+	
+	void (^Notify)(NSString*, NSError*) = ^(NSString *jwt, NSError *error){
 		
-		__strong typeof(self) strongSelf = weakSelf;
-		if (!strongSelf) return;
-		
-		NSArray<dispatch_queue_t> * completionQueues = nil;
-		NSArray<id>               * completionBlocks = nil;
-		[strongSelf->pendingRequests popCompletionQueues: &completionQueues
-		                                completionBlocks: &completionBlocks
-		                                          forKey: requestKey];
-
-		for (NSUInteger i = 0; i < completionBlocks.count; i++)
-		{
-			dispatch_queue_t completionQueue = completionQueues[i];
-			void (^completionBlock)(NSDictionary *delegationToken, NSError *error) = completionBlocks[i];
-
-			dispatch_async(completionQueue, ^{ @autoreleasepool {
-
-				completionBlock(delegation, error);
-			}});
+		if (jwt) {
+			NSParameterAssert(error == nil);
+		} else {
+			NSParameterAssert(error != nil);
 		}
+		
+		dispatch_async(completionQueue, ^{
+			completionBlock(jwt, error);
+		});
 	};
 	
 	NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
@@ -929,18 +914,19 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 	
 	NSURLComponents *urlComponents =
 	  [zdc.restManager apiGatewayV1ForRegion: AWSRegion_US_West_2
-	                                 stage: stage ?: @"prod"
-	                                  path: @"/delegation"];
-
-	NSDictionary *jsonDict = @{
-		@"token" : (idToken ?: @"")
+	                                   stage: localUser.aws_stage ?: @"prod"
+	                                    path: @"/authdUsrPtnr/auth/jwt"];
+	
+	NSDictionary *requestBodyDict = @{
+		@"user_id" : (localUserID  ?: @""),
+		@"token"   : (refreshToken ?: @"")
 	};
 
-	NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:nil];
-
+	NSData *requestBodyData = [NSJSONSerialization dataWithJSONObject:requestBodyDict options:0 error:nil];
+	
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"POST";
-	request.HTTPBody = jsonData;
+	request.HTTPBody = requestBodyData;
 
 	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
 	
@@ -950,7 +936,128 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 	{
 		if (error)
 		{
-			InvokeCompletionBlocks(nil, error);
+			Notify(nil, error);
+			return;
+		}
+		  
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
+		NSInteger statusCode = response.httpStatusCode;
+		if (statusCode == 404)
+		{
+			// The refreshToken has been revoked.
+			// So the user will need to re-login to their account.
+			//
+			NSError *noRefreshTokensError = [strongSelf noRefreshTokensError];
+			dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+			
+			[strongSelf setNeedsRefreshTokenForUser: localUserID
+											completionQueue: bgQueue
+											completionBlock:^
+			{
+				Notify(nil, noRefreshTokensError);
+			}];
+		}
+		
+		NSDictionary *responseDict = nil;
+		
+		if ([responseObject isKindOfClass:[NSDictionary class]])
+		{
+			responseDict = (NSDictionary *)responseObject;
+		}
+		else if ([responseObject isKindOfClass:[NSData class]])
+		{
+			id json = [NSJSONSerialization JSONObjectWithData:(NSData *)responseObject options:0 error:&error];
+			
+			if ([json isKindOfClass:[NSDictionary class]])
+			{
+				responseDict = (NSDictionary *)json;
+			}
+		}
+		  
+		id jwt = responseDict[@"jwt"];
+		  
+		if ([jwt isKindOfClass:[NSString class]]) {
+			Notify((NSString *)jwt, nil);
+		} else {
+			Notify(nil, [strongSelf invalidServerResponseError]);
+		}
+	}];
+	
+	[task resume];
+}
+
+- (void)fetchAWSCredentialsWithJWT:(NSString *)jwt
+                             stage:(NSString *)stage
+                   completionQueue:(nullable dispatch_queue_t)completionQueue
+                   completionBlock:(void (^)(NSDictionary *delegation, NSError *error))completionBlock
+{
+	NSParameterAssert(jwt != nil);
+	NSParameterAssert(stage != nil);
+	
+	if (completionBlock == nil) return;
+	
+	if (jwt == nil)
+	{
+		NSError *error = [self invalidIDTokenError];
+		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+			
+			completionBlock(nil, error);
+		}});
+		return;
+	}
+	
+	__weak typeof(self) weakSelf = self;
+	
+	void (^Notify)(NSDictionary*, NSError*) = ^(NSDictionary *delegation, NSError *error){
+
+		if (delegation) {
+			NSParameterAssert(error == nil);
+		} else {
+			NSParameterAssert(error != nil);
+		}
+		
+		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+			completionBlock(delegation, error);
+		}});
+	};
+	
+	NSError *error = nil;
+	NSString *jwt_issuer = [JWTUtilities issuerFromJWT:jwt error:&error];
+	
+	if (error)
+	{
+		Notify(nil, error);
+		return;
+	}
+	
+	BOOL isPartnerJWT = [jwt_issuer isEqualToString:@"https://resources.zerodark.coop/"];
+	
+	NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
+	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
+	
+	NSString *path =
+		isPartnerJWT ? @"/v1/authdUsrPtnr/auth/aws"
+	                : @"/v1/authdUsrCoop/auth/aws";
+	
+	NSURLComponents *urlComponents =
+	  [zdc.restManager apiGatewayV2ForRegion: AWSRegion_US_West_2
+	                                   stage: stage ?: @"prod"
+	                                    path: path];
+
+	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
+	request.HTTPMethod = @"GET";
+	
+	[request setValue:[NSString stringWithFormat:@"Bearer %@", jwt] forHTTPHeaderField:@"Authorization"];
+	
+	NSURLSessionDataTask *task =
+	  [session dataTaskWithRequest: request
+	             completionHandler:^(NSData *responseObject, NSURLResponse *response, NSError *error)
+	{
+		if (error)
+		{
+			Notify(nil, error);
 			return;
 		}
 		  
@@ -970,12 +1077,10 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 			}
 		}
 		  
-		if (delegation) {
-			InvokeCompletionBlocks(delegation, nil);
-		}
-		else {
-			InvokeCompletionBlocks(nil, error ?: [weakSelf invalidServerResponseError]);
-		}
+		if (delegation)
+			Notify(delegation, nil);
+		else
+			Notify(nil, [weakSelf invalidServerResponseError]);
 	}];
 	
 	[task resume];

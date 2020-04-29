@@ -13,12 +13,9 @@
 
 @implementation JWTUtilities
 
-/**
- * See header file for description.
- */
-+ (nullable NSDate *)expireDateFromJWTString:(NSString *)token error:(NSError *_Nullable *_Nullable)errorOut
++ (nullable NSDictionary *)payloadFromJWT:(NSString *)jwt error:(NSError *_Nullable *_Nullable)errorOut
 {
-	NSArray<NSString *> *comps = [token componentsSeparatedByString:@"."];
+	NSArray<NSString *> *comps = [jwt componentsSeparatedByString:@"."];
 	
 	if (comps.count != 3)
 	{
@@ -28,6 +25,10 @@
 		if (errorOut) *errorOut = error;
 		return nil;
 	}
+	
+	// comps[0] => header
+	// comps[1] => payload
+	// comps[2] => signature
 	
 	NSString *base64String = comps[1];
 	
@@ -45,7 +46,9 @@
 	}
 	
 	
-	NSData *jsonData = [[NSData alloc] initWithBase64EncodedString:base64String options:NSDataBase64DecodingIgnoreUnknownCharacters];
+	NSData *jsonData =
+	  [[NSData alloc] initWithBase64EncodedString: base64String
+	                                      options: NSDataBase64DecodingIgnoreUnknownCharacters];
 	
 	if (jsonData == nil)
 	{
@@ -66,9 +69,23 @@
 		return nil;
 	}
 	
-	NSDictionary *json = (NSDictionary *)obj;
+	NSDictionary *payload = (NSDictionary *)obj;
 	
-	id timestamp = json[@"exp"];
+	if (errorOut) *errorOut = nil;
+	return payload;
+}
+
+/**
+ * See header file for description.
+ */
++ (nullable NSDate *)expireDateFromJWT:(NSString *)jwt error:(NSError *_Nullable *_Nullable)errorOut
+{
+	NSDictionary *payload = [self payloadFromJWT:jwt error:errorOut];
+	if (payload == nil) {
+		return nil;
+	}
+	
+	id timestamp = payload[@"exp"];
 	if (![timestamp isKindOfClass:[NSNumber class]])
 	{
 		NSString *msg = @"The JSON doesn't contain a valid 'exp' value.";
@@ -79,6 +96,32 @@
 	}
 	
 	NSDate *result = [NSDate dateWithTimeIntervalSince1970:[(NSNumber *)timestamp doubleValue]];
+	
+	if (errorOut) *errorOut = nil;
+	return result;
+}
+
+/**
+ * See header file for description.
+ */
++ (nullable NSString *)issuerFromJWT:(NSString *)jwt error:(NSError *_Nullable *_Nullable)errorOut
+{
+	NSDictionary *payload = [self payloadFromJWT:jwt error:errorOut];
+	if (payload == nil) {
+		return nil;
+	}
+	
+	id issuer = payload[@"iss"];
+	if (![issuer isKindOfClass:[NSString class]])
+	{
+		NSString *msg = @"The JSON doesn't contain a valid 'iss' value.";
+		NSError *error = [NSError errorWithClass:[self class] code:400 description:msg];
+		
+		if (errorOut) *errorOut = error;
+		return nil;
+	}
+	
+	NSString *result = (NSString *)issuer;
 	
 	if (errorOut) *errorOut = nil;
 	return result;

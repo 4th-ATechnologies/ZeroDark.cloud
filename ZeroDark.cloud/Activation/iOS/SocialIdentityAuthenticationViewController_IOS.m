@@ -593,10 +593,10 @@
 					return;
 				}
 				
-				[credentialsManager fetchAWSCredentialsWithIDToken: auth0_idToken
-				                                             stage: @"prod"
-				                                   completionQueue: nil
-				                                   completionBlock:^(NSDictionary *delegation, NSError *error)
+				[credentialsManager fetchAWSCredentialsWithJWT: auth0_idToken
+				                                         stage: @"prod"
+				                               completionQueue: nil
+				                               completionBlock:^(NSDictionary *delegation, NSError *error)
 				{
 					if (error)
 					{

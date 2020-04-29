@@ -106,10 +106,10 @@ typedef NS_ENUM(NSInteger, CredentialsErrorCode) {
  *
  * Fetches the AWS credentials using the non-expired idToken (JWT).
  */
-- (void)fetchAWSCredentialsWithIDToken:(NSString *)idToken
-                                 stage:(NSString *)stage
-                       completionQueue:(nullable dispatch_queue_t)completionQueue
-                       completionBlock:(void (^)(NSDictionary *_Nullable delegation, NSError *_Nullable error))completionBlock;
+- (void)fetchAWSCredentialsWithJWT:(NSString *)idToken
+                             stage:(NSString *)stage
+                   completionQueue:(nullable dispatch_queue_t)completionQueue
+                   completionBlock:(void (^)(NSDictionary *_Nullable delegation, NSError *_Nullable error))completionBlock;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Utilities

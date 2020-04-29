@@ -493,10 +493,10 @@
 				return;
 			}
 			
-			[credentialsManager fetchAWSCredentialsWithIDToken: result.idToken
-			                                             stage: @"prod"
-			                                   completionQueue: backgroundQueue
-			                                   completionBlock:^(NSDictionary *delegation, NSError *error)
+			[credentialsManager fetchAWSCredentialsWithJWT: result.idToken
+			                                         stage: @"prod"
+			                               completionQueue: backgroundQueue
+			                               completionBlock:^(NSDictionary *delegation, NSError *error)
 			{
 				__strong typeof(self) strongSelf = weakSelf;
 				if (strongSelf == nil) return;
@@ -637,10 +637,10 @@
 			return;
 		}
 		
-		[credentialsManager fetchAWSCredentialsWithIDToken: result.idToken
-		                                             stage: @"prod"
-		                                   completionQueue: backgroundQueue
-		                                   completionBlock:^(NSDictionary *delegation, NSError *error)
+		[credentialsManager fetchAWSCredentialsWithJWT: result.idToken
+		                                         stage: @"prod"
+		                               completionQueue: backgroundQueue
+		                               completionBlock:^(NSDictionary *delegation, NSError *error)
 		{
 			__strong typeof(self) strongSelf = weakSelf;
 			if (!strongSelf) return;
