@@ -16,10 +16,10 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Generates a random public/private key pair.
  */
-+ (nullable instancetype)createWithUserID:(NSString *)userID
-                                algorithm:(Cipher_Algorithm)algorithm
-                               storageKey:(S4KeyContextRef)storageKey
-                                    error:(NSError *_Nullable *_Nullable)outError;
++ (nullable instancetype)createPrivateKeyWithUserID:(NSString *)userID
+                                          algorithm:(Cipher_Algorithm)algorithm
+                                         storageKey:(S4KeyContextRef)storageKey
+                                              error:(NSError *_Nullable *_Nullable)outError;
 
 /**
  * Creates a new PublicKey instance from the given parameters.

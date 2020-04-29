@@ -1921,9 +1921,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_Put, @"Invalid operation type");
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                    completionQueue: concurrentQueue
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: context.localUserID
+	                                 completionQueue: concurrentQueue
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -2793,9 +2793,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	NSAssert(operation.multipartInfo, @"Invalid operation type");
 	NSAssert(context.multipart_initiate, @"Invalid context type");
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                    completionQueue: concurrentQueue
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: context.localUserID
+	                                 completionQueue: concurrentQueue
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -2904,9 +2904,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	NSAssert(operation.type == ZDCCloudOperationType_Put, @"Invalid operation type");
 	NSAssert(operation.multipartInfo, @"Invalid operation type");
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                    completionQueue: concurrentQueue
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: context.localUserID
+	                                 completionQueue: concurrentQueue
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -3043,9 +3043,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	NSAssert(operation.multipartInfo, @"Invalid operation type");
 	NSAssert(context.multipart_complete, @"Invalid context type");
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                    completionQueue: concurrentQueue
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: context.localUserID
+	                                 completionQueue: concurrentQueue
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -3166,9 +3166,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	NSAssert(operation.multipartInfo, @"Invalid operation type");
 	NSAssert(context.multipart_abort, @"Invalid context type");
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                    completionQueue: concurrentQueue
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: context.localUserID
+	                                 completionQueue: concurrentQueue
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -3647,9 +3647,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_Move, @"Invalid operation type");
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                    completionQueue: concurrentQueue
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: context.localUserID
+	                                 completionQueue: concurrentQueue
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -4163,9 +4163,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_DeleteLeaf, @"Invalid operation type");
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                    completionQueue: concurrentQueue
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: context.localUserID
+	                                 completionQueue: concurrentQueue
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -4605,9 +4605,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_DeleteNode, @"Invalid operation type");
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                    completionQueue: concurrentQueue
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: context.localUserID
+	                                 completionQueue: concurrentQueue
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -5142,9 +5142,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_CopyLeaf, @"Invalid operation type");
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                    completionQueue: concurrentQueue
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: context.localUserID
+	                                 completionQueue: concurrentQueue
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -5804,9 +5804,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	// Start the polling process.
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                    completionQueue: concurrentQueue
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: context.localUserID
+	                                 completionQueue: concurrentQueue
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -5847,7 +5847,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		NSString *path = [NSString stringWithFormat:@"/poll-request/%@", [self requestIDForOperation:operation]];
 		
-		NSURLComponents *urlComponents = [zdc.restManager apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [zdc.restManager apiGatewayV1ForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"GET";
@@ -6145,9 +6145,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	// Start the polling process.
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: concurrentQueue
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	                                 completionQueue: concurrentQueue
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -6193,7 +6193,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		
 		NSString *path = @"/poll-request";
-		NSURLComponents *urlComponents = [zdc.restManager apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [zdc.restManager apiGatewayV1ForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"POST";
@@ -6516,9 +6516,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	// Start the polling process.
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                    completionQueue: concurrentQueue
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: context.localUserID
+	                                 completionQueue: concurrentQueue
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -6955,9 +6955,9 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_Avatar, @"Invalid operation type");
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: context.localUserID
-	                                    completionQueue: concurrentQueue
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: context.localUserID
+	                                 completionQueue: concurrentQueue
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -7001,7 +7001,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		NSString *path = [NSString stringWithFormat:@"/users/avatar/%@", social_userID];
 		
-		NSURLComponents *urlComponents = [zdc.restManager apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [zdc.restManager apiGatewayV1ForRegion:region stage:stage path:path];
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 
 	#if TARGET_OS_IPHONE

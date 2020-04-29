@@ -67,7 +67,7 @@ typedef void (^ZDCLogHandler)(ZDCLogMessage *);
 @property (nonatomic, readwrite) ZDCProgressManager    * progressManager;
 
 @property (nonatomic, readwrite, nullable) Auth0ProviderManager	 * auth0ProviderManager;
-@property (nonatomic, readwrite, nullable) AWSCredentialsManager   * awsCredentialsManager;
+@property (nonatomic, readwrite, nullable) CredentialsManager      * credentialsManager;
 @property (nonatomic, readwrite, nullable) ZDCBlockchainManager    * blockchainManager;
 @property (nonatomic, readwrite, nullable) ZDCCryptoTools          * cryptoTools;
 @property (nonatomic, readwrite, nullable) ZDCDatabaseManager      * databaseManager;
@@ -113,7 +113,7 @@ typedef void (^ZDCLogHandler)(ZDCLogMessage *);
 @dynamic nodeManager;
 @synthesize progressManager;
 
-@synthesize awsCredentialsManager;
+@synthesize credentialsManager;
 @synthesize cryptoTools;
 @synthesize uiTools;
 @synthesize databaseManager;
@@ -440,7 +440,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 		// several others depend on internalPreferences
 		self.internalPreferences = [[ZDCInternalPreferences alloc] initWithOwner:self];
 
-		self.awsCredentialsManager = [[AWSCredentialsManager alloc] initWithOwner:self];
+		self.credentialsManager = [[CredentialsManager alloc] initWithOwner:self];
 		self.diskManager = [[ZDCDiskManager alloc] initWithOwner:self];
 		self.downloadManager = [[ZDCDownloadManager alloc] initWithOwner:self];
 		self.imageManager = [[ZDCImageManager alloc] initWithOwner:self];
@@ -918,9 +918,9 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 {
 	if (completionHandler == nil) return;
 	
-	AWSCredentialsManager *aws = self.awsCredentialsManager;
+	CredentialsManager *cm = self.credentialsManager;
 	
-	if (aws == nil)
+	if (cm == nil)
 	{
 		NSString *msg = @"You must unlock the database first";
 		NSError *error = [NSError errorWithClass:[self class] code:500 description:msg];
@@ -936,14 +936,14 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 	
 	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
-	[aws flushAWSCredentialsForUser: localUserID
-	             deleteRefreshToken: NO
-	                completionQueue: bgQueue
-	                completionBlock:^
+	[cm flushAWSCredentialsForUser: localUserID
+	            deleteRefreshToken: NO
+	               completionQueue: bgQueue
+	               completionBlock:^
 	{
-		[aws getAWSCredentialsForUser: localUserID
-		              completionQueue: bgQueue
-		              completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+		[cm getAWSCredentialsForUser: localUserID
+		             completionQueue: bgQueue
+		             completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 		{
 			if (error)
 			{

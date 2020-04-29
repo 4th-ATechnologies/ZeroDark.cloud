@@ -17,8 +17,8 @@ NS_ASSUME_NONNULL_BEGIN
  * Generates a random symmetic key using the given algorithm.
  */
 + (nullable instancetype)createWithAlgorithm:(Cipher_Algorithm)algorithm
-                         storageKey:(S4KeyContextRef)storageKey
-                              error:(NSError *_Nullable *_Nullable)outError;
+                                  storageKey:(S4KeyContextRef)storageKey
+                                       error:(NSError *_Nullable *_Nullable)outError;
 
 /**
  * Generates a symmetric key from the existing low-level key.

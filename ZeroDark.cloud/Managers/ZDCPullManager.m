@@ -766,9 +766,9 @@ static NSUInteger const kMaxFailCount = 8;
 	
 	dispatch_block_t requestBlock = ^{ @autoreleasepool {
 		
-		[zdc.awsCredentialsManager getAWSCredentialsForUser: pullState.localUserID
-		                                    completionQueue: concurrentQueue
-		                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+		[zdc.credentialsManager getAWSCredentialsForUser: pullState.localUserID
+		                                 completionQueue: concurrentQueue
+		                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 		{
 			if (error)
 			{
@@ -823,7 +823,7 @@ static NSUInteger const kMaxFailCount = 8;
 			
 			NSString *path = [NSString stringWithFormat:@"/pull/%@", changeToken];
 			
-			NSURLComponents *urlComponents = [zdc.restManager apiGatewayForRegion:region stage:stage path:path];
+			NSURLComponents *urlComponents = [zdc.restManager apiGatewayV1ForRegion:region stage:stage path:path];
 			
 			NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 			request.HTTPMethod = @"GET";
@@ -2241,9 +2241,9 @@ static NSUInteger const kMaxFailCount = 8;
 	
 	dispatch_block_t requestBlock = ^{ @autoreleasepool {
 		
-		[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-		                                    completionQueue: concurrentQueue
-		                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+		[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+		                                 completionQueue: concurrentQueue
+		                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 		{
  			if (error)
 			{
@@ -2292,7 +2292,7 @@ static NSUInteger const kMaxFailCount = 8;
 			}
 			
 			NSString *path = @"/pull";
-			NSURLComponents *urlComponents = [zdc.restManager apiGatewayForRegion:region stage:stage path:path];
+			NSURLComponents *urlComponents = [zdc.restManager apiGatewayV1ForRegion:region stage:stage path:path];
 			
 			NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 			request.HTTPMethod = @"GET";
@@ -2634,9 +2634,9 @@ static NSUInteger const kMaxFailCount = 8;
 	
 	requestBlock = ^{ @autoreleasepool {
 		
-		[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-		                                    completionQueue: concurrentQueue
-		                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+		[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+		                                 completionQueue: concurrentQueue
+		                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 		{
  			if (error)
 			{
@@ -5058,9 +5058,9 @@ static NSUInteger const kMaxFailCount = 8;
 	
 	dispatch_block_t requestBlock = ^{ @autoreleasepool {
 		
-		[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-		                                    completionQueue: concurrentQueue
-		                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+		[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+		                                 completionQueue: concurrentQueue
+		                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 		{
 			if (error)
 			{

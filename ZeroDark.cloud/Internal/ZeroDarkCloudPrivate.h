@@ -11,8 +11,8 @@
 
 #import "Auth0APIManager.h"
 #import "Auth0ProviderManager.h"
+#import "CredentialsManager.h"
 #import "ZDCBlockchainManager.h"
-#import "AWSCredentialsManager.h"
 #import "ZDCCryptoTools.h"
 #import "ZDCInternalPreferences.h"
 #import "ZDCNetworkTools.h"
@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) Auth0APIManager * auth0APIManager;
 
-@property (nonatomic, readonly, nullable) AWSCredentialsManager      * awsCredentialsManager;
+@property (nonatomic, readonly, nullable) CredentialsManager         * credentialsManager;
 @property (nonatomic, readonly, nullable) ZDCSessionManager          * sessionManager;
 @property (nonatomic, readonly, nullable) ZDCNetworkTools            * networkTools;
 @property (nonatomic, readonly, nullable) Auth0ProviderManager       * auth0ProviderManager;

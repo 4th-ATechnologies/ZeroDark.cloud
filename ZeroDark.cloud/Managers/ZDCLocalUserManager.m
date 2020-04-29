@@ -959,10 +959,10 @@ static NSString *const k_displayName = @"displayName";
 		return;
 	}
 
-	privateKey = [ZDCPublicKey createWithUserID: localUser.uuid
-	                                  algorithm: kCipher_Algorithm_ECC41417
-	                                 storageKey: zdc.storageKey
-	                                      error: &error];
+	privateKey = [ZDCPublicKey createPrivateKeyWithUserID: localUser.uuid
+	                                            algorithm: kCipher_Algorithm_ECC41417
+	                                           storageKey: zdc.storageKey
+	                                                error: &error];
 	
 	if (error) {
 		Fail(error);

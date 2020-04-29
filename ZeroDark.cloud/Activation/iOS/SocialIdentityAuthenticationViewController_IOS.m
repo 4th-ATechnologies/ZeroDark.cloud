@@ -472,7 +472,7 @@
 	};
 	
 	Auth0APIManager *auth0APIManager = [Auth0APIManager sharedInstance];
-	AWSCredentialsManager *awsCredentialsManager = accountSetupVC.zdc.awsCredentialsManager;
+	CredentialsManager *credentialsManager = accountSetupVC.zdc.credentialsManager;
 	
 	NSDictionary *queryResult = [auth0APIManager parseQueryString:queryString];
 	
@@ -541,10 +541,10 @@
 				return;
 			}
 			
-			[awsCredentialsManager resetAWSCredentialsForUser: userID
-			                                 withRefreshToken: a0Token.refreshToken
-			                                  completionQueue: nil
-			                                  completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+			[credentialsManager resetAWSCredentialsForUser: userID
+			                              withRefreshToken: a0Token.refreshToken
+			                               completionQueue: nil
+			                               completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 			{
 				if (error)
 				{
@@ -593,10 +593,10 @@
 					return;
 				}
 				
-				[awsCredentialsManager fetchAWSCredentialsWithIDToken: auth0_idToken
-				                                                stage: @"prod"
-				                                      completionQueue: nil
-				                                      completionBlock:^(NSDictionary *delegation, NSError *error)
+				[credentialsManager fetchAWSCredentialsWithIDToken: auth0_idToken
+				                                             stage: @"prod"
+				                                   completionQueue: nil
+				                                   completionBlock:^(NSDictionary *delegation, NSError *error)
 				{
 					if (error)
 					{
@@ -610,10 +610,10 @@
 					ZDCLocalUserAuth *auth = nil;
 			
 					BOOL parseSuccess =
-					  [awsCredentialsManager parseLocalUserAuth: &auth
-					                             fromDelegation: delegation
-					                               refreshToken: a0Token.refreshToken
-					                                    idToken: auth0_idToken];
+					  [credentialsManager parseLocalUserAuth: &auth
+					                          fromDelegation: delegation
+					                            refreshToken: a0Token.refreshToken
+					                                 idToken: auth0_idToken];
 					if (!parseSuccess)
 					{
 						NSString *err_title = @"Could not Authenticate";

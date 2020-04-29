@@ -324,10 +324,10 @@
 - (void)deleteRefreshTokenforUserID:(NSString *)localUserID
                     completionBlock:(dispatch_block_t __nullable )completionBlock
 {
-	[zdc.awsCredentialsManager flushAWSCredentialsForUser: localUserID
-	                                   deleteRefreshToken: YES
-	                                      completionQueue: nil
-	                                      completionBlock: completionBlock];
+	[zdc.credentialsManager flushAWSCredentialsForUser: localUserID
+	                                deleteRefreshToken: YES
+	                                   completionQueue: nil
+	                                   completionBlock: completionBlock];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

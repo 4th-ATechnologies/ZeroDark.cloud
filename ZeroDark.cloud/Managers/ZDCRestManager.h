@@ -33,18 +33,33 @@ NS_ASSUME_NONNULL_BEGIN
  * 
  * For example: "rsuraaljlh"
  */
-- (nullable NSString *)apiGatewayIDForRegion:(AWSRegion)region stage:(NSString *)stage;
+- (nullable NSString *)apiGatewayIDV1ForRegion:(AWSRegion)region stage:(NSString *)stage;
 
 /**
  * API Gateway URLS have the following form:
- * - https://{apiGatewayID}.execute-api.{region}.amazonaws.com/{stage}
+ * - https://{apiGatewayID}.execute-api.{region}.amazonaws.com
+ *
+ * This method returns the API Gateway ID that matches the region & stage.
+ *
+ * For example: "rsuraaljlh"
+ */
+- (nullable NSString *)apiGatewayIDV2ForRegion:(AWSRegion)region stage:(NSString *)stage;
+
+/**
+ * API Gateway URLS have the following form:
+ * - https://{apiGatewayID}.execute-api.{region}.amazonaws.com/{stage}/{your_path_here}
  *
  * This method fills out the URL for you, and returns a (configurable) NSURLComponents instance.
- * 
- * Your path property should NOT include the stage component.
- * This will be added for you automatically.
  */
-- (nullable NSURLComponents *)apiGatewayForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path;
+- (nullable NSURLComponents *)apiGatewayV1ForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path;
+
+/**
+ * API Gateway URLS have the following form:
+ * - https://{apiGatewayID}.execute-api.{region}.amazonaws.com/{your_path_here}
+ *
+ * This method fills out the URL for you, and returns a (configurable) NSURLComponents instance.
+ */
+- (nullable NSURLComponents *)apiGatewayV2ForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Configuration

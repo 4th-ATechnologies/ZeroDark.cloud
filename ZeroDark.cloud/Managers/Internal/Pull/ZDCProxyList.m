@@ -9,10 +9,10 @@
 
 #import "ZDCProxyList.h"
 
-#import "AWSCredentialsManager.h"
 #import "AWSDate.h"
 #import "AWSNumber.h"
 #import "AWSSignature.h"
+#import "CredentialsManager.h"
 #import "S3ObjectInfo.h"
 #import "S3ResponseParser.h"
 #import "ZDCSessionManager.h"
@@ -192,9 +192,9 @@
 			[requestCloudPaths addObject:cp];
 		}
 		
-		[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-		                                    completionQueue: queue
-		                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+		[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+		                                 completionQueue: queue
+		                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 		{
 			if (error)
 			{

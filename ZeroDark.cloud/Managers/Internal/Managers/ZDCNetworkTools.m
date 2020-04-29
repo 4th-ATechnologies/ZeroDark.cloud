@@ -213,9 +213,9 @@
 	
 	__weak typeof(self) weakSelf = self;
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{

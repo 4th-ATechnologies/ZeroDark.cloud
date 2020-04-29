@@ -8,9 +8,14 @@
  */
 
 #import "ZDCPartnerTools.h"
+
+#import "ZDCCryptoTools.h"
+#import "ZDCLocalUserManagerPrivate.h"
 #import "ZDCLocalUserPrivate.h"
 #import "ZDCLogging.h"
+#import "ZDCPublicKeyPrivate.h"
 #import "ZDCUserPrivate.h"
+#import "ZeroDarkCloudPrivate.h"
 
 // Log Levels: off, error, warn, info, verbose
 // Log Flags : trace
@@ -61,48 +66,67 @@
 		                       userInfo: @{ NSLocalizedDescriptionKey: description }];
 	};
 	
-	NSError* (^ErrorWithInvalidKey)(NSString*) = ^(NSString *key){
-		
-		NSString *description = [NSString stringWithFormat:@"info has missing/invalid key: %@", key];
-		return ErrorWithDescription(description);
-	};
-	
+	NSError *error = nil;
 	NSString *localUserID = info.userID;
 	
-	ZDCLocalUser *localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
-	if ([localUser isKindOfClass:[ZDCLocalUser class]]) {
-		if (outError) *outError = ErrorWithDescription(@"localUser already exists in database");
-		return nil;
+	ZDCLocalUser *localUser = nil;
+	ZDCLocalUserAuth *localUserAuth = nil;
+	ZDCPublicKey *privateKey = nil;
+	ZDCSymmetricKey *accessKey = nil;
+	
+	if (info == nil)
+	{
+		error = ErrorWithDescription(@"Invalid parameter: info is nil");
+		goto done;
+	}
+	
+	localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
+	if ([localUser isKindOfClass:[ZDCLocalUser class]])
+	{
+		error = ErrorWithDescription(@"localUser already exists in database");
+		goto done;
 	}
 	
 	localUser = [[ZDCLocalUser alloc] initWithUUID:localUserID];
-	
-	if (info.region == AWSRegion_Invalid) {
-		if (outError) *outError = ErrorWithInvalidKey(@"region");
-		return nil;
-	}
 	localUser.aws_region = info.region;
 	localUser.aws_bucket = info.bucket;
 	localUser.aws_stage  = info.stage;
 	localUser.syncedSalt = info.salt;
-	
 	localUser.identities = [NSArray array];
 	
-	ZDCLocalUserAuth *localUserAuth = [[ZDCLocalUserAuth alloc] init];
+	localUserAuth = [[ZDCLocalUserAuth alloc] init];
+	localUserAuth.partner_refreshToken = info.refreshToken;	
 	
-	// Todo...
+	privateKey = [ZDCPublicKey createPrivateKeyWithUserID: localUser.uuid
+	                                            algorithm: kCipher_Algorithm_ECC41417
+	                                           storageKey: zdc.storageKey
+	                                                error: &error];
 	
-//	localUser.publicKeyID = privKey.uuid;
-//	localUser.accessKeyID = accessKey.uuid;
+	if (error) {
+		goto done;
+	}
 	
-	[transaction setObject:localUser forKey:localUser.uuid inCollection:kZDCCollection_Users];
-	[transaction setObject:localUserAuth forKey:localUser.uuid inCollection:kZDCCollection_UserAuth];
-//	[transaction setObject:privKey forKey:privKey.uuid inCollection:kZDCCollection_PublicKeys];
-//	[transaction setObject:accessKey forKey:accessKey.uuid inCollection:kZDCCollection_SymmetricKeys];
+	accessKey = [zdc.cryptoTools createSymmetricKey: info.accessKey
+	                            encryptionAlgorithm: kCipher_Algorithm_2FISH256
+	                                          error: &error];
 	
-//	[self createTrunkNodesForLocalUser: localUser
-//	                     withAccessKey: accessKey
-//	                       transaction: transaction];
+	if (error) {
+		goto done;
+	}
+	
+	localUser.publicKeyID = privateKey.uuid;
+	localUser.accessKeyID = accessKey.uuid;
+	
+	[transaction setObject:localUser     forKey:localUser.uuid  inCollection:kZDCCollection_Users];
+	[transaction setObject:localUserAuth forKey:localUser.uuid  inCollection:kZDCCollection_UserAuth];
+	[transaction setObject:privateKey    forKey:privateKey.uuid inCollection:kZDCCollection_PublicKeys];
+	[transaction setObject:accessKey     forKey:accessKey.uuid  inCollection:kZDCCollection_SymmetricKeys];
+	
+	[zdc.localUserManager createTrunkNodesForLocalUser: localUser
+	                                     withAccessKey: accessKey
+	                                       transaction: transaction];
+	
+done:
 	
 	if (outError) *outError = nil;
 	return localUser;

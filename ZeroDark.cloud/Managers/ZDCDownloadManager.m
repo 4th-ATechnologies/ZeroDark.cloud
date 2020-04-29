@@ -459,18 +459,18 @@ static NSUInteger const kMaxFailCount = 8;
 	
 	dispatch_block_t requestBlock = ^{ @autoreleasepool {
 		
-		AWSCredentialsManager *awsCredentialsManager = nil;
+		CredentialsManager *credentialsManager = nil;
 		{ // scoping
 			__strong typeof(self) strongSelf = weakSelf;
 			if (strongSelf)
 			{
-				awsCredentialsManager = strongSelf->zdc.awsCredentialsManager;
+				credentialsManager = strongSelf->zdc.credentialsManager;
 			}
 		}
 		
-		[awsCredentialsManager getAWSCredentialsForUser: node.localUserID
-		                                completionQueue: concurrentQueue
-		                                completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+		[credentialsManager getAWSCredentialsForUser: node.localUserID
+		                             completionQueue: concurrentQueue
+		                             completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 		{
 			if (error)
 			{
@@ -1203,18 +1203,18 @@ static NSUInteger const kMaxFailCount = 8;
 	
 	dispatch_block_t requestBlock = ^{ @autoreleasepool {
 		
-		AWSCredentialsManager *awsCredentialsManager = nil;
+		CredentialsManager *credentialsManager = nil;
 		{ // scoping
 			__strong typeof(self) strongSelf = weakSelf;
 			if (strongSelf)
 			{
-				awsCredentialsManager = strongSelf->zdc.awsCredentialsManager;
+				credentialsManager = strongSelf->zdc.credentialsManager;
 			}
 		}
 		
-		[awsCredentialsManager getAWSCredentialsForUser: node.localUserID
-		                                completionQueue: concurrentQueue
-		                                completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+		[credentialsManager getAWSCredentialsForUser: node.localUserID
+		                             completionQueue: concurrentQueue
+		                             completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 		{
 			if (error)
 			{
@@ -1924,18 +1924,18 @@ static NSUInteger const kMaxFailCount = 8;
 	
 	dispatch_block_t requestBlock = ^{ @autoreleasepool {
 		
-		AWSCredentialsManager *awsCredentialsManager = nil;
+		CredentialsManager *credentialsManager = nil;
 		{ // scoping
 			__strong typeof(self) strongSelf = weakSelf;
 			if (strongSelf)
 			{
-				awsCredentialsManager = strongSelf->zdc.awsCredentialsManager;
+				credentialsManager = strongSelf->zdc.credentialsManager;
 			}
 		}
 		
-		[awsCredentialsManager getAWSCredentialsForUser: node.localUserID
-		                                completionQueue: concurrentQueue
-		                                completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+		[credentialsManager getAWSCredentialsForUser: node.localUserID
+		                             completionQueue: concurrentQueue
+		                             completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 		{
 			if (error)
 			{

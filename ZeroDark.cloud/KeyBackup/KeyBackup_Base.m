@@ -11,7 +11,7 @@
 
 #import "ZeroDarkCloudPrivate.h"
 #import "Auth0Utilities.h"
-#import "AWSCredentialsManager.h"
+#import "CredentialsManager.h"
 #import "ZDCAccessCode.h"
 #import "ZDCLocalUser.h"
 #import "ZDCLocalUserAuth.h"

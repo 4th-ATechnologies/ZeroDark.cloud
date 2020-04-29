@@ -9,9 +9,9 @@
 
 #import "ZDCRestManagerPrivate.h"
 
-#import "AWSCredentialsManager.h"
 #import "AWSPayload.h"
 #import "AWSSignature.h"
+#import "CredentialsManager.h"
 #import "S3Request.h"
 #import "S4DeepCopy.h"
 #import "ZDCAsyncCompletionDispatch.h"
@@ -96,7 +96,7 @@
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
-- (NSString *)apiGatewayIDForRegion:(AWSRegion)region stage:(NSString *)stage
+- (NSString *)apiGatewayIDV1ForRegion:(AWSRegion)region stage:(NSString *)stage
 {
 	switch(region)
 	{
@@ -123,14 +123,41 @@
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
-- (NSURLComponents *)apiGatewayForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path
+- (nullable NSString *)apiGatewayIDV2ForRegion:(AWSRegion)region stage:(NSString *)stage
 {
-	NSString *regionStr = [AWSRegions shortNameForRegion:region];
-	NSString *apiGatewayID = [self apiGatewayIDForRegion:region stage:stage];
+	switch(region)
+	{
+		case AWSRegion_US_West_2:
+		{
+			if ([stage isEqualToString:@"dev"])  return @"j1n0wvoo16";
+			if ([stage isEqualToString:@"test"]) return @"mzmbqmbwl5";
+			if ([stage isEqualToString:@"prod"]) return @"xx08iqr297";
+		}
+		case AWSRegion_EU_West_1:
+		{
+			if ([stage isEqualToString:@"dev"])  return @"bdpp5w5aqg";
+			if ([stage isEqualToString:@"test"]) return @"atmztx3z50";
+			if ([stage isEqualToString:@"prod"]) return @"mnh0vvlszl";
+		}
+		default: break;
+	}
+	
+	return nil;
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
+ */
+- (NSURLComponents *)apiGatewayV1ForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path
+{
+	NSString *apiGatewayID = [self apiGatewayIDV1ForRegion:region stage:stage];
 	if (apiGatewayID == nil) {
 		return nil;
 	}
 	
+	NSString *regionStr = [AWSRegions shortNameForRegion:region];
 	NSString *host = [NSString stringWithFormat:@"%@.execute-api.%@.amazonaws.com", apiGatewayID, regionStr];
 	
 	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
@@ -146,6 +173,38 @@
 	}
 	
 	return urlComponents;
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
+ */
+- (nullable NSURLComponents *)apiGatewayV2ForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path
+{
+	NSString *apiGatewayID = [self apiGatewayIDV2ForRegion:region stage:stage];
+	if (apiGatewayID == nil) {
+		return nil;
+	}
+	
+	NSString *regionStr = [AWSRegions shortNameForRegion:region];
+	NSString *host = [NSString stringWithFormat:@"%@.execute-api.%@.amazonaws.com", apiGatewayID, regionStr];
+	
+	NSURLComponents *urlComponents = [[NSURLComponents alloc] init];
+	urlComponents.scheme = @"https";
+	urlComponents.host = host;
+	
+	if (path)
+	{
+		if ([path hasPrefix:@"/"])
+			urlComponents.path = path;
+		else
+			urlComponents.path = [NSString stringWithFormat:@"/%@", path];
+	}
+	
+	return urlComponents;
+	
+	return nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -326,7 +385,7 @@
 		NSString *stage = DEFAULT_AWS_STAGE;
 
 		NSString *path = @"/config";
-		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"GET";
@@ -449,7 +508,7 @@
 	}
 
 	NSString *path = @"/activation/setup";
-	NSURLComponents *urlComponents = [self apiGatewayForRegion:request_region stage:request_stage path:path];
+	NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:request_region stage:request_stage path:path];
 	
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"POST";
@@ -564,9 +623,9 @@
 	if (!completionQueue && completionBlock)
 		completionQueue = dispatch_get_main_queue();
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUser.uuid
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: localUser.uuid
+	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -599,7 +658,7 @@
 		
 		NSString *path = @"/registerPushToken";
 		
-		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 		
 		NSString *treeID = zdc.primaryTreeID;
 		NSString *platform;
@@ -684,7 +743,7 @@
 	NSString *stage = DEFAULT_AWS_STAGE;
 	
 	NSString *path = @"/unregisterPushToken";
-	NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+	NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 	
 	NSString *platform;
 	#if TARGET_OS_IPHONE
@@ -766,7 +825,7 @@
 	
 	NSString *path = @"/users/info";
 	
-	NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+	NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 	
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"GET";
@@ -879,9 +938,9 @@
 	if (!completionQueue)
 		completionQueue = dispatch_get_main_queue();
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -911,7 +970,7 @@
 
 		NSString *path = @"/users/info/";
 		
-		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 
 		NSURLQueryItem *user_id = [NSURLQueryItem queryItemWithName:@"user_id" value:remoteUserID];
 		NSURLQueryItem *check_archive = [NSURLQueryItem queryItemWithName:@"check_archive" value:@"1"];
@@ -1003,7 +1062,7 @@
 	
 	NSString *path = [NSString stringWithFormat:@"/users/exists/%@", userID];
 	
-	NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+	NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 	
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"GET";
@@ -1192,7 +1251,7 @@
 	
 	NSString *path = @"/users/privPubKey";
 	
-	NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+	NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"POST";
@@ -1245,9 +1304,9 @@
 		}
 	};
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -1288,7 +1347,7 @@
 		
 		NSString *path = @"/users/pubKeySigs";
 		
-		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"POST";
@@ -1390,9 +1449,9 @@
 		}
 	}
 
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -1419,7 +1478,7 @@
 
 		NSString *path = [NSString stringWithFormat:@"/users/avatar/%@", social_userID];
 		
-		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 
@@ -1512,7 +1571,7 @@
 	
 	NSString *path = @"/multipartComplete";
 	
-	NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+	NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 	
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"POST";
@@ -1578,7 +1637,7 @@
 	
 	NSString *path = @"/listProxy";
 	
-	NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+	NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 	
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"POST";
@@ -1651,9 +1710,9 @@
 		}
 	};
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -1678,7 +1737,7 @@
 		// Generate request
 
 		NSString *path = @"/lostAndFound";
-		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"POST";
@@ -1744,9 +1803,9 @@
 		}
 	};
 
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -1775,7 +1834,7 @@
 
 		NSString *path = [NSString stringWithFormat:@"/auth0/fetch/%@", localUserID];
 
-		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		[request setHTTPMethod:@"GET"];
@@ -1826,9 +1885,9 @@
 		}
 	};
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -1867,7 +1926,7 @@
 
 		NSString *path = [NSString stringWithFormat:@"/auth0/fetch/%@", remoteUserID];
 		
-		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		[request setHTTPMethod:@"GET"];
@@ -1921,9 +1980,9 @@
 		}
 	};
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -1963,7 +2022,7 @@
 
 		NSString *path = @"/auth0/search";
 		
-		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 		
 		// Currently this method only support sending a query that matches based on the name.
 		// However the server also supports limiting the search to a particular social provider.
@@ -2028,9 +2087,9 @@
 	
 	NSString *localUserID = [inLocalUserID copy]; // mutable string protection
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -2073,7 +2132,7 @@
 		}
 		
 		NSString *path = @"/auth0/linkRecovery";
-		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 		
 		NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:2];
 		
@@ -2154,9 +2213,9 @@
 		return;
 	}
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -2200,7 +2259,7 @@
 		
 		NSString *path = @"/auth0/linkIdentity";
 		
-		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 		
 		NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:2];
 		
@@ -2279,9 +2338,9 @@
 		return;
 	}
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -2325,7 +2384,7 @@
 		
 		NSString *path = @"/auth0/unlinkIdentity";
 		
-		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 		
 		NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:2];
 		jsonDict[@"auth0_id"] = auth0ID;
@@ -2427,9 +2486,9 @@
 		}
 	};
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -2455,7 +2514,7 @@
 		
 		NSString *path = @"/payment/isCustomer";
 		
-		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"GET";
@@ -2556,9 +2615,9 @@
 		}
 	};
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -2584,7 +2643,7 @@
 		
 		NSString *path = @"/payment/balance";
 		
-		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"GET";
@@ -2714,9 +2773,9 @@
 	
 	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: bgQueue
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	                                 completionQueue: bgQueue
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -2741,7 +2800,7 @@
 		
 		NSString *path = @"/billing/usage";
 		
-		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 		
 		urlComponents.queryItems = @[
 		  [NSURLQueryItem queryItemWithName:@"v" value:@"1"],
@@ -2882,9 +2941,9 @@
 	
 	dispatch_block_t requestBlock = ^{ @autoreleasepool {
 	
-		[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-		                                    completionQueue: bgQueue
-		                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+		[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+		                                 completionQueue: bgQueue
+		                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 		{
 			if (error)
 			{
@@ -2909,7 +2968,7 @@
 			
 			NSString *path = @"/billing/usage";
 			
-			NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+			NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 			
 			urlComponents.queryItems = @[
 			  [NSURLQueryItem queryItemWithName:@"v" value:@"1"],
@@ -3080,9 +3139,9 @@
 		}
 	};
 
-	[zdc.awsCredentialsManager getAWSCredentialsForUser: localUserID
-	                                    completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                    completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
@@ -3115,7 +3174,7 @@
 
 		NSString *path = @"/payment/oneTime";
 
-		NSURLComponents *urlComponents = [self apiGatewayForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
 
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"POST";

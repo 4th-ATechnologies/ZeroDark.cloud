@@ -14,28 +14,29 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * If an error occurs (i.e. an error is returned via completionBlock),
- * and the NSError.domain is AWSCredentialsManager,
+ * and the NSError.domain is CredentialsManager,
  * then the NSError.code will be set to one of the following values.
  */
-typedef NS_ENUM(NSInteger, AWSCredentialsErrorCode) {
-	AWSCredentialsErrorCode_MissingInvalidUser,
-	AWSCredentialsErrorCode_NoRefreshTokens,
-	AWSCredentialsErrorCode_InvalidIDToken,
-	AWSCredentialsErrorCode_InvalidServerResponse
+typedef NS_ENUM(NSInteger, CredentialsErrorCode) {
+	CredentialsErrorCode_MissingInvalidUser,
+	CredentialsErrorCode_NoRefreshTokens,
+	CredentialsErrorCode_InvalidIDToken,
+	CredentialsErrorCode_InvalidServerResponse
 };
 
 /**
- * Most of the ZeroDark REST API's require valid AWS credentials.
+ * Most of the ZeroDark REST API's require valid credentials.
  *
- * These are provided via a standard delegation system.
- * A refreshToken is used to request temporary AWS credentials.
- * As long as the refreshToken hasn't been revoked, the server will return AWS credentials.
- * The temporary credentials are only valid for a short period of time (a few hours).
+ * The HTTP APIs require a JWT.
+ * And the S3 APIs require AWS credentials.
+ *
+ * Both the JWT & AWS credentials are only valid for a short period of time (a few hours).
+ * The user's refreshToken can be used to refresh them as needed (assuming it hasn't been revoked).
  *
  * This manager is responsible for caching these temporary credentials,
  * and automatically refreshing them on demand.
  */
-@interface AWSCredentialsManager : NSObject
+@interface CredentialsManager : NSObject
 
 /**
  * Standard initialization from ZeroDarkCloud, called during database unlock.
@@ -43,14 +44,31 @@ typedef NS_ENUM(NSInteger, AWSCredentialsErrorCode) {
 - (instancetype)initWithOwner:(ZeroDarkCloud *)owner;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark User API
+#pragma mark JWT
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Fetches the JWT credentials for the given ZDCLocalUser.uuid.
+ *
+ * If cached credentials are available (and not expired), they'll be used.
+ * Otherwise the manager will attempt to refresh the credentials using the user's refreshToken.
+ *
+ * On success, the completionBlock will be invoked with a ZDCLocalUserAuth instance
+ * whose `coop_jwt` or `partner_jwt` is non-nil and not expired.
+ */
+- (void)getJWTCredentialsForUser:(NSString *)userID
+                 completionQueue:(nullable dispatch_queue_t)completionQueue
+                 completionBlock:(void (^)(ZDCLocalUserAuth *_Nullable auth, NSError *_Nullable error))completionBlock;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark AWS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Fetches the AWS credentials for the given ZDCLocalUser.uuid.
  *
  * If cached credentials are available (and not expired), they'll be used.
- * Otherwise the manager will attempt to refresh the AWS credentials using the user's refreshToken.
+ * Otherwise the manager will attempt to refresh the credentials using the user's refreshToken.
  */
 - (void)getAWSCredentialsForUser:(NSString *)userID
                  completionQueue:(nullable dispatch_queue_t)completionQueue

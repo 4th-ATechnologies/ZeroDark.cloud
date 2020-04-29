@@ -488,11 +488,11 @@ typedef NS_ENUM(NSInteger, TblRow) {
 		}
 		case TblRow_Logout:
 		{
-			AWSCredentialsManager *aws = zdc.awsCredentialsManager;
-			[aws flushAWSCredentialsForUser: localUserID
-			             deleteRefreshToken: YES
-			                completionQueue: nil
-			                completionBlock:
+			CredentialsManager *cm = zdc.credentialsManager;
+			[cm flushAWSCredentialsForUser: localUserID
+			            deleteRefreshToken: YES
+			               completionQueue: nil
+			               completionBlock:
 			^{
 				[[self navigationController] popViewControllerAnimated:YES];
 			}];

@@ -9,8 +9,8 @@
 
 #import "AccountSetup_Base.h"
 
-#import "AWSCredentialsManager.h"
 #import "Auth0Utilities.h"
+#import "CredentialsManager.h"
 #import "ZDCConstantsPrivate.h"
 #import "ZDCLocalUser.h"
 #import "ZDCLocalUserAuth.h"
@@ -449,7 +449,7 @@
 	};
 	
 	Auth0APIManager *auth0APIManager = [Auth0APIManager sharedInstance];
-	AWSCredentialsManager *awsCredentialsManager = zdc.awsCredentialsManager;
+	CredentialsManager *credentialsManager = zdc.credentialsManager;
 	
 	dispatch_queue_t backgroundQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
@@ -493,10 +493,10 @@
 				return;
 			}
 			
-			[awsCredentialsManager fetchAWSCredentialsWithIDToken: result.idToken
-			                                                stage: @"prod"
-			                                      completionQueue: backgroundQueue
-			                                      completionBlock:^(NSDictionary *delegation, NSError *error)
+			[credentialsManager fetchAWSCredentialsWithIDToken: result.idToken
+			                                             stage: @"prod"
+			                                   completionQueue: backgroundQueue
+			                                   completionBlock:^(NSDictionary *delegation, NSError *error)
 			{
 				__strong typeof(self) strongSelf = weakSelf;
 				if (strongSelf == nil) return;
@@ -517,10 +517,10 @@
 				ZDCLocalUserAuth* localUserAuth = nil;
 				
 				BOOL parseSuccess =
-				  [awsCredentialsManager parseLocalUserAuth: &localUserAuth
-				                             fromDelegation: delegation
-				                               refreshToken: result.refreshToken
-				                                    idToken: result.idToken];
+				  [credentialsManager parseLocalUserAuth: &localUserAuth
+				                          fromDelegation: delegation
+				                            refreshToken: result.refreshToken
+				                                 idToken: result.idToken];
 				
 				if (!parseSuccess)
 				{
@@ -601,7 +601,7 @@
 	};
 	
 	Auth0APIManager *auth0APIManager = [Auth0APIManager sharedInstance];
-	AWSCredentialsManager *awsCredentialsManager = zdc.awsCredentialsManager;
+	CredentialsManager *credentialsManager = zdc.credentialsManager;
 	
 	dispatch_queue_t backgroundQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
@@ -637,10 +637,10 @@
 			return;
 		}
 		
-		[awsCredentialsManager fetchAWSCredentialsWithIDToken: result.idToken
-		                                                stage: @"prod"
-		                                      completionQueue: backgroundQueue
-		                                      completionBlock:^(NSDictionary *delegation, NSError *error)
+		[credentialsManager fetchAWSCredentialsWithIDToken: result.idToken
+		                                             stage: @"prod"
+		                                   completionQueue: backgroundQueue
+		                                   completionBlock:^(NSDictionary *delegation, NSError *error)
 		{
 			__strong typeof(self) strongSelf = weakSelf;
 			if (!strongSelf) return;
@@ -658,10 +658,10 @@
 			ZDCLocalUserAuth *newAuth = nil;
 			
 			BOOL parseSuccess =
-			  [awsCredentialsManager parseLocalUserAuth: &newAuth
-			                             fromDelegation: delegation
-			                               refreshToken: result.refreshToken
-			                                    idToken: result.idToken];
+			  [credentialsManager parseLocalUserAuth: &newAuth
+			                          fromDelegation: delegation
+			                            refreshToken: result.refreshToken
+			                                 idToken: result.idToken];
 			
 			if (!parseSuccess)
 			{
@@ -1220,10 +1220,10 @@
 		}
 	};
 	
-	[zdc.awsCredentialsManager resetAWSCredentialsForUser: userID
-	                                     withRefreshToken: refreshToken
-	                                      completionQueue: nil
-	                                      completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager resetAWSCredentialsForUser: userID
+	                                  withRefreshToken: refreshToken
+	                                   completionQueue: nil
+	                                   completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		InvokeCompletionBlock(error);
 	}];
