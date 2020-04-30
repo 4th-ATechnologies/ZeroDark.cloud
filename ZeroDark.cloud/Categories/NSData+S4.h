@@ -10,34 +10,52 @@
 #import <Foundation/Foundation.h>
 #import <S4Crypto/S4Crypto.h>
 
+NS_ASSUME_NONNULL_BEGIN
 
 @interface NSData (S4)
 
-+ (NSData *)s4RandomBytes:(NSUInteger)length;
-
-+ (NSData *)dataFromHexString:(NSString *)inString;
-
-- (NSString *)zBase32String;
-+ (NSData *)dataFromZBase32String:(NSString *)inString;
+/**
+ * Allocates and returns a data instance backed by a deallocation routine that automatically zeros the bits.
+ */
++ (instancetype)secureDataWithLength:(NSUInteger)length;
 
 /**
- * Returns a 32 bit hash using the xxHash algorithm.
+ * Generates random data.
+ *
+ * (The S4 library is used, which uses Apple's CommonCrypto.)
+ */
++ (nullable NSData *)s4RandomBytes:(NSUInteger)lengthInBytes;
+
+/**
+ * Converts the data into a zBase32 representation.
+ */
+- (NSString *)zBase32String;
+
+/**
+ * Converts from zBase32 representation into the raw data.
+ *
+ * Returns nil if the given string isn't in zBase32.
+ */
++ (nullable NSData *)dataFromZBase32String:(NSString *)string;
+
+/**
+ * Returns a 32-bit hash using the xxHash algorithm.
  * (xxHash is a fast non-cryptographic hashing algorithm)
  */
 - (uint32_t)xxHash32;
 
 /**
- * Returns a 64 bit hash using the xxHash algorithm.
+ * Returns a 64-bit hash using the xxHash algorithm.
  * (xxHash is a fast non-cryptographic hashing algorithm)
  */
 - (uint64_t)xxHash64;
 
-+ (instancetype)allocSecureDataWithLength:(NSUInteger)length;
-
 /**
- * Convenience function for hashing data.
+ * The S4 library supports many different hashing algorithm.
+ * This is a convenience function for hashing data using any of them.
  */
-- (NSData *)hashWithAlgorithm:(HASH_Algorithm)hashAlgor error:(NSError **)errorOut;
+- (nullable NSData *)hashWithAlgorithm:(HASH_Algorithm)hashAlgor error:(NSError **)errorOut;
 
 @end
 
+NS_ASSUME_NONNULL_END

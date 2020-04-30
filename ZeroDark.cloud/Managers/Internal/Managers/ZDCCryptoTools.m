@@ -623,7 +623,7 @@ done:
 			// The section is encrypted using the node's encryption key.
 			// This way, only those with permission can decrypt it.
 			
-			NSData *ciphertext = [cleartext encryptedDataWithSymmetricKey:node.encryptionKey error:&error];
+			NSData *ciphertext = [cleartext encryptedWithSymmetricKey:node.encryptionKey error:&error];
 			if (error) goto done;
 			
 			dict[kZDCCloudRcrd_Meta] = [ciphertext base64EncodedStringWithOptions:0];
@@ -643,7 +643,7 @@ done:
 			// The section is encrypted using the node's encryption key.
 			// This way, only those with permission can decrypt it.
 			
-			NSData *ciphertext = [cleartext encryptedDataWithSymmetricKey:node.encryptionKey error:&error];
+			NSData *ciphertext = [cleartext encryptedWithSymmetricKey:node.encryptionKey error:&error];
 			if (error) goto done;
 			
 			dict[kZDCCloudRcrd_Data] = [ciphertext base64EncodedStringWithOptions:0];
@@ -912,7 +912,7 @@ done:
 		{
 			NSError *error = nil;
 			
-			decrypted_data = [encrypted_data decryptedDataWithSymmetricKey:cloudRcrd.encryptionKey error:&error];
+			decrypted_data = [encrypted_data decryptedWithSymmetricKey:cloudRcrd.encryptionKey error:&error];
 			if (error)
 			{
 				[cloudRcrd appendError:error];
@@ -978,7 +978,7 @@ done:
 		{
 			NSError *error = nil;
 			
-			decrypted_data = [encrypted_data decryptedDataWithSymmetricKey:cloudRcrd.encryptionKey error:&error];
+			decrypted_data = [encrypted_data decryptedWithSymmetricKey:cloudRcrd.encryptionKey error:&error];
 			if (error)
 			{
 				[cloudRcrd appendError:error];

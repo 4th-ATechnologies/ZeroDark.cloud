@@ -487,7 +487,7 @@ static uint32_t xor32 (uint32_t in32, void *keydata)
 	if(PT[0] != kCipher_Algorithm_2FISH256)
 		RETERR(kS4Err_CorruptData);
 	
-	accessKeyData = [NSData allocSecureDataWithLength:32];
+	accessKeyData = [NSData secureDataWithLength:32];
 	COPY(PT+1, accessKeyData.bytes, 32);
 	
 	
@@ -1504,7 +1504,7 @@ done:
 	// create an encyption key for this data
 	err = Cipher_GetKeySize(algorithm, &keySizeInBits); CKERR;
 	keySizeInBytes = keySizeInBits / 8;
-	encryptionKey = [NSData allocSecureDataWithLength:keySizeInBytes];
+	encryptionKey = [NSData secureDataWithLength:keySizeInBytes];
 	err = RNG_GetBytes((void*)encryptionKey.bytes, keySizeInBytes); CKERR;
 	err = RNG_GetBytes(IV,keySizeInBytes); CKERR;
 	

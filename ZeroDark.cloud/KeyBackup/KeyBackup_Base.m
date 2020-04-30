@@ -266,7 +266,7 @@ done:
 	// get the actual clone data bytes
 	err = S4Key_GetAllocatedProperty(cloneKeyCtx, kS4KeyProp_KeyData, NULL, &keyData, &keyDataLen ); CKERR;
 	
-	accessKeyData = [NSData allocSecureDataWithLength:keyDataLen];
+	accessKeyData = [NSData secureDataWithLength:keyDataLen];
 	COPY(keyData, accessKeyData.bytes, keyDataLen);
 	
 	//	cloneData = [[NSData alloc] initWithBytesNoCopy:keyData

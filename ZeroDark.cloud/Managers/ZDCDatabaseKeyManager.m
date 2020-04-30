@@ -177,7 +177,7 @@ static P2K_Algorithm  	defaultP2KAlgorithm			=	 kP2K_Algorithm_Argon2i;
 
 	if (S4KeyContextRefIsValid(sKeyCtx)) {
 
-		data = [NSData allocSecureDataWithLength:sKeyCtx->sym.keylen];
+		data = [NSData secureDataWithLength:sKeyCtx->sym.keylen];
 		COPY(sKeyCtx->sym.symKey, data.bytes, sKeyCtx->sym.keylen);
 	}
 
@@ -413,7 +413,7 @@ done:
 	err = Cipher_GetKeySize(passKeyAlgorithm, &keySizeInBits); CKERR;
 	keySizeInBytes = keySizeInBits / 8;
 
-	kcPassphraseData = [NSData allocSecureDataWithLength:keySizeInBytes];
+	kcPassphraseData = [NSData secureDataWithLength:keySizeInBytes];
 	err = RNG_GetBytes((void *)kcPassphraseData.bytes, keySizeInBytes); CKERR;
 
 	// try deleting old one first

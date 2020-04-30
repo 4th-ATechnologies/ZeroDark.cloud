@@ -14,6 +14,7 @@
 
 #import "NSData+AWSUtilities.h"
 #import "NSData+S4.h"
+#import "NSData+ZeroDark.h"
 #import "NSString+S4.h"
 
 #define ETHEREUM_CONTRACT_VERSION 3

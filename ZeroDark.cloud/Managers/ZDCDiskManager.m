@@ -2575,16 +2575,16 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	}
 	else // if (result > 0)
 	{
-		NSData *encrypted = [NSData dataWithBytesNoCopy:buffer length:result freeWhenDone:NO];
+		NSData *encryptedData = [NSData dataWithBytesNoCopy:buffer length:result freeWhenDone:NO];
 		
 		NSError *error = nil;
-		NSData *decrypted = [encrypted decryptedDataWithSymmetricKey:encryptionKey error:&error];
+		NSData *decryptedData = [encryptedData decryptedWithSymmetricKey:encryptionKey error:&error];
 		
 		if (error) {
 			ZDCLogError(@"decryption error: %@", error);
 		}
 		else {
-			eTag = [[NSString alloc] initWithData:decrypted encoding:NSUTF8StringEncoding];
+			eTag = [[NSString alloc] initWithData:decryptedData encoding:NSUTF8StringEncoding];
 			success = (eTag != nil);
 		}
 	}
@@ -2600,20 +2600,20 @@ static NSTimeInterval const kDefaultConfiguration_userAvatarExpiration    = (60 
 	
 	if (eTag)
 	{
-		NSData *decrypted = [eTag dataUsingEncoding:NSUTF8StringEncoding];
+		NSData *cleartext = [eTag dataUsingEncoding:NSUTF8StringEncoding];
 		
 		NSError *error = nil;
-		NSData *encrypted = [decrypted encryptedDataWithSymmetricKey:encryptionKey error:&error];
+		NSData *encryptedData = [cleartext encryptedWithSymmetricKey:encryptionKey error:&error];
 		
 		if (error)
 		{
 			ZDCLogError(@"encryption error: %@", error);
 		}
-		else if (encrypted)
+		else if (encryptedData)
 		{
-			const void *buffer = [encrypted bytes];
+			const void *buffer = [encryptedData bytes];
 			
-			int result = setxattr(path, name, buffer, encrypted.length, 0, 0);
+			int result = setxattr(path, name, buffer, encryptedData.length, 0, 0);
 			
 			if (result < 0) {
 				ZDCLogError(@"setxattr(%@): error = %s", [url path], strerror(errno));

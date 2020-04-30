@@ -480,10 +480,6 @@ static inline UIViewAnimationOptions AnimationOptionsFromCurve(UIViewAnimationCu
 
 	__weak typeof(self) weakSelf = self;
 
-//	NSData* data = [[NSData alloc] initWithBase64EncodedString:self.keyBackupVC.user.uuid
-//																		options:0];
-//	NSString* userIDb58  = [NSString base58WithData:data];
-//
 	// the UIActivityViewController  <UIActivityItemSource> protocol isnt very modern.
 	// we need to keep some data lying around to tell the UIActivityViewController what to share.
 	NSArray *objectsToShare = @[self ];

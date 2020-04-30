@@ -8,75 +8,54 @@
 **/
 
 #import "NSData+S4.h"
-
-#import "NSData+AWSUtilities.h"
-#import "NSString+ZeroDark.h"
 #import "NSError+S4.h"
 
 @implementation NSData (S4)
 
-+ (NSData *)s4RandomBytes:(NSUInteger)length
+/**
+ * See header file for description.
+ */
++ (instancetype)secureDataWithLength:(NSUInteger)length
+{
+	NSData *data = nil;
+
+	void *buffer = XMALLOC(length);
+	if (buffer)
+	{
+		void (^deallocator)(void*, NSUInteger) = ^(void *bytes, NSUInteger length){
+			
+			ZERO(bytes, length);
+			XFREE(bytes);
+		};
+		
+		data = [[NSData alloc] initWithBytesNoCopy:buffer length:length deallocator:deallocator];
+	}
+	
+	return data;
+}
+
+/**
+ * See header file for description.
+ */
++ (nullable NSData *)s4RandomBytes:(NSUInteger)lengthInBytes
 {
 	NSData *data = nil;
 	
-	uint8_t *randData = XMALLOC(length);
-	if (randData)
+	uint8_t *buffer = XMALLOC(lengthInBytes);
+	if (buffer)
 	{
-		if (IsntS4Err(RNG_GetBytes(randData, length)))
+		if (IsntS4Err(RNG_GetBytes(buffer, lengthInBytes))) // Uses Apple's Common Crypto
 		{
-			data = [NSData dataWithBytesNoCopy:randData length:length freeWhenDone:YES];
+			data = [NSData dataWithBytesNoCopy:buffer length:lengthInBytes freeWhenDone:YES];
 		}
 	}
 	
 	return data;
 }
 
-+ (NSData *)dataFromHexString:(NSString *)inString
-{
-    NSMutableString *str = [inString mutableCopy];
-
-    [str replaceOccurrencesOfString:@"<" withString:@"" options:0 range:NSMakeRange(0, str.length)];
-    [str replaceOccurrencesOfString:@" " withString:@"" options:0 range:NSMakeRange(0, str.length)];
-    [str replaceOccurrencesOfString:@">" withString:@"" options:0 range:NSMakeRange(0, str.length)];
-
-    NSUInteger inLength = [str length];
-
-    unichar *inCharacters = alloca(sizeof(unichar) * inLength);
-    [str getCharacters:inCharacters range:NSMakeRange(0, inLength)];
-
-    UInt8 *outBytes = malloc(sizeof(UInt8) * ((inLength / 2) + 1));
-
-    NSInteger i, o = 0;
-    UInt8 outByte = 0;
-
-    for (i = 0; i < inLength; i++) {
-
-        UInt8 c = inCharacters[i];
-        SInt8 value = -1;
-
-        if      (c >= '0' && c <= '9') value =      (c - '0');
-        else if (c >= 'A' && c <= 'F') value = 10 + (c - 'A');
-        else if (c >= 'a' && c <= 'f') value = 10 + (c - 'a');
-
-        if (value >= 0) {
-
-            if (i % 2 == 1) {
-                outBytes[o++] = (outByte << 4) | value;
-                outByte = 0;
-
-            } else {
-                outByte = value;
-            }
-
-        } else {
-
-            if (o != 0) break;
-        }
-    }
-
-    return [[NSData alloc] initWithBytesNoCopy:outBytes length:o freeWhenDone:YES];
-}
-
+/**
+ * See header file for description.
+ */
 - (NSString *)zBase32String
 {
 	const uint8_t *bytes = (const uint8_t *)[self bytes];
@@ -86,7 +65,7 @@
 	size_t y = 5;
 	
 	size_t zRad32Len = (x / y + (x % y > 0));
-	uint8_t *zRad32Buffer = malloc(zRad32Len);
+	uint8_t *zRad32Buffer = XMALLOC(zRad32Len);
 	
 	zbase32_encode(zRad32Buffer, bytes, (unsigned int)(bytesLen * 8));
 	
@@ -96,20 +75,34 @@
 	                                freeWhenDone: YES];
 }
 
-+ (NSData *)dataFromZBase32String:(NSString *)string
+/**
+ * See header file for description.
+ */
++ (nullable NSData *)dataFromZBase32String:(NSString *)string
 {
 	const uint8_t *bytes = (const uint8_t *)[string UTF8String];
-	NSUInteger dataLen = (string.UTF8LengthInBytes + 7) / 8 * 5;
+	NSUInteger dataLen = ([string lengthOfBytesUsingEncoding:NSUTF8StringEncoding] + 7) / 8 * 5;
 	
-	uint8_t *outBytes = malloc(dataLen);
-	
+	uint8_t *outBytes = XMALLOC(dataLen);
 	int actualLen = zbase32_decode(outBytes, bytes, (unsigned int)dataLen*8);
 	
-	return [[NSData alloc] initWithBytesNoCopy: outBytes
-	                                    length: actualLen
-	                              freeWhenDone: YES];
+	if (actualLen < 0)
+	{
+		// String wasn't in zBase32 format
+		XFREE(outBytes);
+		return nil;
+	}
+	else
+	{
+		return [[NSData alloc] initWithBytesNoCopy: outBytes
+		                                    length: actualLen
+		                              freeWhenDone: YES];
+	}
 }
 
+/**
+ * See header file for description.
+ */
 - (uint32_t)xxHash32
 {
 	uint32_t checksum = 0;
@@ -120,6 +113,9 @@
 	return checksum;
 }
 
+/**
+ * See header file for description.
+ */
 - (uint64_t)xxHash64
 {
 	uint64_t checksum = 0;
@@ -130,28 +126,10 @@
 	return checksum;
 }
 
-+ (instancetype)allocSecureDataWithLength:(NSUInteger)length
-{
-	NSData* data = NULL;
-
-	void* bytes = XMALLOC(length);
-	if(bytes)
-	{
-		data = [[NSData alloc] initWithBytesNoCopy:bytes
-											length:length
-									   deallocator:^(void * _Nonnull bytes,
-													 NSUInteger length) {
-										   ZERO(bytes, length);
-										   XFREE(bytes);
-									   }];
-	}
-
-done:
-	return data;
-}
-
-
-- (NSData *)hashWithAlgorithm:(HASH_Algorithm)hashAlgor error:(NSError **)errorOut
+/**
+ * See header file for description.
+ */
+- (nullable NSData *)hashWithAlgorithm:(HASH_Algorithm)hashAlgor error:(NSError **)errorOut
 {
 	NSError* error = nil;
 	NSData *hashData = nil;

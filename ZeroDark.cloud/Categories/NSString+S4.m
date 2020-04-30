@@ -1,6 +1,6 @@
 /**
  * ZeroDark.cloud
- * 
+ *
  * Homepage      : https://www.zerodark.cloud
  * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
  * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
@@ -16,6 +16,9 @@
 
 #define INT_CEIL(x,y) (x / y + (x % y > 0))
 
+/**
+ * See header file for description.
+ */
 - (NSString *)KDFWithSeedKey:(NSData *)seedKey label:(NSString *)label
 {
 	S4Err err = kS4Err_NoErr;
@@ -47,13 +50,12 @@ done:
 }
 
 /**
- * Convenience method which converts string to UTF-8 data, and then returns hash of it.
- **/
+ * See header file for description.
+ */
 - (NSData *)hashWithAlgorithm:(HASH_Algorithm)hashAlgo error:(NSError **)errorOut
 {
-    NSData *data = [self dataUsingEncoding:NSUTF8StringEncoding];
-    return [data hashWithAlgorithm:hashAlgo error:errorOut];
+	NSData *data = [self dataUsingEncoding:NSUTF8StringEncoding];
+	return [data hashWithAlgorithm:hashAlgo error:errorOut];
 }
-
 
 @end

@@ -1,6 +1,6 @@
 /**
  * ZeroDark.cloud
- * 
+ *
  * Homepage      : https://www.zerodark.cloud
  * GitHub        : https://github.com/4th-ATechnologies/ZeroDark.cloud
  * Documentation : https://zerodarkcloud.readthedocs.io/en/latest/
@@ -15,15 +15,14 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NSString (S4)
 
 /**
- * Documentation ?
-**/
+ * Vinnie: Write some documentation please.
+ */
 - (NSString *)KDFWithSeedKey:(NSData *)seedKey label:(NSString *)label;
 
 /**
  * Convenience method which converts string to UTF-8 data, and then returns hash of it.
- **/
+ */
 - (NSData *)hashWithAlgorithm:(HASH_Algorithm)hashAlgo error:(NSError **)errorOut;
-
 
 @end
 

@@ -8,25 +8,25 @@
 **/
 
 #import "KeyBackupPrintViewController_IOS.h"
-#import <ZeroDarkCloud/ZeroDarkCloud.h>
-#import "ZeroDarkCloudPrivate.h"
 
-#import "ZDCUserAccessKeyManager.h"
+
+#import "RKTagsView.h"
 #import "ZDCAccessCode.h"
 #import "ZDCConstantsPrivate.h"
+#import "ZDCLogging.h"
+#import "ZDCUserAccessKeyManager.h"
+#import "ZeroDarkCloudPrivate.h"
+
+// Categories
+#import "NSData+ZeroDark.h"
 #import "OSImage+QRCode.h"
 #import "OSImage+ZeroDark.h"
-#import "NSString+ZeroDark.h"
-#import "RKTagsView.h"
-
-#import "ZDCLogging.h"
-
 
 // Log levels: off, error, warn, info, verbose
 #if DEBUG
-static const int zdcLogLevel = ZDCLogLevelVerbose;
+  static const int zdcLogLevel = ZDCLogLevelVerbose;
 #else
-static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 #pragma unused(zdcLogLevel)
 
@@ -205,7 +205,7 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 	
 	ZDCLocalUser* localUser = self.keyBackupVC.user;
 	NSData* data = [[NSData alloc] initWithBase64EncodedString:localUser.uuid options:0];
-	NSString* userIDb58  = [NSString base58WithData:data];
+	NSString* userIDb58  = [data base58String];
 
 	
 	NSURL *tempDir = [ZDCDirectoryManager tempDirectoryURL];

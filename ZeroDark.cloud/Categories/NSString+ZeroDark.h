@@ -23,12 +23,12 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * This is generated via NSUUID (with the dashes removed).
  */
-+ (NSString *_Nonnull)zdcUUIDString;
++ (NSString *)zdcUUIDString;
 
 /**
  * The character set used by our cloud naming system.
  */
-+ (NSCharacterSet *_Nonnull)zBase32CharacterSet;
++ (NSCharacterSet *)zBase32CharacterSet;
 
 /**
  * Returns YES if all the characters in the string are part of the zBase32 character set.
@@ -58,24 +58,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSString *)stringBySettingPathExtension:(NSString *)str;
 
 /**
- * Write some doocumentation here
- *
+ * Vinnie: Write some doocumentation please.
  */
 + (NSString *)hexEncodeBytesWithSpaces:(const uint8_t *)bytes
                                 length:(NSUInteger)length;
-
-
-/**
- * convert NSData to base58 representation as defined in
- * https://en.wikipedia.org/wiki/Base58
- */
-+ (NSString *__nullable)base58WithData:(NSData *__nullable)data;
-
-/**
- * convert base58 NSString representation into NSData as defined in
- * https://en.wikipedia.org/wiki/Base58
- */
-- (NSData * __nullable )base58ToData;
 
 @end
 

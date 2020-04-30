@@ -9,32 +9,30 @@
  **/
 
 #import "BackupSocialViewController_IOS.h"
-#import <ZeroDarkCloud/ZeroDarkCloud.h>
-#import "ZeroDarkCloudPrivate.h"
-#import "ZDCConstantsPrivate.h"
-#import "LanguageListViewController_IOS.h"
-#import "BackupSocialUITableViewCell.h"
-#import "BackupShareUITableViewCell.h"
-#import "ZDCDateFormatterCache.h"
 
+#import "BackupShareUITableViewCell.h"
+#import "BackupSocialUITableViewCell.h"
+#import "LanguageListViewController_IOS.h"
 #import "ZDCAccessCode.h"
+#import "ZDCConstantsPrivate.h"
+#import "ZDCDateFormatterCache.h"
+#import "ZDCLogging.h"
 #import "ZDCSplitKey.h"
 #import "ZDCSplitKeyShare.h"
+#import "ZeroDarkCloudPrivate.h"
 
 // Categories
-#import "ZDCLogging.h"
-#import "OSImage+QRCode.h"
-#import "RKTagsView.h"
-#import "OSImage+ZeroDark.h"
-#import "NSString+ZeroDark.h"
+#import "NSData+ZeroDark.h"
 #import "NSDate+ZeroDark.h"
-
+#import "OSImage+QRCode.h"
+#import "OSImage+ZeroDark.h"
+#import "RKTagsView.h"
 
 // Log levels: off, error, warn, info, verbose
 #if DEBUG
-static const int zdcLogLevel = ZDCLogLevelVerbose;
+  static const int zdcLogLevel = ZDCLogLevelVerbose;
 #else
-static const int zdcLogLevel = ZDCLogLevelWarning;
+  static const int zdcLogLevel = ZDCLogLevelWarning;
 #endif
 #pragma unused(zdcLogLevel)
 
@@ -437,7 +435,7 @@ typedef NS_ENUM(NSInteger, BackupSocialViewController_Page) {
 								  (unsigned long)splitKey.threshold, (unsigned long)splitKey.totalShares ];
 	
 	NSData* data = [[NSData alloc] initWithBase64EncodedString:splitKey.ownerID options:0];
-	NSString* shareIDb58  = [NSString base58WithData:data];
+	NSString* shareIDb58  = [data base58String];
 	cell.lblTitle.text = shareIDb58;
 	
 	NSString* dateString = splitKey.creationDate? splitKey.creationDate.whenString:nil;
@@ -639,7 +637,7 @@ typedef NS_ENUM(NSInteger, BackupSocialViewController_Page) {
 	NSDate* date = splitKey.creationDate;
 	
 	NSData* data = [[NSData alloc] initWithBase64EncodedString:ownerID options:0];
-	NSString* splitIDb58  = [NSString base58WithData:data];
+	NSString* splitIDb58  = [data base58String];
 	
 	_lblSplitID.text = [NSString stringWithFormat:
 							  NSLocalizedString(@"Split ID: %@", @"Split ID: %@"),
@@ -952,7 +950,7 @@ API_AVAILABLE(ios(10.0)){
 	cell.lblTitle.layer.borderWidth    = .50f;
 	
 	NSData* data = [[NSData alloc] initWithBase64EncodedString:shareID options:0];
-	cell.lblDetails.text = [NSString base58WithData:data];
+	cell.lblDetails.text = [data base58String];
 	
 	return cell;
 }
@@ -1484,7 +1482,7 @@ API_AVAILABLE(ios(10.0)){
 	NSString* languageId  = self.backupSocialVC.keyBackupVC.currentLanguageId;
 	
 	NSData* data = [[NSData alloc] initWithBase64EncodedString:_shareID options:0];
-	NSString* shareIDb58  = [NSString base58WithData:data];
+	NSString* shareIDb58  = [data base58String];
 	
 	_lblTitle.text = [NSString stringWithFormat:
 							NSLocalizedString(@"ShareID: %@", @"ShareID: %@"),
@@ -1582,7 +1580,7 @@ API_AVAILABLE(ios(10.0)){
 	__weak typeof(self) weakSelf = self;
 	
 	NSData* data = [[NSData alloc] initWithBase64EncodedString:_shareID options:0];
-	NSString* shareIDb58  = [NSString base58WithData:data];
+	NSString* shareIDb58  = [data base58String];
 	
 	NSURL *tempDir = [ZDCDirectoryManager tempDirectoryURL];
 	NSURL *fileURL = [[tempDir URLByAppendingPathComponent:shareIDb58 isDirectory:NO]
@@ -2019,7 +2017,7 @@ API_AVAILABLE(ios(10.0)){
 	NSString* ownerID = self.backupSocialVC.splitKey.ownerID;
 	NSString* comment = self.backupSocialVC.splitKey.comment;
 	NSData* data = [[NSData alloc] initWithBase64EncodedString:ownerID options:0];
-	NSString* splitIDb58  = [NSString base58WithData:data];
+	NSString* splitIDb58  = [data base58String];
 	
 	_lblSplitID.text = [NSString stringWithFormat:
 							  NSLocalizedString(@"Split Key ID: %@", @"Split Key ID: %@"),
@@ -3050,7 +3048,7 @@ API_AVAILABLE(ios(10.0)){
 	
 	
 	NSData* data = [[NSData alloc] initWithBase64EncodedString:shareID options:0];
-	NSString* shareIDb58  = [NSString base58WithData:data];
+	NSString* shareIDb58  = [data base58String];
 	
 	// the UIActivityViewController  <UIActivityItemSource> protocol isnt very modern.
 	// we need to keep some data lying around to tell the UIActivityViewController what to share.
