@@ -216,10 +216,12 @@ NS_ASSUME_NONNULL_BEGIN
  * If the user doesn't already have a set of keys, the server will accept the pair.
  * Otherwise, the server will reject the request, and return the existing pair.
  *
- * - The privKey file should be a PBKDF2 wrapped private key (i.e. requires accessKey to decrypt)
- * - The pubKey file should be JSON
+ * - The privKey file is a PBKDF2 wrapped private key (i.e. requires accessKey to decrypt)
+ * - The pubKey file is JSON
  * - The files get stored in the root of the user's bucket, and are named ".privKey" & ".pubKey".
- * - The ".privKey" file is only readable by the bucket owner (in terms of S3 permissions)
+ *
+ * In terms of S3 permissions:
+ * - The ".privKey" file is only readable by the bucket owner
  * - The ".pubKey" file is world-readable
  *
  * This method is used during user setup & activation.
@@ -244,14 +246,14 @@ NS_ASSUME_NONNULL_BEGIN
  * @param completionBlock
  *   Invoked with the result of the request.
  */
-- (void)uploadPrivKey:(NSData *)privKey
-               pubKey:(NSData *)pubKey
-         forLocalUser:(ZDCLocalUser *)localUser
-             withAuth:(ZDCLocalUserAuth *)auth
-      completionQueue:(nullable dispatch_queue_t)completionQueue
-      completionBlock:(void (^)(NSData *_Nullable data,
-                                NSURLResponse *_Nullable response,
-                                NSError *_Nullable error))completionBlock;
+- (void)uploadEncryptedPrivKey:(NSData *)privKey
+                        pubKey:(NSData *)pubKey
+                  forLocalUser:(ZDCLocalUser *)localUser
+                      withAuth:(ZDCLocalUserAuth *)auth
+               completionQueue:(nullable dispatch_queue_t)completionQueue
+               completionBlock:(void (^)(NSData *_Nullable data,
+                                         NSURLResponse *_Nullable response,
+                                         NSError *_Nullable error))completionBlock;
 
 /**
  * Update the publicKey for the user.

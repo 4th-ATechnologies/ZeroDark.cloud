@@ -55,9 +55,9 @@
 /**
  * See header file for description.
  */
-- (ZDCLocalUser *)createLocalUser:(ZDCPartnerUserInfo *)info
-                      transaction:(YapDatabaseReadWriteTransaction *)transaction
-                            error:(NSError *_Nullable *_Nullable)outError
+- (void)createLocalUser:(ZDCPartnerUserInfo *)info
+        completionQueue:(nullable dispatch_queue_t)completionQueue
+        completionBlock:(void (^)(ZDCLocalUser *_Nullable, NSError *_Nullable))completionBlock
 {
 	NSError* (^ErrorWithDescription)(NSString*) = ^(NSString *description) {
 		
@@ -66,20 +66,41 @@
 		                       userInfo: @{ NSLocalizedDescriptionKey: description }];
 	};
 	
-	NSError *error = nil;
+	void (^Fail)(NSError*) = ^(NSError *error){
+		
+		NSParameterAssert(error != nil);
+		if (completionBlock)
+		{
+			dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+				completionBlock(nil, error);
+			}});
+		}
+	};
+	
 	NSString *localUserID = info.userID;
 	
 	ZDCLocalUser *localUser = nil;
 	ZDCLocalUserAuth *localUserAuth = nil;
-	ZDCPublicKey *privateKey = nil;
-	ZDCSymmetricKey *accessKey = nil;
 	
 	if (info == nil)
 	{
-		error = ErrorWithDescription(@"Invalid parameter: info is nil");
-		goto done;
+		Fail(ErrorWithDescription(@"Invalid parameter: info is nil"));
+		return;
 	}
 	
+	NSError *error = nil;
+	ZDCSymmetricKey *accessKey = [zdc.cryptoTools createSymmetricKey: info.accessKey
+	                                             encryptionAlgorithm: kCipher_Algorithm_2FISH256
+	                                                           error: &error];
+	
+	if (error) {
+		Fail(error);
+		return;
+	}
+	
+	
+	
+/*
 	localUser = [transaction objectForKey:localUserID inCollection:kZDCCollection_Users];
 	if ([localUser isKindOfClass:[ZDCLocalUser class]])
 	{
@@ -130,6 +151,7 @@ done:
 	
 	if (outError) *outError = nil;
 	return localUser;
+*/
 }
 
 @end

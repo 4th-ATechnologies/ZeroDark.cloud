@@ -17,6 +17,7 @@
 #import "ZDCLocalUserPrivate.h"
 #import "ZDCLocalUserManagerPrivate.h"
 #import "ZDCLogging.h"
+#import "ZDCSymmetricKeyPrivate.h"
 #import "ZDCUserPrivate.h"
 #import "ZeroDarkCloudPrivate.h"
 
@@ -765,54 +766,75 @@
 	// we might never created a key or have failed to unlock in the past
 	// either way we will reset our privkey and try again.
 	
-	if((user.aws_bucket.length == 0)
-		||  (user.accessKeyID.length == 0)
-		||  (user.publicKeyID.length == 0))
+	if ((user.aws_bucket.length == 0)
+	 || (user.accessKeyID.length == 0)
+	 || (user.publicKeyID.length == 0))
 	{
+		
 		[self setupUserOnServerWithCompletion:^(NSError *error) {
-			
 			
 			__strong typeof(self) strongSelf = weakSelf;
 			if(!strongSelf) return;
 
 			if (error)
 			{
-				InvokeCompletionBlock(AccountState_CreationFail,error);
+				InvokeCompletionBlock(AccountState_CreationFail, error);
 				return;
 			}
 			
-			[strongSelf->zdc.localUserManager setupPubPrivKeyForLocalUser: strongSelf->user
-																	 withAuth: strongSelf->auth
-															completionQueue: dispatch_get_main_queue()
-															completionBlock:^(NSData *pkData, NSError *error)
-			 {
-				 __strong typeof(self) strongSelf = weakSelf;
-				 if(!strongSelf) return;
+			NSError *keyGenError = nil;
+			ZDCSymmetricKey *accessKey = [ZDCSymmetricKey createWithAlgorithm: kCipher_Algorithm_2FISH256
+			                                                       storageKey: strongSelf->zdc.storageKey
+			                                                            error: &keyGenError];
+			
+			if (keyGenError)
+			{
+				InvokeCompletionBlock(AccountState_CreationFail, keyGenError);
+				return;
+			}
+			
+			ZDCLocalUserManager *localUserManager = strongSelf->zdc.localUserManager;
+			[localUserManager setupPubPrivKeyForLocalUser: strongSelf->user
+			                                     withAuth: strongSelf->auth
+			                                    accessKey: accessKey
+			                              completionQueue: dispatch_get_main_queue()
+			                              completionBlock:^(NSData *pkData, NSError *error)
+			{
+				__strong typeof(self) strongSelf = weakSelf;
+				if (!strongSelf) return;
 
-				 // did key creation or upload fail?
-				 if(error)
-				 {
-					 InvokeCompletionBlock(AccountState_CreationFail,error);
-				 }
-				 // user is setup and has priv key on server
-				 else if(pkData)
-				 {
-					 // we need to unlock the key
-					 strongSelf->privKeyData = pkData;
-					 InvokeCompletionBlock(AccountState_NeedsCloneClode,nil);
-				 }
-				 // user is setup and privkey has been loaded to server
-				 else
-				 {
-					 if(!strongSelf->user.hasRecoveryConnection )
-					 {
-						 [strongSelf finalizeLocalUserWithCompletion:^{
-							 InvokeCompletionBlock(AccountState_Ready,nil);
-						 }];
-						 
+				if (error)
+				{
+					// Unable to upload/download keypair
+					
+					InvokeCompletionBlock(AccountState_CreationFail,error);
+				}
+				else if (pkData)
+				{
+					// There is a previous keypair for the user on the cloud.
+					// We need to unlock the private key.
+					//
+					// Thus we need to prompt the user for their accessKey.
+					
+					strongSelf->privKeyData = pkData;
+					InvokeCompletionBlock(AccountState_NeedsCloneClode, nil);
+				}
+				else
+				{
+					// This is the user's first login.
+					// The server accepted our randomly generated keypair for the user.
+					
+					if (!strongSelf->user.hasRecoveryConnection)
+					{
+						[strongSelf finalizeLocalUserWithCompletion:^{
+							
+							InvokeCompletionBlock(AccountState_Ready, nil);
+						}];
 					 }
 					 else
+					 {
 						 InvokeCompletionBlock(AccountState_Ready,nil);
+					 }
 				 }
 			 }];
 			
@@ -825,9 +847,10 @@
 	else if(!user.hasRecoveryConnection )
 	{
 		[self finalizeLocalUserWithCompletion:^{
+			
 			InvokeCompletionBlock(AccountState_Ready,nil);
 		}];
-		return ;
+		return;
 	}
 	else
 	{

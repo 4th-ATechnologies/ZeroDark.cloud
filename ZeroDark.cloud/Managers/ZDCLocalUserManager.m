@@ -869,95 +869,75 @@ static NSString *const k_displayName = @"displayName";
 #pragma mark Private Key Management
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)updateUserRecord:(ZDCLocalUser *)localUser
-          withPrivateKey:(ZDCPublicKey *)privateKey
-             accessKey:(ZDCSymmetricKey *)accessKey
-         completionQueue:(dispatch_queue_t)completionQueue
-         completionBlock:(dispatch_block_t)completionBlock
-{
-    __weak typeof(self) weakSelf = self;
-    
- 
-	YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
-	[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
-		
-        __strong typeof(self) strongSelf = weakSelf;
-        if(!strongSelf) return;
-        
-		// Don't forget:
-		// Always grab the latest version of the user within a transaction, and modify that.
-		//
-		ZDCLocalUser *user = [transaction objectForKey:localUser.uuid inCollection:kZDCCollection_Users];
-		if (user)
-		{
-			user = [user copy];
-			user.publicKeyID = privateKey.uuid;
-			user.accessKeyID = accessKey.uuid;
-
-			[transaction setObject: accessKey
-			                forKey: accessKey.uuid
-			          inCollection: kZDCCollection_SymmetricKeys];
-
-			[transaction setObject:user
-							forKey:user.uuid
-					  inCollection:kZDCCollection_Users];
-
-			[transaction setObject:privateKey
-							forKey:privateKey.uuid
-					  inCollection:kZDCCollection_PublicKeys];
-			
-			[strongSelf createTrunkNodesForLocalUser: user
-			                           withAccessKey: accessKey
-			                             transaction: transaction];
-		}
-
-	} completionQueue:completionQueue completionBlock:completionBlock];
-}
-
 /**
- * See header file for description.
+ * See header file for description: ZDCLocalUserManagerPrivate.h
  */
 - (void)setupPubPrivKeyForLocalUser:(ZDCLocalUser *)localUser
                            withAuth:(ZDCLocalUserAuth *)auth
+                          accessKey:(ZDCSymmetricKey *)accessKey
                     completionQueue:(nullable dispatch_queue_t)completionQueue
                     completionBlock:(void (^)(NSData *pKToUnlock,  NSError *error))completionBlock
 {
 	ZDCLogAutoTrace();
-	__weak typeof(self) weakSelf = self;
 
+	NSParameterAssert([localUser isKindOfClass:[ZDCLocalUser class]]);
+	NSParameterAssert(auth != nil);
+	NSParameterAssert(completionBlock != nil);
+	
 	void (^Fail)(NSError*) = ^(NSError *error) {
 		
-		if (completionBlock == nil) return;
+		NSParameterAssert(error != nil);
 		
 		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
 			completionBlock(nil, error);
 		}});
 	};
 	
-	void (^Succeed)(NSData*) = ^(NSData *pKToUnlock){
-
-		if (completionBlock == nil) return;
-
+	void (^Succeed)(NSData *_Nullable) = ^(NSData *_Nullable pKToUnlock){
+	
 		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
 			completionBlock(pKToUnlock, nil);
 		}});
 	};
-
-	__block ZDCPublicKey *   privateKey  = nil;
-	__block ZDCSymmetricKey* cloneKey    = nil;
+	
+	// Here's how this works:
+	//
+	// - The public key is stored on the server in cleartext (non-encrypted JSON).
+	//   In terms of S3 permissions, the pubKey file is accessible to the world.
+	//
+	// - The private key is stored on the server in an encrypted form.
+	//   (PBKDF2 with the privKey bits encrypted with the accessKey.)
+	//   In terms of S3 permissions, the privKey file is only accessible to the localUser.
+	//   The private key can only be unlocked with the user's accessKey, which only the user has access to.
+	//   For co-op users, the accessKey is the thing the user backs up.
+	//
+	// - Neither of these files are directly writable by the user because the 2 files need
+	//   to be set in an atomic fashion. So, instead, the user goes through the REST API.
+	//
+	// - The REST API checks to see if there's already a pair of files setup by the user,
+	//   and if so, it returns those to the caller.
+	//
+	// - Otherwise it accepts the posted pair (cleartext pubKey + encrypted privKey),
+	//   and stores those for the user.
+	//
+	// So this method generates a random privateKey, and then calls the REST API.
+	// The server will either accept our keypair, and give us a success response.
+	// Or it will give us a conflict response, and pass us the existing keypair.
+	
+	ZDCPublicKey *privateKey = nil;
 	NSError *error = nil;
 
 	// Create temporary private key and clone key,
 	// but don't update DB until we know what the real values on the server are.
 
-	cloneKey = [ZDCSymmetricKey createWithAlgorithm: kCipher_Algorithm_2FISH256
-	                                     storageKey: zdc.storageKey
-	                                          error: &error];
-	
-	if (error) {
-		Fail(error);
-		return;
-	}
+//	accessKey = [ZDCSymmetricKey createWithAlgorithm: kCipher_Algorithm_2FISH256
+//	                                      storageKey: zdc.storageKey
+//	                                           error: &error];
+//
+//	if (error) {
+//		Fail(error);
+//		return;
+//	}
 
 	privateKey = [ZDCPublicKey createPrivateKeyWithUserID: localUser.uuid
 	                                            algorithm: kCipher_Algorithm_ECC41417
@@ -969,7 +949,10 @@ static NSString *const k_displayName = @"displayName";
 		return;
 	}
 
-	// Sign the auth0 ID into the public key
+	// When we create the .pubKey file, we can include the user's linked identities.
+	// And then we sign that info with the private key.
+	//
+	// It's one little extra thing we do for added security.
 	
 	NSMutableArray *identityIDs = [NSMutableArray arrayWithCapacity:localUser.identities.count];
 	for (ZDCUserIdentity *ident in localUser.identities)
@@ -993,7 +976,7 @@ static NSString *const k_displayName = @"displayName";
 	}
 
 	NSData *privKeyData = [zdc.cryptoTools exportPrivateKey: privateKey
-	                                            encryptedTo: cloneKey
+	                                            encryptedTo: accessKey
 	                                                  error: &error];
 	if (error) {
 		Fail(error);
@@ -1008,15 +991,18 @@ static NSString *const k_displayName = @"displayName";
 		return;
 	}
 
-	__block void(^processResponseBlock)(NSData*, NSURLResponse*, NSError*);
-	__block void(^issueRequestBlock)(void);
+	__block void(^processResponse)(NSData*, NSURLResponse*, NSError*);
+	__block void(^issueRequest)(void);
 	__block void(^retryRequest)(void);
 
 	__block NSUInteger failCount = 0;
+	
+	__strong ZeroDarkCloud *zdc = self->zdc;
+	__weak typeof(self) weakSelf = self;
 
-	dispatch_queue_t concurrentQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 
-	processResponseBlock = ^(NSData *data, NSURLResponse *response, NSError *uploadError){ @autoreleasepool {
+	processResponse = ^(NSData *data, NSURLResponse *response, NSError *uploadError){ @autoreleasepool {
 
 		__strong typeof(self) strongSelf = weakSelf;
 		if (!strongSelf) return;
@@ -1030,21 +1016,42 @@ static NSString *const k_displayName = @"displayName";
 
 		if (statusCode == 200 || statusCode == 201)
 		{
-			[self updateUserRecord: localUser
-			        withPrivateKey: privateKey
-			             accessKey: cloneKey
-			       completionQueue: concurrentQueue
-			       completionBlock:^
+			// The server accepted our keypair.
+			// So write everything to the database, and then notify caller of our success.
+			//
+			// The following are written to the database:
+			// - localUser
+			// - privateKey
+			// - accessKey
+			// - auth
+			
+			[strongSelf updateLocalUser: localUser
+			             withPrivateKey: privateKey
+			                  accessKey: accessKey
+			                       auth: auth
+			            completionQueue: bgQueue
+			            completionBlock:^
 			{
 				Succeed(nil);
 			}];
 		}
-		else if (statusCode == 409)  // conflict - keys are already there
+		else if (statusCode == 409)  // Conflict - keys are already there
 		{
-			NSData* pkData = nil;
+			// The user account already has a privKey/pubKey pair stored in the cloud.
+			//
+			// This just means the user has already logged in before.
+			// Either they did so on another device,
+			// or they did so on this device (but then deleted the app, or deleted the database, etc).
+			//
+			// In any case, it means the server sent us the existing pubKey and (wrapped) privKey.
+			
+			NSData *pkData = nil;
 
-			NSError* parsingError = nil;
-			NSDictionary* jsonDict = [NSJSONSerialization JSONObjectWithData:(NSData *)data options:0 error:&parsingError];
+			NSError *parsingError = nil;
+			NSDictionary *jsonDict =
+			  [NSJSONSerialization JSONObjectWithData: data
+			                                  options: 0
+			                                    error: &parsingError];
 
 			if (parsingError) {
 				Fail(parsingError);
@@ -1059,117 +1066,94 @@ static NSString *const k_displayName = @"displayName";
 
 			if (pkData == nil)
 			{
-				NSString *msg = // Localize me
-				@"internal error : server call to privPubKey return unexpected value";
+				NSString *msg = @"Server returned unknown response";
 
-				Fail([self errorWithDescription:msg]);
+				Fail([strongSelf errorWithDescription:msg]);
 				return;
 			}
 
-			// check that its a real key.
-			NSString* locator = [strongSelf->zdc.cryptoTools keyIDforPrivateKeyData:pkData error:&parsingError];
+			// Sanity check - ensure pkData is valid (represents a wrapped privateKey)
+			NSString *locator = [zdc.cryptoTools keyIDforPrivateKeyData:pkData error:&parsingError];
 
 			if (parsingError) {
 				Fail(parsingError);
 				return;
 			}
-
-			if (localUser.publicKeyID)
+			
+			if (localUser.publicKeyID == nil) // <= this is what we expect to be true
 			{
-				__block ZDCPublicKey *userPubKey = nil;
-				[strongSelf->zdc.databaseManager.roDatabaseConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
+				Succeed(pkData);
+			}
+			else // if (localUser.publicKeyID)
+			{
+				// The localUser appears to have a key already.
+				// This is unexpected, but let's see if the existing key matches the server at least.
+				
+				__block ZDCLocalUser *existingLocalUser = nil;
+				__block ZDCPublicKey *existingPubKey = nil;
+				
+				YapDatabaseConnection *roConnection = zdc.databaseManager.roDatabaseConnection;
+				[roConnection readWithBlock:^(YapDatabaseReadTransaction *transaction) {
 
-					userPubKey =  [transaction objectForKey: localUser.publicKeyID
-											   inCollection: kZDCCollection_PublicKeys];
+					existingLocalUser = [transaction objectForKey: localUser.uuid
+					                                 inCollection: kZDCCollection_Users];
+					
+					existingPubKey = [transaction objectForKey: existingLocalUser.publicKeyID
+					                              inCollection: kZDCCollection_PublicKeys];
 				}];
 
-				if(!userPubKey)
+				BOOL userAccountIsAlreadySetup =
+				  (existingLocalUser && existingLocalUser.accessKeyID && existingLocalUser.publicKeyID) &&
+				  ([existingPubKey.keyID isEqualToString:locator] && existingPubKey.isPrivateKey);
+				
+				if (userAccountIsAlreadySetup)
 				{
-					NSString *msg = NSLocalizedString(
-						@"Internal error: user record specifies a publicKeyID but it's not found in database",
-						nil);
-
-					Fail([self errorWithDescription:msg]);
-					return;
-				}
-
-				if ([userPubKey.keyID isEqualToString:locator])
-				{
-					// We have an existing account, and the key is same
-
-					if (userPubKey.isPrivateKey)	// is it a private key?
-					{
-						Succeed(nil);
-						return;
-					}
-					else
-					{
-						// we need to  update the public key on DB with a private key.  --  we need to unlock later.;
-
-						Succeed(pkData);
-						return;
-					}
+					// Well alrighty then. Guess you didn't need to call this method, huh?
+					
+					Succeed(nil);
 				}
 				else
 				{
-					// we have a key but it is a mismatch  !!!
-					//    FIX_BEFORE_SHIP("we have a key but it is a mismatch -- Warn USER.")
+					// We need to decrypt pkData.
+					// This may require prompting the user for their accessKey.
 
-					NSString *msg = NSLocalizedString(
-						@"Internal error: key on server exists but doesn't match client",
-						nil);
-
-					Fail([self errorWithDescription:msg]);
-					return;
-
+					Succeed(pkData);
 				}
-			}
-			else
-			{
-				// key on server but not in our DB --  we need to unlock later.
-
-				Succeed(pkData);
-				return;
-
 			}
 		}
 		else if (statusCode == 423)
 		{
-			// Locked - retry.
+			// The server failed while attempting to get a lock for the user's privKey/pubKey pair.
+			// This is unlikely, but possible.
+			//
+			// We should retry after a short period of time.
 
 			failCount++;
 			retryRequest();
 		}
 		else
 		{
-			NSString *msg = // Localize me
-			@"internal error : server call to privPubKey return enexpected code";
+			NSString *msg = @"Server returned unknown statusCode";
 
-			Fail([self errorWithDescription:msg statusCode:statusCode]);
+			Fail([strongSelf errorWithDescription:msg statusCode:statusCode]);
 		}
 	}};
 
-	issueRequestBlock = ^{ @autoreleasepool {
+	issueRequest = ^{ @autoreleasepool {
 
-		__strong typeof(self) strongSelf = weakSelf;
-		if (!strongSelf) return;
-		
-		ZDCRestManager *restManager = strongSelf->zdc.restManager;
-
-		[restManager uploadPrivKey: privKeyData
-		                    pubKey: pubKeyData
-		              forLocalUser: localUser
-		                  withAuth: auth
-		           completionQueue: concurrentQueue
-		           completionBlock: processResponseBlock];
+		[zdc.restManager uploadEncryptedPrivKey: privKeyData
+		                                 pubKey: pubKeyData
+		                           forLocalUser: localUser
+		                               withAuth: auth
+		                        completionQueue: bgQueue
+		                        completionBlock: processResponse];
 	}};
 
 	retryRequest = ^{ @autoreleasepool {
 
 		if (failCount >= 10)
 		{
-			NSString *msg = // Localize me
-			@"Internal Error: server call to privPubKey failed. Check internet connection.";
+			NSString *msg = @"Server call continually failed.";
 
 			Fail([self errorWithDescription:msg]);
 			return;
@@ -1183,13 +1167,77 @@ static NSString *const k_displayName = @"displayName";
 			delayInSeconds = 0.5; // 500 milliseconds
 		}
 
-		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC)), concurrentQueue, ^{
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC)), bgQueue, ^{
 
-			issueRequestBlock();
+			issueRequest();
 		});
 	}};
 
-	issueRequestBlock();
+	issueRequest();
+}
+
+- (void)updateLocalUser:(ZDCLocalUser *)inLocalUser
+         withPrivateKey:(ZDCPublicKey *)privateKey
+              accessKey:(ZDCSymmetricKey *)accessKey
+                   auth:(ZDCLocalUserAuth *)auth
+        completionQueue:(dispatch_queue_t)completionQueue
+        completionBlock:(dispatch_block_t)completionBlock
+{
+	ZDCLogAutoTrace();
+	
+	NSParameterAssert(inLocalUser != nil);
+	NSParameterAssert(privateKey != nil);
+	NSParameterAssert(accessKey != nil);
+	NSParameterAssert(auth != nil);
+	
+	YapDatabaseConnection *rwConnection = zdc.databaseManager.rwDatabaseConnection;
+	[rwConnection asyncReadWriteWithBlock:^(YapDatabaseReadWriteTransaction *transaction) {
+		
+		// Don't forget:
+		// Always grab the latest version of the localUser within a transaction, and modify that.
+		//
+		ZDCLocalUser *localUser = [transaction objectForKey:inLocalUser.uuid inCollection:kZDCCollection_Users];
+		if (!localUser) {
+			
+			localUser = inLocalUser;
+		}
+		else if (![localUser isKindOfClass:[ZDCLocalUser class]]) {
+			
+			// There's an existing remote user in the database already.
+			// We're going to replace it with our local user.
+			// And we're going to replace the previous publicKey with our privateKey.
+			// So let's cleanup after the remote user.
+			//
+			[transaction removeObjectForKey:localUser.publicKeyID inCollection:kZDCCollection_PublicKeys];
+			
+			localUser = inLocalUser;
+		}
+		
+		localUser = [localUser copy];
+		localUser.publicKeyID = privateKey.uuid;
+		localUser.accessKeyID = accessKey.uuid;
+		
+		[transaction setObject: localUser
+		                forKey: localUser.uuid
+		          inCollection: kZDCCollection_Users];
+		
+		[transaction setObject: privateKey
+		                forKey: privateKey.uuid
+		          inCollection: kZDCCollection_PublicKeys];
+		
+		[transaction setObject: accessKey
+		                forKey: accessKey.uuid
+		          inCollection: kZDCCollection_SymmetricKeys];
+		
+		[transaction setObject: auth
+		                forKey: localUser.uuid
+		          inCollection: kZDCCollection_UserAuth];
+		
+		[self createTrunkNodesForLocalUser: localUser
+		                     withAccessKey: accessKey
+		                       transaction: transaction];
+
+	} completionQueue:completionQueue completionBlock:completionBlock];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1508,7 +1556,6 @@ static NSString *const k_displayName = @"displayName";
 {
 	return [NSError errorWithClass:[self class] code:0 description:description];
 }
-
 
 - (NSError *)errorWithDescription:(NSString *)description statusCode:(NSUInteger)statusCode
 {

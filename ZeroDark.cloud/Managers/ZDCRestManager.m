@@ -1189,12 +1189,12 @@
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
-- (void)uploadPrivKey:(NSData *)privKey
-               pubKey:(NSData *)pubKey
-         forLocalUser:(ZDCLocalUser *)user
-             withAuth:(ZDCLocalUserAuth *)auth
-      completionQueue:(dispatch_queue_t)completionQueue
-      completionBlock:(void (^)(NSData *data, NSURLResponse *response, NSError *error))completionBlock
+- (void)uploadEncryptedPrivKey:(NSData *)privKey
+                        pubKey:(NSData *)pubKey
+                  forLocalUser:(ZDCLocalUser *)user
+                      withAuth:(ZDCLocalUserAuth *)auth
+               completionQueue:(dispatch_queue_t)completionQueue
+               completionBlock:(void (^)(NSData *data, NSURLResponse *response, NSError *error))completionBlock
 {
 	ZDCLogAutoTrace();
 	

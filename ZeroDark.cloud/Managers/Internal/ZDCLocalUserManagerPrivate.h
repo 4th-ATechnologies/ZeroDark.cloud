@@ -24,13 +24,17 @@ NS_ASSUME_NONNULL_BEGIN
                          transaction:(YapDatabaseReadWriteTransaction *)transaction;
 
 /**
- * Create or download the public/private keypair for the user.
+ * Creates or download the public/private keypair for the user.
+ *
+ * The completionBlock is invoked with a `pkToUnlock` parameter.
+ * If this parameter is non-nil, it means the user already has a keypair in the cloud (from a previous login).
+ * You will need to unlock this key using the user's proper accessKey in order to complete the login flow.
  *
  * Here's how this works:
  * - The public key is stored on the server in cleartext (JSON).
- *   The public key is accessible to the world.
+ *   In terms of S3 permissions, the publicKey file is accessible to the world.
  * - The private key is stored on the server in an encrypted form.
- *   The private key is only accessible to the localUser.
+ *   In terms of S3 permissions, the privateKey file is only accessible to the localUser.
  *   The private key can only be unlocked with the user's accessKey, which only the user has access to.
  *   The accessKey is the thing the user backs up.
  * - Neither of these files are directly writable by the user because the 2 files need to be set in an atomic fashion.
@@ -44,6 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)setupPubPrivKeyForLocalUser:(ZDCLocalUser *)localUser
                            withAuth:(ZDCLocalUserAuth *)auth
+                          accessKey:(ZDCSymmetricKey *)accessKey
                     completionQueue:(nullable dispatch_queue_t)completionQueue
                     completionBlock:(void (^)(NSData *pKToUnlock,  NSError *error))completionBlock;
 

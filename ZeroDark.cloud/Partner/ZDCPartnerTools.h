@@ -25,9 +25,9 @@ NS_ASSUME_NONNULL_BEGIN
  * the server will return information that can be used to create a `ZDCPartnerUserInfo` instance.
  * That info can then be used to create the user here.
  */
-- (ZDCLocalUser *)createLocalUser:(ZDCPartnerUserInfo *)info
-                      transaction:(YapDatabaseReadWriteTransaction *)transaction
-                            error:(NSError *_Nullable *_Nullable)outError;
+- (void)createLocalUser:(ZDCPartnerUserInfo *)info
+        completionQueue:(nullable dispatch_queue_t)completionQueue
+        completionBlock:(void (^)(ZDCLocalUser *_Nullable, NSError *_Nullable))completionBlock;
 
 @end
 
