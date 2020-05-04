@@ -126,8 +126,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * Creates a Private/Public Key (ZDCPublicKey) from JSON.
- * The private portion of the key is encypted to the accesskey, and so we decrypt it,
- * and then reencypt it to the storage key managed by the ZDCDatabaseKeyManager
+ * The private portion of the key is encypted to the accesskey, and so we decrypt it.
  *
  * @param keyJSON
  *   The JSON content of a private key file.

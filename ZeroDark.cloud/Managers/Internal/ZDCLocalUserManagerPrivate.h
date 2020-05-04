@@ -12,6 +12,17 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/**
+ * Represents the nature of the error that occurred when calling setupPrivPubKey.
+ */
+typedef NS_ENUM(NSInteger, SetupPrivPubKeyErrorCode) {
+	
+	SetupPrivPubKeyErrorCode_InvalidParameter,
+	SetupPrivPubKeyErrorCode_NetworkError,
+	SetupPrivPubKeyErrorCode_ServerError,
+	SetupPrivPubKeyErrorCode_CryptoError
+};
+
 @interface ZDCLocalUserManager (Private)
 
 - (instancetype)initWithOwner:(ZeroDarkCloud *)owner;
@@ -50,7 +61,25 @@ NS_ASSUME_NONNULL_BEGIN
                            withAuth:(ZDCLocalUserAuth *)auth
                           accessKey:(ZDCSymmetricKey *)accessKey
                     completionQueue:(nullable dispatch_queue_t)completionQueue
-                    completionBlock:(void (^)(NSData *pKToUnlock,  NSError *error))completionBlock;
+                    completionBlock:(void (^)(ZDCLocalUser *_Nullable localUser,
+                                                    NSData *_Nullable privKeyToUnlock,
+                                                   NSError *_Nullable error))completionBlock;
+
+/**
+ * Standard routine that:
+ * - sets localUser's publicKeyID && accessKeyID properties
+ * - writes localUser to database
+ * - writes privateKey to database
+ * - writes accessKey to database
+ * - writes auth to database
+ * - create's users trunk nodes
+ */
+- (void)saveLocalUser:(ZDCLocalUser *)inLocalUser
+           privateKey:(ZDCPublicKey *)privateKey
+            accessKey:(ZDCSymmetricKey *)accessKey
+                 auth:(ZDCLocalUserAuth *)auth
+      completionQueue:(dispatch_queue_t)completionQueue
+      completionBlock:(void (^)(ZDCLocalUser*))completionBlock;
 
 /**
  * Setup the recovery connection for the user.
@@ -69,8 +98,7 @@ NS_ASSUME_NONNULL_BEGIN
                              transaction:(YapDatabaseReadWriteTransaction *)transaction;
 
 /**
- * Write some doocumentation here
- *
+ * Vinnie: write doocumentation for your code
  */
 - (void)refreshAuth0ProfilesForLocalUserID:(NSString *)userID
 						   completionQueue:(nullable dispatch_queue_t)completionQueue
@@ -88,8 +116,7 @@ NS_ASSUME_NONNULL_BEGIN
                    completionBlock:(void (^)(NSError *error))completionBlock;
 
 /**
- * Write some doocumentation here
- *
+ * Vinnie: write documentation for your code
  */
 -(NSDictionary*) createProfilesFromIdentities:(NSArray*)identities
                                        region:(AWSRegion)region

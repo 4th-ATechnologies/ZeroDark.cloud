@@ -1018,106 +1018,117 @@ done:
 #pragma mark KeyGen
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (nullable ZDCPublicKey *)createPrivateKeyFromJSON:(NSString *)keyJSON
-										  accessKey:(NSData *)accessKey
-								encryptionAlgorithm:(Cipher_Algorithm)encryptionAlgorithm
-										localUserID:(NSString *)localUserID
-											  error:(NSError *_Nullable *_Nullable)errorOut
+/**
+ * See header file for description.
+ */
+- (nullable ZDCPublicKey *)createPrivateKeyFromJSON:(NSString *)privKeyJSON
+                                          accessKey:(NSData *)accessKey
+                                encryptionAlgorithm:(Cipher_Algorithm)encryptionAlgorithm
+                                        localUserID:(NSString *)localUserID
+                                              error:(NSError *_Nullable *_Nullable)errorOut
 {
+	
+	S4Err             err = kS4Err_NoErr;
+	size_t            cipherSizeInBits = 0;
 
-	NSError *			error = nil;
-	S4Err         		err = kS4Err_NoErr;
+	S4KeyContextRef   accessKeyKeyCtx = kInvalidS4KeyContextRef;
+	S4KeyContextRef   privKeyCtx = kInvalidS4KeyContextRef;
+	
+	S4KeyContextRef * importCtx = NULL;
+	size_t            importCount = 0;
 
-	ZDCPublicKey* 		privKey = nil;
-	size_t           	cipherSizeInBits = 0;
+	uint8_t         * privKeyData = NULL;
+	uint8_t         * pubKeyData = NULL;
+	size_t            keyDataLen = 0;
 
-	S4KeyContextRef 	accessKeyKeyCtx = kInvalidS4KeyContextRef;
-	S4KeyContextRef     *importCtx = NULL;
-	S4KeyContextRef     privKeyCtx =  kInvalidS4KeyContextRef;
-	size_t              keyCount = 0;
-
-	uint8_t*   		 	privKeyData = NULL;
-	uint8_t*    		pubKeyData = NULL;
-	size_t     		 	keyDataLen = 0;
-
-	NSString*           privKeyStr = nil;
-	NSString*           pubKeyStr = nil;
-
-	// parameter checking
-	if (keyJSON == nil)
-	{
-		error = [self errorWithDescription:@"Missing keyJSON."];
+	NSString        * privKeyStr = nil;
+	NSString        * pubKeyStr = nil;
+	
+	ZDCPublicKey    * privKey = nil;
+	NSError         * error = nil;
+	
+	// Check parameters
+	
+	if (privKeyJSON == nil) {
+		error = [self errorWithDescription:@"Invalid parameter: privKeyJSON == nil"];
 		goto done;
 	}
 
-	if (localUserID == nil)
-	{
-		error = [self errorWithDescription:@"Missing localUserID."];
+	if (accessKey == nil) {
+		error = [self errorWithDescription:@"Invalid parameter: accessKey == nil"];
+		goto done;
+	}
+	
+	if (localUserID == nil) {
+		error = [self errorWithDescription:@"Invalid parameter: localUserID == nil"];
 		goto done;
 	}
 
-	if (accessKey == nil)
-	{
-		error = [self errorWithDescription:@"Missing accessKey."];
+	if (!zdc || !S4KeyContextRefIsValid(zdc.storageKey)) {
+		error = [self errorWithDescription:@"Invalid state: zdc.storageKey not available"];
 		goto done;
 	}
 
+	// Ensure accessKey size matches given encryption algorithm
+	err = Cipher_GetKeySize(encryptionAlgorithm, &cipherSizeInBits); CKERR;
+	ASSERTERR(accessKey.length == (cipherSizeInBits / 8), kS4Err_CorruptData);
 
-	if(!zdc || !S4KeyContextRefIsValid(zdc.storageKey))
-	{
-		error = [self errorWithDescription:@"unlocking key not available."];
-		goto done;
-	}
-
- 	err = Cipher_GetKeySize(encryptionAlgorithm, &cipherSizeInBits); CKERR;
-	ASSERTERR(accessKey.length == (cipherSizeInBits / 8), kS4Err_CorruptData );
-
-	// Create a S4 Symmetric key to unlock the pub/priv key with
+	// Create low-level accessKey
 	err = S4Key_NewSymmetric(encryptionAlgorithm, accessKey.bytes, &accessKeyKeyCtx); CKERR;
 
-	// use the cloud key to unlock the priv key
-	err = S4Key_DeserializeKeys((uint8_t*)keyJSON.UTF8String, keyJSON.length, &keyCount, &importCtx ); CKERR;
-	ASSERTERR(keyCount == 1,  kS4Err_SelfTestFailed);
+	// Import privKey via JSON (will be a wrapped key)
+	err = S4Key_DeserializeKeys((uint8_t *)privKeyJSON.UTF8String,
+	                                       privKeyJSON.UTF8LengthInBytes, &importCount, &importCtx); CKERR;
+	ASSERTERR(importCount == 1, kS4Err_SelfTestFailed);
+	
+	// Use the accessKey to unlock the privKey
 	err = S4Key_DecryptFromS4Key(importCtx[0], accessKeyKeyCtx, &privKeyCtx); CKERR;
 
-	// check that it is a private key
-	ASSERTERR(privKeyCtx->type == kS4KeyType_PublicKey ,  kS4Err_BadParams);
-	ASSERTERR(privKeyCtx->pub.isPrivate,  kS4Err_SelfTestFailed);
+	// Check that it's a private key
+	ASSERTERR(privKeyCtx->type == kS4KeyType_PublicKey, kS4Err_BadParams);
+	ASSERTERR(privKeyCtx->pub.isPrivate, kS4Err_SelfTestFailed);
 
-	// reserialize it encoded to our storage key
- 	err = S4Key_SerializeToS4Key(privKeyCtx, zdc.storageKey, &privKeyData, &keyDataLen); CKERR;
- 	privKeyStr = [[NSString alloc]initWithBytesNoCopy:privKeyData
-											   length:keyDataLen
-											 encoding:NSUTF8StringEncoding
-										 freeWhenDone:YES];
+	// Re-serialize it, encoded to our local storage key
+	err = S4Key_SerializeToS4Key(privKeyCtx, zdc.storageKey, &privKeyData, &keyDataLen); CKERR;
+	privKeyStr = [[NSString alloc]initWithBytesNoCopy: privKeyData
+	                                           length: keyDataLen
+	                                         encoding: NSUTF8StringEncoding
+	                                     freeWhenDone: YES];
 
 	err = S4Key_SerializePubKey(privKeyCtx, &pubKeyData, &keyDataLen); CKERR;
-	pubKeyStr = [[NSString alloc]initWithBytesNoCopy:pubKeyData
-											  length:keyDataLen
-											encoding:NSUTF8StringEncoding
-										freeWhenDone:YES];
+	pubKeyStr = [[NSString alloc] initWithBytesNoCopy: pubKeyData
+	                                           length: keyDataLen
+	                                         encoding: NSUTF8StringEncoding
+	                                     freeWhenDone: YES];
 
-	privKey =  [[ZDCPublicKey alloc] initWithUserID:localUserID
-									   pubKeyJSON:pubKeyStr
-									  privKeyJSON:privKeyStr];
-
+	privKey =  [[ZDCPublicKey alloc] initWithUserID: localUserID
+	                                     pubKeyJSON: pubKeyStr
+	                                    privKeyJSON: privKeyStr];
+	
 done:
 
-	
-	if (S4KeyContextRefIsValid(accessKeyKeyCtx))
+	if (S4KeyContextRefIsValid(accessKeyKeyCtx)) {
 		S4Key_Free(accessKeyKeyCtx);
+	}
+	
+	if (importCount) {
+		for (int i = 0; i < importCount; i++) {
+			if (S4KeyContextRefIsValid(importCtx[i])) {
+				S4Key_Free(importCtx[i]);
+			}
+		}
+		XFREE(importCtx);
+	}
 
-	if(S4KeyContextRefIsValid(privKeyCtx))
+	if (S4KeyContextRefIsValid(privKeyCtx)) {
 		S4Key_Free(privKeyCtx);
-
+	}
 
 	if (IsS4Err(err)) {
 		error = [NSError errorWithS4Error:err];
 	}
 
-
 	if (errorOut) *errorOut = error;
-
 	return privKey;
 }
 

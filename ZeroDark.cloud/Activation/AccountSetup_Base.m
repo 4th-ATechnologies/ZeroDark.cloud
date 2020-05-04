@@ -798,7 +798,7 @@
 			                                     withAuth: strongSelf->auth
 			                                    accessKey: accessKey
 			                              completionQueue: dispatch_get_main_queue()
-			                              completionBlock:^(NSData *pkData, NSError *error)
+			                              completionBlock:^(ZDCLocalUser *localUser, NSData *privKeyToUnlock, NSError *error)
 			{
 				__strong typeof(self) strongSelf = weakSelf;
 				if (!strongSelf) return;
@@ -809,14 +809,14 @@
 					
 					InvokeCompletionBlock(AccountState_CreationFail,error);
 				}
-				else if (pkData)
+				else if (privKeyToUnlock)
 				{
 					// There is a previous keypair for the user on the cloud.
 					// We need to unlock the private key.
 					//
 					// Thus we need to prompt the user for their accessKey.
 					
-					strongSelf->privKeyData = pkData;
+					strongSelf->privKeyData = privKeyToUnlock;
 					InvokeCompletionBlock(AccountState_NeedsCloneClode, nil);
 				}
 				else
