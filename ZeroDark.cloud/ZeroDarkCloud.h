@@ -90,7 +90,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)unlockOrCreateDatabase:(ZDCDatabaseConfig *)config error:(NSError *_Nullable *_Nullable)outError;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Managers
+#pragma mark Managers & Tools
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /** The functionality of ZeroDarkCloud is split into multiple managers, separated by task. */
@@ -156,6 +156,10 @@ NS_ASSUME_NONNULL_BEGIN
 /** The functionality of ZeroDarkCloud is split into multiple managers, separated by task.
     Once the database is unlocked, this returns non-nil. */
 @property (nonatomic, readonly, nullable) ZDCUITools * uiTools;
+
+/** The functionality of ZeroDarkCloud is split into multiple managers, separated by task.
+    Once the database is unlocked, this returns non-nil. */
+@property (nonatomic, readonly, nullable) ZDCPartnerTools * partner;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Convenience Methods

@@ -20,6 +20,7 @@
 #import "ZDCLocalUserPrivate.h"
 #import "ZDCLocalUserManagerPrivate.h"
 #import "ZDCLogging.h"
+#import "ZDCPartnerToolsPrivate.h"
 #import "ZDCProgressManagerPrivate.h"
 #import "ZDCPullManagerPrivate.h"
 #import "ZDCPushInfo.h"
@@ -68,6 +69,7 @@ typedef void (^ZDCLogHandler)(ZDCLogMessage *);
 
 @property (nonatomic, readwrite, nullable) Auth0ProviderManager	 * auth0ProviderManager;
 @property (nonatomic, readwrite, nullable) CredentialsManager      * credentialsManager;
+
 @property (nonatomic, readwrite, nullable) ZDCBlockchainManager    * blockchainManager;
 @property (nonatomic, readwrite, nullable) ZDCCryptoTools          * cryptoTools;
 @property (nonatomic, readwrite, nullable) ZDCDatabaseManager      * databaseManager;
@@ -87,6 +89,7 @@ typedef void (^ZDCLogHandler)(ZDCLogMessage *);
 @property (nonatomic, readwrite, nullable) ZDCUserManager          * userManager;
 @property (nonatomic, readwrite, nullable) ZDCUserAccessKeyManager * userAccessKeyManager;
 @property (nonatomic, readwrite, nullable) ZDCUITools        	    * uiTools;
+@property (nonatomic, readwrite, nullable) ZDCPartnerTools         * partner;
 
 @property (atomic, readwrite, strong, nullable) NSString *pushToken;
 
@@ -113,9 +116,11 @@ typedef void (^ZDCLogHandler)(ZDCLogMessage *);
 @dynamic nodeManager;
 @synthesize progressManager;
 
+@synthesize auth0ProviderManager;
 @synthesize credentialsManager;
+
+@synthesize blockchainManager;
 @synthesize cryptoTools;
-@synthesize uiTools;
 @synthesize databaseManager;
 @synthesize diskManager;
 @synthesize downloadManager;
@@ -123,11 +128,13 @@ typedef void (^ZDCLogHandler)(ZDCLogMessage *);
 @synthesize networkTools;
 @synthesize pullManager;
 @synthesize pushManager;
-@synthesize sessionManager;
-@synthesize userManager;
-@synthesize auth0ProviderManager;
 @synthesize searchManager;
+@synthesize sessionManager;
 @synthesize sharesManager;
+@synthesize syncManager;
+@synthesize userManager;
+@synthesize uiTools;
+@synthesize partner;
 
 @synthesize pushToken = _mustUseAtomicProperty_pushToken;
 
@@ -340,9 +347,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 	{
 		NSString *reason =
 		  @"You cannot create multiple ZeroDarkCloud instances with the same database filename."
-		  @" Every ZeroDarkCloud instance must have a unique database (not shared with other ZDC instance)."
-		  @" Further, the database filename itself needs to be unique across instances because it's used"
-		  @" as a key (by various classes) to segregate data between multiple instances.";
+		  @" Every ZeroDarkCloud instance must have a unique database (not shared with another ZDC instance).";
 		
 		@throw [NSException exceptionWithName: @"ZerDarkCloud:DatabaseNameConflict"
 		                               reason: reason
@@ -458,6 +463,8 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 		self.searchManager = [[ZDCUserSearchManager alloc] initWithOwner:self];
 		self.blockchainManager = [[ZDCBlockchainManager alloc] initWithOwner:self];
  		self.sharesManager = [[ZDCSharesManager alloc] initWithOwner:self];
+		
+		self.partner = [[ZDCPartnerTools alloc] initWithOwner:self];
 
 	done:
 

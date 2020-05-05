@@ -44,6 +44,9 @@
 #import "ZDCUserSearchManager.h"
 #import "ZDCSyncManager.h"
 
+// Tools
+#import "ZDCPartnerTools.h"
+
 // Model
 #import "ZDCCloudNode.h"
 #import "ZDCPublicKey.h"

@@ -7,7 +7,7 @@
  * API Reference : https://apis.zerodark.cloud
  */
 
-#import "ZDCPartnerTools.h"
+#import "ZDCPartnerToolsPrivate.h"
 
 #import "ZDCCryptoTools.h"
 #import "ZDCLocalUserManagerPrivate.h"
