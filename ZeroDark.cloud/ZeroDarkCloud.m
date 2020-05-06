@@ -488,8 +488,6 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 			
 			[[self.databaseManager cloudExtForUserID:localUserID treeID:treeID] resume];
 		}
-		
-		[auth0ProviderManager updateProviderCache:NO];  // update provider cache if needed
 	}
 	
 	if (outError) *outError = error;
