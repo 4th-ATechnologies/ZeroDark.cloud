@@ -515,15 +515,11 @@
 					return;
 				}
 				
-				ZDCLocalUserAuth* localUserAuth = nil;
+				ZDCLocalUserAuth *localUserAuth = [credentialsManager parseAWSDelegation:delegation];
+				localUserAuth.coop_refreshToken = result.refreshToken;
+				localUserAuth.coop_jwt = result.idToken;
 				
-				BOOL parseSuccess =
-				  [credentialsManager parseLocalUserAuth: &localUserAuth
-				                          fromDelegation: delegation
-				                            refreshToken: result.refreshToken
-				                                 idToken: result.idToken];
-				
-				if (!parseSuccess)
+				if (localUserAuth == nil)
 				{
 					// The account signup succeeded, but the the  AWS credentials didnt parse.
 					// This is an odd edge case.
@@ -656,15 +652,11 @@
 				return;
 			}
 			
-			ZDCLocalUserAuth *newAuth = nil;
+			ZDCLocalUserAuth *newAuth = [credentialsManager parseAWSDelegation:delegation];
+			newAuth.coop_refreshToken = result.refreshToken;
+			newAuth.coop_jwt = result.idToken;
 			
-			BOOL parseSuccess =
-			  [credentialsManager parseLocalUserAuth: &newAuth
-			                          fromDelegation: delegation
-			                            refreshToken: result.refreshToken
-			                                 idToken: result.idToken];
-			
-			if (!parseSuccess)
+			if (newAuth == nil)
 			{
 				// The login succeeded, but the the AWS credentials didn't parse.
 				// This is an odd edge case.

@@ -8,6 +8,7 @@
 #import "ZDCAsyncCompletionDispatch.h"
 #import "ZDCLocalUser.h"
 #import "ZDCLocalUserAuth.h"
+#import "ZDCLogging.h"
 #import "ZeroDarkCloudPrivate.h"
 
 // Categories
@@ -16,7 +17,16 @@
 #import "NSError+ZeroDark.h"
 #import "NSURLResponse+ZeroDark.h"
 
+// Log Levels: off, error, warning, info, verbose
+// Log Flags : trace
+#if DEBUG
+  static const int zdcLogLevel = ZDCLogLevelWarning;
+#else
+  static const int zdcLogLevel = ZDCLogLevelWarning;
+#endif
+
 static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
+
 
 @implementation CredentialsManager
 {
@@ -201,7 +211,7 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 		
 		if (!refreshToken)
 		{
-			NSError *noRefreshTokensError = [strongSelf noRefreshTokensError];
+			NSError *noRefreshTokensError = [strongSelf missingRefreshTokenError];
 			if (!localUser.accountNeedsA0Token)
 			{
 				[strongSelf setNeedsRefreshTokenForUser: localUserID
@@ -387,7 +397,7 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 		
 		if (!refreshToken)
 		{
-			NSError *noRefreshTokensError = [strongSelf noRefreshTokensError];
+			NSError *noRefreshTokensError = [strongSelf missingRefreshTokenError];
 			if (!localUser.accountNeedsA0Token)
 			{
 				[strongSelf setNeedsRefreshTokenForUser: localUserID
@@ -650,13 +660,13 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 			{
 				// The refreshToken has been revoked.
 				// So the user will need to re-login to their account.
-				//
-				NSError *noRefreshTokensError = [strongSelf noRefreshTokensError];
+				
+				NSError *detailedError = [strongSelf revokedRefreshTokenError];
 				[strongSelf setNeedsRefreshTokenForUser: localUserID
 				                        completionQueue: bgQueue
 				                        completionBlock:^
 				{
-					NotifyListeners(nil, noRefreshTokensError);
+					NotifyListeners(nil, detailedError);
 				}];
 			}
 			else
@@ -773,14 +783,31 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 	      completionQueue: bgQueue
 	      completionBlock:^(NSString *jwt, NSError *error)
 	{
-		if (error)
-		{
-			NotifyListeners(nil, error);
-			return;
-		}
-		
 		__strong typeof(self) strongSelf = weakSelf;
 		if (!strongSelf) return;
+		
+		if (error)
+		{
+			if ([error domainMatchesClass:[strongSelf class]] &&
+			    error.code == CredentialsErrorCode_RevokedRefreshToken)
+			{
+				// The refreshToken has been revoked.
+				// So the user will need to re-login to their account.
+				
+				[strongSelf setNeedsRefreshTokenForUser: localUserID
+				                        completionQueue: bgQueue
+				                        completionBlock:^
+				{
+					NotifyListeners(nil, error);
+				}];
+			}
+			else
+			{
+				NotifyListeners(nil, error);
+			}
+			
+			return;
+		}
 		
 		__block ZDCLocalUserAuth *auth = nil;
 		
@@ -880,7 +907,113 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Low Level
+#pragma mark Low-Level Refresh
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)refreshJWT:(ZDCLocalUserAuth *)auth
+           forUser:(ZDCLocalUser *)localUser
+   completionQueue:(nullable dispatch_queue_t)completionQueue
+   completionBlock:(void (^)(ZDCLocalUserAuth *_Nullable auth, NSError *_Nullable error))completionBlock
+{
+	void (^Notify)(ZDCLocalUserAuth*, NSError*) = ^(ZDCLocalUserAuth *auth, NSError *error){
+		
+		if (auth) {
+			NSParameterAssert(error == nil);
+		} else {
+			NSParameterAssert(error != nil);
+		}
+		
+		if (completionBlock == nil) return;
+		
+		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+			completionBlock(auth, error);
+		}});
+	};
+	
+	BOOL isCoop;
+	NSString *refreshToken;
+	NSString *jwt;
+	
+	if (auth.coop_refreshToken) {
+		isCoop       = YES;
+		refreshToken = auth.coop_refreshToken;
+		jwt          = auth.coop_jwt;
+	} else {
+		isCoop       = NO;
+		refreshToken = auth.partner_refreshToken;
+		jwt          = auth.partner_jwt;
+	}
+	
+	// Check for non-expired JWT
+	
+	if (jwt)
+	{
+		NSDate *expiration = [JWTUtilities expireDateFromJWT:jwt error:nil];
+		if (expiration)
+		{
+			NSDate *nowPlusBuffer = [[NSDate date] dateByAddingTimeInterval:SAFE_INTERVAL];
+			
+			if ([expiration isAfter:nowPlusBuffer])
+			{
+				Notify(auth, nil);
+				return;
+			}
+		}
+	}
+	
+	// Sanity check: we expect there to be a refreshToken
+	
+	if (!refreshToken)
+	{
+		Notify(nil, [self missingRefreshTokenError]);
+		return;
+	}
+	
+	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	
+	if (isCoop)
+	{
+		[zdc.auth0APIManager getIDTokenWithRefreshToken: refreshToken
+		                                completionQueue: bgQueue
+		                                completionBlock:^(NSString *idToken, NSError *error)
+		{
+			if (error)
+			{
+				Notify(nil, error);
+			}
+			else
+			{
+				ZDCLocalUserAuth *updatedAuth = [auth copy];
+				updatedAuth.coop_jwt = idToken;
+				
+				Notify(updatedAuth, nil);
+			}
+		}];
+	}
+	else
+	{
+		[self fetchPartnerJWT: localUser
+		         refreshToken: refreshToken
+		      completionQueue: bgQueue
+		      completionBlock:^(NSString *jwt, NSError *error)
+		{
+			if (error)
+			{
+				Notify(nil, error);
+			}
+			else
+			{
+				ZDCLocalUserAuth *updatedAuth = [auth copy];
+				updatedAuth.partner_jwt = jwt;
+				
+				Notify(updatedAuth, nil);
+			}
+		}];
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Low-Level Fetch
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void)fetchPartnerJWT:(ZDCLocalUser *)localUser
@@ -889,12 +1022,9 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
         completionBlock:(void (^)(NSString *jwt, NSError *error))completionBlock
 {
 	NSParameterAssert(localUser != nil);
+	NSParameterAssert(refreshToken != nil);
 	NSParameterAssert(completionQueue != nil);
 	NSParameterAssert(completionBlock != nil);
-	
-	__weak typeof(self) weakSelf = self;
-	
-	NSString *localUserID = localUser.uuid;
 	
 	void (^Notify)(NSString*, NSError*) = ^(NSString *jwt, NSError *error){
 		
@@ -909,13 +1039,33 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 		});
 	};
 	
+	NSString *localUserID = localUser.uuid;
+	
+	AWSRegion region = localUser.aws_region;
+	NSString *stage = localUser.aws_stage;
+	
+	if (region == AWSRegion_Invalid)
+	{
+		ZDCLogWarn(@"Invalid parameter: localUser.aws_region is invalid");
+		
+		Notify(nil, [self missingInvalidUserError:@"localUser.aws_region is invalid"]);
+		return;
+	}
+	if (stage == nil)
+	{
+		ZDCLogWarn(@"Invalid parameter: localUser.aws_stage is nil");
+		
+		Notify(nil, [self missingInvalidUserError:@"localUser.aws_stage is nil"]);
+		return;
+	}
+	
 	NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
 	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
 	
 	NSURLComponents *urlComponents =
-	  [zdc.restManager apiGatewayV1ForRegion: AWSRegion_US_West_2
-	                                   stage: localUser.aws_stage ?: @"prod"
-	                                    path: @"/authdUsrPtnr/auth/jwt"];
+	  [zdc.restManager apiGatewayV1ForRegion: region
+	                                   stage: stage
+	                                    path: @"/public/auth/jwt"];
 	
 	NSDictionary *requestBodyDict = @{
 		@"user_id" : (localUserID  ?: @""),
@@ -930,34 +1080,28 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 
 	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
 	
+	__weak typeof(self) weakSelf = self;
+	
 	NSURLSessionDataTask *task =
 	  [session dataTaskWithRequest: request
 	             completionHandler:^(NSData *responseObject, NSURLResponse *response, NSError *error)
 	{
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		  
 		if (error)
 		{
 			Notify(nil, error);
 			return;
 		}
-		  
-		__strong typeof(self) strongSelf = weakSelf;
-		if (!strongSelf) return;
 		
 		NSInteger statusCode = response.httpStatusCode;
 		if (statusCode == 404)
 		{
 			// The refreshToken has been revoked.
-			// So the user will need to re-login to their account.
-			//
-			NSError *noRefreshTokensError = [strongSelf noRefreshTokensError];
-			dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 			
-			[strongSelf setNeedsRefreshTokenForUser: localUserID
-											completionQueue: bgQueue
-											completionBlock:^
-			{
-				Notify(nil, noRefreshTokensError);
-			}];
+			Notify(nil, [strongSelf revokedRefreshTokenError]);
+			return;
 		}
 		
 		NSDictionary *responseDict = nil;
@@ -990,23 +1134,13 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 
 - (void)fetchAWSCredentialsWithJWT:(NSString *)jwt
                              stage:(NSString *)stage
-                   completionQueue:(nullable dispatch_queue_t)completionQueue
+                   completionQueue:(dispatch_queue_t)completionQueue
                    completionBlock:(void (^)(NSDictionary *delegation, NSError *error))completionBlock
 {
 	NSParameterAssert(jwt != nil);
 	NSParameterAssert(stage != nil);
-	
-	if (completionBlock == nil) return;
-	
-	if (jwt == nil)
-	{
-		NSError *error = [self invalidIDTokenError];
-		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
-			
-			completionBlock(nil, error);
-		}});
-		return;
-	}
+	NSParameterAssert(completionQueue != nil);
+	NSParameterAssert(completionBlock != nil);
 	
 	__weak typeof(self) weakSelf = self;
 	
@@ -1018,7 +1152,7 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 			NSParameterAssert(error != nil);
 		}
 		
-		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+		dispatch_async(completionQueue, ^{ @autoreleasepool {
 			completionBlock(delegation, error);
 		}});
 	};
@@ -1038,11 +1172,11 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
 	
 	NSString *path =
-		isPartnerJWT ? @"/v1/authdUsrPtnr/auth/aws"
-	                : @"/v1/authdUsrCoop/auth/aws";
+		isPartnerJWT ? @"/authdUsrPtnr/auth/aws"
+	                : @"/authdUsrCoop/auth/aws";
 	
 	NSURLComponents *urlComponents =
-	  [zdc.restManager apiGatewayV2ForRegion: AWSRegion_US_West_2
+	  [zdc.restManager apiGatewayV1ForRegion: AWSRegion_US_West_2
 	                                   stage: stage ?: @"prod"
 	                                    path: path];
 
@@ -1192,10 +1326,7 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 	       (userID.length > 0);
 }
 
-- (BOOL)parseLocalUserAuth:(ZDCLocalUserAuth **)authOut
-            fromDelegation:(NSDictionary *)delegationDict
-              refreshToken:(NSString *)refreshToken
-                   idToken:(NSString *)idToken
+- (nullable ZDCLocalUserAuth *)parseAWSDelegation:(NSDictionary *)delegationDict
 {
 	NSString *accessKeyID = nil;
 	NSString *secret = nil;
@@ -1222,13 +1353,9 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 		auth.aws_secret = secret;
 		auth.aws_session = session;
 		auth.aws_expiration = expiration;
-		
-		auth.coop_refreshToken = refreshToken;
-		auth.coop_jwt = idToken;
 	}
 	
-	if (authOut) *authOut = auth;
-	return success;
+	return auth;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1242,19 +1369,19 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 	                   description: description];
 }
 
-- (NSError *)noRefreshTokensError
+- (NSError *)missingRefreshTokenError
 {
 	NSString *description = @"ZDCLocalUserAuth has no valid refreshToken.";
 	return [NSError errorWithClass: [self class]
-	                          code: CredentialsErrorCode_NoRefreshTokens
+	                          code: CredentialsErrorCode_MissingRefreshToken
 	                   description: description];
 }
 
-- (NSError *)invalidIDTokenError
+- (NSError *)revokedRefreshTokenError
 {
-	NSString *description = @"The given idToken parameter is invalid.";
+	NSString *description = @"The refreshToken appears to have been revoked.";
 	return [NSError errorWithClass: [self class]
-	                          code: CredentialsErrorCode_InvalidIDToken
+	                          code: CredentialsErrorCode_RevokedRefreshToken
 	                   description: description];
 }
 

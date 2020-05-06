@@ -7,7 +7,7 @@
  * API Reference : https://apis.zerodark.cloud
 **/
 
-#import "ZDCPublicKey.h"
+#import "ZDCPublicKeyPrivate.h"
 
 #import "ZDCObjectSubclass.h"
 #import "ZDCConstantsPrivate.h"
@@ -45,15 +45,14 @@ static NSString *const k_pubKeyJSON   = @"k_pubKeyJSON";
 @dynamic keyDict;
 @dynamic pubKey;
 @dynamic keyID;
-//@dynamic eTag;
 
 /**
- * See header file for description.
+ * See header file for description: ZDCPublicKeyPrivate.h
  */
-+ (nullable instancetype)createWithUserID:(NSString *)userID
-                                algorithm:(Cipher_Algorithm)algorithm
-                               storageKey:(S4KeyContextRef)storageKeyCtx
-                                    error:(NSError *_Nullable *_Nullable)outError
++ (nullable instancetype)createPrivateKeyWithUserID:(NSString *)userID
+                                          algorithm:(Cipher_Algorithm)algorithm
+                                         storageKey:(S4KeyContextRef)storageKeyCtx
+                                              error:(NSError *_Nullable *_Nullable)outError
 {
 	S4Err           err = kS4Err_NoErr;
 		

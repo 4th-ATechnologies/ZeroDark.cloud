@@ -988,7 +988,19 @@ static NSString *const k_displayName = @"displayName";
 	}
 
 	// Generate the privKey file.
-	// This is a PBKDF2 file, encrypted with the given accessKey.
+	// This is a JSON file, with the privKey bits encrypted with the given accessKey.
+	//
+	// The output looks something like this:
+	// {
+	//   "version": 1,
+	//   "encoding": "Twofish-256",
+	//   "keySuite": "Curve41417",
+	//   "mac": "9L0f/OrLDNs=",
+	//   "keyID": "w43ok0USZU2201IAf1cY6g==",
+	//   "privKey": "vsTntsXvhx1Ofct05OH+5owKRHu/t6AZfx8Gt4zHlccRCpBjojbNLgZ/oM6YdBT9s6SwAt/Vnycl5rT/YaCYN90Rdr8dYACZpGo0lOLy8l3V9WoVpALFXeiFC0zQVtSruDJpOKBE6ikXJFDRSIcd38nVqY5hc6UuaVtft2oPBovYJER6gaJWbpe7ZcpqdG02Gv9Wzuc/yH0VGlsPsFUN4bUSKaw7naEPx+5+zUo+4lUWZKYwZbtYNuhYppbrvo3V",
+	//   "start-date": "2020-05-06T17:22:05Z",
+	//   "userID": "nxcemc5r156qeuqc6oeqqg7gco43hxp3"
+	// }
 	
 	NSData *privKeyData = [zdc.cryptoTools exportPrivateKey: privateKey
 	                                            encryptedTo: accessKey // <- private bits encrypted with accessKey

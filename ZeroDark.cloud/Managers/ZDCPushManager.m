@@ -5847,7 +5847,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		NSString *path = [NSString stringWithFormat:@"/poll-request/%@", [self requestIDForOperation:operation]];
 		
-		NSURLComponents *urlComponents = [zdc.restManager apiGatewayV1ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [zdc.restManager apiGatewayV0ForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"GET";
@@ -6193,7 +6193,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		}
 		
 		NSString *path = @"/poll-request";
-		NSURLComponents *urlComponents = [zdc.restManager apiGatewayV1ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [zdc.restManager apiGatewayV0ForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"POST";
@@ -7001,7 +7001,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		NSString *path = [NSString stringWithFormat:@"/users/avatar/%@", social_userID];
 		
-		NSURLComponents *urlComponents = [zdc.restManager apiGatewayV1ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [zdc.restManager apiGatewayV0ForRegion:region stage:stage path:path];
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 
 	#if TARGET_OS_IPHONE

@@ -19,8 +19,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 typedef NS_ENUM(NSInteger, CredentialsErrorCode) {
 	CredentialsErrorCode_MissingInvalidUser,
-	CredentialsErrorCode_NoRefreshTokens,
-	CredentialsErrorCode_InvalidIDToken,
+	CredentialsErrorCode_MissingRefreshToken,
+	CredentialsErrorCode_RevokedRefreshToken,
 	CredentialsErrorCode_InvalidServerResponse
 };
 
@@ -102,6 +102,15 @@ typedef NS_ENUM(NSInteger, CredentialsErrorCode) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Given an auth with a non-nil refreshToken, will refresh the associated JWT (if needed).
+ * Returns a new auth with a valid JWT.
+ */
+- (void)refreshJWT:(ZDCLocalUserAuth *)auth
+           forUser:(ZDCLocalUser *)localUser
+   completionQueue:(nullable dispatch_queue_t)completionQueue
+   completionBlock:(void (^)(ZDCLocalUserAuth *_Nullable auth, NSError *_Nullable error))completionBlock;
+
+/**
  * Low-level API.
  *
  * Fetches the AWS credentials using the non-expired idToken (JWT).
@@ -118,10 +127,7 @@ typedef NS_ENUM(NSInteger, CredentialsErrorCode) {
 /**
  * Utility method for parsing the delegation dictionary returned from the server.
  */
-- (BOOL)parseLocalUserAuth:(ZDCLocalUserAuth *_Nullable *_Nonnull)localUserAuth
-            fromDelegation:(NSDictionary *)delegationToken
-              refreshToken:(NSString *)refreshToken
-                   idToken:(NSString *)idToken;
+- (nullable ZDCLocalUserAuth *)parseAWSDelegation:(NSDictionary *)delegation;
 
 @end
 

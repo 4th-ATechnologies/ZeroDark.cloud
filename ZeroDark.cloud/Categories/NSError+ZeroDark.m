@@ -32,4 +32,9 @@
 	return [NSError errorWithDomain:domain code:code userInfo:userInfo];
 }
 
+- (BOOL)domainMatchesClass:(Class)cls
+{
+	return [self.domain isEqualToString:[[self class] domainForClass:cls]];
+}
+
 @end

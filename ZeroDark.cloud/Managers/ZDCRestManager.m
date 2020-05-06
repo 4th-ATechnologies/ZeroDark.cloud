@@ -96,7 +96,7 @@
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
-- (NSString *)apiGatewayIDV1ForRegion:(AWSRegion)region stage:(NSString *)stage
+- (NSString *)apiGatewayIDV0ForRegion:(AWSRegion)region stage:(NSString *)stage
 {
 	switch(region)
 	{
@@ -123,7 +123,7 @@
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
-- (nullable NSString *)apiGatewayIDV2ForRegion:(AWSRegion)region stage:(NSString *)stage
+- (nullable NSString *)apiGatewayIDV1ForRegion:(AWSRegion)region stage:(NSString *)stage
 {
 	switch(region)
 	{
@@ -150,9 +150,9 @@
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
-- (NSURLComponents *)apiGatewayV1ForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path
+- (NSURLComponents *)apiGatewayV0ForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path
 {
-	NSString *apiGatewayID = [self apiGatewayIDV1ForRegion:region stage:stage];
+	NSString *apiGatewayID = [self apiGatewayIDV0ForRegion:region stage:stage];
 	if (apiGatewayID == nil) {
 		return nil;
 	}
@@ -180,9 +180,9 @@
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
-- (nullable NSURLComponents *)apiGatewayV2ForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path
+- (nullable NSURLComponents *)apiGatewayV1ForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path
 {
-	NSString *apiGatewayID = [self apiGatewayIDV2ForRegion:region stage:stage];
+	NSString *apiGatewayID = [self apiGatewayIDV1ForRegion:region stage:stage];
 	if (apiGatewayID == nil) {
 		return nil;
 	}
@@ -197,9 +197,9 @@
 	if (path)
 	{
 		if ([path hasPrefix:@"/"])
-			urlComponents.path = path;
+			urlComponents.path = [NSString stringWithFormat:@"/v1%@", path];
 		else
-			urlComponents.path = [NSString stringWithFormat:@"/%@", path];
+			urlComponents.path = [NSString stringWithFormat:@"/v1/%@", path];
 	}
 	
 	return urlComponents;
@@ -385,7 +385,7 @@
 		NSString *stage = DEFAULT_AWS_STAGE;
 
 		NSString *path = @"/config";
-		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"GET";
@@ -508,7 +508,7 @@
 	}
 
 	NSString *path = @"/activation/setup";
-	NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:request_region stage:request_stage path:path];
+	NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:request_region stage:request_stage path:path];
 	
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"POST";
@@ -658,7 +658,7 @@
 		
 		NSString *path = @"/registerPushToken";
 		
-		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 		
 		NSString *treeID = zdc.primaryTreeID;
 		NSString *platform;
@@ -743,7 +743,7 @@
 	NSString *stage = DEFAULT_AWS_STAGE;
 	
 	NSString *path = @"/unregisterPushToken";
-	NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+	NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 	
 	NSString *platform;
 	#if TARGET_OS_IPHONE
@@ -825,7 +825,7 @@
 	
 	NSString *path = @"/users/info";
 	
-	NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+	NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 	
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"GET";
@@ -970,7 +970,7 @@
 
 		NSString *path = @"/users/info/";
 		
-		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 
 		NSURLQueryItem *user_id = [NSURLQueryItem queryItemWithName:@"user_id" value:remoteUserID];
 		NSURLQueryItem *check_archive = [NSURLQueryItem queryItemWithName:@"check_archive" value:@"1"];
@@ -1062,7 +1062,7 @@
 	
 	NSString *path = [NSString stringWithFormat:@"/users/exists/%@", userID];
 	
-	NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+	NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 	
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"GET";
@@ -1191,7 +1191,7 @@
  */
 - (void)uploadEncryptedPrivKey:(NSData *)privKey
                         pubKey:(NSData *)pubKey
-                  forLocalUser:(ZDCLocalUser *)user
+                  forLocalUser:(ZDCLocalUser *)localUser
                       withAuth:(ZDCLocalUserAuth *)auth
                completionQueue:(dispatch_queue_t)completionQueue
                completionBlock:(void (^)(NSData *data, NSURLResponse *response, NSError *error))completionBlock
@@ -1201,29 +1201,21 @@
 	NSParameterAssert(privKey.length > 0);
 	NSParameterAssert(pubKey.length > 0);
 	
-	NSParameterAssert(user.aws_region != AWSRegion_Invalid); // Need this to create request
-	NSParameterAssert(user.aws_bucket != nil);               // Need this to create request
+	NSParameterAssert(localUser.aws_region != AWSRegion_Invalid); // Need this to create request
+	NSParameterAssert(localUser.aws_stage != nil);                // Need this to create request
 	
-	NSParameterAssert(auth.aws_accessKeyID != nil); // Need this to sign request
-	NSParameterAssert(auth.aws_secret != nil);      // Need this to sign request
-	NSParameterAssert(auth.aws_session != nil);     // Need this to sign request
-	
-	if (!completionQueue && completionBlock)
-		completionQueue = dispatch_get_main_queue();
-	
-	void (^InvokeCompletionBlock)(NSData*, NSURLResponse*, NSError*) =
-		^(NSData *data, NSURLResponse *response, NSError *error)
-	{
+	void (^Notify)(NSData*, NSURLResponse*, NSError*) = ^(NSData *data, NSURLResponse *response, NSError *error) {
+		
 		if (completionBlock)
 		{
-			dispatch_async(completionQueue, ^{ @autoreleasepool {
+			dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
 				completionBlock(data, response, error);
 			}});
 		}
 	};
 	
 	// Create JSON for request
-	
+		
 	NSError *jsonError = nil;
 	NSDictionary *jsonDict = @{
 		@"privKey" : [privKey base64EncodedStringWithOptions:0],
@@ -1233,47 +1225,66 @@
 	NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:&jsonError];
 	if (jsonError)
 	{
-		InvokeCompletionBlock(nil, nil, jsonError);
+		Notify(nil, nil, jsonError);
 		return;
 	}
-    
-	NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
-	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
 	
-	AWSRegion region = user.aws_region;
-	NSString *stage = user.aws_stage;
-	if (!stage)
+	// Fetch JWT
+	
+	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	
+	[zdc.credentialsManager refreshJWT: auth
+	                           forUser: localUser
+	                   completionQueue: bgQueue
+	                   completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
-		stage = DEFAULT_AWS_STAGE;
-	}
-
-	// Generate request
+		if (error)
+		{
+			Notify(nil, nil, error);
+			return;
+		}
+		
+		NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
+		NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
+		
+		// Generate request
+		
+		BOOL isCoop;
+		NSString *jwt;
+		
+		if (auth.coop_jwt) {
+			isCoop = YES;
+			jwt = auth.coop_jwt;
+		} else {
+			isCoop = NO;
+			jwt = auth.partner_jwt;
+		}
+		
+		NSString *path =
+			isCoop ? @"/authdUsrCoop/users/privPubKey"
+			       : @"/authdUsrPtnr/users/privPubKey";
+		
+		NSURLComponents *urlComponents =
+			[self apiGatewayV1ForRegion: localUser.aws_region
+			                      stage: localUser.aws_stage
+			                       path: path];
+		
+		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
+		request.HTTPMethod = @"POST";
+		request.HTTPBody = jsonData;
+		
+		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+		[request setValue:[NSString stringWithFormat:@"Bearer %@", jwt] forHTTPHeaderField:@"Authorization"];
+		
+		NSURLSessionDataTask *task =
+		  [session dataTaskWithRequest:request
+		             completionHandler:^(NSData *data, NSURLResponse *response, NSError *error)
+		{
+			Notify(data, response, error);
+		}];
 	
-	NSString *path = @"/users/privPubKey";
-	
-	NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
-
-	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
-	request.HTTPMethod = @"POST";
-	request.HTTPBody = jsonData;
-
-	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-         
-	[AWSSignature signRequest:request
-	               withRegion:user.aws_region
-	                  service:AWSService_APIGateway
-	              accessKeyID:auth.aws_accessKeyID
-	                   secret:auth.aws_secret
-	                  session:auth.aws_session];
-	
-	NSURLSessionDataTask *task =
-	  [session dataTaskWithRequest:request
-	             completionHandler:^(NSData *data, NSURLResponse *response, NSError *error)
-	{
-		InvokeCompletionBlock(data, response, error);
+		[task resume];
 	}];
-	
-	[task resume];
 }
 
 /**
@@ -1347,7 +1358,7 @@
 		
 		NSString *path = @"/users/pubKeySigs";
 		
-		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"POST";
@@ -1478,7 +1489,7 @@
 
 		NSString *path = [NSString stringWithFormat:@"/users/avatar/%@", social_userID];
 		
-		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 
@@ -1571,7 +1582,7 @@
 	
 	NSString *path = @"/multipartComplete";
 	
-	NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+	NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 	
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"POST";
@@ -1637,7 +1648,7 @@
 	
 	NSString *path = @"/listProxy";
 	
-	NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+	NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 	
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"POST";
@@ -1737,7 +1748,7 @@
 		// Generate request
 
 		NSString *path = @"/lostAndFound";
-		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"POST";
@@ -1834,7 +1845,7 @@
 
 		NSString *path = [NSString stringWithFormat:@"/auth0/fetch/%@", localUserID];
 
-		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		[request setHTTPMethod:@"GET"];
@@ -1926,7 +1937,7 @@
 
 		NSString *path = [NSString stringWithFormat:@"/auth0/fetch/%@", remoteUserID];
 		
-		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		[request setHTTPMethod:@"GET"];
@@ -2022,7 +2033,7 @@
 
 		NSString *path = @"/auth0/search";
 		
-		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 		
 		// Currently this method only support sending a query that matches based on the name.
 		// However the server also supports limiting the search to a particular social provider.
@@ -2132,7 +2143,7 @@
 		}
 		
 		NSString *path = @"/auth0/linkRecovery";
-		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 		
 		NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:2];
 		
@@ -2259,7 +2270,7 @@
 		
 		NSString *path = @"/auth0/linkIdentity";
 		
-		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 		
 		NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:2];
 		
@@ -2384,7 +2395,7 @@
 		
 		NSString *path = @"/auth0/unlinkIdentity";
 		
-		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 		
 		NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:2];
 		jsonDict[@"auth0_id"] = auth0ID;
@@ -2514,7 +2525,7 @@
 		
 		NSString *path = @"/payment/isCustomer";
 		
-		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"GET";
@@ -2643,7 +2654,7 @@
 		
 		NSString *path = @"/payment/balance";
 		
-		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"GET";
@@ -2800,7 +2811,7 @@
 		
 		NSString *path = @"/billing/usage";
 		
-		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 		
 		urlComponents.queryItems = @[
 		  [NSURLQueryItem queryItemWithName:@"v" value:@"1"],
@@ -2968,7 +2979,7 @@
 			
 			NSString *path = @"/billing/usage";
 			
-			NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+			NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 			
 			urlComponents.queryItems = @[
 			  [NSURLQueryItem queryItemWithName:@"v" value:@"1"],
@@ -3174,7 +3185,7 @@
 
 		NSString *path = @"/payment/oneTime";
 
-		NSURLComponents *urlComponents = [self apiGatewayV1ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
 
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"POST";

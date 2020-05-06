@@ -823,7 +823,7 @@ static NSUInteger const kMaxFailCount = 8;
 			
 			NSString *path = [NSString stringWithFormat:@"/pull/%@", changeToken];
 			
-			NSURLComponents *urlComponents = [zdc.restManager apiGatewayV1ForRegion:region stage:stage path:path];
+			NSURLComponents *urlComponents = [zdc.restManager apiGatewayV0ForRegion:region stage:stage path:path];
 			
 			NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 			request.HTTPMethod = @"GET";
@@ -2292,7 +2292,7 @@ static NSUInteger const kMaxFailCount = 8;
 			}
 			
 			NSString *path = @"/pull";
-			NSURLComponents *urlComponents = [zdc.restManager apiGatewayV1ForRegion:region stage:stage path:path];
+			NSURLComponents *urlComponents = [zdc.restManager apiGatewayV0ForRegion:region stage:stage path:path];
 			
 			NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 			request.HTTPMethod = @"GET";

@@ -33,7 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
  * 
  * For example: "rsuraaljlh"
  */
-- (nullable NSString *)apiGatewayIDV1ForRegion:(AWSRegion)region stage:(NSString *)stage;
+- (nullable NSString *)apiGatewayIDV0ForRegion:(AWSRegion)region stage:(NSString *)stage;
 
 /**
  * API Gateway URLS have the following form:
@@ -43,7 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * For example: "rsuraaljlh"
  */
-- (nullable NSString *)apiGatewayIDV2ForRegion:(AWSRegion)region stage:(NSString *)stage;
+- (nullable NSString *)apiGatewayIDV1ForRegion:(AWSRegion)region stage:(NSString *)stage;
 
 /**
  * API Gateway URLS have the following form:
@@ -51,7 +51,7 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * This method fills out the URL for you, and returns a (configurable) NSURLComponents instance.
  */
-- (nullable NSURLComponents *)apiGatewayV1ForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path;
+- (nullable NSURLComponents *)apiGatewayV0ForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path;
 
 /**
  * API Gateway URLS have the following form:
@@ -59,7 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * This method fills out the URL for you, and returns a (configurable) NSURLComponents instance.
  */
-- (nullable NSURLComponents *)apiGatewayV2ForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path;
+- (nullable NSURLComponents *)apiGatewayV1ForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Configuration

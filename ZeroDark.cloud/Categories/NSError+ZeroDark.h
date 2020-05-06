@@ -18,6 +18,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSError *)errorWithClass:(Class)cls code:(NSInteger)code;
 + (NSError *)errorWithClass:(Class)cls code:(NSInteger)code description:(nullable NSString *)description;
 
+- (BOOL)domainMatchesClass:(Class)cls;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -607,14 +607,11 @@
 						return;
 					}
 			
-					ZDCLocalUserAuth *auth = nil;
-			
-					BOOL parseSuccess =
-					  [credentialsManager parseLocalUserAuth: &auth
-					                          fromDelegation: delegation
-					                            refreshToken: a0Token.refreshToken
-					                                 idToken: auth0_idToken];
-					if (!parseSuccess)
+					ZDCLocalUserAuth *auth = [credentialsManager parseAWSDelegation:delegation];
+					auth.coop_refreshToken = a0Token.refreshToken;
+					auth.coop_jwt = auth0_idToken;
+					
+					if (auth == nil)
 					{
 						NSString *err_title = @"Could not Authenticate";
 						NSString *err_msg = error.localizedDescription;
