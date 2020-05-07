@@ -20,10 +20,18 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef NS_ENUM(NSInteger, ZDCDomain) {
+	ZDCDomain_Public,
+	ZDCDomain_UserCoop,
+	ZDCDomain_UserPartner
+};
+
 /**
  * Facilitates access to the REST API of the ZeroDark.cloud servers.
  */
 @interface ZDCRestManager : NSObject
+
+#pragma mark API Gateway v0
 
 /**
  * API Gateway URLS have the following form:
@@ -37,29 +45,36 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  * API Gateway URLS have the following form:
- * - https://{apiGatewayID}.execute-api.{region}.amazonaws.com
- *
- * This method returns the API Gateway ID that matches the region & stage.
- *
- * For example: "rsuraaljlh"
- */
-- (nullable NSString *)apiGatewayIDV1ForRegion:(AWSRegion)region stage:(NSString *)stage;
-
-/**
- * API Gateway URLS have the following form:
- * - https://{apiGatewayID}.execute-api.{region}.amazonaws.com/{stage}/{your_path_here}
+ * - https://{apiGatewayID}.execute-api.{region}.amazonaws.com/{stage}/{path}
  *
  * This method fills out the URL for you, and returns a (configurable) NSURLComponents instance.
  */
 - (nullable NSURLComponents *)apiGatewayV0ForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark API Gateway v1
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
  * API Gateway URLS have the following form:
- * - https://{apiGatewayID}.execute-api.{region}.amazonaws.com/{your_path_here}
+ * - https://{apiGatewayID}.execute-api.{region}.amazonaws.com
+ *
+ * This method returns the API Gateway ID that matches the region & stage.
+ *
+ * For example: "xx08iqr297"
+ */
+- (nullable NSString *)apiGatewayIDV1ForRegion:(AWSRegion)region stage:(NSString *)stage;
+
+/**
+ * API Gateway URLS have the following form:
+ * - https://{apiGatewayID}.execute-api.{region}.amazonaws.com/v1/{domain}/{path}
  *
  * This method fills out the URL for you, and returns a (configurable) NSURLComponents instance.
  */
-- (nullable NSURLComponents *)apiGatewayV1ForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path;
+- (nullable NSURLComponents *)apiGatewayV1ForRegion:(AWSRegion)region
+                                              stage:(NSString *)stage
+                                             domain:(ZDCDomain)domain
+                                               path:(NSString *)path;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Configuration

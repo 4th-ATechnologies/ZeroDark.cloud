@@ -15,6 +15,7 @@
 #import "NSDate+ZeroDark.h"
 #import "NSError+Auth0API.h"
 #import "NSError+ZeroDark.h"
+#import "NSMutableURLRequest+ZeroDark.h"
 #import "NSURLResponse+ZeroDark.h"
 
 // Log Levels: off, error, warning, info, verbose
@@ -298,6 +299,10 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 	void (^NotifyListeners)(ZDCLocalUserAuth*, NSError*) = ^(ZDCLocalUserAuth *auth, NSError *error) {
 	
 		if (auth) {
+			NSParameterAssert(auth.aws_accessKeyID != nil);
+			NSParameterAssert(auth.aws_secret != nil);
+			NSParameterAssert(auth.aws_session != nil);
+			NSParameterAssert(auth.aws_expiration != nil);
 			NSParameterAssert(error == nil);
 		} else {
 			NSParameterAssert(error != nil);
@@ -847,6 +852,15 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 	NSParameterAssert(completionQueue != nil);
 	NSParameterAssert(completionBlock != nil);
 	
+	void (^Fail)(NSError*) = ^(NSError *error){
+		
+		NSParameterAssert(error != nil);
+		
+		dispatch_async(completionQueue, ^{ @autoreleasepool {
+			completionBlock(nil, error);
+		}});
+	};
+	
 	__weak typeof(self) weakSelf = self;
 	
 	NSString *localUserID = localUser.uuid;
@@ -859,9 +873,7 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 	{
 		if (error)
 		{
-			dispatch_async(completionQueue, ^{ @autoreleasepool {
-				completionBlock(nil, error);
-			}});
+			Fail(error);
 			return;
 		}
 		
@@ -880,6 +892,15 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 		                  expiration: &aws_expiration
 		                      userID: &aws_userID
 		              fromDelegation: delegation];
+		
+		if (aws_accessKeyID == nil ||
+			 aws_secret      == nil ||
+		    aws_session     == nil ||
+		    aws_expiration  == nil  )
+		{
+			Fail([strongSelf invalidServerResponseError]);
+			return;
+		}
 		
 		__block ZDCLocalUserAuth *auth = nil;
 		
@@ -1065,7 +1086,8 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 	NSURLComponents *urlComponents =
 	  [zdc.restManager apiGatewayV1ForRegion: region
 	                                   stage: stage
-	                                    path: @"/public/auth/jwt"];
+	                                  domain: ZDCDomain_Public
+	                                    path: @"/auth/jwt"];
 	
 	NSDictionary *requestBodyDict = @{
 		@"user_id" : (localUserID  ?: @""),
@@ -1078,7 +1100,7 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 	request.HTTPMethod = @"POST";
 	request.HTTPBody = requestBodyData;
 
-	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+	[request setJSONContentTypeHeader];
 	
 	__weak typeof(self) weakSelf = self;
 	
@@ -1171,14 +1193,11 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 	NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
 	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
 	
-	NSString *path =
-		isPartnerJWT ? @"/authdUsrPtnr/auth/aws"
-	                : @"/authdUsrCoop/auth/aws";
-	
 	NSURLComponents *urlComponents =
 	  [zdc.restManager apiGatewayV1ForRegion: AWSRegion_US_West_2
 	                                   stage: stage ?: @"prod"
-	                                    path: path];
+	                                  domain: isPartnerJWT ? ZDCDomain_UserPartner : ZDCDomain_UserCoop
+	                                    path: @"/auth/aws"];
 
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"GET";

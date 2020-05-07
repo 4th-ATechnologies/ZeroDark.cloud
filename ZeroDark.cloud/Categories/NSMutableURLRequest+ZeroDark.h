@@ -13,7 +13,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NSMutableURLRequest (ZeroDark)
 
+/**
+ * 
+ */
 - (void)setHTTPRange:(NSRange)byteRange;
+
+- (void)setJSONContentTypeHeader;
+
+- (void)setBearerAuthorization:(NSString *)jwt;
 
 @end
 

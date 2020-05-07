@@ -26,6 +26,7 @@
 
 // Categories
 #import "NSError+ZeroDark.h"
+#import "NSMutableURLRequest+ZeroDark.h"
 #import "NSURLRequest+ZeroDark.h"
 #import "NSURLResponse+ZeroDark.h"
 
@@ -88,7 +89,7 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Utilities
+#pragma mark API Gateway v0
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -111,33 +112,6 @@
 			if ([stage isEqualToString:@"dev"])  return @"74bukw6pwc";
 			if ([stage isEqualToString:@"test"]) return @"3ip9q72kwf";
 			if ([stage isEqualToString:@"prod"]) return @"b0mf3mdmt0";
-		}
-		default: break;
-	}
-	
-	return nil;
-}
-
-/**
- * See header file for description.
- * Or view the api's online (for both Swift & Objective-C):
- * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
- */
-- (nullable NSString *)apiGatewayIDV1ForRegion:(AWSRegion)region stage:(NSString *)stage
-{
-	switch(region)
-	{
-		case AWSRegion_US_West_2:
-		{
-			if ([stage isEqualToString:@"dev"])  return @"j1n0wvoo16";
-			if ([stage isEqualToString:@"test"]) return @"mzmbqmbwl5";
-			if ([stage isEqualToString:@"prod"]) return @"xx08iqr297";
-		}
-		case AWSRegion_EU_West_1:
-		{
-			if ([stage isEqualToString:@"dev"])  return @"bdpp5w5aqg";
-			if ([stage isEqualToString:@"test"]) return @"atmztx3z50";
-			if ([stage isEqualToString:@"prod"]) return @"mnh0vvlszl";
 		}
 		default: break;
 	}
@@ -175,12 +149,46 @@
 	return urlComponents;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark API Gateway v1
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
  * See header file for description.
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
-- (nullable NSURLComponents *)apiGatewayV1ForRegion:(AWSRegion)region stage:(NSString *)stage path:(NSString *)path
+- (nullable NSString *)apiGatewayIDV1ForRegion:(AWSRegion)region stage:(NSString *)stage
+{
+	switch(region)
+	{
+		case AWSRegion_US_West_2:
+		{
+			if ([stage isEqualToString:@"dev"])  return @"j1n0wvoo16";
+			if ([stage isEqualToString:@"test"]) return @"mzmbqmbwl5";
+			if ([stage isEqualToString:@"prod"]) return @"xx08iqr297";
+		}
+		case AWSRegion_EU_West_1:
+		{
+			if ([stage isEqualToString:@"dev"])  return @"bdpp5w5aqg";
+			if ([stage isEqualToString:@"test"]) return @"atmztx3z50";
+			if ([stage isEqualToString:@"prod"]) return @"mnh0vvlszl";
+		}
+		default: break;
+	}
+	
+	return nil;
+}
+
+/**
+ * See header file for description.
+ * Or view the api's online (for both Swift & Objective-C):
+ * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
+ */
+- (nullable NSURLComponents *)apiGatewayV1ForRegion:(AWSRegion)region
+                                              stage:(NSString *)stage
+                                             domain:(ZDCDomain)domain
+                                               path:(NSString *)path
 {
 	NSString *apiGatewayID = [self apiGatewayIDV1ForRegion:region stage:stage];
 	if (apiGatewayID == nil) {
@@ -194,17 +202,19 @@
 	urlComponents.scheme = @"https";
 	urlComponents.host = host;
 	
-	if (path)
+	NSString *domainStr;
+	switch (domain)
 	{
-		if ([path hasPrefix:@"/"])
-			urlComponents.path = [NSString stringWithFormat:@"/v1%@", path];
-		else
-			urlComponents.path = [NSString stringWithFormat:@"/v1/%@", path];
+		case ZDCDomain_UserCoop    : domainStr = @"authdUsrCoop"; break;
+		case ZDCDomain_UserPartner : domainStr = @"authdUsrPtnr"; break;
+		default                    : domainStr = @"public";       break;
 	}
 	
-	return urlComponents;
+	NSString *pathPrefix = [path hasPrefix:@"/"] ? @"" : @"/";
 	
-	return nil;
+	urlComponents.path = [NSString stringWithFormat:@"/v1/%@%@%@", domainStr, pathPrefix, path];
+	
+	return urlComponents;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -514,7 +524,7 @@
 	request.HTTPMethod = @"POST";
 	request.HTTPBody = jsonData;
 	
-	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+	[request setJSONContentTypeHeader];
 	
 	[AWSSignature signRequest: request
 	               withRegion: request_region
@@ -1260,21 +1270,18 @@
 			jwt = auth.partner_jwt;
 		}
 		
-		NSString *path =
-			isCoop ? @"/authdUsrCoop/users/privPubKey"
-			       : @"/authdUsrPtnr/users/privPubKey";
-		
 		NSURLComponents *urlComponents =
 			[self apiGatewayV1ForRegion: localUser.aws_region
 			                      stage: localUser.aws_stage
-			                       path: path];
+			                     domain: isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
+			                       path: @"/users/privPubKey"];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"POST";
 		request.HTTPBody = jsonData;
 		
-		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-		[request setValue:[NSString stringWithFormat:@"Bearer %@", jwt] forHTTPHeaderField:@"Authorization"];
+		[request setJSONContentTypeHeader];
+		[request setBearerAuthorization:jwt];
 		
 		NSURLSessionDataTask *task =
 		  [session dataTaskWithRequest:request
@@ -1364,7 +1371,7 @@
 		request.HTTPMethod = @"POST";
 		request.HTTPBody = jsonData;
 		
-		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+		[request setJSONContentTypeHeader];
 		
 		[AWSSignature signRequest: request
 		               withRegion: region
@@ -1497,7 +1504,7 @@
 		{
 			request.HTTPMethod = @"POST";
 			request.HTTPBody = jsonData;
-			[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+			[request setJSONContentTypeHeader];
  		}
 		else
 		{
@@ -1603,7 +1610,7 @@
 	//
 	// So we explicitly set it here.
 	
-	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+	[request setJSONContentTypeHeader];
 	
 	[AWSSignature signRequest:request
 	               withRegion:region
@@ -1679,7 +1686,7 @@
 	//
 	// So we explicitly set it here.
 	
-	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+	[request setJSONContentTypeHeader];
 	
 	[AWSSignature signRequest:request
 	               withRegion:region
@@ -1766,7 +1773,7 @@
 		//
 		// So we explicitly set it here.
 		//
-		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+		[request setJSONContentTypeHeader];
 		
 		[AWSSignature signRequest: request
 		               withRegion: region
@@ -2158,7 +2165,7 @@
 		request.HTTPMethod = @"POST";
 		request.HTTPBody = jsonData;
 		
-		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+		[request setJSONContentTypeHeader];
 		
 		[AWSSignature signRequest: request
 		               withRegion: region
@@ -2283,7 +2290,7 @@
 		request.HTTPMethod = @"POST";
 		request.HTTPBody = jsonData;
 		
-		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+		[request setJSONContentTypeHeader];
 		
 		[AWSSignature signRequest:request
 		               withRegion:region
@@ -2407,7 +2414,7 @@
 		request.HTTPMethod = @"POST";
 		request.HTTPBody = jsonData;
 		
-		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+		[request setJSONContentTypeHeader];
 		
 		[AWSSignature signRequest:request
 		               withRegion:region
@@ -3191,7 +3198,7 @@
 		request.HTTPMethod = @"POST";
 		request.HTTPBody = jsonData;
 
-		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+		[request setJSONContentTypeHeader];
 		
 		// Send request
 		[AWSSignature signRequest: request
@@ -3257,7 +3264,7 @@
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"GET";
 	
-	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+	[request setJSONContentTypeHeader];
 	
 	NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
 	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];

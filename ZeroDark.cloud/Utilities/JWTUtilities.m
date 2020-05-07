@@ -45,8 +45,9 @@
 		// Debug notes:
 		//
 		// Apple's [NSData initWithBase64EncodedString::] won't accept if:
-		// - input.length is 1 OR
-		// - ipuut.length is a multiple of 5
+		// - ipuut.length is ((multiple of 4) + 1)
+		//
+		// E.g.: 1, 5, 9, 13, 17
 		//
 		// Basically whenever the padding is 3.
 		// Different padding amounts won't help, they just won't accept these input lengths.

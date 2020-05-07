@@ -35,6 +35,7 @@
 #import "NSData+AWSUtilities.h"
 #import "NSError+Auth0API.h"
 #import "NSError+ZeroDark.h"
+#import "NSMutableURLRequest+ZeroDark.h"
 #import "NSString+ZeroDark.h"
 #import "NSURLRequest+ZeroDark.h"
 #import "NSURLResponse+ZeroDark.h"
@@ -609,6 +610,18 @@ static NSUInteger const kMaxFailCount = 8;
 		NSString *latestChangeToken_remote = nil;
 		NSMutableArray<ZDCChangeItem *> *changes = nil;
 		
+		if ([responseObject isKindOfClass:[NSData class]])
+		{
+			NSError *jsonError = nil;
+			responseObject = [NSJSONSerialization JSONObjectWithData: (NSData *)responseObject
+			                                                 options: 0
+			                                                   error: &jsonError];
+			
+			if (jsonError) {
+				ZDCLogError(@"Error parsing JSON: %@", jsonError);
+			}
+		}
+		
 		if ([responseObject isKindOfClass:[NSDictionary class]])
 		{
 			NSDictionary *response = (NSDictionary *)responseObject;
@@ -766,7 +779,7 @@ static NSUInteger const kMaxFailCount = 8;
 	
 	dispatch_block_t requestBlock = ^{ @autoreleasepool {
 		
-		[zdc.credentialsManager getAWSCredentialsForUser: pullState.localUserID
+		[zdc.credentialsManager getJWTCredentialsForUser: pullState.localUserID
 		                                 completionQueue: concurrentQueue
 		                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 		{
@@ -821,19 +834,31 @@ static NSUInteger const kMaxFailCount = 8;
 			else
 				changeToken = @"empty";
 			
-			NSString *path = [NSString stringWithFormat:@"/pull/%@", changeToken];
+			BOOL isCoop;
+			NSString *jwt;
 			
-			NSURLComponents *urlComponents = [zdc.restManager apiGatewayV0ForRegion:region stage:stage path:path];
+			if (auth.coop_jwt) {
+				isCoop = YES;
+				jwt = auth.coop_jwt;
+			} else {
+				isCoop = NO;
+				jwt = auth.partner_jwt;
+			}
+			
+			NSURLComponents *urlComponents =
+			  [zdc.restManager apiGatewayV1ForRegion: region
+			                                   stage: stage
+			                                  domain: isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
+			                                    path: @"/pull/since"];
+			
+			urlComponents.queryItems = @[
+			  [NSURLQueryItem queryItemWithName:@"change_id" value:changeToken],
+			];
 			
 			NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 			request.HTTPMethod = @"GET";
 			
-			[AWSSignature signRequest:request
-			               withRegion:region
-			                  service:AWSService_APIGateway
-			              accessKeyID:auth.aws_accessKeyID
-			                   secret:auth.aws_secret
-			                  session:auth.aws_session];
+			[request setBearerAuthorization:jwt];
 			
 			task = [session dataTaskWithRequest: request
 			                     uploadProgress: nil
@@ -2176,6 +2201,18 @@ static NSUInteger const kMaxFailCount = 8;
 		NSDictionary *response = nil;
 		NSString *latestChangeToken = nil;
 		
+		if ([responseObject isKindOfClass:[NSData class]])
+		{
+			NSError *jsonError = nil;
+			responseObject = [NSJSONSerialization JSONObjectWithData: (NSData *)responseObject
+			                                                 options: 0
+			                                                   error: &jsonError];
+			
+			if (jsonError) {
+				ZDCLogError(@"Error parsing JSON: %@", jsonError);
+			}
+		}
+		
 		if ([responseObject isKindOfClass:[NSDictionary class]])
 		{
 			response = (NSDictionary *)responseObject;
@@ -2227,9 +2264,9 @@ static NSUInteger const kMaxFailCount = 8;
 			
 			pullInfo = [[ZDCChangeList alloc] initWithLatestChangeID_remote:latestChangeToken];
 			
-			[transaction setObject:pullInfo
-			                forKey:localUserID
-			          inCollection:kZDCCollection_PullState];
+			[transaction setObject: pullInfo
+			                forKey: localUserID
+			          inCollection: kZDCCollection_PullState];
 			
 		} completionQueue:concurrentQueue completionBlock:^{
 			
@@ -2241,7 +2278,7 @@ static NSUInteger const kMaxFailCount = 8;
 	
 	dispatch_block_t requestBlock = ^{ @autoreleasepool {
 		
-		[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+		[zdc.credentialsManager getJWTCredentialsForUser: localUserID
 		                                 completionQueue: concurrentQueue
 		                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 		{
@@ -2291,18 +2328,27 @@ static NSUInteger const kMaxFailCount = 8;
 			#endif
 			}
 			
-			NSString *path = @"/pull";
-			NSURLComponents *urlComponents = [zdc.restManager apiGatewayV0ForRegion:region stage:stage path:path];
+			BOOL isCoop;
+			NSString *jwt;
+			
+			if (auth.coop_jwt) {
+				isCoop = YES;
+				jwt = auth.coop_jwt;
+			} else {
+				isCoop = NO;
+				jwt = auth.partner_jwt;
+			}
+			
+			NSURLComponents *urlComponents =
+			  [zdc.restManager apiGatewayV1ForRegion: region
+			                                   stage: stage
+			                                  domain: isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
+			                                    path: @"/pull/latestChangeToken"];
 			
 			NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 			request.HTTPMethod = @"GET";
 			
-			[AWSSignature signRequest:request
-								withRegion:region
-									service:AWSService_APIGateway
-							  accessKeyID:auth.aws_accessKeyID
-									 secret:auth.aws_secret
-									session:auth.aws_session];
+			[request setBearerAuthorization:jwt];
 			
 			task = [session dataTaskWithRequest: request
 			                     uploadProgress: nil

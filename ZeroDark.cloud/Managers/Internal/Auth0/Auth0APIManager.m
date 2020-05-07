@@ -16,6 +16,7 @@
 // Categories
 #import "NSString+S4.h"
 #import "NSError+Auth0API.h"
+#import "NSMutableURLRequest+ZeroDark.h"
 #import "NSURLResponse+ZeroDark.h"
 
 #if TARGET_OS_IPHONE
@@ -392,7 +393,7 @@ static Auth0APIManager *sharedInstance = nil;
 	request.HTTPMethod = @"POST";
 	request.HTTPBody = jsonData;
 
-	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+	[request setJSONContentTypeHeader];
 
 	NSURLSessionDataTask *task =
 	  [session dataTaskWithRequest: request
@@ -525,7 +526,7 @@ static Auth0APIManager *sharedInstance = nil;
 	request.HTTPMethod = @"POST";
 	request.HTTPBody = jsonData;
 
-	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+	[request setJSONContentTypeHeader];
 
 	NSURLSessionDataTask *task =
 	  [session dataTaskWithRequest: request
@@ -674,7 +675,7 @@ static Auth0APIManager *sharedInstance = nil;
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"GET";
 
-	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+	[request setJSONContentTypeHeader];
 
 	NSURLSessionDataTask *task =
 	  [session dataTaskWithRequest: request
@@ -839,7 +840,7 @@ static Auth0APIManager *sharedInstance = nil;
 	request.HTTPMethod = @"POST";
 	request.HTTPBody = jsonData;
 
-	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+	[request setJSONContentTypeHeader];
 
 	NSURLSessionDataTask *task =
 	  [session dataTaskWithRequest: request
@@ -1034,7 +1035,7 @@ static Auth0APIManager *sharedInstance = nil;
 	request.HTTPMethod = @"POST";
 	request.HTTPBody = jsonData;
 
-	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+	[request setJSONContentTypeHeader];
 	
 	NSURLSessionDataTask *task =
 	  [session dataTaskWithRequest: request
@@ -1120,7 +1121,7 @@ static Auth0APIManager *sharedInstance = nil;
 	request.HTTPMethod = @"POST";
 	request.HTTPBody = jsonData;
 
-	[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+	[request setJSONContentTypeHeader];
 
 	NSURLSessionDataTask *task =
 	  [session dataTaskWithRequest: request

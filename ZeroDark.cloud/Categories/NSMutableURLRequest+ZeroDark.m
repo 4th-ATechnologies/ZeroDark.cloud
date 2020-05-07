@@ -21,4 +21,14 @@
 	[self setValue:rangeString forHTTPHeaderField:@"Range"];
 }
 
+- (void)setJSONContentTypeHeader
+{
+	[self setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+}
+
+- (void)setBearerAuthorization:(NSString *)jwt
+{
+	[self setValue:[NSString stringWithFormat:@"Bearer %@", jwt] forHTTPHeaderField:@"Authorization"];
+}
+
 @end

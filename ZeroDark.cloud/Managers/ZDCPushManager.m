@@ -33,6 +33,7 @@
 #import "NSDate+ZeroDark.h"
 #import "NSError+Auth0API.h"
 #import "NSError+ZeroDark.h"
+#import "NSMutableURLRequest+ZeroDark.h"
 #import "NSURLRequest+ZeroDark.h"
 #import "NSURLResponse+ZeroDark.h"
 
@@ -7013,7 +7014,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		if (hasBody)
 		{
 			request.HTTPMethod = @"POST";
-			[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+			[request setJSONContentTypeHeader];
  		}
 		else
 		{
