@@ -37,9 +37,20 @@
 	base64String = [base64String stringByReplacingOccurrencesOfString:@"-" withString:@"+"];
 	
 	// Add trailing =, or Apple's API's won't accept it
-	NSUInteger padding = (base64String.length % 4);
-	if (padding != 0)
+	NSUInteger leftover = (base64String.length % 4);
+	if (leftover != 0)
 	{
+		NSUInteger padding = 4 - leftover;
+		
+		// Debug notes:
+		//
+		// Apple's [NSData initWithBase64EncodedString::] won't accept if:
+		// - input.length is 1 OR
+		// - ipuut.length is a multiple of 5
+		//
+		// Basically whenever the padding is 3.
+		// Different padding amounts won't help, they just won't accept these input lengths.
+		
 		base64String = [base64String stringByPaddingToLength: (base64String.length + padding)
 		                                          withString: @"="
 		                                     startingAtIndex: 0];
