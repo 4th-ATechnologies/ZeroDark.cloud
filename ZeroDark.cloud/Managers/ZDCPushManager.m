@@ -1078,19 +1078,22 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	NSURLResponse *response = task.response;
 	if (response && downloadedFileURL)
 	{
+		NSData *fileData = [NSData dataWithContentsOfURL:downloadedFileURL];
 		NSString *mimeType = response.MIMEType;
 		
 		if ([mimeType isEqualToString:@"application/json"] ||
 		    [mimeType isEqualToString:@"text/json"])
 		{
-			NSData *fileData = [NSData dataWithContentsOfURL:downloadedFileURL];
 			responseObject = [NSJSONSerialization JSONObjectWithData:fileData options:0 error:nil];
 		}
 		else if ([mimeType isEqualToString:@"application/xml"] ||
 		         [mimeType isEqualToString:@"text/xml"])
 		{
-			NSData *fileData = [NSData dataWithContentsOfURL:downloadedFileURL];
 			responseObject = [S3ResponseParser parseXMLData:fileData];
+		}
+		else
+		{
+			responseObject = fileData;
 		}
 	}
 	
@@ -5846,19 +5849,31 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		#endif
 		}
 		
-		NSString *path = [NSString stringWithFormat:@"/poll-request/%@", [self requestIDForOperation:operation]];
+		BOOL isCoop;
+		NSString *jwt;
 		
-		NSURLComponents *urlComponents = [zdc.restManager apiGatewayV0ForRegion:region stage:stage path:path];
+		if (auth.coop_jwt) {
+			isCoop = YES;
+			jwt = auth.coop_jwt;
+		} else {
+			isCoop = NO;
+			jwt = auth.partner_jwt;
+		}
+		
+		NSURLComponents *urlComponents =
+		  [zdc.restManager apiGatewayV1ForRegion: region
+		                                   stage: stage
+		                                  domain: isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
+		                                    path: @"/push/pollRequest"];
+		
+		urlComponents.queryItems = @[
+			 [NSURLQueryItem queryItemWithName:@"request_id" value:[self requestIDForOperation:operation]],
+		];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"GET";
 		
-		[AWSSignature signRequest: request
-		               withRegion: region
-		                  service: AWSService_APIGateway
-		              accessKeyID: auth.aws_accessKeyID
-		                   secret: auth.aws_secret
-		                  session: auth.aws_session];
+		[request setBearerAuthorization:jwt];
 		
 	#if TARGET_OS_IPHONE
 		
@@ -5981,6 +5996,18 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	NSDictionary *stagingStatus = nil;
 	NSInteger stagingStatusCode = 0;
+	
+	if ([responseObject isKindOfClass:[NSData class]])
+	{
+		NSError *jsonError = nil;
+		responseObject = [NSJSONSerialization JSONObjectWithData: (NSData *)responseObject
+		                                                 options: 0
+		                                                   error: &jsonError];
+		
+		if (jsonError) {
+			ZDCLogError(@"Error parsing JSON: %@", jsonError);
+		}
+	}
 	
 	if ([responseObject isKindOfClass:[NSDictionary class]])
 	{
