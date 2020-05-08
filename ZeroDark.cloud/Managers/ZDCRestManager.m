@@ -511,13 +511,17 @@
 	NSParameterAssert(auth != nil);
 	NSParameterAssert(treeIDs.count > 0);
 	
-	NSParameterAssert(localUser.auth0_primary != nil);            // User not configured properly
-	NSParameterAssert(localUser.aws_region != AWSRegion_Invalid); // User not configured properly
-	
-	NSParameterAssert(auth.aws_accessKeyID != nil); // Need this to sign request
-	NSParameterAssert(auth.aws_secret != nil);      // Need this to sign request
-	NSParameterAssert(auth.aws_session != nil);     // Need this to sign request
-	
+	 BOOL isCoop;
+	 NSString *jwt;
+	 
+	 if (auth.coop_jwt) {
+		 isCoop = YES;
+		 jwt = auth.coop_jwt;
+	 } else {
+		 isCoop = NO;
+		 jwt = auth.partner_jwt;
+	 }
+	 
 	// Create JSON for request
 	
 	NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:4];
@@ -538,21 +542,18 @@
 		request_stage = DEFAULT_AWS_STAGE;
 	}
 
-	NSString *path = @"/activation/setup";
-	NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:request_region stage:request_stage path:path];
+	NSURLComponents *urlComponents =
+	  [self apiGatewayV1ForRegion: request_region
+	                        stage: @"dev" // request_stage
+	                       domain: isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
+	                         path: @"/activation/setup"];
 	
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 	request.HTTPMethod = @"POST";
 	request.HTTPBody = jsonData;
 	
 	[request setJSONContentTypeHeader];
-	
-	[AWSSignature signRequest: request
-	               withRegion: request_region
-	                  service: AWSService_APIGateway
-	              accessKeyID: auth.aws_accessKeyID
-	                   secret: auth.aws_secret
-	                  session: auth.aws_session];
+	[request setBearerAuthorization:jwt];
 	
 	// Send request
 	
@@ -610,8 +611,8 @@
 					NSString *domain = [NSError domainForClass:[self class]];
 					error = [NSError errorWithDomain:domain code:statusCode userInfo:json];
 					
-					ZDCLogError(@"REST API Error (%ld): %@ %@ %@: %@",
-						(long)statusCode, [AWSRegions shortNameForRegion:request_region], request_stage, path, json);
+					ZDCLogError(@"REST API Error (%ld): %@ %@ %@",
+						(long)statusCode, [AWSRegions shortNameForRegion:request_region], request_stage, json);
 				}
 			}
 		}

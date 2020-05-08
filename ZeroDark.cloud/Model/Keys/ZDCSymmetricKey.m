@@ -59,7 +59,7 @@ static NSString *const k_keyJSON     = @"keyJSON";
 	ZDCSymmetricKey *result = nil;
 	NSError *error = nil;
 	
-	ASSERTERR(S4KeyContextRefIsValid(symCtx), kS4Err_BadParams);
+	ASSERTERR(S4KeyContextRefIsValid(storageKeyCtx), kS4Err_BadParams);
 	
 	err = Cipher_GetKeySize(algorithm, &cipherSizeInBits); CKERR;
 	cipherSizeInBytes = cipherSizeInBits / 8;
