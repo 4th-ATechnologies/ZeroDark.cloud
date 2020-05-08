@@ -54,19 +54,20 @@ NSString *const kAuth0ProviderInfo_Key_SigninEtag   = @"eTag_signin";
 NSString *const kAuth0ProviderInfo_Key_64x64Etag    = @"eTag_64x64";
 
 
-@implementation Auth0ProviderManager
-{
-	dispatch_queue_t cacheQueue;
-    void *IsOnCacheQueueKey;
-
-    NSDictionary*  _providersInfo;        // must be accessed from within cacheQueue
-    NSArray*       _ordererdProviderKeys;
-	NSArray  <NSString*> * _supportedProviderKeys;
-
-    YapCache        *iconCache;          // must be accessed from within cacheQueue
-
-@private
+@implementation Auth0ProviderManager {
+	
 	__weak ZeroDarkCloud *zdc;
+	
+	dispatch_queue_t cacheQueue;
+	void *IsOnCacheQueueKey;
+
+	// Must be accessed from within cacheQueue:
+	
+	NSDictionary*  _providersInfo;
+	NSArray<NSString *> * _ordererdProviderKeys;
+	NSArray<NSString *> * _supportedProviderKeys;
+
+	YapCache<NSString*, OSImage*> *iconCache;
 }
 
 @dynamic providersInfo;
@@ -85,7 +86,7 @@ static Auth0ProviderManager *sharedInstance = nil;
 	{
 		zdc = inOwner;
 
-		cacheQueue     = dispatch_queue_create("Auth0ProviderManager.cacheQueue", DISPATCH_QUEUE_SERIAL);
+		cacheQueue = dispatch_queue_create("Auth0ProviderManager.cacheQueue", DISPATCH_QUEUE_SERIAL);
 
 		IsOnCacheQueueKey = &IsOnCacheQueueKey;
 		dispatch_queue_set_specific(cacheQueue, IsOnCacheQueueKey, IsOnCacheQueueKey, NULL);
@@ -132,7 +133,9 @@ static Auth0ProviderManager *sharedInstance = nil;
 	return self;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark Memory Management
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if TARGET_OS_IPHONE
 - (void)didReceiveMemoryWarning:(NSNotification *)notification
@@ -148,7 +151,9 @@ static Auth0ProviderManager *sharedInstance = nil;
 }
 #endif
 
-#pragma mark - accessors
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark - Accessors
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (BOOL)isUpdated
 {
@@ -166,35 +171,37 @@ static Auth0ProviderManager *sharedInstance = nil;
 	return hasKeys;
 }
 
--(NSArray*)ordererdProviderKeys
+- (NSArray<NSString *> *)ordererdProviderKeys
 {
-    __block NSArray* keys = nil;
+	__block NSArray* keys = nil;
 
-    dispatch_sync(cacheQueue, ^{
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-        keys = _ordererdProviderKeys;
-#pragma clang diagnostic pop
-    });
+	dispatch_sync(cacheQueue, ^{
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		keys = _ordererdProviderKeys;
+	
+	#pragma clang diagnostic pop
+	});
 
-    return keys;
+	return keys;
 }
 
--(NSDictionary*)providersInfo
+- (NSDictionary *)providersInfo
 {
-    __block NSDictionary* info = nil;
+	__block NSDictionary* info = nil;
 
-    dispatch_sync(cacheQueue, ^{
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-        info = _providersInfo;
-#pragma clang diagnostic pop
-    });
-
-    return info;
+	dispatch_sync(cacheQueue, ^{
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		info = _providersInfo;
+		
+	#pragma clang diagnostic pop
+	});
+	
+	return info;
 }
-
-
 
 - (NSString *)keyPrefixForIconSignin:(NSString *)provider
 {
@@ -206,8 +213,7 @@ static Auth0ProviderManager *sharedInstance = nil;
 	return [NSString stringWithFormat:@"64x64:%@", provider];
 }
 
-
-- (OSImage *)iconForProvider:(NSString *)provider type:(Auth0ProviderIconType)type
+- (nullable OSImage *)iconForProvider:(NSString *)provider type:(Auth0ProviderIconType)type
 {
 	__block OSImage *thumbnail = nil;
 
@@ -230,12 +236,14 @@ static Auth0ProviderManager *sharedInstance = nil;
 			return nil;
 	}
 
-    dispatch_sync(cacheQueue, ^{
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-        thumbnail = [iconCache objectForKey:cacheKey];
-#pragma clang diagnostic pop
-    });
+	dispatch_sync(cacheQueue, ^{
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
+		thumbnail = [iconCache objectForKey:cacheKey];
+		
+	#pragma clang diagnostic pop
+	});
 
 	if (thumbnail == nil)
 	{
@@ -333,74 +341,98 @@ done:
 
 
 
-#pragma mark - create Provider dictionary
+#pragma mark - Create Provider dictionary
 
-- (void)fetchSupportedProviders:(void (^)(NSArray<NSString*> *_Nullable providerKeys,
+- (void)fetchSupportedProviders:(nullable dispatch_queue_t)completionQueue
+                completionBlock:(void (^)(NSArray<NSString *> *_Nullable providerKeys,
                                           NSError *_Nullable error))completionBlock
 {
+	void (^Notify)(NSArray<NSString*>*, NSError*) =
+	^(NSArray<NSString*> *providerKeys, NSError *error){
+		
+		if (providerKeys) {
+			NSParameterAssert(error == nil);
+		} else {
+			NSParameterAssert(error != nil);
+		}
+		
+		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+			completionBlock(providerKeys, error);
+		}});
+	};
 
 	__block NSArray* supportedKeys =  nil;
 
 	dispatch_sync(cacheQueue, ^{
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+		
 		supportedKeys =_supportedProviderKeys;
-#pragma clang diagnostic pop
+		
+	#pragma clang diagnostic pop
 	});
 
-	if(supportedKeys.count)
+	if (supportedKeys.count > 0)
 	{
-		 completionBlock(supportedKeys, NULL);
+		Notify(supportedKeys, nil);
+		return;
 	}
-	else
+	
+	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	__weak typeof(self) weakSelf = self;
+	
+	[zdc.restManager fetchCoopConfigWithCompletionQueue: bgQueue
+	                                    completionBlock:^(NSDictionary *config, NSError *error)
 	{
-		[zdc.restManager fetchConfigWithCompletionQueue: dispatch_get_main_queue()
-		                                completionBlock:^(NSDictionary * _Nullable config, NSError * _Nullable error)
+		if (error)
 		{
-			if (error)
+			Notify(nil, error);
+			return;
+		}
+		
+		NSMutableArray<NSString *> *keys = [self.ordererdProviderKeys mutableCopy];
+		NSMutableArray* supportedKeys = [NSMutableArray array];
+		
+		NSArray<NSDictionary *> *availableProviders = [config objectForKey:kSupportedConfigurations_Key_Providers];
+
+		// filter out any missing strategies
+		for (NSString* key in keys)
+		{
+			BOOL found = NO;
+			
+			for (NSDictionary *providerInfo in availableProviders)
 			{
-				completionBlock(NULL, error);
-				return;
+				NSString *providerID = providerInfo[@"id"];
+				
+				if ([providerID isEqualToString:key])
+				{
+					found = YES;
+					break;
+				}
 			}
-
- 			 NSMutableArray* keys = [NSMutableArray arrayWithArray: self.ordererdProviderKeys];
-			 NSMutableArray* supportedKeys = NSMutableArray.array;
-			 NSArray<NSDictionary *> *availableProviders = [config objectForKey:kSupportedConfigurations_Key_Providers];
-
-
-			 // filter out any missing strategies
-			 for(NSString* key in keys)
-			 {
-				 BOOL found = NO;
-
-				 for(NSDictionary* providerInfo in availableProviders)
-				 {
-					 NSString* providerID = providerInfo[@"id"];
-
-					 if([providerID isEqualToString:key])
-					 {
-						 found = YES;
-						 break;
-					 }
-				 }
-				 if(found)
-					 [supportedKeys addObject:key];
-			 }
-
-			 if(supportedKeys.count)
-			 {
-				 dispatch_sync(self->cacheQueue, ^{
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-retain-self"
-					 _supportedProviderKeys = supportedKeys;
-#pragma clang diagnostic pop
-				 });
-			 }
-
-			 completionBlock(supportedKeys, NULL);
-
- 		 }];
-	}
+			
+			if (found) {
+				[supportedKeys addObject:key];
+			}
+		}
+		
+		if (supportedKeys.count)
+		{
+			dispatch_sync(self->cacheQueue, ^{
+			#pragma clang diagnostic push
+			#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+					
+				_supportedProviderKeys = supportedKeys;
+				
+			#pragma clang diagnostic pop
+			});
+		}
+		
+		BOOL forceUpdate = NO;
+		[weakSelf updateProviderCache:forceUpdate];
+		
+		Notify(supportedKeys, nil);
+	}];
 }
 
 -(BOOL) makeProviderInfoFromURL:(NSURL*)smiURL
@@ -448,7 +480,7 @@ done:
 };
 
 
--(NSArray*) makeOrderedProviderArray:(NSArray <NSDictionary*> *)providerInfo
+-(NSArray*) makeOrderedProviderArray:(NSArray<NSDictionary*> *)providerInfo
                         providerDict:(NSDictionary*)providerDict
 {
     // Walk the providerInfo, extract the "id" key and see if there is a resultant key in the providerDict
@@ -606,12 +638,12 @@ done:
         }
     };
 
-	[zdc.restManager fetchConfigWithCompletionQueue: dispatch_get_main_queue()
-	                                completionBlock:^(NSDictionary * _Nullable config, NSError * _Nullable error)
+	[zdc.restManager fetchCoopConfigWithCompletionQueue: dispatch_get_main_queue()
+	                                    completionBlock:^(NSDictionary * _Nullable config, NSError * _Nullable error)
 	{
-		 if(!error)
-		 {
-			 NSArray<NSDictionary *> *availableProviders = [config objectForKey:kSupportedConfigurations_Key_Providers];
+		if (!error)
+		{
+			NSArray<NSDictionary *> *availableProviders = [config objectForKey:kSupportedConfigurations_Key_Providers];
 
 			[self makeProviderCacheWithInfo:availableProviders
 								   smiWebURL:smiWebURL
@@ -626,7 +658,6 @@ done:
 		 {
           	InvokeCompletionBlock(nil,nil,error);
 		 }
-
 	 }];
 }
 

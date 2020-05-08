@@ -226,24 +226,21 @@
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
-- (void)fetchConfigWithCompletionQueue:(nullable dispatch_queue_t)inCompletionQueue
-                       completionBlock:(void(^)(NSDictionary *_Nullable config,
-                                                     NSError *_Nullable error))inCompletionBlock
+- (void)fetchCoopConfigWithCompletionQueue:(nullable dispatch_queue_t)inCompletionQueue
+                           completionBlock:(void(^)(NSDictionary *_Nullable config,
+                                                    NSError *_Nullable error))inCompletionBlock
 {
 	ZDCLogAutoTrace();
 
 	if (!inCompletionBlock)
 		return;
 
-	if (!inCompletionQueue)
-		inCompletionQueue = dispatch_get_main_queue();
-
 	NSString *requestKey = NSStringFromSelector(_cmd);
 
 	NSUInteger requestCount =
-	  [asyncCompletionDispatch pushCompletionQueue:inCompletionQueue
-	                               completionBlock:inCompletionBlock
-	                                      forKey:requestKey];
+	  [asyncCompletionDispatch pushCompletionQueue: inCompletionQueue
+	                               completionBlock: inCompletionBlock
+	                                        forKey: requestKey];
 
 	if (requestCount > 1)
 	{
@@ -252,8 +249,14 @@
 		return;
 	}
 
-	void (^InvokeCompletionBlocks)(NSDictionary*, NSError*) = ^(NSDictionary* config, NSError *error) {
+	void (^NotifyListeners)(NSDictionary*, NSError*) = ^(NSDictionary* config, NSError *error) {
 
+		if (config) {
+			NSParameterAssert(error == nil);
+		} else {
+			NSParameterAssert(error != nil);
+		}
+		
 		NSArray<dispatch_queue_t> * completionQueues = nil;
 		NSArray<id>               * completionBlocks = nil;
 		[asyncCompletionDispatch popCompletionQueues:&completionQueues
@@ -278,7 +281,12 @@
 		id json = nil;
 		if ([data isKindOfClass:[NSData class]])
 		{
-			json = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+			NSError *jsonError = nil;
+			json = [NSJSONSerialization JSONObjectWithData:data options:0 error:&jsonError];
+			
+			if (jsonError) {
+				ZDCLogError(@"Error parsing JSON: %@", jsonError);
+			}
 		}
 
 		if ([json isKindOfClass:[NSDictionary class]])
@@ -386,16 +394,21 @@
 				}
 			}
 		}
+		
 		return configInfo;
 	}};
 
-	dispatch_block_t requestBlock = ^{ @autoreleasepool {
+	dispatch_block_t PerformRequest = ^{ @autoreleasepool {
 		
 		AWSRegion region = AWSRegion_Master;
-		NSString *stage = DEFAULT_AWS_STAGE;
+	//	NSString *stage = DEFAULT_AWS_STAGE;
+		NSString *stage = @"dev";
 
-		NSString *path = @"/config";
-		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents =
+		  [self apiGatewayV1ForRegion: region
+		                        stage: stage
+		                       domain: ZDCDomain_Public
+		                         path: @"/coop/config"];
 
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"GET";
@@ -429,7 +442,18 @@
 					}];
 				}
 			}
-			InvokeCompletionBlocks(config, error);
+			
+			if (config) {
+				NotifyListeners(config, nil);
+			} else if (error) {
+				NotifyListeners(nil, error);
+			} else {
+				
+				NSString *msg = @"Server returned unrecognized response";
+				error = [NSError errorWithClass:[self class] code:500 description:msg];
+				
+				NotifyListeners(nil, error);
+			}
 		}];
 
 		[task resume];
@@ -449,18 +473,15 @@
 
 		NSDictionary *cachedConfig = nil;
 
-		if (cachedResponseData)
-		{
+		if (cachedResponseData) {
 			cachedConfig = ParseResponse(cachedResponseData);
 		}
 
-		if (cachedConfig)
-		{
-			InvokeCompletionBlocks(cachedConfig, nil);
+		if (cachedConfig) {
+			NotifyListeners(cachedConfig, nil);
 		}
-		else
-		{
-			requestBlock();
+		else {
+			PerformRequest();
 		}
 	}];
 }

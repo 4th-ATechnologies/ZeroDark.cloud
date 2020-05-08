@@ -85,9 +85,9 @@ typedef NS_ENUM(NSInteger, ZDCDomain) {
  *
  * This is a JSON file that describes information such as the list of supported social providers.
  */
-- (void)fetchConfigWithCompletionQueue:(nullable dispatch_queue_t)completionQueue
-                       completionBlock:(void(^)(NSDictionary *_Nullable config,
-                                                NSError *_Nullable error))completionBlock;
+- (void)fetchCoopConfigWithCompletionQueue:(nullable dispatch_queue_t)completionQueue
+                            completionBlock:(void(^)(NSDictionary *_Nullable config,
+                                                     NSError *_Nullable error))completionBlock;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Account Setup

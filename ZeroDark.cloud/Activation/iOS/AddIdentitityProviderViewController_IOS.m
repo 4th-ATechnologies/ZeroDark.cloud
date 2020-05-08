@@ -96,12 +96,12 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 #pragma mark Utilities
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
--(void) fillIdentityProvidersWithCompletion:(dispatch_block_t)completionBlock
+- (void)fillIdentityProvidersWithCompletion:(dispatch_block_t)completionBlock
 {
 	__weak typeof(self) weakSelf = self;
 
-	[providerManager fetchSupportedProviders:
-		^(NSArray<NSString*> *providerKeys, NSError *error)
+	[providerManager fetchSupportedProviders: dispatch_get_main_queue()
+	                         completionBlock:^(NSArray<NSString*> *providerKeys, NSError *error)
 	{
 		__strong typeof(self) strongSelf = weakSelf;
 		if (strongSelf == nil) return;

@@ -572,7 +572,7 @@ static NSString *const kRegions	      		= @"regions";
 
 	__weak typeof(self) weakSelf = self;
 
-	[restManager fetchConfigWithCompletionQueue:dispatch_get_main_queue()
+	[restManager fetchCoopConfigWithCompletionQueue:dispatch_get_main_queue()
 							   completionBlock:^(NSDictionary * _Nullable config, NSError * _Nullable error)
 	 {
 #pragma clang diagnostic push

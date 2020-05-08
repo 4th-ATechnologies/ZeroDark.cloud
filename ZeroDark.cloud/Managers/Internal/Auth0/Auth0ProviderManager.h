@@ -46,7 +46,7 @@ typedef NS_ENUM(NSInteger, Auth0ProviderType) {
 - (instancetype)initWithOwner:(ZeroDarkCloud *)owner;
 
 @property (nonatomic, readonly) NSDictionary *providersInfo;
-@property (nonatomic, readonly) NSArray      *ordererdProviderKeys;
+@property (nonatomic, readonly) NSArray<NSString *> *ordererdProviderKeys;
 
 @property (nonatomic, readonly) BOOL isUpdated;
 
@@ -69,8 +69,9 @@ typedef NS_ENUM(NSInteger, Auth0ProviderType) {
 /**
  *
  */
-- (void)fetchSupportedProviders:(void (^)(NSArray<NSString*> *_Nullable providerKeys,
-                                          NSError *_Nullable error))completionBlock;
+- (void)fetchSupportedProviders:(nullable dispatch_queue_t)completionQueue
+                 completionBlock:(void (^)(NSArray<NSString*> *_Nullable providerKeys,
+                                           NSError *_Nullable error))completionBlock;
 
 @end
 

@@ -6220,19 +6220,27 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		#endif
 		}
 		
-		NSString *path = @"/poll-request";
-		NSURLComponents *urlComponents = [zdc.restManager apiGatewayV0ForRegion:region stage:stage path:path];
+		BOOL isCoop;
+		NSString *jwt;
+		
+		if (auth.coop_jwt) {
+			isCoop = YES;
+			jwt = auth.coop_jwt;
+		} else {
+			isCoop = NO;
+			jwt = auth.partner_jwt;
+		}
+		
+		NSURLComponents *urlComponents =
+		  [zdc.restManager apiGatewayV1ForRegion: region
+		                                   stage: stage
+		                                  domain: isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
+		                                    path: @"/push/pollRequest"];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"POST";
 		
-		[AWSSignature signRequest: request
-		               withRegion: region
-		                  service: AWSService_APIGateway
-		              accessKeyID: auth.aws_accessKeyID
-		                   secret: auth.aws_secret
-		                  session: auth.aws_session
-		               payloadSig: multipollContext.sha256Hash];
+		[request setBearerAuthorization:jwt];
 		
 		__block NSURLSessionUploadTask *task = nil;
 	#if TARGET_OS_IPHONE
@@ -6361,6 +6369,18 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	
 	NSInteger statusCode_rcrd = 0;
 	NSInteger statusCode_data = 0;
+	
+	if ([responseObject isKindOfClass:[NSData class]])
+	{
+		NSError *jsonError = nil;
+		responseObject = [NSJSONSerialization JSONObjectWithData: (NSData *)responseObject
+		                                                 options: 0
+		                                                   error: &jsonError];
+		
+		if (jsonError) {
+			ZDCLogError(@"Error parsing JSON: %@", jsonError);
+		}
+	}
 	
 	if ([responseObject isKindOfClass:[NSDictionary class]])
 	{

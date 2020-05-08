@@ -173,44 +173,41 @@ static const int zdcLogLevel = ZDCLogLevelWarning;
 
 #pragma mark - Utilities
 
--(void) fillIdentityProvidersWithCompletion:(dispatch_block_t)completionBlock
+- (void)fillIdentityProvidersWithCompletion:(dispatch_block_t)completionBlock
 {
 	__weak typeof(self) weakSelf = self;
 
-
-	[providerManager fetchSupportedProviders:
-		^(NSArray<NSString *> * _Nullable providerKeys, NSError * _Nullable error)
+	[providerManager fetchSupportedProviders: dispatch_get_main_queue()
+	                         completionBlock:^(NSArray<NSString *> * _Nullable providerKeys, NSError * _Nullable error)
 	{
-		NSMutableArray* supportedKeys = nil;
-
 		__strong typeof(self) strongSelf = weakSelf;
-		if (strongSelf)
+		if (strongSelf == nil) return;
+
+		if (error)
 		{
-			 if(error)
-			 {
+		//	[strongSelf.accountSetupVC showError: @"Could not get list of identity providers "
+		//	                             message: error.localizedDescription
+		//	                      viewController: self
+		//	                     completionBlock:
+		//	^{
+		//		[strongSelf.accountSetupVC popFromCurrentView   ];
+		//	}];
+		}
+		
+		NSMutableArray<NSString *> *supportedKeys = nil;
+		
+		if (providerKeys)
+		{
+			supportedKeys = [providerKeys mutableCopy];
+			[supportedKeys insertObject:@"" atIndex:0];
+		}
+		
+		strongSelf->identityProviderKeys = supportedKeys;
 
-//				 [strongSelf.accountSetupVC showError:@"Could not get list of identity providers "
-//											  message:error.localizedDescription
-//									   viewController:self
-//									  completionBlock:^{
-//
-//										  [strongSelf.accountSetupVC popFromCurrentView   ];
-//									  }];
-			 }
-
-			 if(providerKeys)
-			 {
-				 supportedKeys = [NSMutableArray arrayWithArray:providerKeys];
-				[supportedKeys insertObject:@"" atIndex:0];
-
-			 }
-			 strongSelf->identityProviderKeys = supportedKeys;
-
-		 }
-
-		 if(completionBlock)
-			 completionBlock();
-	 }];
+		if (completionBlock) {
+			completionBlock();
+		}
+	}];
 }
 
 #pragma mark - Tableview

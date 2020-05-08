@@ -177,8 +177,9 @@
 {
 	__weak typeof(self) weakSelf = self;
 
-	[providerManager fetchSupportedProviders:
-		^(NSArray<NSString *> * _Nullable providerKeys, NSError * _Nullable error)
+	[providerManager fetchSupportedProviders: dispatch_get_main_queue()
+	                        completionBlock:
+	^(NSArray<NSString *> *_Nullable providerKeys, NSError *_Nullable error)
 	{
 		__strong typeof(self) strongSelf = weakSelf;
 		if (!strongSelf) return;
