@@ -1264,10 +1264,10 @@
 	
 	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
-	[zdc.credentialsManager refreshJWT: auth
-	                           forUser: localUser
-	                   completionQueue: bgQueue
-	                   completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
+	[zdc.credentialsManager refreshJWTCredentials: auth
+	                                      forUser: localUser
+	                              completionQueue: bgQueue
+	                              completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{

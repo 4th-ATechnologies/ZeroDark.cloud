@@ -18,9 +18,32 @@ NS_ASSUME_NONNULL_BEGIN
  * then the NSError.code will be set to one of the following values.
  */
 typedef NS_ENUM(NSInteger, CredentialsErrorCode) {
+	
+	/** The ZDCLocalUser doesn't exist, or isn't properly configured. */
 	CredentialsErrorCode_MissingInvalidUser,
+	
+	/**
+	 * The ZDCLocalUserAuth doesn't have a valid refreshToken.
+	 * Ultimately this means the user will have to re-login.
+	 */
 	CredentialsErrorCode_MissingRefreshToken,
+	
+	/**
+	 * The user's refreshToken has been revoked.
+	 * Ultimately this means the user will have to re-login.
+	 */
 	CredentialsErrorCode_RevokedRefreshToken,
+	
+	/**
+	 * The ZDCLocalUserAuth doesn't have a valid JWT.
+	 * This is only used by the low-level `refreshAWSCredentials`,
+	 * which expects the ZDCLocalUserAuth parameter to already have a valid JWT.
+	 */
+	CredentialsErrorCode_MissingJWT,
+	
+	/**
+	 * The server returned a response that we were unable to parse.
+	 */
 	CredentialsErrorCode_InvalidServerResponse
 };
 
@@ -103,31 +126,21 @@ typedef NS_ENUM(NSInteger, CredentialsErrorCode) {
 
 /**
  * Given an auth with a non-nil refreshToken, will refresh the associated JWT (if needed).
- * Returns a new auth with a valid JWT.
+ * Returns a copy of the given auth, with updated JWT credentials.
  */
-- (void)refreshJWT:(ZDCLocalUserAuth *)auth
-           forUser:(ZDCLocalUser *)localUser
-   completionQueue:(nullable dispatch_queue_t)completionQueue
-   completionBlock:(void (^)(ZDCLocalUserAuth *_Nullable auth, NSError *_Nullable error))completionBlock;
+- (void)refreshJWTCredentials:(ZDCLocalUserAuth *)auth
+                      forUser:(ZDCLocalUser *)localUser
+              completionQueue:(nullable dispatch_queue_t)completionQueue
+              completionBlock:(void (^)(ZDCLocalUserAuth *_Nullable auth, NSError *_Nullable error))completionBlock;
 
 /**
- * Low-level API.
- *
- * Fetches the AWS credentials using the non-expired idToken (JWT).
+ * Given an auth with a non-nil JWT, will refresh the associated AWS credentials (if needed).
+ * Returns a copy of the given auth, with updated AWS credentials.
  */
-- (void)fetchAWSCredentialsWithJWT:(NSString *)idToken
-                             stage:(NSString *)stage
-                   completionQueue:(nullable dispatch_queue_t)completionQueue
-                   completionBlock:(void (^)(NSDictionary *_Nullable delegation, NSError *_Nullable error))completionBlock;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Utilities
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * Utility method for parsing the delegation dictionary returned from the server.
- */
-- (nullable ZDCLocalUserAuth *)parseAWSDelegation:(NSDictionary *)delegation;
+- (void)refreshAWSCredentials:(ZDCLocalUserAuth *)auth
+                        stage:(NSString *)stage
+              completionQueue:(nullable dispatch_queue_t)completionQueue
+              completionBlock:(void (^)(ZDCLocalUserAuth *_Nullable auth, NSError *_Nullable error))completionBlock;
 
 @end
 

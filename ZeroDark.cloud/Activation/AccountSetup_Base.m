@@ -494,10 +494,14 @@
 				return;
 			}
 			
-			[credentialsManager fetchAWSCredentialsWithJWT: result.idToken
-			                                         stage: @"prod"
-			                               completionQueue: backgroundQueue
-			                               completionBlock:^(NSDictionary *delegation, NSError *error)
+			ZDCLocalUserAuth *temp = [[ZDCLocalUserAuth alloc] init];
+			temp.coop_refreshToken = result.refreshToken;
+			temp.coop_jwt = result.idToken;
+			
+			[credentialsManager refreshAWSCredentials: temp
+			                                    stage: @"prod"
+			                          completionQueue: backgroundQueue
+			                          completionBlock:^(ZDCLocalUserAuth *localUserAuth, NSError *error)
 			{
 				__strong typeof(self) strongSelf = weakSelf;
 				if (strongSelf == nil) return;
@@ -508,25 +512,6 @@
 					// This is an odd edge case.
 					
 					if (strongSelf.identityMode == IdenititySelectionMode_ExistingAccount)
-						InvokeCompletionBlock(AccountState_LinkingID,error);
-					else
-						InvokeCompletionBlock(AccountState_CreationFail,error);
-					
-					return;
-				}
-				
-				ZDCLocalUserAuth *localUserAuth = [credentialsManager parseAWSDelegation:delegation];
-				localUserAuth.coop_refreshToken = result.refreshToken;
-				localUserAuth.coop_jwt = result.idToken;
-				
-				if (localUserAuth == nil)
-				{
-					// The account signup succeeded, but the the  AWS credentials didnt parse.
-					// This is an odd edge case.
-					
-					error = [self errorWithDescription:@"AWSCredentialsManager file" statusCode:0];
-					
-					if(self.identityMode == IdenititySelectionMode_ExistingAccount)
 						InvokeCompletionBlock(AccountState_LinkingID,error);
 					else
 						InvokeCompletionBlock(AccountState_CreationFail,error);
@@ -634,10 +619,14 @@
 			return;
 		}
 		
-		[credentialsManager fetchAWSCredentialsWithJWT: result.idToken
-		                                         stage: @"prod"
-		                               completionQueue: backgroundQueue
-		                               completionBlock:^(NSDictionary *delegation, NSError *error)
+		ZDCLocalUserAuth *temp = [[ZDCLocalUserAuth alloc] init];
+		temp.coop_refreshToken = result.refreshToken;
+		temp.coop_jwt = result.idToken;
+		
+		[credentialsManager refreshAWSCredentials: temp
+		                                    stage: @"prod"
+		                          completionQueue: backgroundQueue
+		                          completionBlock:^(ZDCLocalUserAuth *newAuth, NSError *error)
 		{
 			__strong typeof(self) strongSelf = weakSelf;
 			if (!strongSelf) return;
@@ -648,25 +637,6 @@
 					InvokeCompletionBlock(AccountState_LinkingID,error);
 				else
 					InvokeCompletionBlock(AccountState_CreationFail,error);
-				
-				return;
-			}
-			
-			ZDCLocalUserAuth *newAuth = [credentialsManager parseAWSDelegation:delegation];
-			newAuth.coop_refreshToken = result.refreshToken;
-			newAuth.coop_jwt = result.idToken;
-			
-			if (newAuth == nil)
-			{
-				// The login succeeded, but the the AWS credentials didn't parse.
-				// This is an odd edge case.
-				
-				error = [self errorWithDescription:@"AWSCredentialsManager file" statusCode:0];
-				
-				if (self.identityMode == IdenititySelectionMode_ExistingAccount)
-					InvokeCompletionBlock(AccountState_LinkingID, error);
-				else
-					InvokeCompletionBlock(AccountState_CreationFail, error);
 				
 				return;
 			}

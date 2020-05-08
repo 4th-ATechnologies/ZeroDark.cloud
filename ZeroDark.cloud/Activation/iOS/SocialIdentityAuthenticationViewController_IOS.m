@@ -593,29 +593,20 @@
 					return;
 				}
 				
-				[credentialsManager fetchAWSCredentialsWithJWT: auth0_idToken
-				                                         stage: @"prod"
-				                               completionQueue: nil
-				                               completionBlock:^(NSDictionary *delegation, NSError *error)
+				ZDCLocalUserAuth *temp = [[ZDCLocalUserAuth alloc] init];
+				temp.coop_refreshToken = a0Token.refreshToken;
+				temp.coop_jwt = auth0_idToken;
+				
+				[credentialsManager refreshAWSCredentials: temp
+				                                    stage: @"prod"
+				                          completionQueue: nil
+				                          completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 				{
 					if (error)
 					{
 						NSString *err_title = @"Could not Authenticate";
 						NSString *err_msg = error.localizedDescription;
 			
-						Fail(err_title, err_msg);
-						return;
-					}
-			
-					ZDCLocalUserAuth *auth = [credentialsManager parseAWSDelegation:delegation];
-					auth.coop_refreshToken = a0Token.refreshToken;
-					auth.coop_jwt = auth0_idToken;
-					
-					if (auth == nil)
-					{
-						NSString *err_title = @"Could not Authenticate";
-						NSString *err_msg = error.localizedDescription;
-				
 						Fail(err_title, err_msg);
 						return;
 					}

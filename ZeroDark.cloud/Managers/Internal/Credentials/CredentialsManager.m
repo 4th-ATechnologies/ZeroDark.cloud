@@ -369,6 +369,19 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 			return;
 		}
 		
+		// Check for non-expired credentials
+		
+		if (auth.aws_expiration)
+		{
+			NSDate *nowPlusBuffer = [[NSDate date] dateByAddingTimeInterval:SAFE_INTERVAL];
+			
+			if ([auth.aws_expiration isAfter:nowPlusBuffer])
+			{
+				NotifyListeners(auth, nil);
+				return;
+			}
+		}
+		
 		// Extract tokens
 
 		BOOL isCoop;
@@ -383,19 +396,6 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 			isCoop       = NO;
 			refreshToken = auth.partner_refreshToken;
 			jwt          = auth.partner_jwt;
-		}
-		
-		// Check for non-expired credentials
-		
-		if (auth.aws_expiration)
-		{
-			NSDate *nowPlusBuffer = [[NSDate date] dateByAddingTimeInterval:SAFE_INTERVAL];
-			
-			if ([auth.aws_expiration isAfter:nowPlusBuffer])
-			{
-				NotifyListeners(auth, nil);
-				return;
-			}
 		}
 		
 		// Sanity check: we expect there to be a refreshToken
@@ -451,6 +451,7 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 			
 			[weakSelf refreshAWSCredentials: localUser
 			                            jwt: jwt
+			                         isCoop: isCoop
 			                completionQueue: bgQueue
 			                completionBlock: NotifyListeners];
 		};
@@ -844,6 +845,7 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
  */
 - (void)refreshAWSCredentials:(ZDCLocalUser *)localUser
                           jwt:(NSString *)jwt
+                       isCoop:(BOOL)isCoop
               completionQueue:(dispatch_queue_t)completionQueue
               completionBlock:(void (^)(ZDCLocalUserAuth *auth, NSError *error))completionBlock
 {
@@ -868,6 +870,7 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 	
 	[self fetchAWSCredentialsWithJWT: jwt
 	                           stage: localUser.aws_stage ?: @"prod"
+	                          isCoop: isCoop
 	                 completionQueue: bgQueue
 	                 completionBlock:^(NSDictionary *delegation, NSError *error)
 	{
@@ -931,11 +934,25 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 #pragma mark Low-Level Refresh
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void)refreshJWT:(ZDCLocalUserAuth *)auth
-           forUser:(ZDCLocalUser *)localUser
-   completionQueue:(nullable dispatch_queue_t)completionQueue
-   completionBlock:(void (^)(ZDCLocalUserAuth *_Nullable auth, NSError *_Nullable error))completionBlock
+/**
+ * See header file for description.
+ */
+- (void)refreshJWTCredentials:(ZDCLocalUserAuth *)auth
+                      forUser:(ZDCLocalUser *)localUser
+              completionQueue:(nullable dispatch_queue_t)completionQueue
+              completionBlock:(void (^)(ZDCLocalUserAuth *_Nullable auth, NSError *_Nullable error))completionBlock
 {
+	// Implementation note:
+	//
+	// This method is designed to be used during the login/signup flow.
+	// That is, it assumes the corresponding localUser & localUser auth are NOT in the database.
+	//
+	// So it's job is simply to perform the network request (if needed).
+	
+	NSParameterAssert(auth != nil);
+	NSParameterAssert(localUser != nil);
+	NSParameterAssert(completionBlock != nil);
+	
 	void (^Notify)(ZDCLocalUserAuth*, NSError*) = ^(ZDCLocalUserAuth *auth, NSError *error){
 		
 		if (auth) {
@@ -1031,6 +1048,123 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 			}
 		}];
 	}
+}
+
+/**
+ * See header file for description.
+ */
+- (void)refreshAWSCredentials:(ZDCLocalUserAuth *)auth
+                        stage:(NSString *)stage
+              completionQueue:(nullable dispatch_queue_t)completionQueue
+              completionBlock:(void (^)(ZDCLocalUserAuth *_Nullable auth, NSError *_Nullable error))completionBlock
+{
+	// Implementation note:
+	//
+	// This method is designed to be used during the login/signup flow.
+	// That is, it assumes the corresponding localUser & localUser auth are NOT in the database.
+	//
+	// So it's job is simply to perform the network request (if needed).
+	
+	NSParameterAssert(auth != nil);
+	NSParameterAssert(completionBlock != nil);
+	
+	void (^Notify)(ZDCLocalUserAuth*, NSError*) = ^(ZDCLocalUserAuth *auth, NSError *error){
+		
+		if (auth) {
+			NSParameterAssert(error == nil);
+		} else {
+			NSParameterAssert(error != nil);
+		}
+		
+		if (completionBlock == nil) return;
+		
+		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+			completionBlock(auth, error);
+		}});
+	};
+	
+	// Check for non-expired credentials
+	
+	if (auth.aws_expiration)
+	{
+		NSDate *nowPlusBuffer = [[NSDate date] dateByAddingTimeInterval:SAFE_INTERVAL];
+		
+		if ([auth.aws_expiration isAfter:nowPlusBuffer])
+		{
+			Notify(auth, nil);
+			return;
+		}
+	}
+	
+	// Extract tokens
+
+	BOOL isCoop;
+	NSString *jwt;
+	
+	if (auth.coop_refreshToken) {
+		isCoop = YES;
+		jwt = auth.coop_jwt;
+	} else {
+		isCoop = NO;
+		jwt = auth.partner_jwt;
+	}
+	
+	// Sanity check: we expect there to be a JWT
+	
+	if (!jwt)
+	{
+		Notify(nil, [self missingJWTError]);
+		return;
+	}
+	
+	__weak typeof(self) weakSelf = self;
+	dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	
+	[self fetchAWSCredentialsWithJWT: jwt
+	                           stage: stage
+	                          isCoop: isCoop
+	                 completionQueue: bgQueue
+	                 completionBlock:^(NSDictionary *delegation, NSError *error)
+	{
+		if (error)
+		{
+			Notify(nil, error);
+			return;
+		}
+		
+		__strong typeof(self) strongSelf = weakSelf;
+		if (!strongSelf) return;
+		
+		NSString *aws_accessKeyID = nil;
+		NSString *aws_secret = nil;
+		NSString *aws_session = nil;
+		NSDate *aws_expiration = nil;
+		NSString *aws_userID = nil;
+		
+		[strongSelf parseAccessKeyID: &aws_accessKeyID
+		                      secret: &aws_secret
+		                     session: &aws_session
+		                  expiration: &aws_expiration
+		                      userID: &aws_userID
+		              fromDelegation: delegation];
+		
+		if (aws_accessKeyID == nil ||
+			 aws_secret      == nil ||
+		    aws_session     == nil ||
+		    aws_expiration  == nil  )
+		{
+			Notify(nil, [strongSelf invalidServerResponseError]);
+			return;
+		}
+		
+		ZDCLocalUserAuth *updatedAuth = [auth copy];
+		updatedAuth.aws_accessKeyID = aws_accessKeyID;
+		updatedAuth.aws_secret = aws_secret;
+		updatedAuth.aws_session = aws_session;
+		updatedAuth.aws_expiration = aws_expiration;
+		
+		Notify(updatedAuth, nil);
+	}];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1156,6 +1290,7 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 
 - (void)fetchAWSCredentialsWithJWT:(NSString *)jwt
                              stage:(NSString *)stage
+                            isCoop:(BOOL)isCoop
                    completionQueue:(dispatch_queue_t)completionQueue
                    completionBlock:(void (^)(NSDictionary *delegation, NSError *error))completionBlock
 {
@@ -1179,24 +1314,13 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 		}});
 	};
 	
-	NSError *error = nil;
-	NSString *jwt_issuer = [JWTUtilities issuerFromJWT:jwt error:&error];
-	
-	if (error)
-	{
-		Notify(nil, error);
-		return;
-	}
-	
-	BOOL isPartnerJWT = [jwt_issuer isEqualToString:@"https://resources.zerodark.coop/"];
-	
 	NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
 	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig];
 	
 	NSURLComponents *urlComponents =
 	  [zdc.restManager apiGatewayV1ForRegion: AWSRegion_US_West_2
-	                                   stage: stage ?: @"prod"
-	                                  domain: isPartnerJWT ? ZDCDomain_UserPartner : ZDCDomain_UserCoop
+	                                   stage: @"dev" // stage ?: @"prod"
+	                                  domain: isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
 	                                    path: @"/auth/aws"];
 
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
@@ -1345,38 +1469,6 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 	       (userID.length > 0);
 }
 
-- (nullable ZDCLocalUserAuth *)parseAWSDelegation:(NSDictionary *)delegationDict
-{
-	NSString *accessKeyID = nil;
-	NSString *secret = nil;
-	NSString *session = nil;
-	NSDate *expiration = nil;
-	NSString *userID = nil;
-	
-	BOOL success =
-	  [self parseAccessKeyID: &accessKeyID
-	                  secret: &secret
-	                 session: &session
-	              expiration: &expiration
-	                  userID: &userID
-	          fromDelegation: delegationDict];
-	
-	ZDCLocalUserAuth *auth = nil;
-	if (success)
-	{
-		auth = [[ZDCLocalUserAuth alloc] init];
-		
-		auth.localUserID = userID;
-		
-		auth.aws_accessKeyID = accessKeyID;
-		auth.aws_secret = secret;
-		auth.aws_session = session;
-		auth.aws_expiration = expiration;
-	}
-	
-	return auth;
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Errors
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1401,6 +1493,14 @@ static const NSTimeInterval SAFE_INTERVAL = 30.0; // seconds
 	NSString *description = @"The refreshToken appears to have been revoked.";
 	return [NSError errorWithClass: [self class]
 	                          code: CredentialsErrorCode_RevokedRefreshToken
+	                   description: description];
+}
+
+- (NSError *)missingJWTError
+{
+	NSString *description = @"ZDCLocalUserAuth has no valid JWT.";
+	return [NSError errorWithClass: [self class]
+	                          code: CredentialsErrorCode_MissingJWT
 	                   description: description];
 }
 
