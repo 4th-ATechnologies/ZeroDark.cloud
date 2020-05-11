@@ -510,17 +510,6 @@
 	NSParameterAssert(localUser != nil);
 	NSParameterAssert(auth != nil);
 	NSParameterAssert(treeIDs.count > 0);
-	
-	 BOOL isCoop;
-	 NSString *jwt;
-	 
-	 if (auth.coop_jwt) {
-		 isCoop = YES;
-		 jwt = auth.coop_jwt;
-	 } else {
-		 isCoop = NO;
-		 jwt = auth.partner_jwt;
-	 }
 	 
 	// Create JSON for request
 	
@@ -545,7 +534,7 @@
 	NSURLComponents *urlComponents =
 	  [self apiGatewayV1ForRegion: request_region
 	                        stage: @"dev" // request_stage
-	                       domain: isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
+	                       domain: auth.isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
 	                         path: @"/activation/setup"];
 	
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
@@ -553,7 +542,7 @@
 	request.HTTPBody = jsonData;
 	
 	[request setJSONContentTypeHeader];
-	[request setBearerAuthorization:jwt];
+	[request setBearerAuthorization:auth.jwt];
 	
 	// Send request
 	
@@ -970,7 +959,7 @@
 	if (!completionQueue)
 		completionQueue = dispatch_get_main_queue();
 	
-	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	[zdc.credentialsManager getJWTCredentialsForUser: localUserID
 	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
 	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
@@ -995,28 +984,25 @@
 		AWSRegion region = AWSRegion_Master; // Activation always goes through Oregon
 		
 		NSString *stage = userInfo.stage;
-		if (!stage)
-		{
+		if (!stage) {
 			stage = DEFAULT_AWS_STAGE;
 		}
-
-		NSString *path = @"/users/info/";
 		
-		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
-
-		NSURLQueryItem *user_id = [NSURLQueryItem queryItemWithName:@"user_id" value:remoteUserID];
-		NSURLQueryItem *check_archive = [NSURLQueryItem queryItemWithName:@"check_archive" value:@"1"];
-		urlComponents.queryItems = @[ user_id, check_archive ];
+		NSURLComponents *urlComponents =
+			[self apiGatewayV1ForRegion: region
+			                      stage: stage
+			                     domain: auth.isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
+			                       path: @"/users/info"];
+		
+		urlComponents.queryItems = @[
+			[NSURLQueryItem queryItemWithName:@"user_id" value:remoteUserID],
+			[NSURLQueryItem queryItemWithName:@"check_archive" value:@"1"]
+		];
 
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"GET";
 	
-		[AWSSignature signRequest: request
-		               withRegion: region
-		                  service: AWSService_APIGateway
-		              accessKeyID: auth.aws_accessKeyID
-		                   secret: auth.aws_secret
-		                  session: auth.aws_session];
+		[request setBearerAuthorization:auth.jwt];
 		
 		// Send request
 	
@@ -1281,21 +1267,10 @@
 		
 		// Generate request
 		
-		BOOL isCoop;
-		NSString *jwt;
-		
-		if (auth.coop_jwt) {
-			isCoop = YES;
-			jwt = auth.coop_jwt;
-		} else {
-			isCoop = NO;
-			jwt = auth.partner_jwt;
-		}
-		
 		NSURLComponents *urlComponents =
 			[self apiGatewayV1ForRegion: localUser.aws_region
 			                      stage: localUser.aws_stage
-			                     domain: isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
+			                     domain: auth.isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
 			                       path: @"/users/privPubKey"];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
@@ -1303,7 +1278,7 @@
 		request.HTTPBody = jsonData;
 		
 		[request setJSONContentTypeHeader];
-		[request setBearerAuthorization:jwt];
+		[request setBearerAuthorization:auth.jwt];
 		
 		NSURLSessionDataTask *task =
 		  [session dataTaskWithRequest:request

@@ -34,6 +34,9 @@ static NSString *const k_partner_jwt          = @"partner_jwt";
 @synthesize partner_refreshToken = partner_refreshToken;
 @synthesize partner_jwt = partner_jwt;
 
+@dynamic isCoop;
+@dynamic jwt;
+
 - (id)initWithCoder:(NSCoder *)decoder
 {
 	if ((self = [super init]))
@@ -94,6 +97,22 @@ static NSString *const k_partner_jwt          = @"partner_jwt";
 	copy->partner_jwt = partner_jwt;
 	
 	return copy;
+}
+
+/**
+ * See header file for description.
+ */
+- (BOOL)isCoop
+{
+	return (coop_refreshToken != nil);
+}
+
+/**
+ * See header file for description.
+ */
+- (nullable NSString *)jwt
+{
+	return (self.isCoop) ? coop_jwt : partner_jwt;
 }
 
 @end

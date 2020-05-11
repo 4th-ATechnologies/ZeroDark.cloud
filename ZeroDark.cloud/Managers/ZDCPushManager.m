@@ -5849,21 +5849,10 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		#endif
 		}
 		
-		BOOL isCoop;
-		NSString *jwt;
-		
-		if (auth.coop_jwt) {
-			isCoop = YES;
-			jwt = auth.coop_jwt;
-		} else {
-			isCoop = NO;
-			jwt = auth.partner_jwt;
-		}
-		
 		NSURLComponents *urlComponents =
 		  [zdc.restManager apiGatewayV1ForRegion: region
 		                                   stage: stage
-		                                  domain: isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
+		                                  domain: auth.isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
 		                                    path: @"/push/pollRequest"];
 		
 		urlComponents.queryItems = @[
@@ -5873,7 +5862,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"GET";
 		
-		[request setBearerAuthorization:jwt];
+		[request setBearerAuthorization:auth.jwt];
 		
 	#if TARGET_OS_IPHONE
 		
@@ -6220,27 +6209,16 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		#endif
 		}
 		
-		BOOL isCoop;
-		NSString *jwt;
-		
-		if (auth.coop_jwt) {
-			isCoop = YES;
-			jwt = auth.coop_jwt;
-		} else {
-			isCoop = NO;
-			jwt = auth.partner_jwt;
-		}
-		
 		NSURLComponents *urlComponents =
 		  [zdc.restManager apiGatewayV1ForRegion: region
 		                                   stage: stage
-		                                  domain: isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
+		                                  domain: auth.isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
 		                                    path: @"/push/pollRequest"];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"POST";
 		
-		[request setBearerAuthorization:jwt];
+		[request setBearerAuthorization:auth.jwt];
 		
 		__block NSURLSessionUploadTask *task = nil;
 	#if TARGET_OS_IPHONE

@@ -62,6 +62,17 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, copy, readwrite, nullable) NSString *partner_jwt;
 
+/**
+ * Returns YES if coop_refreshToken is non-nil.
+ */
+@property (nonatomic, readonly) BOOL isCoop;
+
+/**
+ * Returns either to coop_jwt or partner_jwt.
+ * Value is guaranteed to match `isCoop` property.
+ */
+@property (nonatomic, readonly, nullable) NSString *jwt;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -834,21 +834,10 @@ static NSUInteger const kMaxFailCount = 8;
 			else
 				changeToken = @"empty";
 			
-			BOOL isCoop;
-			NSString *jwt;
-			
-			if (auth.coop_jwt) {
-				isCoop = YES;
-				jwt = auth.coop_jwt;
-			} else {
-				isCoop = NO;
-				jwt = auth.partner_jwt;
-			}
-			
 			NSURLComponents *urlComponents =
 			  [zdc.restManager apiGatewayV1ForRegion: region
 			                                   stage: stage
-			                                  domain: isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
+			                                  domain: auth.isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
 			                                    path: @"/pull/since"];
 			
 			urlComponents.queryItems = @[
@@ -858,7 +847,7 @@ static NSUInteger const kMaxFailCount = 8;
 			NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 			request.HTTPMethod = @"GET";
 			
-			[request setBearerAuthorization:jwt];
+			[request setBearerAuthorization:auth.jwt];
 			
 			task = [session dataTaskWithRequest: request
 			                     uploadProgress: nil
@@ -2328,27 +2317,16 @@ static NSUInteger const kMaxFailCount = 8;
 			#endif
 			}
 			
-			BOOL isCoop;
-			NSString *jwt;
-			
-			if (auth.coop_jwt) {
-				isCoop = YES;
-				jwt = auth.coop_jwt;
-			} else {
-				isCoop = NO;
-				jwt = auth.partner_jwt;
-			}
-			
 			NSURLComponents *urlComponents =
 			  [zdc.restManager apiGatewayV1ForRegion: region
 			                                   stage: stage
-			                                  domain: isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
+			                                  domain: auth.isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
 			                                    path: @"/pull/latestChangeToken"];
 			
 			NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 			request.HTTPMethod = @"GET";
 			
-			[request setBearerAuthorization:jwt];
+			[request setBearerAuthorization:auth.jwt];
 			
 			task = [session dataTaskWithRequest: request
 			                     uploadProgress: nil
