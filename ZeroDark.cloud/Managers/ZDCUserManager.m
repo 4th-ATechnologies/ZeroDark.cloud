@@ -1070,10 +1070,10 @@
                    completionQueue:(dispatch_queue_t)completionQueue
                    completionBlock:(void (^)(ZDCUserProfile *profile, NSError *error))completionBlock
 {
-	[zdc.restManager fetchFilteredAuth0Profile: remoteUserID
-	                               requesterID: localUserID
-	                           completionQueue: completionQueue
-	                           completionBlock:^(NSURLResponse *urlResponse, id responseObject, NSError *error)
+	[zdc.restManager fetchAuth0Profile: remoteUserID
+	                       requesterID: localUserID
+	                   completionQueue: completionQueue
+	                   completionBlock:^(NSURLResponse *urlResponse, id responseObject, NSError *error)
 	{
 		if (error)
 		{

@@ -659,9 +659,10 @@ static NSString *const k_displayName = @"displayName";
 			}
 		}
 		
-		[zdc.restManager fetchAuth0ProfileForLocalUserID: localUser.uuid
-		                                 completionQueue: concurrentQueue
-		                                 completionBlock:
+		[zdc.restManager fetchAuth0Profile: localUser.uuid
+		                       requesterID: localUser.uuid
+		                   completionQueue: concurrentQueue
+		                   completionBlock:
 		^(NSURLResponse *urlResponse, id responseObject, NSError *error)
 		{
 			if (error)

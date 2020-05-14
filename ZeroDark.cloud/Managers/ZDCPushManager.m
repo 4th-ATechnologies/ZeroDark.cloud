@@ -6981,7 +6981,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 	ZDCLogAutoTrace();
 	NSAssert(operation.type == ZDCCloudOperationType_Avatar, @"Invalid operation type");
 	
-	[zdc.credentialsManager getAWSCredentialsForUser: context.localUserID
+	[zdc.credentialsManager getJWTCredentialsForUser: context.localUserID
 	                                 completionQueue: concurrentQueue
 	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
@@ -7012,22 +7012,29 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 		
 		// Calculate path
 		
-		NSString *social_userID;
+		NSString *auth0_userID = @"";
 		
 		NSArray *comps = [operation.avatar_auth0ID componentsSeparatedByString:@"|"];
 		if (comps.count == 2)
 		{
 			// "<provider>|<userID>"
 			
-			social_userID = comps[1];
+			auth0_userID = comps[1];
 		}
 		
 		AWSRegion region = userInfo.region;
 		NSString *stage = userInfo.stage;
 		
-		NSString *path = [NSString stringWithFormat:@"/users/avatar/%@", social_userID];
+		NSURLComponents *urlComponents =
+			[zdc.restManager apiGatewayV1ForRegion: region
+			                                 stage: stage
+			                                domain: auth.isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
+			                                  path: @"/users/avatar"];
 		
-		NSURLComponents *urlComponents = [zdc.restManager apiGatewayV0ForRegion:region stage:stage path:path];
+		urlComponents.queryItems = @[
+			[NSURLQueryItem queryItemWithName:@"auth0_id" value:auth0_userID],
+		];
+		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 
 	#if TARGET_OS_IPHONE
@@ -7063,13 +7070,7 @@ typedef NS_ENUM(NSInteger, ZDCErrCode) {
 			[request setValue:@"*" forHTTPHeaderField:@"If-None-Match"];
 		}
 		
-		[AWSSignature signRequest: request
-		               withRegion: region
-		                  service: AWSService_APIGateway
-		              accessKeyID: auth.aws_accessKeyID
-		                   secret: auth.aws_secret
-		                  session: auth.aws_session
-		               payloadSig: context.sha256Hash];
+		[request setBearerAuthorization:auth.jwt];
 		
 		NSURLSessionUploadTask *task = nil;
 	#if TARGET_OS_IPHONE

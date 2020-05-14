@@ -175,13 +175,6 @@ typedef NS_ENUM(NSInteger, ZDCDomain) {
 
 
 /**
- * Documentation ?
- */
-- (void)fetchAuth0ProfileForLocalUserID:(NSString*) localUserID
-					  completionQueue:(dispatch_queue_t)completionQueue
-					  completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock;
-
-/**
  * Fetches the remote user's info from the server, which includes:
  *
  * - region (NSString)
@@ -288,59 +281,6 @@ typedef NS_ENUM(NSInteger, ZDCDomain) {
                                          NSError *_Nullable error))completionBlock;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Avatar
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * Updates a user's avatar on the server, either by uploading a new avatar or deleting whatever is there.
- *
- * This only works for non-social identities.
- * That is, a user can link multiple identities to their account, including Facebook, LinkedIn, etc.
- * All of these social identities (such as Facebook) have their own system for managing avatars.
- * However, the user is also allowed to create a "traditional" account using only a username/password.
- * This traditional account is referred to as a non-social account.
- * And it's these non-social accounts that this method is designed for.
- * It allows the user to associate an avatar with the non-social account.
- *
- * @param avatarData
- *   The raw image data (serialized in PNG, JPEG, or some other commonly supported image format).
- *   You're encouraged to stick with image formats that will be supported on every major OS.
- *
- * @param contentType
- *   The HTTP-style "Content-Type" for the image data.
- *   Common values include "image/png", "image/jpg", etc.
- *
- * @param previousETag
- *   The server will only allow you to update the avatar if you know the previous eTag value.
- *   This acts as a simple sync mechanism, and ensures that your
- *   app is up-to-date before replacing the current avatar.
- *
- * @param localUserID
- *   The user for which we're replacing the avatar.
- *   This must be a user that's logged in (i.e. there's a valid ZDCLocalUser & ZDCLocalUserAuth in the database).
- *
- * @param auth0ID
- *   The identifier of the non-social account.
- *   The string is expected to be of the form "auth0|<identifier_goes_here>"
- *
- * @param completionQueue
- *   The dispatch queue on which to invoke the completion block.
- *   If unspecified, the main thread is used.
- *
- * @param completionBlock
- *   Invoked with the raw response from the server.
- */
-- (void)updateAvatar:(nullable NSData *)avatarData
-         contentType:(NSString *)contentType
-        previousETag:(nullable NSString *)previousETag
-      forLocalUserID:(NSString *)localUserID
-             auth0ID:(NSString *)auth0ID
-     completionQueue:(nullable dispatch_queue_t)completionQueue
-     completionBlock:(void (^)(NSURLResponse *_Nullable response,
-                               id _Nullable responseObject,
-                               NSError *_Nullable error))completionBlock;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Sync
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -434,18 +374,21 @@ typedef NS_ENUM(NSInteger, ZDCDomain) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Fetches the user's public info via the API Gateway.
+ * Fetches the user's co-op profile.
  *
  * This information includes:
  * - userID
  * - user's region
  * - user's bucket
  * - list of linked identities
+ *
+ * If the given userID matches the localUserID, then the user's FULL profile is retrieved.
+ * Otherwise the user's FILTERED profile is retrieved, which contains only a subset of the full profile.
  */
-- (void)fetchFilteredAuth0Profile:(NSString *)remoteUserID
-                      requesterID:(NSString *)localUserID
-                  completionQueue:(nullable dispatch_queue_t)completionQueue
-                  completionBlock:(nullable void (^)(NSURLResponse *response, id _Nullable responseObject, NSError *_Nullable error))completion;
+- (void)fetchAuth0Profile:(NSString *)userID
+              requesterID:(NSString *)localUserID
+          completionQueue:(nullable dispatch_queue_t)completionQueue
+          completionBlock:(nullable void (^)(NSURLResponse *response, id _Nullable responseObject, NSError *_Nullable error))completion;
 
 /**
  * User search API.

@@ -1391,167 +1391,6 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark Avatar
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * See header file for description.
- * Or view the api's online (for both Swift & Objective-C):
- * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
- */
-- (void)updateAvatar:(NSData *)rawAvatarData
-         contentType:(NSString *)contentType
-        previousETag:(NSString *)previousETag
-      forLocalUserID:(NSString *)localUserID
-             auth0ID:(NSString *)auth0ID
-     completionQueue:(nullable dispatch_queue_t)completionQueue
-     completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
-{
-	ZDCLogAutoTrace();
-
-	NSParameterAssert(rawAvatarData != nil);
-	NSParameterAssert(localUserID != nil);
-	
-	void (^InvokeCompletionBlock)(NSURLResponse*, id, NSError*) =
-	^(NSURLResponse *response, id responseObject, NSError *error)
-	{
-		if (completionBlock)
-		{
-			dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
-				completionBlock(response, responseObject, error);
-			}});
-		}
-	};
-
-	NSArray *comps = [auth0ID componentsSeparatedByString:@"|"];
-	NSParameterAssert(comps.count == 2);
-	
-	NSString *social_provider = comps[0];
-	NSString *social_userID   = comps[1];
-	
-	if (![social_provider isEqualToString:@"auth0"])
-	{
-		NSError *error = [NSError errorWithClass:[self class] code:400 description:@"Invalid auth0ID"];
-		
-		InvokeCompletionBlock(nil, nil, error);
-		return;
-	}
-
-	// Create JSON for request
-	
-	NSData *jsonData = nil; // nil indicates a delete
-	if (rawAvatarData)
-	{
-		NSDictionary *jsonDict = @{
-			@"avatar"       : [rawAvatarData base64EncodedStringWithOptions:0],
-			@"content-type" : (contentType ?: @"image/png")
-		};
-
-		NSError *jsonError = nil;
-		jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:&jsonError];
-		if (jsonError)
-		{
-			InvokeCompletionBlock(nil, nil, jsonError);
-			return;
-		}
-
-		if (jsonData.length > (1024 * 1024 * 10))
-		{
-			NSError *error = [NSError errorWithClass:[self class] code:400 description:@"Avatar image is too big !"];
-
-			InvokeCompletionBlock(nil, nil, error);
-			return;
-		}
-	}
-
-	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
-	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
-	{
-		if (error)
-		{
-			InvokeCompletionBlock(nil, nil, error);
-			return;
-		}
-		
-		ZDCSessionInfo *sessionInfo = [zdc.sessionManager sessionInfoForUserID:localUserID];
-		ZDCSessionUserInfo *userInfo = sessionInfo.userInfo;
-	#if TARGET_OS_IPHONE
-		AFURLSessionManager *session = sessionInfo.foregroundSession;
-	#else
-		AFURLSessionManager *session = sessionInfo.session;
-	#endif
-		
-		AWSRegion region = userInfo.region;
-		NSString *stage = userInfo.stage;
-		if (!stage)
-		{
-			stage = DEFAULT_AWS_STAGE;
-		}
-
-		// Generate request
-
-		NSString *path = [NSString stringWithFormat:@"/users/avatar/%@", social_userID];
-		
-		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
-		
-		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
-
-		if (jsonData)
-		{
-			request.HTTPMethod = @"POST";
-			request.HTTPBody = jsonData;
-			[request setJSONContentTypeHeader];
- 		}
-		else
-		{
-			request.HTTPMethod = @"DELETE";
-		}
-
-		if (previousETag) {
-			[request setValue:previousETag forHTTPHeaderField:@"If-Match"];
-		} else {
-			[request setValue:@"*" forHTTPHeaderField:@"If-None-Match"];
-		}
-		
-		[AWSSignature signRequest: request
-		               withRegion: region
-		                  service: AWSService_APIGateway
-		              accessKeyID: auth.aws_accessKeyID
-		                   secret: auth.aws_secret
-		                  session: auth.aws_session];
-
-		// Are we uploading or deleting?
-		if (jsonData)
-		{
-			NSURLSessionUploadTask *task =
-			  [session uploadTaskWithRequest: request
-			                        fromData: jsonData
-			                        progress: nil
-			               completionHandler:^(NSURLResponse *response, id responseObject, NSError *error)
-			{
-				InvokeCompletionBlock(response, responseObject, error);
-			}];
-
-			[task resume];
-		}
-		else
-		{
-			NSURLSessionDataTask  *task =
-			[session dataTaskWithRequest: request
-			              uploadProgress: nil
-			            downloadProgress: nil
-			           completionHandler:^(NSURLResponse *response, id responseObject, NSError *error)
-			{
-				InvokeCompletionBlock(response, responseObject, error);
-			}];
-
-			[task resume];
-		}
-	}];
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark Sync
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1801,112 +1640,32 @@
  * Or view the api's online (for both Swift & Objective-C):
  * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
  */
-- (void)fetchAuth0ProfileForLocalUserID:(NSString*) localUserID
-					  completionQueue:(dispatch_queue_t)completionQueue
-					  completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
-
-{
-
-	void (^InvokeCompletionBlock)(NSURLResponse*, id, NSError*) =
-	^(NSURLResponse *response, id responseObject, NSError *error)
-	{
-		if (completionBlock)
-		{
-			dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
-				completionBlock(response, responseObject, error);
-			}});
-		}
-	};
-
-	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
-	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
-	{
-		if (error)
-		{
-			InvokeCompletionBlock(nil, nil, error);
-			return;
-		}
-
-		NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
-		AFURLSessionManager *session = [[AFURLSessionManager alloc] initWithSessionConfiguration:sessionConfig];
-
-		// What region do we use ?
-		//
-		// Technically, any region should work.
-		// That is, we can perform the HTTP request from any AWS region we're running in.
-		// However, there are financial costs to consider.
-		// Amazon will charge us for the outgoing bandwidth.
-		//
-		// Interestingly, it appears that auth0 is itself running within AWS.
-		// And they appear to have setup our account in us-west-2.
-		// So there's a chance AWS won't charge us for outgoing bandwidth if our query doesn't leave their datacenter.
-		//
-		// Thus we're going to always direct the query to the us-west-2 center.
-		
-		AWSRegion region = AWSRegion_Master;
-		NSString *stage = DEFAULT_AWS_STAGE;
-
-		NSString *path = [NSString stringWithFormat:@"/auth0/fetch/%@", localUserID];
-
-		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
-
-		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
-		[request setHTTPMethod:@"GET"];
-
-		[AWSSignature signRequest: request
-		               withRegion: region
-		                  service: AWSService_APIGateway
-		              accessKeyID: auth.aws_accessKeyID
-		                   secret: auth.aws_secret
-		                  session: auth.aws_session];
-
-		NSURLSessionDataTask *task =
-			[session dataTaskWithRequest: request
-			              uploadProgress: nil
-			            downloadProgress: nil
-			           completionHandler:^(NSURLResponse *response, id responseObject, NSError *error)
-		{
-			InvokeCompletionBlock(response, responseObject, error);
-		}];
-
-		[task resume];
-	}];
-}
-
-/**
- * See header file for description.
- * Or view the api's online (for both Swift & Objective-C):
- * https://apis.zerodark.cloud/Classes/ZDCRestManager.html
- */
-- (void)fetchFilteredAuth0Profile:(NSString *)remoteUserID
-                      requesterID:(NSString *)localUserID
-                  completionQueue:(dispatch_queue_t)completionQueue
-                  completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
+- (void)fetchAuth0Profile:(NSString *)remoteUserID
+              requesterID:(NSString *)localUserID
+          completionQueue:(dispatch_queue_t)completionQueue
+          completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
 {
 	ZDCLogAutoTrace();
 	
 	remoteUserID = [remoteUserID copy]; // mutable string protection
 	localUserID = [localUserID copy];   // mutable string protection
 	
-	void (^InvokeCompletionBlock)(NSURLResponse*, id, NSError*) =
-	^(NSURLResponse *response, id responseObject, NSError *error)
-	{
-		if (completionBlock)
-		{
-			dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
-				completionBlock(response, responseObject, error);
-			}});
-		}
+	void (^Notify)(NSURLResponse*, id, NSError*) = ^(NSURLResponse *response, id responseObject, NSError *error) {
+		
+		if (completionBlock == nil) return;
+		
+		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+			completionBlock(response, responseObject, error);
+		}});
 	};
 	
-	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	[zdc.credentialsManager getJWTCredentialsForUser: localUserID
 	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
 	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
-			InvokeCompletionBlock(nil, nil, error);
+			Notify(nil, nil, error);
 			return;
 		}
 		
@@ -1938,20 +1697,21 @@
 		{
 			stage = DEFAULT_AWS_STAGE;
 		}
-
-		NSString *path = [NSString stringWithFormat:@"/auth0/fetch/%@", remoteUserID];
 		
-		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents =
+			[self apiGatewayV1ForRegion: region
+			                      stage: @"dev" // stage
+			                     domain: auth.isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
+			                       path: @"/auth0/fetch"];
+		
+		urlComponents.queryItems = @[
+		  [NSURLQueryItem queryItemWithName:@"user_id" value:remoteUserID]
+		];
 		
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		[request setHTTPMethod:@"GET"];
 		
-		[AWSSignature signRequest: request
-		               withRegion: region
-		                  service: AWSService_APIGateway
-		              accessKeyID: auth.aws_accessKeyID
-		                   secret: auth.aws_secret
-		                  session: auth.aws_session];
+		[request setBearerAuthorization:auth.jwt];
 		
 		NSURLSessionDataTask *task =
 		  [session dataTaskWithRequest: request
@@ -1959,7 +1719,7 @@
 		              downloadProgress: nil
 		             completionHandler:^(NSURLResponse *response, id responseObject, NSError *error)
 		{
-			InvokeCompletionBlock(response, responseObject, error);
+			Notify(response, responseObject, error);
 		}];
 		
 		[task resume];
@@ -1984,24 +1744,22 @@
 	localUserID = [localUserID copy];
 	treeID      = [treeID copy];
 	
-	void (^InvokeCompletionBlock)(NSURLResponse*, id, NSError*) =
-	^(NSURLResponse *response, id responseObject, NSError *error)
-	{
-		if (completionBlock)
-		{
-			dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
-				completionBlock(response, responseObject, error);
-			}});
-		}
+	void (^Notify)(NSURLResponse*, id, NSError*) = ^(NSURLResponse *response, id responseObject, NSError *error) {
+		
+		if (completionBlock == nil) return;
+		
+		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+			completionBlock(response, responseObject, error);
+		}});
 	};
 	
-	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	[zdc.credentialsManager getJWTCredentialsForUser: localUserID
 	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
 	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
-			InvokeCompletionBlock(nil, nil, error);
+			Notify(nil, nil, error);
 			return;
 		}
 		
@@ -2034,16 +1792,18 @@
 		{
 			stage = DEFAULT_AWS_STAGE;
 		}
-
-		NSString *path = @"/auth0/search";
 		
-		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents =
+			[self apiGatewayV1ForRegion: region
+			                      stage: stage
+			                     domain: auth.isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
+			                       path: @"/auth0/search"];
 		
 		// Currently this method only support sending a query that matches based on the name.
 		// However the server also supports limiting the search to a particular social provider.
 		//
 
-		NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:2];
+		NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:3];
 
 		jsonDict[@"query"]    = queryString;
 		jsonDict[@"provider"] = providerString.length ? providerString : @"*";
@@ -2051,28 +1811,12 @@
 
 		NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:nil];
 
-		NSURL *url = [urlComponents URL];
-
-		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"POST";
 		request.HTTPBody = jsonData;
-
-
-//		NSURLQueryItem *name = [NSURLQueryItem queryItemWithName:@"query" value:queryString];
-//		NSURLQueryItem *provider = [NSURLQueryItem queryItemWithName:@"provider" value:
-//									providerString.length?providerString:@"*"];
-//
-//		urlComponents.queryItems = @[ name, provider ];
-//		
-//		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
-//		[request setHTTPMethod:@"GET"];
 		
-		[AWSSignature signRequest:request
-		               withRegion:region
-		                  service:AWSService_APIGateway
-		              accessKeyID:auth.aws_accessKeyID
-		                   secret:auth.aws_secret
-		                  session:auth.aws_session];
+		[request setJSONContentTypeHeader];
+		[request setBearerAuthorization:auth.jwt];
 		
 		NSURLSessionDataTask *task =
 		  [session dataTaskWithRequest: request
@@ -2080,7 +1824,7 @@
 		              downloadProgress: nil
 		             completionHandler:^(NSURLResponse *response, id responseObject, NSError *error)
 		{
-			InvokeCompletionBlock(response, responseObject, error);
+			Notify(response, responseObject, error);
 		}];
 		
 		[task resume];
@@ -2102,18 +1846,22 @@
 	
 	NSString *localUserID = [inLocalUserID copy]; // mutable string protection
 	
-	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	void (^Notify)(NSURLResponse*, id, NSError*) = ^(NSURLResponse *response, id responseObject, NSError *error) {
+		
+		if (completionBlock == nil) return;
+		
+		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+			completionBlock(response, responseObject, error);
+		}});
+	};
+	
+	[zdc.credentialsManager getJWTCredentialsForUser: localUserID
 	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
 	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
-			if (completionBlock)
-			{
-				dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{
-					completionBlock(nil, nil, error);
-				});
-			}
+			Notify(nil, nil, error);
 			return;
 		}
 		
@@ -2146,8 +1894,11 @@
 			stage = DEFAULT_AWS_STAGE;
 		}
 		
-		NSString *path = @"/auth0/linkRecovery";
-		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents =
+			[self apiGatewayV1ForRegion: region
+			                      stage: stage
+			                     domain: auth.isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
+			                       path: @"/auth0/linkRecovery"];
 		
 		NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:2];
 		
@@ -2156,20 +1907,12 @@
 		
 		NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonDict options:0 error:nil];
 		
-		NSURL *url = [urlComponents URL];
-		
-		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[urlComponents URL]];
 		request.HTTPMethod = @"POST";
 		request.HTTPBody = jsonData;
 		
 		[request setJSONContentTypeHeader];
-		
-		[AWSSignature signRequest: request
-		               withRegion: region
-		                  service: AWSService_APIGateway
-		              accessKeyID: auth.aws_accessKeyID
-		                   secret: auth.aws_secret
-		                  session: auth.aws_session];
+		[request setBearerAuthorization:auth.jwt];
 		
 		NSURLSessionDataTask *task =
 		  [session dataTaskWithRequest: request
@@ -2178,18 +1921,13 @@
 		             completionHandler:^(NSURLResponse *response, id responseObject, NSError *error)
 		{
 			if (error) {
-				NSLog(@"linkAuth0ID: error: %@", error);
+				ZDCLogVerbose(@"linkAuth0ID: error: %@", error);
 			}
 			else {
-				NSLog(@"linkAuth0ID: %ld: %@", (long)response.httpStatusCode, responseObject);
+				ZDCLogVerbose(@"linkAuth0ID: %ld: %@", (long)response.httpStatusCode, responseObject);
 			}
 			
-			if (completionBlock)
-			{
-				dispatch_async(completionQueue, ^{ @autoreleasepool {
-					completionBlock(response, responseObject, error);
-				}});
-			}
+			Notify(response, responseObject, error);
 		}];
 		
 		[task resume];
@@ -2207,39 +1945,34 @@
     completionBlock:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionBlock
 {
 	ZDCLogAutoTrace();
-	
-	if (!completionQueue)
-		completionQueue = dispatch_get_main_queue();
+
+	void (^Notify)(NSURLResponse*, id, NSError*) = ^(NSURLResponse *response, id responseObject, NSError *error) {
+		
+		if (completionBlock == nil) return;
+		
+		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+			completionBlock(response, responseObject, error);
+		}});
+	};
 	
 	NSString *localUserID = localUser.uuid;
 	NSString *auth0ID = localUser.auth0_primary;
-
 	if (!auth0ID)
 	{
-		if (completionBlock)
-		{
-			dispatch_async(dispatch_get_main_queue(), ^{
-				NSString *desc = @"Internal error, primary user ID Not Found";
-				NSError *error = [NSError errorWithClass:[self class] code:0 description:desc];
-				
-				completionBlock(nil, nil, error);
-			});
-		}
+		NSString *desc = @"Internal error, primary user ID Not Found";
+		NSError *error = [NSError errorWithClass:[self class] code:0 description:desc];
+		
+		Notify(nil, nil, error);
 		return;
 	}
 	
-	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	[zdc.credentialsManager getJWTCredentialsForUser: localUserID
 	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
 	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
-			if (completionBlock)
-			{
-				dispatch_async(dispatch_get_main_queue(), ^{
-					completionBlock(nil, nil, error);
-				});
-			}
+			Notify(nil, nil, error);
 			return;
 		}
 		
@@ -2272,9 +2005,11 @@
 			stage = DEFAULT_AWS_STAGE;
 		}
 		
-		NSString *path = @"/auth0/linkIdentity";
-		
-		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents =
+			[self apiGatewayV1ForRegion: region
+			                      stage: stage
+			                     domain: auth.isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
+			                       path: @"/auth0/linkIdentity"];
 		
 		NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:2];
 		
@@ -2288,13 +2023,7 @@
 		request.HTTPBody = jsonData;
 		
 		[request setJSONContentTypeHeader];
-		
-		[AWSSignature signRequest:request
-		               withRegion:region
-		                  service:AWSService_APIGateway
-		              accessKeyID:auth.aws_accessKeyID
-		                   secret:auth.aws_secret
-		                  session:auth.aws_session];
+		[request setBearerAuthorization:auth.jwt];
 		
 		NSURLSessionDataTask *task =
 		  [session dataTaskWithRequest: request
@@ -2303,18 +2032,13 @@
 		             completionHandler:^(NSURLResponse *response, id responseObject, NSError *error)
 		{
 			if (error) {
-				NSLog(@"linkAuth0ID: error: %@", error);
+				ZDCLogVerbose(@"linkAuth0ID: error: %@", error);
 			}
 			else {
-				NSLog(@"linkAuth0ID: %ld: %@", (long)response.httpStatusCode, responseObject);
+				ZDCLogVerbose(@"linkAuth0ID: %ld: %@", (long)response.httpStatusCode, responseObject);
 			}
-			
-			if (completionBlock)
-			{
-				dispatch_async(completionQueue, ^{ @autoreleasepool {
-					completionBlock(response, responseObject, error);
-				}});
-			}
+			  
+			Notify(response, responseObject, error);
 		}];
 		
 		[task resume];
@@ -2333,38 +2057,33 @@
 {
 	ZDCLogAutoTrace();
 	
-	if (!completionQueue)
-		completionQueue = dispatch_get_main_queue();
+	void (^Notify)(NSURLResponse*, id, NSError*) = ^(NSURLResponse *response, id responseObject, NSError *error) {
+		
+		if (completionBlock == nil) return;
+		
+		dispatch_async(completionQueue ?: dispatch_get_main_queue(), ^{ @autoreleasepool {
+			completionBlock(response, responseObject, error);
+		}});
+	};
 	
 	NSString *localUserID = localUser.uuid;
 	NSString *auth0ID = localUser.auth0_primary;
-
-	if(!auth0ID)
+	if (!auth0ID)
 	{
-		if (completionBlock)
-		{
-			dispatch_async(dispatch_get_main_queue(), ^{
-				NSString *desc = @"Internal error, primary user ID Not Found";
-				NSError *error = [NSError errorWithClass:[self class] code:0 description:desc];
-				
-				completionBlock(nil, nil, error);
-			});
-		}
+		NSString *desc = @"Internal error, primary user ID Not Found";
+		NSError *error = [NSError errorWithClass:[self class] code:0 description:desc];
+		
+		Notify(nil, nil, error);
 		return;
 	}
 	
-	[zdc.credentialsManager getAWSCredentialsForUser: localUserID
+	[zdc.credentialsManager getJWTCredentialsForUser: localUserID
 	                                 completionQueue: dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
 	                                 completionBlock:^(ZDCLocalUserAuth *auth, NSError *error)
 	{
 		if (error)
 		{
-			if (completionBlock)
-			{
-				dispatch_async(dispatch_get_main_queue(), ^{
-					completionBlock(nil, nil, error);
-				});
-			}
+			Notify(nil, nil, error);
 			return;
 		}
 		
@@ -2397,9 +2116,11 @@
 			stage = DEFAULT_AWS_STAGE;
 		}
 		
-		NSString *path = @"/auth0/unlinkIdentity";
-		
-		NSURLComponents *urlComponents = [self apiGatewayV0ForRegion:region stage:stage path:path];
+		NSURLComponents *urlComponents =
+			[self apiGatewayV1ForRegion: region
+			                      stage: stage
+			                     domain: auth.isCoop ? ZDCDomain_UserCoop : ZDCDomain_UserPartner
+			                       path: @"/auth0/unlinkIdentity"];
 		
 		NSMutableDictionary *jsonDict = [NSMutableDictionary dictionaryWithCapacity:2];
 		jsonDict[@"auth0_id"] = auth0ID;
@@ -2412,13 +2133,7 @@
 		request.HTTPBody = jsonData;
 		
 		[request setJSONContentTypeHeader];
-		
-		[AWSSignature signRequest:request
-		               withRegion:region
-		                  service:AWSService_APIGateway
-		              accessKeyID:auth.aws_accessKeyID
-		                   secret:auth.aws_secret
-		                  session:auth.aws_session];
+		[request setBearerAuthorization:auth.jwt];
 		
 		NSURLSessionDataTask *task =
 		  [session dataTaskWithRequest: request
@@ -2427,18 +2142,13 @@
 						 completionHandler:^(NSURLResponse *response, id responseObject, NSError *error)
 		{
 			if (error) {
-				NSLog(@"unlinkAuth0ID: error: %@", error);
+				ZDCLogVerbose(@"unlinkAuth0ID: error: %@", error);
 			}
 			else {
-				NSLog(@"unlinkAuth0ID: %ld: %@", (long)response.httpStatusCode, responseObject);
+				ZDCLogVerbose(@"unlinkAuth0ID: %ld: %@", (long)response.httpStatusCode, responseObject);
 			}
 			
-			if (completionBlock)
-			{
-				dispatch_async(completionQueue, ^{ @autoreleasepool {
-					completionBlock(response, responseObject, error);
-				}});
-			}
+			Notify(response, responseObject, error);
 		}];
 		
 		[task resume];
