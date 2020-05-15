@@ -1,0 +1,24 @@
+workspace 'PartnerStarter'
+
+use_frameworks!
+inhibit_all_warnings!
+
+# Workaround for Xcode bug:
+# - https://www.ralfebert.de/ios/blog/cocoapods-clean-input-output-files/
+# - https://github.com/CocoaPods/CocoaPods/issues/8073
+# - https://github.com/CocoaPods/CocoaPods/pull/8105
+# 
+install! 'cocoapods', :disable_input_output_paths => true
+
+target 'PartnerStarter' do
+	platform :ios, '10.0'
+
+	# This is the pod you need.
+	# In this project we're using it as a "Development Pod".
+	# But in your project you'll install it normally like this:
+	#
+	# pod 'ZeroDarkCloud/Swift'
+	#
+	pod 'ZeroDarkCloud/Swift', path: '../../', :inhibit_warnings => false
+
+end
