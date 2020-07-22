@@ -52,7 +52,7 @@
 	
 	ZDCDatabaseConfig *dbConfig = [[ZDCDatabaseConfig alloc] initWithEncryptionKey:databaseKey];
 	
-	error = [zdc unlockOrCreateDatabase:dbConfig];
+	[zdc unlockOrCreateDatabase:dbConfig error:&error];
 	if (error) {
 		NSLog(@"Error unlocking database: %@", error);
 		return NO;

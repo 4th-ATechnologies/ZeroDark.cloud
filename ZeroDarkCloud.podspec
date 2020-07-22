@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
 	s.name         = "ZeroDarkCloud"
-	s.version      = "0.9.4"
+	s.version      = "0.9.5"
 	s.summary      = "Zero-knowledge sync & messaging framework"
 	s.homepage     = "https://www.zerdark.cloud"
 	s.license      = 'MIT'
@@ -19,7 +19,7 @@ Pod::Spec.new do |s|
 #	s.tvos.deployment_target = '9.0'
 #	s.watchos.deployment_target = '3.0'
 
-	s.dependency 'AFNetworking'
+	s.dependency 'AFNetworking', '~> 4.0'
 	s.dependency 'S4Crypto', '>= 2.2.9'
 	s.dependency 'XMLDictionary'
 	s.dependency 'YapDatabase/SQLCipher-ObjC', '>= 4.0'

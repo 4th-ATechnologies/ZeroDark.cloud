@@ -236,10 +236,10 @@ static NSString *const kSessionDescriptionPrefix_Foreground = @"fg";
 			if (sessionInfo)
 			{
 			#if TARGET_OS_IPHONE
-				[sessionInfo.foregroundSession invalidateSessionCancelingTasks:YES];
-				[sessionInfo.backgroundSession invalidateSessionCancelingTasks:YES];
+				[sessionInfo.foregroundSession invalidateSessionCancelingTasks:YES resetSession:YES];
+				[sessionInfo.backgroundSession invalidateSessionCancelingTasks:YES resetSession:YES];
 			#else
-				[sessionInfo.session invalidateSessionCancelingTasks:YES];
+				[sessionInfo.session invalidateSessionCancelingTasks:YES
 			#endif
 			}
 		}
@@ -544,9 +544,7 @@ done:
 	
 #if TARGET_OS_IPHONE
 	if (isBackgroundSession)
-	{
-		session.attemptsToRecreateUploadTasksForBackgroundSessions = YES;
-		
+	{		
 		[session setDidFinishEventsForBackgroundURLSessionBlock:^(NSURLSession *session){
 			
 			[self didFinishEventsForBackgroundURLSession:session localUserID:localUserID];
