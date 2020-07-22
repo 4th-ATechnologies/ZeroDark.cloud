@@ -239,7 +239,7 @@ static NSString *const kSessionDescriptionPrefix_Foreground = @"fg";
 				[sessionInfo.foregroundSession invalidateSessionCancelingTasks:YES resetSession:YES];
 				[sessionInfo.backgroundSession invalidateSessionCancelingTasks:YES resetSession:YES];
 			#else
-				[sessionInfo.session invalidateSessionCancelingTasks:YES
+				[sessionInfo.session invalidateSessionCancelingTasks:YES resetSession:YES];
 			#endif
 			}
 		}
