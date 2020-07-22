@@ -144,13 +144,7 @@
 			else if([test isEqualToString:@"storm4"]
 					|| [test isEqualToString:@"zdc"])
 			{
-				Mnemonic_Algorithm algorithm = Mnemonic_Invalid;
-
-				if([test isEqualToString:@"storm4"])
-					algorithm  = Mnemonic_Storm4;
-				else if([test isEqualToString:@"zdc"])
-					algorithm  = Mnemonic_ZDC;
-
+		
 				for(NSArray* vectors in tests[test])
 				{
 					NSString* passphrase =  vectors[0];
@@ -161,7 +155,6 @@
 					[BIP39Mnemonic mnemonicFromKey:keyData
 										passphrase:passphrase
 											languageID:language
-										 algorithm:algorithm
 											 error:&error];
 
 					XCTAssert(error == nil);
@@ -170,7 +163,6 @@
 					NSData* result2 = [BIP39Mnemonic keyFromMnemonic: output
 														  passphrase:passphrase
 															  languageID:language
-														   algorithm:algorithm
 															   error:&error   ];
 
 

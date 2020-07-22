@@ -23,15 +23,11 @@
 	});
 	
 	[[NSNotificationCenter defaultCenter] addObserver: self
-	                                         selector: @selector(pullStarted:)
-	                                             name: ZDCPullStartedNotification
+	                                         selector: @selector(syncStatusChange:)
+	                                             name: ZDCSyncStatusChangedNotification
 	                                           object: nil];
 	
-	[[NSNotificationCenter defaultCenter] addObserver: self
-	                                         selector: @selector(pullStopped:)
-	                                             name: ZDCPullStoppedNotification
-	                                           object: nil];
-}
+ }
 
 - (BOOL)setupZeroDarkCloud
 {
@@ -165,17 +161,31 @@
 	}];
 }
 
-- (void)pullStarted:(NSNotification *)notification
+- (void)syncStatusChange:(NSNotification *)notification
 {
-	NSLog(@"PullStarted: %@", notification.userInfo);
-}
-
-- (void)pullStopped:(NSNotification *)notification
-{
-	NSLog(@"pullStopped: %@", notification.userInfo);
 	
-	NSString *localUserID = notification.userInfo[kLocalUserIDKey];
-	[self exploreTreesystem:localUserID];
-}
+	ZDCSyncStatusNotificationInfo* info = notification.userInfo[kZDCSyncStatusNotificationInfo];
+	
+	switch(info.type)
+	{
+		case ZDCSyncStatusNotificationType_PullStarted:
+			NSLog(@"PullStarted: %@", notification.userInfo);
+			break;
 
+		case ZDCSyncStatusNotificationType_PullStopped:
+		{
+			NSLog(@"pullStopped: %@", notification.userInfo);
+ 
+			NSString *localUserID = info.localUserID;
+			[self exploreTreesystem:localUserID];
+		}
+			break;
+ 
+			default:
+			break;
+
+	}
+	
+ }
+ 
 @end
