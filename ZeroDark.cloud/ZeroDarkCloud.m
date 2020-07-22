@@ -344,7 +344,7 @@ static YAPUnfairLock registrationLock = YAP_UNFAIR_LOCK_INIT;
 		  @" Further, the database filename itself needs to be unique across instances because it's used"
 		  @" as a key (by various classes) to segregate data between multiple instances.";
 		
-		@throw [NSException exceptionWithName: @"ZerDarkCloud:DatabaseNameConflict"
+		@throw [NSException exceptionWithName: @"ZeroDarkCloud:DatabaseNameConflict"
 		                               reason: reason
 		                             userInfo: nil];
 	}

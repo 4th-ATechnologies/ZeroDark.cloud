@@ -2,7 +2,7 @@ Pod::Spec.new do |s|
 	s.name         = "ZeroDarkCloud"
 	s.version      = "0.9.5"
 	s.summary      = "Zero-knowledge sync & messaging framework"
-	s.homepage     = "https://www.zerdark.cloud"
+	s.homepage     = "https://www.zerodark.cloud"
 	s.license      = 'MIT'
 
 	s.author = {
