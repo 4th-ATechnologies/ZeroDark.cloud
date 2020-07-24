@@ -714,16 +714,13 @@ done:
 			
 			if (result && error) result = NO;
 			
-			if (@available(iOS 11.0, *)) {
+			if (@available(iOS 11.0, macOS 10.15, *)) {
 				if(result && (context.biometryType != LABiometryTypeFaceID)) result = NO;
 			}
 			else
 			{
 				result = NO;
 			}
-			
-			if(result && (context.biometryType == LABiometryTypeFaceID))
-				result = YES;
 		}
 	}
 	return result;
@@ -752,7 +749,7 @@ done:
 		
 		if (result && error) result = NO;
 		
-		if (@available(iOS 11.0, *)) {
+		if (@available(iOS 11.0, macOS 10.15, *)) {
 			if(result && (context.biometryType != LABiometryTypeTouchID)) result = NO;
 		}
 		
